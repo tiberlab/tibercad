@@ -430,8 +430,12 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
       LAST               /*!< this is used to know the first free number */
     };
 
-    unsigned int qFermi_base;
-    unsigned int density_base;
+    //! Base index for quasi Fermi energies
+    unsigned int _qFermi_base;
+    //! Base index for densities
+    unsigned int _refenergy_base;
+    //! Base index for densities
+    unsigned int _density_base;
 
     //! Internal class for the RSTF test functions
     class RSTFSys : public libMesh::LinearImplicitSystem
@@ -499,13 +503,13 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
 
 
 
-    //! QuasiFermi potential variables present
+    //! Carriers present in the models
     /*!
-     * The order in this vector is the same as the variables get
-     * added to the system, and as they are declared as solution
-     * variables.
+     * The order in this vector is the same as the QuasiFermi potential
+     * variables that get added to the system, and as they are declared
+     * as solution variables.
      */
-    std::vector<std::string> _variables;
+    std::vector<std::string> _carriers;
 
 
     //! The boundary currents

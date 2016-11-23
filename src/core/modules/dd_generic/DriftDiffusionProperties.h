@@ -78,10 +78,10 @@ class DriftDiffusionProperties : public PhysicalModel
         PointData(void);
 
         //! The electron temperature in eV (\f$= k_B T_e / e\f$)
-        double electron_vt;
+        //double electron_vt;
 
         //! The hole temperature in eV (\f$= k_B T_h / e\f$)
-        double hole_vt;
+        //double hole_vt;
 
 
         //! The electric poential
@@ -211,47 +211,46 @@ class DriftDiffusionProperties : public PhysicalModel
         std::vector<double> hole_recombination_rate_derivatives;
 
 
-        //New generic module
         //! A map storing the fermi potential for each carrier identified by id
-        std::map<std::string, double> fermi_potential;
+        //std::vector<double> fermi_potential;
+        std::vector<double> fermi_potential;
 
         //! Old fermi potential
-        std::map<std::string, double> old_fermi_potential;
+        std::vector<double> old_fermi_potential;
 
         //! A map storing carrier densities
-        std::map<std::string, double> q_density;
+        std::vector<double> q_density;
 
          //! A map storing carrier density derivatives
-        std::map<std::string, double> q_density_derivative;
-        std::map<std::string, double> charge_density_derivative;
+        std::vector<double> q_density_derivative;
+        std::vector<double> charge_density_derivative;
 
         //! A map storing carrier conductivities
-        std::map<std::string, double> q_conductivity;
+        std::vector<double> q_conductivity;
 
         //! A map storing carrier mobilities
-        std::map<std::string, double> q_mobility;
+        std::vector<double> q_mobility;
 
         //! A map storing carrier mobilities derivatives w.r.t. electric potential
-        std::map<std::string, double> q_mobility_derivative_potential;
+        std::vector<double> q_mobility_derivative_potential;
 
         //! A map storing carrier mobilities derivatives w.r.t. gradient of the electric potential
-        std::map<std::string, libMesh::RealGradient> q_mobility_derivative_grad_potential;
+        std::vector<libMesh::RealGradient> q_mobility_derivative_grad_potential;
 
         //! A map storing carrier mobilities derivatives w.r.t. gradient of the electrochemical potential
-        std::map<std::string, libMesh::RealGradient> q_mobility_derivative_grad_fermi;
+        std::vector<libMesh::RealGradient> q_mobility_derivative_grad_fermi;
 
         //! A map storing net recombination rates
-        std::map<std::string, double> q_recombination_rate;
+        std::vector<double> q_recombination_rate;
 
         //! A map storing the derivatives of the net recombination rates
         /*!
          * order is: d/dn, d/dp, d/dfermi_e, d/dfermi_h
          */
-        std::map<std::string, std::map<std::string, std::vector<double>>> q_recombination_rate_derivatives;
+        std::vector<std::vector<std::vector<double>>> q_recombination_rate_derivatives;
 
         //! The carrier temperature in eV (\f$= k_B T_e / e\f$)
-        std::map<std::string, double> carrier_vt;
-        //end new
+        std::vector<double> carrier_vt;
 
     };
 
@@ -275,6 +274,15 @@ class DriftDiffusionProperties : public PhysicalModel
         const ModelOptions& options = ModelOptions());
 
 
+    //! Reorder carrier properties according to the given order
+    /*!
+     * Carrier properties could be read from the input in any order, however the module
+     * will assume a particular order to address them. Therefore we need to reorder them
+     * according to a common order.
+     *
+     * \param order_by_name the order given by a sequence of carrier names
+     */
+    void reorder_carrier_properties(const std::vector<std::string> order_by_name);
 
 
     // ! Lock the parameters
@@ -311,14 +319,16 @@ class DriftDiffusionProperties : public PhysicalModel
 
     //! Set the carrier temperatures
     /*!
-     * The lattice, electron and hole temperatures have to be set before
+     * The carrier temperatures have to be set before
      * calling any of the \c calculate_xxx methods
+     * This method sets thesame temperature for all carriers.
      *
-     * \param T_lat the lattice temperature
-     * \param T_e the electron temperature
-     * \param T_h the hole temperature
+     * \param T the carrier temperature
      */
-    void set_carrier_temperatures(double T_e, double T_h);
+    void set_carrier_temperatures(double T);
+
+    //! Set the temperature of carrier \c id
+    void set_carrier_temperature(ID carrier, double T);
 
     //! Set the potentials
     /*!
@@ -548,7 +558,7 @@ class DriftDiffusionProperties : public PhysicalModel
      * The derivatives are given w.r.t. the two quasi Fermi levels
      */
     void get_charge_density_derivatives(double derivatives[2]) const;
-    double get_charge_density_derivative(std::string qname) const;
+    double get_charge_density_derivative(ID id) const;
 
 
     //! Get the net electron recombination rate
@@ -806,111 +816,104 @@ class DriftDiffusionProperties : public PhysicalModel
     //New generic module
 
     //! Set the potentials
-    void set_potentials(double phi, std::map<std::string, double> & q_phif);
+    void set_potentials(double phi, std::vector<double> & q_phif);
     void set_el_potential(double phi);
-    void set_fermi_potential(std::string qname, double phif);
+    void set_fermi_potential(ID id, double phif);
 
     //! Set the old potentials
-    void set_old_potentials(double phi, std::map<std::string, double> & q_phif);
+    void set_old_potentials(double phi, std::vector<double> & q_phif);
     void set_old_el_potential(double phi);
-    void set_old_fermi_potential(std::string qname, double phif);
+    void set_old_fermi_potential(ID id, double phif);
 
     //! Set the gradient electro-chemical potentials
-    void set_grad_fermi(std::map<std::string, libMesh::RealGradient> & q_gradf);
-    void set_grad_fermi(std::string qname, const libMesh::RealGradient & gradf);
+    void set_grad_fermi(std::vector<libMesh::RealGradient> & q_gradf);
+    void set_grad_fermi(ID id, const libMesh::RealGradient & gradf);
 
     //! Get the gradient of the electrochemical potential
-    const std::map<std::string, libMesh::RealGradient>& get_grad_fermi(void) const;
-    void get_grad_fermi(std::string qid, libMesh::RealGradient& gradf);
+    const std::vector<libMesh::RealGradient>& get_grad_fermi(void) const;
+    void get_grad_fermi(ID id, libMesh::RealGradient& gradf);
 
     //! Get carrier densities
-    const std::map<std::string, double>& get_q_density(void) const
+    const std::vector<double>& get_q_density(void) const
       { return _pd->q_density; };
-    double get_q_density(std::string qname) const;
+    double get_q_density(ID id) const;
 
     //! Get carrier density derivatives
-    const std::map<std::string, double>& get_q_density_derivative(void) const
+    const std::vector<double>& get_q_density_derivative(void) const
       { return _pd->q_density_derivative; };
-    double get_q_density_derivative(std::string qname) const;
+    double get_q_density_derivative(ID id) const;
 
     //! Get carrier conductivities
-    const std::map<std::string, double>& get_q_conductivity(void) const
+    const std::vector<double>& get_q_conductivity(void) const
       { return _pd->q_conductivity; };
-    double get_q_conductivity(std::string qname) const;
+    double get_q_conductivity(ID id) const;
 
     //! Get carrier mobilities
-    const std::map<std::string, double>& get_q_mobility(void) const
+    const std::vector<double>& get_q_mobility(void) const
       { return _pd->q_mobility; };
-    double get_q_mobility(std::string qname) const;
+    double get_q_mobility(ID id) const;
 
     //! Get carrier mobilities derivatives w.r.t. electric potential
-    const std::map<std::string, double>& get_q_mobility_derivative_potential(void) const
+    const std::vector<double>& get_q_mobility_derivative_potential(void) const
       { return _pd->q_mobility_derivative_potential; };
-    double get_q_mobility_derivative_potential(std::string qname) const;
+    double get_q_mobility_derivative_potential(ID id) const;
 
     //! Get carrier mobilities derivatives w.r.t. gradient of the electric potential
-    const std::map<std::string, libMesh::RealGradient>& get_q_mobility_derivative_grad_potential(void) const
+    const std::vector<libMesh::RealGradient>& get_q_mobility_derivative_grad_potential(void) const
       { return _pd->q_mobility_derivative_grad_potential; };
-    void get_q_mobility_derivative_grad_potential(std::string qname, libMesh::RealGradient& dmu) const;
+    void get_q_mobility_derivative_grad_potential(ID id, libMesh::RealGradient& dmu) const;
 
     //! Get carrier mobilities derivatives w.r.t. gradient of the electrochemical potential
-    const std::map<std::string, libMesh::RealGradient>& get_q_mobility_derivative_grad_fermi(void) const
+    const std::vector<libMesh::RealGradient>& get_q_mobility_derivative_grad_fermi(void) const
       { return _pd->q_mobility_derivative_grad_fermi; };
-    void get_q_mobility_derivative_grad_fermi(std::string qname, libMesh::RealGradient& dmu) const;
+    void get_q_mobility_derivative_grad_fermi(ID id, libMesh::RealGradient& dmu) const;
 
     //! Get the net recombination rates
-    const std::map<std::string, double>&  get_net_q_recombination_rate(void) const
+    const std::vector<double>&  get_net_q_recombination_rate(void) const
       { return _pd->q_recombination_rate; };
-    double get_net_q_recombination_rate(std::string qname) const;
+    double get_net_q_recombination_rate(ID id) const;
 
     //! Get the net recombination rate derivatives
-    const std::map<std::string, std::map<std::string, std::vector<double>>>& 
+    const std::vector<std::vector<std::vector<double>>>&
             get_net_q_recombination_rate_derivatives(void) const
               { return _pd->q_recombination_rate_derivatives; };
-    const std::vector<double>& get_net_q_recombination_rate_derivatives(std::string qname1, std::string qname2) const;
+    const std::vector<double>& get_net_q_recombination_rate_derivatives(ID id1, ID id2) const;
 
     //! Get the equilibrium q density
-    const std::map<std::string, double>& get_equilibrium_q_density(void) const
+    const std::vector<double>& get_equilibrium_q_density(void) const
       { return _equilibrium_q; };
-    double get_equilibrium_q_density(std::string qname) const;
+    double get_equilibrium_q_density(ID id) const;
 
     //! Get the carrier electro-chemical potential
-    const std::map<std::string, double>& get_q_fermi_potential(void) const
+    const std::vector<double>& get_q_fermi_potential(void) const
       { return _pd->fermi_potential; };
-    double get_q_fermi_potential(std::string qname) const;
+    double get_q_fermi_potential(ID id) const;
 
     //! Get the carrier electro-chemical potential
-    const std::map<std::string, double>& get_old_q_fermi_potential(void) const
+    const std::vector<double>& get_old_q_fermi_potential(void) const
       { return _pd->old_fermi_potential; };
-    double get_old_q_fermi_potential(std::string qname) const;
+    double get_old_q_fermi_potential(ID id) const;
 
     //! Get carrier properties
-    const std::map<std::string, CarrierProperties*>& get_carrier_properties(void) const
+    /*!
+     * This method will only return carrier properties present in the object.
+     */
+    const std::map<ID, CarrierProperties*>& get_carrier_properties(void) const
       { return _carrier_properties; };
-    const CarrierProperties* get_carrier_properties(std::string qname) const;
 
-    std::map<std::string, CarrierProperties*>& get_carrier_properties(void)
+    //! Get carrier properties
+    /*!
+     * This method will only return carrier properties present in the object.
+     */
+    std::map<ID, CarrierProperties*>& get_carrier_properties(void)
       { return _carrier_properties; };
-    CarrierProperties* get_carrier_properties(std::string qname);
+
+    const CarrierProperties* get_carrier_properties(ID id) const;
+
+    CarrierProperties* get_carrier_properties(ID id);
 
     //! Get the carrier band edge
-    double get_carrier_band_edge(std::string qname) const;
-
-    //! Set the carrier temperatures
-    /*!
-     * The lattice, electron and hole temperatures have to be set before
-     * calling any of the \c calculate_xxx methods
-     *
-     * \param T_lat the lattice temperature
-     * \param T_e the electron temperature
-     * \param T_h the hole temperature
-     */
-    void set_carrier_temperatures(double T);
-
-    void set_carrier_temperatures(std::map<std::string, double>& T);
-
-    void set_carrier_temperatures(std::string qname, double T);
-    //end new
+    double get_carrier_band_edge(ID id) const;
 
 
 
@@ -1022,9 +1025,12 @@ class DriftDiffusionProperties : public PhysicalModel
     void set_equilibrium_q_density(std::string qname, double dens);
 
     //! Set carrier properties
+    /*!
+     * This is used e.g. from interface models.
+     */
     void set_carrier_properties(const std::map<std::string, CarrierProperties*>& cp);
 
-    void set_carrier_properties(std::string name, CarrierProperties* cp);
+    //void set_carrier_properties(std::string name, CarrierProperties* cp);
     //end new
 
 
@@ -1149,16 +1155,29 @@ class DriftDiffusionProperties : public PhysicalModel
 
     //New generic model
     //! The gradient of the electrochemical-potential
-    std::map<std::string, libMesh::RealGradient> _grad_fermi;
+    std::vector<libMesh::RealGradient> _grad_fermi;
 
     //! The equilibrium q density
-    std::map<std::string, double> _equilibrium_q;
+    std::vector<double> _equilibrium_q;
 
     //! The carrier properties
     /*!
      * Carrier properties are assumed to be elemental data, \em not nodal data
      */
-    std::map<std::string, CarrierProperties*> _carrier_properties;
+    std::map<ID, CarrierProperties*> _carrier_properties;
+
+
+    //! This vector contains CarrierProperties objects in the order as used in the solver
+    /*!
+     * The initial order is as read from the options
+     */
+    std::vector<CarrierProperties*> _carrier_props_ordered;
+
+    //! The carrier relevant for donor properties
+    unsigned int _donor_reference_carrier;
+
+    //! The carrier relevant for acceptor properties
+    unsigned int _acceptor_reference_carrier;
 
 };
 
@@ -1181,13 +1200,6 @@ DriftDiffusionProperties::set_coordinates(const Point& p)
   _coord = p;
 }
 
-inline
-void
-DriftDiffusionProperties::set_carrier_temperatures(double T_e, double T_h)
-{
-  _pd->electron_vt = T_e;
-  _pd->hole_vt = T_h;
-}
 
 
 
@@ -1573,7 +1585,7 @@ DriftDiffusionProperties::recombination_models_end(void)
 
 inline
 void
-DriftDiffusionProperties::set_potentials(double phi, std::map<std::string, double> & q_phif)
+DriftDiffusionProperties::set_potentials(double phi, std::vector<double> & q_phif)
 {
   _pd->electric_potential = phi;
   _pd->fermi_potential = q_phif;
@@ -1588,17 +1600,14 @@ DriftDiffusionProperties::set_el_potential(double phi)
 
 inline
 void
-DriftDiffusionProperties::set_fermi_potential(std::string qname, double phif)
+DriftDiffusionProperties::set_fermi_potential(ID id, double phif)
 {
-  if (_carrier_properties.find(qname) == _carrier_properties.end() )
-    throw RuntimeException("Wrong carrier name: trying to assign fermi potential to a not defined carrier");
-
-  _pd->fermi_potential[qname] = phif;
+  _pd->fermi_potential[id] = phif;
 }
 
 inline
 void
-DriftDiffusionProperties::set_old_potentials(double phi, std::map<std::string, double> & q_phif)
+DriftDiffusionProperties::set_old_potentials(double phi, std::vector<double> & q_phif)
 {
   _pd->old_electric_potential = phi;
   _pd->old_fermi_potential = q_phif;
@@ -1613,12 +1622,9 @@ DriftDiffusionProperties::set_old_el_potential(double phi)
 
 inline
 void
-DriftDiffusionProperties::set_old_fermi_potential(std::string qname, double phif)
+DriftDiffusionProperties::set_old_fermi_potential(ID id, double phif)
 {
-  if (_carrier_properties.find(qname) == _carrier_properties.end() )
-    throw RuntimeException("Wrong carrier name: trying to assign fermi potential to a not defined carrier");
-
-  _pd->old_fermi_potential[qname] = phif;
+  _pd->old_fermi_potential[id] = phif;
 }
 
 inline
@@ -1640,7 +1646,7 @@ DriftDiffusionProperties::set_grad_fermi(std::string qname, const libMesh::RealG
 }
 
 inline
-const std::map<std::string, libMesh::RealGradient>& 
+const std::vctor<libMesh::RealGradient>&
 DriftDiffusionProperties::get_grad_fermi(void) const
 {
   return _grad_fermi;
@@ -1648,208 +1654,164 @@ DriftDiffusionProperties::get_grad_fermi(void) const
 
 inline
 void 
-DriftDiffusionProperties::get_grad_fermi(std::string qname, libMesh::RealGradient& gradf)
+DriftDiffusionProperties::get_grad_fermi(ID id, libMesh::RealGradient& gradf)
 {
-  gradf.zero();
-  if ( _grad_fermi.find(qname) != _grad_fermi.end() )
-    gradf = _grad_fermi[qname];
-
+  gradf = _grad_fermi[id];
 }
 
 inline
 double 
-DriftDiffusionProperties::get_q_density(std::string qname) const
+DriftDiffusionProperties::get_q_density(ID id) const
 {
-  if (_pd->q_density.find(qname) != _pd->q_density.end() )
-    return _pd->q_density[qname];
-
-  return 0.0;
+  return _pd->q_density[id];
 }
 
 inline
 double 
-DriftDiffusionProperties::get_q_density_derivative(std::string qname) const
+DriftDiffusionProperties::get_q_density_derivative(ID id) const
 {
-  if (_pd->q_density_derivative.find(qname) != _pd->q_density_derivative.end() )
-    return _pd->q_density_derivative[qname];
-
-  return 0.0;
+  return _pd->q_density_derivative[id];
 }
 
 
 inline
 double
-DriftDiffusionProperties::get_charge_density_derivative(std::string qname) const
+DriftDiffusionProperties::get_charge_density_derivative(ID id) const
 {
-  if (_pd->charge_density_derivative.find(qname) != _pd->charge_density_derivative.end() )
-    return _pd->charge_density_derivative[qname];
-
-  return 0.0;
+  return _pd->charge_density_derivative[id];
 }
 
 inline
 double 
-DriftDiffusionProperties::get_q_conductivity(std::string qname) const
+DriftDiffusionProperties::get_q_conductivity(ID id) const
 {
-  if (_pd->q_conductivity.find(qname) != _pd->q_conductivity.end() )
-    return _pd->q_conductivity[qname];
-
-  return 0.0;
+  return _pd->q_conductivity[id];
 }
 
 inline
 double 
-DriftDiffusionProperties::get_q_mobility(std::string qname) const
+DriftDiffusionProperties::get_q_mobility(ID id) const
 {
-  if (_pd->q_mobility.find(qname) != _pd->q_mobility.end() )
-    return _pd->q_mobility[qname];
-
-  return 0.0;
+  return _pd->q_mobility[id];
 }
 
 inline
 double 
-DriftDiffusionProperties::get_q_mobility_derivative_potential(std::string qname) const
+DriftDiffusionProperties::get_q_mobility_derivative_potential(ID id) const
 {
-  if (_pd->q_mobility_derivative_potential.find(qname) != _pd->q_mobility_derivative_potential.end() )
-    return _pd->q_mobility_derivative_potential[qname];
-
-  return 0.0;
+  return _pd->q_mobility_derivative_potential[id];
 }
 
 inline
 void 
-DriftDiffusionProperties::get_q_mobility_derivative_grad_potential(std::string qname, libMesh::RealGradient& dmu) const
+DriftDiffusionProperties::get_q_mobility_derivative_grad_potential(ID id, libMesh::RealGradient& dmu) const
 {
-  if (_pd->q_mobility_derivative_grad_potential.find(qname) != _pd->q_mobility_derivative_grad_potential.end() )
-    dmu = _pd->q_mobility_derivative_grad_potential[qname];
+  dmu = _pd->q_mobility_derivative_grad_potential[id];
 }
 
 inline
 void 
-DriftDiffusionProperties::get_q_mobility_derivative_grad_fermi(std::string qname, libMesh::RealGradient& dmu) const
+DriftDiffusionProperties::get_q_mobility_derivative_grad_fermi(ID id, libMesh::RealGradient& dmu) const
 {
-  if (_pd->q_mobility_derivative_grad_fermi.find(qname) != _pd->q_mobility_derivative_grad_fermi.end() )
-    dmu = _pd->q_mobility_derivative_grad_fermi[qname];
+  dmu = _pd->q_mobility_derivative_grad_fermi[id];
 }
 
 inline
 double 
-DriftDiffusionProperties::get_net_q_recombination_rate(std::string qname) const
+DriftDiffusionProperties::get_net_q_recombination_rate(ID id) const
 {
-  if (_pd->q_recombination_rate.find(qname) != _pd->q_recombination_rate.end() )
-    return _pd->q_recombination_rate[qname];
-
-  return 0.0;
+  return _pd->q_recombination_rate[id];
 }
 
 inline
 const std::vector<double>&
-DriftDiffusionProperties::get_net_q_recombination_rate_derivatives(std::string qname1, std::string qname2) const
+DriftDiffusionProperties::get_net_q_recombination_rate_derivatives(ID id1, ID id2) const
 {
-  if (_pd->q_recombination_rate_derivatives.find(qname1) != _pd->q_recombination_rate_derivatives.end() )
-  {
-    if (_pd->q_recombination_rate_derivatives[qname1].find(qname2) != _pd->q_recombination_rate_derivatives[qname2].end() )
-      return _pd->q_recombination_rate_derivatives[qname1][qname2];
-  }
+  return _pd->q_recombination_rate_derivatives[id1][id2];
 }
 
 inline
 double 
-DriftDiffusionProperties::get_equilibrium_q_density(std::string qname) const
+DriftDiffusionProperties::get_equilibrium_q_density(ID id) const
 {
-  if (_equilibrium_q.find(qname) != _equilibrium_q.end() )
-    return _equilibrium_q.at(qname);
-
-  return 0.0;
+  return _equilibrium_q.at(id);
 }
 
 inline
 double 
-DriftDiffusionProperties::get_q_fermi_potential(std::string qname) const
+DriftDiffusionProperties::get_q_fermi_potential(ID id) const
 {
-  if (_pd->fermi_potential.find(qname) != _pd->fermi_potential.end() )
-    return _pd->fermi_potential[qname];
-
-  return 0.0;
+  return _pd->fermi_potential[id];
 }
 
 inline
 double 
-DriftDiffusionProperties::get_old_q_fermi_potential(std::string qname) const
+DriftDiffusionProperties::get_old_q_fermi_potential(ID id) const
 {
-  if (_pd->old_fermi_potential.find(qname) != _pd->old_fermi_potential.end() )
-    return _pd->old_fermi_potential[qname];
-
-  return 0.0;
+  return _pd->old_fermi_potential[id];
 }
 
 inline
 const CarrierProperties* 
-DriftDiffusionProperties::get_carrier_properties(std::string qname) const
+DriftDiffusionProperties::get_carrier_properties(ID id) const
 {
-  if (_carrier_properties.find(qname) != _carrier_properties.end() )
-    return _carrier_properties.find(qname)->second;
+  const CarrierProperties* ptr = nullptr;
+  auto it = _carrier_properties.find(id);
+  if (it != _carrier_properties.end())
+    ptr = it->second;
 
-  return nullptr;
+  return(ptr);
 }
 
 inline
 CarrierProperties* 
-DriftDiffusionProperties::get_carrier_properties(std::string qname)
+DriftDiffusionProperties::get_carrier_properties(ID id)
 {
-  if (_carrier_properties.find(qname) != _carrier_properties.end() )
-    return _carrier_properties.find(qname)->second;
+  CarrierProperties* ptr = nullptr;
+  auto it = _carrier_properties.find(id);
+  if (it != _carrier_properties.end())
+    ptr = it->second;
 
-  return nullptr;
+  return(ptr);
 }
 
 inline
 double 
-DriftDiffusionProperties::get_carrier_band_edge(std::string qname) const
+DriftDiffusionProperties::get_carrier_band_edge(ID id) const
 {
-  if (_carrier_properties.find(qname) != _carrier_properties.end() )
-    return (_carrier_properties.find(qname)->second)->get_band_edge();
+  double energy = 0;
+  auto it = _carrier_properties.find(id);
+  if (it != _carrier_properties.end())
+    energy = (it->second)->get_band_edge();
 
-  throw RuntimeException("Wrong carrier name: trying to access the band edge of a not defined carrier");
+  return(energy);
 }
 
-inline
-void 
-DriftDiffusionProperties::set_carrier_temperatures(std::map<std::string, double>& T)
-{
-  _pd->carrier_vt = T;
-}
 
 inline
 void 
 DriftDiffusionProperties::set_carrier_temperatures(double T)
 {
-   for (auto& it : _carrier_properties)
-     _pd->carrier_vt[it.first] = T;
+  _pd->carrier_vt.resize(_carrier_props_ordered.size());
+  for (auto& cp : _pd->carrier_vt)
+     cp = T;
 }
 
 
 inline
 void 
-DriftDiffusionProperties::set_carrier_temperatures(std::string qname, double T)
+DriftDiffusionProperties::set_carrier_temperature(ID id, double T)
 {
-  if (_carrier_properties.find(qname) == _carrier_properties.end() )
-    throw RuntimeException("Wrong carrier name: trying to assign a temperature to a not defined carrier");
-
-  _pd->carrier_vt[qname] = T;
+  _pd->carrier_vt.reserve(id + 1);
+  _pd->carrier_vt[id] = T;
 }
 
 inline
 void 
-DriftDiffusionProperties::set_equilibrium_q_density(std::string qname, double dens)
+DriftDiffusionProperties::set_equilibrium_q_density(ID id, double dens)
 {
-  if (_carrier_properties.find(qname) == _carrier_properties.end() )
-    throw RuntimeException("Wrong carrier name: trying to assign equilibrium density to a not defined carrier");
-
-  _equilibrium_q[qname] = dens;
+  _equilibrium_q[id] = dens;
 }
-//end new
 
 
 #endif /* _DRIFTDIFFUSIONPROPERTIES_H_ */

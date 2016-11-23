@@ -46,7 +46,6 @@ DriftDiffusionProperties::PointData::PointData(void)
 DriftDiffusionProperties::DriftDiffusionProperties(const ModelOptions& options)
   : PhysicalModel(options),
     _is_inhomogeneous(false),
-
     _pd(NULL),
     _elem(NULL),
     _strain(0),
@@ -61,7 +60,9 @@ DriftDiffusionProperties::DriftDiffusionProperties(const ModelOptions& options)
     //_eTEpower(0),
     //_hTEpower(0),
     //_polarization(0),
-    _permittivity(0)
+    _permittivity(0),
+    _donor_reference_carrier(0),
+    _acceptor_reference_carrier(0)
     //_thermoelectric_power(NULL),
 {
   _pd = new PointData();
@@ -196,18 +197,29 @@ DriftDiffusionProperties::prepare_submodels(void)
 
   if (get_options().has_submodel("carrier"))
   { 
-    vector<CarrierProperties*> cp;
-    PhysicalModelInterface::create_submodels(cp, "carrier");
+    // this should be zero here, already
+    _carrier_props_ordered.resize(0);
+    _carrier_properties.clear();
 
-    for (auto icp : cp)
+    // they are not yet ordered
+    PhysicalModelInterface::create_submodels(_carrier_props_ordered, "carrier");
+
+    // the check for duplicates
+    set<string> used_names;
+
+    ID id = 0;
+    for (auto cp : _carrier_props_ordered)
     {
-      std::string cp_name = icp->get_name();
+      string cp_name = cp->get_name();
 
-      if (_carrier_properties.find(cp_name) == _carrier_properties.end())
-        _carrier_properties.insert(make_pair(cp_name, icp));
+      if (!used_names.count(cp_name))
+      {
+        _carrier_properties[id] = cp);
+        id++;
+      }
       else
         throw ModelErrorException("Carrier models must have unique names. "
-            "Name: '" + cp_name + "' has already been assigned" );
+            "Name: '" + cp_name + "' has already been used" );
     }
   }
 
@@ -332,6 +344,8 @@ DriftDiffusionProperties::do_init(void)
   }
 
 
+  string donor_ref = get_option("donor_reference_carrier", "electron");
+  string acceptor_ref = get_option("acceptor_reference_carrier", "hole");
   
   // calculate the equilibrium
   set_lattice_temperature(SimulationOptions::T);
@@ -460,7 +474,7 @@ DriftDiffusionProperties::calculate_densities(void)
     _pd->q_density_derivative[cp.first] = dens_der.second;
 
     double sign = 1;
-    if (cp.second->get_carrier_type() == 'h')
+    if (cp.second->get_charge() >= 0)
       sign = -1;
 
     _pd->charge_density_derivative[cp.first] = sign * dens_der.second;
@@ -539,41 +553,50 @@ DriftDiffusionProperties::calculate_ionized_dopants(void)
 
   double kT = _lattice_vt;
 
-  double Ec = get_carrier_band_edge("electron");
-  double Ev = get_carrier_band_edge("hole");
-
-  double arg_e = -_pd->fermi_potential["electron"] + _pd->electric_potential - Ec;
-  double arg_h = _pd->fermi_potential["hole"] - _pd->electric_potential + Ev;
-
-
-  double Nd = 0, dNd = 0;
-  double Na = 0, dNa = 0;
-
   Material::dopant_iterator it(get_material()->donors_begin());
   Material::dopant_iterator end(get_material()->donors_end());
-  for ( ; it != end; ++it)
+  if (it != end)
   {
-    (*it)->calculate_doping_density(_elem, _coord);
-    Nd += (*it)->get_ionized_dopant_density(arg_e, kT);
-    dNd += (*it)->get_ionized_dopant_density_derivative(arg_e, kT);
-  }
+    string name = _carrier_props_ordered[_donor_reference_carrier]->get_particle_name();
 
-  _pd->ionized_donor_density = Nd;
-  _pd->ionized_donor_density_derivative = dNd;
-  _pd->charge_density_derivative["electron"] -= dNd;
+    double Ec = get_carrier_band_edge(name);
+    double arg_e = -_pd->fermi_potential[name] + _pd->electric_potential - Ec;
+    double Nd = 0, dNd = 0;
+
+    for ( ; it != end; ++it)
+    {
+      (*it)->calculate_doping_density(_elem, _coord);
+      Nd += (*it)->get_ionized_dopant_density(arg_e, kT);
+      dNd += (*it)->get_ionized_dopant_density_derivative(arg_e, kT);
+    }
+
+    _pd->ionized_donor_density = Nd;
+    _pd->ionized_donor_density_derivative = dNd;
+    _pd->charge_density_derivative[name] -= dNd;
+  }
 
   it = get_material()->acceptors_begin();
   end = get_material()->acceptors_end();
-  for ( ; it != end; ++it)
-  {
-    (*it)->calculate_doping_density(_elem, _coord);
-    Na += (*it)->get_ionized_dopant_density(arg_h, kT);
-    dNa -= (*it)->get_ionized_dopant_density_derivative(arg_h, kT);
-  }
 
-  _pd->ionized_acceptor_density = Na;
-  _pd->ionized_acceptor_density_derivative = dNa;
-  _pd->charge_density_derivative["hole"] -= dNa;
+  if (it != end)
+  {
+    string name = _carrier_props_ordered[_acceptor_reference_carrier]->get_particle_name();
+
+    double Ev = get_carrier_band_edge(name);
+    double arg_h = _pd->fermi_potential[name] - _pd->electric_potential + Ev;
+    double Na = 0, dNa = 0;
+
+    for ( ; it != end; ++it)
+    {
+      (*it)->calculate_doping_density(_elem, _coord);
+      Na += (*it)->get_ionized_dopant_density(arg_h, kT);
+      dNa -= (*it)->get_ionized_dopant_density_derivative(arg_h, kT);
+    }
+
+    _pd->ionized_acceptor_density = Na;
+    _pd->ionized_acceptor_density_derivative = dNa;
+    _pd->charge_density_derivative[name] -= dNa;
+  }
 
 }
 
@@ -673,7 +696,7 @@ DriftDiffusionProperties::get_hole_mobility_derivative_grad_fermi(libMesh::RealG
 }
 */
 
-
+/*
 void
 DriftDiffusionProperties::calculate_electro_chemical_potentials(void)
 {
@@ -710,7 +733,7 @@ DriftDiffusionProperties::calculate_electro_chemical_potentials(void)
 
   }
 }
-
+*/
 
 
 
@@ -769,6 +792,53 @@ DriftDiffusionProperties::set_equilibrium_properties(double Ef)
 
 }
 
+void
+DriftDiffusionProperties::reorder_carrier_properties(const std::vector<std::string> order_by_name)
+{
+  vector<CarrierProperties*> old_vec(_carrier_props_ordered);
+
+  string donor_ref = get_option("donor_reference_carrier", "electron");
+  string acceptor_ref = get_option("acceptor_reference_carrier", "hole");
+  int d_ref = -1;
+  int a_ref = -1;
+
+  _carrier_props_ordered.resize(0);
+  _carrier_props_ordered.resize(order_by_name.size(), nullptr);
+  for (unsigned int i = 0; i < order_by_name.size(); ++i)
+  {
+    for (auto [first,second] : _carrier_properties)
+    {
+      if (second->get_carrier_name() == order_by_name[i])
+      {
+        _carrier_props_ordered[i] = second;
+      }
+    }
+
+    if (donor_ref == order_by_name[i])
+      d_ref = i;
+    else if (acceptor_ref == order_by_name[i])
+      a_ref = i;
+  }
+
+  _carrier_properties.clear();
+  for (unsigned int i = 0; i < order_by_name.size(); ++i)
+  {
+    if (_carrier_props_ordered[i] != nullptr)
+    _carrier_properties[i] = _carrier_props_ordered[i];
+  }
+
+  if ((d_ref < 0) && (get_material()->donors_begin() != get_material()->donors_end()))
+  {
+    throw InitFailedException("No valid carrier specified as reference for donors.");
+  }
+  if ((a_ref < 0) && (get_material()->acceptors_begin() != get_material()->acceptors_end()))
+  {
+    throw InitFailedException("No valid carrier specified as reference for acceptors.");
+  }
+
+  _donor_reference_carrier = d_ref;
+  _acceptor_reference_carrier = a_ref;
+}
 
 void
 DriftDiffusionProperties::set_carrier_properties(const std::map<std::string, CarrierProperties*>& cp)
@@ -776,6 +846,7 @@ DriftDiffusionProperties::set_carrier_properties(const std::map<std::string, Car
   _carrier_properties = cp;
 }
 
+/*
 void
 DriftDiffusionProperties::set_carrier_properties(std::string name, CarrierProperties* cp)
 {
@@ -784,7 +855,7 @@ DriftDiffusionProperties::set_carrier_properties(std::string name, CarrierProper
   else
     _carrier_properties.insert(std::make_pair(name, cp));
 }
-
+*/
 
 
 /*

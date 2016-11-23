@@ -24,12 +24,17 @@ Module dd_generic
 { 
 
   name = driftdiffusion
-  plot = (ElPotential, electronQFermi, holeQFermi, electronDensity)
+  plot = (ElPotential, QFermi, QFermi, Density, RefEnergy)
 
   local_scaling = false
 
   Physics
   {
+    doping
+    {
+      donor_reference_carrier = electron
+      acceptor_reference_carrier = hole
+    }
 
     carrier
     {

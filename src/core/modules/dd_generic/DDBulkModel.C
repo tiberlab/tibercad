@@ -453,8 +453,8 @@ DDBulkModel::calculate_equilibrium_properties(void)
   // call this method to properly set conduction and valence band DOS
   // and energy
   double kT = get_lattice_temperature();
-  //set_carrier_temperatures(kT, kT);
-  set_carrier_temperatures(kT);
+
+  this->set_carrier_temperatures(kT);
 
 
   const std::map<std::string, CarrierProperties*>& carriers = get_carrier_properties();
