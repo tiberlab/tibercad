@@ -2618,13 +2618,15 @@ DriftDiffusion::calculate_currents_rstf_global(void)
 
   // numeric ids corresponding to the variables
   const unsigned int u_var = system->variable_number("potential");
-  unsigned int en_var = system->variable_number("fermi_e");
-  unsigned int ep_var = system->variable_number("fermi_h");
-  if (_useparticle == 'e')
-    ep_var = en_var;
-  else if (_useparticle == 'h')
-    en_var = ep_var;
 
+  const unsigned int n_vars = _variables.size();
+  // the carriers
+  vector<unsigned int> qf_var_num(n_vars);
+  for (unsigned int i = 0; i < n_vars; ++i)
+    qf_var_num[i] = system->variable_number(_variables[i]);
+
+
+  // all have the same type
   libMesh::FEType fe_type = system->variable_type(u_var);
 
   libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
@@ -2648,11 +2650,14 @@ DriftDiffusion::calculate_currents_rstf_global(void)
   const vector<vector<libMesh::RealGradient> >& dphi = fe->get_dphi();
 
 
+  // dof indices of electrostatic potential
   vector<unsigned int> dof_indices_u;
-  vector<unsigned int> dof_indices_en;
-  vector<unsigned int> dof_indices_ep;
+  // dof indices of all QF potentials
+  vector<vector<unsigned int>> dof_indices_qf(n_vars);
 
+  // dof indices for the RSTF functions
   vector<unsigned int> dof_indices_rstf;
+
 
   MeshBase::const_element_iterator el(this->active_local_elements_begin());
   const MeshBase::const_element_iterator end_el(this->active_local_elements_end());
@@ -2662,12 +2667,22 @@ DriftDiffusion::calculate_currents_rstf_global(void)
     const Elem* elem = *el;
     //const Elem* top_parent = elem->top_parent();
 
+
     // get DOF indices
     dof_map.dof_indices(elem, dof_indices_u, u_var);
-    dof_map.dof_indices(elem, dof_indices_en, en_var);
-    dof_map.dof_indices(elem, dof_indices_ep, ep_var);
+
+    // these are the variables actually present in the element
+    set<unsigned int> qf_vars;
+    for (unsigned int i = 0; i < n_vars; ++i)
+    {
+      dof_map.dof_indices(elem, dof_indices_qf[i], qf_var_num[i]);
+      if (dof_indices_qf[i].size() > 0)
+        qf_vars.insert(i);
+    }
+
 
     dof_map_rstf.dof_indices(elem, dof_indices_rstf, 0);
+
 
     DDBulkModel* sc =
         get_bulk_model<DDBulkModel>(elem);
@@ -2692,50 +2707,64 @@ DriftDiffusion::calculate_currents_rstf_global(void)
     for (unsigned int qp = 0; qp < qrule->n_points(); qp++)
     {
 
+      // this is the same for all
       unsigned int n_dofs = dof_indices_u.size();
+
       Real u  = 0.0;
-      Real en = 0.0;
-      Real ep = 0.0;
-      libMesh::RealGradient dEfn(0);
-      libMesh::RealGradient dEfp(0);
       libMesh::RealGradient e_field(0);
-      libMesh::RealGradient dT(0);
+
+      vector<Real> qf(n_vars, 0.0);
+      vector<RealGradient> grad_qf(n_vars, 0);
+
+      RealGradient dT(0);
+
       for (unsigned int i = 0; i < n_dofs; i++)
       {
         u  += phi[i][qp] * solution(dof_indices_u[i]);
-        en += phi[i][qp] * solution(dof_indices_en[i]);
-        ep += phi[i][qp] * solution(dof_indices_ep[i]);
+        e_field -= dphi[i][qp] * solution(dof_indices_u[i]);
 
-        dEfn += dphi[i][qp] * solution(dof_indices_en[i]);
-        dEfp += dphi[i][qp] * solution(dof_indices_ep[i]);
+        for (auto& var : qf_vars)
+        {
+          qf[var] += phi0 * phi[i][qp] * solution(dof_indices_qf[var][i]);
+
+          grad_qf[var] += dphi[i][qp] * phi0 * solution(dof_indices_qf[var][i]);
+        }
 
         dT += dphi[i][qp] * T_nodes[i];
-
-        e_field -= dphi[i][qp] * solution(dof_indices_u[i]);
       }
 
       // prepare for calculating local properties
-      //sc->set_coordinates(elem->centroid());  ????? 2012-08-31
       sc->set_coordinates(q_point[qp]);
 
 
-      sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
+      sc->set_el_potential(phi0 * u);
       sc->set_electric_field(phi0 * e_field);
-      sc->set_grad_fermi_e(phi0 * dEfn);
-      sc->set_grad_fermi_h(phi0 * dEfp);
+
+      for (auto& var : qf_vars)
+      {
+        sc->set_fermi_potential(_variables[var], qf[var]);
+        sc->set_grad_fermi(_variables[var], grad_qf[var]);
+      }
+
 
       sc->calculate_densities();
       sc->calculate_mobilities();
       sc->calculate_net_recombination_rates();
 
+      /*
       //Get the thermoelectric power
       sc->compute_thermoelectric_powers();
       double Pn =  sc->get_electron_thermoelectric_power() / phi0;
       double Pp =  sc->get_hole_thermoelectric_power() / phi0;
+      */
 
-      // we put the minus here for convenience
-      double sigma_e = -Constants::e * sc->get_electron_conductivity();
-      double sigma_h = -Constants::e * sc->get_hole_conductivity();
+      // we put the sign here for convenience
+      vector<double> sigma(n_vars, 0.0);
+      for (auto& var : qf_vars)
+      {
+        sigma[var] = sc->get_carrier_properties(_variables[var])->get_charge() *
+            Constants::e * sc->get_q_conductivity(_variables[var]);
+      }
 
       double Rn = sc->get_net_electron_recombination_rate();
       double Rp = sc->get_net_hole_recombination_rate();
@@ -2760,8 +2789,13 @@ DriftDiffusion::calculate_currents_rstf_global(void)
         }
       }
 
-      libMesh::RealGradient je(JxW[qp] * phi0 * (sigma_e * (dEfn + Pn * dT)));
-      libMesh::RealGradient jh(JxW[qp] * phi0 * (sigma_h * (dEfp + Pp * dT)));
+      //libMesh::RealGradient je(JxW[qp] * phi0 * (sigma_e * (dEfn + Pn * dT)));
+      //libMesh::RealGradient jh(JxW[qp] * phi0 * (sigma_h * (dEfp + Pp * dT)));
+      vector<RealGradient> curr(n_vars);
+      for (auto& var : qf_vars)
+      {
+        curr[var] = JxW[qp] * sigma[var] * grad_qf[var];
+      }
 
       for (unsigned int n = 0; n < elem->n_nodes(); n++)
       {
@@ -2772,8 +2806,11 @@ DriftDiffusion::calculate_currents_rstf_global(void)
           const Boundary* bd = rstf_it->first;
           const libMesh::NumericVector<double>& sol = *rstf_it->second;
 
-          _boundary_currents[bd] += ((je + jh) * dphi[n][qp] +
-              net_rate * phi[n][qp]) * sol(dof_indices_rstf[n]);
+          for (auto& var : qf_vars)
+          {
+            _boundary_currents[bd] -= (curr[var] * dphi[n][qp] +
+                net_rate * phi[n][qp]) * sol(dof_indices_rstf[n]);
+          }
 
         }
       }
@@ -3415,7 +3452,7 @@ DriftDiffusion::calculate_surface_recombination(void)
 
   // we only do something if we are on processor 0
   //if (get_communicator().rank() != 0)
-  //  return;
+    return;
 
   TiberNonlinearSystem* system = &get_equation_system<TiberNonlinearSystem>();
 

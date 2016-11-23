@@ -512,7 +512,7 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
      */
     char _useparticle;
 
-    //! Variables
+    //! QuasiFermi potential variables present
     /*!
      * The order in this vector is the same as the variables get
      * added to the system, and as they are declared as solution

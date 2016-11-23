@@ -320,8 +320,10 @@ CarrierProperties::get_density_and_derivative(double Ef, double Epot) const
   */
 }
 
+/*
 double
 CarrierProperties::get_gamma(void) const
 {
   return 1; //_density->get_gamma();
 };
+*/

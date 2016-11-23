@@ -69,7 +69,7 @@ class CarrierProperties : public DriftDiffusionModelInterface
     std::pair<double, double> get_density_and_derivative(double Ef, double Epot) const;
 
     //! Get the \f$\gamma\f$ factor
-    double get_gamma(void) const;
+    //double get_gamma(void) const;
 
     //! Set the band edge
     void set_band_edge(double band_edge) {  }
@@ -80,6 +80,9 @@ class CarrierProperties : public DriftDiffusionModelInterface
     //! Get the carrier type
     const char get_carrier_type(void) const
       { return _particle; };
+
+    //! Get the particle charge in units of \c e
+    double get_charge(void) const;
 
 
     //! Do we have quantum density?
@@ -209,6 +212,13 @@ CarrierProperties::get_thermal_velocity(double temp) const
   return (100.0 * std::sqrt(vth));
 }
 
+
+inline
+double
+CarrierProperties::get_charge(void) const
+{
+  return((_particle == 'e') ? -1 : 1);
+}
 
 
 #endif // _CarrierProperties_H_
