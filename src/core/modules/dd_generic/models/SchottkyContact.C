@@ -65,20 +65,23 @@ SchottkyContact::do_init(void)
       throw InitFailedException("Schottky Contact: carrier '" + (_band) + "' not found'");
   }
 
+  const DriftDiffusionProperties* dd = get_bulk_dd_properties();
+  ID band_id = dd->get_carrier_id(_band);
+
   if (!has_option("metal_fermilevel") && !has_option("work_function"))
   {
     double barrier = get_option("barrier_height", 0.8);
     barrier = get_option("barrier", barrier);
 
-    char band_type = get_carrier_properties(_band)->get_carrier_type();
+    char band_type = get_carrier_properties(band_id)->get_carrier_type();
 
-    _metal_Ef = (band_type == 'e') ? get_carrier_band_edge(_band) - barrier : get_carrier_band_edge(_band) + barrier;
+    _metal_Ef = (band_type == 'e') ? get_carrier_band_edge(band_id) - barrier : get_carrier_band_edge(band_id) + barrier;
   }
 
   if (_fixed_barrier)
   {
     // this is a dirty trick, but assures the barrier in strained case
-    _metal_Ef -=  get_carrier_band_edge(_band);
+    _metal_Ef -=  get_carrier_band_edge(band_id);
   }
 
 
@@ -108,13 +111,15 @@ SchottkyContact::do_init(void)
 void
 SchottkyContact::do_compute(void)
 {
+  const DriftDiffusionProperties* dd = get_bulk_dd_properties();
+  ID band_id = dd->get_carrier_id(_band);
+
   double val = _metal_Ef;
   if (_fixed_barrier)
   {
-    val +=  get_carrier_band_edge(_band);
+    val +=  get_carrier_band_edge(band_id);
   }
 
-  const DriftDiffusionProperties* dd = get_bulk_dd_properties();
   const PointData& pd = get_point_data();
 
   if (_thermionic_emission)

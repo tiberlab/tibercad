@@ -93,9 +93,6 @@ DDInterfaceModel::do_init(void)
 {
   _n_carriers = get_bulk_dd_properties()->get_carrier_properties().size();
 
-  for (auto&& it : get_bulk_dd_properties()->get_carrier_properties())
-    _qids.insert(make_pair(it.first, (_qids.size() + 1)));
-
   _coeff_a.resize(_n_carriers + 1, 0);
   _coeff_b.resize(_n_carriers + 1, NEUMANN);
   _coeff_g.resize(_n_carriers + 1, 0);

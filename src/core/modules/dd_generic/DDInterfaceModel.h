@@ -180,10 +180,6 @@ class DDInterfaceModel : public DriftDiffusionProperties
     const int& n_carriers(void)
       { return _n_carriers; };
 
-    //! Get carrier names and IDs
-    const std::map<std::string, ID>& qids(void)
-      { return _qids; };
-
     //! Tell the model that it has non-zero current
     void has_current(bool hascurrent);
 
@@ -265,9 +261,6 @@ class DDInterfaceModel : public DriftDiffusionProperties
 
     //! Number of carriers
     int _n_carriers;
-
-    //! Carriers IDs
-    std::map<std::string, ID> _qids;
 
     //! The DD properties for material A
     DDBulkModel* _ddprop_A;

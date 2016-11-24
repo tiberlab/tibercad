@@ -214,7 +214,7 @@ DriftDiffusionProperties::prepare_submodels(void)
 
       if (!used_names.count(cp_name))
       {
-        _carrier_properties[id] = cp);
+        _carrier_properties[id] = cp;
         id++;
       }
       else
@@ -557,10 +557,9 @@ DriftDiffusionProperties::calculate_ionized_dopants(void)
   Material::dopant_iterator end(get_material()->donors_end());
   if (it != end)
   {
-    string name = _carrier_props_ordered[_donor_reference_carrier]->get_particle_name();
 
-    double Ec = get_carrier_band_edge(name);
-    double arg_e = -_pd->fermi_potential[name] + _pd->electric_potential - Ec;
+    double Ec = get_carrier_band_edge(_donor_reference_carrier);
+    double arg_e = -_pd->fermi_potential[_donor_reference_carrier] + _pd->electric_potential - Ec;
     double Nd = 0, dNd = 0;
 
     for ( ; it != end; ++it)
@@ -572,7 +571,7 @@ DriftDiffusionProperties::calculate_ionized_dopants(void)
 
     _pd->ionized_donor_density = Nd;
     _pd->ionized_donor_density_derivative = dNd;
-    _pd->charge_density_derivative[name] -= dNd;
+    _pd->charge_density_derivative[_donor_reference_carrier] -= dNd;
   }
 
   it = get_material()->acceptors_begin();
@@ -580,10 +579,9 @@ DriftDiffusionProperties::calculate_ionized_dopants(void)
 
   if (it != end)
   {
-    string name = _carrier_props_ordered[_acceptor_reference_carrier]->get_particle_name();
 
-    double Ev = get_carrier_band_edge(name);
-    double arg_h = _pd->fermi_potential[name] - _pd->electric_potential + Ev;
+    double Ev = get_carrier_band_edge(_acceptor_reference_carrier);
+    double arg_h = _pd->fermi_potential[_acceptor_reference_carrier] - _pd->electric_potential + Ev;
     double Na = 0, dNa = 0;
 
     for ( ; it != end; ++it)
@@ -595,7 +593,7 @@ DriftDiffusionProperties::calculate_ionized_dopants(void)
 
     _pd->ionized_acceptor_density = Na;
     _pd->ionized_acceptor_density_derivative = dNa;
-    _pd->charge_density_derivative[name] -= dNa;
+    _pd->charge_density_derivative[_acceptor_reference_carrier] -= dNa;
   }
 
 }
@@ -629,8 +627,8 @@ DriftDiffusionProperties::calculate_net_recombination_rates(void)
     (it->second)->get_net_recombination_rates(R0, R1);
     (it->second)->get_net_recombination_rate_derivatives(dR0, dR1);
 
-    string cp0 = (it->second)->get_carriers()[0];
-    string cp1 = (it->second)->get_carriers()[1];
+    ID cp0;// = (it->second)->get_carriers()[0];
+    ID cp1;// = (it->second)->get_carriers()[1];
 
     _pd->q_recombination_rate[cp0] += R0;
     _pd->q_recombination_rate_derivatives[cp0][cp0][0] += dR0[0];
@@ -806,11 +804,11 @@ DriftDiffusionProperties::reorder_carrier_properties(const std::vector<std::stri
   _carrier_props_ordered.resize(order_by_name.size(), nullptr);
   for (unsigned int i = 0; i < order_by_name.size(); ++i)
   {
-    for (auto [first,second] : _carrier_properties)
+    for (auto&& it : _carrier_properties)
     {
-      if (second->get_carrier_name() == order_by_name[i])
+      if (it.second->get_particle_name() == order_by_name[i])
       {
-        _carrier_props_ordered[i] = second;
+        _carrier_props_ordered[i] = it.second;
       }
     }
 
@@ -841,7 +839,7 @@ DriftDiffusionProperties::reorder_carrier_properties(const std::vector<std::stri
 }
 
 void
-DriftDiffusionProperties::set_carrier_properties(const std::map<std::string, CarrierProperties*>& cp)
+DriftDiffusionProperties::set_carrier_properties(const std::map<ID, CarrierProperties*>& cp)
 {
   _carrier_properties = cp;
 }

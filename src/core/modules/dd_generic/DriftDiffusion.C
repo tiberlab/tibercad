@@ -206,7 +206,7 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
 
     for (unsigned int i = 0; i < _carriers.size(); ++i)
     {
-      double mu = sc->get_q_mobility(_carriers[i]);
+      double mu = sc->get_q_mobility(i);
       mu0 = (mu0 > mu) ? mu0 : mu;
     }
 
@@ -598,9 +598,9 @@ DriftDiffusion::calculate_weights(void)
     sc->reinit(elem);
 
     //Get variables for fermi potentials
-    map<unsigned int, string> var_q;
+    map<ID, string> var_q;
     for (auto&& cp : sc->get_carrier_properties())
-      var_q.insert( make_pair(system.variable_number(cp.first), cp.first) );
+      var_q.insert( make_pair(system.variable_number(_carriers[cp.first]), _carriers[cp.first]) );
 
     for (unsigned int i = 0; i < elem->n_nodes(); i++)
     {
@@ -627,8 +627,8 @@ DriftDiffusion::calculate_weights(void)
       sc->set_old_el_potential(phi0 * oldu);
       for (auto var : var_q)
       {
-        sc->set_fermi_potential(var.second, phi0 * q[var.first]);
-        sc->set_old_fermi_potential(var.second, phi0 * q[var.first]);
+        sc->set_fermi_potential(var.first, phi0 * q[var.first]);
+        sc->set_old_fermi_potential(var.first, phi0 * q[var.first]);
       }
 
       sc->calculate_densities();
@@ -637,7 +637,7 @@ DriftDiffusion::calculate_weights(void)
 
       for (auto var : var_q)
       {
-        double dens = min(1.0, log10(1 + sc->get_q_density(var.second)) / 18);// < 1e7 ? 0 : 1;
+        double dens = min(1.0, log10(1 + sc->get_q_density(var.first)) / 18);// < 1e7 ? 0 : 1;
         weight.set(dofq[var.first], dens);
       }
 
@@ -676,8 +676,8 @@ DriftDiffusion::do_equilibrium(void)
           static_cast<DDBulkModel*>(*it);
 
       // carrier bands
-      map<string, vector<double>> eb;
-      map<string, vector<double>> hb;
+      map<ID, vector<double>> eb;
+      map<ID, vector<double>> hb;
       for (auto&& cp: sc->get_carrier_properties())
       {
         vector<double> bands;
@@ -2081,9 +2081,9 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
     for (auto& v : q_var)
     {
-      sc->set_fermi_potential(_carriers[v], qf[v]);
-      sc->set_old_fermi_potential(_carriers[v], oldqf[v]);
-      sc->set_grad_fermi(_carriers[v], grad_qf_loc[v]);
+      sc->set_fermi_potential(v, qf[v]);
+      sc->set_old_fermi_potential(v, oldqf[v]);
+      sc->set_grad_fermi(v, grad_qf_loc[v]);
     }
 
     sc->calculate_densities();
@@ -2125,10 +2125,10 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
         values[_qFermi_base + v][n] = -qf[v];
 
       if (values.count(_density_base + v))
-        values[_density_base + v][n] = sc->get_q_density(_carriers[v]);
+        values[_density_base + v][n] = sc->get_q_density(v);
 
       if (values.count(_refenergy_base + v))
-        values[_refenergy_base + v][n] = sc->get_carrier_band_edge(_carriers[v]) - u;
+        values[_refenergy_base + v][n] = sc->get_carrier_band_edge(v) - u;
     }
 
     /*
@@ -2709,8 +2709,8 @@ DriftDiffusion::calculate_currents_rstf_global(void)
 
       for (auto& var : qf_vars)
       {
-        sc->set_fermi_potential(_carriers[var], qf[var]);
-        sc->set_grad_fermi(_carriers[var], grad_qf[var]);
+        sc->set_fermi_potential(var, qf[var]);
+        sc->set_grad_fermi(var, grad_qf[var]);
       }
 
 
@@ -2729,8 +2729,8 @@ DriftDiffusion::calculate_currents_rstf_global(void)
       vector<double> sigma(n_vars, 0.0);
       for (auto& var : qf_vars)
       {
-        sigma[var] = sc->get_carrier_properties(_carriers[var])->get_charge() *
-            Constants::e * sc->get_q_conductivity(_carriers[var]);
+        sigma[var] = sc->get_carrier_properties(var)->get_charge() *
+            Constants::e * sc->get_q_conductivity(var);
       }
 
       double Rn = sc->get_net_electron_recombination_rate();
@@ -3686,9 +3686,9 @@ DriftDiffusion::build_local_scaling(void)
     fe->reinit(elem);
 
     //Get variables for fermi potentials
-    map<unsigned int, string> q_var;
+    set<unsigned int> q_var;
     for (auto&& cp : sc->get_carrier_properties())
-      q_var.insert( make_pair(system.variable_number(cp.first), cp.first) );
+      q_var.insert(cp.first);
 
     //Get dof indices
     map<unsigned int, vector<unsigned int>> dof_indices_q;
@@ -3752,7 +3752,7 @@ DriftDiffusion::build_local_scaling(void)
       sc->set_el_potential(phi0 * u);
       for (auto var : q_var)
       {
-        sc->set_fermi_potential(var.second, phi0 * q[var]);
+        sc->set_fermi_potential(var, phi0 * q[var]);
         sc->set_grad_fermi(var, libMesh::RealGradient(0.0));
       }
       sc->set_electric_field(phi0 / x0 * e_field);

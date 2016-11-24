@@ -266,10 +266,10 @@ DDBulkModel::prepare_submodels(void)
     // check if a mobility model has been defined for all carriers
     for (auto&& cp : get_carrier_properties())
     {
-      std::vector<std::string>::iterator find_it;
-      find_it = std::find(carriers_all.begin(), carriers_all.end(), cp.first);
+      auto find_it = std::find(carriers_all.begin(), carriers_all.end(), cp.second->get_particle_name());
       if (find_it == carriers_all.end())
-          throw InitFailedException("A mobility model for carrier '" + cp.first + "' has not been defined");
+          throw InitFailedException("A mobility model for carrier '" +
+              cp.second->get_particle_name() + "' has not been defined");
     }
 
     //
@@ -412,7 +412,7 @@ DDBulkModel::do_reinit(const Elem* elem)
   }
 
   // here we assume thermal equilibrium
-  get_pd().electron_vt = get_pd().hole_vt = get_lattice_temperature();
+  this->set_carrier_temperatures(get_lattice_temperature());
 
 }
 
@@ -429,10 +429,10 @@ DDBulkModel::calculate_mobilities(void)
   PointData& pd = get_pd();
   for (auto&& cp : get_carrier_properties())
   {
-    pd.q_mobility[cp.first] = _q_mobility[cp.first]->get_mobility();
-    pd.q_mobility_derivative_potential[cp.first] = _q_mobility[cp.first]->get_derivative_potential();
-    _q_mobility[cp.first]->get_derivative_grad_potential(pd.q_mobility_derivative_grad_potential[cp.first]);
-    _q_mobility[cp.first]->get_derivative_grad_fermi(pd.q_mobility_derivative_grad_fermi[cp.first]);
+    pd.q_mobility[cp.first] = _q_mobility[cp.second->get_particle_name()]->get_mobility();
+    pd.q_mobility_derivative_potential[cp.first] = _q_mobility[cp.second->get_particle_name()]->get_derivative_potential();
+    _q_mobility[cp.second->get_particle_name()]->get_derivative_grad_potential(pd.q_mobility_derivative_grad_potential[cp.first]);
+    _q_mobility[cp.second->get_particle_name()]->get_derivative_grad_fermi(pd.q_mobility_derivative_grad_fermi[cp.first]);
 
     pd.q_conductivity[cp.first] = pd.q_mobility[cp.first]*pd.q_density[cp.first] + _background_conductivity;
   }
@@ -457,7 +457,7 @@ DDBulkModel::calculate_equilibrium_properties(void)
   this->set_carrier_temperatures(kT);
 
 
-  const std::map<std::string, CarrierProperties*>& carriers = get_carrier_properties();
+  auto& carriers = get_carrier_properties();
 
   double Ec, Ev = 0.0;
   for (auto&& cp: carriers)

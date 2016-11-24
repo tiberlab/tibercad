@@ -18,9 +18,9 @@
 
 #include "tensor.h"
 
-#include "tensor_value.h"
-#include "vector_value.h"
-#include "point.h"
+#include "libmesh/tensor_value.h"
+#include "libmesh/vector_value.h"
+#include "libmesh/point.h"
 
 
 #include <vector>
@@ -29,7 +29,6 @@
 
 
 // forward declarations
-class Elem;
 class Dopant;
 class Trap;
 class SimulationInterface;
@@ -283,6 +282,15 @@ class DriftDiffusionProperties : public PhysicalModel
      * \param order_by_name the order given by a sequence of carrier names
      */
     void reorder_carrier_properties(const std::vector<std::string> order_by_name);
+
+    //! Get the ID of a carrier
+    /*!
+     * \return -1 if \c name is not present
+     *
+     * This method should be called only with carrier names known
+     * to be present.
+     */
+    ID get_carrier_id(const std::string& name) const;
 
 
     // ! Lock the parameters
@@ -912,6 +920,8 @@ class DriftDiffusionProperties : public PhysicalModel
 
     CarrierProperties* get_carrier_properties(ID id);
 
+    CarrierProperties* get_carrier_properties(const std::string& name) const;
+
     //! Get the carrier band edge
     double get_carrier_band_edge(ID id) const;
 
@@ -1019,19 +1029,17 @@ class DriftDiffusionProperties : public PhysicalModel
 
     //New generic model
     //! Set the equilibrium electron density
-    void set_equilibrium_q_density(std::map<std::string, double>& dens)
+    void set_equilibrium_q_density(std::vector<double>& dens)
       { _equilibrium_q = dens; };
 
-    void set_equilibrium_q_density(std::string qname, double dens);
+    void set_equilibrium_q_density(ID id, double dens);
 
     //! Set carrier properties
     /*!
      * This is used e.g. from interface models.
      */
-    void set_carrier_properties(const std::map<std::string, CarrierProperties*>& cp);
+    void set_carrier_properties(const std::map<ID, CarrierProperties*>& cp);
 
-    //void set_carrier_properties(std::string name, CarrierProperties* cp);
-    //end new
 
 
   private:
@@ -1629,24 +1637,21 @@ DriftDiffusionProperties::set_old_fermi_potential(ID id, double phif)
 
 inline
 void 
-DriftDiffusionProperties::set_grad_fermi(std::map<std::string, libMesh::RealGradient> & q_gradf)
+DriftDiffusionProperties::set_grad_fermi(std::vector<libMesh::RealGradient> & q_gradf)
 {
   _grad_fermi = q_gradf;
 }
 
 inline
 void
-DriftDiffusionProperties::set_grad_fermi(std::string qname, const libMesh::RealGradient& gradf)
+DriftDiffusionProperties::set_grad_fermi(ID id, const libMesh::RealGradient& gradf)
 {
-  if (_carrier_properties.find(qname) == _carrier_properties.end() )
-    throw RuntimeException("Wrong carrier name: trying to assign grad fermi to a not defined carrier");
-
-  _grad_fermi[qname] = gradf;
+  _grad_fermi[id] = gradf;
 
 }
 
 inline
-const std::vctor<libMesh::RealGradient>&
+const std::vector<libMesh::RealGradient>&
 DriftDiffusionProperties::get_grad_fermi(void) const
 {
   return _grad_fermi;
@@ -1750,6 +1755,39 @@ DriftDiffusionProperties::get_old_q_fermi_potential(ID id) const
 {
   return _pd->old_fermi_potential[id];
 }
+
+
+inline
+ID
+DriftDiffusionProperties::get_carrier_id(const std::string& name) const
+{
+  for (auto&& it : _carrier_properties)
+  {
+    if (name == it.second->get_name())
+    {
+      return(it.first);
+    }
+  }
+  return(static_cast<ID>(-1));
+}
+
+
+
+inline
+CarrierProperties*
+DriftDiffusionProperties::get_carrier_properties(const std::string& name) const
+{
+  CarrierProperties* prop = nullptr;
+  for (auto&& it : _carrier_properties)
+  {
+    if (name == it.second->get_name())
+    {
+      prop = it.second;
+    }
+  }
+  return(prop);
+}
+
 
 inline
 const CarrierProperties* 
