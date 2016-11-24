@@ -87,16 +87,28 @@ class TBDLEXPORT ElectricalContact : public DDInterfaceModel
 
 
 
-    //! Set the recombination velocities
+    //! Set the recombination velocity for all carriers
     /*!
      * A value of -1 will not change the current value.
      */
     void set_recombination_velocities(double vrec);
-    void set_recombination_velocities(ID qid, double vrec);
+
+
+    //! Set the recombination velocity for one carrier
+    /*!
+     * A value of -1 will not change the current value.
+     *
+     * \param carrier the global carrier ID
+     */
+    void set_recombination_velocities(ID carrier, double vrec);
 
 
     //! Get the recombination velocities
-    void get_recombination_velocities(std::vector<double>& vrec);
+    /*!
+     * The ordering in the vector is the same as the global ordering of
+     * carrier quasi Fermi variables
+     */
+    void get_recombination_velocities(std::vector<double>& vrec) const;
 
 
 
@@ -169,34 +181,34 @@ inline
 void
 ElectricalContact::set_recombination_velocities(double vrec)
 {
-  for (unsigned int i=0; i < n_carriers(); i++)
+  for (unsigned int i = 0; i < n_known_carriers(); i++)
   {
-    if ( (vrec>0) && !_fixed_vrec[i] )
+    if ((vrec > 0) && !_fixed_vrec[i])
     {
       _vrec[i] = vrec;
-      set_type(i+1, NEUMANN);
+      set_type(i + 1, NEUMANN);
     }
   }
 }
 
 inline
 void
-ElectricalContact::set_recombination_velocities(ID qid, double vrec)
+ElectricalContact::set_recombination_velocities(ID carrier, double vrec)
 {
-  if (qid > _vrec.size())
-    throw ModelErrorException("ElectricalContact: number of carriers and size of recombination velocities vector are not consistent");
+  if (carrier >= _vrec.size())
+    throw ModelErrorException("ElectricalContact: invalid carrier ID provided");
 
-  if ( (vrec>0) && !_fixed_vrec[qid-1])
+  if ((vrec > 0) && !_fixed_vrec[carrier])
   {
-    _vrec[qid-1]=vrec;
-    set_type(qid, NEUMANN);
+    _vrec[carrier] = vrec;
+    set_type(carrier + 1, NEUMANN);
   }
 }
 
 
 inline
 void
-ElectricalContact::get_recombination_velocities(std::vector<double>& vrec)
+ElectricalContact::get_recombination_velocities(std::vector<double>& vrec) const
 {
   vrec = _vrec;
 }

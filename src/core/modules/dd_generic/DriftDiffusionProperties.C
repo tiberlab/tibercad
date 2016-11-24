@@ -80,6 +80,14 @@ DriftDiffusionProperties::create(const std::string& name, const Material* mat,
 
 
 
+void
+DriftDiffusionProperties::copy_from(const PhysicalModelInterface* rhs)
+{
+  const DriftDiffusionProperties* other =
+      dynamic_cast<const DriftDiffusionProperties*>(rhs);
+
+  this->set_known_carriers(other->get_known_carriers());
+}
 
 
 
@@ -197,25 +205,29 @@ DriftDiffusionProperties::prepare_submodels(void)
 
   if (get_options().has_submodel("carrier"))
   { 
-    // this should be zero here, already
-    _carrier_props_ordered.resize(0);
+    // this should be empty here, actually
     _carrier_properties.clear();
 
-    // they are not yet ordered
-    PhysicalModelInterface::create_submodels(_carrier_props_ordered, "carrier");
+    vector<CarrierProperties*> carriers;
+    PhysicalModelInterface::create_submodels(carriers, "carrier");
 
     // the check for duplicates
     set<string> used_names;
 
-    ID id = 0;
-    for (auto cp : _carrier_props_ordered)
+    for (auto cp : carriers)
     {
       string cp_name = cp->get_name();
 
       if (!used_names.count(cp_name))
       {
+        int id = this->get_carrier_id(cp_name);
+        // we should never have this case, by construction:
+        if (id < 0)
+          throw ModelErrorException("Carrier '" + cp_name + "' is unknown" );
+
         _carrier_properties[id] = cp;
-        id++;
+
+        used_names.insert(cp_name);
       }
       else
         throw ModelErrorException("Carrier models must have unique names. "
@@ -346,9 +358,31 @@ DriftDiffusionProperties::do_init(void)
 
   string donor_ref = get_option("donor_reference_carrier", "electron");
   string acceptor_ref = get_option("acceptor_reference_carrier", "hole");
+  _donor_reference_carrier = this->get_carrier_id(donor_ref);
+  _acceptor_reference_carrier = this->get_carrier_id(acceptor_ref);
+
+
+  if ((_donor_reference_carrier < 0) && (get_material()->donors_begin() != get_material()->donors_end()))
+  {
+    throw InitFailedException("No valid carrier specified as reference for donors.");
+  }
+  if ((_acceptor_reference_carrier < 0) && (get_material()->acceptors_begin() != get_material()->acceptors_end()))
+  {
+    throw InitFailedException("No valid carrier specified as reference for acceptors.");
+  }
+
   
   // calculate the equilibrium
   set_lattice_temperature(SimulationOptions::T);
+
+  // not sure if pd ever gets recreated
+  _pd->fermi_potential.resize(n_known_carriers());
+  _pd->old_fermi_potential.resize(n_known_carriers());
+  _pd->old_fermi_potential.resize(n_known_carriers());
+  _grad_fermi.resize(n_known_carriers());
+
+
+  _equilibrium_q.resize(n_known_carriers());
 
 }
 
@@ -465,6 +499,10 @@ DriftDiffusionProperties::reinit(const Elem* elem)
 void
 DriftDiffusionProperties::calculate_densities(void)
 {
+  _pd->q_density.resize(this->n_known_carriers());
+  _pd->q_density_derivative.resize(this->n_known_carriers());
+  _pd->charge_density_derivative.resize(this->n_known_carriers());
+
   for (auto&& cp: get_carrier_properties())
   {
     cp.second->set_temperature(_pd->carrier_vt[cp.first]);
@@ -604,9 +642,15 @@ DriftDiffusionProperties::calculate_ionized_dopants(void)
 void
 DriftDiffusionProperties::calculate_net_recombination_rates(void)
 {
+  _pd->q_recombination_rate.resize(this->n_known_carriers());
+  _pd->q_recombination_rate_derivatives.resize(this->n_known_carriers());
+
   for (auto&& cpi: get_carrier_properties())
   {
     _pd->q_recombination_rate[cpi.first] = 0;
+
+    _pd->q_recombination_rate_derivatives[cpi.first].resize(this->n_known_carriers());
+
     for (auto && cpj : get_carrier_properties())
     { 
       vector<double> zero(2);
@@ -790,53 +834,7 @@ DriftDiffusionProperties::set_equilibrium_properties(double Ef)
 
 }
 
-void
-DriftDiffusionProperties::reorder_carrier_properties(const std::vector<std::string> order_by_name)
-{
-  vector<CarrierProperties*> old_vec(_carrier_props_ordered);
 
-  string donor_ref = get_option("donor_reference_carrier", "electron");
-  string acceptor_ref = get_option("acceptor_reference_carrier", "hole");
-  int d_ref = -1;
-  int a_ref = -1;
-
-  _carrier_props_ordered.resize(0);
-  _carrier_props_ordered.resize(order_by_name.size(), nullptr);
-  for (unsigned int i = 0; i < order_by_name.size(); ++i)
-  {
-    for (auto&& it : _carrier_properties)
-    {
-      if (it.second->get_particle_name() == order_by_name[i])
-      {
-        _carrier_props_ordered[i] = it.second;
-      }
-    }
-
-    if (donor_ref == order_by_name[i])
-      d_ref = i;
-    else if (acceptor_ref == order_by_name[i])
-      a_ref = i;
-  }
-
-  _carrier_properties.clear();
-  for (unsigned int i = 0; i < order_by_name.size(); ++i)
-  {
-    if (_carrier_props_ordered[i] != nullptr)
-    _carrier_properties[i] = _carrier_props_ordered[i];
-  }
-
-  if ((d_ref < 0) && (get_material()->donors_begin() != get_material()->donors_end()))
-  {
-    throw InitFailedException("No valid carrier specified as reference for donors.");
-  }
-  if ((a_ref < 0) && (get_material()->acceptors_begin() != get_material()->acceptors_end()))
-  {
-    throw InitFailedException("No valid carrier specified as reference for acceptors.");
-  }
-
-  _donor_reference_carrier = d_ref;
-  _acceptor_reference_carrier = a_ref;
-}
 
 void
 DriftDiffusionProperties::set_carrier_properties(const std::map<ID, CarrierProperties*>& cp)

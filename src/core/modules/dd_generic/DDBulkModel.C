@@ -427,6 +427,12 @@ void
 DDBulkModel::calculate_mobilities(void)
 {
   PointData& pd = get_pd();
+  pd.q_mobility.resize(this->n_known_carriers());
+  pd.q_conductivity.resize(this->n_known_carriers());
+  pd.q_mobility_derivative_potential.resize(this->n_known_carriers());
+  pd.q_mobility_derivative_grad_potential.resize(this->n_known_carriers());
+  pd.q_mobility_derivative_grad_fermi.resize(this->n_known_carriers());
+
   for (auto&& cp : get_carrier_properties())
   {
     pd.q_mobility[cp.first] = _q_mobility[cp.second->get_particle_name()]->get_mobility();

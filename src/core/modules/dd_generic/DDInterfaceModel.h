@@ -73,6 +73,9 @@ class DDInterfaceModel : public DriftDiffusionProperties
      *
      * Returns the coefficients \f$a(u)\f$ computed in compute()
      * for each equation.
+     *
+     * The last entry in the vector refers to the electrostatic potential,
+     * the remaining to all known quasi Fermi potentials
      */
     const std::vector<double>& get_a(void) const;
 
@@ -82,11 +85,19 @@ class DDInterfaceModel : public DriftDiffusionProperties
      *
      * Returns the coefficients \f$g(u)\f$ computed in compute()
      * for each equation.
+     *
+     * The last entry in the vector refers to the electrostatic potential,
+     * the remaining to all known quasi Fermi potentials
      */
     const std::vector<double>& get_g(void) const;
 
 
-    //! Get the coefficients b (to know the type of boundary condition)
+    /*!
+     * \brief Get the coefficients b (to know the type of boundary condition)
+     *
+     * The last entry in the vector refers to the electrostatic potential,
+     * the remaining to all known quasi Fermi potentials
+     */
     const std::vector<BCType>& get_b(void) const;
 
 
@@ -176,9 +187,6 @@ class DDInterfaceModel : public DriftDiffusionProperties
     //! Get the jacobian
     double& jacobian(unsigned int i, unsigned int j);
 
-    //! Get the number of carriers
-    const int& n_carriers(void)
-      { return _n_carriers; };
 
     //! Tell the model that it has non-zero current
     void has_current(bool hascurrent);
@@ -259,8 +267,6 @@ class DDInterfaceModel : public DriftDiffusionProperties
     //! True if flux controlled for electrons
     bool _eflux_controlled;
 
-    //! Number of carriers
-    int _n_carriers;
 
     //! The DD properties for material A
     DDBulkModel* _ddprop_A;

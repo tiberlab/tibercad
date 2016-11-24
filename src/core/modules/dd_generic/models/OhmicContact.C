@@ -18,7 +18,7 @@ OhmicContact::do_init(void)
 {
   ElectricalContact::do_init();
 
-  for (unsigned int i = 0; i <= n_carriers(); i++)
+  for (unsigned int i = 0; i <= n_known_carriers(); i++)
     set_type(i, DIRICHLET);
 }
 

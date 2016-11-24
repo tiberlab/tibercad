@@ -23,11 +23,15 @@ SchottkyContact::do_init(void)
 {
   ElectricalContact::do_init();
   
-  for (unsigned int i = 0; i <= n_carriers(); i++)
+  for (unsigned int i = 0; i <= this->n_known_carriers(); i++)
     set_type(i, DIRICHLET);
 
-  if (!has_option("metal_fermilevel") && !has_option("work_function") && !has_option("barrier") && !has_option("barrier_height"))
-    throw InitFailedException("Schottky Contact: 'work_function' or 'metal_fermilevel' or 'barrier' must be set");
+  if (!has_option("metal_fermilevel") &&
+      !has_option("work_function") &&
+      !has_option("barrier") &&
+      !has_option("barrier_height"))
+    throw InitFailedException("Schottky Contact: One of 'work_function' or 'metal_fermilevel' "
+        "or 'barrier' must be set");
 
   _fixed_barrier = true;
   if (has_option("work_function"))
@@ -59,10 +63,11 @@ SchottkyContact::do_init(void)
     _band = get_options().get_option("band", "");
 
     if (_band == "")
-      throw InitFailedException("Schottky Contact: in order to fix the barrier a carrier must be provided with 'band' keyword");
+      throw InitFailedException("Schottky Contact: in order to fix the barrier a "
+          "carrier must be provided with 'band' keyword");
 
     if (get_carrier_properties(_band) == nullptr)
-      throw InitFailedException("Schottky Contact: carrier '" + (_band) + "' not found'");
+      throw InitFailedException("Schottky Contact: carrier '" + _band + "' not found'");
   }
 
   const DriftDiffusionProperties* dd = get_bulk_dd_properties();
@@ -73,9 +78,10 @@ SchottkyContact::do_init(void)
     double barrier = get_option("barrier_height", 0.8);
     barrier = get_option("barrier", barrier);
 
-    char band_type = get_carrier_properties(band_id)->get_carrier_type();
+    double charge = get_carrier_properties(band_id)->get_charge();
 
-    _metal_Ef = (band_type == 'e') ? get_carrier_band_edge(band_id) - barrier : get_carrier_band_edge(band_id) + barrier;
+    _metal_Ef = (charge < 0) ? get_carrier_band_edge(band_id) - barrier :
+        get_carrier_band_edge(band_id) + barrier;
   }
 
   if (_fixed_barrier)
@@ -96,7 +102,7 @@ SchottkyContact::do_init(void)
     for ( auto&& it : get_bulk_dd_properties()->get_carrier_properties())
     {
       double v_rec = it.second->get_thermal_velocity(temp);
-      set_recombination_velocities(qids().at(it.first), fac*v_rec);
+      set_recombination_velocities(it.first, fac*v_rec);
     }
 
      // use the Scott and Malliaras formula for recombination velocities;
@@ -141,23 +147,23 @@ SchottkyContact::do_compute(void)
 
       for ( auto&& it : get_bulk_dd_properties()->get_carrier_properties())
       {
-        double temp = pd.carrier_vt.at(it.first);
+        double temp = pd.carrier_vt[it.first];
         double v0 = 16 * pi * epsilon * temp * temp * dd->get_q_mobility(it.first); 
 
         double rC = 1 / (4 * pi * epsilon * temp);
         double f = rC * e_field.size() / temp;
         double psi = (1 + sqrt(f) - sqrt(1 + 2*sqrt(f))) / f;
         double vE = v0 * (1/(psi * psi) - f) / 4;
-        set_recombination_velocities(qids().at(it.first), vE);
+        set_recombination_velocities(it.first, vE);
       }
     }
     else
     {
       for ( auto&& it : get_bulk_dd_properties()->get_carrier_properties())
       {
-        double temp = pd.carrier_vt.at(it.first);
+        double temp = pd.carrier_vt[it.first];
         double v_rec = it.second->get_thermal_velocity(temp);
-        set_recombination_velocities(qids().at(it.first), fac*v_rec);
+        set_recombination_velocities(it.first, fac*v_rec);
       }
     }
 

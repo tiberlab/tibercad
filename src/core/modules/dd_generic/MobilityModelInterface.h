@@ -89,7 +89,8 @@ inline
 MobilityModelInterface::MobilityModelInterface(const ModelOptions& options)
   : DriftDiffusionModelInterface(options)
 {
-  std::string p = get_options().get_option("particle", "electron");
+  std::string p = get_options().get_option("carrier", "electron");
+  p = get_options().get_option("particle", p);
   if (p == "electron")
     _carrier_type = 'e';
   else

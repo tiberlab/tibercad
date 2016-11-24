@@ -34,6 +34,10 @@ DirectRecombination::do_init(void)
 {
   RecombinationModelInterface::do_init();
 
+  if (get_carrier_names().size() != 2)
+    throw InitFailedException("Direct recombination model needs exactly "
+        "two recombinaing carriers");
+
   get_parameter("C", C_);
 
   string quantumsim = get_option("optics_simulation", "");
@@ -60,13 +64,11 @@ DirectRecombination::get_net_recombination_rates(double& recomb_e,
     double& recomb_h)
 {
   const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
-  const CarrierProperties* cp0 = dd.get_carrier_properties(get_carriers().at(0));
-  const CarrierProperties* cp1 = dd.get_carrier_properties(get_carriers().at(1));
 
-  double d0  = dd.get_q_density(get_carriers().at(0));
-  double d1  = dd.get_q_density(get_carriers().at(1));
-  double d00 = dd.get_equilibrium_q_density(get_carriers().at(0));
-  double d10 = dd.get_equilibrium_q_density(get_carriers().at(1));
+  double d0  = dd.get_q_density(get_carrier_ids()[0]);
+  double d1  = dd.get_q_density(get_carrier_ids()[1]);
+  double d00 = dd.get_equilibrium_q_density(get_carrier_ids()[0]);
+  double d10 = dd.get_equilibrium_q_density(get_carrier_ids()[1]);
   //double ni = dd.get_intrinsic_density();
   //double gn = dd.get_electron_gamma();
   //double gp = dd.get_hole_gamma();
@@ -81,11 +83,9 @@ DirectRecombination::get_net_recombination_rate_derivatives(
     std::vector<double>& recomb_e, std::vector<double>& recomb_h)
 {
   const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
-  const CarrierProperties* cp0 = dd.get_carrier_properties(get_carriers().at(0));
-  const CarrierProperties* cp1 = dd.get_carrier_properties(get_carriers().at(1));
 
-  double d0  = dd.get_q_density(get_carriers().at(0));
-  double d1  = dd.get_q_density(get_carriers().at(1));
+  double d0  = dd.get_q_density(get_carrier_ids()[0]);
+  double d1  = dd.get_q_density(get_carrier_ids()[1]);
 
   recomb_e[0] = recomb_h[0] = C_ * d1; // dR/dd0
   recomb_e[1] = recomb_h[1] = C_ * d0; // dR/dd1

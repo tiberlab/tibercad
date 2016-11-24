@@ -61,7 +61,7 @@ class CarrierProperties : public DriftDiffusionModelInterface
     std::pair<double, double> get_density_and_derivative(double Ef, double Epot) const;
 
     //! Set the band edge
-    void set_band_edge(double band_edge) {  }
+    void set_band_edge(double band_edge);
 
     //! Set the effective mass
     void set_effective_mass(double effective_mass) { _effective_mass = effective_mass; }
@@ -171,6 +171,10 @@ class CarrierProperties : public DriftDiffusionModelInterface
 
 };
 
+inline
+void
+CarrierProperties::set_band_edge(double)
+{}
 
 inline
 CarrierProperties*

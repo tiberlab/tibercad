@@ -236,13 +236,13 @@ SchottkyTunneling::get_net_recombination_rates(double& recomb_e,
   double kT;
   if (_band == 'c')
   {
-    kT = dd.get_point_data().electron_vt;
+    kT = dd.get_point_data().carrier_vt[0];
     band_edge = dd.get_conduction_band_edge() - dd.get_electric_potential();
     pot_diff = -_contact_voltage + _barrier - band_edge;
   }
   else
   {
-    kT = dd.get_point_data().hole_vt;
+    kT = dd.get_point_data().carrier_vt[1];
     band_edge = dd.get_valence_band_edge() - dd.get_electric_potential();
     pot_diff =  _barrier + band_edge + _contact_voltage;
   }
@@ -311,13 +311,13 @@ SchottkyTunneling::get_net_recombination_rate_derivatives(
   double kT;
   if (_band == 'c')
   {
-    kT = dd.get_point_data().electron_vt;
+    kT = dd.get_point_data().carrier_vt[0];
     band_edge = dd.get_conduction_band_edge() - dd.get_electric_potential();
     pot_diff = -_contact_voltage + _barrier - band_edge;
   }
   else
   {
-    kT = dd.get_point_data().hole_vt;
+    kT = dd.get_point_data().carrier_vt[1];
     band_edge = dd.get_valence_band_edge() - dd.get_electric_potential();
     pot_diff =  _barrier + band_edge + _contact_voltage;
   }

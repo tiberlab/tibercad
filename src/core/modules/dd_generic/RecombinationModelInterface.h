@@ -59,8 +59,11 @@ class TBDLEXPORT RecombinationModelInterface : public DriftDiffusionModelInterfa
     const Boundary* get_tunneling_contact(void);
 
     //! Get the IDs of the recombining carrers;
-    const std::vector<std::string>& get_carriers(void) const
-      { return _carriers; };
+    const std::vector<ID>& get_carrier_ids(void) const;
+
+    //! Get the names of the recombining carriers
+    const std::vector<std::string>& get_carrier_names(void) const;
+
 
   protected:
 
@@ -82,7 +85,11 @@ class TBDLEXPORT RecombinationModelInterface : public DriftDiffusionModelInterfa
     //! The associated tunneling contact, or NULL
     const Boundary* _tunneling_boundary;
 
+    //! The names of the carriers as found in the input
     std::vector<std::string> _carriers;
+
+    //! The global IDs for the carriers
+    std::vector<ID> _carrier_ids;
 
 };
 

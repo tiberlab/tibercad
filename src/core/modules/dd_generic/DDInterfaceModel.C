@@ -91,15 +91,15 @@ DDInterfaceModel::create(const MaterialBoundary* boundary, const ModelOptions& o
 void
 DDInterfaceModel::do_init(void)
 {
-  _n_carriers = get_bulk_dd_properties()->get_carrier_properties().size();
+  unsigned int n_carriers = this->n_known_carriers();
 
-  _coeff_a.resize(_n_carriers + 1, 0);
-  _coeff_b.resize(_n_carriers + 1, NEUMANN);
-  _coeff_g.resize(_n_carriers + 1, 0);
+  _coeff_a.resize(n_carriers + 1, 0);
+  _coeff_b.resize(n_carriers + 1, NEUMANN);
+  _coeff_g.resize(n_carriers + 1, 0);
 
-  _jacobian.resize(_n_carriers + 1);
-  for (unsigned int i = 0; i < _n_carriers + 1; i++)
-    _jacobian[i].resize(_n_carriers + 1, 0);
+  _jacobian.resize(n_carriers + 1);
+  for (unsigned int i = 0; i < n_carriers + 1; i++)
+    _jacobian[i].resize(n_carriers + 1, 0);
 
 
   const MaterialBoundary* bnd = dynamic_cast<const MaterialBoundary*>(get_owner());
@@ -202,7 +202,7 @@ DDInterfaceModel::do_init(void)
 
   if (get_number_of_recombination_models() > 0)
   {
-    for (unsigned int i = 1; i <= n_carriers(); i++)
+    for (unsigned int i = 0; i < n_carriers; i++)
       set_type(i, NEUMANN);
   }
 
@@ -302,12 +302,12 @@ DDInterfaceModel::reinit(const Elem* elem, int side)
 void
 DDInterfaceModel::compute()
 {
-  for (unsigned int i = 0; i <= _n_carriers; i++)
+  for (unsigned int i = 0; i <= n_known_carriers(); i++)
   {
     if (get_type(i) == NEUMANN)
     {
       _coeff_g[i] = 0;
-      _jacobian[i].resize(_n_carriers + 1, 0);
+      _jacobian[i].resize(n_known_carriers() + 1, 0);
     }
   }
   calculate_densities();
@@ -316,7 +316,7 @@ DDInterfaceModel::compute()
   do_compute();
 
   // now add common stuff if needed
-    const PointData& pd = get_point_data();
+  const PointData& pd = get_point_data();
 
   // for now we cannot put doping on interfaces
   /*

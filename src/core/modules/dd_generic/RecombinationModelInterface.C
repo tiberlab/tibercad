@@ -9,19 +9,25 @@ RecombinationModelInterface::do_init(void)
 
   get_option("carriers", _carriers);
 
-  if (_carriers.size() < 2)
-    throw InitFailedException("Recombination model '" + get_default_name() + "' requires to provide two carriers");
+  // to be sure
+  _carrier_ids.resize(0);
 
-  _carriers.resize(2);
-
-  const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
+  // we are paranoid and check for multiple names
+  std::set<ID> used_ids;
 
   for ( auto it : _carriers)
   {
-    if (dd.get_carrier_properties(it) == nullptr)
-      throw InitFailedException("Recombination '" + get_default_name() + "': carrier '" + (it) + "' not found'");
-  }
+    ID id = get_driftdiffusionproperties().get_carrier_id(it);
+    if (id == DriftDiffusionProperties::unknown_carrier_id)
+      throw InitFailedException("Recombination '" + get_default_name() +
+          "': carrier '" + (it) + "' not found in module");
 
-  if (_carriers[0] == _carriers[1])
-    throw InitFailedException("Recombination '" + get_default_name() + "': carrier names must be different");
+    if (used_ids.count(id))
+      throw InitFailedException("Recombination '" + get_default_name() +
+          "': carrier names must be different");
+
+    _carrier_ids.push_back(id);
+    used_ids.insert(id);
+
+  }
 }

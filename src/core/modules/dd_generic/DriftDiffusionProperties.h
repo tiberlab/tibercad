@@ -254,6 +254,10 @@ class DriftDiffusionProperties : public PhysicalModel
     };
 
 
+    //! An ID to identify unknown carriers
+    static const ID unknown_carrier_id = static_cast<ID>(-1);
+
+
 
     //! A default (empty) destructor.
     virtual ~DriftDiffusionProperties(void);
@@ -273,15 +277,24 @@ class DriftDiffusionProperties : public PhysicalModel
         const ModelOptions& options = ModelOptions());
 
 
-    //! Reorder carrier properties according to the given order
+    //! Set the list of known carriers, defining their ordering
     /*!
      * Carrier properties could be read from the input in any order, however the module
-     * will assume a particular order to address them. Therefore we need to reorder them
-     * according to a common order.
+     * will assume a particular order to address them. This is assured by passing all
+     * known carrier names in the same order as they are used in \c DriftDiffusion,
+     * immediately after creating the model.
      *
-     * \param order_by_name the order given by a sequence of carrier names
+     * \param known_carriers the sequence of carrier names in global ordering
      */
-    void reorder_carrier_properties(const std::vector<std::string> order_by_name);
+    void set_known_carriers(const std::vector<std::string>& known_carriers);
+
+
+    //! Get the ordered vector of known carriers
+    const std::vector<std::string>& get_known_carriers(void) const;
+
+    //! Get the number of known carriers
+    unsigned int n_known_carriers(void) const;
+
 
     //! Get the ID of a carrier
     /*!
@@ -941,11 +954,14 @@ class DriftDiffusionProperties : public PhysicalModel
      * A derived class which reimplements this method has to call
      * explicitly the one of this class!
      */
-    virtual void do_init(void);
+    virtual void do_init(void) override;
+
+    //! Copy some stuff from the original model
+    virtual void copy_from(const PhysicalModelInterface* rhs) override;
 
 
     //! Create some of the submodels
-    virtual void prepare_submodels(void);
+    virtual void prepare_submodels(void) override;
 
 
     //! Set the element we are currently working on
@@ -1175,11 +1191,12 @@ class DriftDiffusionProperties : public PhysicalModel
     std::map<ID, CarrierProperties*> _carrier_properties;
 
 
-    //! This vector contains CarrierProperties objects in the order as used in the solver
+    //! This vector contains of all the known carriers in a consistent ordering
     /*!
-     * The initial order is as read from the options
+     * The order is set from \c DriftDiffusion, and used also to define the
+     * system and solution variables
      */
-    std::vector<CarrierProperties*> _carrier_props_ordered;
+    std::vector<std::string> _known_carriers_ordered;
 
     //! The carrier relevant for donor properties
     unsigned int _donor_reference_carrier;
@@ -1197,8 +1214,28 @@ class DriftDiffusionProperties : public PhysicalModel
 
 
 
+inline
+void
+DriftDiffusionProperties::set_known_carriers(
+    const std::vector<std::string>& known_carriers)
+{
+  _known_carriers_ordered = known_carriers;
+}
 
 
+inline
+const std::vector<std::string>&
+DriftDiffusionProperties::get_known_carriers(void) const
+{
+  return(_known_carriers_ordered);
+}
+
+inline
+unsigned int
+DriftDiffusionProperties::n_known_carriers(void) const
+{
+  return(_known_carriers_ordered.size());
+}
 
 
 inline
@@ -1758,17 +1795,16 @@ DriftDiffusionProperties::get_old_q_fermi_potential(ID id) const
 
 
 inline
-ID
+int
 DriftDiffusionProperties::get_carrier_id(const std::string& name) const
 {
-  for (auto&& it : _carrier_properties)
+  int id = -1;
+  for (unsigned int i = 0; i < _known_carriers_ordered.size(); ++i)
   {
-    if (name == it.second->get_name())
-    {
-      return(it.first);
-    }
+    if (name == _known_carriers_ordered[i])
+      id = i;
   }
-  return(static_cast<ID>(-1));
+  return(id);
 }
 
 
@@ -1830,7 +1866,7 @@ inline
 void 
 DriftDiffusionProperties::set_carrier_temperatures(double T)
 {
-  _pd->carrier_vt.resize(_carrier_props_ordered.size());
+  _pd->carrier_vt.resize(_known_carriers_ordered.size());
   for (auto& cp : _pd->carrier_vt)
      cp = T;
 }
