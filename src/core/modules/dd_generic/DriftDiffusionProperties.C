@@ -355,18 +355,30 @@ DriftDiffusionProperties::do_init(void)
       _htraps.insert(t);
   }
 
+  _donor_reference_carrier = unknown_carrier_id;
+  _acceptor_reference_carrier = unknown_carrier_id;
+  string donor_ref = "electron";
+  string acceptor_ref = "hole";
 
-  string donor_ref = get_option("donor_reference_carrier", "electron");
-  string acceptor_ref = get_option("acceptor_reference_carrier", "hole");
+  if (get_options().has_submodel("doping"))
+  {
+    const ModelOptions& opts = get_options().submodels_begin("doping")->second;
+    donor_ref = opts.get_option("donor_reference_carrier", donor_ref);
+    acceptor_ref = opts.get_option("acceptor_reference_carrier", acceptor_ref);
+  }
+  donor_ref = get_option("donor_reference_carrier", donor_ref);
+  acceptor_ref = get_option("acceptor_reference_carrier", acceptor_ref);
+
   _donor_reference_carrier = this->get_carrier_id(donor_ref);
   _acceptor_reference_carrier = this->get_carrier_id(acceptor_ref);
 
-
-  if ((_donor_reference_carrier < 0) && (get_material()->donors_begin() != get_material()->donors_end()))
+  if ((_donor_reference_carrier == unknown_carrier_id) &&
+      (get_material()->donors_begin() != get_material()->donors_end()))
   {
     throw InitFailedException("No valid carrier specified as reference for donors.");
   }
-  if ((_acceptor_reference_carrier < 0) && (get_material()->acceptors_begin() != get_material()->acceptors_end()))
+  if ((_acceptor_reference_carrier == unknown_carrier_id) &&
+      (get_material()->acceptors_begin() != get_material()->acceptors_end()))
   {
     throw InitFailedException("No valid carrier specified as reference for acceptors.");
   }
@@ -375,14 +387,8 @@ DriftDiffusionProperties::do_init(void)
   // calculate the equilibrium
   set_lattice_temperature(SimulationOptions::T);
 
-  // not sure if pd ever gets recreated
-  _pd->fermi_potential.resize(n_known_carriers());
-  _pd->old_fermi_potential.resize(n_known_carriers());
-  _pd->old_fermi_potential.resize(n_known_carriers());
-  _grad_fermi.resize(n_known_carriers());
 
-
-  _equilibrium_q.resize(n_known_carriers());
+  _equilibrium_q.resize(n_known_carriers(), 0.0);
 
 }
 
@@ -499,9 +505,9 @@ DriftDiffusionProperties::reinit(const Elem* elem)
 void
 DriftDiffusionProperties::calculate_densities(void)
 {
-  _pd->q_density.resize(this->n_known_carriers());
-  _pd->q_density_derivative.resize(this->n_known_carriers());
-  _pd->charge_density_derivative.resize(this->n_known_carriers());
+  _pd->q_density.resize(this->n_known_carriers(), 0.0);
+  _pd->q_density_derivative.resize(this->n_known_carriers(), 0.0);
+  _pd->charge_density_derivative.resize(this->n_known_carriers(), 0.0);
 
   for (auto&& cp: get_carrier_properties())
   {
@@ -642,7 +648,7 @@ DriftDiffusionProperties::calculate_ionized_dopants(void)
 void
 DriftDiffusionProperties::calculate_net_recombination_rates(void)
 {
-  _pd->q_recombination_rate.resize(this->n_known_carriers());
+  _pd->q_recombination_rate.resize(this->n_known_carriers(), 0.0);
   _pd->q_recombination_rate_derivatives.resize(this->n_known_carriers());
 
   for (auto&& cpi: get_carrier_properties())

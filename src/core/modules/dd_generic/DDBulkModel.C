@@ -43,8 +43,6 @@ DDBulkModel::DDBulkModel(const ModelOptions& options)
   : DriftDiffusionProperties(options),
     _is_inhomogeneous(false),
     _use_predictor(true),
-    _electron_mobility(NULL),
-    _hole_mobility(NULL),
     _eTEpowerGrad(0.0),
     _hTEpowerGrad(0.0),
     _eTEpower(0),
@@ -122,104 +120,6 @@ DDBulkModel::prepare_submodels(void)
     create_submodel(pm, "permittivity", opts);
   }
 
-  /*
-  if (&get_conduction_band() == NULL)
-  {
-    CarrierProperties* cb;
-    ModelOptions opts;
-    opts.set_option("particle", "el");
-    opts.set_option("type", "kp");
-    create_submodel(cb, "carrier", opts);
-    set_conduction_band(cb);
-  }
-
-
-  if (&get_valence_band() == NULL)
-  {
-    CarrierProperties* vb;
-    ModelOptions opts;
-    opts.set_option("particle", "hl");
-    opts.set_option("type", "kp");
-    create_submodel(vb, "carrier", opts);
-    set_valence_band(vb);
-  }
-  */
-
-/*
-  // particle densities
-  {
-    ModelOptions opts;
-    opts.set_option("statistics", "fermidirac");
-
-    bool e_done = false;
-    bool h_done = false;
-
-    ModelOptions::submodel_iterator
-      it(get_options().submodels_begin("particle_density"));
-    ModelOptions::submodel_iterator
-      end(get_options().submodels_end("particle_density"));
-
-
-
-    while (it != end)
-    {
-      ModelOptions& o = it->second;
-      ++it;
-
-      const string& particle = o.get_option("particle", "");
-      if (!o.find_option("statistics"))
-        o.set_option("statistics", "fermidirac");
-
-      if (particle == "electron")
-      {
-        if (e_done)
-          throw InitFailedException("Only one particle_density model per "
-              "particle and region is allowed");
-
-        e_done = true;
-      }
-      else if (particle == "hole")
-      {
-        if (h_done)
-          throw InitFailedException("Only one particle_density model per "
-              "particle and region is allowed");
-
-        h_done = true;
-      }
-      else
-      {
-        if (e_done || h_done)
-          throw InitFailedException("Only one particle_density model per "
-              "particle and region is allowed");
-
-        // this case is valid for both
-
-        o.set_option("particle", "electron");
-
-        opts = o;
-        opts.set_option("particle", "hole");
-        get_options().add_submodel("particle_density", opts);
-
-        e_done = h_done = true;
-      }
-    }
-
-    if (!e_done)
-    {
-      opts.set_option("particle", "electron");
-      get_options().add_submodel("particle_density", opts);
-    }
-
-    if (!h_done)
-    {
-      opts.set_option("particle", "hole");
-      get_options().add_submodel("particle_density", opts);
-    }
-
-    vector<PhysicalModelInterface*> pd;
-    create_submodels(pd, "particle_density");
-  }
-*/
 
   // polarization models
   create_submodels(_pm, "polarization");
@@ -233,11 +133,12 @@ DDBulkModel::prepare_submodels(void)
     ModelOptions::submodel_iterator it(get_options().submodels_begin("mobility"));
     ModelOptions::submodel_iterator end(get_options().submodels_end("mobility"));
 
-    //mobility models
-    std::vector<std::string> carriers_all;
+    // to check for duplicates
+    set<ID> carriers_all;
+
     for ( ; it != end; ++it)
     {
-      std::vector<std::string> carriers;
+      vector<string> carriers;
       (it->second).get_option("carriers", carriers);
 
       // check if at least one carrier has been provided
@@ -246,28 +147,27 @@ DDBulkModel::prepare_submodels(void)
 
       for ( auto ca : carriers)
       {
+        ID carrier = this->get_carrier_id(ca);
+
         // check if carriers have been defined
-        if (get_carrier_properties(ca) == nullptr)
-          throw InitFailedException("Mobility: carrier '" + (ca) + "' not found'");
+        if (carrier == unknown_carrier_id)
+          throw InitFailedException("Mobility: carrier '" + (ca) + "' is unknown");
 
         // check if mobility for this carrier has already been defined
-        std::vector<std::string>::iterator find_it;
-        find_it = std::find(carriers_all.begin(), carriers_all.end(), ca);
-        if (find_it != carriers_all.end())
+        if (carriers_all.count(carrier))
           throw InitFailedException("Multiple definition of mobility for carrier '" + (ca) + "'");
-        else
-          carriers_all.push_back(ca); 
 
-        _q_mobility.insert( make_pair(ca, create_mobility_model(it->second)) );
-        _q_mobility[ca]->set_carrier(ca);
+        carriers_all.insert(carrier);
+
+        _q_mobility[carrier] = create_mobility_model(it->second);
+        _q_mobility[carrier]->set_carrier(ca);
       }
     }
 
     // check if a mobility model has been defined for all carriers
     for (auto&& cp : get_carrier_properties())
     {
-      auto find_it = std::find(carriers_all.begin(), carriers_all.end(), cp.second->get_particle_name());
-      if (find_it == carriers_all.end())
+      if (!carriers_all.count(cp.first))
           throw InitFailedException("A mobility model for carrier '" +
               cp.second->get_particle_name() + "' has not been defined");
     }
@@ -435,10 +335,10 @@ DDBulkModel::calculate_mobilities(void)
 
   for (auto&& cp : get_carrier_properties())
   {
-    pd.q_mobility[cp.first] = _q_mobility[cp.second->get_particle_name()]->get_mobility();
-    pd.q_mobility_derivative_potential[cp.first] = _q_mobility[cp.second->get_particle_name()]->get_derivative_potential();
-    _q_mobility[cp.second->get_particle_name()]->get_derivative_grad_potential(pd.q_mobility_derivative_grad_potential[cp.first]);
-    _q_mobility[cp.second->get_particle_name()]->get_derivative_grad_fermi(pd.q_mobility_derivative_grad_fermi[cp.first]);
+    pd.q_mobility[cp.first] = _q_mobility[cp.first]->get_mobility();
+    pd.q_mobility_derivative_potential[cp.first] = _q_mobility[cp.first]->get_derivative_potential();
+    _q_mobility[cp.first]->get_derivative_grad_potential(pd.q_mobility_derivative_grad_potential[cp.first]);
+    _q_mobility[cp.first]->get_derivative_grad_fermi(pd.q_mobility_derivative_grad_fermi[cp.first]);
 
     pd.q_conductivity[cp.first] = pd.q_mobility[cp.first]*pd.q_density[cp.first] + _background_conductivity;
   }

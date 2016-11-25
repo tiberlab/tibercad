@@ -141,15 +141,6 @@ class DDBulkModel : public DriftDiffusionProperties
       { return _polarization; };
 
 
-    //! Get the electron mobility model
-    MobilityModelInterface* get_electron_mobility_model(void)
-      { return _electron_mobility; };
-
-
-    //! Get the hole mobility model
-    MobilityModelInterface* get_hole_mobility_model(void)
-      { return _hole_mobility; };
-
 
     //! Returns the thermoelectric power for electrons
     double get_electron_thermoelectric_power() const;
@@ -325,13 +316,6 @@ class DDBulkModel : public DriftDiffusionProperties
     std::set<Trap*> _htraps;
 
 
-    //! The electron mobility
-    MobilityModelInterface* _electron_mobility;
-
-    //! The hole mobility
-    MobilityModelInterface* _hole_mobility;
-
-
     //! The thermoelectric power
     ThermoelectricPower* _thermoelectric_power;
 
@@ -354,7 +338,7 @@ class DDBulkModel : public DriftDiffusionProperties
     //New generic model
 
     //! Carrier mobilities
-    std::map<std::string, MobilityModelInterface*> _q_mobility;
+    std::map<ID, MobilityModelInterface*> _q_mobility;
 
 };
 

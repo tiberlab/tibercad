@@ -24,7 +24,8 @@ Module dd_generic
 { 
 
   name = driftdiffusion
-  plot = (ElPotential, QFermi, QFermi, Density, RefEnergy)
+  plot = (ElPotential, QFermi, QFermi, Density, RefEnergy, Mobility,
+          IonizedDonors)
 
   local_scaling = false
 
@@ -38,8 +39,8 @@ Module dd_generic
 
     carrier
     {
-      name = electron
-      type = electron
+      name = pippo
+      charge = -1
 
       density_of_states bulk_kp
       {
@@ -48,8 +49,17 @@ Module dd_generic
 
     carrier
     {
+      name = electron
+
+      density_of_states bulk_kp
+      {
+      }
+    }
+
+
+    carrier
+    {
       name = hole
-      type = hole
 
       density_of_states bulk_kp
       {
@@ -59,8 +69,14 @@ Module dd_generic
     mobility constant
     {
       carriers = (electron, hole)
+      mu = 1000
     }
 
+    mobility constant
+    {
+      carriers = (pippo)
+      mu = 1000
+    }
     #recombination srh {}
 
   }   
@@ -97,7 +113,7 @@ Module sweep
 Simulation
 {
   temperature = 300
-  solve = sweep
+  solve = sweep #driftdiffusion #sweep
   resultpath = output
   output_format = grace
 }

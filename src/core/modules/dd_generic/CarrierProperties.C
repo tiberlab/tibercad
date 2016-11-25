@@ -25,34 +25,33 @@ CarrierProperties::CarrierProperties(const ModelOptions& options) :
         Constants::me / (Constants::h * Constants::h) *
         Constants::e, 1.5) / 1e6)
 {
-  string particle(get_option("type", "-"));
-
-  if (particle == string("el") || particle == string("e") ||
-      particle == string("electron") ||
-      particle == string("electrons") ||
-      particle == string("n") ||
-      particle == string("negative"))
-  {
-    _charge = -1;
-  }
-  else if (particle == string("hl") || particle == string("h") ||
-      particle == string("hole") ||
-      particle == string("holes") ||
-      particle == string("p") ||
-      particle == string("positive"))
-  {
-    _charge = 1;
-  }
-  else
-    throw ModelErrorException("Unknown carrier type '" + particle + "'");
-
-  _charge = get_option("charge", _charge);
-
-  _particle = (_charge < 0.0) ? 'e' : 'h';
 
   _particle_name = get_option("name", _particle_name);
   if (_particle_name.empty())
     throw ModelErrorException("Carrier name MUST be provided");
+
+  if (_particle_name == string("el") ||
+      _particle_name == string("e") ||
+      _particle_name == string("electron") ||
+      _particle_name == string("electrons") ||
+      _particle_name == string("n") ||
+      _particle_name == string("negative"))
+  {
+    _charge = -1;
+  }
+  else if (_particle_name == string("hl") ||
+      _particle_name == string("h") ||
+      _particle_name == string("hole") ||
+      _particle_name == string("holes") ||
+      _particle_name == string("p") ||
+      _particle_name == string("positive"))
+  {
+    _charge = 1;
+  }
+
+  _charge = get_option("charge", _charge);
+
+  _particle = (_charge < 0.0) ? 'e' : 'h';
 
 }
 

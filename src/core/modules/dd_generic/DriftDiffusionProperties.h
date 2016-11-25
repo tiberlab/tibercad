@@ -361,7 +361,7 @@ class DriftDiffusionProperties : public PhysicalModel
      * \param Ef_e the electron electro-chemical potential
      * \param Ef_h the hole electro-chemical potential
      */
-    void set_potentials(double potential, double Ef_e = 0.0, double Ef_h = 0.0);
+    void set_potentials(double potential, double Ef_e, double Ef_h);
 
     // Set the old potentials
     void set_old_potentials(double potential, double Ef_e = 0.0, double Ef_h = 0.0);
@@ -826,9 +826,6 @@ class DriftDiffusionProperties : public PhysicalModel
       { return *_valence_band; };
 
 
-    //! Get the electrons
-
-
 
     //! Tells if we are doing equilibrium calculation
     bool has_solution(void) const;
@@ -837,17 +834,17 @@ class DriftDiffusionProperties : public PhysicalModel
     //New generic module
 
     //! Set the potentials
-    void set_potentials(double phi, std::vector<double> & q_phif);
+    void set_potentials(double phi, const std::vector<double> & q_phif = std::vector<double>(0));
     void set_el_potential(double phi);
     void set_fermi_potential(ID id, double phif);
 
     //! Set the old potentials
-    void set_old_potentials(double phi, std::vector<double> & q_phif);
+    void set_old_potentials(double phi, const std::vector<double> & q_phif);
     void set_old_el_potential(double phi);
     void set_old_fermi_potential(ID id, double phif);
 
     //! Set the gradient electro-chemical potentials
-    void set_grad_fermi(std::vector<libMesh::RealGradient> & q_gradf);
+    void set_grad_fermi(const std::vector<libMesh::RealGradient> & q_gradf);
     void set_grad_fermi(ID id, const libMesh::RealGradient & gradf);
 
     //! Get the gradient of the electrochemical potential
@@ -1630,10 +1627,12 @@ DriftDiffusionProperties::recombination_models_end(void)
 
 inline
 void
-DriftDiffusionProperties::set_potentials(double phi, std::vector<double> & q_phif)
+DriftDiffusionProperties::set_potentials(double phi, const std::vector<double>& q_phif)
 {
   _pd->electric_potential = phi;
   _pd->fermi_potential = q_phif;
+  // if vector was empty:
+  _pd->fermi_potential.resize(n_known_carriers(), 0.0);
 }
 
 inline
@@ -1647,14 +1646,16 @@ inline
 void
 DriftDiffusionProperties::set_fermi_potential(ID id, double phif)
 {
+  _pd->fermi_potential.resize(n_known_carriers());
   _pd->fermi_potential[id] = phif;
 }
 
 inline
 void
-DriftDiffusionProperties::set_old_potentials(double phi, std::vector<double> & q_phif)
+DriftDiffusionProperties::set_old_potentials(double phi, const std::vector<double> & q_phif)
 {
   _pd->old_electric_potential = phi;
+  _pd->old_fermi_potential.resize(n_known_carriers());
   _pd->old_fermi_potential = q_phif;
 }
 
@@ -1669,13 +1670,15 @@ inline
 void
 DriftDiffusionProperties::set_old_fermi_potential(ID id, double phif)
 {
+  _pd->old_fermi_potential.resize(n_known_carriers());
   _pd->old_fermi_potential[id] = phif;
 }
 
 inline
 void 
-DriftDiffusionProperties::set_grad_fermi(std::vector<libMesh::RealGradient> & q_gradf)
+DriftDiffusionProperties::set_grad_fermi(const std::vector<libMesh::RealGradient> & q_gradf)
 {
+  _grad_fermi.resize(n_known_carriers());
   _grad_fermi = q_gradf;
 }
 
@@ -1683,6 +1686,7 @@ inline
 void
 DriftDiffusionProperties::set_grad_fermi(ID id, const libMesh::RealGradient& gradf)
 {
+  _grad_fermi.resize(n_known_carriers());
   _grad_fermi[id] = gradf;
 
 }
@@ -1876,7 +1880,7 @@ inline
 void 
 DriftDiffusionProperties::set_carrier_temperature(ID id, double T)
 {
-  _pd->carrier_vt.reserve(id + 1);
+  _pd->carrier_vt.resize(_known_carriers_ordered.size());
   _pd->carrier_vt[id] = T;
 }
 

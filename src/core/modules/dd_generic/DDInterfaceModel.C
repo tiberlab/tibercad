@@ -101,6 +101,14 @@ DDInterfaceModel::do_init(void)
   for (unsigned int i = 0; i < n_carriers + 1; i++)
     _jacobian[i].resize(n_carriers + 1, 0);
 
+  vector<string> zeroflux;
+  get_option("isolated_carriers", zeroflux);
+
+  for (auto&& carrier : zeroflux)
+  {
+    _zero_flux.insert(this->get_carrier_id(carrier));
+  }
+
 
   const MaterialBoundary* bnd = dynamic_cast<const MaterialBoundary*>(get_owner());
   if (bnd == NULL)
@@ -314,6 +322,14 @@ DDInterfaceModel::compute()
   calculate_traps();
 
   do_compute();
+
+  for (auto&& c : _zero_flux)
+  {
+    set_type(c, NEUMANN);
+    _coeff_g[c] = 0;
+    _jacobian[c].resize(0);
+    _jacobian[c].resize(n_known_carriers() + 1, 0);
+  }
 
   // now add common stuff if needed
   const PointData& pd = get_point_data();

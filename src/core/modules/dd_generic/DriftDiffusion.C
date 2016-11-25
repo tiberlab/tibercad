@@ -1689,6 +1689,7 @@ DriftDiffusion::do_setup_solution_variables(void)
   _qFermi_base = LAST;
   _refenergy_base = _qFermi_base + _carriers.size();
   _density_base = _refenergy_base + _carriers.size();
+  _mobility_base = _density_base + _carriers.size();
   for (unsigned int i = 0; i < _carriers.size(); ++i)
   {
     declare_solution_ext(_carriers[i] + "QFermi", _qFermi_base + i,
@@ -1705,6 +1706,11 @@ DriftDiffusion::do_setup_solution_variables(void)
         SolutionDescriptor::REAL, SolutionDescriptor::NODES, "eV");
     if (plot_solution("RefEnergy"))
           add_plot_variable(_refenergy_base + i);
+
+    declare_solution_ext(_carriers[i] + "Mobility", _mobility_base + i,
+        SolutionDescriptor::REAL, SolutionDescriptor::NODES, "cm^2/(V*s)");
+    if (plot_solution("Mobility"))
+          add_plot_variable(_mobility_base + i);
   }
   /*
   declare_solution(Eg, REAL, NODES, "eV");
@@ -2124,6 +2130,9 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
       if (values.count(_refenergy_base + v))
         values[_refenergy_base + v][n] = sc->get_carrier_band_edge(v) - u;
+
+      if (values.count(_mobility_base + v))
+        values[_mobility_base + v][n] = sc->get_q_mobility(v);
     }
 
     /*
@@ -2157,6 +2166,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
     if (values.count(hConductivity))
       values[hConductivity][n] = sigma_h;
+    */
 
     bool ionized_donors = values.count(IonizedDonors);
     bool ionized_acceptors = values.count(IonizedAcceptors);
@@ -2170,6 +2180,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
         values[IonizedAcceptors][n] = sc->get_ionized_acceptor_density();
     }
 
+    /*
     bool trapped_electrons = values.count(IonizedElectronTraps);
     bool trapped_holes = values.count(IonizedHoleTraps);
     if (trapped_electrons || trapped_holes)
@@ -5131,7 +5142,8 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
   if (jacobian != NULL)
   {
     jacobian->close();
-    jacobian->print_matlab("J.m");
+    //jacobian->print_matlab("J.m");
+    //exit(0);
     //exit(0);
 
     /*

@@ -218,6 +218,9 @@ class DDInterfaceModel : public DriftDiffusionProperties
     //! The Jacobian (derivatives with respect to the potentials)
     std::vector<std::vector<double> > _jacobian;
 
+    //! Set of carrier ids which do not interact with contact/interface
+    std::set<ID> _zero_flux;
+
 
     //! \c true if this is an internal boundary
     bool _internal_bd;
