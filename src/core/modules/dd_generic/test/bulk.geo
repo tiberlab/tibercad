@@ -11,6 +11,7 @@ Line(2) = {3, 1};
 Line(3) = {2, 4};
 
 Physical Line("bulk") = {1};
-Physical Line("ndop") = {2,3};
-Physical Point("anode") = {3};
-Physical Point("cathode") = {4};
+Physical Line("ndop") = {2};
+Physical Line("pdop") = {3};
+Physical Point("anode") = {4};
+Physical Point("cathode") = {3};

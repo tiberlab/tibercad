@@ -41,6 +41,9 @@ class TBDLEXPORT RecombinationModelInterface : public DriftDiffusionModelInterfa
     virtual void get_net_recombination_rate_derivatives(
         std::vector<double>& recomb_e, std::vector<double>& recomb_h) = 0;
 
+    //! Get the recombination rate and derivatives
+    double get_net_rate_and_derivatives(std::vector<double>& dPotentials);
+
 
     //! Creates a new named recombination model
     /*!
@@ -78,7 +81,10 @@ class TBDLEXPORT RecombinationModelInterface : public DriftDiffusionModelInterfa
     void set_tunneling_contact(const Boundary* bd);
 
     //! \copydoc RecombinationModelInterface::do_init()
-    virtual void do_init(void); 
+    virtual void do_init(void) override;
+
+    //! Calculate the recombination rate and its derivatives
+    virtual double calculate_rate_and_derivatives(std::vector<double>& dPotentials);
 
   private:
 
@@ -126,6 +132,14 @@ RecombinationModelInterface::set_tunneling_contact(const Boundary* bd)
 }
 
 
+inline
+double
+RecombinationModelInterface::get_net_rate_and_derivatives(
+    std::vector<double>& dPotentials)
+{
+  return(calculate_rate_and_derivatives(dPotentials));
+}
+
 
 inline
 RecombinationModelInterface*
@@ -138,6 +152,18 @@ RecombinationModelInterface::create(const std::string& name,
 
 }
 
+inline
+const std::vector<std::string>&
+RecombinationModelInterface::get_carrier_names(void) const
+{
+  return(_carriers);
+}
 
+inline
+const std::vector<ID>&
+RecombinationModelInterface::get_carrier_ids(void) const
+{
+  return(_carrier_ids);
+}
 
 #endif // _RECOMBINATIONMODELINTERFACE_H_

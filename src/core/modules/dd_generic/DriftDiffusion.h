@@ -438,6 +438,8 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
     unsigned int _density_base;
     //! Base index for mobilities
     unsigned int _mobility_base;
+    //! Base index for fluxes
+    unsigned int _flux_base;
 
     //! Internal class for the RSTF test functions
     class RSTFSys : public libMesh::LinearImplicitSystem
@@ -512,6 +514,9 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
      * as solution variables.
      */
     std::vector<std::string> _carriers;
+
+    //! The region IDs for the different carriers
+    std::map<std::string, std::set<ID>> _carrier_region_ids;
 
 
     //! The boundary currents

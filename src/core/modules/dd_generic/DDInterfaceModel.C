@@ -325,11 +325,15 @@ DDInterfaceModel::compute()
 
   for (auto&& c : _zero_flux)
   {
+    if (c == unknown_carrier_id)
+      continue;
+
     set_type(c, NEUMANN);
     _coeff_g[c] = 0;
     _jacobian[c].resize(0);
     _jacobian[c].resize(n_known_carriers() + 1, 0);
   }
+
 
   // now add common stuff if needed
   const PointData& pd = get_point_data();

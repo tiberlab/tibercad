@@ -1322,11 +1322,12 @@ DriftDiffusion::rebuild_equation_system(void)
   system.attach_assembly_routine(assemble_system);
 
   for (auto&& name : _carriers)
-    system.add_variable(name, libMeshEnums::FIRST);
+    system.add_variable(name, libMeshEnums::FIRST, &(_carrier_region_ids[name]));
 
   // this is the last variable, so that we can us the index of the carriers also
   // as their variable index
-  system.add_variable("potential", libMeshEnums::FIRST);
+  // the potential is assumed to be on the whole domain
+  system.add_variable("potential", libMeshEnums::FIRST, &(this->get_region_ids()));
 
   system.add_vector("old_sol");
   system.add_vector("weight");
@@ -1626,6 +1627,24 @@ DriftDiffusion::do_init(void)
   parse_const_options();
 
 
+  {
+    // find the region IDs for the different variables
+    // this is not elegant, but it cannot be done in the constructor
+    auto physit(get_options().submodels_begin("Physics"));
+    ModelOptions& physopts = physit->second;
+
+    auto itc (physopts.submodels_begin("carrier"));
+    auto end_itc (physopts.submodels_end("carrier"));
+
+    for ( ; itc != end_itc; ++itc)
+    {
+      string name = (itc->second).get_option("name", "");
+      string regions = (itc->second).get_option("regions", get_option("regions", "all"));
+      set<ID> reg_ids;
+      this->get_environment().get_device().extract_physical_regions(regions, reg_ids);
+      _carrier_region_ids[name].insert(reg_ids.begin(), reg_ids.end());
+    }
+  }
 
   get_environment().update_boundary_element_map();
 
@@ -1690,6 +1709,7 @@ DriftDiffusion::do_setup_solution_variables(void)
   _refenergy_base = _qFermi_base + _carriers.size();
   _density_base = _refenergy_base + _carriers.size();
   _mobility_base = _density_base + _carriers.size();
+  _flux_base = _mobility_base + _carriers.size();
   for (unsigned int i = 0; i < _carriers.size(); ++i)
   {
     declare_solution_ext(_carriers[i] + "QFermi", _qFermi_base + i,
@@ -1711,6 +1731,12 @@ DriftDiffusion::do_setup_solution_variables(void)
         SolutionDescriptor::REAL, SolutionDescriptor::NODES, "cm^2/(V*s)");
     if (plot_solution("Mobility"))
           add_plot_variable(_mobility_base + i);
+
+
+    declare_solution_ext(_carriers[i] + "Flux", _flux_base + i,
+        SolutionDescriptor::VECTOR, SolutionDescriptor::CELL, "1/(s*cm^2)");
+    if (plot_solution("Flux"))
+          add_plot_variable(_flux_base + i);
   }
   /*
   declare_solution(Eg, REAL, NODES, "eV");
@@ -1730,21 +1756,6 @@ DriftDiffusion::do_setup_solution_variables(void)
 
   declare_solution(Polarization, VECTOR, CELL, "C/m^2");
   /*
-  declare_solution(eDensity, REAL, NODES, "cm^-3");
-  declare_solution(hDensity, REAL, NODES, "cm^-3");
-  if (plot_solution("Density"))
-  {
-    add_plot_variable(eDensity);
-    add_plot_variable(hDensity);
-  }
-
-  declare_solution(eMobility, REAL, NODES, "cm^2/(V*s)");
-  declare_solution(hMobility, REAL, NODES, "cm^2/(V*s)");
-  if (plot_solution("Mobility"))
-  {
-    add_plot_variable(eMobility);
-    add_plot_variable(hMobility);
-  }
 
   declare_solution(eConductivity, REAL, NODES, "S/cm");
   declare_solution(hConductivity, REAL, NODES, "S/cm");
@@ -2020,6 +2031,9 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
   }
 
   // cell data variables (to be integrated)
+  libMesh::RealGradient curr(0);
+  vector<RealGradient> flux(_carriers.size(), 0);
+
   libMesh::RealGradient jn(0);
   libMesh::RealGradient jp(0);
   libMesh::RealGradient el_field(0);
@@ -2094,6 +2108,15 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
     sc->calculate_mobilities();
 
+    for (auto& v : q_var)
+    {
+      double q = sc->get_carrier_properties(v)->get_charge();
+      double sign = (q < 0) ? -1 : 1;
+      double sigma = sc->get_q_conductivity(v);
+      RealGradient flux_loc = - sign * sigma * grad_qf_loc[v];
+      flux[v] += flux_loc;
+      curr += Constants::e * q * flux_loc;
+    }
     /*
     sc->compute_thermoelectric_powers();
     double Pn =  sc->get_electron_thermoelectric_power();
@@ -2327,11 +2350,21 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
   if (values.count(CurrentDensity))
   {
-    values[CurrentDensity][0] = (jn(0) + jp(0)) / np;
-    values[CurrentDensity][1] = (jn(1) + jp(1)) / np;
-    values[CurrentDensity][2] = (jn(2) + jp(2)) / np;
+    values[CurrentDensity][0] = curr(0) / np;
+    values[CurrentDensity][1] = curr(1) / np;
+    values[CurrentDensity][2] = curr(2) / np;
   }
 
+  for (unsigned int v = 0; v < n_vars; ++v)
+  {
+    if (values.count(_flux_base + v))
+    {
+      values[_flux_base + v][0] = flux[v](0) / np;
+      values[_flux_base + v][1] = flux[v](1) / np;
+      values[_flux_base + v][2] = flux[v](2) / np;
+    }
+
+  }
 
 /*
   if (values.count(ElectronBands))
@@ -3798,9 +3831,17 @@ DriftDiffusion::build_local_scaling(void)
       dRp[0] = -(dRp[1] + dRp[2]);
       */
 
-      double drhovec[2];
-      sc->get_charge_density_derivatives(drhovec);
-      double drho = -JxW[qp] * (drhovec[0] + drhovec[1]) * phi0 / C0;
+      double drho = 0.0;
+
+      for (auto&& var : q_var)
+      {
+        if (var != u_var)
+        {
+          double drho_v = sc->get_charge_density_derivative(var) * phi0 / C0;
+          drho += drho_v;
+        }
+      }
+      drho *= -JxW[qp];
 
       for (unsigned int i = 0; i < n_dofs; i++)
       {
@@ -4311,7 +4352,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 
 
     // they have all the same number of DOFs
-    unsigned int n_dofs     = dof_indices_var[0].size();
+    unsigned int n_dofs     = dof_indices_var[u_var].size();
     unsigned int n_dofs_tot = dof_indices.size();
 
     fe->reinit(elem);
@@ -4341,7 +4382,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
     //        | ... ... ... ... |        | .. |
     //        | Ku1 Ku2 ... Kuu |        | Fu |
     //
-
+    DenseSubMatrix<Real> testm(Ke);
     unsigned int n_var = 0;
     for (auto&& var : q_var)
     {
@@ -4360,6 +4401,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
       for (auto&& varj : q_var)
       {
         Kvv[var].insert(make_pair(varj, DenseSubMatrix<Real>(Ke)));
+        //cerr << "n = " << Kvv[var].at(varj).n() << "\n";
         Kvv[var].at(varj).reposition(n_var*n_dofs, n_varj*n_dofs, n_dofs, n_dofs);
         n_varj++;
       }
@@ -4774,6 +4816,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
       }  //end residual
 
     } // end loop over quadrature points
+    //cerr << Fe << "\n";
 
 
     map<unsigned int, vector<double> > dirichlet_jac;
@@ -4890,8 +4933,8 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
           if (jacobian != NULL)
           {
             // for Dirichlet DOFs we do not add anything
-            vector<double> scale_v(q_var.size());
-            vector<vector<double>> deriv_v(q_var.size());
+            vector<double> scale_v(_carriers.size() + 1, 0.0);
+            vector<vector<double>> deriv_v(_carriers.size() + 1, vector<double>(_carriers.size() + 1, 0));
             for (auto&& var : q_var)
             {
               scale_v[var] = (var==u_var) ?  J * phi0 / x0 / C0 : J * phi0 / (x0 * R0);
@@ -4905,7 +4948,9 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 
             for (unsigned int i = 0; i < n_dofs; i++)
             {
-              vector<double> fac(q_var.size());
+              vector<double> fac(_carriers.size() + 1, 0.0);
+              // since not all variables may be present, we need an auxiliary counter
+              unsigned int ctr = 0;
               for (auto&& var : q_var)
               {
                 fac[var] = scale_v[var] / scalev.at(var)(i);
@@ -4913,8 +4958,11 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                 if (elem->is_node_on_side(i, s))
                 {
                   if (sm->get_type(var) == DDInterfaceModel::DIRICHLET)
-                    dirichlet_jac[var*n_dofs + i] = deriv_v[var];
+                  {
+                    dirichlet_jac[ctr*n_dofs + i] = deriv_v[var];
+                  }
                 }
+                ctr++;
               }
 
               for (unsigned int j = 0; j < n_dofs; j++)
@@ -4945,7 +4993,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
           if (residual != NULL)
           {
 
-            vector<double> value_v(q_var.size());
+            vector<double> value_v(_carriers.size() + 1, 0.0);
 
             const vector<double>& coeff_a = sm->get_a();
             const vector<double>& coeff_g = sm->get_g();
@@ -4986,6 +5034,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 
             for (unsigned int i = 0; i < n_dofs; i++)
             {
+              unsigned int ctr = 0;
               for (auto&& var : q_var)
               {
                 double scale_v = 1.0 / scalev.at(var)(i);
@@ -4994,10 +5043,12 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                 {
                   if (sm->get_type(var) == DDInterfaceModel::DIRICHLET)
                   {
-                    dirichlet_res[var*n_dofs + i] = value_v[var];
+                    dirichlet_res[ctr*n_dofs + i] = value_v[var];
                     scale_v = 0;
                   }
                 }
+
+                ctr++;
 
                 if (((var == u_var) && (coupling & POISSON)) || ((var != u_var) && (coupling & CURRENTS)))
                   Fv.at(var)(i) -= value_v[var] * phi_face[i][qp] * scale_v;
@@ -5058,8 +5109,12 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
           Ke(i,j) = 0.0;
 
         unsigned int j = i % n_dofs;
+        unsigned int ctr = 0;
         for (auto&& var : q_var)
-          Ke(i,var * n_dofs + j) = -(it->second)[var];
+        {
+          Ke(i,ctr * n_dofs + j) = -(it->second)[var];
+          ctr++;
+        }
       }
     }
 
@@ -5086,6 +5141,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
     dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
 
     system.exclude_dofs(Ke, dof_indices, elem);
+
 
 
     //perf_log.start_event("add");
@@ -5115,7 +5171,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
       jacobian->add_matrix(Ke, dof_indices);
       /*
       for (unsigned int i = 0; i < n_dofs; i++)
-      {
+      i
         unsigned int i2 = i + n_dofs;
         unsigned int i3 = i2 + n_dofs;
         for (unsigned int j = 0; j < n_dofs; j++)
@@ -5142,8 +5198,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
   if (jacobian != NULL)
   {
     jacobian->close();
-    //jacobian->print_matlab("J.m");
-    //exit(0);
+    jacobian->print_matlab("J.m");
     //exit(0);
 
     /*
@@ -5209,6 +5264,8 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
   else
   {
     residual->close();
+    residual->print_matlab("r.m");
+    //exit(0);
 
     //sysmat.close();
     //sysmat.print_matlab("sysmat.m");

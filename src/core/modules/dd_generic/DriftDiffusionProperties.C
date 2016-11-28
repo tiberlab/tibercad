@@ -596,6 +596,10 @@ DriftDiffusionProperties::calculate_ionized_dopants(void)
 {
 
   double kT = _lattice_vt;
+  _pd->ionized_donor_density = 0.0;
+  _pd->ionized_donor_density_derivative = 0.0;
+  _pd->ionized_acceptor_density = 0.0;
+  _pd->ionized_acceptor_density_derivative = 0.0;
 
   Material::dopant_iterator it(get_material()->donors_begin());
   Material::dopant_iterator end(get_material()->donors_end());
@@ -651,20 +655,11 @@ DriftDiffusionProperties::calculate_net_recombination_rates(void)
   _pd->q_recombination_rate.resize(this->n_known_carriers(), 0.0);
   _pd->q_recombination_rate_derivatives.resize(this->n_known_carriers());
 
-  for (auto&& cpi: get_carrier_properties())
+  for (unsigned int i = 0; i < this->n_known_carriers(); ++i)
   {
-    _pd->q_recombination_rate[cpi.first] = 0;
+    _pd->q_recombination_rate[i] = 0;
 
-    _pd->q_recombination_rate_derivatives[cpi.first].resize(this->n_known_carriers());
-
-    for (auto && cpj : get_carrier_properties())
-    { 
-      vector<double> zero(2);
-      _pd->q_recombination_rate_derivatives[cpi.first][cpj.first] = zero;
-      _pd->q_recombination_rate_derivatives[cpi.first][cpj.first] = zero;
-      _pd->q_recombination_rate_derivatives[cpi.first][cpj.first] = zero;
-      _pd->q_recombination_rate_derivatives[cpi.first][cpj.first] = zero;
-    }
+    _pd->q_recombination_rate_derivatives[i].resize(this->n_known_carriers() + 1, vector<double>(2, 0.0));
   }
 
   double R0, R1;

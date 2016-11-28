@@ -242,9 +242,9 @@ class DriftDiffusionProperties : public PhysicalModel
         //! A map storing net recombination rates
         std::vector<double> q_recombination_rate;
 
-        //! A map storing the derivatives of the net recombination rates
+        //! The net recombination rate derivatives w.r.t potentials
         /*!
-         * order is: d/dn, d/dp, d/dfermi_e, d/dfermi_h
+         * order is the same as the variable order
          */
         std::vector<std::vector<std::vector<double>>> q_recombination_rate_derivatives;
 
@@ -303,7 +303,7 @@ class DriftDiffusionProperties : public PhysicalModel
      * This method should be called only with carrier names known
      * to be present.
      */
-    ID get_carrier_id(const std::string& name) const;
+    int get_carrier_id(const std::string& name) const;
 
 
     // ! Lock the parameters
@@ -1420,8 +1420,8 @@ DriftDiffusionProperties::get_charge_density(void) const
 
   for (auto& cp: _carrier_properties)
   {
-    double sign = (cp.second->get_carrier_type() == 'e') ? -1.0 : 1.0;
-    dens += sign * _pd->q_density[cp.first];
+    dens += cp.second->get_charge() * _pd->q_density[cp.first];
+    //std::cerr << cp.second->get_particle_name() << " " <<  cp.second->get_charge() << " " << _pd->q_density[cp.first] << std::endl;
   }
     
       //static_cast<long double>(_pd->hole_density) -

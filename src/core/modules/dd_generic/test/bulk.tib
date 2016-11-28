@@ -8,12 +8,17 @@ Device
 
    Region bulk 
    {
-     Doping { Nd = 1e16 type = donor}
+     Doping { Nd = 1e15 type = donor}
    }
 
    Region ndop 
    {
      Doping { Nd = 1e19 type = donor }
+   }
+
+   Region pdop 
+   {
+     Doping { Nd = 1e19 type = acceptor }
    }
 
 
@@ -24,8 +29,8 @@ Module dd_generic
 { 
 
   name = driftdiffusion
-  plot = (ElPotential, QFermi, QFermi, Density, RefEnergy, Mobility,
-          IonizedDonors)
+  plot = (ElPotential, QFermi, Density, RefEnergy, Mobility,
+          IonizedDonors, Flux)
 
   local_scaling = false
 
@@ -39,19 +44,40 @@ Module dd_generic
 
     carrier
     {
-      name = pippo
+      name = eguest
+      regions = bulk
       charge = -1
 
-      density_of_states bulk_kp
+      density_of_states gauss
       {
+        level = 1.9
+        sigma = 0.15
+        N0 = 1e18
       }
     }
 
     carrier
     {
-      name = electron
+      name = hguest
+      regions = bulk
+      charge = 1
 
-      density_of_states bulk_kp
+      density_of_states gauss
+      {
+        level = 1.2
+        sigma = 0.1
+        N0 = 1e18
+      }
+    }
+
+
+
+    carrier
+    {
+      name = electron
+      regions = (bulk, ndop)
+
+      density_of_states gauss #bulk_kp
       {
       }
     }
@@ -60,8 +86,9 @@ Module dd_generic
     carrier
     {
       name = hole
+      regions = (bulk, pdop)
 
-      density_of_states bulk_kp
+      density_of_states gauss #bulk_kp
       {
       }
     }
@@ -74,10 +101,21 @@ Module dd_generic
 
     mobility constant
     {
-      carriers = (pippo)
-      mu = 1000
+      carriers = (eguest, hguest)
+      mu = 10
     }
-    #recombination srh {}
+
+#    recombination direct 
+#    {
+#      carriers = (electron, hole)
+#      C = 1e-10
+#    }
+
+#    recombination direct 
+#    {
+#      carriers = (gueste, guesth)
+#      C = 1e-10
+#    }
 
   }   
 
@@ -86,12 +124,14 @@ Module dd_generic
   {
     type = ohmic
     voltage = $Vb
+    #isolated_carriers = (gueste, guesth)
   }
 
   Contact cathode
   {
     type = ohmic
     voltage = 0.0
+    #isolated_carriers = (gueste, guesth)
   }
 
 }  

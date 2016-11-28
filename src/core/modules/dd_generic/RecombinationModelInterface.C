@@ -31,3 +31,13 @@ RecombinationModelInterface::do_init(void)
 
   }
 }
+
+
+double
+RecombinationModelInterface::calculate_rate_and_derivatives(
+    std::vector<double>& dPotentials)
+{
+  dPotentials.resize(0);
+  dPotentials.resize(this->get_driftdiffusionproperties().get_known_carriers().size(), 0.0);
+  return(0.0);
+}

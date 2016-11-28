@@ -460,9 +460,9 @@ DDBulkModel::calculate_equilibrium_properties(void)
     calculate_traps();
     calculate_ionized_dopants();
     double f = get_charge_density();
-    double df_fermi[2];
-    get_charge_density_derivatives(df_fermi);
-    double df = -(df_fermi[0] + df_fermi[1]);
+    double df = 0;
+    for (auto&& c : this->get_carrier_properties())
+      df -= get_charge_density_derivative(c.first);
 
     //cout << "x = " << x << " f = " << f << " df = " << df << endl;
 
