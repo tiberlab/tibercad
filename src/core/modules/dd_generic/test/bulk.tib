@@ -33,6 +33,10 @@ Module dd_generic
           IonizedDonors, Flux, NetRecombination)
 
   #Solver trustregion { max_step = 100 }
+  Solver
+  {
+    #step_tolerance = 0.01
+  }
 
   Physics
   {
@@ -116,6 +120,7 @@ Module dd_generic
       carriers = (electron, hole)
       C = 1e-10
     }
+
 
 #    recombination direct 
 #    {
