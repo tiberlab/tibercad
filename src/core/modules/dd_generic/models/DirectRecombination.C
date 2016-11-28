@@ -99,8 +99,8 @@ DirectRecombination::calculate_rate_and_derivatives(std::vector<double>& dPotent
   const ID id2 = this->get_carrier_ids()[1];
 
   const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
-  double Ef1 = -dd.get_old_q_fermi_potential(id1);
-  double Ef2 = -dd.get_old_q_fermi_potential(id2);
+  double Ef1 = -dd.get_q_fermi_potential(id1);
+  double Ef2 = -dd.get_q_fermi_potential(id2);
   double kT = dd.get_lattice_temperature();
 
   double n1  = dd.get_q_density(id1);
@@ -124,7 +124,7 @@ DirectRecombination::calculate_rate_and_derivatives(std::vector<double>& dPotent
 
   dPotentials[id1] = dR1;
   dPotentials[id2] = dR2;
-  dPotentials[dd.n_known_carriers() + 1] = -stat_fac * C_ * (n2 * dn1 + n1 * dn2);
+  dPotentials[dd.n_known_carriers()] = stat_fac * C_ * (n2 * dn1 + n1 * dn2);
   return R;
 }
 

@@ -1733,11 +1733,15 @@ DriftDiffusion::do_setup_solution_variables(void)
     if (plot_solution("Mobility"))
           add_plot_variable(_mobility_base + i);
 
-
     declare_solution_ext(_carriers[i] + "Flux", _flux_base + i,
         SolutionDescriptor::VECTOR, SolutionDescriptor::CELL, "1/(s*cm^2)");
     if (plot_solution("Flux"))
           add_plot_variable(_flux_base + i);
+
+    declare_solution_ext(_carriers[i] + "NetRecombination", _rec_base + i,
+        SolutionDescriptor::REAL, SolutionDescriptor::NODES, "1/(s*cm^3)");
+    if (plot_solution("NetRecombination"))
+          add_plot_variable(_rec_base + i);
   }
   /*
   declare_solution(Eg, REAL, NODES, "eV");
@@ -2242,8 +2246,25 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
     if (values.count(hThElPower))
       values[hThElPower][n] = Pp;
+    */
 
+    bool need_recomb = false;
+    for (unsigned int v = 0; v < n_vars; ++v)
     {
+      if (values.count(_rec_base + v))
+        need_recomb = true;
+    }
+
+    if (need_recomb)
+      sc->calculate_net_recombination_rates();
+
+    for (unsigned int v = 0; v < n_vars; ++v)
+    {
+      if (values.count(_rec_base + v))
+        values[_rec_base + v][n] = sc->get_net_q_recombination_rate(v);
+    }
+
+    /*
       bool get_recomb_e = values.count(eNetRecombination);
       bool get_recomb_h = values.count(hNetRecombination);
       bool get_recomb = get_recomb_e || get_recomb_h;
@@ -4721,8 +4742,8 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
               {
                 if (vari != u_var)
                 {
-                  if ((coupling & POISSON) && _options.exact_newton)
-                    Kvv.at(vari).at(u_var)(i,j) -= dR[vari][u_var] * phi_i_x_phi_j / scalev.at(vari)(i);
+                  //if ((coupling & POISSON) && _options.exact_newton)
+                  //  Kvv.at(vari).at(u_var)(i,j) -= dR[vari][u_var] * phi_i_x_phi_j / scalev.at(vari)(i);
 
                   for (auto varj : q_var)
                     Kvv.at(vari).at(varj)(i,j) -= dR[vari][varj] * phi_i_x_phi_j / scalev.at(vari)(i);

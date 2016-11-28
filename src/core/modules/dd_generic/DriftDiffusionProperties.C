@@ -659,20 +659,15 @@ DriftDiffusionProperties::calculate_net_recombination_rates(void)
   {
     _pd->q_recombination_rate[i] = 0;
 
-    _pd->q_recombination_rate_derivatives[i].resize(this->n_known_carriers() + 1, 0.0);
+    _pd->q_recombination_rate_derivatives[i] = vector<double>(this->n_known_carriers() + 1, 0.0);
   }
 
-  double R0, R1;
-  vector<double> dR0(4), dR1(4);
   vector<double> dR(this->n_known_carriers() + 1, 0.0);
 
   recomb_iterator it = _recombination_models.begin();
   recomb_iterator end = _recombination_models.end();
   for ( ; it != end; ++it)
   {
-    //(it->second)->get_net_recombination_rates(R0, R1);
-    //(it->second)->get_net_recombination_rate_derivatives(dR0, dR1);
-
     double R = (it->second)->get_net_rate_and_derivatives(dR);
 
     const vector<ID>& carriers = (it->second)->get_carrier_ids();
@@ -682,7 +677,7 @@ DriftDiffusionProperties::calculate_net_recombination_rates(void)
       _pd->q_recombination_rate[i] += R;
       for (ID j = 0; j < carriers.size() + 1; ++j)
       {
-        _pd->q_recombination_rate_derivatives[i][j] += dR0[j];
+        _pd->q_recombination_rate_derivatives[i][j] += dR[j];
       }
     }
   }

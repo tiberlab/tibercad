@@ -440,6 +440,8 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
     unsigned int _mobility_base;
     //! Base index for fluxes
     unsigned int _flux_base;
+    //! Base index for recombinations
+    unsigned int _rec_base;
 
     //! Internal class for the RSTF test functions
     class RSTFSys : public libMesh::LinearImplicitSystem

@@ -8,7 +8,7 @@ Device
 
    Region bulk 
    {
-     Doping { Nd = 1e16 type = donor}
+     Doping { Nd = 1e15 type = donor}
    }
 
    Region ndop 
@@ -30,7 +30,7 @@ Module dd_generic
 
   name = driftdiffusion
   plot = (ElPotential, QFermi, Density, RefEnergy, Mobility,
-          IonizedDonors, Flux)
+          IonizedDonors, Flux, NetRecombination)
 
   #Solver trustregion { max_step = 100 }
 
