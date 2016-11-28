@@ -92,6 +92,41 @@ DirectRecombination::get_net_recombination_rate_derivatives(
   recomb_e[2] = recomb_e[3] = recomb_h[2] = recomb_h[3] = 0.0;
 }
 
+double
+DirectRecombination::calculate_rate_and_derivatives(std::vector<double>& dPotentials)
+{
+  const ID id1 = this->get_carrier_ids()[0];
+  const ID id2 = this->get_carrier_ids()[1];
+
+  const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
+  double Ef1 = -dd.get_old_q_fermi_potential(id1);
+  double Ef2 = -dd.get_old_q_fermi_potential(id2);
+  double kT = dd.get_lattice_temperature();
+
+  double n1  = dd.get_q_density(id1);
+  double n2  = dd.get_q_density(id2);
+  double dn1  = dd.get_q_density_derivative(id1);
+  double dn2  = dd.get_q_density_derivative(id2);
+  double q1 = dd.get_carrier_properties(id1)->get_charge();
+  double q2 = dd.get_carrier_properties(id2)->get_charge();
+
+  double E01 = dd.get_carrier_properties(id1)->get_band_edge();
+  double E02 = dd.get_carrier_properties(id2)->get_band_edge();
+
+  double exponential = exp((Ef2 - Ef1) / kT);
+  double stat_fac = 1.0 - exponential;
+  double g = C_ * n1 * n2;
+
+  double R = g * stat_fac;
+
+  double dR1 = -C_ * n2 * (-dn1 * stat_fac + 1/kT * n1 * exponential);
+  double dR2 = -C_ * n1 * (-dn2 * stat_fac - 1/kT * n2 * exponential);
+
+  dPotentials[id1] = dR1;
+  dPotentials[id2] = dR2;
+  dPotentials[dd.n_known_carriers() + 1] = -stat_fac * C_ * (n2 * dn1 + n1 * dn2);
+  return R;
+}
 
 void
 DirectRecombination::do_reinit(void)

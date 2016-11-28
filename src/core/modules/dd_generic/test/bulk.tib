@@ -8,7 +8,7 @@ Device
 
    Region bulk 
    {
-     Doping { Nd = 1e15 type = donor}
+     Doping { Nd = 1e16 type = donor}
    }
 
    Region ndop 
@@ -32,7 +32,7 @@ Module dd_generic
   plot = (ElPotential, QFermi, Density, RefEnergy, Mobility,
           IonizedDonors, Flux)
 
-  local_scaling = false
+  #Solver trustregion { max_step = 100 }
 
   Physics
   {
@@ -75,10 +75,13 @@ Module dd_generic
     carrier
     {
       name = electron
-      regions = (bulk, ndop)
+      #regions = (bulk, ndop)
 
-      density_of_states gauss #bulk_kp
+      density_of_states bulk_kp
       {
+        level = 2.1
+        sigma = 0.13
+        N0 = 1e19
       }
     }
 
@@ -86,10 +89,13 @@ Module dd_generic
     carrier
     {
       name = hole
-      regions = (bulk, pdop)
+      #regions = (bulk, pdop)
 
-      density_of_states gauss #bulk_kp
+      density_of_states bulk_kp
       {
+        level = 1.4
+        sigma = 0.11
+        N0 = 1e19
       }
     }
 
@@ -105,11 +111,11 @@ Module dd_generic
       mu = 10
     }
 
-#    recombination direct 
-#    {
-#      carriers = (electron, hole)
-#      C = 1e-10
-#    }
+    recombination direct 
+    {
+      carriers = (electron, hole)
+      C = 1e-10
+    }
 
 #    recombination direct 
 #    {
@@ -153,7 +159,7 @@ Module sweep
 Simulation
 {
   temperature = 300
-  solve = sweep #driftdiffusion #sweep
+  solve = (driftdiffusion, sweep)
   resultpath = output
   output_format = grace
 }

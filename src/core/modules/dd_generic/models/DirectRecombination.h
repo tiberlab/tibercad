@@ -44,13 +44,15 @@ class TBDLLOCAL DirectRecombination : public RecombinationModelInterface
     DirectRecombination(const ModelOptions& options);
 
     //! \copydoc RecombinationModelInterface::read_database()
-    virtual void read_database(void);
+    virtual void read_database(void) override;
 
     //! \copydoc RecombinationModelInterface::do_init()
-    virtual void do_init(void);
+    virtual void do_init(void) override;
 
     //! \copydoc RecombinationModelInterface::do_reinit()
-    virtual void do_reinit(void);
+    virtual void do_reinit(void) override;
+
+    virtual double calculate_rate_and_derivatives(std::vector<double>& dPotentials) override;
 
   private:
 

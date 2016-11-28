@@ -28,6 +28,7 @@ class TBDLEXPORT RecombinationModelInterface : public DriftDiffusionModelInterfa
     //! Get the electron and hole net recombination rates
     /*!
      * The net recombination rate is defined as \f$R_{net}=R-G\f$
+     * \obsolete
      */
     virtual void get_net_recombination_rates(double& recomb_e,
         double& recomb_h) = 0;
@@ -37,6 +38,8 @@ class TBDLEXPORT RecombinationModelInterface : public DriftDiffusionModelInterfa
      * The net recombination rate is defined as \f$R_{net}=R-G\f$
      * The derivative is intended with respect to the electron (first
      * component) and hole (second component) density.
+     *
+     * \obsolete
      */
     virtual void get_net_recombination_rate_derivatives(
         std::vector<double>& recomb_e, std::vector<double>& recomb_h) = 0;
@@ -131,14 +134,6 @@ RecombinationModelInterface::set_tunneling_contact(const Boundary* bd)
   _tunneling_boundary = bd;
 }
 
-
-inline
-double
-RecombinationModelInterface::get_net_rate_and_derivatives(
-    std::vector<double>& dPotentials)
-{
-  return(calculate_rate_and_derivatives(dPotentials));
-}
 
 
 inline

@@ -659,32 +659,32 @@ DriftDiffusionProperties::calculate_net_recombination_rates(void)
   {
     _pd->q_recombination_rate[i] = 0;
 
-    _pd->q_recombination_rate_derivatives[i].resize(this->n_known_carriers() + 1, vector<double>(2, 0.0));
+    _pd->q_recombination_rate_derivatives[i].resize(this->n_known_carriers() + 1, 0.0);
   }
 
   double R0, R1;
   vector<double> dR0(4), dR1(4);
+  vector<double> dR(this->n_known_carriers() + 1, 0.0);
 
   recomb_iterator it = _recombination_models.begin();
   recomb_iterator end = _recombination_models.end();
   for ( ; it != end; ++it)
   {
-    (it->second)->get_net_recombination_rates(R0, R1);
-    (it->second)->get_net_recombination_rate_derivatives(dR0, dR1);
+    //(it->second)->get_net_recombination_rates(R0, R1);
+    //(it->second)->get_net_recombination_rate_derivatives(dR0, dR1);
 
-    ID cp0;// = (it->second)->get_carriers()[0];
-    ID cp1;// = (it->second)->get_carriers()[1];
+    double R = (it->second)->get_net_rate_and_derivatives(dR);
 
-    _pd->q_recombination_rate[cp0] += R0;
-    _pd->q_recombination_rate_derivatives[cp0][cp0][0] += dR0[0];
-    _pd->q_recombination_rate_derivatives[cp0][cp1][0] += dR0[1];
-    _pd->q_recombination_rate_derivatives[cp0][cp0][1] += dR0[2];
-    _pd->q_recombination_rate_derivatives[cp0][cp1][1] += dR0[3];
-    _pd->q_recombination_rate[cp1] += R1;
-    _pd->q_recombination_rate_derivatives[cp1][cp1][0] += dR1[0];
-    _pd->q_recombination_rate_derivatives[cp1][cp0][0] += dR1[1];
-    _pd->q_recombination_rate_derivatives[cp1][cp1][1] += dR1[2];
-    _pd->q_recombination_rate_derivatives[cp1][cp0][1] += dR1[3];
+    const vector<ID>& carriers = (it->second)->get_carrier_ids();
+
+    for (ID i = 0; i < carriers.size(); ++i)
+    {
+      _pd->q_recombination_rate[i] += R;
+      for (ID j = 0; j < carriers.size() + 1; ++j)
+      {
+        _pd->q_recombination_rate_derivatives[i][j] += dR0[j];
+      }
+    }
   }
 }
 

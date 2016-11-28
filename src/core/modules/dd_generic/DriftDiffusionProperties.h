@@ -246,7 +246,7 @@ class DriftDiffusionProperties : public PhysicalModel
         /*!
          * order is the same as the variable order
          */
-        std::vector<std::vector<std::vector<double>>> q_recombination_rate_derivatives;
+        std::vector<std::vector<double>> q_recombination_rate_derivatives;
 
         //! The carrier temperature in eV (\f$= k_B T_e / e\f$)
         std::vector<double> carrier_vt;
@@ -892,10 +892,10 @@ class DriftDiffusionProperties : public PhysicalModel
     double get_net_q_recombination_rate(ID id) const;
 
     //! Get the net recombination rate derivatives
-    const std::vector<std::vector<std::vector<double>>>&
+    const std::vector<std::vector<double>>&
             get_net_q_recombination_rate_derivatives(void) const
               { return _pd->q_recombination_rate_derivatives; };
-    const std::vector<double>& get_net_q_recombination_rate_derivatives(ID id1, ID id2) const;
+    const std::vector<double>& get_net_q_recombination_rate_derivatives(ID id) const;
 
     //! Get the equilibrium q density
     const std::vector<double>& get_equilibrium_q_density(void) const
@@ -1771,9 +1771,9 @@ DriftDiffusionProperties::get_net_q_recombination_rate(ID id) const
 
 inline
 const std::vector<double>&
-DriftDiffusionProperties::get_net_q_recombination_rate_derivatives(ID id1, ID id2) const
+DriftDiffusionProperties::get_net_q_recombination_rate_derivatives(ID id) const
 {
-  return _pd->q_recombination_rate_derivatives[id1][id2];
+  return _pd->q_recombination_rate_derivatives[id];
 }
 
 inline

@@ -167,11 +167,6 @@ CarrierProperties::get_density_and_derivative(double Ef, double Epot) const
 
   double kT = _temperature;
   double sign = (_particle == 'h') ? 1 : -1;
-  //double Ef = (_particle == 'h') ?
-  //    ddp.get_hole_electro_chemical_potential() :
-  //    ddp.get_electron_electro_chemical_potential();
-  //Ef *= sign;
-  //double Epot = sign * ddp.get_electric_potential();
   Epot *= sign;
   Ef *= sign;
 
