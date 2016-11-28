@@ -1330,9 +1330,9 @@ DriftDiffusion::rebuild_equation_system(void)
   // the potential is assumed to be on the whole domain
   system.add_variable("potential", libMeshEnums::FIRST, &(this->get_region_ids()));
 
-  system.add_vector("old_sol");
-  system.add_vector("weight");
-  system.add_vector("scaling");
+  system.add_vector("old_sol", GHOSTED);
+  system.add_vector("weight", GHOSTED);
+  system.add_vector("scaling", GHOSTED);
   //system.add_matrix("Preconditioner");
 
 
