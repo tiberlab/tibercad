@@ -97,6 +97,11 @@ DirectRecombination::calculate_rate_and_derivatives(std::vector<double>& dPotent
 {
   const ID id1 = this->get_carrier_ids()[0];
   const ID id2 = this->get_carrier_ids()[1];
+  if ((id1 == DriftDiffusionProperties::unknown_carrier_id) ||
+      (id2 == DriftDiffusionProperties::unknown_carrier_id))
+  {
+    return 0.0;
+  }
 
   const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
   double Ef1 = -dd.get_q_fermi_potential(id1);
@@ -110,8 +115,8 @@ DirectRecombination::calculate_rate_and_derivatives(std::vector<double>& dPotent
   double q1 = dd.get_carrier_properties(id1)->get_charge();
   double q2 = dd.get_carrier_properties(id2)->get_charge();
 
-  double E01 = dd.get_carrier_properties(id1)->get_band_edge();
-  double E02 = dd.get_carrier_properties(id2)->get_band_edge();
+  //double E01 = dd.get_carrier_properties(id1)->get_band_edge();
+  //double E02 = dd.get_carrier_properties(id2)->get_band_edge();
 
   double exponential = exp((Ef2 - Ef1) / kT);
   double stat_fac = 1.0 - exponential;
@@ -125,6 +130,7 @@ DirectRecombination::calculate_rate_and_derivatives(std::vector<double>& dPotent
   dPotentials[id1] = dR1;
   dPotentials[id2] = dR2;
   dPotentials[dd.n_known_carriers()] = stat_fac * C_ * (n2 * dn1 + n1 * dn2);
+
   return R;
 }
 

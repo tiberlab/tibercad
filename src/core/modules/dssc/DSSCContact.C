@@ -24,7 +24,9 @@ DSSCContact::DSSCContact(const ModelOptions& options)
     _beta(1.0),
     _current(0.0),
     _barrier(0.0),
-    _kinetic_rate(1e4)
+    _kinetic_rate(1e4),
+    _kinetic_rate_I3(0),
+    _kinetic_rate_I(0)
 {
 }
 
@@ -67,6 +69,8 @@ DSSCContact::do_init(void)
   get_parameter("bias", _bias);
   get_parameter("barrier", _barrier);
   get_parameter("kinetic_rate", _kinetic_rate);
+  get_parameter("kinetic_rate_I", _kinetic_rate_I);
+  get_parameter("kinetic_rate_I3", _kinetic_rate_I3);
   get_parameter("Ex_curr", _j0);
   //get_parameter("beta", _beta);
 }

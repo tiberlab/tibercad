@@ -81,7 +81,7 @@ Module dd_generic
       name = electron
       #regions = (bulk, ndop)
 
-      density_of_states bulk_kp
+      density_of_states bulk
       {
         level = 2.1
         sigma = 0.13
@@ -95,7 +95,7 @@ Module dd_generic
       name = hole
       #regions = (bulk, pdop)
 
-      density_of_states bulk_kp
+      density_of_states bulk
       {
         level = 1.4
         sigma = 0.11
@@ -121,12 +121,26 @@ Module dd_generic
       C = 1e-10
     }
 
+    recombination direct 
+    {
+      regions = bulk
+      carriers = (electron, eguest)
+      C = 1e-10
+    }
 
-#    recombination direct 
-#    {
-#      carriers = (gueste, guesth)
-#      C = 1e-10
-#    }
+    recombination direct 
+    {
+      regions = bulk
+      carriers = (eguest, hole)
+      C = 1e-10
+    }
+
+    recombination direct 
+    {
+      regions = bulk
+      carriers = (eguest, hguest)
+      C = 1e-11
+    }
 
   }   
 

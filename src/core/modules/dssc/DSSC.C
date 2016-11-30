@@ -2386,6 +2386,8 @@ DSSC::do_assembly(const libMesh::NumericVector<Number>& x,
               double dsigma_C = phi0 / C0_C * sc->get_mobility_C() *
                 sc->get_density_derivative_C();
 
+              double dI_dphi = sc->get_density_derivative_I();
+              double dI3_dphi = sc->get_density_derivative_I3();
 
             //define flux direction
             
@@ -2468,14 +2470,42 @@ DSSC::do_assembly(const libMesh::NumericVector<Number>& x,
                 {
 	           //double Normal_n = x0 / (phi0 * C0_e * local_scaling[s][0] );
 	           double Normal_n = x0 / (phi0 * C0_e );
+	           double Normal_I = x0 / (phi0 * C0_I * scaling_I);
+	           double Normal_I3 = x0 / (phi0 * C0_I3 * scaling_I3);
                    double kinetic_anode = contact->get_kinetic();
                     
                    double J_phi_i_phi_j = J * phi_face[i][qp] * phi_face[j][qp];
 
                    double dn_dphi = sc->get_density_derivative_n();
 
+                   double vI3 = contact->get_kinetic_I3();
+                   double vI = contact->get_kinetic_I();
+                   double kT = sc->get_lattice_temperature();
+
+                   double expI3 = exp(eI3);
+                   double expI  = exp(eI);
+                   // for jI3
+                   double djnI3 = vI3 * (1 - expI3);
+                   double djnI  = -1.0/3.0 * vI * (1 - expI);
+
                    Knu(i,j) += -kinetic_anode * dn_dphi * Normal_n * J_phi_i_phi_j;
                    Knn(i,j) += -kinetic_anode * -dn_dphi * Normal_n * J_phi_i_phi_j;
+
+                   double I3I3 = (djnI3 * dI3_dphi +
+                       vI3 * sc->get_density_I3() * expI3 / kT) * J_phi_i_phi_j;
+                   double I3I = (djnI * dI_dphi -
+                       1.0/3 * vI * sc->get_density_I() * expI / kT) * J_phi_i_phi_j;
+                   double I3u = (djnI3 * dI3_dphi + djnI * dI_dphi) * J_phi_i_phi_j;
+
+                   KI3I3(i,j) -= I3I3 * Normal_I3;
+                   KI3I(i, j) -= I3I * Normal_I3;
+                   KI3u(i, j) += I3u * Normal_I3;
+
+                   KII(i,j)   += 3 * I3I * Normal_I;
+                   KII3(i, j) += 3 * I3I3 * Normal_I;
+                   KIu(i, j)  -= 3 * I3u * Normal_I;
+
+
                 }
                }
                if (residual != NULL)
@@ -2489,9 +2519,22 @@ DSSC::do_assembly(const libMesh::NumericVector<Number>& x,
 
 	         //double Normal_n = x0 / ( phi0 * C0_e * local_scaling[s][0] );
 	         double Normal_n = x0 / ( phi0 * C0_e );
+	         double Normal_I = x0 / (phi0 * C0_I * scaling_I);
+	         double Normal_I3 = x0 / (phi0 * C0_I3 * scaling_I3);
+
                  double kinetic_anode = contact->get_kinetic();
 
-                 Fn(i) += -kinetic_anode * (density_n - n_0) * Normal_n * J * phi_face[i][qp];
+                 double vI3 = contact->get_kinetic_I3();
+                 double vI = contact->get_kinetic_I();
+
+                 double expI3 = exp(eI3);
+                 double expI  = exp(eI);
+                 double jnI3 = vI3 * sc->get_density_I3() * (1 - expI3) -
+                     1.0/3 * vI * sc->get_density_I() * (1 - expI);
+
+                 Fn(i)  += -kinetic_anode * (density_n - n_0) * Normal_n * J * phi_face[i][qp];
+                 FI3(i) += jnI3 * Normal_I3 * J * phi_face[i][qp];
+                 FI(i)  -= 3 * jnI3 * Normal_I * J * phi_face[i][qp];
                }
              }
 

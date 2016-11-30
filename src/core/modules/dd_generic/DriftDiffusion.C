@@ -1711,6 +1711,7 @@ DriftDiffusion::do_setup_solution_variables(void)
   _density_base = _refenergy_base + _carriers.size();
   _mobility_base = _density_base + _carriers.size();
   _flux_base = _mobility_base + _carriers.size();
+  _rec_base = _flux_base + _carriers.size();
   for (unsigned int i = 0; i < _carriers.size(); ++i)
   {
     declare_solution_ext(_carriers[i] + "QFermi", _qFermi_base + i,
@@ -4745,8 +4746,8 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                   //if ((coupling & POISSON) && _options.exact_newton)
                   //  Kvv.at(vari).at(u_var)(i,j) -= dR[vari][u_var] * phi_i_x_phi_j / scalev.at(vari)(i);
 
-                  for (auto varj : q_var)
-                    Kvv.at(vari).at(varj)(i,j) -= dR[vari][varj] * phi_i_x_phi_j / scalev.at(vari)(i);
+                  for (auto&& varj : q_var)
+                    Kvv[vari].at(varj)(i,j) -= dR[vari][varj] * phi_i_x_phi_j / scalev.at(vari)(i);
                 }
               }
             }

@@ -34,6 +34,8 @@ class DSSCContact : public PhysicalModel
 
     //! Get barrier kinetic rate
     double get_kinetic(void) const;
+    double get_kinetic_I(void) const;
+    double get_kinetic_I3(void) const;
 
 
     //! Get the contact load
@@ -104,6 +106,8 @@ class DSSCContact : public PhysicalModel
 
 
     double _kinetic_rate;
+    double _kinetic_rate_I;
+    double _kinetic_rate_I3;
 
 
     double _barrier;
@@ -158,6 +162,22 @@ double
 DSSCContact::get_kinetic(void) const
 {
   return _kinetic_rate;
+}
+
+
+inline
+double
+DSSCContact::get_kinetic_I(void) const
+{
+  return _kinetic_rate_I;
+}
+
+
+inline
+double
+DSSCContact::get_kinetic_I3(void) const
+{
+  return _kinetic_rate_I3;
 }
 
 
