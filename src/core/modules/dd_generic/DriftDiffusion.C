@@ -1330,9 +1330,9 @@ DriftDiffusion::rebuild_equation_system(void)
   // the potential is assumed to be on the whole domain
   system.add_variable("potential", libMeshEnums::FIRST, &(this->get_region_ids()));
 
-  system.add_vector("old_sol", GHOSTED);
-  system.add_vector("weight", GHOSTED);
-  system.add_vector("scaling", GHOSTED);
+  system.add_vector("old_sol", true, GHOSTED);
+  system.add_vector("weight", true, GHOSTED);
+  system.add_vector("scaling", true, GHOSTED);
   //system.add_matrix("Preconditioner");
 
 
@@ -4421,7 +4421,6 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
       for (auto&& varj : q_var)
       {
         Kvv[var].insert(make_pair(varj, DenseSubMatrix<Real>(Ke)));
-        //cerr << "n = " << Kvv[var].at(varj).n() << "\n";
         Kvv[var].at(varj).reposition(n_var*n_dofs, n_varj*n_dofs, n_dofs, n_dofs);
         n_varj++;
       }
@@ -5209,7 +5208,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
   if (jacobian != NULL)
   {
     jacobian->close();
-    jacobian->print_matlab("J.m");
+    //jacobian->print_matlab("J.m");
     //exit(0);
 
     /*
@@ -5275,7 +5274,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
   else
   {
     residual->close();
-    residual->print_matlab("r.m");
+    //residual->print_matlab("r.m");
     //exit(0);
 
     //sysmat.close();
