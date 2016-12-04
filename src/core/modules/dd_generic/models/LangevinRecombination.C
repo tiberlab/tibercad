@@ -32,55 +32,44 @@ LangevinRecombination::do_init(void)
   get_parameter("gamma", _gamma);
 }
 
-void
-LangevinRecombination::get_net_recombination_rates(double& recomb_e, double& recomb_h)
+
+
+double
+LangevinRecombination::calculate_rate_and_derivatives(std::vector<double>& dPotentials)
 {
+  const ID id1 = this->get_carrier_ids()[0];
+  const ID id2 = this->get_carrier_ids()[1];
+
   const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
+  double Efn = -dd.get_q_fermi_potential(id1);
+  double Efp = -dd.get_q_fermi_potential(id2);
+  double kT = dd.get_lattice_temperature();
 
-  double n  = dd.get_electron_density();
-  double p  = dd.get_hole_density();
-  double n0 = dd.get_equilibrium_electron_density();
-  double p0 = dd.get_equilibrium_hole_density();
-  double mun = dd.get_electron_mobility();
-  double mup = dd.get_hole_mobility();
-  
-  if (((n < 100) || (p < 100)) && ((n0 < 100) || (p0 < 100))) {
-    recomb_e = recomb_h = 0;
-  }
-  else {
-    recomb_e = recomb_h = _gamma * Constants::e * 100 / (_er * Constants::e0) * (mun + mup) * (n*p - n0*p0);
-  }
+  double n  = dd.get_q_density(id1);
+  double p  = dd.get_q_density(id2);
+  double dn  = dd.get_q_density_derivative(id1);
+  double dp  = dd.get_q_density_derivative(id2);
+  double qn = dd.get_carrier_properties(id1)->get_charge();
+  double qp = dd.get_carrier_properties(id2)->get_charge();
+
+  double mun = dd.get_q_mobility(id1);
+  double mup = dd.get_q_mobility(id2);
+
+  double exponential = exp((Efp - Efn) / kT);
+  double stat_fac = 1.0 - exponential;
+  double prefactor = _gamma * Constants::e * 100 / (_er * Constants::e0) * (mun + mup);
+
+  double g = prefactor * n * p;
+
+  double R = g * stat_fac;
+
+  double dR1 = prefactor * p * (dn * stat_fac - 1/kT * n * exponential);
+  double dR2 = prefactor * n * (dp * stat_fac + 1/kT * p * exponential);
+
+  dPotentials[id1] = dR1;
+  dPotentials[id2] = dR2;
+  dPotentials[dd.n_known_carriers()] = stat_fac * prefactor * (p * dn + n * dp);
+
+  return R;
 }
 
-
-void
-LangevinRecombination::get_net_recombination_rate_derivatives(std::vector<double>& recomb_e, std::vector<double>& recomb_h)
-{
-  const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
-
-  double n  = dd.get_electron_density();
-  double p  = dd.get_hole_density();
-  double n0 = dd.get_equilibrium_electron_density();
-  double p0 = dd.get_equilibrium_hole_density();
-  double mun = dd.get_electron_mobility();
-  double mup = dd.get_hole_mobility();
-  double dn_dphi = dd.get_electron_density_derivative();
-  double dp_dphi = dd.get_hole_density_derivative();
-  double dmun_dphi = dd.get_electron_mobility_derivative_potential();
-  double dmup_dphi = dd.get_hole_mobility_derivative_potential();
-
-  if (((n < 100) || (p < 100)) && ((n0 < 100) || (p0 < 100))) {
-    recomb_e[0] = recomb_h[0] = 0;
-    recomb_e[1] = recomb_h[1] = 0;
-  }
-  else {
-    recomb_e[0] = recomb_h[0] = _gamma * Constants::e * 100 / (_er * Constants::e0) * ( (dmun_dphi / dn_dphi + dmup_dphi / dn_dphi) * (n*p - n0*p0) + (mun + mup) * p ); // dR/dn
-    recomb_e[1] = recomb_h[1] = _gamma * Constants::e * 100 / (_er * Constants::e0) * ( (dmun_dphi / dp_dphi + dmup_dphi / dp_dphi) * (n*p - n0*p0) + (mun + mup) * n ); // dR/dp
-  }
-}
-
-void
-LangevinRecombination::do_reinit(void)
-{
-  
-}

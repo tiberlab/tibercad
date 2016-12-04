@@ -178,6 +178,12 @@ SRHRecombination::read_interface_database(void)
 void
 SRHRecombination::do_init(void)
 {
+  RecombinationModelInterface::do_init();
+
+  if (get_carrier_names().size() != 2)
+    throw InitFailedException("SRH recombination model needs exactly "
+        "two recombining carriers");
+
   if (get_option("trap", false))
   {
     if (get_options().has_submodel("profile"))
@@ -238,11 +244,16 @@ SRHRecombination::get_trap_level(void)
 {
   double ref;
   const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
-  double Ec = dd.get_conduction_band_edge();
-  double Ev = dd.get_valence_band_edge();
+  // we use a naming scheme corresponding to the 'normal' SRH in a
+  // CB / VB semiconductor
+  const ID id1 = this->get_carrier_ids()[0];
+  const ID id2 = this->get_carrier_ids()[1];
+  double Ec = dd.get_carrier_properties(id1)->get_band_edge();
+  double Ev = dd.get_carrier_properties(id2)->get_band_edge();
   switch (_energy_reference)
   {
     case 'v':
+    case '2':
       ref = Ev + _E_t;
       break;
 
@@ -259,7 +270,48 @@ SRHRecombination::get_trap_level(void)
 }
 
 
+double
+SRHRecombination::calculate_rate_and_derivatives(std::vector<double>& dPotentials)
+{
+  const ID id1 = this->get_carrier_ids()[0];
+  const ID id2 = this->get_carrier_ids()[1];
 
+  const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
+  double Efn = -dd.get_q_fermi_potential(id1);
+  double Efp = -dd.get_q_fermi_potential(id2);
+  double kT = dd.get_lattice_temperature();
+
+  double n  = dd.get_q_density(id1);
+  double p  = dd.get_q_density(id2);
+  double dn  = dd.get_q_density_derivative(id1);
+  double dp  = dd.get_q_density_derivative(id2);
+  double qn = dd.get_carrier_properties(id1)->get_charge();
+  double qp = dd.get_carrier_properties(id2)->get_charge();
+
+  double Et = get_trap_level();
+
+  //double E01 = dd.get_carrier_properties(id1)->get_band_edge();
+  //double E02 = dd.get_carrier_properties(id2)->get_band_edge();
+
+  double exponential = exp((Efp - Efn) / kT);
+  double stat_fac = 1.0 - exponential;
+  /*
+  double g = C_ * n1 * n2;
+
+  double R = g * stat_fac;
+
+  double dR1 = -C_ * n2 * (-dn1 * stat_fac + 1/kT * n1 * exponential);
+  double dR2 = -C_ * n1 * (-dn2 * stat_fac - 1/kT * n2 * exponential);
+
+  dPotentials[id1] = dR1;
+  dPotentials[id2] = dR2;
+  dPotentials[dd.n_known_carriers()] = stat_fac * C_ * (n2 * dn1 + n1 * dn2);
+  */
+  double R = 0;
+  return R;
+}
+
+/*
 void
 SRHRecombination::get_net_recombination_rates(double& recomb_e,
     double& recomb_h)
@@ -535,7 +587,7 @@ SRHRecombination::get_net_recombination_rate_derivatives(
   recomb_e[2] = recomb_h[2] = dRedEfn;
   recomb_e[3] = recomb_h[3] = dRedEfp;
 }
-
+*/
 
 void
 SRHRecombination::do_init_alloy(const PhysicalModelInterface* comp_A,

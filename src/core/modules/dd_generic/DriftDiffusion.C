@@ -2108,10 +2108,6 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     }
 
     sc->calculate_densities();
-
-    double edens = sc->get_electron_density();
-    double hdens = sc->get_hole_density();
-
     sc->calculate_mobilities();
 
     for (auto& v : q_var)
@@ -2787,7 +2783,6 @@ DriftDiffusion::calculate_currents_rstf_global(void)
       double Pp =  sc->get_hole_thermoelectric_power() / phi0;
       */
 
-      // we put the sign here for convenience
       vector<double> sigma(n_vars, 0.0);
       for (auto& var : qf_vars)
       {
@@ -2803,6 +2798,9 @@ DriftDiffusion::calculate_currents_rstf_global(void)
       // tunneling for the current contact
       // this is needed, because the current calculated afterwards does not
       // include direct tunneling.
+      /*
+       * TODO: this has to be adjusted
+
       DriftDiffusionProperties::RecombinationModelIterator recit(
           sc->recombination_models_begin());
       DriftDiffusionProperties::RecombinationModelIterator recend(
@@ -2817,6 +2815,7 @@ DriftDiffusion::calculate_currents_rstf_global(void)
           _boundary_currents[bd] -= JxW[qp] * Constants::e * (elrate - hlrate);
         }
       }
+      */
 
       //libMesh::RealGradient je(JxW[qp] * phi0 * (sigma_e * (dEfn + Pn * dT)));
       //libMesh::RealGradient jh(JxW[qp] * phi0 * (sigma_h * (dEfp + Pp * dT)));
@@ -2882,8 +2881,12 @@ DriftDiffusion::calculate_currents_rstf_compact(void)
 
   // numeric ids corresponding to the variables
   const unsigned int u_var = system->variable_number("potential");
-  unsigned int en_var = system->variable_number("fermi_e");
-  unsigned int ep_var = system->variable_number("fermi_h");
+
+  const unsigned int n_vars = _carriers.size();
+  // the carriers
+  vector<unsigned int> qf_var_num(n_vars);
+  for (unsigned int i = 0; i < n_vars; ++i)
+    qf_var_num[i] = system->variable_number(_carriers[i]);
 
   libMesh::FEType fe_type = system->variable_type(u_var);
 
@@ -2909,8 +2912,8 @@ DriftDiffusion::calculate_currents_rstf_compact(void)
 
 
   vector<unsigned int> dof_indices_u;
-  vector<unsigned int> dof_indices_en;
-  vector<unsigned int> dof_indices_ep;
+  // dof indices of all QF potentials
+  vector<vector<unsigned int>> dof_indices_qf(n_vars);
 
 
   BoundaryElementMap::iterator el(env.boundary_elements_begin());
@@ -2925,8 +2928,15 @@ DriftDiffusion::calculate_currents_rstf_compact(void)
 
     // get DOF indices
     dof_map.dof_indices(elem, dof_indices_u, u_var);
-    dof_map.dof_indices(elem, dof_indices_en, en_var);
-    dof_map.dof_indices(elem, dof_indices_ep, ep_var);
+
+    // these are the variables actually present in the element
+    set<unsigned int> qf_vars;
+    for (unsigned int i = 0; i < n_vars; ++i)
+    {
+      dof_map.dof_indices(elem, dof_indices_qf[i], qf_var_num[i]);
+      if (dof_indices_qf[i].size() > 0)
+        qf_vars.insert(i);
+    }
 
     DDBulkModel* sc =
         get_bulk_model<DDBulkModel>(elem);
@@ -2953,59 +2963,78 @@ DriftDiffusion::calculate_currents_rstf_compact(void)
 
       unsigned int n_dofs = dof_indices_u.size();
       Real u  = 0.0;
-      Real en = 0.0;
-      Real ep = 0.0;
-      libMesh::RealGradient dEfn(0);
-      libMesh::RealGradient dEfp(0);
       libMesh::RealGradient e_field(0);
+
+      vector<Real> qf(n_vars, 0.0);
+      vector<RealGradient> grad_qf(n_vars, 0);
+
       libMesh::RealGradient dT(0);
+
       for (unsigned int i = 0; i < n_dofs; i++)
       {
         u  += phi[i][qp] * solution(dof_indices_u[i]);
-        en += phi[i][qp] * solution(dof_indices_en[i]);
-        ep += phi[i][qp] * solution(dof_indices_ep[i]);
+        e_field -= dphi[i][qp] * solution(dof_indices_u[i]);
 
-        dEfn += dphi[i][qp] * solution(dof_indices_en[i]);
-        dEfp += dphi[i][qp] * solution(dof_indices_ep[i]);
+
+        for (auto& var : qf_vars)
+        {
+          qf[var] += phi0 * phi[i][qp] * solution(dof_indices_qf[var][i]);
+
+          grad_qf[var] += dphi[i][qp] * phi0 * solution(dof_indices_qf[var][i]);
+        }
 
         dT += dphi[i][qp] * T_nodes[i];
-
-        e_field -= dphi[i][qp] * solution(dof_indices_u[i]);
       }
 
       // prepare for calculating local properties
       //sc->set_coordinates(elem->centroid());  ????? 2012-08-31
       sc->set_coordinates(q_point[qp]);
 
-
-      sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
+      sc->set_el_potential(phi0 * u);
       sc->set_electric_field(phi0 * e_field);
-      sc->set_grad_fermi_e(phi0 * dEfn);
-      sc->set_grad_fermi_h(phi0 * dEfp);
+
+      for (auto& var : qf_vars)
+      {
+        sc->set_fermi_potential(var, qf[var]);
+        sc->set_grad_fermi(var, grad_qf[var]);
+      }
 
       sc->calculate_densities();
       sc->calculate_mobilities();
       sc->calculate_net_recombination_rates();
 
       //Get the thermoelectric power
+      /*
       sc->compute_thermoelectric_powers();
       double Pn =  sc->get_electron_thermoelectric_power() / phi0;
       double Pp =  sc->get_hole_thermoelectric_power() / phi0;
+      */
 
-      // we put the minus here for convenience
-      double sigma_e = -Constants::e * sc->get_electron_conductivity();
-      double sigma_h = -Constants::e * sc->get_hole_conductivity();
+
+      // we put the sign here for convenience
+      vector<RealGradient> curr(n_vars, 0.0);
+      for (auto& var : qf_vars)
+      {
+        double sigma = sc->get_carrier_properties(var)->get_charge() *
+            Constants::e * sc->get_q_conductivity(var);
+        curr[var] = JxW[qp] * sigma * grad_qf[var];
+      }
 
       double Rn = sc->get_net_electron_recombination_rate();
       double Rp = sc->get_net_hole_recombination_rate();
       double net_rate = JxW[qp] * Constants::e * (Rn - Rp);
 
-      libMesh::RealGradient je(JxW[qp] * phi0 * (sigma_e * (dEfn + Pn * dT)));
-      libMesh::RealGradient jh(JxW[qp] * phi0 * (sigma_h * (dEfp + Pp * dT)));
+      //libMesh::RealGradient je(JxW[qp] * phi0 * (sigma_e * (dEfn + Pn * dT)));
+      //libMesh::RealGradient jh(JxW[qp] * phi0 * (sigma_h * (dEfp + Pp * dT)));
 
       for (unsigned int n = 0; n < elem->n_nodes(); n++)
-        _boundary_currents[boundary] += ((je + jh) * dphi[n][qp] -
-            net_rate * phi[n][qp]) * weight[n];
+      {
+        for (auto& var : qf_vars)
+        {
+          _boundary_currents[boundary] -= (curr[var] * dphi[n][qp] +
+              net_rate * phi[n][qp]) * weight[n];
+        }
+      }
 
     } // end loop over quadrature points
   } // end loop over elements
@@ -3217,11 +3246,12 @@ DriftDiffusion::calculate_field_emission(void)
 
 
 
-
 void
 DriftDiffusion::calculate_currents_surfint(void)
 {
+  Messages::warning("Current by surface integration is not implemented.\n");
 
+/*
   // reset currents
   ContactData::iterator it =
     _boundary_currents.begin();
@@ -3455,14 +3485,16 @@ DriftDiffusion::calculate_currents_surfint(void)
     } // end loop over elem sides
   } // end loop over elements
 
+*/
 }
-
 
 
 void
 DriftDiffusion::calculate_surface_recombination(void)
 {
+  Messages::warning("Current by surface integration is not implemented.\n");
 
+/*
   // we only do something if we are on processor 0
   //if (get_communicator().rank() != 0)
     return;
@@ -3625,6 +3657,7 @@ DriftDiffusion::calculate_surface_recombination(void)
   ostringstream rec;
   rec << "Surface recombination current = " << current * Constants::e << "\n";
   Messages::info(rec.str());
+*/
 }
 
 

@@ -39,15 +39,15 @@ SemiconductorModel::do_init(void)
 {
   Parent::do_init();
 
-  _recompute_band_parameters = get_option("recompute_band_parameters",
-      _recompute_band_parameters);
+  //_recompute_band_parameters = get_option("recompute_band_parameters",
+  //    _recompute_band_parameters);
 
 }
 
 
 
 
-
+/*
 void
 SemiconductorModel::prepare_element_data(void)
 {
@@ -93,3 +93,4 @@ SemiconductorModel::prepare_element_data(void)
     }
   }
 }
+*/

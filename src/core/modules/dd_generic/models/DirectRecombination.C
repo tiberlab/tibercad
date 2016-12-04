@@ -36,7 +36,7 @@ DirectRecombination::do_init(void)
 
   if (get_carrier_names().size() != 2)
     throw InitFailedException("Direct recombination model needs exactly "
-        "two recombinaing carriers");
+        "two recombining carriers");
 
   get_parameter("C", C_);
 
@@ -59,49 +59,12 @@ DirectRecombination::do_init(void)
 
 
 
-void
-DirectRecombination::get_net_recombination_rates(double& recomb_e,
-    double& recomb_h)
-{
-  const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
-
-  double d0  = dd.get_q_density(get_carrier_ids()[0]);
-  double d1  = dd.get_q_density(get_carrier_ids()[1]);
-  double d00 = dd.get_equilibrium_q_density(get_carrier_ids()[0]);
-  double d10 = dd.get_equilibrium_q_density(get_carrier_ids()[1]);
-  //double ni = dd.get_intrinsic_density();
-  //double gn = dd.get_electron_gamma();
-  //double gp = dd.get_hole_gamma();
-
-  recomb_e = recomb_h = C_ * (d0 * d1 - d00 * d10);
-}
-
-
-
-void
-DirectRecombination::get_net_recombination_rate_derivatives(
-    std::vector<double>& recomb_e, std::vector<double>& recomb_h)
-{
-  const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
-
-  double d0  = dd.get_q_density(get_carrier_ids()[0]);
-  double d1  = dd.get_q_density(get_carrier_ids()[1]);
-
-  recomb_e[0] = recomb_h[0] = C_ * d1; // dR/dd0
-  recomb_e[1] = recomb_h[1] = C_ * d0; // dR/dd1
-  recomb_e[2] = recomb_e[3] = recomb_h[2] = recomb_h[3] = 0.0;
-}
 
 double
 DirectRecombination::calculate_rate_and_derivatives(std::vector<double>& dPotentials)
 {
   const ID id1 = this->get_carrier_ids()[0];
   const ID id2 = this->get_carrier_ids()[1];
-  if ((id1 == DriftDiffusionProperties::unknown_carrier_id) ||
-      (id2 == DriftDiffusionProperties::unknown_carrier_id))
-  {
-    return 0.0;
-  }
 
   const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
   double Ef1 = -dd.get_q_fermi_potential(id1);

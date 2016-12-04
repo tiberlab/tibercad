@@ -81,6 +81,9 @@ class ModelOptions
 
 
     //! Get the name
+    /*!
+     * The name is set from the second keyword in the input file
+     */
     const std::string& get_name(void) const;
 
 

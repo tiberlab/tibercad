@@ -17,7 +17,7 @@
 #include "Messages.h"
 #include "TypeDefs.h"
 
-#include "elem.h"
+#include "libmesh/elem.h"
 
 
 #include <cmath>
@@ -52,9 +52,6 @@ DriftDiffusionProperties::DriftDiffusionProperties(const ModelOptions& options)
     _conduction_band(NULL),
     _valence_band(NULL),
     _equilibrium_fermi_level(0.0),
-    _intrinsic_density(1e10),
-    _equilibrium_n(0.0),
-    _equilibrium_p(0.0),
     //_eTEpowerGrad(0.0),
     //_hTEpowerGrad(0.0),
     //_eTEpower(0),
@@ -806,8 +803,9 @@ DriftDiffusionProperties::get_net_recombination_rate(ID id)
   for ( ; it != end; ++it)
     if (it->first == id)
     {
+      // TODO
       double re, rh;
-      it->second->get_net_recombination_rates(re, rh);
+      //it->second->get_net_recombination_rates(re, rh);
       rece += re;
       rech += rh;
     }
@@ -815,7 +813,7 @@ DriftDiffusionProperties::get_net_recombination_rate(ID id)
   return(make_pair(rece, rech));
 }
 
-
+/*
 void
 DriftDiffusionProperties::set_equilibrium_properties(double Ef)
 {
@@ -824,12 +822,12 @@ DriftDiffusionProperties::set_equilibrium_properties(double Ef)
   set_potentials(Ef);
   calculate_densities();
 
-  _intrinsic_density = sqrt(_pd->electron_density) * sqrt(_pd->hole_density);
-  _equilibrium_n = _pd->electron_density;
-  _equilibrium_p = _pd->hole_density;
+  //_intrinsic_density = sqrt(_pd->electron_density) * sqrt(_pd->hole_density);
+  //_equilibrium_n = _pd->electron_density;
+  //_equilibrium_p = _pd->hole_density;
 
 }
-
+*/
 
 
 void

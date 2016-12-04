@@ -86,16 +86,8 @@ class DriftDiffusionProperties : public PhysicalModel
         //! The electric poential
         double electric_potential;
 
-        //! The electron electro-chemical potential
-        double fermi_e;
-
-        //! The hole electro-chemical potential
-        double fermi_h;
-
 
         double old_electric_potential;
-        double old_fermi_e;
-        double old_fermi_h;
 
 
         //! The electron density
@@ -103,7 +95,7 @@ class DriftDiffusionProperties : public PhysicalModel
          * The electron density is given by
          * \f[n = N_c e^{\frac{e\varphi - e\phi_n - E_c}{k_B T_e}}\f]
          */
-        double electron_density;
+        //double electron_density;
 
         //! The electron density derivative with respect to the electric potential
         /*!
@@ -117,7 +109,7 @@ class DriftDiffusionProperties : public PhysicalModel
          * The hole density is given by
          * \f[p = N_v e^{-\frac{e\varphi - e\phi_p - E_v}{k_B T_h}}\f]
          */
-        double hole_density;
+        //double hole_density;
 
         //! The hole density derivative
         /*!
@@ -351,21 +343,6 @@ class DriftDiffusionProperties : public PhysicalModel
     //! Set the temperature of carrier \c id
     void set_carrier_temperature(ID carrier, double T);
 
-    //! Set the potentials
-    /*!
-     * The potentials have to be set before calling any of the
-     * \c calculate_xxx methods. If the densities are used as variables,
-     * the electro-chemical potentials can be left out.
-     *
-     * \param potential the electric potential
-     * \param Ef_e the electron electro-chemical potential
-     * \param Ef_h the hole electro-chemical potential
-     */
-    void set_potentials(double potential, double Ef_e, double Ef_h);
-
-    // Set the old potentials
-    void set_old_potentials(double potential, double Ef_e = 0.0, double Ef_h = 0.0);
-
 
     //! Set the electric field
     /*!
@@ -461,8 +438,8 @@ class DriftDiffusionProperties : public PhysicalModel
      *
      * \return the electron density
      */
-    double get_electron_density(void) const
-      { return _pd->electron_density; };
+    //double get_electron_density(void) const
+    //  { return _pd->electron_density; };
 
 
 
@@ -489,8 +466,8 @@ class DriftDiffusionProperties : public PhysicalModel
      *
      * \return the hole density
      */
-    double get_hole_density(void) const
-      { return _pd->hole_density; };
+    //double get_hole_density(void) const
+    //  { return _pd->hole_density; };
 
 
     //! Get the ehole density derivative
@@ -708,8 +685,8 @@ class DriftDiffusionProperties : public PhysicalModel
 
 
     //! Get the equilibrium hole density
-    double get_equilibrium_hole_density(void) const
-      { return _equilibrium_p; };
+    //double get_equilibrium_hole_density(void) const
+    //  { return _equilibrium_p; };
 
 
     //! Get equilibrium fermi level
@@ -718,17 +695,17 @@ class DriftDiffusionProperties : public PhysicalModel
 
 
     //! Get the lowest conduction band edge
-    double get_conduction_band_edge(void) const
-      { return _conduction_band->get_band_edge(); };
+    //double get_conduction_band_edge(void) const
+    //  { return _conduction_band->get_band_edge(); };
 
     //! Get all conduction bands
-    void get_conduction_bands(std::vector<double>& bands)
-      { _conduction_band->get_bands(bands); };
+    //void get_conduction_bands(std::vector<double>& bands)
+    //  { _conduction_band->get_bands(bands); };
 
 
     //! Get the highest valence band edge
-    double get_valence_band_edge(void) const
-      { return _valence_band->get_band_edge(); };
+    //double get_valence_band_edge(void) const
+    //  { return _valence_band->get_band_edge(); };
 
     //! Get all valence bands
     void get_valence_bands(std::vector<double>& bands)
@@ -777,24 +754,8 @@ class DriftDiffusionProperties : public PhysicalModel
     //! Get the electric potential
     double get_electric_potential(void) const;
 
-
-    //! Get the electron electro-chemical potential
-    double get_electron_electro_chemical_potential(void) const
-      { return _pd->fermi_e; };
-
-
-    //! Get the hole electro-chemical potential
-    double get_hole_electro_chemical_potential(void) const
-      { return _pd->fermi_h; };
-
     double get_old_phi(void) const
       { return _pd->old_electric_potential; };
-
-    double get_old_fermie(void) const
-      { return _pd->old_fermi_e; };
-
-    double get_old_fermih(void) const
-      { return _pd->old_fermi_h; };
 
 
     //! Get the point data
@@ -831,8 +792,6 @@ class DriftDiffusionProperties : public PhysicalModel
     bool has_solution(void) const;
 
 
-    //New generic module
-
     //! Set the potentials
     void set_potentials(double phi, const std::vector<double> & q_phif = std::vector<double>(0));
     void set_el_potential(double phi);
@@ -840,6 +799,7 @@ class DriftDiffusionProperties : public PhysicalModel
 
     //! Set the old potentials
     void set_old_potentials(double phi, const std::vector<double> & q_phif);
+
     void set_old_el_potential(double phi);
     void set_old_fermi_potential(ID id, double phif);
 
@@ -1015,7 +975,7 @@ class DriftDiffusionProperties : public PhysicalModel
     /*!
      * Calculates the associated equilibrium densities
      */
-    void set_equilibrium_properties(double Ef);
+    //void set_equilibrium_properties(double Ef);
 
 
     //! Get the conduction band properties as pointer
@@ -1256,36 +1216,10 @@ DriftDiffusionProperties::get_electric_potential(void) const
 
 inline
 void
-DriftDiffusionProperties::set_potentials(double potential, double Ef_e,
-    double Ef_h)
-{
-  _pd->electric_potential = potential;
-  _pd->fermi_e = Ef_e;
-  _pd->fermi_h = Ef_h;
-}
-
-
-inline
-void
-DriftDiffusionProperties::set_old_potentials(double potential, double Ef_e,
-    double Ef_h)
-{
-  _pd->old_electric_potential = potential;
-  _pd->old_fermi_e = Ef_e;
-  _pd->old_fermi_h = Ef_h;
-}
-
-
-inline
-void
 DriftDiffusionProperties::set_electric_field(const libMesh::RealGradient& E)
 {
   _electric_field = E;
 }
-
-
-
-
 
 
 

@@ -24,19 +24,6 @@ class TBDLLOCAL DirectRecombination : public RecombinationModelInterface
     //! Create a ConstantMobility object
     static DirectRecombination* create(const ModelOptions& options);
 
-    //! \copydoc RecombinationModelInterface::get_net_recombination_rates()
-    void get_net_recombination_rates(double& recomb_e, double& recomb_h);
-
-    /*!
-     * \copydoc
-     * RecombinationModelInterface::get_net_recombination_rate_derivatives()
-     */
-    void get_net_recombination_rate_derivatives(
-        std::vector<double>& recomb_e, std::vector<double>& recomb_h);
-
-    //! Set the direct recombination parameters
-    void set_parameters(double C);
-
     
   protected:
 
@@ -52,6 +39,7 @@ class TBDLLOCAL DirectRecombination : public RecombinationModelInterface
     //! \copydoc RecombinationModelInterface::do_reinit()
     virtual void do_reinit(void) override;
 
+    //! \copydoc RecombinationModelInterface::calculate_rate_and_derivatives()
     virtual double calculate_rate_and_derivatives(std::vector<double>& dPotentials) override;
 
   private:
@@ -99,13 +87,6 @@ DirectRecombination::create(const ModelOptions& options)
   return new DirectRecombination(options);
 }
 
-
-inline
-void
-DirectRecombination::set_parameters(double C)
-{
-  C_ = C;
-}
 
 
 

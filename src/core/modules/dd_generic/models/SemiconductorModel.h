@@ -53,7 +53,6 @@ class TBDLLOCAL SemiconductorModel : public DDBulkModel
       double mv;
 
       double Ef0;
-      //double ni;
 
       libMesh::RealVectorValue polarization;
     };
@@ -66,12 +65,7 @@ class TBDLLOCAL SemiconductorModel : public DDBulkModel
     virtual void do_init();
 
 
-    /*! \copydoc DriftDiffusionProperties::prepare_element_data() */
-    virtual void prepare_element_data(void);
-
-
-    //! Set the object to unprepared state
-    void set_to_unprepared(void);
+    //virtual void prepare_element_data(void);
 
 
     //! Get the data map with the element wise cached data
@@ -118,15 +112,6 @@ SemiconductorModel::create(const ModelOptions& options)
 {
   return new SemiconductorModel(options);
 }
-
-
-inline
-void
-SemiconductorModel::set_to_unprepared(void)
-{
-  _is_prepared = false;
-}
-
 
 
 

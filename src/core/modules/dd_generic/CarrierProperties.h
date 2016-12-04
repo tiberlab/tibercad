@@ -99,16 +99,16 @@ class CarrierProperties : public DriftDiffusionModelInterface
     double get_lattice_temperature(void) const;
 
     //! Prepare submodels
-    virtual void prepare_submodels(void);
+    virtual void prepare_submodels(void) override;
 
     //! Initialize
-    virtual void do_init(void) {};
+    virtual void do_init(void) override;
 
     //! Calculate band properties
     virtual void do_calculate(void) {};
 
     //! Print some info
-    virtual void do_print_info(void);
+    virtual void do_print_info(void) override;
 
 
     // ! Get band edge
@@ -140,6 +140,9 @@ class CarrierProperties : public DriftDiffusionModelInterface
 
     //! The logical name of the particle
     std::string _particle_name;
+
+    //! The carrier's unique ID in the module
+    ID _carrier_id;
 
 
     //! The band edge

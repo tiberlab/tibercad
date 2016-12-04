@@ -20,12 +20,13 @@ CarrierProperties::CarrierProperties(const ModelOptions& options) :
     DriftDiffusionModelInterface(options),
     _particle('e'),
     _particle_name(""),
+    _carrier_id(DriftDiffusionProperties::unknown_carrier_id),
     _charge(-1),
     _dos_factor(pow(2.0 * M_PI *
         Constants::me / (Constants::h * Constants::h) *
         Constants::e, 1.5) / 1e6)
 {
-
+  _particle_name = get_options().get_name();
   _particle_name = get_option("name", _particle_name);
   if (_particle_name.empty())
     throw ModelErrorException("Carrier name MUST be provided");
@@ -60,6 +61,12 @@ CarrierProperties::~CarrierProperties(void)
   destroy(_dos_model);
 }
 
+
+void
+CarrierProperties::do_init(void)
+{
+  _carrier_id = this->get_driftdiffusionproperties().get_carrier_id(_particle_name);
+}
 
 void
 CarrierProperties::prepare_submodels(void)
@@ -174,7 +181,8 @@ CarrierProperties::get_density_and_derivative(double Ef, double Epot) const
 
   if (_dos_model->has_quantum_density() && ddp.has_solution()) // && use_predictor())
   {
-    double Ef_old = (_particle == 'h') ? ddp.get_old_fermih() : -ddp.get_old_fermie();
+    double Ef_old = ddp.get_old_q_fermi_potential(_carrier_id);
+    Ef_old *= (_particle == 'h') ? 1.0 : -1.0;
     double Epot_old = sign * ddp.get_old_phi();
 
     // get the old quantum density

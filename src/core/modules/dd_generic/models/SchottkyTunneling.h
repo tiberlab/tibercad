@@ -28,17 +28,6 @@ class TBDLLOCAL SchottkyTunneling : public RecombinationModelInterface
     //! Create a ConstantMobility object
     static SchottkyTunneling* create(const ModelOptions& options);
 
-    //! \copydoc RecombinationModelInterface::get_net_recombination_rates()
-    void get_net_recombination_rates(double& recomb_e, double& recomb_h);
-
-    /*!
-     * \copydoc
-     * RecombinationModelInterface::get_net_recombination_rate_derivatives()
-     */
-    void get_net_recombination_rate_derivatives(
-        std::vector<double>& recomb_e, std::vector<double>& recomb_h);
-
-
     
   protected:
 
@@ -46,13 +35,13 @@ class TBDLLOCAL SchottkyTunneling : public RecombinationModelInterface
     SchottkyTunneling(const ModelOptions& options);
 
     //! \copydoc RecombinationModelInterface::read_database()
-    virtual void read_database(void);
+    virtual void read_database(void) override;
 
     //! \copydoc RecombinationModelInterface::do_init()
-    virtual void do_init(void);
+    virtual void do_init(void) override;
 
-    // ! \copydoc RecombinationModelInterface::do_reinit()
-    //virtual void do_reinit(void);
+    //! Calculate the recombination rate and its derivatives
+    virtual double calculate_rate_and_derivatives(std::vector<double>& dPotentials) override;
 
 
   private:

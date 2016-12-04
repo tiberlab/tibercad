@@ -521,13 +521,13 @@ DDBulkModel::calculate_equilibrium_properties(void)
   set_equilibrium_fermi_level(y);
 
 
-  for (auto&& cp: carriers)
-  {
-     bool quantum = cp.second->has_quantum();
-     cp.second->use_quantum(quantum);
+  //for (auto&& cp: carriers)
+  //{
+  //   bool quantum = cp.second->has_quantum();
+  //   cp.second->use_quantum(quantum);
 
-     set_equilibrium_q_density(cp.first, get_q_density(cp.first));
-  }
+  //   set_equilibrium_q_density(cp.first, get_q_density(cp.first));
+  //}
 }
 
 
@@ -542,9 +542,9 @@ DDBulkModel::set_equilibrium_properties(double Ef)
   set_potentials(Ef);
   calculate_densities();
 
-  set_intrinsic_density(sqrt(get_electron_density()) * sqrt(get_hole_density()));
-  set_equilibrium_n(get_electron_density());
-  set_equilibrium_p(get_hole_density());
+  //set_intrinsic_density(sqrt(get_electron_density()) * sqrt(get_hole_density()));
+  //set_equilibrium_n(get_electron_density());
+  //set_equilibrium_p(get_hole_density());
 
 }
 
@@ -558,8 +558,12 @@ DDBulkModel::set_equilibrium_properties(double Ef)
 void
 DDBulkModel::compute_thermoelectric_powers(void)
 {
+  _eTEpower = 0;
+  _hTEpower = 0;
+
   if (_thermoelectric_power != NULL)
   {
+    /*
     _thermoelectric_power->set_potentials(
         get_electron_electro_chemical_potential(),
         get_hole_electro_chemical_potential(),
@@ -578,20 +582,18 @@ DDBulkModel::compute_thermoelectric_powers(void)
     _eTEpower = _thermoelectric_power->get_electrons_thermoelectric_power();
 
     _hTEpower = _thermoelectric_power->get_holes_thermoelectric_power();
-
-  }
-  else
-  {
-    _eTEpower = 0;
-    _hTEpower = 0;
+    */
   }
 }
 
 void
 DDBulkModel::compute_thermoelectric_power_gradient(void)
 {
+  _eTEpowerGrad = 0;
+  _hTEpowerGrad = 0;
    if (_thermoelectric_power != NULL)
    {
+     /*
      _thermoelectric_power->set_potential_gradients(get_grad_fermi_e(),
          get_grad_fermi_h(),get_electric_field());
 
@@ -602,13 +604,8 @@ DDBulkModel::compute_thermoelectric_power_gradient(void)
      _eTEpowerGrad =  _thermoelectric_power->get_electron_thermoelectric_power_gradient();
 
      _hTEpowerGrad =  _thermoelectric_power->get_hole_thermoelectric_power_gradient();
-
+      */
     }
-   else
-   {
-     _eTEpowerGrad = 0;
-     _hTEpowerGrad = 0;
-   }
 }
 
 std::vector<double>&

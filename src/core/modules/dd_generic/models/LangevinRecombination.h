@@ -1,3 +1,5 @@
+// $Id$
+
 #ifndef _LANGEVINRECOMBINATION_H_
 #define _LANGEVINRECOMBINATION_H_
 
@@ -22,15 +24,6 @@ class TBDLLOCAL LangevinRecombination : public RecombinationModelInterface
     //! Create a LangevinRecombination object
     static LangevinRecombination* create(const ModelOptions& options);
 
-    //! \copydoc RecombinationModelInterface::get_net_recombination_rates()
-    void get_net_recombination_rates(double& recomb_e, double& recomb_h);
-
-    /*!
-     * \copydoc
-     * RecombinationModelInterface::get_net_recombination_rate_derivatives()
-     */
-    void get_net_recombination_rate_derivatives(
-        std::vector<double>& recomb_e, std::vector<double>& recomb_h);
 
   protected:
 
@@ -38,13 +31,13 @@ class TBDLLOCAL LangevinRecombination : public RecombinationModelInterface
     LangevinRecombination(const ModelOptions& options);
 
     //! \copydoc RecombinationModelInterface::read_database()
-    virtual void read_database(void);
+    virtual void read_database(void) override;
 
     //! \copydoc RecombinationModelInterface::do_init()
-    virtual void do_init(void);
+    virtual void do_init(void) override;
 
-    //! \copydoc RecombinationModelInterface::do_reinit()
-    virtual void do_reinit(void);
+    //! \copydoc RecombinationModelInterface::calculate_rate_and_derivatives()
+    virtual double calculate_rate_and_derivatives(std::vector<double>& dPotentials) override;
 
   private:
 

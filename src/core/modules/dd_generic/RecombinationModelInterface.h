@@ -16,6 +16,11 @@ class Boundary;
 /*!
  * This is the base class for recombination models. A new recombination model
  * can be implemented by deriving from this class.
+ *
+ * To simplify handling of the standard case of electrons and holes, the API
+ * guarantees the order (electron, hole) whenever two particles with these names are
+ * provided.
+ *
  */
 class TBDLEXPORT RecombinationModelInterface : public DriftDiffusionModelInterface
 {
@@ -25,24 +30,6 @@ class TBDLEXPORT RecombinationModelInterface : public DriftDiffusionModelInterfa
     //! Destructor
     virtual ~RecombinationModelInterface(void);
 
-    //! Get the electron and hole net recombination rates
-    /*!
-     * The net recombination rate is defined as \f$R_{net}=R-G\f$
-     * \obsolete
-     */
-    virtual void get_net_recombination_rates(double& recomb_e,
-        double& recomb_h) = 0;
-
-    //! Get the electron and hole net recombination rate derivatives
-    /*!
-     * The net recombination rate is defined as \f$R_{net}=R-G\f$
-     * The derivative is intended with respect to the electron (first
-     * component) and hole (second component) density.
-     *
-     * \obsolete
-     */
-    virtual void get_net_recombination_rate_derivatives(
-        std::vector<double>& recomb_e, std::vector<double>& recomb_h) = 0;
 
     //! Get the recombination rate and derivatives
     double get_net_rate_and_derivatives(std::vector<double>& dPotentials);
@@ -88,6 +75,10 @@ class TBDLEXPORT RecombinationModelInterface : public DriftDiffusionModelInterfa
 
     //! Calculate the recombination rate and its derivatives
     virtual double calculate_rate_and_derivatives(std::vector<double>& dPotentials);
+
+    //! Reorder carriers according to a module specific order
+    void reorder_carriers(const std::vector<ID>& new_order);
+
 
   private:
 

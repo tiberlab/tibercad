@@ -3,6 +3,9 @@
 #include "RecombinationModelInterface.h"
 #include "Material.h"
 
+using namespace std;
+
+
 void
 RecombinationModelInterface::do_init(void)
 {
@@ -13,7 +16,7 @@ RecombinationModelInterface::do_init(void)
   _carrier_ids.resize(0);
 
   // we are paranoid and check for multiple names
-  std::set<ID> used_ids;
+  set<ID> used_ids;
 
   for ( auto it : _carriers)
   {
@@ -28,10 +31,44 @@ RecombinationModelInterface::do_init(void)
 
     _carrier_ids.push_back(id);
     used_ids.insert(id);
+  }
 
+  // for the case of electrons and holes we put them in a standard order
+  // electron, hole
+  if (_carriers.size() == 2)
+  {
+    if ((_carriers[1] == "electron") && (_carriers[0] == "hole"))
+    {
+      vector<ID> new_order(2);
+      new_order[0] = _carrier_ids[1];
+      new_order[1] = _carrier_ids[0];
+      this->reorder_carriers(new_order);
+    }
   }
 }
 
+
+
+void
+RecombinationModelInterface::reorder_carriers(const std::vector<ID>& new_order)
+{
+  vector<string> old_order(_carriers);
+
+  assert(new_order.size() == _carriers.size());
+
+  for (unsigned int i = 0; i < new_order.size(); ++i)
+  {
+    for (unsigned int j = 0; j < _carriers.size(); ++j)
+    {
+      if (_carrier_ids[j] == new_order[i])
+      {
+        _carriers[i] = old_order[j];
+      }
+    }
+  }
+
+  _carrier_ids = new_order;
+}
 
 double
 RecombinationModelInterface::get_net_rate_and_derivatives(
