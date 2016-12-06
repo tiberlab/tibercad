@@ -244,8 +244,9 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
     //    sc->get_ionized_acceptor_density());
     C0 = (C0 > C) ? C0 : C;
 
-    double ni = sc->get_intrinsic_density();
-    ni0 = (ni0 > ni) ? ni0 : ni;
+    //sc->get_bulk_equilibrium_densities(densities);
+    //double ni = sc->get_intrinsic_density();
+    //ni0 = (ni0 > ni) ? ni0 : ni;
 
     const libMesh::RealTensor& eps_tens = sc->get_relative_permittivity();
     eps0 = (eps0 > eps_tens(0,0)) ? eps0 : eps_tens(0,0);

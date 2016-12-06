@@ -355,22 +355,9 @@ class DriftDiffusionProperties : public PhysicalModel
     void set_old_electric_field(const libMesh::RealGradient& E);
 
 
-    //! Set the gradient of the electron electr-chemical potential
-    void set_grad_fermi_e(const libMesh::RealGradient& grad_Fe);
-
-    //! Set the gradient of the hole electr-chemical potential
-    void set_grad_fermi_h(const libMesh::RealGradient& grad_Fh);
-
     //! Get the electric field
     const libMesh::RealGradient& get_electric_field(void) const;
     const libMesh::RealGradient& get_old_electric_field(void) const;
-
-
-    //! Get the gradient of the electron electr-chemical potential
-    const libMesh::RealGradient& get_grad_fermi_e(void) const;
-
-    //! Get the gradient of the hole electr-chemical potential
-    const libMesh::RealGradient& get_grad_fermi_h(void) const;
 
 
     //! Get the element we are currently working on
@@ -669,52 +656,11 @@ class DriftDiffusionProperties : public PhysicalModel
     void get_hole_mobility_derivative_grad_fermi(libMesh::RealGradient& dmu) const
       { dmu = _pd->hole_mobility_derivatives; };
 
-    //! Get the square of the intrinsic density
-    double get_intrinsic_density_squared(void) const
-      { return _intrinsic_density * _intrinsic_density; };
-
-
-    //! Get the intrinsic density
-    double get_intrinsic_density(void) const
-      { return _intrinsic_density; };
-
-
-    //! Get the equilibrium electron density
-    double get_equilibrium_electron_density(void) const
-      { return _equilibrium_n; };
-
-
-    //! Get the equilibrium hole density
-    //double get_equilibrium_hole_density(void) const
-    //  { return _equilibrium_p; };
-
 
     //! Get equilibrium fermi level
     double get_equilibrium_fermi_level(void) const
       { return _equilibrium_fermi_level; };
 
-
-    //! Get the lowest conduction band edge
-    //double get_conduction_band_edge(void) const
-    //  { return _conduction_band->get_band_edge(); };
-
-    //! Get all conduction bands
-    //void get_conduction_bands(std::vector<double>& bands)
-    //  { _conduction_band->get_bands(bands); };
-
-
-    //! Get the highest valence band edge
-    //double get_valence_band_edge(void) const
-    //  { return _valence_band->get_band_edge(); };
-
-    //! Get all valence bands
-    void get_valence_bands(std::vector<double>& bands)
-      { _valence_band->get_bands(bands); };
-
-
-    //! Get the band gap
-    double get_band_gap(void) const
-      { return _conduction_band->get_band_edge() - _valence_band->get_band_edge(); };
 
     //void get_net_recombination_rates(std::vector<double>& rates);
     //! Get the iterator to the first recombination model
@@ -765,27 +711,6 @@ class DriftDiffusionProperties : public PhysicalModel
 
     //! Create the recombination models
     void create_recombination_models(void);
-
-
-    //! Get the conduction band properties
-    const CarrierProperties& get_conduction_band(void) const
-      { return *_conduction_band; };
-
-
-    //! Get the valence band properties
-    const CarrierProperties& get_valence_band(void) const
-      { return *_valence_band; };
-
-
-    //! Get the conduction band properties
-    CarrierProperties& get_conduction_band(void)
-      { return *_conduction_band; };
-
-
-    //! Get the valence band properties
-    CarrierProperties& get_valence_band(void)
-      { return *_valence_band; };
-
 
 
     //! Tells if we are doing equilibrium calculation
@@ -857,10 +782,6 @@ class DriftDiffusionProperties : public PhysicalModel
               { return _pd->q_recombination_rate_derivatives; };
     const std::vector<double>& get_net_q_recombination_rate_derivatives(ID id) const;
 
-    //! Get the equilibrium q density
-    const std::vector<double>& get_equilibrium_q_density(void) const
-      { return _equilibrium_q; };
-    double get_equilibrium_q_density(ID id) const;
 
     //! Get the carrier electro-chemical potential
     const std::vector<double>& get_q_fermi_potential(void) const
@@ -971,41 +892,8 @@ class DriftDiffusionProperties : public PhysicalModel
       { _equilibrium_fermi_level = Ef; }
 
 
-    //! Set the intrinsic Fermi level
-    /*!
-     * Calculates the associated equilibrium densities
-     */
-    //void set_equilibrium_properties(double Ef);
-
-
-    //! Get the conduction band properties as pointer
-    void set_conduction_band(CarrierProperties* cb);
-
-
-    //! Get the valence band properties as pointer
-    void set_valence_band(CarrierProperties* vb);
-
-
-    //! Set the intrinsic density
-    void set_intrinsic_density(double ni)
-      { _intrinsic_density = ni; };
-
-
-    //! Set the equilibrium electron density
-    void set_equilibrium_n(double n)
-      { _equilibrium_n = n; };
-
-
-    //! Set the equilibrium hole density
-    void set_equilibrium_p(double p)
-      { _equilibrium_p = p; };
-
-    //New generic model
-    //! Set the equilibrium electron density
-    void set_equilibrium_q_density(std::vector<double>& dens)
-      { _equilibrium_q = dens; };
-
-    void set_equilibrium_q_density(ID id, double dens);
+    //! Set the bulk equilibrium density for carrier \c id
+    void set_bulk_equilibrium_density(ID id, double density);
 
     //! Set carrier properties
     /*!
@@ -1035,14 +923,6 @@ class DriftDiffusionProperties : public PhysicalModel
      */
     double _equilibrium_fermi_level;
 
-    //! The intrinsic density
-    double _intrinsic_density;
-
-    //! The equilibrium electron density
-    double _equilibrium_n;
-
-    //! The equilibrium electron density
-    double _equilibrium_p;
 
     //! The point-wise data
     PointData* _pd;
@@ -1053,12 +933,6 @@ class DriftDiffusionProperties : public PhysicalModel
     libMesh::RealGradient _electric_field;
     libMesh::RealGradient _old_electric_field;
 
-
-    //! The gradient of the electron chemical-potential
-    libMesh::RealGradient _grad_fermi_e;
-
-    //! The gradient of the hole chemical-potential
-    libMesh::RealGradient _grad_fermi_h;
 
     //! The total electric polarization
     //RealVectorValue _polarization;
@@ -1098,18 +972,6 @@ class DriftDiffusionProperties : public PhysicalModel
     //! The strain
     Tensor2Sym _strain;
 
-    //! The conduction band properties
-    /*!
-     * Band properties are assumed to be elemental data, \em not nodal data
-     */
-    CarrierProperties* _conduction_band;
-
-    //! The conduction band properties
-    /*!
-     * Band properties are assumed to be elemental data, \em not nodal data
-     */
-    CarrierProperties* _valence_band;
-
 
     //! The electron traps
     std::set<Trap*> _etraps;
@@ -1134,12 +996,11 @@ class DriftDiffusionProperties : public PhysicalModel
     double _lattice_vt;
 
 
-    //New generic model
     //! The gradient of the electrochemical-potential
     std::vector<libMesh::RealGradient> _grad_fermi;
 
-    //! The equilibrium q density
-    std::vector<double> _equilibrium_q;
+    //! The densities in equilibrium
+    std::vector<double> _equilibrium_densities;
 
     //! The carrier properties
     /*!
@@ -1204,6 +1065,13 @@ DriftDiffusionProperties::set_coordinates(const Point& p)
 
 
 
+inline
+void
+DriftDiffusionProperties::set_bulk_equilibrium_density(ID id, double density)
+{
+  _equilibrium_densities[id] = density;
+}
+
 
 inline
 double
@@ -1231,21 +1099,6 @@ DriftDiffusionProperties::set_old_electric_field(const libMesh::RealGradient& E)
   _old_electric_field = E;
 }
 
-inline
-void
-DriftDiffusionProperties::set_grad_fermi_e(const libMesh::RealGradient& grad_Fe)
-{
-  _grad_fermi_e = grad_Fe;
-}
-
-
-inline
-void
-DriftDiffusionProperties::set_grad_fermi_h(const libMesh::RealGradient& grad_Fh)
-{
-  _grad_fermi_h = grad_Fh;
-}
-
 
 
 inline
@@ -1260,29 +1113,6 @@ const libMesh::RealGradient&
 DriftDiffusionProperties::get_old_electric_field(void) const
 {
   return _old_electric_field;
-}
-
-
-
-
-
-
-
-
-inline
-const libMesh::RealGradient&
-DriftDiffusionProperties::get_grad_fermi_e(void) const
-{
-  return _grad_fermi_e;
-}
-
-
-
-inline
-const libMesh::RealGradient&
-DriftDiffusionProperties::get_grad_fermi_h(void) const
-{
-  return _grad_fermi_h;
 }
 
 
@@ -1710,12 +1540,6 @@ DriftDiffusionProperties::get_net_q_recombination_rate_derivatives(ID id) const
   return _pd->q_recombination_rate_derivatives[id];
 }
 
-inline
-double 
-DriftDiffusionProperties::get_equilibrium_q_density(ID id) const
-{
-  return _equilibrium_q.at(id);
-}
 
 inline
 double 
@@ -1818,12 +1642,6 @@ DriftDiffusionProperties::set_carrier_temperature(ID id, double T)
   _pd->carrier_vt[id] = T;
 }
 
-inline
-void 
-DriftDiffusionProperties::set_equilibrium_q_density(ID id, double dens)
-{
-  _equilibrium_q[id] = dens;
-}
 
 
 #endif /* _DRIFTDIFFUSIONPROPERTIES_H_ */

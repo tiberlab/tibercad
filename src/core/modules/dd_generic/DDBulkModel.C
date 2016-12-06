@@ -365,17 +365,28 @@ DDBulkModel::calculate_equilibrium_properties(void)
 
   auto& carriers = get_carrier_properties();
 
-  double Ec, Ev = 0.0;
+  double Ec = 0.0, Ev = 0.0;
+  int ncb = 0, nvb = 0;
   for (auto&& cp: carriers)
   {
     cp.second->calculate(kT);
     if (cp.second->get_carrier_type() == 'e')
+    {
       Ec += cp.second->get_band_edge();
+      ncb++;
+    }
     else
+    {
       Ev += cp.second->get_band_edge();
-
+      nvb++;
+    }
   }
   
+  if (ncb > 0)
+    Ec /= ncb;
+  if (nvb > 0)
+    Ev /= nvb;
+
 
   for (auto&& cp: carriers)
   {
@@ -521,13 +532,13 @@ DDBulkModel::calculate_equilibrium_properties(void)
   set_equilibrium_fermi_level(y);
 
 
-  //for (auto&& cp: carriers)
-  //{
-  //   bool quantum = cp.second->has_quantum();
-  //   cp.second->use_quantum(quantum);
+  for (auto&& cp: carriers)
+  {
+     bool quantum = cp.second->has_quantum();
+     cp.second->use_quantum(quantum);
 
-  //   set_equilibrium_q_density(cp.first, get_q_density(cp.first));
-  //}
+     set_bulk_equilibrium_density(cp.first, get_q_density(cp.first));
+  }
 }
 
 

@@ -49,13 +49,7 @@ DriftDiffusionProperties::DriftDiffusionProperties(const ModelOptions& options)
     _pd(NULL),
     _elem(NULL),
     _strain(0),
-    _conduction_band(NULL),
-    _valence_band(NULL),
     _equilibrium_fermi_level(0.0),
-    //_eTEpowerGrad(0.0),
-    //_hTEpowerGrad(0.0),
-    //_eTEpower(0),
-    //_hTEpower(0),
     //_polarization(0),
     _permittivity(0),
     _donor_reference_carrier(0),
@@ -385,24 +379,10 @@ DriftDiffusionProperties::do_init(void)
   set_lattice_temperature(SimulationOptions::T);
 
 
-  _equilibrium_q.resize(n_known_carriers(), 0.0);
+  _equilibrium_densities.resize(n_known_carriers(), 0.0);
 
 }
 
-
-
-void
-DriftDiffusionProperties::set_conduction_band(CarrierProperties* cb)
-{
-  _conduction_band = cb;
-}
-
-
-void
-DriftDiffusionProperties::set_valence_band(CarrierProperties* vb)
-{
-  _valence_band = vb;
-}
 
 
 DriftDiffusionProperties::~DriftDiffusionProperties(void)
