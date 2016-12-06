@@ -46,9 +46,8 @@ Module dd_generic
       acceptor_reference_carrier = hole
     }
 
-    carrier
+    carrier eguest
     {
-      name = eguest
       regions = bulk
       charge = -1
 
@@ -121,26 +120,26 @@ Module dd_generic
       C = 1e-10
     }
 
-    recombination direct 
-    {
-      regions = bulk
-      carriers = (electron, eguest)
-      C = 1e-10
-    }
+    #recombination direct 
+    #{
+    #  regions = bulk
+    #  carriers = (electron, eguest)
+    #  C = 1e-10
+    #}
 
-    recombination direct 
-    {
-      regions = bulk
-      carriers = (eguest, hole)
-      C = 1e-10
-    }
+    #recombination direct 
+    #{
+    #  regions = bulk
+    #  carriers = (eguest, hole)
+    #  C = 1e-10
+    #}
 
-    recombination direct 
-    {
-      regions = bulk
-      carriers = (eguest, hguest)
-      C = 1e-11
-    }
+    #recombination direct 
+    #{
+    #  regions = bulk
+    #  carriers = (eguest, hguest)
+    #  C = 1e-11
+    #}
 
   }   
 

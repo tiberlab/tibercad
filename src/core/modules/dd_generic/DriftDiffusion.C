@@ -518,7 +518,7 @@ DriftDiffusion::do_solve(void)
   // calculate the currents to print them on screen
   calculate_currents();
   calculate_iqe();
-  calculate_surface_recombination();
+  //calculate_surface_recombination();
 
 
   ContactData::iterator it(_boundary_currents.begin());
