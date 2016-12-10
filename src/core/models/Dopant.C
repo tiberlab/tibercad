@@ -14,6 +14,7 @@ Dopant::create(const std::string& profile, const ModelOptions& options)
 
   double density = options.get_option("density", 0.0);
   density = options.get_option("Nd", density);
+
   double ionisation_energy = options.get_option("level", 0.025);
   ionisation_energy = options.get_option("Ed", ionisation_energy);
   int g_factor = 2;
@@ -29,6 +30,7 @@ Dopant::create(const std::string& profile, const ModelOptions& options)
 
   dop = new Dopant(density, ionisation_energy, g_factor, type);
   dop->_options = options;
+  dop->_incomplete_ionisation = options.get_option("incomplete_ionization", true);
 
   if (options.has_submodel("profile"))
   {
@@ -43,7 +45,7 @@ Dopant::create(const std::string& profile, const ModelOptions& options)
 double
 Dopant::get_ionized_dopant_density(double arg, double kT)
 {
-  if (SimulationOptions::incomplete_ionization)
+  if (_incomplete_ionisation)
   {
     double denom = 1.0 + _g_factor * std::exp((arg + _ionisation_energy) / kT);
     return _density / denom;
@@ -56,7 +58,7 @@ Dopant::get_ionized_dopant_density(double arg, double kT)
 double
 Dopant::get_ionized_dopant_density_derivative(double arg, double kT)
 {
-  if (SimulationOptions::incomplete_ionization)
+  if (_incomplete_ionisation)
   {
     double tmp = _g_factor * std::exp((arg + _ionisation_energy) / kT);
     double denom = 1.0 + tmp;

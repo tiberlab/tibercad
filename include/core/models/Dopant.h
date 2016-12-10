@@ -119,6 +119,9 @@ class TBDLEXPORT Dopant
     //! The doping type
     DopingType _type;
 
+    //! Whether to use incomplete ionisation
+    bool _incomplete_ionisation;
+
     //! The ionisation energy
     double _ionisation_energy;
 
@@ -143,6 +146,7 @@ Dopant::Dopant(double density, double ionisation_energy,
   : _profile(nullptr),
     _density(density),
     _type(type),
+    _incomplete_ionisation(true),
     _ionisation_energy(ionisation_energy),
     _g_factor(g_factor)
 {
@@ -153,6 +157,7 @@ Dopant::Dopant(const Dopant& dopant)
   : _profile(dopant._profile),
     _density(dopant._density),
     _type(dopant._type),
+    _incomplete_ionisation(dopant._incomplete_ionisation),
     _ionisation_energy(dopant._ionisation_energy),
     _g_factor(dopant._g_factor)
 {
