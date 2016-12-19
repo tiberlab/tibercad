@@ -33,7 +33,8 @@ AtomisticBasis::AtomisticBasis(void)
 
 void
 AtomisticBasis::get_lattice_vectors(libMesh::RealVectorValue& a,
-    libMesh::RealVectorValue& b, libMesh::RealVectorValue& c) const
+                                    libMesh::RealVectorValue& b,
+                                    libMesh::RealVectorValue& c) const
 {
   a = libMesh::RealVectorValue(_lattice_vectors[0], _lattice_vectors[1], _lattice_vectors[2]);
   b = libMesh::RealVectorValue(_lattice_vectors[3], _lattice_vectors[4], _lattice_vectors[5]);
@@ -42,7 +43,9 @@ AtomisticBasis::get_lattice_vectors(libMesh::RealVectorValue& a,
 
 
 void
-AtomisticBasis::set_lattice_vectors(const RealVectorValue& a, const RealVectorValue& b, const RealVectorValue& c)
+AtomisticBasis::set_lattice_vectors(const libMesh::RealVectorValue& a,
+                                    const libMesh::RealVectorValue& b,
+                                    const libMesh::RealVectorValue& c)
 {
   _lattice_vectors[0] = a(0);
   _lattice_vectors[1] = a(1);

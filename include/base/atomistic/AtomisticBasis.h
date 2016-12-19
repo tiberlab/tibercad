@@ -75,9 +75,9 @@ class AtomisticBasis
                            libMesh::RealVectorValue& c) const;
 
   //! Set the lattice vectors
-  void set_lattice_vectors(const RealVectorValue& a,
-                           const RealVectorValue& b,
-                           const RealVectorValue& c);
+  void set_lattice_vectors(const libMesh::RealVectorValue& a,
+                           const libMesh::RealVectorValue& b,
+                           const libMesh::RealVectorValue& c);
 
   //! Set the periodicity
   void set_ttype_lattice_vectors(const Tensor2Gen& T);
