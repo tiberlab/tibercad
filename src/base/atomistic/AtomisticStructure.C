@@ -1299,6 +1299,10 @@ AtomisticStructure::print_tgn(const std::string& path) const
           file << std::setw(6) << _atom_types[i];
         }
       file << std::endl;
+      
+      // we need to know which regions have been used actually, otherwise
+      // we will write too many materials at the end.
+      unsigned int id = 1;
 
       for (unsigned int i = 0; i < _atoms.size(); i++)
         {

@@ -40,6 +40,7 @@ _local_origin(0),
 _translation(0),
 _cell_translation(0),
 _period(0),
+_periodicity(3, false),
 _bulk(NULL)
 {
 
@@ -225,7 +226,7 @@ AtomisticGenerator::do_init()
   // remove unflagged atoms
   remove_atoms();
 
-  // assign random-alloy species (only cations for the moment)
+  // assign random-alloy species
   if (_as->is_random_alloy())
   {
     if (_as->get_options().get_option("old_random_routine",false))
@@ -1181,6 +1182,7 @@ void AtomisticGenerator::passivate()
   if (_bondmap == NULL) bond_map_gen(_super_basis);
 
   const BondMap& bond_map = *_bondmap;
+  //_bondmap->print(_super_basis);
 
 
   //Warning: cycle end must be defined before as size will change dynamically during cycle
@@ -1462,7 +1464,6 @@ AtomisticGenerator::build_random_alloy()
 
   if (_bondmap == NULL)
   {
-    std::cout<< "yet another bondmap..."<<std::endl;
     bond_map_gen(_structure_basis);
   }
 

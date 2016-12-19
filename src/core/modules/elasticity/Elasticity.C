@@ -883,10 +883,35 @@ Elasticity::apply_shape_deformation()
     std::vector<Atom>& structure = atom_structures[ns]->get_structure_atoms();
     std::vector<std::vector<unsigned int> > bond_map = atom_structures[ns]->get_bond_map();
     double scale = atom_structures[ns]->get_scale();
+
+    // for periodic structures, we adjust the periodicity by scaling with the ratio
+    // of new and old bounding box
+    Point xmin(1e30, 1e30, 1e30);
+    Point xmax(-xmin);
+    Point xmin_n(1e30, 1e30, 1e30);
+    Point xmax_n(-xmin);
    
     for (unsigned int na = 0; na < structure.size(); na++)
     {
-      Point old_pos(structure[na].get_position() / scale);
+      Point old_pos(structure[na].get_position());
+
+      if (old_pos(0) < xmin(0))
+        xmin(0) = old_pos(0);
+      else if (old_pos(0) > xmax(0))
+        xmax(0) = old_pos(0);
+
+      if (old_pos(1) < xmin(1))
+        xmin(1) = old_pos(1);
+      else if (old_pos(1) > xmax(1))
+        xmax(1) = old_pos(1);
+
+      if (old_pos(2) < xmin(2))
+        xmin(2) = old_pos(2);
+      else if (old_pos(2) > xmax(2))
+        xmax(2) = old_pos(2);
+
+      old_pos /= scale;
+
        
       // will be the point in the reference coordinates, but is used also to
       // pass the real space coordinates to inverse_map
@@ -947,7 +972,47 @@ Elasticity::apply_shape_deformation()
       
       structure[na].set_position(old_pos);
       
+      if (old_pos(0) < xmin_n(0))
+        xmin_n(0) = old_pos(0);
+      else if (old_pos(0) > xmax_n(0))
+        xmax_n(0) = old_pos(0);
+
+      if (old_pos(1) < xmin_n(1))
+        xmin_n(1) = old_pos(1);
+      else if (old_pos(1) > xmax_n(1))
+        xmax_n(1) = old_pos(1);
+
+      if (old_pos(2) < xmin_n(2))
+        xmin_n(2) = old_pos(2);
+      else if (old_pos(2) > xmax_n(2))
+        xmax_n(2) = old_pos(2);
+
+
     }
+
+    // the new bounding box
+    xmax_n -= xmin_n;
+
+    // the old bounding box
+    xmax -= xmin;
+
+    RealVectorValue a, b, c;
+    atom_structures[ns]->get_lattice_vectors(a, b, c);
+    a *= xmax_n(0) / xmax(0);
+    b *= xmax_n(1) / xmax(1);
+    c *= xmax_n(2) / xmax(2);
+    atom_structures[ns]->set_lattice_vectors(a, b, c);
+    atom_structures[ns]->build_bond_map();
+
+
+    ostringstream os;
+    os << "ratio : " << xmax_n(0) / xmax(0) << " "
+      << xmax_n(1) / xmax(1) << " "
+      << xmax_n(2) / xmax(2) << "\n";
+    atom_structures[ns]->get_lattice_vectors(a, b, c);
+    os << a << endl;
+    os << b << endl;
+    os << c << endl;
 
   }
   

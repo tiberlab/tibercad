@@ -8,7 +8,6 @@
 #include "Messages.h"
 #include "Specie.h"
 #include "InitFailedException.h"
-#include "BondMap.h"
 
 #include "HashSet.h"
 #include "HashMap.h"
@@ -70,15 +69,30 @@ class AtomisticBasis
    */
   const std::vector<double>& get_lattice_vectors(void) const;
 
+  //! Get the three lattice vectors
   void get_lattice_vectors(libMesh::RealVectorValue& a,
                            libMesh::RealVectorValue& b,
                            libMesh::RealVectorValue& c) const;
+
+  //! Set the lattice vectors
+  void set_lattice_vectors(const RealVectorValue& a,
+                           const RealVectorValue& b,
+                           const RealVectorValue& c);
 
   //! Set the periodicity
   void set_ttype_lattice_vectors(const Tensor2Gen& T);
   
   //! Set the periodicity
   Tensor2Gen get_ttype_lattice_vectors(void);
+
+  //! Refresh (or build) information as bondmap, number of atoms etc.
+  /*! This can be needed if we move atoms and the bondmap change, or
+   * we change total number of atoms
+   */
+  void refresh(void);
+
+  //! Build or re-build bond map
+  void build_bond_map(void);
 
   //! Build and return a BondMap object
   /*!
@@ -172,15 +186,6 @@ class AtomisticBasis
    * maybe this will change in the future
    */
   AtomisticBasis(void);
-
-  //! Build bond map
-  void build_bond_map(void);
-
-  //! Refresh (or build) information as bondmap, number of atoms etc.
-  /*! This can be needed if we move atoms and the bondmap change, or
-   * we change total number of atoms
-   */
-  void refresh(void);
     
   //! Bond Map object pointer
   BondMap* _bondmap;

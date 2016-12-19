@@ -42,6 +42,24 @@ AtomisticBasis::get_lattice_vectors(libMesh::RealVectorValue& a,
 
 
 void
+AtomisticBasis::set_lattice_vectors(const RealVectorValue& a, const RealVectorValue& b, const RealVectorValue& c)
+{
+  _lattice_vectors[0] = a(0);
+  _lattice_vectors[1] = a(1);
+  _lattice_vectors[2] = a(2);
+
+  _lattice_vectors[3] = b(0);
+  _lattice_vectors[4] = b(1);
+  _lattice_vectors[5] = b(2);
+
+  _lattice_vectors[6] = c(0);
+  _lattice_vectors[7] = c(1);
+  _lattice_vectors[8] = c(2);
+}
+
+
+
+void
 AtomisticBasis::set_ttype_lattice_vectors(const Tensor2Gen& T)
 {
   unsigned int count = 0;
