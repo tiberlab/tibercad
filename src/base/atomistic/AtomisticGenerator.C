@@ -40,7 +40,6 @@ _local_origin(0),
 _translation(0),
 _cell_translation(0),
 _period(0),
-_periodicity(3, false),
 _bulk(NULL)
 {
 
