@@ -21,6 +21,15 @@ class Boundary;
  * guarantees the order (electron, hole) whenever two particles with these names are
  * provided.
  *
+ * Recombination models should be implemented as
+ * \[ R_{12} = g(n_1, n_2)*\left( 1 - e^{(E_{F,2}-E_{F,1})/k_BT} \right) \]
+ * where 1,2 are the two carriers. The net recombination for carrier 1 is then
+ * \$R1 = -sign(q_1)R_{12}\$ and for carrier 2 \$R1 = sign(q_2)R_{12}\$.
+ * The sign factor is provided as a weight, so that stoichiometric ratios can be
+ * implemented. This handles both electron-hole recombination and transfers between
+ * bands of the same type. The direction of transfer is given by the sign of the
+ * Fermi level difference.
+ *
  */
 class TBDLEXPORT RecombinationModelInterface : public DriftDiffusionModelInterface
 {
@@ -32,7 +41,15 @@ class TBDLEXPORT RecombinationModelInterface : public DriftDiffusionModelInterfa
 
 
     //! Get the recombination rate and derivatives
+    /*!
+     * This provides the single rate and its derivatives,
+     * which have to be multiplied with the weight factor
+     * for every carrier.
+     */
     double get_net_rate_and_derivatives(std::vector<double>& dPotentials);
+
+    //! Get the weights for the different carriers
+    const std::vector<double>& get_weights(void) const;
 
 
     //! Creates a new named recombination model
@@ -79,6 +96,9 @@ class TBDLEXPORT RecombinationModelInterface : public DriftDiffusionModelInterfa
     //! Reorder carriers according to a module specific order
     void reorder_carriers(const std::vector<ID>& new_order);
 
+    //! Set the weights, if necessary
+    void set_weights(std::vector<double>& weights);
+
 
   private:
 
@@ -90,6 +110,9 @@ class TBDLEXPORT RecombinationModelInterface : public DriftDiffusionModelInterfa
 
     //! The global IDs for the carriers
     std::vector<ID> _carrier_ids;
+
+    //! The weights for the different carrier
+    std::vector<double> _weights;
 
 };
 
@@ -150,6 +173,20 @@ const std::vector<ID>&
 RecombinationModelInterface::get_carrier_ids(void) const
 {
   return(_carrier_ids);
+}
+
+inline
+const std::vector<double>&
+RecombinationModelInterface::get_weights(void) const
+{
+  return(_weights);
+}
+
+inline
+void
+RecombinationModelInterface::set_weights(std::vector<double>& weights)
+{
+  _weights = weights;
 }
 
 #endif // _RECOMBINATIONMODELINTERFACE_H_

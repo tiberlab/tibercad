@@ -76,26 +76,12 @@ class DriftDiffusionProperties : public PhysicalModel
         //! Constructor
         PointData(void);
 
-        //! The electron temperature in eV (\f$= k_B T_e / e\f$)
-        //double electron_vt;
-
-        //! The hole temperature in eV (\f$= k_B T_h / e\f$)
-        //double hole_vt;
-
-
         //! The electric poential
         double electric_potential;
 
 
         double old_electric_potential;
 
-
-        //! The electron density
-        /*!
-         * The electron density is given by
-         * \f[n = N_c e^{\frac{e\varphi - e\phi_n - E_c}{k_B T_e}}\f]
-         */
-        //double electron_density;
 
         //! The electron density derivative with respect to the electric potential
         /*!
@@ -104,12 +90,6 @@ class DriftDiffusionProperties : public PhysicalModel
          */
         double electron_density_derivative;
 
-        //! The hole density
-        /*!
-         * The hole density is given by
-         * \f[p = N_v e^{-\frac{e\varphi - e\phi_p - E_v}{k_B T_h}}\f]
-         */
-        //double hole_density;
 
         //! The hole density derivative
         /*!
@@ -118,11 +98,6 @@ class DriftDiffusionProperties : public PhysicalModel
          */
         double hole_density_derivative;
 
-        //! \f$\gamma_n\f$
-        double gamma_n;
-
-        //! \f$\gamma_n\f$
-        double gamma_p;
 
         //! The ionized donor density
         double ionized_donor_density;
@@ -149,61 +124,8 @@ class DriftDiffusionProperties : public PhysicalModel
         //! The total charge density
         double charge_density;
 
-        //! The electron mobility
-        double electron_mobility;
-
-        double electron_mobility_derivative_potential;
-
-        libMesh::RealGradient electron_mobility_derivative_grad_potential;
-
-        //! The electron mobility derivative w.r.t gradient of Fermi level
-        libMesh::RealGradient electron_mobility_derivatives;
-
-
-        //! The hole mobility
-        double hole_mobility;
-
-        double hole_mobility_derivative_potential;
-
-        libMesh::RealGradient hole_mobility_derivative_grad_potential;
-
-        //! The hole mobility derivative w.r.t gradient of Fermi level
-        libMesh::RealGradient hole_mobility_derivatives;
-
-
-        //! The electron conductivity
-        double electron_conductivity;
-
-        // ! The derivatives of the electron conductivity
-        //std::vector<double> electron_conductivity_derivatives;
-
-        //! The hole conductivity
-        double hole_conductivity;
-
-        // ! The derivatives of the hole conductivity
-        //std::vector<double> hole_conductivity_derivatives;
-
-        //! The net electron recombination rate
-        double electron_recombination_rate;
-
-        //! The derivatives of the net electron recombination rate
-        /*!
-         * order is: d/dn, d/dp, d/dfermi_e, d/dfermi_h
-         */
-        std::vector<double> electron_recombination_rate_derivatives;
-
-        //! The net hole recombination rate
-        double hole_recombination_rate;
-
-        //! The derivatives of the net hole recombination rate
-        /*!
-         * order is: d/dn, d/dp, d/dfermi_e, d/dfermi_h
-         */
-        std::vector<double> hole_recombination_rate_derivatives;
-
 
         //! A map storing the fermi potential for each carrier identified by id
-        //std::vector<double> fermi_potential;
         std::vector<double> fermi_potential;
 
         //! Old fermi potential
@@ -214,6 +136,8 @@ class DriftDiffusionProperties : public PhysicalModel
 
          //! A map storing carrier density derivatives
         std::vector<double> q_density_derivative;
+
+        //! Total charge density derivatives
         std::vector<double> charge_density_derivative;
 
         //! A map storing carrier conductivities
@@ -418,18 +342,6 @@ class DriftDiffusionProperties : public PhysicalModel
     void calculate_net_recombination_rates(void);
 
 
-
-    //! Get the electron density
-    /*!
-     * Get the electron density as calculated by \c calculate_all(...)
-     *
-     * \return the electron density
-     */
-    //double get_electron_density(void) const
-    //  { return _pd->electron_density; };
-
-
-
     //! Get the electron density derivative
     /*!
      * \return the electron density derivative with respect to the
@@ -437,24 +349,6 @@ class DriftDiffusionProperties : public PhysicalModel
      */
     double get_electron_density_derivative(void) const
       { return _pd->electron_density_derivative; };
-
-
-    //! Get the electron gamma \f$\gamma_n\f$
-    /*!
-     * \f$\gamma_n = n/n_{cl}\f$
-     */
-    double get_electron_gamma(void) const
-    { return _pd->gamma_n; };
-
-
-    //! Get the hole density
-    /*!
-     * Get the hole density as calculated by \c calculate_all(...)
-     *
-     * \return the hole density
-     */
-    //double get_hole_density(void) const
-    //  { return _pd->hole_density; };
 
 
     //! Get the ehole density derivative
@@ -465,13 +359,6 @@ class DriftDiffusionProperties : public PhysicalModel
     double get_hole_density_derivative(void) const
       { return _pd->hole_density_derivative; };
 
-
-    //! Get the hole gamma \f$\gamma_p\f$
-    /*!
-     * \f$\gamma_p = p/p_{cl}\f$
-     */
-    double get_hole_gamma(void) const
-    { return _pd->gamma_p; };
 
 
     //! Get the ionized donor density
@@ -540,50 +427,17 @@ class DriftDiffusionProperties : public PhysicalModel
 
     //! Get the derivatives of the total charge density
     /*!
-     * The derivatives are given w.r.t. the two quasi Fermi levels
+     * The derivatives are given w.r.t. the quasi Fermi levels
      */
-    void get_charge_density_derivatives(double derivatives[2]) const;
+    void get_charge_density_derivatives(std::vector<double>& derivatives) const;
+
+    //! Get the derivative of the total charge density
+    /*!
+     * The derivative is given w.r.t. the quasi Fermi level
+     *
+     * \param id the id of the particle
+     */
     double get_charge_density_derivative(ID id) const;
-
-
-    //! Get the net electron recombination rate
-    /*!
-     * Get \f$R_{net} = R - G\f$ as
-     */
-    double get_net_electron_recombination_rate(void) const
-      { return _pd->electron_recombination_rate; };
-
-
-    //! Get the net electron recombination rate derivatives
-    /*!
-     * Get \f$\frac{\partial R_{net}}{\partial\varphi}\f$
-     *
-     * \return the derivatives as a const vector reference
-     */
-    const std::vector<double>&
-      get_net_electron_recombination_rate_derivatives(void) const
-        { return _pd->electron_recombination_rate_derivatives; };
-
-
-    //! Get the net hole recombination rate
-    /*!
-     * Get \f$R_{net} = R - G\f$ as
-     * calculated by \c calculate_all(...)
-     *
-     */
-    double get_net_hole_recombination_rate(void) const
-      { return _pd->hole_recombination_rate; };
-
-
-    //! Get the net hole recombination rate derivatives
-    /*!
-     * Get \f$\frac{\partial R_{net}}{\partial\varphi}\f$
-     *
-     * \return the derivatives as a const vector reference
-     */
-    const std::vector<double>&
-      get_net_hole_recombination_rate_derivatives(void) const
-        { return _pd->hole_recombination_rate_derivatives; };
 
 
     //! Get the total electric polarization
@@ -598,63 +452,6 @@ class DriftDiffusionProperties : public PhysicalModel
     //! Get the relative permittivity tensor
     const libMesh::RealTensor& get_relative_permittivity(void) const
       { return _permittivity; };
-
-
-    //! Get the electron conductivity
-    /*!
-     * \return the electron conductivity \f$\sigma_n = \mu_n n\f$
-     */
-    double get_electron_conductivity(void) const
-      { return _pd->electron_conductivity; };
-
-
-    //! Get the hole conductivity
-    /*!
-     * \return the hole conductivity \f$\sigma_p = \mu_p p\f$
-     */
-    double get_hole_conductivity(void) const
-      { return _pd->hole_conductivity; };
-
-
-    //! Get the electron mobility
-    /*!
-     * \return the electron mobility
-     */
-    double get_electron_mobility(void) const
-      { return _pd->electron_mobility; };
-
-
-    //! Get the hole mobility
-    /*!
-     * \return the hole mobility
-     */
-    double get_hole_mobility(void) const
-      { return _pd->hole_mobility; };
-
-
-    //! Get the electron mobility derivative w.r.t. electric potential
-    double get_electron_mobility_derivative_potential(void) const
-      { return _pd->electron_mobility_derivative_potential; };
-
-    //! Get the hole mobility derivative w.r.t. electric potential
-    double get_hole_mobility_derivative_potential(void) const
-      { return _pd->hole_mobility_derivative_potential; };
-
-    //! Get the electron mobility derivative w.r.t. gradient of the electric potential
-    void get_electron_mobility_derivative_grad_potential(libMesh::RealGradient& dmu) const
-      { dmu = _pd->electron_mobility_derivative_grad_potential; };
-
-    //! Get the hole mobility derivative w.r.t. gradient of the electric potential
-    void get_hole_mobility_derivative_grad_potential(libMesh::RealGradient& dmu) const
-      { dmu = _pd->hole_mobility_derivative_grad_potential; };
-
-    //! Get the electron mobility derivative w.r.t. gradient of the fermi potential
-    void get_electron_mobility_derivative_grad_fermi(libMesh::RealGradient& dmu) const
-      { dmu = _pd->electron_mobility_derivatives; };
-
-    //! Get the hole mobility derivative w.r.t. gradient of the fermi potential
-    void get_hole_mobility_derivative_grad_fermi(libMesh::RealGradient& dmu) const
-      { dmu = _pd->hole_mobility_derivatives; };
 
 
     //! Get equilibrium fermi level
@@ -772,6 +569,11 @@ class DriftDiffusionProperties : public PhysicalModel
     void get_q_mobility_derivative_grad_fermi(ID id, libMesh::RealGradient& dmu) const;
 
     //! Get the net recombination rates
+    /*!
+     * Get \f$R_{net} = R - G\f$ as
+     * calculated by \c calculate_all(...)
+     *
+     */
     const std::vector<double>&  get_net_q_recombination_rate(void) const
       { return _pd->q_recombination_rate; };
     double get_net_q_recombination_rate(ID id) const;
@@ -1185,7 +987,6 @@ DriftDiffusionProperties::get_charge_density(void) const
   for (auto& cp: _carrier_properties)
   {
     dens += cp.second->get_charge() * _pd->q_density[cp.first];
-    //std::cerr << cp.second->get_particle_name() << " " <<  cp.second->get_charge() << " " << _pd->q_density[cp.first] << std::endl;
   }
     
       //static_cast<long double>(_pd->hole_density) -
@@ -1205,26 +1006,16 @@ DriftDiffusionProperties::get_charge_density(void) const
 inline
 void
 DriftDiffusionProperties::get_charge_density_derivatives(
-    double derivatives[2]) const
+    std::vector<double>& derivatives) const
 {
-  long double der0, der1 = 0.0;
+  derivatives.resize(_carrier_properties.size(), 0.0);
 
   for (auto& cp: _carrier_properties)
   {
-    if (cp.second->get_carrier_type() == 'e')
-      der0 += _pd->q_density_derivative[cp.first];
-    if (cp.second->get_carrier_type() == 'h')
-       der1 -= _pd->q_density_derivative[cp.first];
+    derivatives[cp.first] += _pd->charge_density_derivative[cp.first];
   }
 
-  der0 += - static_cast<long double>(get_ionized_donor_density_derivative())
-          + static_cast<long double>(_pd->ionized_traps_derivative[0]);
 
-  der1 +=   static_cast<long double>(get_ionized_acceptor_density_derivative())
-          + static_cast<long double>(_pd->ionized_traps_derivative[1]);
-
-  derivatives[0] = static_cast<double>(der0);
-  derivatives[1] = static_cast<double>(der1);
 
   //derivatives[0] = get_electron_density_derivative()
   //  - get_ionized_donor_density_derivative()

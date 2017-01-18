@@ -14,6 +14,7 @@ RecombinationModelInterface::do_init(void)
 
   // to be sure
   _carrier_ids.resize(0);
+  _weights.resize(0);
 
   // we are paranoid and check for multiple names
   set<ID> used_ids;
@@ -30,6 +31,11 @@ RecombinationModelInterface::do_init(void)
           "': carrier names must be different");
 
     _carrier_ids.push_back(id);
+
+    double weight = (get_driftdiffusionproperties().get_carrier_properties(id)
+            ->get_carrier_type() == 'e') ? 1.0 : -1.0;
+    _weights.push_back(weight);
+
     used_ids.insert(id);
   }
 
@@ -53,6 +59,7 @@ void
 RecombinationModelInterface::reorder_carriers(const std::vector<ID>& new_order)
 {
   vector<string> old_order(_carriers);
+  vector<double> old_weights(_weights);
 
   assert(new_order.size() == _carriers.size());
 
@@ -63,6 +70,7 @@ RecombinationModelInterface::reorder_carriers(const std::vector<ID>& new_order)
       if (_carrier_ids[j] == new_order[i])
       {
         _carriers[i] = old_order[j];
+        _weights[i] = old_weights[j];
       }
     }
   }

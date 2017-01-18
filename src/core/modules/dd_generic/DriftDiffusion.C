@@ -2791,8 +2791,9 @@ DriftDiffusion::calculate_currents_rstf_global(void)
             Constants::e * sc->get_q_conductivity(var);
       }
 
-      double Rn = sc->get_net_electron_recombination_rate();
-      double Rp = sc->get_net_hole_recombination_rate();
+      // TODO
+      double Rn = 0;
+      double Rp = 0;
       double net_rate = JxW[qp] * Constants::e * (Rn - Rp);
 
       // loop over all recombination models and add the ones that model
@@ -3021,8 +3022,9 @@ DriftDiffusion::calculate_currents_rstf_compact(void)
         curr[var] = JxW[qp] * sigma * grad_qf[var];
       }
 
-      double Rn = sc->get_net_electron_recombination_rate();
-      double Rp = sc->get_net_hole_recombination_rate();
+      // TODO
+      double Rn = 0;
+      double Rp = 0;
       double net_rate = JxW[qp] * Constants::e * (Rn - Rp);
 
       //libMesh::RealGradient je(JxW[qp] * phi0 * (sigma_e * (dEfn + Pn * dT)));

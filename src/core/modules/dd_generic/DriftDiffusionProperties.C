@@ -29,12 +29,6 @@ using namespace std;
 
 
 DriftDiffusionProperties::PointData::PointData(void)
-  : //electron_conductivity_derivatives(3, 0.0),
-    //hole_conductivity_derivatives(3, 0.0),
-    electron_recombination_rate(0.0),
-    electron_recombination_rate_derivatives(4, 0.0),
-    hole_recombination_rate(0.0),
-    hole_recombination_rate_derivatives(4, 0.0)
 {
 }
 
@@ -647,15 +641,18 @@ DriftDiffusionProperties::calculate_net_recombination_rates(void)
     double R = (it->second)->get_net_rate_and_derivatives(dR);
 
     const vector<ID>& carriers = (it->second)->get_carrier_ids();
+    const vector<double>& weights = (it->second)->get_weights();
 
     for (ID i = 0; i < carriers.size(); ++i)
     {
-      _pd->q_recombination_rate[carriers[i]] += R;
+      _pd->q_recombination_rate[carriers[i]] += weights[i] * R;
       for (ID j = 0; j < carriers.size(); ++j)
       {
-        _pd->q_recombination_rate_derivatives[carriers[i]][carriers[j]] += dR[j];
+        _pd->q_recombination_rate_derivatives[carriers[i]][carriers[j]]
+                                                           += weights[i] * dR[j];
       }
-      _pd->q_recombination_rate_derivatives[carriers[i]][this->n_known_carriers()] += dR[this->n_known_carriers()];
+      _pd->q_recombination_rate_derivatives[carriers[i]][this->n_known_carriers()]
+                                                         += weights[i] * dR[this->n_known_carriers()];
     }
   }
 }
