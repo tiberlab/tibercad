@@ -52,7 +52,7 @@ SemiconductorModel::do_init(void)
 void
 SemiconductorModel::prepare_element_data(void)
 {
-  const Elem* elem = get_element();
+  const libMesh::Elem* elem = get_element();
   assert(elem != NULL);
 
   if (is_inhomogeneous())

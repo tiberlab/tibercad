@@ -28,6 +28,7 @@ CarrierProperties::CarrierProperties(const ModelOptions& options) :
 {
   _particle_name = get_options().get_name();
   _particle_name = get_option("name", _particle_name);
+
   if (_particle_name.empty())
     throw ModelErrorException("Carrier name MUST be provided");
 

@@ -100,7 +100,7 @@ HoppingMobility::get_derivative_potential(void)
 }
 
 void
-HoppingMobility::get_derivative_grad_potential(RealGradient& dm)
+HoppingMobility::get_derivative_grad_potential(libMesh::RealGradient& dm)
 {
   double mu;
   if (get_carrier_type() == 'e')
@@ -136,7 +136,7 @@ HoppingMobility::get_mobility_derivatives(std::vector<double>& dm)
 }
 
 void
-HoppingMobility::get_derivative_grad_fermi(RealGradient& dm)
+HoppingMobility::get_derivative_grad_fermi(libMesh::RealGradient& dm)
 {
   dm.zero();
 }

@@ -31,10 +31,10 @@ class TBDLLOCAL FieldDependentMobility : public MobilityModelInterface
     virtual double get_mobility(void);
 
     //! \copydoc MobilityModelInterface::get_derivative_grad_potential()
-    virtual void get_derivative_grad_potential(RealGradient& dm);
+    virtual void get_derivative_grad_potential(libMesh::RealGradient& dm);
 
     //! \copydoc MobilityModelInterface::get_derivative_grad_fermi()
-    virtual void get_derivative_grad_fermi(RealGradient& dm);
+    virtual void get_derivative_grad_fermi(libMesh::RealGradient& dm);
 
 
   protected:

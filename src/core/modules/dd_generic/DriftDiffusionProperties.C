@@ -637,22 +637,22 @@ DriftDiffusionProperties::calculate_net_recombination_rates(void)
   recomb_iterator end = _recombination_models.end();
   for ( ; it != end; ++it)
   {
-    vector<double> dR(this->n_known_carriers() + 1, 0.0);
-    double R = (it->second)->get_net_rate_and_derivatives(dR);
+    vector<double> R(this->n_known_carriers(), 0.0);
+    vector<vector<double>> dR( this->n_known_carriers(), vector<double>(this->n_known_carriers() + 1, 0.0) );
+
+    (it->second)->get_net_rate_and_derivatives(R, dR);
 
     const vector<ID>& carriers = (it->second)->get_carrier_ids();
     const vector<double>& weights = (it->second)->get_weights();
 
     for (ID i = 0; i < carriers.size(); ++i)
     {
-      _pd->q_recombination_rate[carriers[i]] += weights[i] * R;
+      _pd->q_recombination_rate[carriers[i]] += R[i];
       for (ID j = 0; j < carriers.size(); ++j)
       {
-        _pd->q_recombination_rate_derivatives[carriers[i]][carriers[j]]
-                                                           += weights[i] * dR[j];
+        _pd->q_recombination_rate_derivatives[carriers[i]][carriers[j]] += dR[i][j];
       }
-      _pd->q_recombination_rate_derivatives[carriers[i]][this->n_known_carriers()]
-                                                         += weights[i] * dR[this->n_known_carriers()];
+      _pd->q_recombination_rate_derivatives[carriers[i]][this->n_known_carriers()] += dR[i][this->n_known_carriers()];
     }
   }
 }

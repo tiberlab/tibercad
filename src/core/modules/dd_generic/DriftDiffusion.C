@@ -1326,7 +1326,7 @@ DriftDiffusion::rebuild_equation_system(void)
   for (auto&& name : _carriers)
     system.add_variable(name, libMeshEnums::FIRST, &(_carrier_region_ids[name]));
 
-  // this is the last variable, so that we can us the index of the carriers also
+  // this is the last variable, so that we can use the index of the carriers also
   // as their variable index
   // the potential is assumed to be on the whole domain
   system.add_variable("potential", libMeshEnums::FIRST, &(this->get_region_ids()));
@@ -4786,7 +4786,6 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                 }
               }
             }
-            
           }
         }
 

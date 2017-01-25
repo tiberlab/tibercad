@@ -60,41 +60,84 @@ DirectRecombination::do_init(void)
 
 
 
-double
-DirectRecombination::calculate_rate_and_derivatives(std::vector<double>& dPotentials)
+void
+DirectRecombination::calculate_rate_and_derivatives(std::vector<double>& R, std::vector<std::vector<double>>& dPotentials)
 {
   const ID id1 = this->get_carrier_ids()[0];
   const ID id2 = this->get_carrier_ids()[1];
 
   const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
-  double Ef1 = -dd.get_q_fermi_potential(id1);
-  double Ef2 = -dd.get_q_fermi_potential(id2);
+
+  const char ct1 = dd.get_carrier_properties(id1)->get_carrier_type();
+  const char ct2 = dd.get_carrier_properties(id2)->get_carrier_type();
+
   double kT = dd.get_lattice_temperature();
 
-  double n1  = dd.get_q_density(id1);
-  double n2  = dd.get_q_density(id2);
-  double dn1  = dd.get_q_density_derivative(id1);
-  double dn2  = dd.get_q_density_derivative(id2);
-  double q1 = dd.get_carrier_properties(id1)->get_charge();
-  double q2 = dd.get_carrier_properties(id2)->get_charge();
+  if (ct1 != ct2)
+  {
+    double Ef1 = -dd.get_q_fermi_potential(id1);
+    double Ef2 = -dd.get_q_fermi_potential(id2);
+    double beta = (ct1 == 'e') ? 1.0/kT : -1.0/kT;
 
-  //double E01 = dd.get_carrier_properties(id1)->get_band_edge();
-  //double E02 = dd.get_carrier_properties(id2)->get_band_edge();
+    double n1  = dd.get_q_density(id1);
+    double n2  = dd.get_q_density(id2);
+    double dn1  = dd.get_q_density_derivative(id1);
+    double dn2  = dd.get_q_density_derivative(id2);
+    double q1 = dd.get_carrier_properties(id1)->get_charge();
+    double q2 = dd.get_carrier_properties(id2)->get_charge();
 
-  double exponential = exp((Ef2 - Ef1) / kT);
-  double stat_fac = 1.0 - exponential;
-  double g = C_ * n1 * n2;
+    //double E01 = dd.get_carrier_properties(id1)->get_band_edge();
+    //double E02 = dd.get_carrier_properties(id2)->get_band_edge();
 
-  double R = g * stat_fac;
+    double exponential = exp((Ef2 - Ef1) * beta);
+    double stat_fac = 1.0 - exponential;
+    double g = C_ * n1 * n2;
 
-  double dR1 = -C_ * n2 * (-dn1 * stat_fac + 1/kT * n1 * exponential);
-  double dR2 = -C_ * n1 * (-dn2 * stat_fac - 1/kT * n2 * exponential);
+    R[id1] = g * stat_fac;
+    R[id2] = g * stat_fac;
 
-  dPotentials[id1] = dR1;
-  dPotentials[id2] = dR2;
-  dPotentials[dd.n_known_carriers()] = stat_fac * C_ * (n2 * dn1 + n1 * dn2);
+    double dR0 = stat_fac * C_ * (n2 * dn1 + n1 * dn2);
+    double dR1 = -C_ * n2 * (dn1 * stat_fac + beta * n1 * exponential);
+    double dR2 = -C_ * n1 * (dn2 * stat_fac - beta * n2 * exponential);
 
-  return R;
+    dPotentials[id1][id1] = dR1;
+    dPotentials[id1][id2] = dR2;
+    dPotentials[id2][id1] = dR1;
+    dPotentials[id2][id2] = dR2;
+    dPotentials[id1][dd.n_known_carriers()] = dR0; 
+    dPotentials[id2][dd.n_known_carriers()] = dR0;
+  }
+  else
+  {
+    double n1  = dd.get_q_density(id1);
+    double n2  = dd.get_q_density(id2);
+    double N0  = dd.get_carrier_properties(id2)->get_effective_DOS();
+    double dn1 = dd.get_q_density_derivative(id1);
+    double dn2 = dd.get_q_density_derivative(id2);
+    double E1  = dd.get_carrier_properties(id1)->get_band_edge();
+    double E2  = dd.get_carrier_properties(id2)->get_band_edge();
+    double Ef1 = -dd.get_q_fermi_potential(id1);
+    double Ef2 = -dd.get_q_fermi_potential(id2);
+    double beta = (ct1 == 'e') ? 1.0/kT : -1.0/kT;
+
+    double thermal = exp( 0.5*beta*(E1-E2) - 0.5*beta*fabs(E1-E2) );
+    double exponential = exp((Ef2 - Ef1) * beta);
+    double stat = 1.0 - exponential;
+
+    R[id1] = C_ * thermal * stat * n1 * (N0 - n2);
+    R[id2] = -R[id1];
+
+    double dR0 =  C_ * thermal * stat * ( (N0 - n2)*dn1 - n1*dn2 );
+    double dR1 = -C_ * thermal * (N0 - n2) * ( dn1 * stat + beta * n1 * exponential);
+    double dR2 = -C_ * thermal * n1 * (-dn2 * stat - beta * (N0 - n2) * exponential);
+
+    dPotentials[id1][id1] =  dR1;
+    dPotentials[id1][id2] =  dR2;
+    dPotentials[id2][id1] = -dR1;
+    dPotentials[id2][id2] = -dR2;
+    dPotentials[id1][dd.n_known_carriers()] =  dR0;
+    dPotentials[id2][dd.n_known_carriers()] = -dR0;
+  }
 }
 
 void

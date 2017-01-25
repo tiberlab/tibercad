@@ -175,13 +175,13 @@ DopingDependentMobility::get_mobility_derivatives(std::vector<double>& dm)
 }
 
 void
-DopingDependentMobility::get_derivative_grad_potential(RealGradient& dm)
+DopingDependentMobility::get_derivative_grad_potential(libMesh::RealGradient& dm)
 {
   dm.zero();
 }
 
 void
-DopingDependentMobility::get_derivative_grad_fermi(RealGradient& dm)
+DopingDependentMobility::get_derivative_grad_fermi(libMesh::RealGradient& dm)
 {
   dm.zero();
 }

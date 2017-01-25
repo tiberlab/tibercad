@@ -78,17 +78,18 @@ RecombinationModelInterface::reorder_carriers(const std::vector<ID>& new_order)
   _carrier_ids = new_order;
 }
 
-double
+void
 RecombinationModelInterface::get_net_rate_and_derivatives(
-    std::vector<double>& dPotentials)
+    std::vector<double>& R, std::vector<std::vector<double>>& dPotentials)
 {
-  dPotentials.resize(this->get_driftdiffusionproperties().n_known_carriers() + 1, 0.0);
-  return(calculate_rate_and_derivatives(dPotentials));
+  R.resize(this->get_driftdiffusionproperties().n_known_carriers(), 0.0);
+  dPotentials.resize(this->get_driftdiffusionproperties().n_known_carriers(), vector<double>(this->get_driftdiffusionproperties().n_known_carriers() + 1, 0.0) );
+  calculate_rate_and_derivatives(R, dPotentials);
 }
 
-double
+void
 RecombinationModelInterface::calculate_rate_and_derivatives(
-    std::vector<double>& )
+    std::vector<double>& R, std::vector<std::vector<double>>& dPotentials)
 {
-  return(0.0);
+
 }

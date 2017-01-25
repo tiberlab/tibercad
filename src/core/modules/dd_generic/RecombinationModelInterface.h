@@ -41,12 +41,7 @@ class TBDLEXPORT RecombinationModelInterface : public DriftDiffusionModelInterfa
 
 
     //! Get the recombination rate and derivatives
-    /*!
-     * This provides the single rate and its derivatives,
-     * which have to be multiplied with the weight factor
-     * for every carrier.
-     */
-    double get_net_rate_and_derivatives(std::vector<double>& dPotentials);
+    void get_net_rate_and_derivatives(std::vector<double>& R, std::vector<std::vector<double>>& dPotentials);
 
     //! Get the weights for the different carriers
     const std::vector<double>& get_weights(void) const;
@@ -91,7 +86,7 @@ class TBDLEXPORT RecombinationModelInterface : public DriftDiffusionModelInterfa
     virtual void do_init(void) override;
 
     //! Calculate the recombination rate and its derivatives
-    virtual double calculate_rate_and_derivatives(std::vector<double>& dPotentials);
+    virtual void calculate_rate_and_derivatives(std::vector<double>& R, std::vector<std::vector<double>>& dPotentials);
 
     //! Reorder carriers according to a module specific order
     void reorder_carriers(const std::vector<ID>& new_order);

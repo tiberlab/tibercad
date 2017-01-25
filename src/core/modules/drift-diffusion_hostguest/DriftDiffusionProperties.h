@@ -28,7 +28,7 @@
 #include <string>
 
 // forward declarations
-class Elem;
+//class Elem;
 class Dopant;
 class Trap;
 class SimulationInterface;
@@ -148,6 +148,7 @@ class DriftDiffusionProperties : public PhysicalModel
         //! The ionized acceptor density derivative
         double ionized_acceptor_density_derivative;
 
+
         //! The trapped electron density
         double ionized_electron_traps;
 
@@ -165,10 +166,10 @@ class DriftDiffusionProperties : public PhysicalModel
 
         double electron_mobility_derivative_potential;
 
-        RealGradient electron_mobility_derivative_grad_potential;
+        libMesh::RealGradient electron_mobility_derivative_grad_potential;
 
         //! The electron mobility derivative w.r.t gradient of Fermi level
-        RealGradient electron_mobility_derivatives;
+        libMesh::RealGradient electron_mobility_derivatives;
 
 
         //! The hole mobility
@@ -176,10 +177,11 @@ class DriftDiffusionProperties : public PhysicalModel
 
         double hole_mobility_derivative_potential;
 
-        RealGradient hole_mobility_derivative_grad_potential;
+        libMesh::RealGradient hole_mobility_derivative_grad_potential;
 
         //! The hole mobility derivative w.r.t gradient of Fermi level
-        RealGradient hole_mobility_derivatives;
+        libMesh::RealGradient hole_mobility_derivatives;
+
 
         //! The electron conductivity
         double electron_conductivity;
@@ -258,7 +260,7 @@ class DriftDiffusionProperties : public PhysicalModel
      * \c reinit() calls \c prepare_element_data() which needs to be
      * implemented in derived classes
      */
-    //void reinit(const Elem* elem);
+    //void reinit(const libMesh::Elem* elem);
 
 
     //! Set the coupling type
@@ -281,13 +283,8 @@ class DriftDiffusionProperties : public PhysicalModel
     //! Get or set dielectric flag
     bool& is_dielectric(void);
 
-
-    //! Set the polarization vector
-    //void set_polarization(const RealVectorValue& polarization);
-
-
     //! Set the coordinates
-    void set_coordinates(const Point& p);
+    void set_coordinates(const libMesh::Point& p);
 
     //! Set the carrier temperatures
     /*!
@@ -333,34 +330,33 @@ class DriftDiffusionProperties : public PhysicalModel
      *
      * \param E the electric field
      */
-    void set_electric_field(const RealGradient& E);
-    void set_old_electric_field(const RealGradient& E);
+    void set_electric_field(const libMesh::RealGradient& E);
+    void set_old_electric_field(const libMesh::RealGradient& E);
 
 
     //! Set the gradient of the electron electr-chemical potential
-    void set_grad_fermi_e(const RealGradient& grad_Fe);
+    void set_grad_fermi_e(const libMesh::RealGradient& grad_Fe);
 
     //! Set the gradient of the hole electr-chemical potential
-    void set_grad_fermi_h(const RealGradient& grad_Fh);
-
+    void set_grad_fermi_h(const libMesh::RealGradient& grad_Fh);
 
     //! Get the electric field
-    const RealGradient& get_electric_field(void) const;
-    const RealGradient& get_old_electric_field(void) const;
+    const libMesh::RealGradient& get_electric_field(void) const;
+    const libMesh::RealGradient& get_old_electric_field(void) const;
 
 
     //! Get the gradient of the electron electr-chemical potential
-    const RealGradient& get_grad_fermi_e(void) const;
+    const libMesh::RealGradient& get_grad_fermi_e(void) const;
 
     //! Get the gradient of the hole electr-chemical potential
-    const RealGradient& get_grad_fermi_h(void) const;
+    const libMesh::RealGradient& get_grad_fermi_h(void) const;
 
 
     //! Get the element we are currently working on
-    const Elem* get_element(void) const;
+    const libMesh::Elem* get_element(void) const;
 
     //! Get the coordinates of the point we are currently working on
-    const Point& get_coordinates(void) const;
+    const libMesh::Point& get_coordinates(void) const;
 
     //! Set the strain
     void set_strain(const Tensor2Sym& strain);
@@ -585,17 +581,17 @@ class DriftDiffusionProperties : public PhysicalModel
         { return _pd->hole_recombination_rate_derivatives; };
 
 
-    //! Get the total electric polarization
-    /*!
+    // ! Get the total electric polarization
+    /* !
      * The total electric polarization \b P is the sum of the
      * pyroelectric and piezoelectric polarization
      */
-    //const RealVectorValue& get_total_polarization(void) const
+    //const libMesh::RealVectorValue& get_total_polarization(void) const
     //  { return _polarization; };
 
 
     //! Get the relative permittivity tensor
-    const RealTensor& get_relative_permittivity(void) const
+    const libMesh::RealTensor& get_relative_permittivity(void) const
       { return _permittivity; };
 
 
@@ -640,19 +636,19 @@ class DriftDiffusionProperties : public PhysicalModel
       { return _pd->hole_mobility_derivative_potential; };
 
     //! Get the electron mobility derivative w.r.t. gradient of the electric potential
-    void get_electron_mobility_derivative_grad_potential(RealGradient& dmu) const
+    void get_electron_mobility_derivative_grad_potential(libMesh::RealGradient& dmu) const
       { dmu = _pd->electron_mobility_derivative_grad_potential; };
 
     //! Get the hole mobility derivative w.r.t. gradient of the electric potential
-    void get_hole_mobility_derivative_grad_potential(RealGradient& dmu) const
+    void get_hole_mobility_derivative_grad_potential(libMesh::RealGradient& dmu) const
       { dmu = _pd->hole_mobility_derivative_grad_potential; };
 
     //! Get the electron mobility derivative w.r.t. gradient of the fermi potential
-    void get_electron_mobility_derivative_grad_fermi(RealGradient& dmu) const
+    void get_electron_mobility_derivative_grad_fermi(libMesh::RealGradient& dmu) const
       { dmu = _pd->electron_mobility_derivatives; };
 
     //! Get the hole mobility derivative w.r.t. gradient of the fermi potential
-    void get_hole_mobility_derivative_grad_fermi(RealGradient& dmu) const
+    void get_hole_mobility_derivative_grad_fermi(libMesh::RealGradient& dmu) const
       { dmu = _pd->hole_mobility_derivatives; };
 
     //! Get the square of the intrinsic density
@@ -749,12 +745,6 @@ class DriftDiffusionProperties : public PhysicalModel
     //! Computes the electron and hole thermoelectric power derivatives
     //void compute_thermoelectric_power_gradient(void);
 
-    //!provides holes thermoelectric power [V/K]
-    //RealGradient get_electron_thermoelectric_power_gradient(void) const;
-
-    //!provides holes thermoelectric power [V/K]
-    //RealGradient get_hole_thermoelectric_power_gradient(void) const;
-
 
     //! Get the electric potential
     double get_electric_potential(void) const;
@@ -816,6 +806,7 @@ class DriftDiffusionProperties : public PhysicalModel
     bool has_solution(void) const;
 
 
+
   protected:
 
 
@@ -875,7 +866,7 @@ class DriftDiffusionProperties : public PhysicalModel
 
 
     //! Set the relative permittivity tensor
-    void set_relative_permittivity(const RealTensor& eps)
+    void set_relative_permittivity(const libMesh::RealTensor& eps)
       { _permittivity = eps; };
 
 
@@ -954,34 +945,21 @@ class DriftDiffusionProperties : public PhysicalModel
     PointData* _pd;
 
 
-    // ! Electron thermoelectric power gradient
-    //RealGradient _eTEpowerGrad;
-
-    // ! Hole thermoelectric power gradient
-    //RealGradient _hTEpowerGrad;
-
-    //! Electron thermoelectric power
-    //double _eTEpower;
-
-    //! Hole thermoelectric power
-    //double _hTEpower;
-
     //! The electric field
-    RealGradient _electric_field;
-    RealGradient _old_electric_field;
+    libMesh::RealGradient _electric_field;
+    libMesh::RealGradient _old_electric_field;
 
 
     //! The gradient of the electron chemical-potential
-    RealGradient _grad_fermi_e;
+    libMesh::RealGradient _grad_fermi_e;
 
     //! The gradient of the hole chemical-potential
-    RealGradient _grad_fermi_h;
+    libMesh::RealGradient _grad_fermi_h;
 
-    //! The total electric polarization
-    //RealVectorValue _polarization;
+    //libMesh::RealVectorValue _polarization;
 
     //! The relative permittivity tensor
-    RealTensor _permittivity;
+    libMesh::RealTensor _permittivity;
 
 
     //! The copy constructor is disabled
@@ -1006,10 +984,10 @@ class DriftDiffusionProperties : public PhysicalModel
 
 
     //! The element we are currently working on
-    const Elem* _elem;
+    const libMesh::Elem* _elem;
 
     //! The coordinates of the point we are working on
-    Point _coord;
+    libMesh::Point _coord;
 
 
     //! Type of coupling (particles) we want to study
@@ -1060,6 +1038,15 @@ class DriftDiffusionProperties : public PhysicalModel
     //! True if this is a dielectric
     bool _is_dielectric;
 
+
+
+
+
+
+
+
+
+
     //! The relaxation factor for the polarization
     //double _relax_polariz;
 
@@ -1094,7 +1081,7 @@ DriftDiffusionProperties::is_dielectric(void)
 
 inline
 void
-DriftDiffusionProperties::set_coordinates(const Point& p)
+DriftDiffusionProperties::set_coordinates(const libMesh::Point& p)
 {
   _coord = p;
 }
@@ -1106,6 +1093,7 @@ DriftDiffusionProperties::set_carrier_temperatures(double T_e, double T_h)
   _pd->electron_vt = T_e;
   _pd->hole_vt = T_h;
 }
+
 
 
 inline
@@ -1141,22 +1129,28 @@ DriftDiffusionProperties::set_old_potentials(double potential, double Ef_e,
 
 inline
 void
-DriftDiffusionProperties::set_electric_field(const RealGradient& E)
+DriftDiffusionProperties::set_electric_field(const libMesh::RealGradient& E)
 {
   _electric_field = E;
 }
 
 
+
+
+
+
+
+
 inline
 void
-DriftDiffusionProperties::set_old_electric_field(const RealGradient& E)
+DriftDiffusionProperties::set_old_electric_field(const libMesh::RealGradient& E)
 {
   _old_electric_field = E;
 }
 
 inline
 void
-DriftDiffusionProperties::set_grad_fermi_e(const RealGradient& grad_Fe)
+DriftDiffusionProperties::set_grad_fermi_e(const libMesh::RealGradient& grad_Fe)
 {
   _grad_fermi_e = grad_Fe;
 }
@@ -1164,21 +1158,22 @@ DriftDiffusionProperties::set_grad_fermi_e(const RealGradient& grad_Fe)
 
 inline
 void
-DriftDiffusionProperties::set_grad_fermi_h(const RealGradient& grad_Fh)
+DriftDiffusionProperties::set_grad_fermi_h(const libMesh::RealGradient& grad_Fh)
 {
   _grad_fermi_h = grad_Fh;
 }
 
 
+
 inline
-const RealGradient&
+const libMesh::RealGradient&
 DriftDiffusionProperties::get_electric_field(void) const
 {
   return _electric_field;
 }
 
 inline
-const RealGradient&
+const libMesh::RealGradient&
 DriftDiffusionProperties::get_old_electric_field(void) const
 {
   return _old_electric_field;
@@ -1192,7 +1187,7 @@ DriftDiffusionProperties::get_old_electric_field(void) const
 
 
 inline
-const RealGradient&
+const libMesh::RealGradient&
 DriftDiffusionProperties::get_grad_fermi_e(void) const
 {
   return _grad_fermi_e;
@@ -1201,7 +1196,7 @@ DriftDiffusionProperties::get_grad_fermi_e(void) const
 
 
 inline
-const RealGradient&
+const libMesh::RealGradient&
 DriftDiffusionProperties::get_grad_fermi_h(void) const
 {
   return _grad_fermi_h;
@@ -1246,7 +1241,6 @@ DriftDiffusionProperties::get_lattice_temperature(void) const
   return _lattice_vt;
 }
 
-
 inline
 void
 DriftDiffusionProperties::set_element(const Elem* elem)
@@ -1255,25 +1249,24 @@ DriftDiffusionProperties::set_element(const Elem* elem)
 }
 
 inline
-const Elem*
+const libMesh::Elem*
 DriftDiffusionProperties::get_element(void) const
 {
   return _elem;
 }
 
 inline
-const Point&
+const libMesh::Point&
 DriftDiffusionProperties::get_coordinates(void) const
 {
   return _coord;
 }
 
+
 inline
 double
 DriftDiffusionProperties::get_charge_density(void) const
 {
-  
-
   long double dens = static_cast<long double>(_pd->hole_density) -
       static_cast<long double>(_pd->electron_density) +
       static_cast<long double>(_pd->ionized_donor_density) -
@@ -1286,6 +1279,7 @@ DriftDiffusionProperties::get_charge_density(void) const
   //  _pd->ionized_donor_density - _pd->ionized_acceptor_density
   //  + _pd->ionized_electron_traps + _pd->ionized_hole_traps;
 }
+
 
 inline
 void
@@ -1367,14 +1361,6 @@ DriftDiffusionProperties::get_strain(void)
 
 
 
-//inline
-//void
-//DriftDiffusionProperties::set_polarization(const RealVectorValue& polarization)
-//{
-//  _polarization = _relax_polariz * polarization;
-//}
-
-
 inline
 int
 DriftDiffusionProperties::get_number_of_recombination_models(void) const
@@ -1382,40 +1368,6 @@ DriftDiffusionProperties::get_number_of_recombination_models(void) const
   return _recombination_models.size();
 }
 
-/*
-inline
-double
-DriftDiffusionProperties::get_electron_thermoelectric_power(void) const
-{
-  return _eTEpower;
-}
-
-
-inline
-double
-DriftDiffusionProperties::get_hole_thermoelectric_power(void) const
-{
-  return _hTEpower;
-}
-
-inline
-RealGradient
-DriftDiffusionProperties::get_electron_thermoelectric_power_gradient(void) const
-{
-
-  return  _eTEpowerGrad;
-
-}
-
-inline
-RealGradient
-DriftDiffusionProperties::get_hole_thermoelectric_power_gradient(void) const
-{
-
-  return  _hTEpowerGrad;
-
-}
-*/
 
 
 inline
@@ -1463,8 +1415,6 @@ DriftDiffusionProperties::recombination_models_end(void)
 {
   return(RecombinationModelIterator(_recombination_models.end()));
 }
-
-
 
 
 #endif /* _DRIFTDIFFUSIONPROPERTIES_H_ */

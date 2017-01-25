@@ -3,6 +3,7 @@
 #ifndef _EXCITONTRANSPORT_H_
 #define _EXCITONTRANSPORT_H_
 
+#include "TiberNonlinearSystem.h"
 #include "SimulationInterface.h"
 #include "SimulationOptions.h"
 #include "ExcitonDefs.h"
@@ -14,22 +15,28 @@
 #include "libmesh_common.h"
 #include "enum_order.h"
 #include "point.h"
+//#include "nonlinear_implicit_system.h"
+#include "libMeshDefs.h"
 
 
 // C++ includes
 #include <vector>
 #include <map>
 
+namespace libMesh
+{
 // forward declarations
 class MeshBase;
-class Elem;
+//class Elem;
 class EquationSystems;
-class ExcitonProperties;
 
 template<typename T> class NumericVector;
 template<typename T> class SparseMatrix;
 
 template<typename T> class NonlinearSolver;
+}
+
+class ExcitonProperties;
 
 //! The main class to perform exciton drift-diffusion calculations
 /*!
@@ -90,8 +97,8 @@ class ExcitonTransport : public SimulationInterface
 
       RDISS             /*!< total dissociation rate */
     };
-
  
+    
     /**
      * This class defines various parameters that control a
      * drift-diffusion calculation
@@ -101,7 +108,7 @@ class ExcitonTransport : public SimulationInterface
       public:
 
         Options(void);
-
+        
         Options(const Options& rhs);
 
         Options& operator=(const Options& rhs);
@@ -159,10 +166,11 @@ class ExcitonTransport : public SimulationInterface
         int coupling;
 
       private:
-
+        
         friend class ExcitonTransport;
     };
 
+    
 
     //! Constructor
     ExcitonTransport(const ModelOptions& options);
@@ -172,8 +180,8 @@ class ExcitonTransport : public SimulationInterface
 
     //! Create an ExcitonTransport object
     static ExcitonTransport* create(const ModelOptions& options);
-
-
+  
+    
     /*! \copydoc SimulationInterface::create_bulk_model() */
     virtual PhysicalModel*
       create_bulk_model(const ModelOptions& options,
@@ -278,7 +286,7 @@ class ExcitonTransport : public SimulationInterface
     /*!
      * The equation system for this device
      */
-    EquationSystems* _eq_system;
+    libMesh::EquationSystems* _eq_system;
     
     /*!
      * If @c true, the equation system needs to be rebuilt
@@ -314,10 +322,9 @@ class ExcitonTransport : public SimulationInterface
      */
     void compute_scaling(void);
 
-    /*
+
     //! Calculate the local scaling values
     void build_local_scaling(void);
-    */
 
 
     //! Reset solver environment.
@@ -343,17 +350,17 @@ class ExcitonTransport : public SimulationInterface
      * This method gets called from the underlying nonlinear solver
      * library
      */
-    static void assemble(const NumericVector<Number>& x,
-        NumericVector<Number>* residual,
-        SparseMatrix<Number>* jacobian);
+    static void assemble(const libMesh::NumericVector<Number>& x,
+        libMesh::NumericVector<Number>* residual,
+        libMesh::SparseMatrix<Number>* jacobian,
+        libMesh::NonlinearImplicitSystem&);
 
 
     //! Do the actual assembly
-    template <int T>
-    void do_assembly(const NumericVector<Number>& x,
-        NumericVector<Number>* residual,
-        SparseMatrix<Number>* jacobian);
-
+        template <int coupling>
+        void do_assembly(const libMesh::NumericVector<Number>& x,
+        libMesh::NumericVector<Number>* residual,
+        libMesh::SparseMatrix<Number>* jacobian);
 
 };
 

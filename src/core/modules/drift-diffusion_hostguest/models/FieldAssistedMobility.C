@@ -86,7 +86,7 @@ FieldAssistedMobility::get_mobility_derivatives(std::vector<double>& dm)
 
 
 void
-FieldAssistedMobility::get_derivative_grad_fermi(RealGradient& dm)
+FieldAssistedMobility::get_derivative_grad_fermi(libMesh::RealGradient& dm)
 {
   //std::cout<<"#############################____##############################"<<std::endl;
   dm.zero();
