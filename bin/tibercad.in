@@ -35,6 +35,12 @@ then
   exit 1
 fi
 
+if test "${MPI_HOSTFILE}x" != "x"
+then
+  mpi_opts=(--hostfile ${MPI_HOSTFILE})
+fi
+
+
 ARCH=`${TIBERCADROOT}/share/arch.sh`
 SDKDIR=${TIBERCADROOT}/SDK
 
@@ -54,5 +60,5 @@ then
   gdb -nx -ex run --args ${executable} $@
 else
   #${SDKDIR}/${ARCH}/bin/mpiexec -n ${n_mpi_procs} ${executable} $@
-  @MPIEXEC@ -n ${n_mpi_procs} ${executable} $@
+  @MPIEXEC@ -n ${n_mpi_procs} ${mpi_opts[*]}  ${executable} $@
 fi
