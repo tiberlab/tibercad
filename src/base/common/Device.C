@@ -260,8 +260,9 @@ Device::setup_mesh(void)
 
   {
     ostringstream os;
-    os << "Reading mesh file \'" << meshfile << "\' assuming dimension "<<dim<<" ...";
+    os << "Reading mesh file \'" << meshfile << " ...";
     m.info(os.str());
+    m.indent();
   }
 
   _mesh = new libMesh::Mesh(_mesh_comm, dim);
@@ -270,7 +271,6 @@ Device::setup_mesh(void)
   _bd_regions = new BoundaryRegions(*_mesh);
 
   MeshReader::read_mesh(meshfile, *_mesh, *_mesh_region_info, *_bd_regions);
-
 
   // TODO only for now (back compatibility)
   delete _boundary_nodes;
@@ -281,7 +281,8 @@ Device::setup_mesh(void)
   // update mesh dimension
   dim = _mesh->mesh_dimension();
 
-  m.info(" done.");
+  //m.info("done.");
+  m.newline();
   {
     ostringstream os;
 

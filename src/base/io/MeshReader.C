@@ -6,6 +6,8 @@
 #include "ReadComsol.h"
 #include "BoundaryRegions.h"
 #include "InitFailedException.h"
+#include "Utils.h"
+#include "Messages.h"
 
 #include "mesh_base.h"
 #include "mesh_communication.h"
@@ -20,6 +22,8 @@ using namespace std;
 void MeshReader::read_mesh(const string& filename, libMesh::MeshBase& mesh,
     MeshRegionInfo& region_info, BoundaryRegions& bd_regions)
 {
+
+  Utils::Timer tt;
 
   // we read only on processor 0
   if (mesh.comm().rank() == 0)
@@ -46,12 +50,25 @@ void MeshReader::read_mesh(const string& filename, libMesh::MeshBase& mesh,
       os << "Known formats are: ISE grid (.grd), GMSH (.msh)";
       throw InitFailedException(os.str());
     }
+
+    ostringstream os;
+    os << "mesh reading time: " << tt.elapsed_string();
+    Messages::info(os.str());
+
   }
 
+  tt.reset();
   // broadcast it to the other processors
   libMesh::MeshCommunication().broadcast(mesh);
   region_info.broadcast();
   bd_regions.broadcast();
+
+  if (mesh.comm().size() > 1)
+  {
+    ostringstream os;
+    os << "mesh broadcast time: " << tt.elapsed_string();
+    Messages::info(os.str());
+  }
 
   // now prepare it for use
   mesh.prepare_for_use();
