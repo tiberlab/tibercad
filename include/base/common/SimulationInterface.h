@@ -1150,8 +1150,8 @@ class SimulationInterface : public TiberModelObject
     virtual void do_add_scaled_remembered_solution(ID id, double factor);
 
 
-    //! Parse the options
-    /*!
+    // ! Parse the options
+    /* !
      * This method has to be called \em explicitly somewhere in the derived
      * class. It is not called from \c SimulationInterface::init(), because
      * in some situations options could change between different calls
@@ -1159,7 +1159,7 @@ class SimulationInterface : public TiberModelObject
      * because in other situations this is not necessary. So: call it in
      * \c do_init() or \c do_solve().
      */
-    virtual void parse_options(void) = 0;
+    //virtual void parse_options(void);
 
 
     //! Get the output data formats
