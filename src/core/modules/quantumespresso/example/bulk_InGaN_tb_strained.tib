@@ -1,0 +1,426 @@
+@define INCONT 0.0
+
+Device
+{
+  
+  meshfile = bulk0.0.msh
+  mesh_units = 1e-9
+
+  y-growth-direction = (1,0,-1,0)
+  z-growth-direction = (-1,2,-1,0)
+  x-growth-direction = (0,0,0,1)
+
+
+  Region bulk
+  {
+    material = InGaN
+    x = INCONT
+  }
+
+
+  Cluster quantum
+  {
+    regions = (bulk)
+  }
+
+  Atomistic tb
+  {
+    reference_material GaN {}
+    regions = quantum
+    passivation = no
+    print = xyz
+
+    #Per caricare il file
+    #load =  output_x0.20_1200/tb.xyz
+    #load =  /work/maufder/NEWLED/OSRAM/SQW/Random/NAE_04664/output_1/tb.tgn
+
+    random_alloy = true
+    #clustering = (In)
+    #cluster_seeds = 0.1
+    periodicity = true
+    extract_alloy_statistics = true
+    control_volume_radius = 0.5
+
+    #radial_distribution { cutoff_radius = 2 species = In}
+
+    supercell_size_z = 10 #15
+    supercell_size_y = 10 #20  
+
+  }
+
+}
+
+
+Module elasticity 
+{
+
+  name = strain
+  nonlinear_strain = true
+
+  plot = (Strain, Stress)
+
+
+  Physics 
+  {
+    body_force lattice_mismatch 
+    {
+      reference_material = GaN
+      y-growth-direction = (1,0,-1,0)
+      z-growth-direction = (-1,2,-1,0)
+      x-growth-direction = (0,0,0,1)
+    }
+       
+  }
+
+  Contact left  
+  {type = clamp}
+
+}
+
+
+
+Module vff
+{
+
+ regions = bulk
+ atomistic_structure = tb
+# boundary_conditions = substrate
+# substrate_plane = x
+# substrate_tol = 0.1 # 0.519
+
+ plot = xyz
+
+ Physics
+ {
+
+  keating automatic
+  {
+   regions = InGaN
+  }
+
+ }
+}
+
+
+
+
+
+Module  driftdiffusion
+{ 
+        
+  name = dd
+       
+  current_integration_method = compact_rstf
+  # we solve only Poisson equation
+  coupling = poisson
+  guess_el_qfermi = 0
+  guess_hl_qfermi = $bias
+  #local_scaling = false
+     
+  plot = (Ec, Ev, eQFermi, hQFermi, eDensity, hDensity, 
+          NetRecombination, IQE)
+  Solver
+  {
+    linear_solver
+    {
+      #preconditioner = jacobi
+    }
+
+    step_tolerance = 1e-3
+  }
+
+  Physics
+  {
+
+    strain_simulation = strain 
+    background_conductivity = 1e-5
+    relax_polarization = 1.0
+
+#    polarization (piezo, pyro) { }
+
+#    generation optical
+#    {
+#      generation = $gen
+#    }
+
+    recombination srh
+    {
+      tau_n = 100e-9
+      tau_p = 100e-9
+    }
+
+    recombination direct
+    {
+#      C = 2e-10
+    }
+
+
+#    recombination auger
+#    {
+#      Cn = 3e-31
+#      Cp = 3e-31
+#    }
+
+
+  }
+
+#   Contact left {
+#     type = schottky
+#     barrier = 0.3
+#     rec_velocity_n = 1e3
+#     rec_velocity_p = 1e3
+#   }
+#   Contact right {
+#     type = schottky
+#     barrier = 0.3
+#     band = v
+#     rec_velocity_n = 1e3
+#     rec_velocity_p = 1e3
+#     voltage = $bias
+#   }
+
+
+}
+
+
+Module  efaschroedinger
+{
+  
+  name = quantum_efa
+  regions = quantum
+
+  #plot = (ProbabilityDensity, EigenEnergy)
+
+  poisson_simulation = dd
+  strain_simulation  = strain 
+
+  num_electron_states = 2
+  num_hole_states = 6
+
+  job = bulk
+  bulk_point = (0.5, 0, 0)
+ 
+
+  Solver
+  {
+    solver = krylovshur 
+    ksp_type = bcgsl
+    pc_type =  lu
+  }
+
+  Physics
+  {
+    model = 8x8
+  }
+
+  BBulkDispersion
+  {
+    k_path = G-X
+  }
+  
+
+}
+
+
+
+Module opticskp
+{
+
+  name = spectrum 
+
+  job = bulk
+  bulk_point = (0.5, 0, 0)
+
+  refractive_index = 2.3
+
+  regions = quantum
+
+  plot = (optical_spectrum, OpticalPower, Recombination, matrix_elements)
+  output_format = grace
+
+
+  initial_state_model = quantum_efa
+  final_state_model =   quantum_efa
+
+
+  Emin = 1.0
+  Emax  = 4.0
+  dE = 0.001
+  broadening = 0.02
+
+  # we want all polarizations, not one specific
+  #polarization = (0, 0, 1)
+
+  k_integration
+  {
+     k_max = 2.0
+     number_of_elements = (5,5,5)
+     quadrature_type = gaussian 
+     quadrature_order = second 
+
+     refine_k_space = true
+     maximum_ref_level = 2
+     refine_fraction = 0.25
+     relative_accuracy = 0.01 
+  }
+
+}
+
+Module quantumespresso
+{
+  atomistic_structure = tb
+
+
+  ecutwfc = 100
+  pseudopotentials = 
+          (Ga, Ga.pz-d-hgh.upf,
+           In, In.pz-d-hgh.upf,
+           N,  N.pz-vbc.upf)
+}
+
+
+ 
+Module empirical_tb
+{
+  regions = bulk
+  name = tb
+
+  atomistic_structure = tb
+  Harrison_scaling = true     #set false when no strain
+
+  #potential_simulation = dd
+ 
+  sparse_format = full
+  add_band_shifts = true
+
+  jmol_output_format = cube
+
+  plot = (tbstates)
+
+  Solver
+  {
+    
+    num_conduction_eigenvalues = 8
+    num_valence_eigenvalues = 12
+
+    long_tolerance = 1e-5
+
+  }
+
+  Dispersion
+  {
+    k_path = (G, X)
+  }
+
+#  DOS
+#  {
+#    k_max = 0.05
+#    number_of_nodes = (8, 8)	
+#  }
+}
+
+ 
+Module opticstb
+ {
+  name = opticstb
+  regions = bulk
+
+  skip_solve = true
+
+
+  plot = (optical_spectrum_k_0, matrix_elements)
+	
+  #put it to write output in 1D
+  output_format=grace
+	
+  initial_state_model = tb
+  final_state_model = tb
+	
+
+
+  Emin = 1
+  Emax  = 4 #4.5
+  dE = 0.001
+  broadening = 0.02
+
+  k_integration
+  {
+     k_max = 2.0
+     number_of_elements = (3,3,3)
+     quadrature_type = gaussian 
+     quadrature_order = second 
+
+     refine_k_space = true
+     maximum_ref_level = 3
+     refine_fraction = 0.25
+     relative_accuracy = 0.01 
+  }
+
+
+ }
+
+
+
+
+#Module sweep
+#{
+#  name = sweep_gen
+#  solve = (dd, quantum_efa, spectrum)
+#  variable = $gen
+  #start = 0
+  #stop = 3.5
+  #steps = 35
+  #min_step = 1e-3
+#  start = 1
+#  stop = 1e21
+#  type = log
+#  plot_data = true
+#}
+
+
+Module sweep
+{
+  name = sweep_bias1
+  solve = (dd)#, spectrum)
+  variable = $bias
+  start = 0.2
+  stop = 2.0 # 3.0
+  steps = 18 # 14
+  #min_step = 1e-3
+  plot_data = true
+}
+
+
+
+Module sweep
+{
+  name = sweep_bias
+  solve = (dd, tb, opticstb) #spectrum)
+  variable = $bias
+  start = 2.0
+  stop = 3.4
+  steps = 14
+  #min_step = 1e-3
+  plot_data = true
+}
+
+
+
+
+ 
+
+Simulation
+{  
+   
+  temperature = 300
+  verbose = 5
+  solve = (strain, vff, quantumespresso, tb)   
+  #solve = (sweep_bias, sweep_gen, quantum_efa, spectrum)   
+  #solve = (strain, vff, sweep_bias1, sweep_bias)
+  #solve = (strain, vff, dd, tb, opticstb)
+  #solve = (sweep_bias1)
+  #resultpath = "output_random/output_"INCONT"_@INDEX@"
+  resultpath = rnd_test
+  output_format = grace
+
+}
