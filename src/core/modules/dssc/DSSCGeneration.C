@@ -462,7 +462,8 @@ DSSCGeneration::_read_spectrum(void)
       if (in >> l >> s)
       {
         _lambda.push_back(l);
-        _spectrum.push_back(1e-7 * s / gap);
+        double energy = Constants::h * Constants::c / l;
+        _spectrum.push_back(1e-7 * s / energy);
         i++;
       }
     }
