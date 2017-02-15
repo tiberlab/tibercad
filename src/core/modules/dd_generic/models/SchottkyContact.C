@@ -22,9 +22,8 @@ void
 SchottkyContact::do_init(void)
 {
   ElectricalContact::do_init();
-  
-  for (unsigned int i = 0; i <= this->n_known_carriers(); i++)
-    set_type(i, DIRICHLET);
+
+  set_type(n_known_carriers(), DIRICHLET);
 
   if (!has_option("metal_fermilevel") &&
       !has_option("work_function") &&
@@ -96,6 +95,9 @@ SchottkyContact::do_init(void)
   _thermionic_emission = get_option("thermionic_emission", true);
   if (_thermionic_emission)
   {
+    for (unsigned int i = 0; i < this->n_known_carriers(); i++)
+      set_type(i, NEUMANN);
+
     double temp = Constants::k_B * SimulationOptions::T;
     const double fac = 0.23032943;
 
@@ -109,8 +111,11 @@ SchottkyContact::do_init(void)
     _scott_malliaras = get_option("scott_malliaras", false);
     //_barrier_lowering = get_option("barrier_lowering", false);
    }
-
-
+   else
+   {
+     for (unsigned int i = 0; i < this->n_known_carriers(); i++)
+      set_type(i, DIRICHLET);
+   }
 }
 
 
@@ -186,6 +191,9 @@ SchottkyContact::do_compute(void)
     }
     */
   }
+
+  //std::cout<<"Val = "<<val<<std::endl;
+
   set_contact_fermilevel(val); 
   ElectricalContact::do_compute();
 }

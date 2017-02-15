@@ -372,7 +372,7 @@ DriftDiffusionProperties::do_init(void)
   // calculate the equilibrium
   set_lattice_temperature(SimulationOptions::T);
 
-
+  _equilibrium_densities.resize(0);
   _equilibrium_densities.resize(n_known_carriers(), 0.0);
 
 }
@@ -629,7 +629,6 @@ DriftDiffusionProperties::calculate_net_recombination_rates(void)
   for (unsigned int i = 0; i < this->n_known_carriers(); ++i)
   {
     _pd->q_recombination_rate[i] = 0;
-
     _pd->q_recombination_rate_derivatives[i] = vector<double>(this->n_known_carriers() + 1, 0.0);
   }
 

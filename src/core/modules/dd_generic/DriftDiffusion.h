@@ -438,8 +438,12 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
     unsigned int _density_base;
     //! Base index for mobilities
     unsigned int _mobility_base;
+    //! Base index for conductivities
+    unsigned int _conductivity_base;
     //! Base index for fluxes
     unsigned int _flux_base;
+    //! Base index for currents
+    unsigned int _curr_base;
     //! Base index for recombinations
     unsigned int _rec_base;
 

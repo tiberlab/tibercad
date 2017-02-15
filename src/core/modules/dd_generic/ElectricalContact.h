@@ -186,7 +186,7 @@ ElectricalContact::set_recombination_velocities(double vrec)
     if ((vrec > 0) && !_fixed_vrec[i])
     {
       _vrec[i] = vrec;
-      set_type(i + 1, NEUMANN);
+      set_type(i, NEUMANN);
     }
   }
 }
@@ -201,7 +201,7 @@ ElectricalContact::set_recombination_velocities(ID carrier, double vrec)
   if ((vrec > 0) && !_fixed_vrec[carrier])
   {
     _vrec[carrier] = vrec;
-    set_type(carrier + 1, NEUMANN);
+    set_type(carrier, NEUMANN);
   }
 }
 

@@ -1008,14 +1008,11 @@ void
 DriftDiffusionProperties::get_charge_density_derivatives(
     std::vector<double>& derivatives) const
 {
+  derivatives.resize(0);
   derivatives.resize(_carrier_properties.size(), 0.0);
 
   for (auto& cp: _carrier_properties)
-  {
     derivatives[cp.first] += _pd->charge_density_derivative[cp.first];
-  }
-
-
 
   //derivatives[0] = get_electron_density_derivative()
   //  - get_ionized_donor_density_derivative()

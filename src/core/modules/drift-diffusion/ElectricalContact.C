@@ -104,9 +104,8 @@ ElectricalContact::do_compute(void)
     //    pd.electron_vt);
     //double n0 = el.get_particle_density();
 
-    //std::cout<<"vrec="<<_vrec_n<<" el dens="<<pd.electron_density<<" n0="<<n0<<std::endl;
+    //std::cout<<"vrec_n="<<_vrec_n<<" n="<<pd.electron_density<<" n0="<<n0<<std::endl;
     double Rn = _vrec_n * (pd.electron_density - n0);
-    //std::cout<<"Rn = "<<Rn<<" vrec = "<<_vrec_n<<" n = "<<pd.electron_density<<" n0 = "<<n0<<std::endl;
     double dRn = _vrec_n * pd.electron_density_derivative;
     //std::cout<<"dRn = "<<dRn<<std::endl;
    
@@ -145,9 +144,10 @@ ElectricalContact::do_compute(void)
     //    pd.hole_vt);
     //double p0 = hl.get_particle_density();
 
+    //std::cout<<"vrec_p="<<_vrec_p<<" p="<<pd.hole_density<<" p0="<<p0<<std::endl;
     double Rp = _vrec_p * (pd.hole_density - p0);
     double dRp = _vrec_p * pd.hole_density_derivative;
-
+    //std::cout<<"dRp ="<<dRp<<std::endl;
 
     if (_tunneling)
     {

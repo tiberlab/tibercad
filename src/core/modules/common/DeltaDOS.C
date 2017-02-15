@@ -33,7 +33,7 @@ DeltaDOS::calculate_density_and_derivative(double Ef, double Epot, double kT, do
   double dens = 1.0 / (1.0 + expf);
   double der = dens;
 
-  der /= kT * (1 + expf);
+  der /= kT * (1.0 + expf);
   der *= expf;
 
   return make_pair(dens, der);

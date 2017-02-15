@@ -315,6 +315,7 @@ DDInterfaceModel::compute()
     if (get_type(i) == NEUMANN)
     {
       _coeff_g[i] = 0;
+      _jacobian[i].resize(0);
       _jacobian[i].resize(n_known_carriers() + 1, 0);
     }
   }

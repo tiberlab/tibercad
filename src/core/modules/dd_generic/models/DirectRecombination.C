@@ -104,14 +104,15 @@ DirectRecombination::calculate_rate_and_derivatives(std::vector<double>& R, std:
     dPotentials[id1][id2] = dR2;
     dPotentials[id2][id1] = dR1;
     dPotentials[id2][id2] = dR2;
-    dPotentials[id1][dd.n_known_carriers()] = dR0; 
+    dPotentials[id1][dd.n_known_carriers()] = dR0;
     dPotentials[id2][dd.n_known_carriers()] = dR0;
   }
   else
   {
     double n1  = dd.get_q_density(id1);
     double n2  = dd.get_q_density(id2);
-    double N0  = dd.get_carrier_properties(id2)->get_effective_DOS();
+    double N1  = dd.get_carrier_properties(id1)->get_effective_DOS();
+    double N2  = dd.get_carrier_properties(id2)->get_effective_DOS();
     double dn1 = dd.get_q_density_derivative(id1);
     double dn2 = dd.get_q_density_derivative(id2);
     double E1  = dd.get_carrier_properties(id1)->get_band_edge();
@@ -124,12 +125,14 @@ DirectRecombination::calculate_rate_and_derivatives(std::vector<double>& R, std:
     double exponential = exp((Ef2 - Ef1) * beta);
     double stat = 1.0 - exponential;
 
-    R[id1] = C_ * thermal * stat * n1 * (N0 - n2);
+    R[id1] = C_ * thermal * stat * n1 * (N2 - n2);
     R[id2] = -R[id1];
 
-    double dR0 =  C_ * thermal * stat * ( (N0 - n2)*dn1 - n1*dn2 );
-    double dR1 = -C_ * thermal * (N0 - n2) * ( dn1 * stat + beta * n1 * exponential);
-    double dR2 = -C_ * thermal * n1 * (-dn2 * stat - beta * (N0 - n2) * exponential);
+    //cout<<"R = "<<R[id1]<<" stat12 = "<<stat12<<" thermal12 = "<<thermal12<<" n1 = "<<n1<<" N1 = "<<N1<<" stat21 = "<<stat21<<" thermal21 = "<<thermal21<<" n2 = "<<n2<<" N2 = "<<N2<<endl;
+
+    double dR0 =  C_ * thermal * stat * ( (N2 - n2)*dn1 - n1*dn2 );
+    double dR1 = -C_ * thermal * (N2 - n2) * ( dn1 * stat + beta * n1 * exponential);
+    double dR2 = -C_ * thermal * n1 * (-dn2 * stat - beta * (N2 - n2) * exponential);
 
     dPotentials[id1][id1] =  dR1;
     dPotentials[id1][id2] =  dR2;

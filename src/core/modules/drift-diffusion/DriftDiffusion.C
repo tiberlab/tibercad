@@ -215,8 +215,8 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
     //    sc->get_ionized_acceptor_density());
     C0 = (C0 > C) ? C0 : C;
 
-    double ni = sc->get_intrinsic_density();
-    ni0 = (ni0 > ni) ? ni0 : ni;
+    //double ni = sc->get_intrinsic_density();
+   // ni0 = (ni0 > ni) ? ni0 : ni;
 
     const libMesh::RealTensor& eps_tens = sc->get_relative_permittivity();
     eps0 = (eps0 > eps_tens(0,0)) ? eps0 : eps_tens(0,0);
@@ -2698,6 +2698,8 @@ DriftDiffusion::calculate_currents_rstf_global(void)
       double sigma_e = -Constants::e * sc->get_electron_conductivity();
       double sigma_h = -Constants::e * sc->get_hole_conductivity();
 
+      
+
       double Rn = sc->get_net_electron_recombination_rate();
       double Rp = sc->get_net_hole_recombination_rate();
       double net_rate = JxW[qp] * Constants::e * (Rn - Rp);
@@ -2734,7 +2736,6 @@ DriftDiffusion::calculate_currents_rstf_global(void)
 
           _boundary_currents[rstf_it->first] += ((je + jh) * dphi[n][qp] +
               net_rate * phi[n][qp]) * sol(dof_indices_rstf[n]);
-
         }
       }
 
@@ -3579,6 +3580,7 @@ DriftDiffusion::build_local_scaling(void)
   const double C0 = scaling.get_density_scaling();
   const double mu0 = scaling.get_mobility_scaling();
   const double l2 = scaling.get_lambda_squared() * Constants::e0 * 1e-2;
+
   // density scaling for electrons
   double C0_e = C0;
   // density scaling for holes
@@ -3587,7 +3589,9 @@ DriftDiffusion::build_local_scaling(void)
   double R0_e = C0_e / scaling.get_time_scaling();
   double R0_h = C0_h / scaling.get_time_scaling();
 
-  C0_e = C0_h = 1;
+  C0_e = C0_h = 1; 
+
+  //cout<<"l2 = "<<l2<<" C0 = "<<C0<<" x0 = "<<x0<<" mu0 = "<<mu0<<" C0_e = "<<C0_e<<" C0_h = "<<C0_h<<endl;
 
   const unsigned int u_var = system.variable_number("potential");
   unsigned int en_var = system.variable_number("fermi_e");
@@ -3712,7 +3716,7 @@ DriftDiffusion::build_local_scaling(void)
         e_field += dphi[i][qp] * solution(dof_indices_u[i]);
       }
 
-
+      //cout<<"u = "<<u<<" v = "<<en<<" w = "<<ep<<endl;
 
       // prepare for calculating local properties
       sc->set_coordinates(q_point[qp]);
@@ -3943,6 +3947,8 @@ DriftDiffusion::build_local_scaling(void)
     }
     */
 
+    //for (size_t i = 0; i< local_scaling.size(); i++ )
+      //cout<<"ls["<<i<<"] = "<<local_scaling(i)<<endl;
 
     loc_scaling.add_vector(local_scaling, dof_indices);
   } // end loop over elements
@@ -4147,6 +4153,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
   // density scaling for holes
   double C0_h = C0;
 
+  //cout<<"l2 = "<<l2<<" x0 = "<<x0<<" phi0 = "<<phi0<<" C0 = "<<C0<<" mu0 = "<<mu0<<" do_loc_scal = "<<_do_local_scaling<<endl;
   if (_do_local_scaling)
     C0_e = C0_h = 1.0;
 
@@ -4447,6 +4454,9 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
       double sigma_e_x_Pe_x_J = J * sigma_e * eTEpower;
       double sigma_h_x_Ph_x_J = J * sigma_h * hTEpower;
 
+      //cout<<"C0 dens = "<<n<<" R = "<<Rn<<" mu = "<<mue<<" sigma = "<<sigma_e<<endl;
+      //cout<<"C1 dens = "<<p<<" R = "<<Rp<<" mu = "<<muh<<" sigma = "<<sigma_h<<endl;
+
       // TEST
       //double dn_dphi = sc->get_electron_density_derivative();
       //double art_diff = 0.5 * x0 * elem->hmax() * mue * dn_dphi * grad_en.size() / (mu0 * C0_e);
@@ -4486,7 +4496,12 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 
           if (coupling & HCURRENT)
             Kpp(i,j) += sigma_h * laplace / scalep(i);
+
         }
+
+        //cout<<"scale0("<<i<<") = "<<scalen(i)<<endl;
+        //cout<<"scale1("<<i<<") = "<<scalep(i)<<endl;
+        //cout<<"scale2("<<i<<") = "<<scaleu(i)<<endl;
 
         if (!(coupling & POISSON))
           Kuu(i,i) += 1;
@@ -4839,6 +4854,10 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
             grad_ep += dphi_face[i][qp] * Xp(i);
           }
 
+          //cout<<"u0 = "<<en<<endl;
+          //cout<<"u1 = "<<ep<<endl;
+          //cout<<"u2 = "<<u<<endl;
+
           sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
           sc->set_coordinates(q_point_face[qp]);
           sc->set_electric_field(phi0 / x0 * e_field);
@@ -5019,8 +5038,9 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
             else
               value_p = coeff_g[2] / phi0;
 
-         
-
+            //cout<<"g0 = "<<coeff_g[1]<<" a0 = "<<coeff_a[1]<<" v0 = "<<en<<endl;
+            //cout<<"g1 = "<<coeff_g[2]<<" a1 = "<<coeff_a[2]<<" v1 = "<<ep<<endl;
+            //cout<<"g2 = "<<coeff_g[0]<<" a2 = "<<coeff_a[0]<<" v2 = "<<u<<endl;
 
             for (unsigned int i = 0; i < n_dofs; i++)
             {
@@ -5057,6 +5077,9 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 
               if (coupling & HCURRENT)
                 Fp(i) += value_p * phi_face[i][qp] * scale_p;
+
+              //cout<<"Fe("<<i<<") = "<<Fn(i)<< " value_e = "<<value_n<<" scale_e = "<<scale_n<<endl;
+              //cout<<"Fh("<<i<<") = "<<Fp(i)<< " value_h = "<<value_p<<" scale_h = "<<scale_p<<endl;
             }
           }
         }
