@@ -121,14 +121,16 @@ DirectRecombination::calculate_rate_and_derivatives(std::vector<double>& R, std:
     double Ef2 = -dd.get_q_fermi_potential(id2);
     double beta = (ct1 == 'e') ? 1.0/kT : -1.0/kT;
 
-    double thermal = exp( 0.5*beta*(E1-E2) - 0.5*beta*fabs(E1-E2) );
+    double thermal = exp( 0.5*beta*(E1-E2) - 0.5*fabs(beta*(E1-E2)) );
     double exponential = exp((Ef2 - Ef1) * beta);
     double stat = 1.0 - exponential;
 
     R[id1] = C_ * thermal * stat * n1 * (N2 - n2);
     R[id2] = -R[id1];
 
-    //cout<<"R = "<<R[id1]<<" stat12 = "<<stat12<<" thermal12 = "<<thermal12<<" n1 = "<<n1<<" N1 = "<<N1<<" stat21 = "<<stat21<<" thermal21 = "<<thermal21<<" n2 = "<<n2<<" N2 = "<<N2<<endl;
+    //if (ct1 == 'e')
+      //cout<<"Ef1 = "<<Ef1<<" Ef2 = "<<Ef2<<" stat = "<<stat<<" R1 = "<<R[id1]<<endl;
+    //cout<<"R = "<<R[id1]<<" stat = "<<stat<<" thermal = "<<thermal<<" n1 = "<<n1<<" N2 = "<<N2<<endl;
 
     double dR0 =  C_ * thermal * stat * ( (N2 - n2)*dn1 - n1*dn2 );
     double dR1 = -C_ * thermal * (N2 - n2) * ( dn1 * stat + beta * n1 * exponential);

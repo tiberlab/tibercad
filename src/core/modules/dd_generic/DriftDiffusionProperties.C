@@ -646,12 +646,12 @@ DriftDiffusionProperties::calculate_net_recombination_rates(void)
 
     for (ID i = 0; i < carriers.size(); ++i)
     {
-      _pd->q_recombination_rate[carriers[i]] += R[i];
+      _pd->q_recombination_rate[carriers[i]] += R[carriers[i]];
       for (ID j = 0; j < carriers.size(); ++j)
       {
-        _pd->q_recombination_rate_derivatives[carriers[i]][carriers[j]] += dR[i][j];
+        _pd->q_recombination_rate_derivatives[carriers[i]][carriers[j]] += dR[carriers[i]][carriers[j]];
       }
-      _pd->q_recombination_rate_derivatives[carriers[i]][this->n_known_carriers()] += dR[i][this->n_known_carriers()];
+      _pd->q_recombination_rate_derivatives[carriers[i]][this->n_known_carriers()] += dR[carriers[i]][this->n_known_carriers()];
     }
   }
 }
