@@ -431,7 +431,10 @@ DSSCGeneration::_read_spectrum(void)
       if (in >> l >> s)
       {
         _lambda.push_back(l);
-        _spectrum.push_back(1e-7 * s / gap);
+        // conversion from nm^-1 to J
+        const double conv = Constants::h * Constants::c * 1e9;
+        double energy = conv / l;
+        _spectrum.push_back(1e-7 * s / energy);
         i++;
       }
     }
