@@ -1,6 +1,6 @@
 #!/bin/sh
 
-GMSHVER=2.8.4
+GMSHVER=2.16.0
 
 make_windows_package () {
 
