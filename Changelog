@@ -1,3 +1,26 @@
+Version 2.5.2
+-------------
+
+Bug fixes:
+	- fixed a bug in dssc_generation
+
+
+Version 2.5.0
+-------------
+
+New features:
+	- complete reorganization of handling of the band parameters in drift
+	  diffusion. Allows now for different DOS implemented as modules
+	- implemented several models for the simulation of organic materials,
+	  e.g. Gaussian DOS, Langevin recombination
+	- Valence force field is included
+	- Empirical tight binding is included
+
+Bug fixes:
+
+	- missing factor of 2/3 added in spontaneous emission
+
+
 Version 2.3.0
 -------------
 
