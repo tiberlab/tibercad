@@ -1,3 +1,16 @@
+Version 3.0.0
+-------------
+
+New features:
+	- upgraded to libmesh 1.0.0, PETSc 3.6.4, SLEPc 3.6.4
+	- improved MPI parallelization: can assign communicators
+	  to devices and modules
+	- k-integration can parallelize automatically
+
+Bug fixes:
+	- fixed a bug in dssc_generation
+
+
 Version 2.6.0
 -------------
 
