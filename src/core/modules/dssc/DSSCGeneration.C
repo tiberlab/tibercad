@@ -413,7 +413,7 @@ DSSCGeneration::_read_spectrum(void)
         if (in >> s)
         {
           l_tmp.push_back(l);
-          // alpha given in um^-1
+          // alpha given in um^-1, we need it in cm^-1
           a_tmp.push_back(1e4 * s);
           i++;
         }
@@ -462,7 +462,9 @@ DSSCGeneration::_read_spectrum(void)
       if (in >> l >> s)
       {
         _lambda.push_back(l);
-        double energy = Constants::h * Constants::c / l;
+        // conversion from nm^-1 to J
+        const double conv = Constants::h * Constants::c * 1e9;
+        double energy = conv / l;
         _spectrum.push_back(1e-7 * s / energy);
         i++;
       }
