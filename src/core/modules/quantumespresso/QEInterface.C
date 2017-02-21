@@ -157,7 +157,7 @@ QEInterface::do_solve(void)
            << endl;
   }
   
-  qe_scf << "KPOINTS ";
+  qe_scf << "K_POINTS ";
   for (unsigned int i = 0; i < _qe_k_points.size(); ++i)
   {
     qe_scf << _qe_k_points[i] << endl;
