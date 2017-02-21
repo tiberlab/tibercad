@@ -37,8 +37,9 @@ namespace libMesh
 
 //! Higher-level definition of the  structure to  be  simulated.
 /*!
- * This class contains all Material instances and the list of boundary
- * nodes as read from the mesh file
+ * This class contains all material instances and provides access to bulk and boundary
+ * model containers for given mesh elements, sides and atoms. It also contains the
+ * atomistic structures and quantum contacts for a device.
  */
 class Device
 {
@@ -239,16 +240,6 @@ class Device
     const std::string& get_region_name(ID id) const;
 
 
-    // Get the name of a boundary region
-    /*
-     * \param id the ID of the boundary region
-     *
-     * If a region has no name associated, it will be assigned the
-     * empty string.
-     */
-    //const std::string& get_boundary_region_name(ID id) const;
-
-
     //! Get the region IDs of the region with name \c name
     /*!
      * \c name can be the name of a physical region, of a cluster
@@ -270,10 +261,6 @@ class Device
     void extract_physical_regions(const std::string& str, IDSet& ids) const;
 
 
-    /* // ! Get a const reference to the boundary region descriptor */
-    //const BoundaryRegions& get_boundary_regions(void) const;
-
-
     //! Get the region IDs of the boundary region with name \c name
     /*!
      * \c name can be one of
@@ -287,11 +274,6 @@ class Device
      */
     void get_boundary_region_ids(const std::string& name,
         std::vector<ID>& ids) const;
-
-
-    //  ! Set the name for a boundary region
-    //void set_boundary_region_name(const std::string& name,
-    //    const std::vector<ID>& ids);
 
 
     //! Define a cluster
@@ -437,13 +419,6 @@ class Device
     //! Setup quantum contacts
     void setup_quantum_contacts(void);
 
-    //! Prepares the boundaries
-    /*!
-     * Assign to each explicitly or implicitly (region interfaces) defined
-     * boundary a unique index.
-     */
-    //void prepare_boundaries(void) TBDLLOCAL;
-
 
     //! The map that connects region number to material
     MaterialMap _material_map;
@@ -469,15 +444,6 @@ class Device
 
     //! The mesh for this device
     libMesh::MeshBase* _mesh;
-
-
-    //! A typdef for the bulk materials
-    //typedef HashMap<Elem*, std::vector<unsigned int>* >::Type ElemAtomsMap;
-
-
-    //! A map between elements of _mesh and atoms
-    //! It is defined as vector for fast indexing on elem ID.
-    // std::map<AtomisticStructure*, ElemAtomsMap> _as_elematom_map;
 
 
     //! The mesh unit in m
@@ -507,10 +473,6 @@ class Device
     ModelOptions _options;
 
 
-    //! A set with all region IDs
-    //std::set<ID> _region_ids;
-
-
     //! A set with all active region IDs
     /*!
      * An active region is a region with an associated material.
@@ -532,9 +494,6 @@ class Device
      /*! (keep track of existing quantum contacts) */
     QuantumContactMap _quantum_contact_map;
 
-    //! A map that assigns boundary region IDs to boundary region names
-    //std::map<ID, std::string> _boundary_region_names;
-
 
     //! A map containing all clusters
     ClusterMap _cluster_map;
@@ -547,8 +506,10 @@ class Device
     TiberCad::Symmetry _symmetry;
 
 
-    //! The associated MPI communicator
+    //! The MPI communicator associated with the device
     libMesh::Parallel::Communicator _mpi_comm;
+
+    //! The MPI communicator associated with the principal device mesh
     libMesh::Parallel::Communicator _mesh_comm;
 
 };
@@ -693,32 +654,6 @@ Device::get_region_name(ID id) const
   return it->second;
 }
 
-
-/*
-inline
-const BoundaryRegions&
-Device::get_boundary_regions(void) const
-{
-  return *_bd_regions;
-}
-*/
-
-/*
-inline
-const std::string&
-Device::get_boundary_region_name(ID id) const
-{
-  std::map<ID, std::string>::const_iterator it(_boundary_region_names.find(id));
-
-  if (it == _boundary_region_names.end())
-  {
-    std::ostringstream s;
-    s << "Tried to access unknown boundary region with id " << id;
-    throw (DeviceException(s.str()));
-  }
-  return it->second;
-}
-*/
 
 
 inline

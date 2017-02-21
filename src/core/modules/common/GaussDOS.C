@@ -188,11 +188,13 @@ double GaussDOS::inverfc(double x) const
   }
 }
 
+inline
 double GaussDOS::H(double x) const
 {
   return sqrt(2.0) * inverfc(exp(-0.5 * x * x)) / x;
 }
 
+inline
 double GaussDOS::K(double x, double h) const
 { 
   return 2.0*(1.0 - exp(0.5 * x * x * (1.0 - h * h)) * (h * sqrt(2.0/M_PI))/x);

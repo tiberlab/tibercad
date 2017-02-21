@@ -69,9 +69,21 @@ void MeshReader::read_mesh(const string& filename, libMesh::MeshBase& mesh,
     os << "mesh broadcast time: " << tt.elapsed_string();
     Messages::info(os.str());
   }
+  tt.reset();
 
   // now prepare it for use
   mesh.prepare_for_use();
+  {
+    ostringstream os;
+    os << "mesh preparation time: " << tt.elapsed_string();
+    Messages::info(os.str());
+  }
+  tt.reset();
 
   bd_regions.prepare_for_use();
+  {
+    ostringstream os;
+    os << "bd_regions preparation time: " << tt.elapsed_string();
+    Messages::info(os.str());
+  }
 }

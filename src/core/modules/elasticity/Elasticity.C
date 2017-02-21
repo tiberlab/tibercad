@@ -1006,13 +1006,14 @@ Elasticity::apply_shape_deformation()
 
 
     ostringstream os;
-    os << "ratio : " << xmax_n(0) / xmax(0) << " "
+    os << "New periodicity (ratios : " << xmax_n(0) / xmax(0) << " "
       << xmax_n(1) / xmax(1) << " "
-      << xmax_n(2) / xmax(2) << "\n";
+      << xmax_n(2) / xmax(2) << ")\n";
     atom_structures[ns]->get_lattice_vectors(a, b, c);
     os << a << endl;
     os << b << endl;
     os << c << endl;
+    Messages::info(os.str());
 
   }
   
