@@ -23,5 +23,5 @@ endif
 include $(topdir)/Make.rules
 
 #print a numbered list of variables in grace output
-CPPFLAGS += -DNUM_VAR
+#CPPFLAGS += -DNUM_VAR
 
