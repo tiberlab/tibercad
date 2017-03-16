@@ -10,6 +10,7 @@ void
 RecombinationModelInterface::do_init(void)
 {
 
+  _plot_name = get_option("plot_name", "");
   get_option("carriers", _carriers);
 
   // to be sure
@@ -26,14 +27,18 @@ RecombinationModelInterface::do_init(void)
       throw InitFailedException("Recombination '" + get_default_name() +
           "': carrier '" + (it) + "' not found in module");
 
+    const CarrierProperties* cp = get_driftdiffusionproperties().get_carrier_properties(id);
+    if ( cp == nullptr)
+      throw InitFailedException("Recombination '" + get_default_name() +
+          "': carrier '" + (it) + "' not defined in the same regions as the recombination model");
+
     if (used_ids.count(id))
       throw InitFailedException("Recombination '" + get_default_name() +
           "': carrier names must be different");
 
     _carrier_ids.push_back(id);
 
-    double weight = (get_driftdiffusionproperties().get_carrier_properties(id)
-            ->get_carrier_type() == 'e') ? 1.0 : -1.0;
+    double weight = (cp->get_carrier_type() == 'e') ? 1.0 : -1.0;
     _weights.push_back(weight);
 
     used_ids.insert(id);
@@ -76,6 +81,29 @@ RecombinationModelInterface::reorder_carriers(const std::vector<ID>& new_order)
   }
 
   _carrier_ids = new_order;
+}
+
+void
+RecombinationModelInterface::reorder_ids(const std::vector<std::string>& new_order)
+{
+  vector<ID> old_order(_carrier_ids);
+  vector<double> old_weights(_weights);
+
+  assert(new_order.size() == _carrier_ids.size());
+
+  for (unsigned int i = 0; i < new_order.size(); ++i)
+  {
+    for (unsigned int j = 0; j < _carrier_ids.size(); ++j)
+    {
+      if (_carriers[j] == new_order[i])
+      {
+        _carrier_ids[i] = old_order[j];
+        _weights[i] = old_weights[j];
+      }
+    }
+  }
+
+  _carriers = new_order;
 }
 
 void

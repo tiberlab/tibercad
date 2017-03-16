@@ -6,6 +6,7 @@
 #include "TiberMath.h"
 #include "Database.h"
 #include "InitFailedException.h"
+#include "Messages.h"
 
 #include "TiberModule.h"
 
@@ -73,8 +74,8 @@ GaussDOS::do_init(void)
     get_parameter("N0", _N0);
   }
   effective_mass()[0] = 1.0;
-  
-   effective_dos() = _N0;
+
+  effective_dos() = _N0;
 }
 
 double GaussDOS::erfc(double x) const
@@ -241,3 +242,14 @@ GaussDOS::calculate_density_and_derivative(double Ef, double Epot, double kT, do
   }
   return make_pair(dens, der);
 }
+
+void
+GaussDOS::do_print_info(void)
+{
+  ostringstream os;
+  os << "Gaussian center = " <<  reference_energy()[0] << " eV\n"
+       << "N0 = " << _N0 << " cm^-3"
+       << ", sigma = " << _sigma << " eV\n";
+  Messages::info(os.str());
+}
+

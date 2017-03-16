@@ -418,7 +418,7 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
       ElPotential,      /*!< electric potential */
       ElField,          /*!< electric field vector */
       Polarization,     /*!< total electric polarization */
-      CurrentDensity,   /*!< total electric current density */
+      TotCurrentDensity,   /*!< total electric current density */
       IonizedDonors,    /*!< ionized donor density */
       IonizedAcceptors, /*!< ionized acceptor density */
       IonizedElectronTraps, /*!< trapped electron density */
@@ -444,7 +444,9 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
     unsigned int _flux_base;
     //! Base index for currents
     unsigned int _curr_base;
-    //! Base index for recombinations
+    //! Base index for net recombination;
+    unsigned int _net_rec_base;
+    //! Base index for recombinations;
     unsigned int _rec_base;
 
     //! Internal class for the RSTF test functions
@@ -524,6 +526,20 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
     //! The region IDs for the different carriers
     std::map<std::string, std::set<ID>> _carrier_region_ids;
 
+    //! Recombination models
+    /*!
+     * If recombination models are named, 
+     * they are inserted in the map _rec_models
+     * and then separately plotted.
+     * Recombination models without a name are summed in NetRecombinationRate
+     */
+    std::map<std::string, std::set<unsigned int> > _rec_models;
+
+    //! Excitons map
+    /*!
+     * A map storing, for each exciton, the ids of its associated charge carriers
+     */
+    std::map<std::string, std::set<unsigned int> > _excitons;
 
     //! The boundary currents
     /*!

@@ -76,6 +76,18 @@ class CarrierProperties : public DriftDiffusionModelInterface
     //! Get the particle charge in units of \c e
     double get_charge(void) const;
 
+    //! Get the particle spin  in units of \c h/2pi
+    double get_spin(void) const;
+
+    //! Tell if the carrier is an exciton
+    const bool is_exciton(void) const;
+
+    //! Tell if the carrier is a dopant
+    const bool is_dopant(void) const;
+
+    //! Return the charge carriers names associated to an exciton
+    std::vector<std::string> get_exciton_carriers(void) const;
+
 
     //! Do we have quantum density?
     /*!
@@ -103,6 +115,8 @@ class CarrierProperties : public DriftDiffusionModelInterface
 
     //! Initialize
     virtual void do_init(void) override;
+
+    virtual void do_reinit(void) override;
 
     //! Calculate band properties
     virtual void do_calculate(void) {};
@@ -159,6 +173,17 @@ class CarrierProperties : public DriftDiffusionModelInterface
     //! The particle charge in units of \c e
     double _charge;
 
+    //! The particle spin in units of \c h/2pi
+    double _spin;
+
+    //! Tell if the carrier is an exciton
+    bool _is_exciton;
+
+    //! Tell if the carrier is a dopant
+    bool _is_dopant;
+
+    //! Charge carrier forming the exciton
+    std::vector<std::string> _exciton_carriers;
 
     //! The temperature in eV
     double _temperature;
@@ -225,10 +250,39 @@ CarrierProperties::get_charge(void) const
 }
 
 inline
+double
+CarrierProperties::get_spin(void) const
+{
+  return(_spin);
+}
+
+inline
 std::string
 CarrierProperties::get_particle_name(void) const
 {
   return(_particle_name);
 }
+
+inline
+const bool
+CarrierProperties::is_exciton(void) const
+{
+  return(_is_exciton);
+}
+
+inline
+std::vector<std::string>
+CarrierProperties::get_exciton_carriers(void) const
+{
+  return(_exciton_carriers);
+}
+
+inline
+const bool
+CarrierProperties::is_dopant(void) const
+{
+  return(_is_dopant);
+}
+
 
 #endif // _CarrierProperties_H_

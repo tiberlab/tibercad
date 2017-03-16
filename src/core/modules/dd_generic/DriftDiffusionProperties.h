@@ -986,9 +986,11 @@ DriftDiffusionProperties::get_charge_density(void) const
 
   for (auto& cp: _carrier_properties)
   {
-    dens += cp.second->get_charge() * _pd->q_density[cp.first];
+    if (cp.second->is_dopant())
+      dens -= cp.second->get_charge() * _pd->q_density[cp.first];
+    else
+      dens += cp.second->get_charge() * _pd->q_density[cp.first];
   }
-    
       //static_cast<long double>(_pd->hole_density) -
       //static_cast<long double>(_pd->electron_density) +
   dens += static_cast<long double>(_pd->ionized_donor_density) -

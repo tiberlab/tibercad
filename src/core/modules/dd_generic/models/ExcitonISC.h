@@ -1,7 +1,7 @@
-// $Id: ExcitonGeneration.h 3414 2012-09-10 20:40:28Z maufder $
+// $Id: ExcitonISC.h 3414 2012-09-10 20:40:28Z maufder $
 
-#ifndef _EXCITONGENERATION_H_
-#define _EXCITONGENERATION_H_
+#ifndef _EXCITONISC_H_
+#define _EXCITONDISC_H_
 
 #include "RecombinationModelInterface.h"
 #include "TypeDefs.h"
@@ -13,22 +13,22 @@ class SimulationInterface;
  * This class implements direct recombination processes that can be
  * modeled by \f[R_{direct}=C(np-n_i^2)\f]
  */
-class TBDLLOCAL ExcitonGeneration : public RecombinationModelInterface
+class TBDLLOCAL ExcitonISC : public RecombinationModelInterface
 {
 
   public:
 
     //! Destructor
-    virtual ~ExcitonGeneration(void) {};
+    virtual ~ExcitonISC(void) {};
 
     //! Create a ConstantMobility object
-    static ExcitonGeneration* create(const ModelOptions& options);
+    static ExcitonISC* create(const ModelOptions& options);
 
-    
+
   protected:
 
     //! Constructor
-    ExcitonGeneration(const ModelOptions& options);
+    ExcitonISC(const ModelOptions& options);
 
     //! \copydoc RecombinationModelInterface::read_database()
     virtual void read_database(void) override;
@@ -47,11 +47,8 @@ class TBDLLOCAL ExcitonGeneration : public RecombinationModelInterface
     typedef std::map<std::pair<SimulationInterface*, SimulationInterface*>,
         std::pair<unsigned int, double> > QRecMap;
 
-    //! Recombination rate parameters
-    std::vector<double>  _C;
-
-    //! A map associating charge carriers to each exciton
-    std::map<unsigned int, std::vector<unsigned int>> _exciton_carriers;
+    //! Recombination rate parameter
+    double  _C;
 
     //! The quantum optics simulation, if available
     SimulationInterface* _quantum_optics;
@@ -75,7 +72,7 @@ class TBDLLOCAL ExcitonGeneration : public RecombinationModelInterface
 // 
 
 inline
-ExcitonGeneration::ExcitonGeneration(const ModelOptions& options)
+ExcitonISC::ExcitonISC(const ModelOptions& options)
   : RecombinationModelInterface(options),
     _quantum_optics(NULL)
 {
@@ -83,10 +80,10 @@ ExcitonGeneration::ExcitonGeneration(const ModelOptions& options)
 
 
 inline
-ExcitonGeneration*
-ExcitonGeneration::create(const ModelOptions& options)
+ExcitonISC*
+ExcitonISC::create(const ModelOptions& options)
 {
-  return new ExcitonGeneration(options);
+  return new ExcitonISC(options);
 }
 
 
@@ -94,4 +91,4 @@ ExcitonGeneration::create(const ModelOptions& options)
 
 
 
-#endif // _EXCITONGENERATION_H__
+#endif // _EXCITONISC_H__

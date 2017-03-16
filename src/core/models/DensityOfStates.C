@@ -9,9 +9,11 @@ using namespace std;
 
 DensityOfStates::DensityOfStates(const ModelOptions& options) :
   PhysicalModelInterface(options),
+  _fixed_DOS(false),
   _reference_energy({0.0}),
   _effective_mass({1.0}),
   _particle(' '),
+  _spin(0.5),
   _use_quantum(false),
   _is_quantum(false)
 {
@@ -22,6 +24,8 @@ DensityOfStates::DensityOfStates(const ModelOptions& options) :
   else if (particle == string("hl") || particle == string("h") ||
       particle == string("hole"))
     _particle = 'h';
+
+  _spin = get_option("spin", _spin);
 }
 
 

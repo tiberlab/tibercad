@@ -63,8 +63,8 @@ DirectRecombination::do_init(void)
 void
 DirectRecombination::calculate_rate_and_derivatives(std::vector<double>& R, std::vector<std::vector<double>>& dPotentials)
 {
-  const ID id1 = this->get_carrier_ids()[0];
-  const ID id2 = this->get_carrier_ids()[1];
+  ID id1 = this->get_carrier_ids()[0];
+  ID id2 = this->get_carrier_ids()[1];
 
   const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
 
@@ -75,9 +75,12 @@ DirectRecombination::calculate_rate_and_derivatives(std::vector<double>& R, std:
 
   if (ct1 != ct2)
   {
+    if (ct1 != 'e')
+      swap(id1, id2);
+
     double Ef1 = -dd.get_q_fermi_potential(id1);
     double Ef2 = -dd.get_q_fermi_potential(id2);
-    double beta = (ct1 == 'e') ? 1.0/kT : -1.0/kT;
+    double beta = 1.0/kT;
 
     double n1  = dd.get_q_density(id1);
     double n2  = dd.get_q_density(id2);

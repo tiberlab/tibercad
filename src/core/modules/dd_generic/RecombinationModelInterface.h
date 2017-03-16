@@ -69,6 +69,9 @@ class TBDLEXPORT RecombinationModelInterface : public DriftDiffusionModelInterfa
     //! Get the names of the recombining carriers
     const std::vector<std::string>& get_carrier_names(void) const;
 
+    //! Get the plot name
+    const std::string& get_plot_name(void) const;
+
 
   protected:
 
@@ -91,6 +94,9 @@ class TBDLEXPORT RecombinationModelInterface : public DriftDiffusionModelInterfa
     //! Reorder carriers according to a module specific order
     void reorder_carriers(const std::vector<ID>& new_order);
 
+    //! Reorder ids according to a module specific order
+    void reorder_ids(const std::vector<std::string>& new_order);
+
     //! Set the weights, if necessary
     void set_weights(std::vector<double>& weights);
 
@@ -108,6 +114,13 @@ class TBDLEXPORT RecombinationModelInterface : public DriftDiffusionModelInterfa
 
     //! The weights for the different carrier
     std::vector<double> _weights;
+
+    //! The plot name used to plot separately each recombination model
+    /*! If two recombination models have the same plot name
+     *  the corresponding recombination rates will be summed in the output file.
+     *  If plot name is not specified, the recombination rate will be summed in NetRecombinationRate only
+     */
+    std::string _plot_name;
 
 };
 
@@ -161,6 +174,13 @@ const std::vector<std::string>&
 RecombinationModelInterface::get_carrier_names(void) const
 {
   return(_carriers);
+}
+
+inline
+const std::string&
+RecombinationModelInterface::get_plot_name(void) const
+{
+  return(_plot_name);
 }
 
 inline

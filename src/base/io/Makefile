@@ -21,3 +21,7 @@ CPPFLAGS += -I$(topdir)/contrib/dlfcn-win32-r19
 endif
 
 include $(topdir)/Make.rules
+
+#print a numbered list of variables in grace output
+#CPPFLAGS += -DNUM_VAR
+

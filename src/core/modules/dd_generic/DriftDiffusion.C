@@ -108,17 +108,130 @@ DriftDiffusion::DriftDiffusion(const ModelOptions& options)
 
   // names can appear several times
   set<string> names;
+  // check if carriers with the same name have also the same charge
+  map<string, set<double>> charges;
+   // check if carriers with the same name have also the same spin
+  map<string, set<double>> spin;
 
   for ( ; itc != end_itc; ++itc)
   {
     string name = (itc->second).get_option("name", "");
     names.insert(name);
+    charges.insert( make_pair(name, set<double>()) );
+    charges[name].insert( (itc->second).get_option("charge", 1.0) );
+    spin.insert( make_pair(name, set<double>()) );
+    spin[name].insert( (itc->second).get_option("spin", 0.5) );
   }
 
   _carriers.resize(0);
   _carriers.reserve(names.size());
   for (auto&& name : names)
+  {
+    if (charges[name].size()>1)
+      throw InitFailedException("Carrier '" + name + "' has multiple definitions with different charges");
+
+    if (spin[name].size()>1)
+      throw InitFailedException("Carrier '" + name + "' has multiple definitions with different spins");
+
     _carriers.push_back(name);
+  }
+
+  // detect all excitons
+  itc = physopts.submodels_begin("carrier");
+
+  for ( ; itc != end_itc; ++itc)
+  {
+    bool ex = (itc->second).get_option("exciton", false); 
+    if (ex) //the carrier is an exciton
+    {
+      string name = (itc->second).get_option("name", "");
+
+      vector<string> ex_carriers;
+      (itc->second).get_option("exciton_carriers", ex_carriers);
+
+      if (ex_carriers.size() < 2)
+        throw InitFailedException("Two carriers must be specified to set exciton '" + name + "'");
+
+      ex_carriers.resize(2);
+      double charge = 1.0;
+
+      //insert the exciton in the map associating charge carriers ids
+      _excitons.insert( make_pair(name, set<unsigned int>()) );
+
+      for (auto exc : ex_carriers)
+      {
+        if (names.count(exc) == 0)
+          throw InitFailedException("In exciton '" + name + "', carrier '" + exc + "' does not exist");
+
+        //get exciton carrier options
+        auto findc (physopts.submodels_begin("carrier"));
+
+        for ( ; findc != end_itc; ++findc)
+          if ( (findc->second).get_option("name" , "") == exc )
+            break;
+
+        if ((findc->second).get_option("exciton" , false))
+          throw InitFailedException("Carrier '" + exc + "' is an exciton. \nExciton '" + name + "' has to be defined by two charge carriers");
+
+        charge *= (findc->second).get_option("charge" , 1.0); //multiply the charge of each exciton carrier, eventually charge has to be negative
+
+        //insert the charge carrier id in excitons map
+        for (unsigned int i = 0; i < _carriers.size(); i++)
+        {
+          if (exc == _carriers[i])
+            _excitons[name].insert(i);
+        }
+      }
+
+      if (charge > 0.0)
+        throw InitFailedException("Carriers associated to exciton '" + name + "' must have opposite charge");
+
+    }
+  }
+  // end excitons
+
+
+  // detect all recombination models in order to define specific plot variables
+  auto itr (physopts.submodels_begin("recombination"));
+  auto end_itr (physopts.submodels_end("recombination"));
+
+  for ( ; itr != end_itr; ++itr)
+  {
+    string recname = (itr->second).get_option("name", "");
+    string plotname = (itr->second).get_option("plot_name", "");
+    vector<string> rec_carriers;
+
+    // get the carriers associated to each recombination model
+    (itr->second).get_option("carriers", rec_carriers);
+
+    if (plotname != "")
+    {
+      _rec_models.insert(make_pair(plotname, set<unsigned int>()));
+
+      for (auto carrier : rec_carriers)
+      {
+        for (unsigned int i = 0; i < _carriers.size(); i++)
+        {
+          if (carrier == _carriers[i])
+            _rec_models[plotname].insert(i);
+        }
+
+        // if we have an exciton, we add its charge carriers to generation model plot variables
+        if (_excitons.count(carrier))
+        {
+          bool add;
+          add = ( recname.compare(0, 11, "exciton_gen") == 0 ) ? true : false;
+
+          if (add)
+          {
+            for (auto i : _excitons[carrier])
+              _rec_models[plotname].insert(i);
+          }
+        }
+      }
+    }
+  } //end rec models
+
 }
 
 
@@ -1646,6 +1759,43 @@ DriftDiffusion::do_init(void)
       this->get_environment().get_device().extract_physical_regions(regions, reg_ids);
       _carrier_region_ids[name].insert(reg_ids.begin(), reg_ids.end());
     }
+
+
+    // check excitons regions
+    itc = physopts.submodels_begin("carrier");
+
+    for ( ; itc != end_itc; ++itc)
+    {
+      bool ex = (itc->second).get_option("exciton", false); 
+      if (ex) //the carrier is an exciton
+      {
+        string name = (itc->second).get_option("name", "");
+
+        vector<string> ex_carriers;
+        (itc->second).get_option("exciton_carriers", ex_carriers);
+        ex_carriers.resize(2);
+
+        vector<ID> regions;
+        copy(_carrier_region_ids[name].begin(), _carrier_region_ids[name].end(), back_inserter(regions));
+
+        for (auto exc : ex_carriers)
+        {
+          vector<ID> regtmp = regions;
+          regions.resize(0);
+          set_intersection(regtmp.begin(), regtmp.end(), 
+                           _carrier_region_ids[exc].begin(), _carrier_region_ids[exc].end(), 
+                           back_inserter(regions));
+        }
+
+        if (regions.size() == 0)
+          throw InitFailedException("Exciton '" + name + "' and its carriers must be defined on the same regions");
+
+      }
+    }
+    // end excitons
+
+
+
   }
 
   get_environment().update_boundary_element_map();
@@ -1714,7 +1864,10 @@ DriftDiffusion::do_setup_solution_variables(void)
   _conductivity_base = _mobility_base + _carriers.size();
   _flux_base = _conductivity_base + _carriers.size();
   _curr_base = _flux_base + _carriers.size();
-  _rec_base = _curr_base + _carriers.size();
+  _net_rec_base = _curr_base + _carriers.size();
+  _rec_base = _net_rec_base + _carriers.size();
+  //not used now, just a reminder of the correct way to proceed adding new variables if needed
+  //_next_var_base = _rec_base + _rec_models.size()*_carriers.size();
 
   for (unsigned int i = 0; i < _carriers.size(); ++i)
   {
@@ -1748,16 +1901,32 @@ DriftDiffusion::do_setup_solution_variables(void)
     if (plot_solution("Flux"))
           add_plot_variable(_flux_base + i);
 
-    declare_solution_ext(_carriers[i] + "qCurrentDensity", _curr_base + i,
+    declare_solution_ext(_carriers[i] + "CurrentDensity", _curr_base + i,
         SolutionDescriptor::VECTOR, SolutionDescriptor::CELL, "A/cm^2");
-    if (plot_solution("qCurrentDensity"))
+    if (plot_solution("CurrentDensity"))
           add_plot_variable(_curr_base + i);
 
-    declare_solution_ext(_carriers[i] + "NetRecombination", _rec_base + i,
+    declare_solution_ext(_carriers[i] + "NetRecombination", _net_rec_base + i,
         SolutionDescriptor::REAL, SolutionDescriptor::NODES, "1/(s*cm^3)");
     if (plot_solution("NetRecombination"))
-          add_plot_variable(_rec_base + i);
+          add_plot_variable(_net_rec_base + i);
+
   }
+
+  unsigned int n_rec = 0;
+  for (auto& rec : _rec_models)
+  {
+    for (auto id : rec.second)
+    {
+      declare_solution_ext(_carriers[id] + "Recombination_" + rec.first, _rec_base + n_rec*_carriers.size() + id,
+        SolutionDescriptor::REAL, SolutionDescriptor::NODES, "1/(s*cm^3)");
+
+      if (plot_solution("NetRecombination"))
+        add_plot_variable(_rec_base + n_rec*_carriers.size() + id);
+    }
+    n_rec++;
+  }
+
   /*
   declare_solution(Eg, REAL, NODES, "eV");
   declare_solution(Ev, REAL, NODES, "eV");
@@ -1786,7 +1955,7 @@ DriftDiffusion::do_setup_solution_variables(void)
   }
   */
 
-  declare_solution(CurrentDensity, VECTOR, CELL, "A/cm^2");
+  declare_solution(TotCurrentDensity, VECTOR, CELL, "A/cm^2");
   /*
   declare_solution(eCurrentDensity, VECTOR, CELL, "A/cm^2");
   declare_solution(hCurrentDensity, VECTOR, CELL, "A/cm^2");
@@ -2267,7 +2436,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     bool need_recomb = false;
     for (unsigned int v = 0; v < n_vars; ++v)
     {
-      if (values.count(_rec_base + v))
+      if (values.count(_net_rec_base + v))
         need_recomb = true;
     }
 
@@ -2276,8 +2445,36 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
     for (unsigned int v = 0; v < n_vars; ++v)
     {
-      if (values.count(_rec_base + v))
-        values[_rec_base + v][n] = sc->get_net_q_recombination_rate(v);
+      if (values.count(_net_rec_base + v))
+        values[_net_rec_base + v][n] = sc->get_net_q_recombination_rate(v);
+    }
+
+    unsigned int n_rec = 0;
+    for (auto& rec : _rec_models)
+    {
+      for (auto id : rec.second)
+      {
+        if (values.count(_rec_base + n_rec*_carriers.size() + id))
+        {
+          values[_rec_base + n_rec*_carriers.size() + id][n] = 0.0;
+
+          DriftDiffusionProperties::RecombinationModelIterator recit(sc->recombination_models_begin());
+          DriftDiffusionProperties::RecombinationModelIterator recend(sc->recombination_models_end());
+
+          for ( ; recit != recend; ++recit)
+          {
+            if (rec.first == (recit->second)->get_plot_name())
+            {
+              vector<double> R(_carriers.size(), 0.0);
+              vector<vector<double>> dR( _carriers.size(), vector<double>(_carriers.size() + 1, 0.0) );
+
+              (recit->second)->get_net_rate_and_derivatives(R, dR);
+              values[_rec_base + n_rec*_carriers.size() + id][n] += R[id];
+            }
+          }
+        }
+      }
+      n_rec++;
     }
 
     /*
@@ -2386,11 +2583,11 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     values[Polarization][2] = polariz(2) / np;
   }
 
-  if (values.count(CurrentDensity))
+  if (values.count(TotCurrentDensity))
   {
-    values[CurrentDensity][0] = curr_tot(0) / np;
-    values[CurrentDensity][1] = curr_tot(1) / np;
-    values[CurrentDensity][2] = curr_tot(2) / np;
+    values[TotCurrentDensity][0] = curr_tot(0) / np;
+    values[TotCurrentDensity][1] = curr_tot(1) / np;
+    values[TotCurrentDensity][2] = curr_tot(2) / np;
   }
 
   for (unsigned int v = 0; v < n_vars; ++v)
@@ -4506,6 +4703,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
       n_var++;
     }
 
+
     // Get the temperature given the element
     vector<double> T_nodes = sc->get_temperature_at_nodes();
 
@@ -4760,8 +4958,12 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                   double dmu_grad_u_x_dphi = dmu_grad_u[var] * dphi[j][qp];
                   double dmu_grad_f_x_dphi = dmu_grad_f[var] * dphi[j][qp];
 
+                  //if the carrier has zero charge, there is no dependence on the electric potential, hence dsigma_du is zero
+                  double q = sc->get_carrier_properties(var)->get_charge();
+                  double pot_fac = ( q == 0 ) ? 0.0 : 1.0;
+
                   if (coupling & POISSON)
-                    Kvv.at(var).at(u_var)(i,j) += dsigma_x_phi + (dmu_u_x_phi + dmu_grad_u_x_dphi) * lap[var];
+                    Kvv.at(var).at(u_var)(i,j) += pot_fac * dsigma_x_phi + (dmu_u_x_phi + dmu_grad_u_x_dphi) * lap[var];
 
                   Kvv.at(var).at(var)(i,j) += (dmu_grad_f_x_dphi - dmu_u_x_phi) * lap[var] - dsigma_x_phi;
                 }

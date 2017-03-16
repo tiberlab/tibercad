@@ -44,7 +44,8 @@ class TBDLEXPORT DeltaDOS : public DensityOfStates
 
   private:
 
-
+  //! The effective DOS
+  double _N0;
 };
 
 //

@@ -369,19 +369,21 @@ DDBulkModel::calculate_equilibrium_properties(void)
   int ncb = 0, nvb = 0;
   for (auto&& cp: carriers)
   {
-    cp.second->calculate(kT);
-    if (cp.second->get_carrier_type() == 'e')
+    if (!cp.second->is_dopant())
     {
-      Ec += cp.second->get_band_edge();
-      ncb++;
-    }
-    else
-    {
-      Ev += cp.second->get_band_edge();
-      nvb++;
+      cp.second->calculate(kT);
+      if (cp.second->get_carrier_type() == 'e')
+      {
+        Ec += cp.second->get_band_edge();
+        ncb++;
+      }
+      else
+      {
+        Ev += cp.second->get_band_edge();
+        nvb++;
+      }
     }
   }
-  
   if (ncb > 0)
     Ec /= ncb;
   if (nvb > 0)
@@ -657,7 +659,7 @@ DDBulkModel::do_print_info(void)
     os << "Band edge = " << cp.second->get_band_edge()
        << ", N0 = " << cp.second->get_effective_DOS() << " cm^-3\n"
        << "m_dos = " << cp.second->get_effective_mass()
-       << ", v_th = " << cp.second->get_thermal_velocity(Constants::k_B * SimulationOptions::T) << " cm/s\n";
+       << ", v_th = " << cp.second->get_thermal_velocity(Constants::k_B * SimulationOptions::T) << " cm/s\n\n";
 
     Messages::info(os.str());
     m.unindent();

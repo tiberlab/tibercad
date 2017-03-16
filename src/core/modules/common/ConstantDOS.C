@@ -45,32 +45,15 @@ ConstantDOS::read_database(void)
 void
 ConstantDOS::do_init(void)
 {
-  if (get_particle() == 'e')
-  {
-	//_E0 = reference_energy();
-        //get_parameter("E0_n", _E0);
-        if (has_parameter("level"))
-        {
-          get_parameter("level", reference_energy());
-        }
-	get_parameter("Ewidth", _Ewidth);
-	get_parameter("N0", _N0);
-        //cout<<"E0_e = "<<_E0<<endl;
-  }
-  else
-  {
-        //_E0 = reference_energy();
-	//get_parameter("E0_p", _E0);
-        if (has_parameter("level"))
-        {
-          get_parameter("level", reference_energy());
-        }
-	get_parameter("Ewidth", _Ewidth);
-	get_parameter("N0", _N0);
-	//_E0 *= -1.0;
-        //cout<<"E0_h = "<<_E0<<endl;
-  }
+  if (has_parameter("level"))
+    get_parameter("level", reference_energy());
+
+  get_parameter("Ewidth", _Ewidth);
+  get_parameter("N0", _N0);
+
   effective_mass()[0] = 1.0;
+
+  effective_dos() = _N0;
 }
 
 std::pair<double, double>

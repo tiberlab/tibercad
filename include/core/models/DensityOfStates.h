@@ -30,6 +30,10 @@ class TBDLEXPORT DensityOfStates : public PhysicalModelInterface
     void set_reference_energy(double E0);
 
 
+    //! Set the effective DOS
+    void set_effective_DOS(double DOS);
+
+
 
     //! Get occupied states
     /*!
@@ -51,6 +55,9 @@ class TBDLEXPORT DensityOfStates : public PhysicalModelInterface
 
     //! Get the particle name
     char get_particle(void) const;
+
+    //! Get the particle spin
+    double get_spin(void) const;
 
 
     //! Do or don't use the quantum density
@@ -90,6 +97,9 @@ class TBDLEXPORT DensityOfStates : public PhysicalModelInterface
     //! The effective DOS
     double get_effective_dos(void) const { return _effective_dos; }
 
+    //! Read the _fixed_DOS flag
+    bool get_fixed_dos(void) const { return _fixed_DOS; }
+
 
   protected:
 
@@ -98,6 +108,9 @@ class TBDLEXPORT DensityOfStates : public PhysicalModelInterface
 
     //! A readable reference to the effective DOS
     double& effective_dos(void) { return _effective_dos; }
+
+    //! A RW reference to _fixed_DOS
+    bool& fixed_dos(void) { return _fixed_DOS; }
 
     //! Calculate density and derivative
     virtual std::pair<double, double>
@@ -124,12 +137,18 @@ class TBDLEXPORT DensityOfStates : public PhysicalModelInterface
     //! The effective DOS
     double _effective_dos;
 
+    //! A flag used to lock the effective DOS
+    bool _fixed_DOS;
+
     //! We keep the name of the particle
     /*!
      * e -> electron
      * h -> hole
      */
     char _particle;
+
+    //! The spin of the particle
+    double _spin;
 
 
     //! Do or don't use quantum density
@@ -152,6 +171,14 @@ DensityOfStates::set_reference_energy(double E0)
   _reference_energy[0] = E0;
 }
 
+inline
+void
+DensityOfStates::set_effective_DOS(double DOS)
+{
+  if (!_fixed_DOS)
+    _effective_dos = DOS;
+}
+
 
 //inline
 //void
@@ -165,6 +192,13 @@ char
 DensityOfStates::get_particle(void) const
 {
   return _particle;
+}
+
+inline
+double
+DensityOfStates::get_spin(void) const
+{
+  return _spin;
 }
 
 inline

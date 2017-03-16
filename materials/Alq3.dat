@@ -25,7 +25,9 @@ m_L_l = 1
 m_X_t = 1
 m_X_l = 1
 
-[valenceband ]
+m_dos = 1
+
+[valenceband]
 m_HH = 1
 m_LH = 1
 

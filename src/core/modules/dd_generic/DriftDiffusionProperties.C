@@ -267,6 +267,7 @@ DriftDiffusionProperties::create_recombination_models(void)
   // we create them only if they do not exist yet
   vector<ID> ids;
   get_net_recombination_rate_IDs(ids);
+
   if (!ids.size())
   {
     //
@@ -485,14 +486,22 @@ DriftDiffusionProperties::calculate_densities(void)
     cp.second->set_temperature(_pd->carrier_vt[cp.first]);
     pair<double, double> dens_der(cp.second->get_density_and_derivative(
         _pd->fermi_potential[cp.first], _pd->electric_potential));
-    _pd->q_density[cp.first] = dens_der.first;
+
+    if (cp.second->is_dopant())
+    {
+      double DOS = cp.second->get_effective_DOS();
+      _pd->q_density[cp.first] = DOS - dens_der.first;
+    }
+    else
+    {
+      _pd->q_density[cp.first] = dens_der.first;
+    }
+
     _pd->q_density_derivative[cp.first] = dens_der.second;
 
-    double sign = 1;
-    if (cp.second->get_charge() >= 0)
-      sign = -1;
+    double q = cp.second->get_charge();
 
-    _pd->charge_density_derivative[cp.first] = sign * dens_der.second;
+    _pd->charge_density_derivative[cp.first] = - q * dens_der.second;
   }
 }
 
