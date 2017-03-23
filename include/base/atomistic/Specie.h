@@ -18,7 +18,6 @@
  * to make I/O and comparison operations compatible with
  * strings
  */
-
 class Specie
 {
 public:
@@ -57,9 +56,6 @@ public:
 
     //! Constructor with enumerator specification
     Specie(const Type& type);
-
-    //! Get reference to specie type
-    //const Type& get_type(void) const;
 
     //!Get mass
     const double get_mass(void) const;
@@ -156,8 +152,8 @@ Specie::operator!=(const Specie& specie) const
 }
 
 
-//!Override comparison operator, allows:
-//! s == 'H'
+//Override comparison operator, allows:
+// s == 'H'
 inline
 bool operator== (const Specie& specie, const std::string& type_string)
 {
@@ -165,8 +161,8 @@ bool operator== (const Specie& specie, const std::string& type_string)
     else return false;
 }
 
-//!Override comparison operator, allows:
-  //! 'H' == s
+//Override comparison operator, allows:
+  // 'H' == s
 inline
 bool operator== (const std::string& type_string, const Specie& specie)
 {
@@ -174,40 +170,40 @@ bool operator== (const std::string& type_string, const Specie& specie)
     else return false;
 }
 
-//!Override comparison, allow comparison between Specie and Type avoiding
-//! explicit get_type() call
+//Override comparison, allow comparison between Specie and Type avoiding
+// explicit get_type() call
 inline
 bool operator== (const Specie& specie, const Specie::Type& type)
     {
   return ( specie._type == type);
     }
 
-//!Override comparison, allow comparison between Specie and Type avoiding
-//! explicit get_type() call
+//Override comparison, allow comparison between Specie and Type avoiding
+// explicit get_type() call
 inline
 bool operator== (const Specie::Type& type, const Specie& specie)
     {
   return ( specie._type == type);
     }
 
-//!Override comparison, allow comparison between Specie and Type avoiding
-//! explicit get_type() call
+//Override comparison, allow comparison between Specie and Type avoiding
+// explicit get_type() call
 inline
 bool operator!= (const Specie& specie, const Specie::Type& type)
     {
   return !(specie == type);
     }
 
-//!Override comparison, allow comparison between Specie and Type avoiding
-//! explicit get_type() call
+//Override comparison, allow comparison between Specie and Type avoiding
+// explicit get_type() call
 inline
 bool operator!= (const Specie::Type& type, const Specie& specie)
     {
   return !( type == specie);
     }
 
-////!Override comparison operator, allows:
-//    //! s.get_type() == 'H'
+////Override comparison operator, allows:
+//    // s.get_type() == 'H'
 //bool operator!= (Type& type, std::string& type_string)
 //{
 //  return !(type == string_to_specie[type_string]);
@@ -220,32 +216,32 @@ bool operator!= (const Specie::Type& type, const Specie& specie)
 //  return !(type == type_string);
 //}
 
-//!Override comparison operator, allows:
-  //! s == 'H'
+//Override comparison operator, allows:
+  // s == 'H'
 inline
 bool operator!= (const Specie& specie, const std::string& type_string)
 {
   return !(specie == type_string);
 }
 
-//!Override comparison operator, allows:
-  //! 'H' == s
+//Override comparison operator, allows:
+  // 'H' == s
 inline
 bool operator!= (const std::string& type_string, const Specie& specie)
 {
   return !(specie == type_string);
 }
 
-//!Override greater operator, allows:
-  //! 's1 > s2
+//Override greater operator, allows:
+  // 's1 > s2
 inline
 bool operator> (const Specie& specie1, const Specie& specie2)
 {
   return (specie1._type > specie2._type);
 }
 
-//!Override greater operator, allows:
-  //! 's1 < s2
+//Override greater operator, allows:
+  // 's1 < s2
 inline
 bool operator< (const Specie& specie1, const Specie& specie2)
 {

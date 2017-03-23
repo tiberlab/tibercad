@@ -53,7 +53,7 @@ AtomisticGenerator3D::build()
   max_y = (*nd)(1);
   max_z = (*nd)(2);
 
-  for (std::vector<Elem*>::iterator it = _structure_elements.begin(); it != _structure_elements.end(); ++it){
+  for (auto it = _structure_elements.begin(); it != _structure_elements.end(); ++it){
 
     elem = *it;
 
@@ -82,7 +82,6 @@ AtomisticGenerator3D::build()
   double l2 = (fabs(max_y - min_y)) * scale;
   double l3 = (fabs(max_z - min_z)) * scale;
 
-  
   make_supercell( l1, l2, l3);
 
   //print_basis(_super_basis, "supercell.xyz");

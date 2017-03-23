@@ -410,6 +410,7 @@ AtomisticBasis::neighbor_iterator::neighbor_iterator(const AtomisticBasis& struc
       _setA.insert(make_pair(curr[i], nt[_current][i]));
 
     _itA = _setA.begin();
+    //cerr << _start << endl;
   }
   else
   {
@@ -465,6 +466,7 @@ AtomisticBasis::neighbor_iterator::operator++(void)
       _current = _itA->first;
       _image = (_itA->second);
       _visited.insert(make_pair(_current, _image));
+      //cerr << _start << " : " << _current << " " << _image;
 
       const vector<unsigned int>& nn = _structure.get_bond_map()[_current];
       for (unsigned int i = 0; i < nn.size(); ++i)
@@ -480,7 +482,7 @@ AtomisticBasis::neighbor_iterator::operator++(void)
         bool visited = false;
         HMMap::iterator it(range.first);
         for ( ; it != range.second; ++it)
-          if (it->second == new_shift)
+          if ((it->second).relative_fuzzy_equals(new_shift, 1e-9))
           {
             visited = true;
             break;
@@ -494,7 +496,7 @@ AtomisticBasis::neighbor_iterator::operator++(void)
           {
             double d = Point(_structure.get_structure_atom(_start).get_position()
                 - _structure.get_structure_atom(nn[i]).get_position()
-                + new_shift).size();
+                - new_shift).size();
 
             if (d < _length * 1.5)
               _setB.insert(make_pair(nn[i], new_shift));
@@ -502,11 +504,11 @@ AtomisticBasis::neighbor_iterator::operator++(void)
           else
           {
             double dx  = fabs(_structure.get_structure_atom(_start).get_position(0)
-                - _structure.get_structure_atom(nn[i]).get_position(0) + new_shift(0));
+                - _structure.get_structure_atom(nn[i]).get_position(0) - new_shift(0));
             double dy  = fabs(_structure.get_structure_atom(_start).get_position(1)
-                - _structure.get_structure_atom(nn[i]).get_position(1) + new_shift(1));
+                - _structure.get_structure_atom(nn[i]).get_position(1) - new_shift(1));
             double dz  = fabs(_structure.get_structure_atom(_start).get_position(2)
-                - _structure.get_structure_atom(nn[i]).get_position(2) + new_shift(2));
+                - _structure.get_structure_atom(nn[i]).get_position(2) - new_shift(2));
 
             if (dx < (_length/2 + _min_bond) &&
                 dy < (_height/2 + _min_bond) &&
@@ -524,18 +526,19 @@ AtomisticBasis::neighbor_iterator::operator++(void)
       {
         double d = Point(_structure.get_structure_atom(_start).get_position()
             - _structure.get_structure_atom(_current).get_position()
-            + _image).size();
+            - _image).norm();
 
-        advance = d > _length;
+        advance = (d > _length) || (d < 1e-3);
+        //cerr << "   " << _current << "  d = " << d <<  " (" << advance << ")" << endl;
       }
       else
       {
         double dx  = fabs(_structure.get_structure_atom(_start).get_position(0)
-            - _structure.get_structure_atom(_current).get_position(0) + _image(0));
+            - _structure.get_structure_atom(_current).get_position(0) - _image(0));
         double dy  = fabs(_structure.get_structure_atom(_start).get_position(1)
-            - _structure.get_structure_atom(_current).get_position(1) + _image(1));
+            - _structure.get_structure_atom(_current).get_position(1) - _image(1));
         double dz  = fabs(_structure.get_structure_atom(_start).get_position(2)
-            - _structure.get_structure_atom(_current).get_position(2) + _image(2));
+            - _structure.get_structure_atom(_current).get_position(2) - _image(2));
 
         advance = (dx > (_length/2)) || (dy > (_height/2)) || (dz > (_width/2));
       }

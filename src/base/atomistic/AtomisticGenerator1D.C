@@ -58,8 +58,7 @@ AtomisticGenerator1D::build()
   edge_min = (*nd)(0); edge_max = (*nd)(0);
   nd++;
 
-  for (std::vector<Elem*>::iterator it = _structure_elements.begin();
-      it != _structure_elements.end(); it++)
+  for (auto it = _structure_elements.begin(); it != _structure_elements.end(); it++)
   {
 
     elem = *it;

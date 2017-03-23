@@ -2340,9 +2340,9 @@ AtomisticStructure::extract_statistics(map<Specie, vector<unsigned int>>& stats,
       }
 
       stats[atm.get_specie()][0] += 1;
-      //cerr << "start: " << i << endl;
       if ((ref_atom < 0) || (atm.get_label() == ref_atom))
       {
+        //cerr << "start: " << i << endl;
         unsigned int counter = 0;
         unsigned int total = 1;
 
@@ -2507,6 +2507,29 @@ AtomisticStructure::find_nearest_atom(const Elem* elem, const Point& point, doub
 void
 AtomisticStructure::extract_alloy_statistics(const ModelOptions& opt)
 {
+
+  // we can induce an artificial detection efficiency, to model e.g. APT
+  map<Specie, double> detection_efficiency;
+  vector<string> det_eff;
+  opt.get_option("detection_efficiency", det_eff);
+  if (det_eff.size() % 2 != 0)
+  {
+    Messages::error("detection_efficiency for alloy statistics is ill defined: "
+        "need pairs (species, efficiency)");
+  }
+  else
+  {
+    for (int i = 0; i < det_eff.size(); i += 2)
+    {
+      double eff = Utils::convert<double>(det_eff[i+1]);
+      if ((eff > 1.0) || (eff < 0))
+        Messages::error("Wrong detection efficiency for " + det_eff[i] + ": "
+            + det_eff[i+1]);
+      else
+        detection_efficiency[det_eff[i]] = eff;
+    }
+  }
+
 
   if (opt.get_option("control_volume", string("sphere")) == "column")
   {
@@ -2777,9 +2800,9 @@ AtomisticStructure::extract_alloy_statistics(const ModelOptions& opt)
           max = sums[i];
       }
 
-      for (int i = 0; i < NN; ++i)
+      for (int i = 1; i < NN; ++i)
       {
-        if (sums[i] >= (max - 1))
+        //if (sums[i] >= (max - 1))
         {
           for (mit = stats.begin(); mit != mend; ++mit)
             of << (mit->second)[i] << " ";
@@ -2827,7 +2850,6 @@ AtomisticStructure::plot_alloy_composition(const ModelOptions& opt)
     {
       SolutionDescriptor desc(atom_types[i], ctr,
         SolutionDescriptor::REAL, SolutionDescriptor::NODES);
-      cerr << "Atom : " << atom_types[i] << endl;
 
       species_to_descr[sp] = desc;
       ++ctr;

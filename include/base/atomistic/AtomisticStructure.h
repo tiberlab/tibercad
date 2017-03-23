@@ -173,7 +173,7 @@ public:
   //! Tells if random alloy approximation is used
   bool is_random_alloy(void);
 
-  //! Get the reference material
+  // ! Get the reference material
   //const Material* get_reference_material(void) const;
 
   //! Apply reordering to atoms
@@ -215,13 +215,13 @@ public:
                               std::vector<std::string>& str,
                               std::vector<double>& frac);
 
-  // extract alloy statistics
+  //! extract alloy statistics
   void extract_alloy_statistics(const ModelOptions& );
 
-  // plot alloy composition on a vtk file
+  //! plot alloy composition on a vtk file
   void plot_alloy_composition(const ModelOptions& );
 
-  // compute radial distribution
+  //! compute radial distribution
   void radial_distribution(std::string suffix = "");
 
 private:

@@ -922,10 +922,16 @@ void AtomisticGenerator::move_origin()
   }
   while(conv_iterator != _conv_lattice.end());
   
+  // 2017-03-13, Matthias: the following was added because sometimes the origin
+  // was not with positive coordinates. Don't know why it mostly worked
+  if (min_pos(1) >= 0) min_pos(1) = -1e-6;
+  if (min_pos(2) >= 0) min_pos(2) = -1e-6;
+  if (min_pos(3) >= 0) min_pos(3) = -1e-6;
+
   _local_origin = _conv_vect * _cell_translation - min_pos;
  
   ostringstream os;
-  os<< "New origin: "<<_local_origin;
+  os << "Relative origin of atomic structure: "<< _local_origin;
   Messages msg;
   msg.info(os.str()); 
 
