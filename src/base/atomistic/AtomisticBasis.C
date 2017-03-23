@@ -465,8 +465,9 @@ AtomisticBasis::neighbor_iterator::operator++(void)
 
       _current = _itA->first;
       _image = (_itA->second);
-      _visited.insert(make_pair(_current, _image));
-      //cerr << _start << " : " << _current << " " << _image;
+      _visited.insert(make_pair(_current, _structure.get_structure_atom(_start).get_position()
+          - _structure.get_structure_atom(_current).get_position()
+          - _image));
 
       const vector<unsigned int>& nn = _structure.get_bond_map()[_current];
       for (unsigned int i = 0; i < nn.size(); ++i)
@@ -478,11 +479,15 @@ AtomisticBasis::neighbor_iterator::operator++(void)
         // this neighbour would be shifted by this amount, if periodic copy
         Point new_shift(nt[_current][i] + _image);
 
+        Point dist(_structure.get_structure_atom(_start).get_position()
+                    - _structure.get_structure_atom(nn[i]).get_position()
+                    - new_shift);
+
         // did we already use this (periodic) atom?
         bool visited = false;
         HMMap::iterator it(range.first);
         for ( ; it != range.second; ++it)
-          if ((it->second).relative_fuzzy_equals(new_shift, 1e-9))
+          if ((it->second).relative_fuzzy_equals(dist, 1e-9))
           {
             visited = true;
             break;
@@ -494,21 +499,16 @@ AtomisticBasis::neighbor_iterator::operator++(void)
         {
           if( _height == 0 && _width == 0 )
           {
-            double d = Point(_structure.get_structure_atom(_start).get_position()
-                - _structure.get_structure_atom(nn[i]).get_position()
-                - new_shift).size();
+            double d = dist.norm();
 
             if (d < _length * 1.5)
               _setB.insert(make_pair(nn[i], new_shift));
           }
           else
           {
-            double dx  = fabs(_structure.get_structure_atom(_start).get_position(0)
-                - _structure.get_structure_atom(nn[i]).get_position(0) - new_shift(0));
-            double dy  = fabs(_structure.get_structure_atom(_start).get_position(1)
-                - _structure.get_structure_atom(nn[i]).get_position(1) - new_shift(1));
-            double dz  = fabs(_structure.get_structure_atom(_start).get_position(2)
-                - _structure.get_structure_atom(nn[i]).get_position(2) - new_shift(2));
+            double dx  = fabs(dist(0));
+            double dy  = fabs(dist(1));
+            double dz  = fabs(dist(2));
 
             if (dx < (_length/2 + _min_bond) &&
                 dy < (_height/2 + _min_bond) &&
@@ -529,7 +529,6 @@ AtomisticBasis::neighbor_iterator::operator++(void)
             - _image).norm();
 
         advance = (d > _length) || (d < 1e-3);
-        //cerr << "   " << _current << "  d = " << d <<  " (" << advance << ")" << endl;
       }
       else
       {
