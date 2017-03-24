@@ -14,8 +14,9 @@ QEInterface::QEInterface(const ModelOptions& options) :
   SimulationInterface(options),
   _qe_pseudo_dir("."),
   _qe_ecutwfc(20.0),
-  _eq_conv_thr(1e-12),
-  _qe_k_points({"automatic", "1 1 1 1 1 1"})
+  _eq_conv_thr(1e-6),
+  _qe_k_points({"automatic", "1 1 1 0 0 0"}),
+  _outdir("out")
 {
 }
 
@@ -52,6 +53,8 @@ QEInterface::do_init(void)
     _qe_pseudos[pseudos[i]] = pseudos[i+1];
     cerr << pseudos[i] << "  " << pseudos[i+1] << endl;
   }
+
+  _outdir = get_option("outdir", _outdir);
 }
 
 
@@ -92,7 +95,7 @@ QEInterface::do_solve(void)
          << "   restart_mode='from_scratch'," << endl
          << "   prefix = '" << prefix << "'," << endl
          << "   pseudo_dir = '" << _qe_pseudo_dir << "'," << endl
-         << "   outdir = '" << outdir << "'," << endl
+         << "   outdir = '" << _outdir << "'," << endl
          << "/" << endl;
 
   // for now this is fixed to tetragonal cells
@@ -142,9 +145,9 @@ QEInterface::do_solve(void)
         dz = atoms[i].get_position(2);
     }
 
-    dx -= 1e-3;
-    dy -= 1e-3;
-    dz -= 1e-3;
+    dx -= 1e-6;
+    dy -= 1e-6;
+    dz -= 1e-6;
   }
 
   qe_scf << "ATOMIC_POSITIONS angstrom" << endl;

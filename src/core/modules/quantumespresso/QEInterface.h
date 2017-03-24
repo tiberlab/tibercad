@@ -65,6 +65,9 @@ class QEInterface : public SimulationInterface
     //! Pseudopotentials to be used
     std::map<std::string, std::string> _qe_pseudos;
 
+    //! Output directory for QE
+    std::string _outdir;
+
 };
 
 
