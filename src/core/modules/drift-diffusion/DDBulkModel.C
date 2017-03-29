@@ -433,14 +433,14 @@ DDBulkModel::do_reinit(const Elem* elem)
      _strain_if.get_crystal_strain(elem, elem->centroid(), get_strain());
 
 
-      _polarization = 0;
+      RealVectorValue polarization(0);
       for (size_t n = 0; n < _pm.size(); n++)
       {
         _pm[n]->set_strain(get_strain());
         _pm[n]->calculate(get_element(), get_coordinates());
-        _polarization += _relax_polariz * _pm[n]->get_polarization();
+        polarization += _pm[n]->get_polarization();
       }
-      set_polarization(_polarization);
+      set_polarization(polarization);
 
       //this->prepare_element_data();
   }

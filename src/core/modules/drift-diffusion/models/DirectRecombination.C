@@ -60,13 +60,14 @@ DirectRecombination::get_net_recombination_rates(double& recomb_e,
 {
   const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
 
+  double Efn  = -dd.get_electron_electro_chemical_potential();
+  double Efp  = -dd.get_hole_electro_chemical_potential();
   double n  = dd.get_electron_density();
   double p  = dd.get_hole_density();
-  double ni = dd.get_intrinsic_density();
-  double gn = dd.get_electron_gamma();
-  double gp = dd.get_hole_gamma();
+  double T = dd.get_lattice_temperature();
 
-  recomb_e = recomb_h = C_ * (n * p - ni * ni * gn * gp);
+  double c = 1.0 - exp((Efp - Efn) / T);
+  recomb_e = recomb_h = C_ * n * p * c;
 }
 
 
@@ -77,11 +78,19 @@ DirectRecombination::get_net_recombination_rate_derivatives(
 {
   const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
 
+  double Efn  = -dd.get_electron_electro_chemical_potential();
+  double Efp  = -dd.get_hole_electro_chemical_potential();
   double n  = dd.get_electron_density();
   double p  = dd.get_hole_density();
+  double T = dd.get_lattice_temperature();
 
-  recomb_e[0] = recomb_h[0] = C_ * p; // dR/dn
-  recomb_e[1] = recomb_h[1] = C_ * n; // dR/dp
+  double expf = exp((Efp - Efn) / T);
+  double c = 1.0 - expf;
+
+  recomb_e[0] = recomb_h[0] = C_ * p * c; // dR/dn
+  recomb_e[1] = recomb_h[1] = C_ * n * c; // dR/dp
+  recomb_e[2] = recomb_h[2] = -C_ * n * p / T * expf; // dR/dEfn
+  recomb_e[3] = recomb_h[3] = C_ * n * p / T * expf; // dR/dEfn
 }
 
 
