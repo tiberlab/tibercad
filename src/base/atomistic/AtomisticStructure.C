@@ -1314,15 +1314,6 @@ AtomisticStructure::print_tgn(const std::string& path) const
           file << std::setw(3);
           file<< static_cast<unsigned int>(_atoms[i].get_label());
 
-          /*if (_atoms[i].get_elem() ==  NULL)
-            {
-              file << material_map[_device->get_material(_atoms[get_bond_map()[i][0]].get_region_ID()) ];
-            }
-          else
-            {
-              file << material_map[ (_device->get_material(_atoms[i].get_region_ID())) ];
-            }
-          */
           file << std::setw(5) << n_specie + 1
               << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_atoms[i].get_position(0))
               << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_atoms[i].get_position(1))
@@ -1344,9 +1335,20 @@ AtomisticStructure::print_tgn(const std::string& path) const
 
           //ID of element is saved (note: no modifications to mesh are allowed to preserve compatibility)
           file << std::setw(14);
-          if (_atoms[i].get_elem() == NULL) file << -1;
+          if (_atoms[i].get_elem() == NULL || _atoms[i].get_label() == 0) file << -1;
           else file << _atoms[i].get_elem()->id();
 
+          //Write Material ID (useful for some external codes...)
+          file << std::setw(3);
+          if (_atoms[i].get_elem() ==  NULL)
+          {
+            file << material_map[_device->get_material(_atoms[get_bond_map()[i][0]].get_region_ID()) ];
+          }
+          else
+          {
+            file << material_map[ (_device->get_material(_atoms[i].get_region_ID())) ];
+          }
+         
 
           file << std::endl;
 
