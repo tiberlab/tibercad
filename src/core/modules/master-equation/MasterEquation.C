@@ -112,13 +112,11 @@ MasterEquation::do_init(void)
 {
   cerr<<"do_init_begin"<<endl;
   
+  parse_options();
   
   //! last added
   _env = &get_environment();
   _device = &(_env->get_device());
-  
-  
-
   
   
 
@@ -129,8 +127,6 @@ MasterEquation::do_init(void)
 
   TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
   
-
-
 
 
   // add variables "Fermi leves" for electrons and holes
@@ -149,7 +145,7 @@ MasterEquation::do_init(void)
 
 
 
-  // initialize the system
+  /// initialize the system
   system.init();
 
   //cerr<<"do_init attach assembly done"<<endl;
@@ -163,11 +159,6 @@ MasterEquation::do_init(void)
   // define number of variable which belong to the system
   const unsigned int Ef_e_var = system.variable_number("Ef_e");
   const unsigned int Ef_h_var = system.variable_number("Ef_h");
-  const double scaling = 1;
-
-
-  // Fermi level of inital guess, it's for both carriers
-  const double Ef = 1.75;
 
 
 
@@ -202,14 +193,6 @@ MasterEquation::do_init(void)
   const unsigned int LUMO_var = _sys_EcEv->variable_number("LUMO");
   const unsigned int HOMO_var = _sys_EcEv->variable_number("HOMO");
 
-
-
-  const double sigma = 0.00; // sigma of Gaussian expression (standard deviation) // 0.06
-  const double mean = 0.00;  // mean value of gaussian
-  const double sigma_c = sigma * scaling; // sigma of Gaussian expression (standard deviation)
-
-
-
 /*
   read_database();
 
@@ -225,9 +208,6 @@ MasterEquation::do_init(void)
   //cerr << prova << endl;
   */
 
-
-  const double level_LUMO = 2.5;//Ec = db->get_conduction_band_edge();
-  const double level_HOMO = 1;//Ev = db->get_valence_band_edge();
 
 
   // get mesh
@@ -323,7 +303,7 @@ MasterEquation::do_init(void)
 
       double ru2_c = static_cast<double>(generator()) / generator.max();
 
-      r_n_c = sigma_c * sqrt(-2.0 * log(ru1_c)) * cos(2.0 * M_PI * ru2_c);
+      r_n_c = sigma * sqrt(-2.0 * log(ru1_c)) * cos(2.0 * M_PI * ru2_c);
 
       if (i == 0)
       {
@@ -363,12 +343,13 @@ MasterEquation::do_init(void)
   //cerr << solution_E << endl;
 
   ofstream outFile;
-  outFile.open("/home/drossi/TiberCAD/ME/OLED_2D/Test_1/output/Energies_1.txt");
+  string outputpath = TiberCad::get_output_dir();
+  outFile.open(outputpath+"/Energies_1.txt");
   outFile << solution_E << endl;
   outFile.close();
 
   ofstream outFile1;
-  outFile1.open("/home/drossi/TiberCAD/ME/OLED_2D/Test_1/output/Densities.txt");
+  outFile1.open(outputpath+"/Densities.txt");
   outFile1 << solution << endl;
   outFile1.close();
 
@@ -419,7 +400,6 @@ MasterEquation::do_solve(void)
   _this = this;
   //cerr<<"do_solve"<<endl;
 
-  parse_options();
 
   //TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>(0);
   //get_solution_vector().close();
@@ -486,8 +466,6 @@ MasterEquation::do_print_info(void)
 {
   Messages::info("Module implementation example: simple Master Equations");
 
-  parse_options();
-
   Options& myopts = get_my_options();
 
   Messages::newline();
@@ -511,17 +489,28 @@ void
 MasterEquation::parse_options(void)
 {
 
-  const ModelOptions& opts = SimulationInterface::get_options();
+  sigma = get_option("sigma",0.0);
+
+  level_LUMO = get_option("LUMO",0.0); 
+
+  level_HOMO = get_option("HOMO",0.0); 
+
+  Ef = get_option("Ef", (level_HOMO+level_LUMO)/2.0 );
+
+  alpha = get_option("alpha",1e-9);
+
+  v_0 = get_option("v0",1e12); 
+ 
+  string coupling = get_option("coupling", "");
+
   Options& myopts = get_options();
-
-  string coupling = opts.get_option("coupling", "");
-
   if (coupling == "electrons")
     myopts.coupling = ELECTRONS;
   else if (coupling == "holes")
     myopts.coupling = HOLES;
   else
     myopts.coupling = BOTH;
+
 
 }
 
@@ -607,18 +596,15 @@ MasterEquation::do_assembly(const libMesh::NumericVector<Number>& x, libMesh::Nu
   //NumericVector<Number>& oldx = system.get_vector("me_old_sol");
 
 
-
-  //cerr<< solution_E << endl;
-
-  //cerr<<"do_assembly build finite elements"<<endl;
-
-  const double alpha = 1e-9; //1e-9;
-  const double v_0 = 1e12; //1e12;
-
   libMesh::FEType fe_type = system.variable_type(Ef_e_var); //
 
   // the volume finite element
   libMesh::UniquePtr<libMesh::FEBase> fe(libMesh::FEBase::build(dim, fe_type));
+
+
+  std::cout<<"sigma: "<<sigma<<endl;
+  std::cout<<"Ef: "<<Ef<<endl;
+  std::cout<<"lumo: "<<level_LUMO<<endl;
 
 
   // Jacobian * quadrature weight at each integration point.
@@ -705,7 +691,8 @@ MasterEquation::do_assembly(const libMesh::NumericVector<Number>& x, libMesh::Nu
   double kbT = SimulationOptions::temperature * Constants::kb; 
 
   ofstream outFile_log;
-  outFile_log.open("/home/drossi/TiberCAD/ME/OLED_2D/Test_1/output/log.txt");
+  string outputpath = TiberCad::get_output_dir();
+  outFile_log.open(outputpath+"/log.txt");
 
   //cerr<<"do_assembly: begin loop over elements"<<endl;
 
@@ -1305,34 +1292,33 @@ if (jacobian != NULL)
   std::vector<unsigned int> BC_rows_p(1);
   
 
-    BC_rows_n[0] = n_elem-1;
-    BC_rows_p[0] = n_el-1;
-  
-  
-      for (unsigned int l = 0; l < n_el  ; l++)
-      {
-        //cerr << 1/ n_elem << endl;
-		
-		
-        //jacobian->add(0, l , 1 / n_elem);
-        //jacobian->set(n_elem - 1, l , 1 / n_elem);
-        //jacobian->set(n_el - 1, l + n_elem, 1 / n_elem);
-        //jacobian->set(n_elem - 1, l , 0);
-        //jacobian->set(n_el - 1, l + n_elem, 0);
-		
-		//jacobian->add(l ,n_elem - 1,  1 / n_elem);
-		
-		BC_cols[l] = l;
-		BC(0,l) += v_0/ n_elem;
-      }
+  BC_rows_n[0] = n_elem-1;
+  BC_rows_p[0] = n_el-1;
+ 
+ 
+  for (unsigned int l = 0; l < n_el  ; l++)
+  {
+     //cerr << 1/ n_elem << endl;
+ 	
+     //jacobian->add(0, l , 1 / n_elem);
+     //jacobian->set(n_elem - 1, l , 1 / n_elem);
+     //jacobian->set(n_el - 1, l + n_elem, 1 / n_elem);
+     //jacobian->set(n_elem - 1, l , 0);
+     //jacobian->set(n_el - 1, l + n_elem, 0);
+ 	
+ 	   //jacobian->add(l ,n_elem - 1,  1 / n_elem);
+ 	
+     BC_cols[l] = l;
+   	 BC(0,l) = 1.0;
+   }
 
-	    jacobian->add_matrix(BC, BC_rows_n, BC_cols);
-	    jacobian->add_matrix(BC, BC_rows_p, BC_cols);
-		//jacobian->add_matrix(BC, BC_rows_p, BC_cols);
-		
-      //jacobian->set(n_elem - 1, n_elem-1,  v_0/n_elem);
-      //jacobian->set(n_el - 1, n_el-1, v_0/n_elem);
-  }
+   jacobian->add_matrix(BC, BC_rows_n, BC_cols);
+   jacobian->add_matrix(BC, BC_rows_p, BC_cols);
+ 
+    //jacobian->add_matrix(BC, BC_rows_p, BC_cols);
+ 	  //jacobian->set(n_elem - 1, n_elem-1,  v_0/n_elem);
+    //jacobian->set(n_el - 1, n_el-1, v_0/n_elem);
+}
 
 
 // boundary conditions residual
@@ -1347,11 +1333,6 @@ if (residual != NULL)
   double BCn = 0.0;
   double BCp = 0.0;
 
-  const double Ef = 1.75;
-
-
-  const double level_LUMO = 2.5;//Ec = db->get_conduction_band_edge();
-  const double level_HOMO = 1;//Ev = db->get_valence_band_edge();
 
   for (unsigned int j = 0; j < n_elem; j++)
   {
@@ -1388,8 +1369,8 @@ if (residual != NULL)
 
 
   //residual->set(0, BCn_0);
-  //residual->set(n_elem - 1, BCn);
-  //residual->set(n_el - 1, BCp);
+  residual->set(n_elem - 1, 0.0);
+  residual->set(n_el - 1, 0.0);
 
 }
 
@@ -1410,11 +1391,11 @@ if (residual != NULL)
 
    if (jacobian != NULL)
    {
-     //jacobian->print_matlab("/home/drossi/TiberCAD/ME/OLED_2D/Test_1/output/jacobian.m");
+     //jacobian->print_matlab("jacobian.m");
    }
    if (residual != NULL)
    {
-     //residual->print_matlab("/home/drossi/TiberCAD/ME/OLED_2D/Test_1/output/residual.m");
+     //residual->print_matlab("residual.m");
    }
 
 
@@ -1443,16 +1424,17 @@ if (residual != NULL)
   it_el = convert1.str();
 
 
+  //string outputpath = TiberCad::get_output_dir();
 
 
   ofstream outFile_x;
-  outFile_x.open("/home/drossi/TiberCAD/ME/OLED_2D/Test_1/output/solution.txt");
+  outFile_x.open(outputpath+"/solution.txt");
   outFile_x << x << endl;
   outFile_x.close();
 
 
   ofstream outFile_res;
-  outFile_res.open("/home/drossi/TiberCAD/ME/OLED_2D/Test_1/output/Jac_"+ num + ".txt");
+  outFile_res.open(outputpath+"/Jac_"+ num + ".txt");
   outFile_res << Ke << endl;
   outFile_res.close();
 
@@ -1518,7 +1500,7 @@ MasterEquation::do_transformation(libMesh::NumericVector<Number>& u,
 
   const int n_elem = n_el/2;
 
-  const double kbT = 0.026;
+  double kbT = SimulationOptions::temperature * Constants::kb; 
 
   vector<unsigned int> dof_indices_tot;
   vector<unsigned int> dof_indices_tot_neigh;
@@ -1532,7 +1514,6 @@ MasterEquation::do_transformation(libMesh::NumericVector<Number>& u,
 
   unsigned int ind = 0.0;
   unsigned int n = 1;
-  double sigma = 0.06;
 
 
 
@@ -1677,7 +1658,7 @@ MasterEquation::get_solution_secure(const Elem* elem, std::map<ID,
 
   const unsigned int n_dofs = dof_indices_n.size();
 
-  const double beta = 1/0.026;
+  const double beta = 1.0/(SimulationOptions::temperature * Constants::kb); 
 
   //const int n_elem = solution.size() /2;
 

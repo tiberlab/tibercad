@@ -287,8 +287,21 @@ class TBDLLOCAL MasterEquation : public SimulationInterface
     void rebuild_equation_system(void);
 
 
+    //! Gaussian disorder parameter 
+    double sigma;
 
-    //TiberLinearSystem *_sys_EcEv;
+    //! Equilibrium Fermi level of the system
+    double Ef;
+
+    //! Variable range hopping parameter
+    double alpha; 
+  
+    //! Attempt hopping frequency
+    double v_0; 
+  
+    double level_LUMO;
+
+    double level_HOMO;   
 
 };
 
