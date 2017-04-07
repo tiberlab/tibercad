@@ -1,0 +1,12 @@
+
+export TIBERCADROOT=/usr/local/tibercad-2.5.1
+export ARCH=x86_64-linux
+export LD_LIBRARY_PATH=$TIBERCADROOT/SDK/lib
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$TIBERCADROOT/SDK/$ARCH/lib
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$TIBERCADROOT/$ARCH/lib
+
+#ln -s $TIBERCADROOT/SDK/$ARCH/bin/build_module
+
+./build_module module.conf
+#./build_module -h
+
