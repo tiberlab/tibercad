@@ -30,11 +30,11 @@ class PoissonModel : public PhysicalModel
 
 
     //! Get the relative permittivity
-    const RealTensor& get_permittivity(void) const;
+    const libMesh::RealTensor& get_permittivity(void) const;
 
 
     //! Get the total polarization
-    const RealVectorValue& get_polarization(void) const;
+    const libMesh::RealVectorValue& get_polarization(void) const;
 
 
     //! Get the total charge
@@ -42,11 +42,11 @@ class PoissonModel : public PhysicalModel
 
 
     //! Set the relative permittivity
-    RealTensor& get_permittivity(void);
+    libMesh::RealTensor& get_permittivity(void);
 
 
     //! Set the total polarization
-    RealVectorValue& get_polarization(void);
+    libMesh::RealVectorValue& get_polarization(void);
 
 
     //! Set the total charge
@@ -94,19 +94,19 @@ class PoissonModel : public PhysicalModel
     Point _point;
 
     //! The relative permittivity
-    RealTensor _permittivity;
+    libMesh::RealTensor _permittivity;
 
     //! The polarization
-    RealVectorValue _polarization;
+    libMesh::RealVectorValue _polarization;
 
     //! The charge density
-    double _charge;
+    double _charge_density;
 
     //! The permittivity model
     PermittivityModel* _permittivity_model;
 
     //! The charge density model
-    ChargeDensityModel* _charge_density;
+    ChargeDensityModel* _charge_density_model;
 
     //! The constructor method
     static TiberModelObject* _create(const ModelOptions& options, const void*);
@@ -122,7 +122,7 @@ class PoissonModel : public PhysicalModel
 inline
 PoissonModel::PoissonModel(const ModelOptions& options) :
   PhysicalModel(options),
-  _charge_density(NULL),
+  _charge_density_model(NULL),
   _permittivity_model(NULL)
 {
 }
@@ -146,14 +146,14 @@ PoissonModel::set_point(const Point& point)
 
 
 inline
-const RealTensor&
+const libMesh::RealTensor&
 PoissonModel::get_permittivity(void) const
 {
   return _permittivity;
 }
 
 inline
-RealTensor&
+libMesh::RealTensor&
 PoissonModel::get_permittivity(void)
 {
   return _permittivity;
@@ -161,7 +161,7 @@ PoissonModel::get_permittivity(void)
 
 
 inline
-RealVectorValue&
+libMesh::RealVectorValue&
 PoissonModel::get_polarization(void)
 {
   return _polarization;
@@ -169,7 +169,7 @@ PoissonModel::get_polarization(void)
 
 
 inline
-const RealVectorValue&
+const libMesh::RealVectorValue&
 PoissonModel::get_polarization(void) const
 {
   return _polarization;
@@ -180,14 +180,14 @@ inline
 double
 PoissonModel::get_charge_density(void) const
 {
-  return _charge;
+  return _charge_density;
 }
 
 inline
 void
 PoissonModel::set_charge_density(double charge_density)
 {
-  _charge = charge_density;
+  _charge_density = charge_density;
 }
 
 

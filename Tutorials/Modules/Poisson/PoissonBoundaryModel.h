@@ -4,7 +4,7 @@
 #define _POISSONBOUNDARYMODEL_H_
 
 #include "PhysicalModel.h"
-
+#include "SimulationInterface.h"
 
 
 class Elem;
@@ -39,6 +39,8 @@ class PoissonBoundaryModel : public PhysicalModel
 
     void set_coefficients(double a, double b, double c);
 
+    //! Simulation interface
+    std::vector<SimulationInterface::SolutionProvider> _sim;
 
   private:
 

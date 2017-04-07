@@ -59,6 +59,7 @@ class PoissonDirichlet : public PoissonBoundaryModel
     //! The boundary potential
     double _potential;
 
+    unsigned int dim;
 };
 
 

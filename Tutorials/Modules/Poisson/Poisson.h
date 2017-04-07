@@ -4,6 +4,8 @@
 #define _POISSON_H_
 
 #include "SimulationInterface.h"
+#include "enum_order.h"
+#include "enum_quadrature_type.h"
 
 /*!
  * 
@@ -96,10 +98,10 @@ class TBDLLOCAL Poisson : public SimulationInterface
     Poisson(const ModelOptions& options);
 
     //! The assembly function
-    static void assemble(EquationSystems& es, const std::string& system_name);
+    static void assemble(libMesh::EquationSystems& es, const std::string& system_name);
 
     //! The real assembly function
-    void do_assemble(EquationSystems& es, const std::string& system_name);
+    void do_assemble(libMesh::EquationSystems& es, const std::string& system_name);
 
     //! A static pointer to this
     static Poisson* _this;
@@ -112,7 +114,10 @@ class TBDLLOCAL Poisson : public SimulationInterface
      * Set the default boundary conditions
      */
     std::string default_boundary_conditions;
-    
+  
+    libMeshEnums::QuadratureType quadrature_type; 
+
+    libMeshEnums::Order integration_order;  
   };
 
   Options myopts;
@@ -121,7 +126,7 @@ class TBDLLOCAL Poisson : public SimulationInterface
 
 
 void
-Poisson::assemble(EquationSystems& es, const std::string& system_name)
+Poisson::assemble(libMesh::EquationSystems& es, const std::string& system_name)
 {
   _this->do_assemble(es, system_name);
 }

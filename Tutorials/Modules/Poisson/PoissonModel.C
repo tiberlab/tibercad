@@ -56,9 +56,9 @@ PoissonModel::do_calculate(void)
 {
  
 
-  _charge = 0.0;
-  if (_charge_density != NULL)
-    _charge = _charge_density->get_charge_density(get_element(), get_point());
+  _charge_density = 0.0;
+  if (_charge_density_model != NULL)
+    _charge_density = _charge_density_model->get_charge_density(get_element(), get_point());
 
   //Get total polarization 
   _polarization = 0;
@@ -85,7 +85,7 @@ PoissonModel::prepare_submodels(void)
   // PermittivityModel* mod = PhysicalModelInterface::create("permittivity", opts);
   // add_submodel("permittivity", mod)
 
-  create_submodel(_charge_density, "charge_density");
+  create_submodel(_charge_density_model, "charge_density");
   create_submodels(_pm, "polarization");
 
   // NOTE: all submodels are initialized automatically before calling do_init()

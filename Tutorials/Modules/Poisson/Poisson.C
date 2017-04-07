@@ -9,18 +9,21 @@
 #include "equation_systems.h"
 #include "dof_map.h"
 #include "quadrature_gauss.h"
+#include "quadrature_trap.h"
 #include "sparse_matrix.h"
 #include "dense_matrix.h"
 #include "dense_vector.h"
 #include "dense_submatrix.h"
 #include "dense_subvector.h"
-
+#include "tensor_value.h"
+#include "vector_value.h"
 
 // This is needed in order to create the shared module library
 #include "TiberModule.h"
 
 
 using namespace std;
+using namespace libMesh;
 
 
 Poisson*
@@ -53,6 +56,8 @@ Poisson::create(const ModelOptions& options)
 void
 Poisson::do_init(void)
 {
+  parse_options();
+
   // create a linear equation system 
   create_equation_system("linear");
 
@@ -70,7 +75,24 @@ void
 Poisson::parse_options(void)
 {
  myopts.default_boundary_conditions =
-   get_options().get_option("default_boundary_condition", "zero_field");
+   get_option("default_boundary_condition", "zero_field");
+ 
+ string qrule = "trapez";
+ qrule = get_option("quadrature_rule", qrule);
+ if (qrule == "gauss")
+   myopts.quadrature_type = QGAUSS;
+ else if (qrule == "trapez")
+   myopts.quadrature_type = QTRAP;
+ else
+   throw InitFailedException("Unknown quadrature rule");
+
+ int intorder = get_option("integration_order", 2);
+
+ if (intorder>7) 
+    throw InitFailedException("Invalid integration order");
+
+ myopts.integration_order = static_cast<libMeshEnums::Order>(intorder);
+ 
 }
 
 
@@ -87,6 +109,7 @@ Poisson::do_setup_solution_variables(void)
   // we can define aliases (but the association name -> id
   // has to be surjective)
   add_alias("ElectricField", ElField);
+  add_alias("ElPotential", Potential);
 }
 
 
@@ -139,7 +162,7 @@ Poisson::get_solution_secure(const Elem* elem,
 
   TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
 
-  const NumericVector<Number>& solution = system.get_solution_vector();
+  const NumericVector<libMesh::Number>& solution = system.get_solution_vector();
 
   const unsigned int dim = get_mesh().mesh_dimension();
 
@@ -198,7 +221,7 @@ Poisson::get_solution_secure(const Elem* elem,
 
     if (calculate)
     {
-      mod.set_point(p[n]);
+      mod.set_point(real_pts[n]);
 
       mod.calculate();
 
@@ -248,28 +271,47 @@ Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
 
   const MeshBase& mesh = get_mesh();
   const unsigned int dim = mesh.mesh_dimension();
-
+  // NB: Tibercad by default uses length-scale in meters 
+  //     This means that FEM derivatives d/dx are in 1/m
+  //     To change this behavior it is necessary to define a different 'scaling'
+  //     For instance if we want to use mesh_units in the assembly we need to:
+  //     1. set the scaling to mesh units:
+  //        get_scaling().set_length_scaling(get_mesh_units());
+  //     2. use  build_finite_element(dim, fe_type, true)  
+  //                                                ^ false is the default  
+  //                                                
+  // Now 2nd derivatives will be 1/mesh_units^2
+  // We need a factor to transform rho/eps0 into V/mesh_units^2
+  // Charge density is cm^-3, and Constants::e is in Coulomb, 
+  // Constant::e0 is in C/Vm
+  // The factor Lambda is such that rho*Lambda is in V/mesh_units^2
+  // BUT (BUT) 
+  // This is not that clever! Since Displacement and Polarization are already in C/m^2
+  // it is easier to work with the derivatives in 1/m and rho/eps0 in V/m^2 
+  // The factor 1e6 is for cm^3 -> m^3 in rho 
+  get_scaling().set_length_scaling(1.0);
+  double Lambda = Constants::e * 1e6;
+  
   DofMap& dof_map =  system.get_dof_map();
 
   const unsigned int uvar = system.variable_number("u");
 
   FEType fe_type = dof_map.variable_type(uvar);
 
-  // the volume finite element
+  // the finite element
   UniquePtr<FEBase> fe(build_finite_element(dim, fe_type, true));
-  QGauss qrule(dim, SECOND);
-  fe->attach_quadrature_rule(&qrule);
+  UniquePtr<QBase> qrule(QBase::build(myopts.quadrature_type, dim, myopts.integration_order));
+  fe->attach_quadrature_rule(qrule.get());
 
   const vector<Real>& JxW = fe->get_JxW();
   const vector<Point>& q_point = fe->get_xyz();
   const vector<vector<Real> >& phi = fe->get_phi();
   const vector<vector<RealGradient> >& dphi = fe->get_dphi();
 
-
   // the surface finite element
   UniquePtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
-  QGauss qface(dim - 1, THIRD);
-  fe_face->attach_quadrature_rule(&qface);
+  UniquePtr<QBase> qface(QBase::build(myopts.quadrature_type, dim-1, myopts.integration_order));
+  fe_face->attach_quadrature_rule(qface.get());
 
   const vector<Real>& JxW_face = fe_face->get_JxW();
   const vector<Point>& qface_point = fe_face->get_xyz();
@@ -304,29 +346,27 @@ Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
     mod.set_element(elem);
 
     // loop over the quadrature points
-    for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
+    for (unsigned int qp = 0; qp < qrule->n_points(); qp++)
     {
 
       mod.set_point(q_point[qp]);
 
       mod.calculate();
 
-      const RealTensor& eps = mod.get_permittivity();
+      const RealTensor& eps = mod.get_permittivity()*Constants::e0;
+      // units of polarization ??????
       const RealVectorValue& pol = mod.get_polarization();
-      double rho = Constants::e * mod.get_charge_density();
-
-
+      double rho =  mod.get_charge_density() * Lambda;
 
       for (unsigned int i = 0; i < n_dofs; i++)
       {
         for (unsigned int j = 0; j < n_dofs; j++)
-          Ke(i, j) += JxW[qp] * Constants::e0 * (dphi[i][qp] * (eps * dphi[j][qp]));
+          Ke(i, j) += JxW[qp] * (dphi[i][qp] * (eps * dphi[j][qp]));
 
-	Fe(i) += JxW[qp] * (rho * phi[i][qp] + pol * dphi[i][qp]);
+        Fe(i) += JxW[qp] * (rho * phi[i][qp] + pol * dphi[i][qp]);
       }
 
     }
-
 
 
     // the sides
@@ -339,7 +379,7 @@ Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
       {
         fe_face->reinit(elem, s);
 
-        for (unsigned int qp = 0; qp < qface.n_points(); qp++)
+        for (unsigned int qp = 0; qp < qface->n_points(); qp++)
         {
           mod_int->calculate(elem, s, qface_point[qp]);
 

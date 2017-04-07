@@ -10,7 +10,6 @@
 #include "vector_value.h"
 
 
-
 class Elem;
 
 
@@ -59,6 +58,7 @@ class PoissonNeumann : public PoissonBoundaryModel
     //! The normal field on the boundary
     double _field;
 
+    unsigned int dim;
 };
 
 
