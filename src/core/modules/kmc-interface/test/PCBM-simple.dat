@@ -1,0 +1,25 @@
+# P3HT
+
+[valenceband]
+E_v = -6.0
+
+[conductionband]
+E_c = -3.8
+#m_G = 0.156
+
+[bandgap]
+Eg_G = 2.2
+Eg_L = 2.2
+Eg_X = 2.2
+
+[permittivity]
+permittivity = 3.5
+#optical_epsilon = 3.5
+
+[mobility/constant]
+mu_max   = (3.7e-3, 6.1e-4)
+exponent = (0, 0)
+
+# radiative recombination
+#[recombination/direct]
+#C = 1.e-10
