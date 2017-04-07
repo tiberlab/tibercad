@@ -101,7 +101,7 @@ Module sweep
   solve = sweep_coll
 
   # plot only for the last collector bias
-  plot_data = true
+  #plot_data = true
 }
 
 Module sweep
@@ -113,7 +113,7 @@ Module sweep
   steps = 60
 
   solve = dd
-  #plot_data = true
+  plot_data = last
   
   # ignore failure current output characteristic, going to the next one
   ignore_failure = true
