@@ -57,7 +57,10 @@ class QEInterface : public SimulationInterface
     double _qe_ecutwfc;
 
     //! Convergence threshold for QE
-    double _eq_conv_thr;
+    double _qe_conv_thr;
+
+    //! Number of bands for nscf
+    int _qe_nbnd;
 
     //! The k_points as strings
     std::vector<std::string> _qe_k_points;
@@ -66,7 +69,7 @@ class QEInterface : public SimulationInterface
     std::map<std::string, std::string> _qe_pseudos;
 
     //! Output directory for QE
-    std::string _outdir;
+    std::string _qe_outdir;
 
 };
 

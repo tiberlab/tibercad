@@ -5,6 +5,7 @@
 
 #include "QEInterface.h"
 #include "AtomisticStructure.h"
+#include "TeeStream.h"
 
 #include "TiberModule.h"
 
@@ -14,9 +15,10 @@ QEInterface::QEInterface(const ModelOptions& options) :
   SimulationInterface(options),
   _qe_pseudo_dir("."),
   _qe_ecutwfc(20.0),
-  _eq_conv_thr(1e-6),
+  _qe_conv_thr(1e-6),
+  _qe_nbnd(0),
   _qe_k_points({"automatic", "1 1 1 0 0 0"}),
-  _outdir("out")
+  _qe_outdir("out")
 {
 }
 
@@ -41,7 +43,9 @@ QEInterface::do_init(void)
 
   _qe_pseudo_dir = get_option("pseudo_dir", _qe_pseudo_dir);
   _qe_ecutwfc = get_option("ecutwfc", _qe_ecutwfc);
-  _eq_conv_thr = get_option("conv_thr", _eq_conv_thr);
+  _qe_conv_thr = get_option("conv_thr", _qe_conv_thr);
+  _qe_nbnd = get_option("nbnd", _qe_nbnd);
+
   get_option("k_points", _qe_k_points);
   if (_qe_k_points.size() < 2)
     throw InitFailedException("You need to provide the definitions for the kpoints.");
@@ -54,7 +58,7 @@ QEInterface::do_init(void)
     cerr << pseudos[i] << "  " << pseudos[i+1] << endl;
   }
 
-  _outdir = get_option("outdir", _outdir);
+  _qe_outdir = get_option("outdir", _qe_outdir);
 }
 
 
@@ -86,17 +90,21 @@ QEInterface::do_solve(void)
   }
 
 
-  string qe_file_base = outdir + "/" + prefix + ".scf";
+  string qe_file_base = outdir + "/" + prefix;
 
-  ofstream qe_scf(qe_file_base + ".in");
+  ofstream qe_scf(qe_file_base + ".scf.in");
+  ofstream qe_nscf(qe_file_base + ".nscf.in");
 
-  qe_scf << "&control" << endl
-         << "   calculation = 'scf'," << endl
-         << "   restart_mode='from_scratch'," << endl
-         << "   prefix = '" << prefix << "'," << endl
-         << "   pseudo_dir = '" << _qe_pseudo_dir << "'," << endl
-         << "   outdir = '" << _outdir << "'," << endl
-         << "/" << endl;
+  TeeStream qe_both(qe_scf, qe_nscf);
+
+  qe_both << "&control" << endl;
+  qe_scf  << "   calculation = 'scf'," << endl
+          << "   restart_mode='from_scratch'," << endl;
+  qe_nscf << "   calculation = 'nscf'," << endl;
+  qe_both << "   prefix = '" << prefix << "'," << endl
+          << "   pseudo_dir = '" << _qe_pseudo_dir << "'," << endl
+          << "   outdir = '" << _qe_outdir << "'," << endl
+          << "/" << endl;
 
   // for now this is fixed to tetragonal cells
   int ibrav = 8;
@@ -104,25 +112,27 @@ QEInterface::do_solve(void)
   this->get_atomistic_structure()->get_lattice_vectors(a, b, c);
   int nat = this->get_atomistic_structure()->get_N_atoms();
   int ntyp = this->get_atomistic_structure()->get_N_types(); 
-  qe_scf << "&system" << endl
-         << "   ibrav = " << ibrav << "," << endl
-         << "   a = " << a(0) << "," << endl
-         << "   b = " << b(1) << "," << endl
-         << "   c = " << c(2) << "," << endl
-         << "   nat = " << nat << ", ntyp = " << ntyp << endl
-         << "   ecutwfc = " << _qe_ecutwfc << endl
-         << "/" << endl;
+  qe_both << "&system" << endl
+          << "   ibrav = " << ibrav << "," << endl
+          << "   a = " << a(0) << "," << endl
+          << "   b = " << b(1) << "," << endl
+          << "   c = " << c(2) << "," << endl
+          << "   nat = " << nat << ", ntyp = " << ntyp << "," << endl
+          << "   ecutwfc = " << _qe_ecutwfc << "," << endl;
+  if (_qe_nbnd > 0)
+    qe_nscf << "   nbnd = " << _qe_nbnd << "," << endl;
+  qe_both << "/" << endl;
 
-  qe_scf << "&electrons" << endl
-         << "   conv_thr = " << _eq_conv_thr << "," << endl
-         << "/" << endl;
+  qe_both << "&electrons" << endl
+          << "   conv_thr = " << _qe_conv_thr << "," << endl
+          << "/" << endl;
 
   const vector<string>& atom_types = this->get_atomistic_structure()->get_atom_types();
 
-  qe_scf << "ATOMIC_SPECIES" << endl;
+  qe_both << "ATOMIC_SPECIES" << endl;
   for (unsigned int i = 0; i < ntyp; ++i)
   {
-    qe_scf << atom_types[i] << " " << Specie(atom_types[i]).get_mass()
+    qe_both << atom_types[i] << " " << Specie(atom_types[i]).get_mass()
       << " " << _qe_pseudos[atom_types[i]] << endl;
   }
 
@@ -138,10 +148,10 @@ QEInterface::do_solve(void)
       if (atoms[i].get_position(0) < dx)
         dx = atoms[i].get_position(0);
 
-      if (atoms[i].get_position(1) < dx)
+      if (atoms[i].get_position(1) < dy)
         dy = atoms[i].get_position(1);
 
-      if (atoms[i].get_position(2) < dx)
+      if (atoms[i].get_position(2) < dz)
         dz = atoms[i].get_position(2);
     }
 
@@ -150,19 +160,20 @@ QEInterface::do_solve(void)
     dz -= 1e-6;
   }
 
-  qe_scf << "ATOMIC_POSITIONS angstrom" << endl;
+  qe_both << "ATOMIC_POSITIONS angstrom" << endl;
   for (unsigned int i = 0; i < nat; ++i)
   {
-    qe_scf << atoms[i].get_specie() << "  "
-           << atoms[i].get_position(0) - dx << " "
-           << atoms[i].get_position(1) - dy << " "
-           << atoms[i].get_position(2) - dz << " "
-           << endl;
+    qe_both << atoms[i].get_specie() << "  "
+            << atoms[i].get_position(0) - dx << " "
+            << atoms[i].get_position(1) - dy << " "
+            << atoms[i].get_position(2) - dz << " "
+            << endl;
   }
   
-  qe_scf << "K_POINTS ";
+  qe_both << "K_POINTS ";
   for (unsigned int i = 0; i < _qe_k_points.size(); ++i)
   {
     qe_scf << _qe_k_points[i] << endl;
   }
+  qe_nscf << "crystal_b\n1\n0 0 0 1\n";
 }
