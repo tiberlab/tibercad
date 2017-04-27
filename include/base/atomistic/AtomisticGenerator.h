@@ -14,6 +14,15 @@
 #include "Alloy.h"
 #include "mesh.h"
 
+
+
+// forward declarations
+class AtomisticStructure;
+class BondMap;
+class BulkCrystal;
+
+
+
 //! A class for building Atomistic Structure from mesh informations
 /*!
  *Atomistic Generator can create 1D, 2D and 3D atomistic structure
@@ -21,16 +30,6 @@
  *to mesh informations. Material parameters (kind of lattice, atomic basis, ecc.)
  *are read from material files
  */
-
-
-//forward declaration
-class AtomisticStructure;
-class BondMap;
-class BulkCrystal;
-
-
-
-
 class TBDLLOCAL AtomisticGenerator
 {
 
@@ -43,6 +42,7 @@ public:
   //! Initialize structure informations
   void do_init();
 
+  //! Create an object of AtomisticGenerator for the right dimensionality
   static AtomisticGenerator* create(AtomisticStructure* const as, unsigned int dimension);
 
   //! Tolerance defined internally for casting and comparison
@@ -80,9 +80,6 @@ protected:
   //! Change atom species according to regions
   void cut_and_change_specie(std::string preserve);
 
-  //  // Fast bond map generation, suitable for both
-  //   unsigned int** fast_bond_map(const std::vector<Atom> &basis,
-  //		   Tensor1& edge_min, Tensor1& edge_max, Tensor2Gen& period);
 
   //! Conventional cell vectors in absolute basis
   Tensor2Gen _conv_vect;
@@ -114,12 +111,6 @@ protected:
   //! Final structure basis
   std::vector<Atom> _structure_basis;
 
-  //!Supercell lattice points
-  //std::vector<Tensor1> _super_lattice;
-
-  //! Supercell conventional cell edges points
-  //std::vector<Tensor1> _super_conv;
-
   //! Dimensionality of the system (1, 2 or 3)
   unsigned int _dim;
 
@@ -132,13 +123,13 @@ protected:
   //! Reference material
   const Material* _reference_material;
 
-  //!Bond map generation
+  //! Bond map generation
   void bond_map_gen(const std::vector<Atom>& basis);
   
-  //!enlarge supercell vectors for dummy periodicities
+  //! enlarge supercell vectors for dummy periodicities
   void check_periodic(void);
 
-  //!Actually remove marked atoms from structure
+  //! Actually remove marked atoms from structure
   void remove_atoms(void);
 
   //! Real passivation routine (implemented in derived classes, it takes in account periodicity)
@@ -182,44 +173,44 @@ protected:
   void move_origin();  
 
 
-  //Calculate a reciprocal basis from a real basis
+  //! Calculate a reciprocal basis from a real basis
   static Tensor2Gen reciprocal(Tensor2Gen real_basis);
 
-  //Find greater common denominator between two integers
+  //! Find greater common denominator between two integers
   static int gcd(int a, int b);
 
-  //Reduce vector, dividing its members for GCD (cast from double to int temporary)
+  //! Reduce vector, dividing its members for GCD (cast from double to int temporary)
   static Tensor1 reduce_vector(Tensor1 v);
 
-  //Reduce vectors contained in a 2D tensor
+  //! Reduce vectors contained in a 2D tensor
   static Tensor2Gen reduce_vector(Tensor2Gen a);
 
-  //Comparison with tolerance
+  //! Comparison with tolerance
   static int compare_tol(double a, double b);
 
-  //Casting from double to int, checking that fractional part is minor than an internal  tolerance
+  //! Casting from double to int, checking that fractional part is minor than an internal  tolerance
   static int double_to_int_cast_checked(double a);
 
-  //Reduce double to nearest integer and checked whatever difference is greater than internal tolerance
+  //! Reduce double to nearest integer and checked whatever difference is greater than internal tolerance
   static double double_to_int_value_checked(double a);
 
-  //same on entire tensor (in place)
+  //! Reduce double to nearest integer and checked whatever difference is greater than internal tolerance
   static void double_to_int_value_checked(Tensor1& a);
 
-  //Scale a vector with fractional parts to all integer vector
+  //! Scale a vector with fractional parts to all integer vector
   static void scale_to_int(Tensor1& a);
 
-  //Same work with 3 vectors composing a tensor2Gen
+  //! Scale 3 vectors (as tensor) with fractional parts to all integer vector
   static void scale_to_int(Tensor2Gen& a);
 
-  //fold atoms into conventional cell
-  bool fold_in_cell(Atom& atom, const Point& orig, const Point& a1, const Point& a2, const Point& a3, bool fold=true);
-  //fold point into conventional cell
-  bool fold_in_cell(Point& p, const Point& orig, const Point& a1, const Point& a2, const Point& a3, bool fold=true);
+  //! fold atoms into conventional cell
+  static bool fold_in_cell(Atom& atom, const Point& orig, const Point& a1, const Point& a2, const Point& a3, bool fold=true);
+  //! fold point into conventional cell
+  static bool fold_in_cell(Point& p, const Point& orig, const Point& a1, const Point& a2, const Point& a3, bool fold=true);
 
 private:
 
-  //Common 0d,1d,2d,3d init operations
+  //! Common 0d,1d,2d,3d init operations
   void init_commons();
 
   //! Build random alloy structure
@@ -234,6 +225,10 @@ private:
   //! BulkCrystal of the reference material
   BulkCrystal* _bulk;
 
+  //! tells for every atom if it belongs to the structure
+  /*!
+   * Used for internal purpose
+   */
   std::vector<bool> _belong_to_structure;
 
 };

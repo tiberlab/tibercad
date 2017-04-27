@@ -213,6 +213,32 @@ AtomisticGenerator::do_init()
   //(build bondmap if not present)
   check_periodic();
 
+  if (_as->get_options().get_option("fold_into_box", false))
+  {
+    Point origin(0);
+    Point a1, a2, a3;
+    a1(0) = _period(1,1); a1(1) = _period(2,1); a1(2) = _period(3,1);
+    a2(0) = _period(1,2); a2(1) = _period(2,2); a2(2) = _period(3,2);
+    a3(0) = _period(1,3); a3(1) = _period(2,3); a3(2) = _period(3,3);
+    vector<Atom>::iterator basis_iterator = _super_basis.begin();
+    for ( ; basis_iterator != _super_basis.end(); ++basis_iterator)
+    {
+      const Atom& at = *basis_iterator;
+      if (at.get_position(0) < origin(0))
+        origin(0) = at.get_position(0);
+      if (at.get_position(1) < origin(1))
+        origin(1) = at.get_position(1);
+      if (at.get_position(2) < origin(2))
+        origin(2) = at.get_position(2);
+    }
+
+    basis_iterator = _super_basis.begin();
+    for ( ; basis_iterator != _super_basis.end(); ++basis_iterator)
+    {
+      fold_in_cell(*basis_iterator, origin, a1, a2, a3);
+    }
+  }
+
   //rebuild bondmap with new periodicity
   Messages::info("Rebuild bondmap");
   delete _bondmap; _bondmap = NULL;
@@ -359,6 +385,7 @@ AtomisticGenerator::cut(const std::set<ID>& reg_ids, const std::string preserve)
   //Different strategies if preserving conventional cell or preserving basis are needed
   if (preserve.compare("none") == 0)
   {
+    _belong_to_structure.clear();
     _belong_to_structure.reserve(2 * _super_basis.size());
 
     for (unsigned int i=0; i<  _super_basis.size(); i++)
