@@ -41,6 +41,18 @@ InterpolatedMobility::do_init(void)
   _temperature_id = _interpolation_sim->get_param_id(_temperature_var, _model_id);
   _field_id = _interpolation_sim->get_param_id(_field_var, _model_id);
   _density_id = _interpolation_sim->get_param_id(_density_var, _model_id);
+
+  if (_model_id == INVALID_ID)
+    throw InitFailedException("Model name '" + _model_name + "' not found in module '" + sim + "'");
+
+  if (_temperature_id == INVALID_ID)
+    throw InitFailedException("Variable '" + _temperature_var + "' not found in model '" + _model_name + "'");
+
+  if (_field_id == INVALID_ID)
+    throw InitFailedException("Variable '" + _field_var + "' not found in model '" + _model_name + "'");
+
+  if (_density_id == INVALID_ID)
+    throw InitFailedException("Variable '" + _density_var + "' not found in model '" + _model_name + "'");
 }
 
 
