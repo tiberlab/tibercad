@@ -16,6 +16,7 @@
 #include "NodeObject.h"
 #include "Alloy.h"
 #include "Embracing.h"
+#include "RuntimeException.h"
 
 #include "Variable.h"
 
@@ -2623,6 +2624,28 @@ SimulationInterface::get_solution(map<ID, vector<double> >& values)
 }
 
 
+std::pair<double, double> 
+SimulationInterface::get_value_and_derivative(
+  ID value_id, std::map<ID, double> params, ID dvar_id )
+{
+  if (!_value_id_map.count(value_id))
+    return make_pair(0.0, 0.0);
+
+  if (!_param_id_map[value_id].count(dvar_id))
+    dvar_id = INVALID_ID;
+  for (auto param : params)
+  {
+    if (!_param_id_map[value_id].count(param.first))
+      return make_pair(0.0, 0.0);
+  }
+  return get_value_and_derivative_secure(value_id, params, dvar_id);
+}
+
+std::pair<double, double> 
+SimulationInterface::get_value_and_derivative_secure(
+  ID value_id, std::map<ID, double> params, ID dvar_id )
+{
+}
 
 void
 SimulationInterface::get_solution_secure(const Elem*,
@@ -3305,3 +3328,37 @@ SimulationInterface::project_on_tensor_grid(void)
     delete fstreams[0][0];
   }
 }
+
+////
+void
+SimulationInterface::add_value(std::string name)
+{
+  if (!_value_map.count(name))
+  {
+    ID id = _value_map.size();
+
+    _value_map.insert( make_pair(name, id) );
+    _param_map.insert( make_pair( id, std::map<std::string, ID>() ) );
+    _value_id_map.insert( make_pair(id, name) );
+    _param_id_map.insert( make_pair( id, std::map<ID, std::string>() ) );
+  }
+}
+
+void 
+SimulationInterface::add_parameter(std::string name, ID value_id)
+{
+  if (!_param_map.count(value_id))
+    throw RuntimeException("Cannot add Parameter '" + name + "'since its corresponding Value id does not exist");
+
+  if (!_param_map[value_id].count(name))
+  {
+    ID id = _param_map[value_id].size();
+
+   _param_map[value_id].insert( make_pair( name, id) );
+   _param_id_map[value_id].insert( make_pair( id, name) );
+  }
+}
+
+
+
+////

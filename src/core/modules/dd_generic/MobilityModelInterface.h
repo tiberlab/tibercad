@@ -51,12 +51,12 @@ class TBDLEXPORT MobilityModelInterface : public DriftDiffusionModelInterface
      */
     void set_carrier_type(char type);
 
-    void set_carrier(std::string carrier);
+    void set_carrier(ID carrier);
 
     //! Get the carrier type
     char get_carrier_type(void) const;
 
-    std::string get_carrier(void) const;
+    ID get_carrier(void) const;
 
 
   protected:
@@ -74,7 +74,7 @@ class TBDLEXPORT MobilityModelInterface : public DriftDiffusionModelInterface
      */
     char _carrier_type;
 
-    std::string _carrier;
+    ID _carrier;
 
 };
 
@@ -122,13 +122,13 @@ MobilityModelInterface::get_carrier_type(void) const
 
 inline
 void
-MobilityModelInterface::set_carrier(std::string carrier)
+MobilityModelInterface::set_carrier(ID carrier)
 {
   _carrier = carrier;
 }
 
 inline
-std::string
+ID
 MobilityModelInterface::get_carrier(void) const
 {
   return _carrier;

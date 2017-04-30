@@ -296,7 +296,9 @@ GraceIO::do_write(bool force)
         DataMap::const_iterator it(data.begin());
         const DataMap::const_iterator end(data.end());
 
-#ifdef NUM_VAR  //print a numbered list of variable at the beginning of the file
+#ifdef NUM_VAR  //Print a numbered list of variable at the beginning of the file
+	        //Defined in src/base/io/Makefile
+
         unsigned int num = 0;
         of << "# " << ++num << " x\n";
         for ( ; it != end; ++it)

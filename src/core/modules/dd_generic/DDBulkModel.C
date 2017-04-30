@@ -160,7 +160,7 @@ DDBulkModel::prepare_submodels(void)
         carriers_all.insert(carrier);
 
         _q_mobility[carrier] = create_mobility_model(it->second);
-        _q_mobility[carrier]->set_carrier(ca);
+        _q_mobility[carrier]->set_carrier(carrier);
       }
     }
 
