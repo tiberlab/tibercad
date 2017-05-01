@@ -105,14 +105,17 @@ METHOD=devel
 if [ "x$LINKONLY" == "x" ]
 then
 
-  ./configure --enable-petsc --disable-slepc --disable-complex --disable-periodic ${SHARED} --disable-pfem --enable-static \
-   --disable-second --enable-exceptions --disable-laspack --disable-sfc --disable-gzstreams --disable-bzip2 \
-   --disable-tecplot --disable-netcdf --disable-exodus --disable-nemesis --disable-libHilbert --disable-perflog  --disable-gmv \
-   --disable-reference-counting --disable-legacy-using-namespace --enable-unique-ptr \
-   --with-subdomain-id-bytes=2 \
-   --with-fparser=none \
-   --with-methods=$METHOD \
-   --host=$HOST --build=$BUILD
+  ./configure --enable-petsc --disable-slepc --disable-complex \
+    --enable-periodic ${SHARED} --disable-pfem --enable-static \
+    --disable-second --enable-exceptions --disable-laspack --disable-sfc \
+    --disable-gzstreams --disable-bzip2 --disable-vtk \
+    --disable-tecplot --disable-netcdf --disable-exodus --disable-nemesis \
+    --disable-libHilbert --disable-perflog  --disable-gmv \
+    --disable-reference-counting --disable-legacy-using-namespace --enable-unique-ptr \
+    --with-subdomain-id-bytes=2 \
+    --with-fparser=none \
+    --with-methods=$METHOD \
+    --host=$HOST --build=$BUILD
 
 
   make |tee make.log
