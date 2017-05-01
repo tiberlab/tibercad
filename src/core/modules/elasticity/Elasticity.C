@@ -881,7 +881,7 @@ Elasticity::apply_shape_deformation()
   for (unsigned int ns = 0; ns < atom_structures.size(); ns++)
   {
     std::vector<Atom>& structure = atom_structures[ns]->get_structure_atoms();
-    std::vector<std::vector<unsigned int> > bond_map = atom_structures[ns]->get_bond_map();
+    BondMap bond_map& = atom_structures[ns]->get_bond_map();
     double scale = atom_structures[ns]->get_scale();
 
     // for periodic structures, we adjust the periodicity by scaling with the ratio
