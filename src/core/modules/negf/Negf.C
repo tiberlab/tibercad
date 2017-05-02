@@ -2417,13 +2417,20 @@ Negf::do_compare(ID i, ID j)
 void
 Negf::get_boundary_potentials(QuantumContact* qc, double& av_V, double& av_mu_n, double& av_mu_p)
 {
-  PotentialInterface model;
+  PotentialInterface pot_model;
+  PotentialInterface mue_model;
+  PotentialInterface muh_model;
   av_V = 0.0;
   av_mu_n = 0.0;
   av_mu_p = 0.0;
 
   if (opt.pot_module == "none") return;
-  else model.set_simulation(opt.pot_module);
+  else
+  {
+    pot_model.set_simulation(opt.pot_module+".ElPotential");
+    mue_model.set_simulation(opt.pot_module+".eQFermi");
+    muh_model.set_simulation(opt.pot_module+".hQFermi");
+  }
 
   std::vector<double> V;
 
@@ -2472,9 +2479,9 @@ Negf::get_boundary_potentials(QuantumContact* qc, double& av_V, double& av_mu_n,
       {
         std::pair<const Elem*, Point> pair = qc->project_on_boundary(elem, q_point[qp]);
 
-        av_V += model.get_potential(pair.first, pair.second) * elem->volume()/volume ;
-        av_mu_n += model.get_el_chem_potential(pair.first, pair.second) * elem->volume()/volume;
-        av_mu_p += model.get_hl_chem_potential(pair.first, pair.second) * elem->volume()/volume;
+        av_V += pot_model.get_potential(pair.first, pair.second) * elem->volume()/volume ;
+        av_mu_n += mue_model.get_potential(pair.first, pair.second) * elem->volume()/volume;
+        av_mu_p += muh_model.get_potential(pair.first, pair.second) * elem->volume()/volume;
       }
     }
   }

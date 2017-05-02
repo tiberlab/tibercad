@@ -4,6 +4,7 @@
 #define _DDINTERFACEMODEL_H_
 
 #include "DriftDiffusionProperties.h"
+#include "SimulationInterface.h"
 
 #include "point.h"
 
@@ -16,7 +17,6 @@ class MaterialBoundary;
 class RecombinationModelInterface;
 class Trap;
 class FowlerNordheim;
-class SimulationInterface;
 
 /*!
  * \brief The base class for the Drift-Diffusion boundary models
@@ -132,6 +132,8 @@ class DDInterfaceModel : public DriftDiffusionProperties
     //! Get the electron flux simulation
     SimulationInterface* get_eflux_simulation(void) const;
 
+    //! Get the electron flux simulation
+    SimulationInterface* get_hflux_simulation(void) const;
 
 
   protected:
@@ -242,18 +244,24 @@ class DDInterfaceModel : public DriftDiffusionProperties
 
     //! The electron flux in \f$cm^{-2}\f$
     double _eflux;
+   
+    //! The hole flux in \f$cm^{-2}\f$
+    double _hflux;
 
-    //! The simulation providing electron flux
-    SimulationInterface* _eflux_sim;
+    //! Solution provider for eflux
+    SimulationInterface::SolutionProvider _eflux_sim;
 
-    //! The solution ID for the electron current density
-    ID _eflux_id;
+    //! Solution provider for hflux
+    SimulationInterface::SolutionProvider _hflux_sim;
+    
+    //! True if flux controlled for electrons
+    bool _eflux_controlled;
+
+    //! True if flux controlled for electrons
+    bool _hflux_controlled;
 
     //! True if a flux predictor should be used
     bool _flux_predictor;
-
-    //! True if flux controlled for electrons
-    bool _eflux_controlled;
 
     //! The DD properties for material A
     DDBulkModel* _ddprop_A;
@@ -481,7 +489,14 @@ inline
 SimulationInterface*
 DDInterfaceModel::get_eflux_simulation(void) const
 {
-  return(_eflux_sim);
+  return(_eflux_sim.first);
+}
+
+inline
+SimulationInterface*
+DDInterfaceModel::get_hflux_simulation(void) const
+{
+  return(_hflux_sim.first);
 }
 
 

@@ -9,8 +9,9 @@
 #include "Boundary.h"
 #include "PotentialInterface.h"
 
+#include "meshfree_interpolation.h"
 
-using namespace std;
+//using namespace std;
 
 class TBDLLOCAL KmcInterface : public SimulationInterface
 {
@@ -24,7 +25,8 @@ class TBDLLOCAL KmcInterface : public SimulationInterface
     eCurrentDensity,
     hCurrentDensity,
     Generation,
-    Recombination
+    Recombination,
+    Potential
   };
    
   virtual ~KmcInterface() {};
@@ -45,16 +47,13 @@ class TBDLLOCAL KmcInterface : public SimulationInterface
   SimulationInterface::SolutionProvider _mue_sol;
   SimulationInterface::SolutionProvider _muh_sol;
 
-  //! this system is used to assemble a fem useful for projections 
-  TiberLinearSystem* _sys;
+  //! this is used for storage and interpolation of data between grid and mesh 
+  //libMesh::MeshfreeInterpolation* _griddata;
 
-  vector<double> _potential;
-  
-  vector<double> _eldensity;
-
-  vector<double> _hldensity;
-
-  vector<double> _xdensity;
+  std::vector<double> _eldensity;
+  std::vector<double> _hldensity;
+  std::vector<double> _xdensity;
+  std::vector<double> _potential;
 
   //! Monte Carlo variables
   unsigned int _Nstep;

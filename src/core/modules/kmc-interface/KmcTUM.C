@@ -18,6 +18,7 @@
 #include "boost/process.hpp"
 
 using namespace std;
+using namespace libMesh;
 namespace bp = boost::process;
 namespace bpi = boost::process::initializers;
 namespace fs = boost::filesystem;
@@ -27,6 +28,12 @@ KmcTUM::KmcTUM(const ModelOptions& options) :
 {
    has_solution_vector(false);
 }
+
+KmcTUM::~KmcTUM()
+{ 
+  //delete _griddata;
+}
+
 
 KmcTUM*
 KmcTUM::create(const ModelOptions& opt)
@@ -43,6 +50,7 @@ KmcTUM::do_setup_solution_variables(void)
   //declare_solution(xDensity, REAL, CELL, "1/cm^3");
   declare_solution(eCurrentDensity, REAL, CELL, "A/cm^2");
   declare_solution(hCurrentDensity, REAL, CELL, "A/cm^2");
+  declare_solution(Potential, REAL, CELL, "V");
   //declare_solution(Recombination, REAL, CELL, "s^-1 cm^-3");
   //declare_solution(Generation, REAL, CELL, "s^-1 cm^-3");
 }
@@ -55,12 +63,14 @@ KmcTUM::do_init()
   KmcInterface::do_init();
   
   parse_options();  
- 
-  _eldensity.resize(grid.num_elements()); 
-  _hldensity.resize(grid.num_elements()); 
-  _potential.resize(grid.num_elements());
 
-  
+  //if (_griddata == nullptr){ delete _griddata; }
+  //_griddata = new InverseDistanceInterpolation<3>(get_communicator());  
+ 
+  _hldensity.resize(grid.num_elements());
+  _eldensity.resize(grid.num_elements());
+  _potential.resize(grid.num_elements());
+   
   // get the poisson bounding box in order to define the buffer distances  
   SimulationInterface* poisson_sim = _pot_sol.first;
 
@@ -416,27 +426,23 @@ KmcTUM::get_solution_secure(const Elem* elem,
                            map<ID, vector<double> >& values,
                            const vector<Point>& p)
 {
-  
-   if (values.count(elDensity))
-   { 
-     for (unsigned int n=0; n < p.size(); n++)
-     { 
-       unsigned int i = grid.find_element(p[n]);
-       values[elDensity][n] = _eldensity[i];  // 1/cm^3
-     }
+   //vector<string> field(1,"eldensity");
+   //_griddata->interpolate_field_data(field, p, values[elDensity]);
+
+   for (unsigned int n=0; n < p.size(); n++)
+   {
+       Point q =  FE<3, FEFamily::LAGRANGE>::map(elem,p[n]);
+       unsigned int i = grid.find_element(q);
+       if (values.count(elDensity))
+          values[elDensity][n] = _eldensity[i];  // 1/cm^3
+
+       if (values.count(hlDensity))
+          values[hlDensity][n] = _hldensity[i];  // 1/cm^3
+       
+       if (values.count(Potential))
+          values[Potential][n] = _potential[i];  // V
    }
    
-   if (values.count(hlDensity))
-   {  
-     for (int n=0; n< p.size(); n++)
-     { 
-       unsigned int i = grid.find_element(p[n]);
-       values[hlDensity][n] = _hldensity[i];  // 1/cm^3
-     }
-   }
-  
-  
-
 }
 
 double
@@ -622,7 +628,7 @@ KmcTUM::write_input(void)
   ff<<"// FLAG: dark current on/off (1 = on, 0 = off)"<<endl;
   ff<<1<<endl;
   ff<<"// FLAG: illumination on/off (1 = on, 0 = off)"<<endl;
-  ff<<1<<endl;
+  ff<<0<<endl;
   ff<<"// FLAG: Coulomb interaction on/off (1 = on, 0 = off)"<<endl;
   ff<<1<<endl;
 
@@ -686,21 +692,47 @@ KmcTUM::read_density(void)
   if (ff.fail()) return false;
 
   string tmp;
-  for(unsigned int i=0; i < 5; i++)
+  for(unsigned int i=0; i < 6; i++)
     ff >> tmp;
 
+  /*
+  unsigned int ne = grid.num_elements();
+  double dx = grid.grid_step(0);
+  double dy = grid.grid_step(0);
+  double dz = grid.grid_step(0);
+  vector<double> densities(2 * ne, 0.0); 
+  vector<Point>  points(ne); 
+  Point pt;
+  vector<string> fieldnames(2);
+  fieldnames[0] = "eldensity";
+  fieldnames[1] = "hldensity";
+  */
+
+  //potential.resize(grid.num_elements());
   unsigned int k, l, m;
   double edens, hdens, pot;
   
+  unsigned int count = 0; 
+
   while (ff >> k >> l >> m >> edens >> hdens >> pot)
   {
+     count += 1;
      unsigned int i = grid.index_to_element(k,l,m);
+     //pt(0) = dx*k; pt(1) = dy*l; pt(2) = dz*m;
+     //points[i] = _p0+pt;
+     //densities[i] = edens;
+     //densities[ne + i] = hdens;
      _eldensity[i] = edens;
      _hldensity[i] = hdens;
+     _potential[i] = pot;
   }
 
-  return true;
+  if (count != grid.num_elements(0)*grid.num_elements(1)*(grid.num_elements(2)-2))
+    return false;
 
+  //_griddata->add_field_data(fieldnames, points, densities);
+
+  return true;
 }
 
 bool
@@ -750,6 +782,7 @@ KmcTUM::write_potential(void)
   string input_file = inputpath + "/tcad-pot.txt";
   fstream ff(input_file.c_str(), std::fstream::out);
 
+  ff<< "// potential file "<< endl;
   unsigned int k,l,m;
   for (unsigned int i=0; i<grid.num_elements(); i++)
   {
