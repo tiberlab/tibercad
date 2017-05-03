@@ -10,20 +10,24 @@
 #include "mesh_base.h"
 
 
-
 PotentialInterface::PotentialInterface(void) :
   _simulation(NULL),
-  _id(INVALID_ID),
-  _id_chem_el(INVALID_ID),
-  _id_chem_hl(INVALID_ID)
-  //_current_atom(NULL)
+  _id(INVALID_ID)
 {
+}
+
+
+PotentialInterface::PotentialInterface(const std::string& name, const std::string& variable) :
+  _simulation(NULL),
+  _id(INVALID_ID)
+{
+  set_simulation(name, variable); 
 }
 
 
 
 bool
-PotentialInterface::set_simulation(const std::string& name)
+PotentialInterface::set_simulation(const std::string& name, const std::string& variable)
 {
   bool answer = false;
   if (name != "")
@@ -32,25 +36,11 @@ PotentialInterface::set_simulation(const std::string& name)
     if (_simulation == NULL)
       throw InitFailedException("No such simulation found: " + name);
 
-    _id = _simulation->get_solution_id("ElPotential");
+    _id = _simulation->get_solution_id(variable);
 
     if (_id == INVALID_ID)
       throw InitFailedException("Simulation " + name +
-          " has no variable 'ElPotential'");
-
-
-    _id_chem_el = _simulation->get_solution_id("eQFermi");
-
-    if (_id == INVALID_ID)
-      throw InitFailedException("Simulation " + name +
-          " has no variable 'eQFermi'");
-
-
-    _id_chem_hl = _simulation->get_solution_id("hQFermi");
-
-    if (_id == INVALID_ID)
-      throw InitFailedException("Simulation " + name +
-          " has no variable 'hQFermi'");
+          " has no variable '"+variable+"'");
 
     answer = true;
   }
@@ -61,8 +51,8 @@ PotentialInterface::set_simulation(const std::string& name)
 
 
 void
-PotentialInterface::get_potential(const Elem* elem,
-    const std::vector<Point>& p, std::vector<double>& potentials,
+PotentialInterface::get_potential(const libMesh::Elem* elem,
+    const std::vector<libMesh::Point>& p, std::vector<double>& potentials,
     bool local_coord)
 {
   assert(elem != NULL);
@@ -79,10 +69,10 @@ PotentialInterface::get_potential(const Elem* elem,
 
 
 double
-PotentialInterface::get_potential(const Elem* elem, const Point& p,
+PotentialInterface::get_potential(const libMesh::Elem* elem, const libMesh::Point& p,
     bool local_coord)
 {
-  std::vector<Point> ps(1, p);
+  std::vector<libMesh::Point> ps(1, p);
   std::vector<double> temp(1);
 
   get_potential(elem, ps, temp, local_coord);
@@ -95,7 +85,7 @@ PotentialInterface::get_potential(const Elem* elem, const Point& p,
 double
 PotentialInterface::get_potential(const Atom* atom)
 {
-  Point p(0);
+  libMesh::Point p(0);
   switch (get_simulation()->get_mesh().mesh_dimension())
   {
     case 3:
@@ -108,99 +98,4 @@ PotentialInterface::get_potential(const Atom* atom)
   return get_potential(atom->get_elem(), p);
 }
 
-
-void
-PotentialInterface::get_el_chem_potential(const Elem* elem,
-    const std::vector<Point>& p, std::vector<double>& potentials,
-    bool local_coord)
-{
-  assert(elem != NULL);
-
-  if ((_simulation == NULL) ||
-      !_simulation->get_solution(elem, _id_chem_el, potentials, p, local_coord))
-  {
-    int nn = p.size();
-    potentials.resize(nn);
-    for (int i = 0; i < nn; i++)
-      potentials[i] = 0.0;
-  }
-}
-
-
-double
-PotentialInterface::get_el_chem_potential(const Elem* elem, const Point& p,
-    bool local_coord)
-{
-  std::vector<Point> ps(1, p);
-  std::vector<double> temp(1);
-
-  get_el_chem_potential(elem, ps, temp, local_coord);
-
-  return temp[0];
-}
-
-
-double
-PotentialInterface::get_el_chem_potential(const Atom* atom)
-{
-  Point p(0);
-  switch (get_simulation()->get_mesh().mesh_dimension())
-  {
-    case 3:
-      p(2) = atom->get_position(2);
-    case 2:
-      p(1) = atom->get_position(1);
-    default:
-      p(0) = atom->get_position(0);
-  }
-  return get_el_chem_potential(atom->get_elem(), p);
-}
-
-
-void
-PotentialInterface::get_hl_chem_potential(const Elem* elem,
-    const std::vector<Point>& p, std::vector<double>& potentials,
-    bool local_coord)
-{
-  assert(elem != NULL);
-
-  if ((_simulation == NULL) ||
-      !_simulation->get_solution(elem, _id_chem_hl, potentials, p, local_coord))
-  {
-    int nn = p.size();
-    potentials.resize(nn);
-    for (int i = 0; i < nn; i++)
-      potentials[i] = 0.0;
-  }
-}
-
-
-double
-PotentialInterface::get_hl_chem_potential(const Elem* elem, const Point& p,
-    bool local_coord)
-{
-  std::vector<Point> ps(1, p);
-  std::vector<double> temp(1);
-
-  get_hl_chem_potential(elem, ps, temp, local_coord);
-
-  return temp[0];
-}
-
-
-double
-PotentialInterface::get_hl_chem_potential(const Atom* atom)
-{
-  Point p(0);
-  switch (get_simulation()->get_mesh().mesh_dimension())
-  {
-    case 3:
-      p(2) = atom->get_position(2);
-    case 2:
-      p(1) = atom->get_position(1);
-    default:
-      p(0) = atom->get_position(0);
-  }
-  return get_hl_chem_potential(atom->get_elem(), p);
-}
 

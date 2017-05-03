@@ -1700,6 +1700,7 @@ DriftDiffusion::do_setup_solution_variables(void)
   declare_solution(eQFermi, REAL, NODES, "eV");
   declare_solution(hQFermi, REAL, NODES, "eV");
   declare_solution(ElField, VECTOR, CELL, "V/cm");
+  declare_solution(Displacement, VECTOR, CELL, "C/m^2");
   declare_solution(Eg, REAL, NODES, "eV");
   declare_solution(Ec, REAL, NODES, "eV");
   declare_solution(Ev, REAL, NODES, "eV");
@@ -1719,6 +1720,7 @@ DriftDiffusion::do_setup_solution_variables(void)
 
   declare_solution(eDensity, REAL, NODES, "cm^-3");
   declare_solution(hDensity, REAL, NODES, "cm^-3");
+  declare_solution(ChargeDensity, REAL, NODES, "cm^-3");
   if (plot_solution("Density"))
   {
     add_plot_variable(eDensity);
@@ -2120,6 +2122,12 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     if (values.count(hDensity))
       values[hDensity][n] = hdens;
 
+    if (values.count(ChargeDensity))
+    {
+      sc->calculate_ionized_dopants();
+      values[ChargeDensity][n] = sc->get_charge_density();
+    }
+
     if (values.count(IntrinsicDensity))
       values[IntrinsicDensity][n] = sc->get_intrinsic_density();
 
@@ -2288,6 +2296,15 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     values[Polarization][0] = polariz(0) / np;
     values[Polarization][1] = polariz(1) / np;
     values[Polarization][2] = polariz(2) / np;
+  }
+
+  if (values.count(Displacement))
+  {
+    const RealTensor& permittivity = sc->get_relative_permittivity();
+    RealVectorValue displ = Constants::e0 * 100 * permittivity * el_field; 
+    values[Displacement][0] = displ(0) / np;
+    values[Displacement][1] = displ(1) / np;
+    values[Displacement][2] = displ(2) / np;
   }
 
   if (values.count(CurrentDensity))
@@ -2494,27 +2511,35 @@ DriftDiffusion::calculate_mean_fermi_levels(void)
     it->second /= boundary_area[it->first];
   }
 
+  // NEEDED FOR PREDICTOR CURRENT. TO BE CHECKED
   // search for interface models with external current source
-  // TODO to be implemented also for holes
+  // TODO to be checked the logic for holes
   map<const SimulationInterface*, set<Boundary*>> fluxmodels;
   map<DDInterfaceModel*, Boundary*>::iterator ifit(ifmodels.begin());
   for ( ; ifit != ifmodels.end(); ++ifit)
   {
     if ((ifit->first)->get_eflux_simulation() != NULL)
       fluxmodels[(ifit->first)->get_eflux_simulation()].insert(ifit->second);
+    
+    if ((ifit->first)->get_hflux_simulation() != NULL)
+      fluxmodels[(ifit->first)->get_hflux_simulation()].insert(ifit->second);
   }
 
   map<const SimulationInterface*, double> reffermi_e;
+  map<const SimulationInterface*, double> reffermi_h;
   map<const SimulationInterface*, set<Boundary*>>::iterator sit(fluxmodels.begin());
   for ( ; sit != fluxmodels.end(); ++sit)
   {
     const set<Boundary*>& bdset = sit->second;
     reffermi_e[sit->first] = 0;
+    reffermi_h[sit->first] = 0;
     double count = bdset.size();
     for (set<Boundary*>::iterator bdit(bdset.begin()); bdit != bdset.end(); ++bdit)
-      reffermi_e[sit->first] += _boundary_eqfermi[(*bdit)->get_name()] / count;
+    {
+       reffermi_e[sit->first] += _boundary_eqfermi[(*bdit)->get_name()] / count;
+       reffermi_h[sit->first] += _boundary_hqfermi[(*bdit)->get_name()] / count;
+    }
   }
-
 
   ifit = ifmodels.begin();
   for ( ; ifit != ifmodels.end(); ++ifit)
@@ -2529,6 +2554,15 @@ DriftDiffusion::calculate_mean_fermi_levels(void)
       if (simit != reffermi_e.end())
         eref = simit->second;
     }
+    
+    if ((ifit->first)->get_hflux_simulation() != NULL)
+    {
+      map<const SimulationInterface*, double>::iterator simit(
+          reffermi_h.find((ifit->first)->get_hflux_simulation()));
+      if (simit != reffermi_h.end())
+        href = simit->second;
+    }
+
 
     (ifit->first)->set_reference_fermi_potentials(eref, href);
   }

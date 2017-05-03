@@ -8,7 +8,6 @@
 #include "Trap.h"
 #include "FowlerNordheim.h"
 #include "RecombinationModelInterface.h"
-#include "SimulationInterface.h"
 #include "ModelErrorException.h"
 #include "Variable.h"
 #include "elem.h"
@@ -24,9 +23,10 @@ DDInterfaceModel::DDInterfaceModel(const ModelOptions& options) :
   _ref_fermi_h(0),
   _emission(NULL),
   _eflux(0.0),
-  _eflux_sim(NULL),
+  _hflux(0.0),
   _flux_predictor(false),
   _eflux_controlled(false),
+  _hflux_controlled(false),
   _ddprop_A(NULL),
   _ddprop_B(NULL)
 {
@@ -223,22 +223,16 @@ DDInterfaceModel::do_init(void)
       if ((iss >> _eflux).fail())
       {
         _eflux = 0;
-        _eflux_sim = SimulationInterface::find_simulation(eflux);
-        if (_eflux_sim == NULL)
+        _eflux_sim = SimulationInterface::find_solution_provider(eflux,"eCurrentDensity");
+
+        if (_eflux_sim.first == NULL || 
+            _eflux_sim.second == INVALID_ID)
         {
-          string msg("DriftDiffusion Interface: ");
-          msg += "no electron current simulation '" + eflux + "' found.";
-          throw InitFailedException(msg);
+           throw InitFailedException( eflux + " is invalid identifier for "
+                    "a module providing eCurrentDensity");
         }
-
-        _flux_predictor = get_option("flux_predictor", false);
-
-        _eflux_id = _eflux_sim->get_solution_id("eCurrentDensity");
-        if (_eflux_id == INVALID_ID)
-          throw InitFailedException("Module '" +
-              eflux + "' does not contain solution variable 'eCurrentDensity'");
+    
       }
-      //has_current(true);
     }
 
     _eflux_controlled = true;
@@ -246,6 +240,37 @@ DDInterfaceModel::do_init(void)
     set_type(1, NEUMANN);
     set_type(2, NEUMANN);
   }
+
+  string hflux = get_option("hole_current", "");
+  if (!hflux.empty())
+  {
+    if (VariableValue::check_string(hflux))
+      get_parameter("hole_current", _hflux);
+    else
+    {
+      istringstream iss(hflux);
+      if ((iss >> _hflux).fail())
+      {
+        _hflux = 0;
+        _hflux_sim = SimulationInterface::find_solution_provider(hflux,"hCurrentDensity");
+
+        if (_hflux_sim.first == NULL || 
+            _hflux_sim.second == INVALID_ID)
+        {
+           throw InitFailedException( hflux + " is invalid identifier for "
+                    "a module providing hCurrentDensity");
+        }
+    
+      }
+    }
+
+    _hflux_controlled = true;
+    set_type(0, NEUMANN);
+    set_type(1, NEUMANN);
+    set_type(2, NEUMANN);
+  }
+
+
 
 }
 
@@ -373,11 +398,11 @@ DDInterfaceModel::compute()
     if (this->is_internal_boundary())
       flux *= 0.5;
 
-    if (_eflux_sim != NULL)
+    if (_eflux_sim.first != NULL)
     {
       vector<double> data;
       // we take the flux from the neighbor element
-      if (_eflux_sim->get_solution(get_element()->neighbor(_side), _eflux_id,
+      if (_eflux_sim.first->get_solution(get_element()->neighbor(_side), _eflux_sim.second,
           data, get_coordinates()))
       {
         flux = data[0] * _normal(0) + data[1] * _normal(1) + data[2] * _normal(2);
@@ -398,10 +423,48 @@ DDInterfaceModel::compute()
       }
     }
 
-
     _coeff_g[1] -= flux / Constants::e;
 
   }
+
+
+  if (_hflux_controlled)
+  {
+
+    double flux = _hflux;
+    if (this->is_internal_boundary())
+      flux *= 0.5;
+
+    if (_hflux_sim.first != NULL)
+    {
+      vector<double> data;
+      // we take the flux from the neighbor element
+      if (_hflux_sim.first->get_solution(get_element()->neighbor(_side), _hflux_sim.second,
+          data, get_coordinates()))
+      {
+        flux = data[0] * _normal(0) + data[1] * _normal(1) + data[2] * _normal(2);
+
+        if (_flux_predictor)
+        {
+          double dV = pd.old_fermi_h - _ref_fermi_h;
+          if ((abs(dV) > 1e-9) && (abs(flux) > 0))
+          {
+            double rho = abs(dV / flux);
+
+            flux = (pd.fermi_h - _ref_fermi_h) / rho;
+            //std::cerr << (pd.fermi_h - pd.old_fermi_h) / rho << " " << flux << std::endl;
+            _jacobian[2][2] += 1.0 / rho / Constants::e;
+          }
+        }
+
+      }
+    }
+
+    _coeff_g[2] += flux / Constants::e;
+
+  }
+
+
 
 }
 

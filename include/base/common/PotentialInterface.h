@@ -35,16 +35,19 @@ class PotentialInterface
 
 public:
 
-  //! Default constructor
+  //! Default constructor creates an empty interface that must be initialized by set_simulation
   PotentialInterface(void);
 
+  //! Constructor that invokes initializations
+  PotentialInterface(const std::string& name, const std::string& variable = "ElPotential");
 
-  //! Specify the Poisson simulation to use
+
+  //! Specify the simulation to use 
   /*!
-   * Returns true if \c name refers to a valid Poisson
-   * simulation.
+   * Returns true if \c name refers to a valid potential simulation
+   * (examples of potential variables: ElPotential, eQFermi, hQFermi).
    */
-  bool set_simulation(const std::string& name);
+  bool set_simulation(const std::string& name, const std::string& variable);
 
 
   //! Get the electrostatic potential in specified points
@@ -59,34 +62,6 @@ public:
 
   //! Get the electrostatic potential at the position of an atom
   double get_potential(const Atom* atom);
-
-
-  //! Get the electron chemical potential in specified points
-  void get_el_chem_potential(const libMesh::Elem* elem, const std::vector<libMesh::Point>& p,
-      std::vector<double>& potentials, bool local_coord = false);
-
-
-  //! Get the electron chemical potential in one point
-  double get_el_chem_potential(const libMesh::Elem* elem, const libMesh::Point& p,
-      bool local_coord = false);
-
-
-  //! Get the electron chemical potential at the position of an atom
-  double get_el_chem_potential(const Atom* atom);
-
-
-  //! Get the hole chemical potential in specified points
-  void get_hl_chem_potential(const libMesh::Elem* elem, const std::vector<libMesh::Point>& p,
-      std::vector<double>& potentials, bool local_coord = false);
-
-
-  //! Get the hole chemical potential in one point
-  double get_hl_chem_potential(const libMesh::Elem* elem, const libMesh::Point& p,
-      bool local_coord = false);
-
-
-  //! Get the hole chemical potential at the position of an atom
-  double get_hl_chem_potential(const Atom* atom);
 
 
   //! Tells if this interface has a simulation associated
@@ -106,15 +81,6 @@ private:
 
   //! The ID as returned from the simulation
   ID _id;
-
-  //! The ID as returned from the simulation
-  ID _id_chem_el;
-
-  //! The ID as returned from the simulation
-  ID _id_chem_hl;
-
-  //! For efficiency, we will get all potentials together on an atomic position
-  //const Atom* _current_atom;
 
 };
 

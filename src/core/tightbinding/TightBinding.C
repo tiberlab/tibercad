@@ -166,12 +166,12 @@ TightBinding::project_potential(const std::string model_name, const std::string 
 {
   Point p;
 
-  //Use PotentialInterface to get the right simulation
-  PotentialInterface model;
+  //Use PotentialInterface to get the right simulation: currently hard-coded variables
+  PotentialInterface pot_model(model_name,"ElPotential");
+  PotentialInterface elchem_model(model_name,"eQFermi");
+  PotentialInterface hlchem_model(model_name,"hQFermi");
 
-  model.set_simulation(model_name);
-
-  if( !model.get_simulation()->is_solved() )
+  if( !pot_model.get_simulation()->is_solved() )
     throw InitFailedException("Potential model has not been solved");
 
   if (mode == "point")
@@ -229,9 +229,9 @@ TightBinding::project_potential(const std::string model_name, const std::string 
 
         // pot_shift is without "-" because the minus-sign is explicitly set in the
         // TB-codes.
-        _pot_shift[i] = model.get_potential(elem, p);
-        _el_chem_pot[i] = model.get_el_chem_potential(elem, p);
-        _hl_chem_pot[i] = model.get_hl_chem_potential(elem, p);
+        _pot_shift[i] = pot_model.get_potential(elem, p);
+        _el_chem_pot[i] = elchem_model.get_potential(elem, p);
+        _hl_chem_pot[i] = hlchem_model.get_potential(elem, p);
 
       }
 
