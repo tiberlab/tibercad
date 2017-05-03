@@ -5,6 +5,14 @@
 #include "ElasticityBoundaryModel.h"
 #include "TiberLinearSystem.h"
 #include "Messages.h"
+#include "SimulationOptions.h"
+#include "SimulationEnvironment.h"
+#include "TensorOperators.h"
+#include "RotatedCrystal.h"
+#include "AtomisticStructure.h"
+#include "QuantumContact.h"
+#include "DataOutput.h"
+
 #include "libmesh/equation_systems.h"
 #include "libmesh/dof_map.h"
 #include "libmesh/quadrature_gauss.h"
@@ -15,13 +23,6 @@
 #include "libmesh/dense_submatrix.h"
 #include "libmesh/dense_subvector.h"
 #include "libmesh/fe_interface.h"
-#include "SimulationOptions.h"
-#include "SimulationEnvironment.h"
-#include "TensorOperators.h"
-#include "RotatedCrystal.h"
-#include "AtomisticStructure.h"
-#include "QuantumContact.h"
-#include "DataOutput.h"
 
 #include "TiberModule.h"
 
@@ -881,7 +882,7 @@ Elasticity::apply_shape_deformation()
   for (unsigned int ns = 0; ns < atom_structures.size(); ns++)
   {
     std::vector<Atom>& structure = atom_structures[ns]->get_structure_atoms();
-    BondMap bond_map& = atom_structures[ns]->get_bond_map();
+    const BondMap& bond_map = atom_structures[ns]->get_bond_map();
     double scale = atom_structures[ns]->get_scale();
 
     // for periodic structures, we adjust the periodicity by scaling with the ratio
