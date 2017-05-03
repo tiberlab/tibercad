@@ -334,12 +334,11 @@ class SimulationInterface : public TiberModelObject
 
     //! Remember current solution (on the current mesh!)
     /*!
-     * Calls do_remember_current_solution()
-     */
-    /*!
      * If \c id is invalid or not specified, a new ID will be generated and
      * the solution stored with this new ID. Otherwise a solution stored at
      * \c id will be overwritten.
+     *
+     * Calls do_remember_current_solution()
      */
     ID remember_current_solution(ID id = 0);
 
