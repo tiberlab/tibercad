@@ -73,8 +73,6 @@ class TBDLLOCAL Thermal : public SimulationInterface
 
   private:
 
-  //!node connection
-  std::vector<unsigned short int> node_conn;
 
   double compute_power_dissipated();
 

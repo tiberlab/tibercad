@@ -3,14 +3,11 @@
 #ifndef _CONSTANTTHERMALCONDUCTIVITY_H_
 #define _CONSTANTTHERMALCONDUCTIVITY_H_
 
-#include "ThermalConductivityModel.h"
-
-
-
 #include "tensor_value.h"
 #include "vector_value.h"
 #include "PhysicalModelInterface.h"
 #include "tiber_dll.h"
+#include "ThermalConductivityModel.h"
 
 
 
@@ -28,7 +25,7 @@ public:
   //! Creator function
   static ConstantThermalConductivity* create(const ModelOptions& options);
   
-  virtual void calculate(const Elem* elem, const Point& point){};
+  virtual void calculate(const Elem* elem, const Point& point, double temperature);
   
 protected:
   
@@ -57,7 +54,14 @@ protected:
   
 private:
   
+  //! The thermal conductivity at reference temperature
   libMesh::RealGradient _kappa;
+
+  //! The temperature coefficient
+  libMesh::RealGradient _temp_coeff;
+
+  //! The reference temperature (default 300K)
+  double _ref_temp;
 
   //! Constructor
   ConstantThermalConductivity(const ModelOptions& options);
