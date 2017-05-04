@@ -4,7 +4,7 @@
 topdir := ../../..
 
 # we have to compile each module
-subdirs += excitons dssc common boltzmann
+subdirs += excitons dssc common 
 subdirs += thermal drift-diffusion elasticity
 subdirs += vff negf etb 
 subdirs += polarizationgrid 
