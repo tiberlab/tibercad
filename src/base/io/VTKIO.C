@@ -5,8 +5,8 @@
 #include "VTKIO.h"
 #include "RuntimeException.h"
 
-#include "elem.h"
-#include "mesh_base.h"
+#include "libmesh/elem.h"
+#include "libmesh/mesh_base.h"
 
 #include "b64/encode.h"
 
@@ -886,7 +886,7 @@ TiberVTKIO::create_pieces(map<ID, vector<unsigned int> >& points,
     }
 
     // translation table for node IDs
-    map<ID, map<ID, unsigned int> > ttable;
+    map<ID, map<libMesh::dof_id_type, unsigned int> > ttable;
 
     for (it = mesh.active_local_subdomains_elements_begin(subdomains); it != end; ++it)
     {
