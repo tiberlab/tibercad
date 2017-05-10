@@ -1289,7 +1289,7 @@ SimulationInterface::plot_meshdata(void)
   // we write only on mesh part associated to this simulation
 
   MeshBase::const_element_iterator it = this->active_local_elements_begin();
-  const MeshBase::const_element_iterator end = this->active_local_elements_end();
+  MeshBase::const_element_iterator end = this->active_local_elements_end();
   //libMesh::MeshBase::const_element_iterator it = mesh.active_elements_begin();
   //const libMesh::MeshBase::const_element_iterator end = mesh.active_elements_end();
 
@@ -1363,7 +1363,9 @@ SimulationInterface::plot_meshdata(void)
 
 
   //for (it = mesh.active_elements_begin(); it != end; ++it)
-  for (it = this->active_local_elements_begin(); it != end; ++it)
+  //for (it = this->active_local_elements_begin(); it != end; ++it)
+  end = (this->get_mesh()).active_local_subdomains_elements_end(this->get_region_ids());
+  for (it = (this->get_mesh()).active_local_subdomains_elements_begin(this->get_region_ids()); it != end; ++it)
   {
     const Elem* elem = *it;
 
