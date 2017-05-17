@@ -53,13 +53,11 @@ Module dd_generic
       regions = bulk
       charge = 0
       spin = 0
-      exciton = true
-      #exciton_carriers = (electron, hole)
       density_of_states gauss
       {
         level = 3.4
         sigma = 0.05
-      #  N0 = 1e18
+        N0 = 1e18
       }
     }
 
@@ -118,7 +116,7 @@ Module dd_generic
     {
       regions = bulk
       carriers = (electron, hole, exciton)
-      gamma = 1e-9
+      gamma = 1e-6
       plot_name = "gen"
     }
 

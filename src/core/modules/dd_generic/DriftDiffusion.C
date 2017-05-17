@@ -136,7 +136,7 @@ DriftDiffusion::DriftDiffusion(const ModelOptions& options)
     _carriers.push_back(name);
   }
 
-  /*
+/*
   // detect all excitons
   itc = physopts.submodels_begin("carrier");
 
@@ -191,6 +191,7 @@ DriftDiffusion::DriftDiffusion(const ModelOptions& options)
   }
   // end excitons
 
+*/
 
   // detect all recombination models in order to define specific plot variables
   auto itr (physopts.submodels_begin("recombination"));
@@ -218,6 +219,7 @@ DriftDiffusion::DriftDiffusion(const ModelOptions& options)
         }
 
         // if we have an exciton, we add its charge carriers to generation model plot variables
+        /*
         if (_excitons.count(carrier))
         {
           bool add;
@@ -229,10 +231,11 @@ DriftDiffusion::DriftDiffusion(const ModelOptions& options)
               _rec_models[plotname].insert(i);
           }
         }
+        */
       }
     }
   } //end rec models
-*/
+
 }
 
 

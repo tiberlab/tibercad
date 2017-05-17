@@ -77,8 +77,6 @@ CarrierProperties::CarrierProperties(const ModelOptions& options) :
 
   _is_dopant = get_option("dopant", _is_dopant);
 
-  if (_is_exciton && _is_dopant)
-    throw InitFailedException("Carrier '" + _particle_name + "' cannot be both an exciton and a dopant");
 }
 
 CarrierProperties::~CarrierProperties(void)
@@ -200,9 +198,6 @@ CarrierProperties::calculate(double temperature)
 double
 CarrierProperties::get_band_edge(void) const
 {
-  if (_is_exciton)
-    return(_dos_model->get_reference_energy()[0]);
-
   if (_charge <= 0)
     return(*min_element(_dos_model->get_reference_energy().begin(),
         _dos_model->get_reference_energy().end()));
@@ -214,9 +209,6 @@ CarrierProperties::get_band_edge(void) const
 double
 CarrierProperties::get_effective_mass(void) const
 {
-  if (_is_exciton)
-    return _dos_model->get_effective_mass()[0];
-
   size_t i = 0;
   if (_charge <= 0)
   {
@@ -241,7 +233,7 @@ CarrierProperties::get_density_and_derivative(double Ef, double Epot) const
   const DriftDiffusionProperties& ddp = get_driftdiffusionproperties();
 
   double kT = _temperature;
-  double sign = (_particle == 'h') ? 1 : -1;
+  double sign = (_charge > 0.0) ? 1 : -1;
   Epot *= _charge;
   Ef *= sign;
 
@@ -251,8 +243,8 @@ CarrierProperties::get_density_and_derivative(double Ef, double Epot) const
   if (_dos_model->has_quantum_density() && ddp.has_solution()) // && use_predictor())
   {
     double Ef_old = ddp.get_old_q_fermi_potential(_carrier_id);
-    Ef_old *= (_particle == 'h') ? 1.0 : -1.0;
-    double Epot_old = sign * ddp.get_old_phi();
+    Ef_old *= sign;
+    double Epot_old = _charge * ddp.get_old_phi();
 
     // get the old quantum density
     pair<double, double> dens_der_old(_dos_model->get_occupied_density_and_derivative(
