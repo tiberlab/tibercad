@@ -651,7 +651,6 @@ DriftDiffusionProperties::calculate_net_recombination_rates(void)
     (it->second)->get_net_rate_and_derivatives(R, dR);
 
     const vector<ID>& carriers = (it->second)->get_carrier_ids();
-    const vector<double>& weights = (it->second)->get_weights();
 
     for (ID i = 0; i < carriers.size(); ++i)
     {

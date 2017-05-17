@@ -3,7 +3,7 @@
 Device
 {
   meshfile = bulk.msh
-  material = Si
+  material = GaN
 
 
    Region bulk 
@@ -30,7 +30,7 @@ Module dd_generic
 
   name = driftdiffusion
   plot = (ElPotential, QFermi, Density, RefEnergy, Mobility,
-          IonizedDonors, Flux, NetRecombination)
+          IonizedDonors, Flux, NetRecombination, ContactCurrent)
 
   #Solver trustregion { max_step = 100 }
   Solver
@@ -46,57 +46,44 @@ Module dd_generic
       acceptor_reference_carrier = hole
     }
 
-    carrier eguest
+    background_conductivity = 0
+
+    carrier exciton
     {
       regions = bulk
-      charge = -1
-
+      charge = 0
+      spin = 0
+      exciton = true
+      #exciton_carriers = (electron, hole)
       density_of_states gauss
       {
-        level = 1.9
-        sigma = 0.15
-        N0 = 1e18
-      }
-    }
-
-    carrier
-    {
-      name = hguest
-      regions = bulk
-      charge = 1
-
-      density_of_states gauss
-      {
-        level = 1.2
-        sigma = 0.1
-        N0 = 1e18
+        level = 3.4
+        sigma = 0.05
+      #  N0 = 1e18
       }
     }
 
 
-
-    carrier
+    carrier electron
     {
-      name = electron
       #regions = (bulk, ndop)
 
-      density_of_states bulk
+      Ddensity_of_states gauss
       {
-        level = 2.1
+        level = 3.5
         sigma = 0.13
         N0 = 1e19
       }
     }
 
 
-    carrier
+    carrier hole
     {
-      name = hole
       #regions = (bulk, pdop)
 
-      density_of_states bulk
+      Ddensity_of_states bulk
       {
-        level = 1.4
+        level = 0.0
         sigma = 0.11
         N0 = 1e19
       }
@@ -110,36 +97,38 @@ Module dd_generic
 
     mobility constant
     {
-      carriers = (eguest, hguest)
+      carriers = (exciton)
       mu = 10
     }
+
 
     recombination direct 
     {
       carriers = (electron, hole)
-      C = 1e-10
+      C = 1e-15
     }
 
-    #recombination direct 
-    #{
-    #  regions = bulk
-    #  carriers = (electron, eguest)
-    #  C = 1e-10
-    #}
+    Rrecombination srh
+    {
+      carriers = (electron, hole)
+    }
 
-    #recombination direct 
-    #{
-    #  regions = bulk
-    #  carriers = (eguest, hole)
-    #  C = 1e-10
-    #}
 
-    #recombination direct 
-    #{
-    #  regions = bulk
-    #  carriers = (eguest, hguest)
-    #  C = 1e-11
-    #}
+    recombination exciton_generation
+    {
+      regions = bulk
+      carriers = (electron, hole, exciton)
+      gamma = 1e-9
+      plot_name = "gen"
+    }
+
+    recombination exciton_decay
+    {
+      regions = bulk
+      carriers = (exciton)
+      tau = 1e-9
+      plot_name = "decay"
+    }
 
   }   
 
@@ -148,14 +137,12 @@ Module dd_generic
   {
     type = ohmic
     voltage = $Vb
-    #isolated_carriers = (gueste, guesth)
   }
 
   Contact cathode
   {
     type = ohmic
     voltage = 0.0
-    #isolated_carriers = (gueste, guesth)
   }
 
 }  
@@ -167,8 +154,8 @@ Module sweep
   solve = driftdiffusion
   variable = $Vb
   start = 0.0
-  stop = 1
-  steps = 10
+  stop = 4
+  steps = 40
   plot_data = true
 }
 

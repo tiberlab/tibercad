@@ -15,7 +15,6 @@ RecombinationModelInterface::do_init(void)
 
   // to be sure
   _carrier_ids.resize(0);
-  _weights.resize(0);
 
   // we are paranoid and check for multiple names
   set<ID> used_ids;
@@ -37,9 +36,6 @@ RecombinationModelInterface::do_init(void)
           "': carrier names must be different");
 
     _carrier_ids.push_back(id);
-
-    double weight = (cp->get_carrier_type() == 'e') ? 1.0 : -1.0;
-    _weights.push_back(weight);
 
     used_ids.insert(id);
   }
@@ -64,7 +60,6 @@ void
 RecombinationModelInterface::reorder_carriers(const std::vector<ID>& new_order)
 {
   vector<string> old_order(_carriers);
-  vector<double> old_weights(_weights);
 
   assert(new_order.size() == _carriers.size());
 
@@ -75,7 +70,6 @@ RecombinationModelInterface::reorder_carriers(const std::vector<ID>& new_order)
       if (_carrier_ids[j] == new_order[i])
       {
         _carriers[i] = old_order[j];
-        _weights[i] = old_weights[j];
       }
     }
   }
@@ -87,7 +81,6 @@ void
 RecombinationModelInterface::reorder_ids(const std::vector<std::string>& new_order)
 {
   vector<ID> old_order(_carrier_ids);
-  vector<double> old_weights(_weights);
 
   assert(new_order.size() == _carrier_ids.size());
 
@@ -98,7 +91,6 @@ RecombinationModelInterface::reorder_ids(const std::vector<std::string>& new_ord
       if (_carriers[j] == new_order[i])
       {
         _carrier_ids[i] = old_order[j];
-        _weights[i] = old_weights[j];
       }
     }
   }
@@ -111,7 +103,8 @@ RecombinationModelInterface::get_net_rate_and_derivatives(
     std::vector<double>& R, std::vector<std::vector<double>>& dPotentials)
 {
   R.resize(this->get_driftdiffusionproperties().n_known_carriers(), 0.0);
-  dPotentials.resize(this->get_driftdiffusionproperties().n_known_carriers(), vector<double>(this->get_driftdiffusionproperties().n_known_carriers() + 1, 0.0) );
+  dPotentials.resize(this->get_driftdiffusionproperties().n_known_carriers(),
+      vector<double>(this->get_driftdiffusionproperties().n_known_carriers() + 1, 0.0) );
   calculate_rate_and_derivatives(R, dPotentials);
 }
 

@@ -36,32 +36,15 @@ class TBDLLOCAL ExcitonDecay : public RecombinationModelInterface
     //! \copydoc RecombinationModelInterface::do_init()
     virtual void do_init(void) override;
 
-    //! \copydoc RecombinationModelInterface::do_reinit()
-    virtual void do_reinit(void) override;
-
     //! \copydoc RecombinationModelInterface::calculate_rate_and_derivatives()
     virtual void calculate_rate_and_derivatives(std::vector<double>& R, std::vector<std::vector<double>>& dPotentials) override;
 
   private:
 
-    typedef std::map<std::pair<SimulationInterface*, SimulationInterface*>,
-        std::pair<unsigned int, double> > QRecMap;
 
-    //! Exciton dissociation time
-    std::vector<double>  _tau;
+    //! Exciton recombination time
+    double  _tau;
 
-    //! The quantum optics simulation, if available
-    SimulationInterface* _quantum_optics;
-
-    //! The solution ID for the optical recombination
-    ID _rec_id;
-
-    //! A static map to put quantum recombination in
-    /*!
-     * This map is used so as to not calculate the same quantity
-     * several times.
-     */
-    static QRecMap _qrec_vals;
 
 };
 
@@ -74,7 +57,7 @@ class TBDLLOCAL ExcitonDecay : public RecombinationModelInterface
 inline
 ExcitonDecay::ExcitonDecay(const ModelOptions& options)
   : RecombinationModelInterface(options),
-    _quantum_optics(NULL)
+    _tau(1e9)
 {
 }
 

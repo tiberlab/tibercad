@@ -136,6 +136,7 @@ DriftDiffusion::DriftDiffusion(const ModelOptions& options)
     _carriers.push_back(name);
   }
 
+  /*
   // detect all excitons
   itc = physopts.submodels_begin("carrier");
 
@@ -231,7 +232,7 @@ DriftDiffusion::DriftDiffusion(const ModelOptions& options)
       }
     }
   } //end rec models
-
+*/
 }
 
 
@@ -1761,6 +1762,7 @@ DriftDiffusion::do_init(void)
     }
 
 
+/*
     // check excitons regions
     itc = physopts.submodels_begin("carrier");
 
@@ -1793,7 +1795,7 @@ DriftDiffusion::do_init(void)
       }
     }
     // end excitons
-
+*/
 
 
   }
@@ -2157,19 +2159,6 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     q_var_num[i] = system->variable_number(_carriers[i]);
 
 
-  bool exclude_e = false;
-  bool exclude_h = false;
-  map<ID, set<string>>::const_iterator it(get_excluded_domains().find(subdomain));
-  if (it != get_excluded_domains().end())
-  {
-    if ((it->second).count("fermi_e"))
-      exclude_e = true;
-    if ((it->second).count("fermi_h"))
-      exclude_h = true;
-  }
-
-
-
   libMesh::FEType fe_type = system->variable_type(u_var);
   libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
 
@@ -2234,6 +2223,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
   {
     double u  = 0.0;
     vector<double> qf(n_vars, 0.0);
+    vector<double> pot_erg(n_vars, 0.0);
     double oldu  = 0.0;
     vector<double> oldqf(n_vars, 0.0);
     double T  = 0.0;
@@ -2273,6 +2263,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
       qf[v] *= phi0;
       oldqf[v] *= phi0;
       grad_qf_loc[v] *= phi0;
+      pot_erg[v] = -u * std::fabs(sc->get_carrier_properties(v)->get_charge());
     }
 
     el_pot = u;
@@ -2294,10 +2285,12 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     sc->calculate_densities();
     sc->calculate_mobilities();
 
+    // NOTE: from the definition of the (electro)chemical potential, uncharged
+    // carriers are consistent with negatively charged carriers in terms of flux
     for (auto& v : q_var)
     {
       double q = sc->get_carrier_properties(v)->get_charge();
-      double sign = (q < 0) ? -1 : 1;
+      double sign = (q > 0) ? 1 : -1;
       double sigma = sc->get_q_conductivity(v);
       RealGradient flux_loc = - sign * sigma * grad_qf_loc[v];
       flux[v] += flux_loc;
@@ -2339,7 +2332,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
         values[_density_base + v][n] = sc->get_q_density(v);
 
       if (values.count(_refenergy_base + v))
-        values[_refenergy_base + v][n] = sc->get_carrier_band_edge(v) - u;
+        values[_refenergy_base + v][n] = sc->get_carrier_band_edge(v) + pot_erg[v];
 
       if (values.count(_mobility_base + v))
         values[_mobility_base + v][n] = sc->get_q_mobility(v);

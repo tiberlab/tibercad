@@ -1,0 +1,195 @@
+
+# Description of  the  device physical regions
+Device
+{
+  meshfile = bulk.msh
+  material = GaAs
+
+
+   Region bulk 
+   {
+     Doping { Nd = 1e15 type = donor}
+   }
+
+   Region ndop 
+   {
+     Doping { Nd = 1e19 type = donor }
+   }
+
+   Region pdop 
+   {
+     Doping { Nd = 1e19 type = acceptor }
+   }
+
+
+}
+
+
+Module dd_generic
+{ 
+
+  name = driftdiffusion
+  plot = (ElPotential, QFermi, Density, RefEnergy, Mobility,
+          IonizedDonors, Flux, NetRecombination, ContactCurrent)
+
+  #Solver trustregion { max_step = 100 }
+  Solver
+  {
+    #step_tolerance = 0.01
+  }
+
+  Physics
+  {
+    doping
+    {
+      donor_reference_carrier = electron
+      acceptor_reference_carrier = hole
+    }
+
+    carrier eguest
+    {
+      regions = bulk
+      charge = -1
+
+      density_of_states gauss
+      {
+        level = 0.5
+        sigma = 0.15
+        N0 = 1e18
+      }
+    }
+
+    carrier hguest
+    {
+      regions = bulk
+      charge = 1
+
+      density_of_states gauss
+      {
+        level = -0.4
+        sigma = 0.1
+        N0 = 1e18
+      }
+    }
+
+    carrier electron
+    {
+    }
+
+
+    carrier hole
+    {
+    }
+
+    mobility constant
+    {
+      carriers = (electron, hole)
+      #mu = 1000
+    }
+
+    mobility constant
+    {
+      carriers = (eguest, hguest)
+      mu = 1
+    }
+
+    recombination direct 
+    {
+      plot_name = "hh"
+      carriers = (electron, hole)
+    }
+
+    recombination direct 
+    {
+      regions = bulk
+      plot_name = "e-capture"
+      carriers = (electron, eguest)
+      C = 1e-10
+    }
+   
+    recombination direct 
+    {
+      regions = bulk
+      plot_name = "h-capture"
+      carriers = (hole, hguest)
+      C = 1e-11
+    }
+
+    recombination direct 
+    {
+      regions = bulk
+      plot_name = "gg"
+      carriers = (eguest, hguest)
+      C = 1e-8
+    }
+   
+
+
+    #recombination direct 
+    #{
+    #  regions = bulk
+    #  carriers = (eguest, hole)
+    #  C = 1e-10
+    #}
+
+    #recombination direct 
+    #{
+    #  regions = bulk
+    #  carriers = (eguest, hguest)
+    #  C = 1e-11
+    #}
+
+  }   
+
+
+  Contact anode
+  {
+    type = ohmic
+    voltage = $Vb
+    #isolated_carriers = (gueste, guesth)
+  }
+
+  Contact cathode
+  {
+    type = ohmic
+    voltage = 0.0
+    #isolated_carriers = (gueste, guesth)
+  }
+
+}  
+
+
+
+Module sweep
+{
+  solve = driftdiffusion
+  variable = $Vb
+  start = 0.0
+  stop = 1
+  steps = 10
+  plot_data = true
+}
+
+
+
+Simulation
+{
+  temperature = 300
+  solve = (driftdiffusion, sweep)
+  resultpath = output
+  output_format = grace
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

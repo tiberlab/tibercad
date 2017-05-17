@@ -57,6 +57,8 @@ class CarrierProperties : public DriftDiffusionModelInterface
     /*!
      * \param Ef the quasi Fermi level
      * \param Epot the electrostatic potential
+     *
+     * Derivative is given w.r.t to the quasi Fermi level
      */
     std::pair<double, double> get_density_and_derivative(double Ef, double Epot) const;
 
@@ -85,8 +87,8 @@ class CarrierProperties : public DriftDiffusionModelInterface
     //! Tell if the carrier is a dopant
     const bool is_dopant(void) const;
 
-    //! Return the charge carriers names associated to an exciton
-    std::vector<std::string> get_exciton_carriers(void) const;
+    // ! Return the charge carriers names associated to an exciton
+    //std::vector<std::string> get_exciton_carriers(void) const;
 
 
     //! Do we have quantum density?
@@ -182,8 +184,8 @@ class CarrierProperties : public DriftDiffusionModelInterface
     //! Tell if the carrier is a dopant
     bool _is_dopant;
 
-    //! Charge carrier forming the exciton
-    std::vector<std::string> _exciton_carriers;
+    // ! Charge carrier forming the exciton
+    //std::vector<std::string> _exciton_carriers;
 
     //! The temperature in eV
     double _temperature;
@@ -270,12 +272,14 @@ CarrierProperties::is_exciton(void) const
   return(_is_exciton);
 }
 
+/*
 inline
 std::vector<std::string>
 CarrierProperties::get_exciton_carriers(void) const
 {
   return(_exciton_carriers);
 }
+*/
 
 inline
 const bool

@@ -21,12 +21,12 @@ class Boundary;
  * guarantees the order (electron, hole) whenever two particles with these names are
  * provided.
  *
- * Recombination models should be implemented as
+ * Recombination models should be implemented as (e.g. for two carriers)
  * \[ R_{12} = g(n_1, n_2)*\left( 1 - e^{(E_{F,2}-E_{F,1})/k_BT} \right) \]
  * where 1,2 are the two carriers. The net recombination for carrier 1 is then
  * \$R1 = -sign(q_1)R_{12}\$ and for carrier 2 \$R1 = sign(q_2)R_{12}\$.
- * The sign factor is provided as a weight, so that stoichiometric ratios can be
- * implemented. This handles both electron-hole recombination and transfers between
+ *
+ * This handles both electron-hole recombination and transfers between
  * bands of the same type. The direction of transfer is given by the sign of the
  * Fermi level difference.
  *
@@ -41,10 +41,8 @@ class TBDLEXPORT RecombinationModelInterface : public DriftDiffusionModelInterfa
 
 
     //! Get the recombination rate and derivatives
-    void get_net_rate_and_derivatives(std::vector<double>& R, std::vector<std::vector<double>>& dPotentials);
-
-    //! Get the weights for the different carriers
-    const std::vector<double>& get_weights(void) const;
+    void get_net_rate_and_derivatives(std::vector<double>& R,
+        std::vector<std::vector<double>>& dPotentials);
 
 
     //! Creates a new named recombination model
@@ -89,16 +87,14 @@ class TBDLEXPORT RecombinationModelInterface : public DriftDiffusionModelInterfa
     virtual void do_init(void) override;
 
     //! Calculate the recombination rate and its derivatives
-    virtual void calculate_rate_and_derivatives(std::vector<double>& R, std::vector<std::vector<double>>& dPotentials);
+    virtual void calculate_rate_and_derivatives(std::vector<double>& R,
+        std::vector<std::vector<double>>& dPotentials);
 
     //! Reorder carriers according to a module specific order
     void reorder_carriers(const std::vector<ID>& new_order);
 
     //! Reorder ids according to a module specific order
     void reorder_ids(const std::vector<std::string>& new_order);
-
-    //! Set the weights, if necessary
-    void set_weights(std::vector<double>& weights);
 
 
   private:
@@ -111,9 +107,6 @@ class TBDLEXPORT RecombinationModelInterface : public DriftDiffusionModelInterfa
 
     //! The global IDs for the carriers
     std::vector<ID> _carrier_ids;
-
-    //! The weights for the different carrier
-    std::vector<double> _weights;
 
     //! The plot name used to plot separately each recombination model
     /*! If two recombination models have the same plot name
@@ -190,18 +183,6 @@ RecombinationModelInterface::get_carrier_ids(void) const
   return(_carrier_ids);
 }
 
-inline
-const std::vector<double>&
-RecombinationModelInterface::get_weights(void) const
-{
-  return(_weights);
-}
 
-inline
-void
-RecombinationModelInterface::set_weights(std::vector<double>& weights)
-{
-  _weights = weights;
-}
 
 #endif // _RECOMBINATIONMODELINTERFACE_H_

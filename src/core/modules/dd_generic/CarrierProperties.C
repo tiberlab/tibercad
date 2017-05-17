@@ -53,20 +53,27 @@ CarrierProperties::CarrierProperties(const ModelOptions& options) :
   {
     _charge = 1;
   }
+  else if (_particle_name == string("ex") ||
+      _particle_name == string("x") ||
+      _particle_name == string("exciton"))
+  {
+    _charge = 0;
+    _spin = 0;
+  }
 
   _charge = get_option("charge", _charge);
   _spin = get_option("spin", _spin);
   _is_exciton = get_option("exciton", _is_exciton);
 
-  _exciton_carriers.resize(0);
+  //_exciton_carriers.resize(0);
   if (_is_exciton)
   {
-    get_option("exciton_carriers", _exciton_carriers);
-    _exciton_carriers.resize(2);
+    //get_option("exciton_carriers", _exciton_carriers);
+    //_exciton_carriers.resize(2);
     _spin = get_option("spin", 0.0);
   }
 
-  _particle = (_charge < 0.0) ? 'e' : 'h';
+  _particle = (_charge <= 0.0) ? 'e' : 'h';
 
   _is_dopant = get_option("dopant", _is_dopant);
 
@@ -89,6 +96,7 @@ CarrierProperties::do_init(void)
 void
 CarrierProperties::do_reinit(void)
 {
+  /*
   if (_is_exciton)
   {
     double DOS = 0.0;
@@ -103,6 +111,7 @@ CarrierProperties::do_reinit(void)
     DOS = pow(DOS, 3.0/2.0);
     _dos_model->set_effective_DOS(DOS);
   }
+  */
 }
 
 void
@@ -128,6 +137,7 @@ CarrierProperties::prepare_submodels(void)
   create_submodel(_dos_model, "density_of_states", dosopts);
 
   //for an exciton reference_energy() will store the band edges of the corresponding e and h
+  /*
   if (_is_exciton)
   {
     _dos_model->reference_energy().resize(0);
@@ -137,6 +147,7 @@ CarrierProperties::prepare_submodels(void)
       _dos_model->reference_energy().push_back(  ( get_driftdiffusionproperties().get_carrier_properties(
                                                      _exciton_carriers[i]) )->get_band_edge()  );
   }
+  */
 }
 
 
@@ -231,8 +242,9 @@ CarrierProperties::get_density_and_derivative(double Ef, double Epot) const
 
   double kT = _temperature;
   double sign = (_particle == 'h') ? 1 : -1;
-  Epot *= sign;
+  Epot *= _charge;
   Ef *= sign;
+
 
   pair<double, double> dens_der;
 

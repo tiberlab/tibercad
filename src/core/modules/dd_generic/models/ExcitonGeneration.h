@@ -8,10 +8,13 @@
 
 class SimulationInterface;
 
-//! Implementation of direct recombination
+//! Implementation of exciton generation/dissociation from free carrier gas
 /*!
- * This class implements direct recombination processes that can be
- * modeled by \f[R_{direct}=C(np-n_i^2)\f]
+ * This class implements generation and dissociation of excitons
+ * modeled by \f[R=\gamma np(1 - exp(\frac{E_{Fx} - E_{Fn} + E_{Fp}}{k_BT}))\f]
+ *
+ * In the input file, the carriers have to be provided in the order
+ * \c electron, \c hole, \c exciton
  */
 class TBDLLOCAL ExcitonGeneration : public RecombinationModelInterface
 {
@@ -36,35 +39,14 @@ class TBDLLOCAL ExcitonGeneration : public RecombinationModelInterface
     //! \copydoc RecombinationModelInterface::do_init()
     virtual void do_init(void) override;
 
-    //! \copydoc RecombinationModelInterface::do_reinit()
-    virtual void do_reinit(void) override;
-
     //! \copydoc RecombinationModelInterface::calculate_rate_and_derivatives()
-    virtual void calculate_rate_and_derivatives(std::vector<double>& R, std::vector<std::vector<double>>& dPotentials) override;
+    virtual void calculate_rate_and_derivatives(std::vector<double>& R,
+        std::vector<std::vector<double>>& dPotentials) override;
 
   private:
 
-    typedef std::map<std::pair<SimulationInterface*, SimulationInterface*>,
-        std::pair<unsigned int, double> > QRecMap;
-
     //! Recombination rate parameters
-    std::vector<double>  _C;
-
-    //! A map associating charge carriers to each exciton
-    std::map<unsigned int, std::vector<unsigned int>> _exciton_carriers;
-
-    //! The quantum optics simulation, if available
-    SimulationInterface* _quantum_optics;
-
-    //! The solution ID for the optical recombination
-    ID _rec_id;
-
-    //! A static map to put quantum recombination in
-    /*!
-     * This map is used so as to not calculate the same quantity
-     * several times.
-     */
-    static QRecMap _qrec_vals;
+    double  _gamma;
 
 };
 
@@ -77,7 +59,7 @@ class TBDLLOCAL ExcitonGeneration : public RecombinationModelInterface
 inline
 ExcitonGeneration::ExcitonGeneration(const ModelOptions& options)
   : RecombinationModelInterface(options),
-    _quantum_optics(NULL)
+    _gamma(0.0)
 {
 }
 
