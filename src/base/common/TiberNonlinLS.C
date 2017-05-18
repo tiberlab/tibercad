@@ -231,7 +231,7 @@ TiberNonlinLS::do_solve(void)
         alpha *= 0.5;
 
       du.scale(alpha);
-      norm_du *= alpha;
+      //norm_du *= alpha;
     }
 
 
