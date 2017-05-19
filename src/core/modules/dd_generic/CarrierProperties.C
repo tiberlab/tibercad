@@ -68,8 +68,6 @@ CarrierProperties::CarrierProperties(const ModelOptions& options) :
   //_exciton_carriers.resize(0);
   if (_is_exciton)
   {
-    //get_option("exciton_carriers", _exciton_carriers);
-    //_exciton_carriers.resize(2);
     _spin = get_option("spin", 0.0);
   }
 
@@ -126,11 +124,12 @@ CarrierProperties::prepare_submodels(void)
            it(get_options().submodels_begin("density_of_states"));
   ModelOptions& dosopts = it->second;
   dosopts["particle"] = _particle;
+  dosopts["charge"] = _charge;
   dosopts["spin"] = _spin;
+
   //if (!dosopts.find_option("level"))
   //  dosopts["level"] = get_option("band_edge", "0");
 
-  dosopts.set_option("spin", _spin);
 
   create_submodel(_dos_model, "density_of_states", dosopts);
 

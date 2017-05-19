@@ -37,40 +37,10 @@ ExcitonGeneration::do_init(void)
   //get_option("carriers", carriers);
   //reorder_ids(carriers);
   _gamma = get_option("gamma", _gamma);
+  _gamma = get_option("C", _gamma);
 
 
   _stat_fac = get_option("stat_fac", _stat_fac);
-
-
-  if (_C.size() == 1)
-    _C.resize(carriers.size(), _C[0]);
-
-  if ( (_C.size() > 1) && (_C.size() != carriers.size()) )
-    throw InitFailedException("Number of excitons not consistent with number of C's");
-
-  const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
-  for (auto name : get_carrier_names())
-  {
-    if (!dd.get_carrier_properties(name)->is_exciton())
-      throw InitFailedException("Recombination '" + get_default_name() + ": carrier '" + name + "' is not an exciton");
-
-    double spin = dd.get_carrier_properties(name)->get_spin();
-    if ((spin != 0.0) && (spin != 1.0))
-      throw InitFailedException("Recombination '" + get_default_name() + ": '" + name + "' spin can be either 0 or 1");
-  }
-  */
-
-  /*
-  for (auto id : get_carrier_ids())
-  {
-    _exciton_carriers.insert( make_pair(id, vector<unsigned int>()) );
-    vector<string> ex_carriers = dd.get_carrier_properties(id)->get_exciton_carriers();
-    for (auto exc : ex_carriers)
-      _exciton_carriers[id].push_back( dd.get_carrier_id(exc) );
-  }
-  */
-
-
 
 }
 
@@ -119,16 +89,16 @@ ExcitonGeneration::calculate_rate_and_derivatives(std::vector<double>& R, std::v
     double exponential = exp(beta*(Efx - Efn + Efp));
     double stat = 1.0 - exponential;
 
-    double rate = _C[i] * stat * n * p * (Nx + x) / Nx;
+    double rate = _gamma * stat * n * p * ((Nx + x) / Nx);
 
     R[idx] = -rate;
     R[idn] = rate;
     R[idp] = rate;
 
-    double derf = _C[i] * stat * (Nx + x) * (n * dp + p * dn) / Nx;
-    double derx = - _C[i] * n * p * (dx * stat - beta * (Nx + x) * exponential) / Nx;
-    double dern = - _C[i] * p * (Nx + x) * (dn * stat + beta * n * exponential) / Nx;
-    double derp = - _C[i] * n * (Nx + x) * (dp * stat - beta * n * exponential) / Nx;
+    double derf = _gamma * stat * ((Nx + x) / Nx) * (n * dp + p * dn);
+    double derx = _gamma * n * p * (beta * exponential * ((Nx + x) / Nx) + (dx / Nx) * stat);
+    double dern = -_gamma * p * (dn * stat + beta * n * exponential) * ((Nx + x) / Nx);
+    double derp = -_gamma * n * (dp * stat - beta * p * exponential) * ((Nx + x) / Nx);
 
     dPotentials[idx][idx] = - derx;
     dPotentials[idx][idn] = - dern;

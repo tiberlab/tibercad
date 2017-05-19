@@ -66,12 +66,12 @@ Module dd_generic
     {
       #regions = (bulk, ndop)
 
-      Ddensity_of_states gauss
-      {
-        level = 3.5
-        sigma = 0.13
-        N0 = 1e19
-      }
+      #density_of_states gauss
+      #{
+      #  level = 3.5
+      #  sigma = 0.13
+      #  N0 = 1e19
+      #}
     }
 
 
@@ -79,12 +79,12 @@ Module dd_generic
     {
       #regions = (bulk, pdop)
 
-      Ddensity_of_states bulk
-      {
-        level = 0.0
-        sigma = 0.11
-        N0 = 1e19
-      }
+      #density_of_states bulk
+      #{
+      #  level = 0.0
+      #  sigma = 0.11
+      #  N0 = 1e19
+      #}
     }
 
     mobility constant

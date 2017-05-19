@@ -465,7 +465,7 @@ DDBulkModel::calculate_equilibrium_properties(void)
   double xmax = Ec + 0.5;
 
   
-  cerr << "***" << get_owner()->get_name() << endl;;
+  //cerr << "***" << get_owner()->get_name() << endl;;
   for (unsigned int i = 0; i < 10000; ++i)
   {
     set_potentials(x);
@@ -477,7 +477,7 @@ DDBulkModel::calculate_equilibrium_properties(void)
     for (auto&& c : this->get_carrier_properties())
       df -= get_charge_density_derivative(c.first);
 
-    cout << "x = " << x << " f = " << f << " df = " << df << endl;
+    //cout << "x = " << x << " f = " << f << " df = " << df << endl;
 
     if (f > 0) xmin = x;
     else if (f < 0) xmax = x;

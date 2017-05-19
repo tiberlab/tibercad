@@ -599,7 +599,7 @@ DriftDiffusionProperties::calculate_ionized_dopants(void)
 
     _pd->ionized_donor_density = Nd;
     _pd->ionized_donor_density_derivative = dNd;
-    //_pd->charge_density_derivative[_donor_reference_carrier] -= dNd;
+    _pd->charge_density_derivative[_donor_reference_carrier] -= dNd;
   }
 
   it = get_material()->acceptors_begin();
@@ -621,7 +621,7 @@ DriftDiffusionProperties::calculate_ionized_dopants(void)
 
     _pd->ionized_acceptor_density = Na;
     _pd->ionized_acceptor_density_derivative = dNa;
-    //_pd->charge_density_derivative[_acceptor_reference_carrier] = dNa;
+    _pd->charge_density_derivative[_acceptor_reference_carrier] += dNa;
   }
 
 }

@@ -165,8 +165,8 @@ Module sweep
   solve = driftdiffusion
   variable = $Vb
   start = 0.0
-  stop = 1
-  steps = 10
+  stop = 2
+  steps = 20
   plot_data = true
 }
 
