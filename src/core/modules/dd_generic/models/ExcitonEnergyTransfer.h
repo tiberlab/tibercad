@@ -1,7 +1,7 @@
-// $Id: ExcitonISC.h 3414 2012-09-10 20:40:28Z maufder $
 
-#ifndef _EXCITONISC_H_
-#define _EXCITONISC_H_
+
+#ifndef _EXCITONENERGYTRANSFER_H_
+#define _EXCITONENERGYTRANSFER_H_
 
 #include "RecombinationModelInterface.h"
 #include "TypeDefs.h"
@@ -13,22 +13,22 @@ class SimulationInterface;
  * This class implements direct recombination processes that can be
  * modeled by \f[R_{direct}=C(np-n_i^2)\f]
  */
-class TBDLLOCAL ExcitonISC : public RecombinationModelInterface
+class TBDLLOCAL ExcitonEnergyTransfer : public RecombinationModelInterface
 {
 
   public:
 
     //! Destructor
-    virtual ~ExcitonISC(void) {};
+    virtual ~ExcitonEnergyTransfer(void) {};
 
     //! Create a ConstantMobility object
-    static ExcitonISC* create(const ModelOptions& options);
+    static ExcitonEnergyTransfer* create(const ModelOptions& options);
 
 
   protected:
 
     //! Constructor
-    ExcitonISC(const ModelOptions& options);
+    ExcitonEnergyTransfer(const ModelOptions& options);
 
     //! \copydoc RecombinationModelInterface::read_database()
     virtual void read_database(void) override;
@@ -47,8 +47,36 @@ class TBDLLOCAL ExcitonISC : public RecombinationModelInterface
     typedef std::map<std::pair<SimulationInterface*, SimulationInterface*>,
         std::pair<unsigned int, double> > QRecMap;
 
-    //! Recombination rate parameter
-    double  _C;
+    //! Donor material permittivity
+    double _er;
+
+    //! Donor exciton effective mass
+    double _m;
+
+    //! Forster radius
+    double _Rf;
+
+    //! Dexter radius
+    double _Rd;
+
+    //! Average donor-acceptor distance
+    double _R_da;
+
+    //! Total donor exciton lifetime
+    double _tau;
+
+    //! Donor exciton radiative lifetime
+    double _tau_rad;
+
+    //! Forster rate
+    double _Kf;
+
+    //! Dexter rate
+    double _Kd;
+
+    // donor and acceptor ids
+    ID _id_d;
+    ID _id_a;
 
     //! The quantum optics simulation, if available
     SimulationInterface* _quantum_optics;
@@ -72,18 +100,25 @@ class TBDLLOCAL ExcitonISC : public RecombinationModelInterface
 // 
 
 inline
-ExcitonISC::ExcitonISC(const ModelOptions& options)
+ExcitonEnergyTransfer::ExcitonEnergyTransfer(const ModelOptions& options)
   : RecombinationModelInterface(options),
+    _Rf(3e-7),
+    _Rd(1e-7),
+    _R_da(1.5e-7),
+    _er(1.0),
+    _m(2.0),
+    _tau(1e-9),
+    _tau_rad(1e-9),
     _quantum_optics(NULL)
 {
 }
 
 
 inline
-ExcitonISC*
-ExcitonISC::create(const ModelOptions& options)
+ExcitonEnergyTransfer*
+ExcitonEnergyTransfer::create(const ModelOptions& options)
 {
-  return new ExcitonISC(options);
+  return new ExcitonEnergyTransfer(options);
 }
 
 
@@ -91,4 +126,4 @@ ExcitonISC::create(const ModelOptions& options)
 
 
 
-#endif // _EXCITONISC_H__
+#endif // _EXCITONENERGYTRANSFER_H__

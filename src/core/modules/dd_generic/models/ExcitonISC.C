@@ -12,7 +12,7 @@
 
 #include "TiberModule.h"
 
-
+ 
 using namespace std;
 
 ExcitonISC::QRecMap
@@ -102,9 +102,9 @@ ExcitonISC::calculate_rate_and_derivatives(std::vector<double>& R, std::vector<s
   double exponential = exp( beta*(f1-f2) );
   double stat = 1.0 - exponential;
 
-  double rate = _C * stat * x1 * (N2 + x2);
-  double der1 = - _C * (N2 + x2) * (dx1 * stat + beta * x1 * exponential);
-  double der2 = - _C * x1 * (dx2 * stat + beta * (N2 + x2) * exponential);
+  double rate = _C * stat * x1 * (N2 + x2) / N2;
+  double der1 = - _C * (N2 + x2) * (dx1 * stat + beta * x1 * exponential) / N2;
+  double der2 = - _C * x1 * (dx2 * stat + beta * (N2 + x2) * exponential) / N2;
 
   R[id1] = rate;
   R[id2] = -rate;

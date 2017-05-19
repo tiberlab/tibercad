@@ -48,6 +48,24 @@ class TBDLLOCAL ExcitonGeneration : public RecombinationModelInterface
     //! Recombination rate parameters
     double  _gamma;
 
+    bool _stat_fac;
+
+    //! A map associating charge carriers to each exciton
+    std::map<unsigned int, std::vector<unsigned int>> _exciton_carriers;
+
+    //! The quantum optics simulation, if available
+    SimulationInterface* _quantum_optics;
+
+    //! The solution ID for the optical recombination
+    ID _rec_id;
+
+    //! A static map to put quantum recombination in
+    /*!
+     * This map is used so as to not calculate the same quantity
+     * several times.
+     */
+    static QRecMap _qrec_vals;
+
 };
 
 
@@ -59,7 +77,8 @@ class TBDLLOCAL ExcitonGeneration : public RecombinationModelInterface
 inline
 ExcitonGeneration::ExcitonGeneration(const ModelOptions& options)
   : RecombinationModelInterface(options),
-    _gamma(0.0)
+    _stat_fac(true),
+    _quantum_optics(NULL)
 {
 }
 

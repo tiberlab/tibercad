@@ -39,7 +39,15 @@ ExcitonGeneration::do_init(void)
   _gamma = get_option("gamma", _gamma);
 
 
-  /*
+  _stat_fac = get_option("stat_fac", _stat_fac);
+
+
+  if (_C.size() == 1)
+    _C.resize(carriers.size(), _C[0]);
+
+  if ( (_C.size() > 1) && (_C.size() != carriers.size()) )
+    throw InitFailedException("Number of excitons not consistent with number of C's");
+
   const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
   for (auto name : get_carrier_names())
   {
@@ -94,6 +102,9 @@ ExcitonGeneration::calculate_rate_and_derivatives(std::vector<double>& R, std::v
     double spin = dd.get_carrier_properties(idx)->get_spin();
     double fac = (spin == 0.0) ? 0.25 : 0.75;
 
+    if (!_stat_fac)
+      fac = 1.0;
+
     double x = dd.get_q_density(idx);
     double n = dd.get_q_density(idn);
     double p = dd.get_q_density(idp);
@@ -108,16 +119,16 @@ ExcitonGeneration::calculate_rate_and_derivatives(std::vector<double>& R, std::v
     double exponential = exp(beta*(Efx - Efn + Efp));
     double stat = 1.0 - exponential;
 
-    double rate = _gamma * stat * n * p; // add *(1 + f_x)
+    double rate = _C[i] * stat * n * p * (Nx + x) / Nx;
 
     R[idx] = -rate;
     R[idn] = rate;
     R[idp] = rate;
 
-    double derf = _gamma * stat * (n * dp + p * dn);
-    double derx = _gamma * n * p * beta * exponential;
-    double dern = -_gamma * p * (dn * stat + beta * n * exponential);
-    double derp = -_gamma * n * (dp * stat - beta * p * exponential);
+    double derf = _C[i] * stat * (Nx + x) * (n * dp + p * dn) / Nx;
+    double derx = - _C[i] * n * p * (dx * stat - beta * (Nx + x) * exponential) / Nx;
+    double dern = - _C[i] * p * (Nx + x) * (dn * stat + beta * n * exponential) / Nx;
+    double derp = - _C[i] * n * (Nx + x) * (dp * stat - beta * n * exponential) / Nx;
 
     dPotentials[idx][idx] = - derx;
     dPotentials[idx][idn] = - dern;

@@ -1,7 +1,5 @@
-// $Id: ExcitonISC.h 3414 2012-09-10 20:40:28Z maufder $
-
-#ifndef _EXCITONISC_H_
-#define _EXCITONISC_H_
+#ifndef _EXCITONTTAINTERPOLATED_H_
+#define _EXCITONTTAINTERPOLATED_H_
 
 #include "RecombinationModelInterface.h"
 #include "TypeDefs.h"
@@ -13,22 +11,22 @@ class SimulationInterface;
  * This class implements direct recombination processes that can be
  * modeled by \f[R_{direct}=C(np-n_i^2)\f]
  */
-class TBDLLOCAL ExcitonISC : public RecombinationModelInterface
+class TBDLLOCAL ExcitonTTAInterpolated : public RecombinationModelInterface
 {
 
   public:
 
     //! Destructor
-    virtual ~ExcitonISC(void) {};
+    virtual ~ExcitonTTAInterpolated(void) {};
 
     //! Create a ConstantMobility object
-    static ExcitonISC* create(const ModelOptions& options);
+    static ExcitonTTAInterpolated* create(const ModelOptions& options);
 
-
+    
   protected:
 
     //! Constructor
-    ExcitonISC(const ModelOptions& options);
+    ExcitonTTAInterpolated(const ModelOptions& options);
 
     //! \copydoc RecombinationModelInterface::read_database()
     virtual void read_database(void) override;
@@ -47,8 +45,21 @@ class TBDLLOCAL ExcitonISC : public RecombinationModelInterface
     typedef std::map<std::pair<SimulationInterface*, SimulationInterface*>,
         std::pair<unsigned int, double> > QRecMap;
 
-    //! Recombination rate parameter
-    double  _C;
+    //! The interpolation simulation to use
+    SimulationInterface* _interpolation_sim;
+
+    //! Model name
+    std::string _model_name;
+
+    //Variables
+    std::string _temperature_var;
+    std::string _density_var;
+
+    ID _model_id;
+    ID _temperature_id;
+    ID _density_id;
+
+
 
     //! The quantum optics simulation, if available
     SimulationInterface* _quantum_optics;
@@ -72,7 +83,7 @@ class TBDLLOCAL ExcitonISC : public RecombinationModelInterface
 // 
 
 inline
-ExcitonISC::ExcitonISC(const ModelOptions& options)
+ExcitonTTAInterpolated::ExcitonTTAInterpolated(const ModelOptions& options)
   : RecombinationModelInterface(options),
     _quantum_optics(NULL)
 {
@@ -80,10 +91,10 @@ ExcitonISC::ExcitonISC(const ModelOptions& options)
 
 
 inline
-ExcitonISC*
-ExcitonISC::create(const ModelOptions& options)
+ExcitonTTAInterpolated*
+ExcitonTTAInterpolated::create(const ModelOptions& options)
 {
-  return new ExcitonISC(options);
+  return new ExcitonTTAInterpolated(options);
 }
 
 
@@ -91,4 +102,4 @@ ExcitonISC::create(const ModelOptions& options)
 
 
 
-#endif // _EXCITONISC_H__
+#endif // _EXCITONTTAINTERPOLATED_H__

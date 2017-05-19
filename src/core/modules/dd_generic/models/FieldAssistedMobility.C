@@ -84,6 +84,18 @@ FieldAssistedMobility::get_mobility_derivatives(std::vector<double>& dm)
   dm[0] = dm[1] = dm[2] = 0.0;
 }
 
+void
+FieldAssistedMobility::get_derivative_grad_potential(libMesh::RealGradient& dm)
+{
+  dm.zero();
+  const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
+
+  const libMesh::RealGradient& E = dd.get_electric_field();
+  double mu  = dd.get_q_mobility(get_carrier());
+
+  double dmu = (E.size() > 0) ? mu / (2.0 * E.size() * sqrt(E.size() * _E0)) : 0.0;
+  dm = -E * dmu;
+}
 
 void
 FieldAssistedMobility::get_derivative_grad_fermi(libMesh::RealGradient& dm)
