@@ -14,7 +14,7 @@ LIBMESHDIR=${BUILDDIR}/libmesh-1.0.0-${ARCH}-linux
 
 export CXX=mpicxx-3.1.1
 export CC=mpicc-3.1.1
-export FC="mpif90-3.1.1 -fc=ifort-11.1"
+export FC=mpifort-3.1.1
 export F77=${FC}
 #export CXX=/usr/pack/tibercad_dev-2.2-ma/${ARCH}-linux/bin/mpicxx
 #export CC=/usr/pack/tibercad_dev-2.2-ma/${ARCH}-linux/bin/mpicc
