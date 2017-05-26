@@ -690,10 +690,12 @@ LATEX_PATH
 GENERATE_LATEX
 GMSH
 SVN
+MKL_DIR
 MKL_LIBS
 MKL_INCLUDEDIR
 HAVE_MKL
 ENABLE_PARDISO
+CUDA_DIR
 CUDA_LIBS
 CUDA_INCLUDEDIR
 HAVE_CUDA
@@ -4305,6 +4307,7 @@ fi
   HAVE_MKL="${tc_cv_mkl_dir:-no}"
   if test "$HAVE_MKL" != no
   then
+    MKL_DIR=$tc_cv_mkl_dir
     MKL_INCLUDEDIR="$tc_cv_mkl_dir/include"
     HAVE_MKL="yes"
     case $host in
@@ -4312,6 +4315,7 @@ fi
       i?86-*-*) MKL_LIBS="-L$tc_cv_mkl_dir/lib/32 -Wl,-rpath,$tc_cv_mkl_dir/lib/32 -lmkl_intel -lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread" ;;
       *) tc_cv_mkl_dir="no"; HAVE_MKL="no"; MKL_LIBDIR= ; MKL_INCLUDEDIR= ;;
     esac
+
 
 
 
@@ -4356,6 +4360,7 @@ fi
   HAVE_CUDA="${tc_cv_cuda_dir:-no}"
   if test "$HAVE_CUDA" != no
   then
+    CUDA_DIR=$tc_cv_cuda_dir
     CUDA_INCLUDEDIR="$tc_cv_cuda_dir/include"
     HAVE_CUDA="yes"
     case $host in
@@ -4363,6 +4368,7 @@ fi
       i?86-*-*) CUDA_LIBS="-L$tc_cv_cuda_dir/lib32 -Wl,-rpath,$tc_cv_cuda_dir/lib32 -lcublas -lcusparse -lcurand -lcudart -lrt" ;;
       *) tc_cv_cuda_dir="no"; HAVE_CUDA="no"; CUDA_LIBDIR= ; CUDA_INCLUDEDIR= ;;
     esac
+
 
 
 
@@ -8060,7 +8066,7 @@ fi
 
 ac_config_files="$ac_config_files stamp-h"
 
-ac_config_files="$ac_config_files Make.common Make.defs doc/Doxyfile Makefile doc/Makefile src/tibercad/Makefile src/utils/SLEPC/Makefile src/core/modules/etb/libuptight/Make.defs contrib/crypto++/make.defs installer/Makefile installer/windows/tibercad.bim installer/linux/deb/control installer/linux/tar/install share/coremodules.conf share/Doxyfile_SDK"
+ac_config_files="$ac_config_files Make.common Make.defs doc/Doxyfile Makefile doc/Makefile src/tibercad/Makefile src/utils/SLEPC/Makefile src/core/modules/etb/libuptight/Makefile contrib/crypto++/make.defs installer/Makefile installer/windows/tibercad.bim installer/linux/deb/control installer/linux/tar/install share/coremodules.conf share/Doxyfile_SDK"
 
 ac_config_files="$ac_config_files installer/prepare_files.sh"
 
@@ -8631,7 +8637,7 @@ do
     "doc/Makefile") CONFIG_FILES="$CONFIG_FILES doc/Makefile" ;;
     "src/tibercad/Makefile") CONFIG_FILES="$CONFIG_FILES src/tibercad/Makefile" ;;
     "src/utils/SLEPC/Makefile") CONFIG_FILES="$CONFIG_FILES src/utils/SLEPC/Makefile" ;;
-    "src/core/modules/etb/libuptight/Make.defs") CONFIG_FILES="$CONFIG_FILES src/core/modules/etb/libuptight/Make.defs" ;;
+    "src/core/modules/etb/libuptight/Makefile") CONFIG_FILES="$CONFIG_FILES src/core/modules/etb/libuptight/Makefile" ;;
     "contrib/crypto++/make.defs") CONFIG_FILES="$CONFIG_FILES contrib/crypto++/make.defs" ;;
     "installer/Makefile") CONFIG_FILES="$CONFIG_FILES installer/Makefile" ;;
     "installer/windows/tibercad.bim") CONFIG_FILES="$CONFIG_FILES installer/windows/tibercad.bim" ;;
@@ -8777,10 +8783,12 @@ LATEX_PATH!$LATEX_PATH$ac_delim
 GENERATE_LATEX!$GENERATE_LATEX$ac_delim
 GMSH!$GMSH$ac_delim
 SVN!$SVN$ac_delim
+MKL_DIR!$MKL_DIR$ac_delim
 MKL_LIBS!$MKL_LIBS$ac_delim
 MKL_INCLUDEDIR!$MKL_INCLUDEDIR$ac_delim
 HAVE_MKL!$HAVE_MKL$ac_delim
 ENABLE_PARDISO!$ENABLE_PARDISO$ac_delim
+CUDA_DIR!$CUDA_DIR$ac_delim
 CUDA_LIBS!$CUDA_LIBS$ac_delim
 CUDA_INCLUDEDIR!$CUDA_INCLUDEDIR$ac_delim
 HAVE_CUDA!$HAVE_CUDA$ac_delim
@@ -8798,8 +8806,6 @@ PETSC_DIR!$PETSC_DIR$ac_delim
 COMPLEX_PETSC_ARCH!$COMPLEX_PETSC_ARCH$ac_delim
 REAL_PETSC_ARCH!$REAL_PETSC_ARCH$ac_delim
 SLEPC_DIR!$SLEPC_DIR$ac_delim
-TAO_DIR!$TAO_DIR$ac_delim
-TAO_INCLUDES!$TAO_INCLUDES$ac_delim
 _ACEOF
 
   if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 97; then
@@ -8841,6 +8847,8 @@ _ACEOF
 ac_delim='%!_!# '
 for ac_last_try in false false false false false :; do
   cat >conf$$subs.sed <<_ACEOF
+TAO_DIR!$TAO_DIR$ac_delim
+TAO_INCLUDES!$TAO_INCLUDES$ac_delim
 BOOST_PREFIX!$BOOST_PREFIX$ac_delim
 BOOST_CPPFLAGS!$BOOST_CPPFLAGS$ac_delim
 BOOST_REGEX_LIB!$BOOST_REGEX_LIB$ac_delim
@@ -8851,7 +8859,7 @@ LICENSE_CHECK!$LICENSE_CHECK$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 8; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 10; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5
