@@ -35,7 +35,7 @@ libuptight$(shared_libext) :  .$(ARCH)/UptWrapper$(obj-suffix) libuptight_$(ARCH
 
 libuptight_$(ARCH).a: checkout
 	@echo "Updating libuptight ..."
-	@cd src; svn -r $(UPTREV) up; \
+	@cd src; svn -r $(UPTREV) up;  svn -r $(UPTREV) up lib_uptight;  svn -r $(UPTREV) up api; \
 	echo "Compiling libuptight ..."; \
 	CC=$(CC) CXX=$(CXX) FC=$(FC) ./configure $(CUDACONF) $(MKLCONF); \
 	$(MAKE) -C api libuptight; 
