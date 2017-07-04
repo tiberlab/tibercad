@@ -89,16 +89,16 @@ ExcitonGeneration::calculate_rate_and_derivatives(std::vector<double>& R, std::v
     double exponential = exp(beta*(Efx - Efn + Efp));
     double stat = 1.0 - exponential;
 
-    double rate = _gamma * stat * n * p * ((Nx + x) / Nx);
+    double rate = _gamma * stat * n * p * ((Nx + x) );
 
     R[idx] = -rate;
     R[idn] = rate;
     R[idp] = rate;
 
-    double derf = _gamma * stat * ((Nx + x) / Nx) * (n * dp + p * dn);
-    double derx = _gamma * n * p * (beta * exponential * ((Nx + x) / Nx) + (dx / Nx) * stat);
-    double dern = -_gamma * p * (dn * stat + beta * n * exponential) * ((Nx + x) / Nx);
-    double derp = -_gamma * n * (dp * stat - beta * p * exponential) * ((Nx + x) / Nx);
+    double derf = _gamma * stat * ((Nx + x) ) * (n * dp + p * dn);
+    double derx = _gamma * n * p * (beta * exponential * ((Nx + x) ) + (dx ) * stat);
+    double dern = -_gamma * p * (dn * stat + beta * n * exponential) * ((Nx + x) );
+    double derp = -_gamma * n * (dp * stat - beta * p * exponential) * ((Nx + x) );
 
     dPotentials[idx][idx] = - derx;
     dPotentials[idx][idn] = - dern;

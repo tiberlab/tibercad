@@ -39,7 +39,7 @@ namespace {
     }
 
     return make_pair(f, deriv);
-  };
+  }
 }
 
 DirectRecombination::QRecMap
