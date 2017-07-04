@@ -115,7 +115,6 @@ KPBulkDOS::do_reinit(const Elem* elem)
     _bulk_model->set_strain(strain);
 
     // it wants temperature in K
-    //_bulk_model->set_temperature(SimulationOptions::T / Constants::k_B);
     _bulk_model->set_temperature(SimulationOptions::T);
 
     _solve_kp();
