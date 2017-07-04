@@ -181,6 +181,7 @@ Ramp::ramp(void)
     }
     catch (SolveFailedException& e)
     {
+      /*
       for (int i = 0; i < num_sim; i++)
       {
         _simulations[i]->set_to_remembered_solution(_old_sol_ids[i]);
@@ -188,6 +189,7 @@ Ramp::ramp(void)
         _simulations[i]->plot();
         TiberCad::drop_first_filename_suffix();
       }
+      */
 
       currstep /= 2.0;
 
