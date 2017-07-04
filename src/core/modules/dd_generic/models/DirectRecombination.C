@@ -15,6 +15,33 @@
 
 using namespace std;
 
+namespace {
+  pair<double, double> fermi_dirac(double E)
+  {
+    double f = 0, deriv = 0;
+    double arg = E;
+    if (arg > 50)
+    {
+      f = exp(-arg);
+      deriv = -f;
+    }
+    else if (arg < -50)
+    {
+      deriv = -exp(arg);
+      f = 1 + deriv;
+    }
+    else
+    {
+      double expfac = exp(arg);
+      double denom = 1.0 + expfac;
+      f = 1.0 / denom;
+      deriv = -expfac * f / denom;
+    }
+
+    return make_pair(f, deriv);
+  };
+}
+
 DirectRecombination::QRecMap
 DirectRecombination::_qrec_vals;
 
@@ -63,6 +90,7 @@ DirectRecombination::do_init(void)
 void
 DirectRecombination::calculate_rate_and_derivatives(std::vector<double>& R, std::vector<std::vector<double>>& dPotentials)
 {
+
   ID id1 = this->get_carrier_ids()[0];
   ID id2 = this->get_carrier_ids()[1];
 
@@ -112,28 +140,100 @@ DirectRecombination::calculate_rate_and_derivatives(std::vector<double>& R, std:
   }
   else
   {
+    double E1  = dd.get_carrier_properties(id1)->get_band_edge();
+    double E2  = dd.get_carrier_properties(id2)->get_band_edge();
+
+    if ((ct1 == 'e') && (E1 < E2))
+    {
+      swap(id1, id2);
+      swap(E1, E2);
+    }
+    else if ((ct1 == 'h') && (E2 < E1))
+    {
+      swap(id1, id2);
+      swap(E1, E2);
+    }
+
+    /*
+    / *if ((ct1 == 'e') && (E1 < E2))
+    {
+      swap(id1, id2);
+      swap(E1, E2);
+    }
+    else if ((ct1 == 'h') && (E2 < E1))
+    {
+      swap(id1, id2);
+      swap(E1, E2);
+    }* /
+
+    if (E1 < E2)
+    {
+      swap(id1, id2);
+      swap(E1, E2);
+    }
+
+    // now E1 > E2 for electrons
+    //     E2 > E1 for holes
+
+
+    //double n1  = dd.get_q_density(id1);
+    //double n2  = dd.get_q_density(id2);
+    //double N1  = dd.get_carrier_properties(id1)->get_effective_DOS();
+    //double N2  = dd.get_carrier_properties(id2)->get_effective_DOS();
+    //double dn1 = dd.get_q_density_derivative(id1);
+    //double dn2 = dd.get_q_density_derivative(id2);
+    double Ef1 = -dd.get_q_fermi_potential(id1);
+    double Ef2 = -dd.get_q_fermi_potential(id2);
+    double beta = 1/kT; //(ct1 == 'e') ? 1.0/kT : -1.0/kT;
+
+    double exponential = exp((Ef2 - Ef1) * beta);
+    double stat = 1.0 - exponential;
+
+    auto occ1 = fermi_dirac((E1 - Ef1) * beta);
+    double f1 = occ1.first;
+    double df1 = occ1.second;
+
+    auto occ2 = fermi_dirac((Ef2 - E2) * beta);
+    double f2 = occ2.first;
+    double df2 = -occ2.second;
+
+    R[id1] = C_ * f1 * f2 * stat;
+    R[id2] = -R[id1];
+
+    double dRE1 = C_ * df1 * f2 * stat;
+    double dRE2 = C_ * f1 * df2 * stat;
+
+
+    double dR0 =  -(dRE1 + dRE2) * beta;
+    double dR1 = -dRE1 * beta + C_ * f1 * f2 * beta * exponential;
+    double dR2 = -dRE2 * beta - C_ * f1 * f2 * beta * exponential;
+
+    dPotentials[id1][id1] = - dR1;
+    dPotentials[id1][id2] = - dR2;
+    dPotentials[id2][id1] = dR1;
+    dPotentials[id2][id2] = dR2;
+    dPotentials[id1][dd.n_known_carriers()] =  dR0;
+    dPotentials[id2][dd.n_known_carriers()] = -dR0;
+    */
+
+    ///*
     double n1  = dd.get_q_density(id1);
     double n2  = dd.get_q_density(id2);
     double N1  = dd.get_carrier_properties(id1)->get_effective_DOS();
     double N2  = dd.get_carrier_properties(id2)->get_effective_DOS();
     double dn1 = dd.get_q_density_derivative(id1);
     double dn2 = dd.get_q_density_derivative(id2);
-    double E1  = dd.get_carrier_properties(id1)->get_band_edge();
-    double E2  = dd.get_carrier_properties(id2)->get_band_edge();
     double Ef1 = -dd.get_q_fermi_potential(id1);
     double Ef2 = -dd.get_q_fermi_potential(id2);
     double beta = (ct1 == 'e') ? 1.0/kT : -1.0/kT;
 
-    double thermal = exp( 0.5*beta*(E1-E2) - 0.5*fabs(beta*(E1-E2)) );
+    double thermal = 1; //exp( 0.5*beta*(E1-E2) - 0.5*fabs(beta*(E1-E2)) );
     double exponential = exp((Ef2 - Ef1) * beta);
     double stat = 1.0 - exponential;
 
     R[id1] = C_ * thermal * stat * n1 * (N2 - n2);
     R[id2] = -R[id1];
 
-    //if (ct1 == 'e')
-      //cout<<"Ef1 = "<<Ef1<<" Ef2 = "<<Ef2<<" stat = "<<stat<<" R1 = "<<R[id1]<<endl;
-    //cout<<"R = "<<R[id1]<<" stat = "<<stat<<" thermal = "<<thermal<<" n1 = "<<n1<<" N2 = "<<N2<<endl;
 
     double dR0 =  C_ * thermal * stat * ( (N2 - n2)*dn1 - n1*dn2 );
     double dR1 = -C_ * thermal * (N2 - n2) * ( dn1 * stat + beta * n1 * exponential);
@@ -145,6 +245,7 @@ DirectRecombination::calculate_rate_and_derivatives(std::vector<double>& R, std:
     dPotentials[id2][id2] = -dR2;
     dPotentials[id1][dd.n_known_carriers()] =  dR0;
     dPotentials[id2][dd.n_known_carriers()] = -dR0;
+    //*/
   }
 }
 

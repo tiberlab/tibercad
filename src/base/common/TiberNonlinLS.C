@@ -46,12 +46,21 @@ TiberNonlinLS::do_solve(void)
 
   assert(_assemble != NULL);
 
+  // the ghosted solution vector
   NumericVector<Number>& u = get_solution_vector();
   if (!u.closed()) u.close();
-  NumericVector<Number>& du = *current_local_solution;
-  libMesh::UniquePtr<NumericVector<Number> > u_old_ptr = u.clone();
-  libMesh::UniquePtr<NumericVector<Number> > tmp_vec = u.clone();
+
+  // the linear system solution
+  libMesh::UniquePtr<NumericVector<Number> > du_ptr = solution->clone();
+  NumericVector<Number>& du = *du_ptr;
+
+  // the old local solution values
+  libMesh::UniquePtr<NumericVector<Number> > u_old_ptr = solution->clone();
   NumericVector<Number>& u_old = *u_old_ptr;
+
+
+  //libMesh::UniquePtr<NumericVector<Number> > u_tmp_ptr = u_old.clone();
+  NumericVector<Number>& u_tmp = *solution;
 
   // the l_infty tolerance for the step size
   double eps = get_nonlinear_stol();
@@ -77,22 +86,24 @@ TiberNonlinLS::do_solve(void)
   for ( ; i <= get_nonlinear_max_it(); i++)
   {
 
+    u_old = u_tmp;
+
     // prepare jacobian and residual
     _assemble(u, NULL, matrix, *this);
     _assemble(u, rhs, NULL, *this);
 
     get_linear_solver()->set_linear_rtol(tol);
 
+    du.zero();
+
     // solve the linear system
     if (this->have_matrix("Preconditioner"))
       get_linear_solver()->solve(*matrix, this->get_matrix("Preconditioner"),
-          *solution, *rhs);
+          du, *rhs);
     else
-      get_linear_solver()->solve(*matrix, *solution, *rhs);
+      get_linear_solver()->solve(*matrix, du, *rhs);
 
-    solution->localize(du, get_dof_map().get_send_list()); 
-
-
+    du.close();
 
     // the l2 norm of the current residual
     //norm_rhs = rhs->l2_norm();
@@ -114,7 +125,6 @@ TiberNonlinLS::do_solve(void)
       break;
     }
 
-    u_old = u;
     norm_du_old = norm_du;
 
     // the relaxation factor
@@ -147,7 +157,8 @@ TiberNonlinLS::do_solve(void)
       }
       */
 
-      u.add(-alpha, du);
+      u_tmp.add(-alpha, du);
+      u_tmp.localize(u, get_dof_map().get_send_list());
 
       // evaluate the residual
       _assemble(u, rhs, NULL, *this);
@@ -155,8 +166,7 @@ TiberNonlinLS::do_solve(void)
       old_norm = norm_res;
       //norm_res = rhs->l2_norm();
       norm_res = TiberEqSystem::calculate_norm(rhs, l2_NORM);
-      *tmp_vec = du;
-      norm_du = TiberEqSystem::calculate_norm(tmp_vec.get(), MAX_NORM);
+      norm_du = TiberEqSystem::calculate_norm(&du, MAX_NORM);
       //norm_du = du.linfty_norm();
       //norm_du = du.l2_norm();
       //double norm_u = u.l2_norm();
@@ -182,7 +192,7 @@ TiberNonlinLS::do_solve(void)
         }
 
         // don't accept step
-        u = u_old;
+        u_tmp = u_old;
         alpha *= 0.5;
 
         // if the norm decreases sufficiently, we don't increase the counter
@@ -209,8 +219,9 @@ TiberNonlinLS::do_solve(void)
 
     {
       // check for one more smaller step
-      u = u_old;
-      u.add(-0.5 * alpha, du);
+      u_tmp = u_old;
+      u_tmp.add(-0.5 * alpha, du);
+      u_tmp.localize(u, get_dof_map().get_send_list());
 
       // evaluate the residual
       _assemble(u, rhs, NULL, *this);
@@ -223,14 +234,15 @@ TiberNonlinLS::do_solve(void)
       if (norm_res > norm_res_old)
       {
         // keep the former step
-        u = u_old;
-        u.add(-alpha, du);
+        u_tmp = u_old;
+        u_tmp.add(-alpha, du);
+        u_tmp.localize(u, get_dof_map().get_send_list());
         norm_res = norm_res_old;
       }
       else
         alpha *= 0.5;
 
-      du.scale(alpha);
+      //du.scale(alpha);
       //norm_du *= alpha;
     }
 

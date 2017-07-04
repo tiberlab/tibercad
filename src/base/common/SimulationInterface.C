@@ -1131,8 +1131,8 @@ SimulationInterface::do_get_solution_vector(void)
 {
   assert(_systems.size() > 0);
 
-  get_equation_system<TiberEqSystem>(0).get_solution_vector().close();
-  return get_equation_system<TiberEqSystem>(0).get_solution_vector();
+  get_equation_system<TiberEqSystem>(0).get_local_solution_vector().close();
+  return get_equation_system<TiberEqSystem>(0).get_local_solution_vector();
 }
 
 
@@ -1142,6 +1142,9 @@ SimulationInterface::do_set_solution_vector(
     const libMesh::NumericVector<double>& new_solution)
 {
   get_solution_vector() = new_solution;
+  if (_systems.size() > 0)
+    get_equation_system<libMesh::System>(0).update();
+
 }
 
 
@@ -1752,6 +1755,9 @@ SimulationInterface::do_load_data(istream& is)
       is.getline(buf, bufsize);
     }
 
+    if (_systems.size() > 0)
+      get_equation_system<libMesh::System>(0).update();
+
     has_read = true;
   }
 
@@ -1855,7 +1861,12 @@ SimulationInterface::do_set_to_remembered_solution(ID id)
   map<ID, libMesh::NumericVector<double>*>::iterator it(_remembered_solutions.find(id));
 
   if (it != end)
+  {
     get_solution_vector() = *(it->second);
+
+    if (_systems.size() > 0)
+      get_equation_system<libMesh::System>(0).update();
+  }
 }
 
 
@@ -1948,7 +1959,12 @@ void
 SimulationInterface::do_scale_solution(double factor)
 {
   if (has_solution_vector())
+  {
     get_solution_vector().scale(factor);
+
+    if (_systems.size() > 0)
+      get_equation_system<libMesh::System>(0).update();
+  }
 }
 
 
@@ -1962,6 +1978,9 @@ SimulationInterface::do_add_scaled_remembered_solution(ID id, double factor)
   if (it != end)
   {
     get_solution_vector().add(factor, *(it->second));
+
+    if (_systems.size() > 0)
+      get_equation_system<libMesh::System>(0).update();
   }
 }
 

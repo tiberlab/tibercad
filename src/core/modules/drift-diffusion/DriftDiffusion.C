@@ -263,7 +263,7 @@ DriftDiffusion::set_electron_fermi_level(double Ef_n)
 {
   TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
 
-  libMesh::NumericVector<Number>& solution = get_solution_vector();
+  libMesh::NumericVector<Number>& solution = system.get_local_solution_vector();
 
   const unsigned int var = system.variable_number("fermi_e");
   const double phi0 = get_scaling().get_potential_scaling();
@@ -283,6 +283,9 @@ DriftDiffusion::set_electron_fermi_level(double Ef_n)
       solution.set(id, level);
     }
   }
+
+  solution.close();
+  system.update();
 }
 
 
@@ -293,7 +296,7 @@ DriftDiffusion::set_hole_fermi_level(double Ef_p)
 {
   TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
 
-  libMesh::NumericVector<Number>& solution = get_solution_vector();
+  libMesh::NumericVector<Number>& solution = system.get_local_solution_vector();
 
   const unsigned int var = system.variable_number("fermi_h");
   const double phi0 = get_scaling().get_potential_scaling();
@@ -313,6 +316,9 @@ DriftDiffusion::set_hole_fermi_level(double Ef_p)
       solution.set(id, level);
     }
   }
+
+  solution.close();
+  system.update();
 }
 
 
@@ -323,7 +329,7 @@ DriftDiffusion::set_electric_potential(double pot)
 {
   TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
 
-  libMesh::NumericVector<Number>& solution = get_solution_vector();
+  libMesh::NumericVector<Number>& solution = system.get_local_solution_vector();
 
   const unsigned int var = system.variable_number("potential");
   const double phi0 = get_scaling().get_potential_scaling();
@@ -343,6 +349,9 @@ DriftDiffusion::set_electric_potential(double pot)
       solution.set(id, level);
     }
   }
+
+  solution.close();
+  system.update();
 }
 
 
@@ -465,14 +474,17 @@ DriftDiffusion::do_solve(void)
 
     // if we would repeat the equilibrium simulation, we can stop now
     if (equilibrium)
+    {
+      //get_solution_vector().close();
       return;
+    }
   }
 
   // set the old solution
   //EquationSystems& es = get_equation_systems();
   TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
-  get_solution_vector().close();
-  system.get_vector("old_sol") = get_solution_vector();
+  system.get_solution_vector().close();
+  system.get_vector("old_sol") = system.get_solution_vector();
 
   int coupling = get_my_options().coupling;
 
@@ -617,7 +629,7 @@ DriftDiffusion::calculate_weights(void)
 {
   TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
 
-  libMesh::NumericVector<Number>& solution = get_solution_vector();
+  libMesh::NumericVector<Number>& solution = system.get_solution_vector();
   libMesh::NumericVector<Number>& oldsol = system.get_vector("old_sol");
   libMesh::NumericVector<Number>& weight = system.get_vector("weight");
 
@@ -823,7 +835,7 @@ DriftDiffusion::compute_reference_potential(void)
     {
       TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
 
-      const libMesh::NumericVector<Number>& solution = get_solution_vector();
+      const libMesh::NumericVector<Number>& solution = system.get_solution_vector();
       const unsigned int system_number = system.number();
       const unsigned int u_var = system.variable_number("potential");
 
@@ -1058,7 +1070,7 @@ DriftDiffusion::guess_equilibrium(void)
   const libMesh::DofMap& dof_map_u = poisson.get_dof_map();
   vector<unsigned int> dof_indices_u;
 
-  libMesh::NumericVector<Number>& solution_u = poisson.get_solution_vector();
+  libMesh::NumericVector<Number>& solution_u = poisson.get_local_solution_vector();
   solution_u.close();
   //solution_u.zero();
 
@@ -1100,6 +1112,9 @@ DriftDiffusion::guess_equilibrium(void)
           / (phi0 * static_cast<Real>(node_conn[elem->node(i)])));
     }
   }
+
+  solution_u.close();
+  poisson.update();
 }
 
 
@@ -1706,6 +1721,7 @@ DriftDiffusion::do_setup_solution_variables(void)
   declare_solution(Ev, REAL, NODES, "eV");
   declare_solution(Ec0, REAL, NODES, "eV");
   declare_solution(Ev0, REAL, NODES, "eV");
+  declare_solution(ArtificialDiffusion, REAL, NODES, "");
 
   // the correct number of components will be inserted afterwards
   declare_solution(ConductionBands, NTUPLE, CELL, "eV", 1);
@@ -2090,6 +2106,14 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     el_field += e_field;
     polariz += sc->get_total_polarization();
 
+    if (values.count(ArtificialDiffusion))
+    {
+      RealGradient chempot(e_field + grad_en_loc);
+      double x0 = this->get_mesh_units();
+      double art_diff = 0.5 * sc->get_electron_mobility() * x0 * elem->hmax() *
+          sc->get_electron_density_derivative() * chempot.norm();
+      values[ArtificialDiffusion][n] = art_diff;
+    }
 
     if (values.count(ElPotential))
       values[ElPotential][n] = u - _reference_potential;
@@ -3171,7 +3195,7 @@ DriftDiffusion::calculate_currents_surfint(void)
 
   TiberNonlinearSystem* system = &get_equation_system<TiberNonlinearSystem>();
 
-  const libMesh::NumericVector<Number>& solution = get_solution_vector();
+  const libMesh::NumericVector<Number>& solution = system->get_solution_vector();
 
   // aliases for nicer code
   const MeshBase& mesh = system->get_mesh();
@@ -3414,7 +3438,7 @@ DriftDiffusion::calculate_surface_recombination(void)
 
   TiberNonlinearSystem* system = &get_equation_system<TiberNonlinearSystem>();
 
-  const libMesh::NumericVector<Number>& solution = get_solution_vector();
+  const libMesh::NumericVector<Number>& solution = system->get_solution_vector();
 
   // aliases for nicer code
   const MeshBase& mesh = system->get_mesh();
@@ -3583,7 +3607,7 @@ DriftDiffusion::build_local_scaling(void)
 {
   TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>(0);
 
-  const libMesh::NumericVector<Number>& solution = get_solution_vector();
+  const libMesh::NumericVector<Number>& solution = system.get_solution_vector();
   libMesh::NumericVector<Number>& loc_scaling = system.get_vector("scaling");
   loc_scaling.zero();
   //loc_scaling.close();
@@ -3997,6 +4021,7 @@ DriftDiffusion::build_local_scaling(void)
   }
 
   loc_scaling.close();
+  loc_scaling.localize(loc_scaling, system.get_dof_map().get_send_list());
 
 
   /*
@@ -4492,10 +4517,11 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
       //cout<<"C1 dens = "<<p<<" R = "<<Rp<<" mu = "<<muh<<" sigma = "<<sigma_h<<endl;
 
       // TEST
-      //double dn_dphi = sc->get_electron_density_derivative();
-      //double art_diff = 0.5 * x0 * elem->hmax() * mue * dn_dphi * grad_en.size() / (mu0 * C0_e);
-      //cerr << "art. diffusivity = " << art_diff << " (" << sigma_e << ")" << endl;
-      //sigma_e += art_diff;
+      double dn_dphi = sc->get_electron_density_derivative();
+      RealGradient chempot(grad_en);
+      double art_diff = 0.5 * elem->hmax() * mue * phi0 * dn_dphi * chempot.norm() / (mu0 * C0_e);
+      //cerr << sigma_e << " " << art_diff << endl;
+
 
       //
       // The residual looks like this:
@@ -4526,7 +4552,13 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
             Kuu(i,j) += l2 * laplace_u / scaleu(i);
 
           if (coupling & ECURRENT)
+          {
             Knn(i,j) += sigma_e * laplace / scalen(i);
+
+
+                //Knn(i,j) += fabs(art_diff) * dphi[i][qp] * dphi[j][qp] / scalen(i);
+                //Knn(i,j) += art_diff * dphi[i][qp] * dphi[j][qp] / scalen(i);
+          }
 
           if (coupling & HCURRENT)
             Kpp(i,j) += sigma_h * laplace / scalep(i);
@@ -4637,7 +4669,6 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
         dmu_e_u *= J * phi0 / (mu0 * C0_e) * n;
         dmu_h_u *= J * phi0 / (mu0 * C0_h) * p;
 
-        //cout<<"dmu_e_u = "<<dmu_e_u<<" dmu_h_u = "<<dmu_h_u<<" dmu_e_grad_u = "<<dmu_e_grad_u.size()<<" dmu_h_grad_u = "<<dmu_h_grad_u.size()<<endl;
 
         for (unsigned int i = 0; i < n_dofs; i++)
         {
@@ -4674,6 +4705,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                   Knu(i,j) += dsigma_e_x_phi + (dmu_e_u_x_phi + dmu_e_grad_u_x_dphi) * lap_e;
 
                 Knn(i,j) += (dmu_e_grad_v_x_dphi - dmu_e_u_x_phi) * lap_e - dsigma_e_x_phi;
+                //Knn(i,j) += fabs(art_diff) * dphi[i][qp] * dphi[j][qp] / scalen(i);
               }
 
               if (coupling & HCURRENT)
@@ -5275,6 +5307,8 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
   if (jacobian != NULL)
   {
     jacobian->close();
+    //jacobian->print_matlab("J_ref.m");
+    //exit(0);
 
     /*
     DenseMatrix<Number> Pe(3, 3);

@@ -213,13 +213,13 @@ DDBulkModel::do_init(void)
   //      0.5 * get_option("background_conductivity", 1e-3 * Constants::e) / Constants::e;
   //else
   _background_conductivity =
-      0.5 * get_option("background_conductivity", 1e-3 * Constants::e) / Constants::e;
+      0.5 * get_option("background_conductivity", 0.0) / Constants::e;
 
   ModelOptions::submodel_iterator it_bgc(get_options().submodels_begin("background_conductivity"));
   ModelOptions::submodel_iterator end_bgc(get_options().submodels_end("background_conductivity"));
 
   if (it_bgc != end_bgc)
-    _background_conductivity += (it_bgc->second).get_option("sigma", 1e-3 * Constants::e) / Constants::e;
+    _background_conductivity += (it_bgc->second).get_option("sigma", 0.0) / Constants::e;
 
 
   // calculate the equilibrium

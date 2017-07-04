@@ -388,8 +388,13 @@ class SimulationInterface : public TiberModelObject
     //! Get a pointer to the solution vector
     /*!
      * Calls do_get_solution_vector()
+     *
+     * In most cases (like standard FEM stuff based on libmesh)
+     * this gives the local solution vector without any ghost
+     * values.
      */
     libMesh::NumericVector<double>& get_solution_vector(void);
+
 
 
     //! Set the current solution to a given value
@@ -2110,6 +2115,7 @@ SimulationInterface::get_solution_vector(void)
 
   return do_get_solution_vector();
 }
+
 
 
 inline

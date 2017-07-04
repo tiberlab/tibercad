@@ -270,8 +270,8 @@ SRHRecombination::get_trap_level(void)
 }
 
 
-double
-SRHRecombination::calculate_rate_and_derivatives(std::vector<double>& dPotentials)
+void
+SRHRecombination::calculate_rate_and_derivatives(std::vector<double>& R, std::vector<std::vector<double>>& dPotentials)
 {
   const ID id1 = this->get_carrier_ids()[0];
   const ID id2 = this->get_carrier_ids()[1];
@@ -295,20 +295,78 @@ SRHRecombination::calculate_rate_and_derivatives(std::vector<double>& dPotential
 
   double exponential = exp((Efp - Efn) / kT);
   double stat_fac = 1.0 - exponential;
-  /*
-  double g = C_ * n1 * n2;
 
-  double R = g * stat_fac;
+  double tau_n = _tau_n;
+  double tau_p = _tau_p;
 
-  double dR1 = -C_ * n2 * (-dn1 * stat_fac + 1/kT * n1 * exponential);
-  double dR2 = -C_ * n1 * (-dn2 * stat_fac - 1/kT * n2 * exponential);
+  double kT_e = kT;
+  double kT_h = kT;
+  double arg_e = get_trap_level() - Efn - dd.get_electric_potential();
+  double arg_h = get_trap_level() - Efp - dd.get_electric_potential();
 
-  dPotentials[id1] = dR1;
-  dPotentials[id2] = dR2;
-  dPotentials[dd.n_known_carriers()] = stat_fac * C_ * (n2 * dn1 + n1 * dn2);
-  */
-  double R = 0;
-  return R;
+    std::pair<double, double> occ_e(Distributions::fermi_dirac(-arg_e, kT_e));
+    double f_e = occ_e.first;
+    double deriv_e = occ_e.second;
+
+    std::pair<double, double> occ_h(Distributions::fermi_dirac(-arg_h, kT_h));
+    double f_h = occ_h.first;
+    double deriv_h = occ_h.second;
+
+  double gc = (1.0 - f_e) / f_e;
+  double gv = f_h / (1.0 - f_h);
+  double deriv_gc = -deriv_e / (f_e * f_e);
+  double deriv_gv =  deriv_h / ((1 - f_h) * (1 - f_h));
+
+  //if (arg_e / kT_e > 50)
+    gc = exp(arg_e / kT_e);
+    deriv_gc = -gc / kT_e;
+  //if (arg_e / kT_e < -50)
+    gv = exp(-arg_h / kT_h);
+    deriv_gv = gv / kT_h;
+
+
+
+
+  double a = 1 + gc;
+  double b = 1 + gv;
+
+  //a = 1 + exp((Et - Efn) / T);
+  //b = 1 + exp((Efp - Et) / T);
+
+
+  double denom = tau_p * n * a + tau_n * p * b;
+  double nom = n * p * stat_fac;
+
+  double rec = nom / denom;
+  R[id1] = rec;
+  R[id2] = rec;
+
+
+  long double denom2 = denom * denom;
+
+  long double dRedn = (p * stat_fac - rec * tau_p * a) / denom;
+  long double dRedp = (n * stat_fac - rec * tau_n * b) / denom;
+
+
+  long double dRedEfn = n * deriv_gc * (p * gv + tau_p * rec) / denom;
+  long double dRedEfp = p * deriv_gv * (n * gc + tau_n * rec) / denom;
+
+
+
+  double dR1 = -dRedn*dn + dRedEfn;
+  double dR2 = -dRedp*dp + dRedEfp;
+
+  double dR0 = dRedn*dn + dRedp*dp;
+
+  
+
+
+  dPotentials[id1][id1] = dR1;
+  dPotentials[id1][id2] = dR2;
+  dPotentials[id2][id1] = dR1;
+  dPotentials[id2][id2] = dR2;
+  dPotentials[id1][dd.n_known_carriers()] = dR0;
+  dPotentials[id2][dd.n_known_carriers()] = dR0;
 }
 
 /*
