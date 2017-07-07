@@ -1755,6 +1755,8 @@ SimulationInterface::do_load_data(istream& is)
       is.getline(buf, bufsize);
     }
 
+    solution.close();
+
     if (_systems.size() > 0)
       get_equation_system<libMesh::System>(0).update();
 
