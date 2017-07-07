@@ -128,6 +128,7 @@ my @svninfo = (`$svncmd info $topdir`);
 if ($#svninfo <= 0) {
   @svninfo = q('dummy' 'dummy');
 }
+
 my $repo = (grep(/URL/, @svninfo))[0];
 my $revision = (grep(/Revision/, @svninfo))[0];
 my $last_changed_author = (grep(/Author/, @svninfo))[0];
