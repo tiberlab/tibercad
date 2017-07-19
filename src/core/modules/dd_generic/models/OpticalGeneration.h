@@ -34,16 +34,9 @@ class TBDLLOCAL OpticalGeneration : public RecombinationModelInterface
     //! \copydoc RecombinationModelInterface::get_net_recombination_rates()
     void get_net_recombination_rates(double& recomb_e, double& recomb_h);
 
-    /*!
-     * \copydoc
-     * RecombinationModelInterface::get_net_recombination_rate_derivatives()
-     */
-    void get_net_recombination_rate_derivatives(
-        std::vector<double>& recomb_e, std::vector<double>& recomb_h);
-
     //! File to read the external generation
-//    double read_file(char *filename, double p);
-     double read_file(void);
+    double read_file(void);
+
 
   protected:
 
@@ -52,6 +45,10 @@ class TBDLLOCAL OpticalGeneration : public RecombinationModelInterface
 
     //! \copydoc RecombinationModelInterface::do_init()
     virtual void do_init(void);
+
+    //! \copydoc RecombinationModelInterface::calculate_rate_and_derivatives()
+    virtual void calculate_rate_and_derivatives(std::vector<double>& R,
+        std::vector<std::vector<double>>& dPotentials) override;
 
 
   private:

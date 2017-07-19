@@ -219,8 +219,8 @@ DirectRecombination::calculate_rate_and_derivatives(std::vector<double>& R, std:
     ///*
     double n1  = dd.get_q_density(id1);
     double n2  = dd.get_q_density(id2);
-    double N1  = dd.get_carrier_properties(id1)->get_effective_DOS();
-    double N2  = dd.get_carrier_properties(id2)->get_effective_DOS();
+    double N1  = 100 * dd.get_carrier_properties(id1)->get_effective_DOS();
+    double N2  = 100 * dd.get_carrier_properties(id2)->get_effective_DOS();
     double dn1 = dd.get_q_density_derivative(id1);
     double dn2 = dd.get_q_density_derivative(id2);
     double Ef1 = -dd.get_q_fermi_potential(id1);
@@ -231,6 +231,7 @@ DirectRecombination::calculate_rate_and_derivatives(std::vector<double>& R, std:
     double exponential = exp((Ef2 - Ef1) * beta);
     double stat = 1.0 - exponential;
 
+    // TODO N2 should be the maximum density for n2, but now its 100*Nc
     R[id1] = C_ * thermal * stat * n1 * (N2 - n2);
     R[id2] = -R[id1];
 

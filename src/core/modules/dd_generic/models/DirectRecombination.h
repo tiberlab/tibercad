@@ -40,7 +40,8 @@ class TBDLLOCAL DirectRecombination : public RecombinationModelInterface
     virtual void do_reinit(void) override;
 
     //! \copydoc RecombinationModelInterface::calculate_rate_and_derivatives()
-    virtual void calculate_rate_and_derivatives(std::vector<double>& R, std::vector<std::vector<double>>& dPotentials) override;
+    virtual void calculate_rate_and_derivatives(std::vector<double>& R,
+        std::vector<std::vector<double>>& dPotentials) override;
 
   private:
 
