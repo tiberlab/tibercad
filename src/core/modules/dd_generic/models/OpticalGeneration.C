@@ -98,7 +98,7 @@ OpticalGeneration::calculate_rate_and_derivatives(std::vector<double>& R,
 */
   }
 
-  double rate = -_multiplier * _generation;
+  double rate = _multiplier * _generation;
 
   // energies are referred to negatively charged particles, so
   // taking away one negative carrier means adding one 'hole'
@@ -153,6 +153,11 @@ OpticalGeneration::calculate_rate_and_derivatives(std::vector<double>& R,
     df2 = ff.second;
   }
 
+  //cerr << endl;
+  //cerr << dd.get_carrier_properties(id1)->get_particle_name() <<
+  //    " " << ch1 << " " << E1 << " " << Ef1 << " " << f1 << endl;
+  //cerr << dd.get_carrier_properties(id2)->get_particle_name() <<
+  //    " " << ch2 << " " << E2 << " " << Ef2 << " " << f2 << endl;
 
   // R = rate * g1 * g2;
   double g1, g2, dg1, dg2;
@@ -163,24 +168,24 @@ OpticalGeneration::calculate_rate_and_derivatives(std::vector<double>& R,
     // it's a hole
     g1 = 1 - f1;
     dg1 = -df1;
+    sign1 = -1;
   }
   else
   {
     g1 = f1;
     dg1 = df1;
-    sign1 = -1;
   }
 
   if (ch2 > 0)
   {
     g2 = f2;
     dg2 = df2;
-    sign2 = -1;
   }
   else
   {
     g2 = 1 - f2;
     dg2 = -df2;
+    sign2 = -1;
   }
 
   //g1 = g2 = 1;
@@ -188,6 +193,7 @@ OpticalGeneration::calculate_rate_and_derivatives(std::vector<double>& R,
 
   R[id1] = sign1 * rate * g1 * g2;
   R[id2] = sign2 * rate * g1 * g2;
+  //cerr << "   " << R[id1] << " " << R[id2] << endl;
 
   double dR1 = rate * dg1 * g2;
   double dR2 = rate * g1 * dg2;
