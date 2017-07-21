@@ -54,7 +54,7 @@ class Device
 
   public:
 
-    typedef std::map<ID, std::vector<ID> > BCNodeMap;
+    typedef std::map<ID, std::vector<unsigned int> > BCNodeMap;
 
     //! The atomistic structures iterator type
     typedef AtomStructMap::iterator atomistic_structure_iterator;

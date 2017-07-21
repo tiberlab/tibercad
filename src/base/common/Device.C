@@ -274,7 +274,7 @@ Device::setup_mesh(void)
 
   // TODO only for now (back compatibility)
   delete _boundary_nodes;
-  _boundary_nodes = new map<ID, vector<ID> >();
+  _boundary_nodes = new map<ID, vector<unsigned int> >();
   _bd_regions->get_bc_node_map(*_boundary_nodes);
 
 
