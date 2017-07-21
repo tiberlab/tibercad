@@ -85,7 +85,7 @@ ExcitonISC::calculate_rate_and_derivatives(std::vector<double>& R, std::vector<s
 
   double rate = _C * stat * x1 * (N2 + x2);
   double der1 = - _C * (N2 + x2) * (dx1 * stat + beta * x1 * exponential);
-  double der2 = - _C * x1 * (dx2 * stat + beta * (N2 + x2) * exponential);
+  double der2 = - _C * x1 * (dx2 * stat - beta * (N2 + x2) * exponential);
 
   R[id1] = rate;
   R[id2] = -rate;
