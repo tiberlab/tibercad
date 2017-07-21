@@ -411,7 +411,7 @@ DriftDiffusion::set_electron_fermi_level(double Ef_n)
 {
   TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
 
-  libMesh::NumericVector<Number>& solution = get_solution_vector();
+  libMesh::NumericVector<Number>& solution = system.get_local_solution_vector();
 
   const unsigned int var = system.variable_number("fermi_e");
   const double phi0 = get_scaling().get_potential_scaling();
@@ -431,6 +431,9 @@ DriftDiffusion::set_electron_fermi_level(double Ef_n)
       solution.set(id, level);
     }
   }
+
+  solution.close();
+  system.update();
 }
 
 
@@ -441,7 +444,7 @@ DriftDiffusion::set_hole_fermi_level(double Ef_p)
 {
   TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
 
-  libMesh::NumericVector<Number>& solution = get_solution_vector();
+  libMesh::NumericVector<Number>& solution = system.get_local_solution_vector();
 
   const unsigned int var = system.variable_number("fermi_h");
   const double phi0 = get_scaling().get_potential_scaling();
@@ -461,6 +464,9 @@ DriftDiffusion::set_hole_fermi_level(double Ef_p)
       solution.set(id, level);
     }
   }
+
+  solution.close();
+  system.update();
 }
 
 
@@ -471,7 +477,7 @@ DriftDiffusion::set_electric_potential(double pot)
 {
   TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
 
-  libMesh::NumericVector<Number>& solution = get_solution_vector();
+  libMesh::NumericVector<Number>& solution = system.get_local_solution_vector();
 
   const unsigned int var = system.variable_number("potential");
   const double phi0 = get_scaling().get_potential_scaling();
@@ -491,6 +497,9 @@ DriftDiffusion::set_electric_potential(double pot)
       solution.set(id, level);
     }
   }
+
+  solution.close();
+  system.update();
 }
 
 
@@ -579,8 +588,8 @@ DriftDiffusion::do_solve(void)
   // set the old solution
   //EquationSystems& es = get_equation_systems();
   TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
-  get_solution_vector().close();
-  system.get_vector("old_sol") = get_solution_vector();
+  system.get_solution_vector().close();
+  system.get_vector("old_sol") = system.get_solution_vector();
 
 
   int coupling = get_my_options().coupling;
@@ -721,7 +730,7 @@ DriftDiffusion::calculate_weights(void)
 {
   TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
 
-  libMesh::NumericVector<Number>& solution = get_solution_vector();
+  libMesh::NumericVector<Number>& solution = system.get_solution_vector();
   libMesh::NumericVector<Number>& oldsol = system.get_vector("old_sol");
   libMesh::NumericVector<Number>& weight = system.get_vector("weight");
 
@@ -954,7 +963,7 @@ DriftDiffusion::compute_reference_potential(void)
     {
       TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
 
-      const libMesh::NumericVector<Number>& solution = get_solution_vector();
+      const libMesh::NumericVector<Number>& solution = system.get_solution_vector();
       const unsigned int system_number = system.number();
       const unsigned int u_var = system.variable_number("potential");
 
@@ -1185,7 +1194,7 @@ DriftDiffusion::guess_equilibrium(void)
   const libMesh::DofMap& dof_map_u = poisson.get_dof_map();
   vector<unsigned int> dof_indices_u;
 
-  libMesh::NumericVector<Number>& solution_u = poisson.get_solution_vector();
+  libMesh::NumericVector<Number>& solution_u = poisson.get_local_solution_vector();
   solution_u.close();
   //solution_u.zero();
 
@@ -1229,8 +1238,8 @@ DriftDiffusion::guess_equilibrium(void)
   }
 
   // guess is checked: ok
-  //solution_u.close();
-  //solution_u.print_matlab("guess.m");
+  solution_u.close();
+  poisson.update();
 }
 
 
@@ -3893,7 +3902,7 @@ DriftDiffusion::build_local_scaling(void)
 {
   TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>(0);
 
-  const libMesh::NumericVector<Number>& solution = get_solution_vector();
+  const libMesh::NumericVector<Number>& solution = system.get_solution_vector();
   libMesh::NumericVector<Number>& loc_scaling = system.get_vector("scaling");
   loc_scaling.zero();
 
@@ -4318,6 +4327,7 @@ DriftDiffusion::build_local_scaling(void)
   }
 
   loc_scaling.close();
+  loc_scaling.localize(loc_scaling, system.get_dof_map().get_send_list());
   //loc_scaling.print_matlab("scaling.m");
 
 
