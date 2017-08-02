@@ -444,6 +444,16 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
     unsigned int _flux_base;
     //! Base index for currents
     unsigned int _curr_base;
+    //! Base index for joule heat
+    unsigned int _joule_base;
+    //! Base index for thermoelectric power
+    unsigned int _thelpower_base;
+    //! Base index for Peltier heat
+    unsigned int _peltier_base;
+    //! Base index for recombination heat
+    unsigned int _recheat_base;
+    //! Base index for power flux
+    unsigned int _powerflux_base;
     //! Base index for net recombination;
     unsigned int _net_rec_base;
     //! Base index for recombinations;

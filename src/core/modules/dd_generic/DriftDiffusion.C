@@ -1878,7 +1878,12 @@ DriftDiffusion::do_setup_solution_variables(void)
   _conductivity_base = _mobility_base + _carriers.size();
   _flux_base = _conductivity_base + _carriers.size();
   _curr_base = _flux_base + _carriers.size();
-  _net_rec_base = _curr_base + _carriers.size();
+  _joule_base = _curr_base + _carriers.size();
+  _thelpower_base = _joule_base + _carriers.size() + 1;
+  _peltier_base = _thelpower_base + _carriers.size();
+  _recheat_base = _peltier_base + _carriers.size() + 1; // we put them all together
+  _powerflux_base = _recheat_base + 1;
+  _net_rec_base = _powerflux_base + _carriers.size() + 1;
   _rec_base = _net_rec_base + _carriers.size();
   //not used now, just a reminder of the correct way to proceed adding new variables if needed
   //_next_var_base = _rec_base + _rec_models.size()*_carriers.size();
@@ -1920,12 +1925,27 @@ DriftDiffusion::do_setup_solution_variables(void)
     if (plot_solution("CurrentDensity"))
           add_plot_variable(_curr_base + i);
 
+    declare_solution_ext(_carriers[i] + "ThElPower", _thelpower_base + i, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "eV/K");
+
+    declare_solution_ext(_carriers[i] + "Joule", _joule_base + i, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "W/cm^3");
+
+    declare_solution_ext(_carriers[i] + "PowerFlux", _powerflux_base + i, SolutionDescriptor::VECTOR, SolutionDescriptor::NODES, "W/cm^2");
+
+    declare_solution_ext(_carriers[i] + "Peltier", _peltier_base + i, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "W/cm^3");
+
+
+
     declare_solution_ext(_carriers[i] + "NetRecombination", _net_rec_base + i,
         SolutionDescriptor::REAL, SolutionDescriptor::NODES, "1/(s*cm^3)");
     if (plot_solution("NetRecombination"))
           add_plot_variable(_net_rec_base + i);
 
   }
+
+  declare_solution_ext("TotalRecombinationHeat", _recheat_base, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "W/cm^3");
+  declare_solution_ext("TotalJouleHeat", _joule_base + _carriers.size(), SolutionDescriptor::REAL, SolutionDescriptor::NODES, "W/cm^3");
+  declare_solution_ext("TotalPowerFlux", _powerflux_base + _carriers.size(), SolutionDescriptor::VECTOR, SolutionDescriptor::NODES, "W/cm^2");
+  declare_solution_ext("TotalPeltierHeat", _peltier_base + _carriers.size(), SolutionDescriptor::REAL, SolutionDescriptor::NODES, "W/cm^3");
 
   unsigned int n_rec = 0;
   for (auto& rec : _rec_models)
@@ -1942,11 +1962,6 @@ DriftDiffusion::do_setup_solution_variables(void)
   }
 
   /*
-  declare_solution(Eg, REAL, NODES, "eV");
-  declare_solution(Ev, REAL, NODES, "eV");
-  declare_solution(Ec0, REAL, NODES, "eV");
-  declare_solution(Ev0, REAL, NODES, "eV");
-
   // the correct number of components will be inserted afterwards
   declare_solution(ElectronBands, NTUPLE, CELL, "eV", 1);
   declare_solution(HoleBands, NTUPLE, CELL, "eV", 1);
@@ -1958,24 +1973,8 @@ DriftDiffusion::do_setup_solution_variables(void)
   */
 
   declare_solution(Polarization, VECTOR, CELL, "C/m^2");
-  /*
-
-  declare_solution(eConductivity, REAL, NODES, "S/cm");
-  declare_solution(hConductivity, REAL, NODES, "S/cm");
-  if (plot_solution("Conductivity"))
-  {
-    add_plot_variable(eConductivity);
-    add_plot_variable(hConductivity);
-  }
-  */
 
   declare_solution(TotCurrentDensity, VECTOR, CELL, "A/cm^2");
-  /*
-  declare_solution(eCurrentDensity, VECTOR, CELL, "A/cm^2");
-  declare_solution(hCurrentDensity, VECTOR, CELL, "A/cm^2");
-  //declare_solution(eFlux, VECTOR, CELL, "1/(s*cm^2)");
-  //declare_solution(hFlux, VECTOR, CELL, "1/(s*cm^2)");
-  */
 
   declare_solution(IonizedDonors, REAL, NODES, "cm^-3");
   declare_solution(IonizedAcceptors, REAL, NODES, "cm^-3");
@@ -1984,21 +1983,7 @@ DriftDiffusion::do_setup_solution_variables(void)
   declare_solution(IonizedElectronTraps, REAL, NODES, "cm^-3");
   declare_solution(IonizedHoleTraps, REAL, NODES, "cm^-3");
 
-  declare_solution(eThElPower, REAL, NODES, "eV/K");
-  add_alias("Pn", eThElPower);
-  declare_solution(hThElPower, REAL, NODES, "eV/K");
-  add_alias("Pp", hThElPower);
 
-  declare_solution(eJoule, REAL, NODES, "W/cm^3");
-  declare_solution(hJoule, REAL, NODES, "W/cm^3");
-
-  declare_solution(ePowerFlux, VECTOR, NODES, "W/cm^2");
-  declare_solution(hPowerFlux, VECTOR, NODES, "W/cm^2");
-
-  declare_solution(ePeltier, REAL, NODES, "W/cm^3");
-  declare_solution(hPeltier, REAL, NODES, "W/cm^3");
-
-  declare_solution(RecombHeat, REAL, NODES, "W/cm^3");
 
   if (plot_solution("NetRecombination"))
   {
