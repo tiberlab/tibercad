@@ -419,6 +419,17 @@ The main parameters are:
     *optical_spectrum_k_0* to  select  optical emission spectrum in *k=0* (:math:`\Gamma` point) 
     *matrix_elements* to  select calculation of  the optical matrix elements 
 
+The spontaneous recombination rate is calculated according to
+
+.. math::
+
+    R_{sp} = 2\frac{2}{3}\frac{n_r \omega^2}{c^3}|\mathbf{p}_{ij}\cdot\hat{\mathbf{e}}|^2 f_e f_h
+
+where :math:`\mathbf{p}_{ij}` is the momentum matrix element between states :math:`i` and :math:`j`, given by
+
+.. math::
+    \mathbf{p} = \langle\psi_i|(\mathbf{R}-\mathbf{R}')H|\psi_j\rangle
+
 
 The output  file  for optical emission spectrum in *k=0* (:math:`\Gamma` point) is named *<simulation_name>_spectrum_k_0.dat*  and is composed by  several  columns  with the  following format ::
 
