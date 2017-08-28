@@ -22,21 +22,21 @@
 
 
 // libmesh includes
-#include "node.h"
-#include "mesh.h"
-#include "dof_map.h"
-#include "elem.h"
-#include "fe_interface.h"
-#include "quadrature_gauss.h"
-#include "quadrature_trap.h"
-#include "equation_systems.h"
-#include "mesh_refinement.h"
-#include "sparse_matrix.h"
-#include "numeric_vector.h"
-#include "dense_submatrix.h"
-#include "dense_subvector.h"
-#include "libmesh_logging.h"
-#include "perf_log.h"
+#include "libmesh/node.h"
+#include "libmesh/mesh.h"
+#include "libmesh/dof_map.h"
+#include "libmesh/elem.h"
+#include "libmesh/fe_interface.h"
+#include "libmesh/quadrature_gauss.h"
+#include "libmesh/quadrature_trap.h"
+#include "libmesh/equation_systems.h"
+#include "libmesh/mesh_refinement.h"
+#include "libmesh/sparse_matrix.h"
+#include "libmesh/numeric_vector.h"
+#include "libmesh/dense_submatrix.h"
+#include "libmesh/dense_subvector.h"
+#include "libmesh/libmesh_logging.h"
+#include "libmesh/perf_log.h"
 //#include "libMeshDefs.h"
 
 #include "DataOutput.h"
@@ -136,62 +136,6 @@ DriftDiffusion::DriftDiffusion(const ModelOptions& options)
     _carriers.push_back(name);
   }
 
-/*
-  // detect all excitons
-  itc = physopts.submodels_begin("carrier");
-
-  for ( ; itc != end_itc; ++itc)
-  {
-    bool ex = (itc->second).get_option("exciton", false); 
-    if (ex) //the carrier is an exciton
-    {
-      string name = (itc->second).get_option("name", "");
-
-      vector<string> ex_carriers;
-      (itc->second).get_option("exciton_carriers", ex_carriers);
-
-      if (ex_carriers.size() < 2)
-        throw InitFailedException("Two carriers must be specified to set exciton '" + name + "'");
-
-      ex_carriers.resize(2);
-      double charge = 1.0;
-
-      //insert the exciton in the map associating charge carriers ids
-      _excitons.insert( make_pair(name, set<unsigned int>()) );
-
-      for (auto exc : ex_carriers)
-      {
-        if (names.count(exc) == 0)
-          throw InitFailedException("In exciton '" + name + "', carrier '" + exc + "' does not exist");
-
-        //get exciton carrier options
-        auto findc (physopts.submodels_begin("carrier"));
-
-        for ( ; findc != end_itc; ++findc)
-          if ( (findc->second).get_option("name" , "") == exc )
-            break;
-
-        if ((findc->second).get_option("exciton" , false))
-          throw InitFailedException("Carrier '" + exc + "' is an exciton. \nExciton '" + name + "' has to be defined by two charge carriers");
-
-        charge *= (findc->second).get_option("charge" , 1.0); //multiply the charge of each exciton carrier, eventually charge has to be negative
-
-        //insert the charge carrier id in excitons map
-        for (unsigned int i = 0; i < _carriers.size(); i++)
-        {
-          if (exc == _carriers[i])
-            _excitons[name].insert(i);
-        }
-      }
-
-      if (charge > 0.0)
-        throw InitFailedException("Carriers associated to exciton '" + name + "' must have opposite charge");
-
-    }
-  }
-  // end excitons
-
-*/
 
   // detect all recombination models in order to define specific plot variables
   auto itr (physopts.submodels_begin("recombination"));
@@ -217,21 +161,6 @@ DriftDiffusion::DriftDiffusion(const ModelOptions& options)
           if (carrier == _carriers[i])
             _rec_models[plotname].insert(i);
         }
-
-        // if we have an exciton, we add its charge carriers to generation model plot variables
-        /*
-        if (_excitons.count(carrier))
-        {
-          bool add;
-          add = ( recname.compare(0, 11, "exciton_gen") == 0 ) ? true : false;
-
-          if (add)
-          {
-            for (auto i : _excitons[carrier])
-              _rec_models[plotname].insert(i);
-          }
-        }
-        */
       }
     }
   } //end rec models
@@ -2289,6 +2218,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
       double q = sc->get_carrier_properties(v)->get_charge();
       double sign = (q > 0) ? 1 : -1;
       double sigma = sc->get_q_conductivity(v);
+      //double thel_pow = sc->get_carrier_properties(v)->get_thermoelectric_power();
       RealGradient flux_loc = - sign * sigma * grad_qf_loc[v];
       flux[v] += flux_loc;
       curr[v] += Constants::e * q  * flux_loc;
@@ -4752,7 +4682,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
       sc->calculate_net_recombination_rates();
 
       map<unsigned int, long double> dens, R;
-      map<unsigned int, double> mu, sigma;
+      map<unsigned int, double> mu, sigma, tep;
 
       for (auto&& var : q_var)
       {
@@ -4763,7 +4693,6 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
           mu.insert( make_pair(var, sc->get_q_mobility(var)) );
           sigma.insert( make_pair(var, sc->get_q_conductivity(var) / (mu0 * C0_q)) );
 
-          //cout<<"C"<<var<<" dens = "<<dens[var]<<" R = "<<R[var]<<" mu = "<<mu[var]<<" sigma = "<<sigma[var]<<endl;
         }
       }
       //double Nd = sc->get_ionized_donor_density();

@@ -6,7 +6,6 @@
 #include "RecombinationModelInterface.h"
 #include "TypeDefs.h"
 
-class SimulationInterface;
 
 //! Implementation of direct recombination
 /*!
@@ -44,9 +43,6 @@ class TBDLLOCAL ExcitonEnergyTransfer : public RecombinationModelInterface
 
   private:
 
-    typedef std::map<std::pair<SimulationInterface*, SimulationInterface*>,
-        std::pair<unsigned int, double> > QRecMap;
-
     //! Donor material permittivity
     double _er;
 
@@ -78,18 +74,6 @@ class TBDLLOCAL ExcitonEnergyTransfer : public RecombinationModelInterface
     ID _id_d;
     ID _id_a;
 
-    //! The quantum optics simulation, if available
-    SimulationInterface* _quantum_optics;
-
-    //! The solution ID for the optical recombination
-    ID _rec_id;
-
-    //! A static map to put quantum recombination in
-    /*!
-     * This map is used so as to not calculate the same quantity
-     * several times.
-     */
-    static QRecMap _qrec_vals;
 
 };
 
@@ -108,8 +92,7 @@ ExcitonEnergyTransfer::ExcitonEnergyTransfer(const ModelOptions& options)
     _er(1.0),
     _m(2.0),
     _tau(1e-9),
-    _tau_rad(1e-9),
-    _quantum_optics(NULL)
+    _tau_rad(1e-9)
 {
 }
 

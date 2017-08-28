@@ -14,8 +14,6 @@
 
 using namespace std;
 
-ExcitonTTAInterpolated::QRecMap
-ExcitonTTAInterpolated::_qrec_vals;
 
 void
 ExcitonTTAInterpolated::read_database(void)
@@ -31,7 +29,7 @@ ExcitonTTAInterpolated::do_init(void)
   RecombinationModelInterface::do_init();
 
   const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
-  for (auto name : get_carrier_names())
+  /*for (auto name : get_carrier_names())
   {
     if (!dd.get_carrier_properties(name)->is_exciton())
       throw InitFailedException("Recombination '" + get_default_name() + ": carrier '" + name + "' is not an exciton");
@@ -39,7 +37,7 @@ ExcitonTTAInterpolated::do_init(void)
     if (dd.get_carrier_properties(name)->get_spin() != 1.0)
       throw InitFailedException("Recombination '" + get_default_name() + ": exciton '" + name + "' is not an triplet");
 
-  }
+  }*/
 
   string sim = get_option("interpolation_module", "");
   _interpolation_sim = SimulationInterface::find_simulation(sim);
@@ -68,20 +66,6 @@ ExcitonTTAInterpolated::do_init(void)
     throw InitFailedException("Variable '" + _density_var + "' not found in model '" + _model_name + "'");
 
 
-  string quantumsim = get_option("optics_simulation", "");
-  if (!quantumsim.empty())
-  {
-    _quantum_optics = SimulationInterface::find_simulation(quantumsim);
-    if (_quantum_optics == NULL)
-      throw InitFailedException("Cannot find optics simulation \'" + quantumsim + "\'");
-
-    _rec_id = _quantum_optics->get_solution_id("Recombination");
-    if (_rec_id == INVALID_ID)
-      throw InitFailedException("Simulation \'" + quantumsim + "\'" +
-          " does not have the needed solution \'Recombination\'");
-
-    // TODO should check for consistency of regions
-  }
 
 }
 

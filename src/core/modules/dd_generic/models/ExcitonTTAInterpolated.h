@@ -60,20 +60,6 @@ class TBDLLOCAL ExcitonTTAInterpolated : public RecombinationModelInterface
     ID _density_id;
 
 
-
-    //! The quantum optics simulation, if available
-    SimulationInterface* _quantum_optics;
-
-    //! The solution ID for the optical recombination
-    ID _rec_id;
-
-    //! A static map to put quantum recombination in
-    /*!
-     * This map is used so as to not calculate the same quantity
-     * several times.
-     */
-    static QRecMap _qrec_vals;
-
 };
 
 
@@ -84,8 +70,7 @@ class TBDLLOCAL ExcitonTTAInterpolated : public RecombinationModelInterface
 
 inline
 ExcitonTTAInterpolated::ExcitonTTAInterpolated(const ModelOptions& options)
-  : RecombinationModelInterface(options),
-    _quantum_optics(NULL)
+  : RecombinationModelInterface(options)
 {
 }
 

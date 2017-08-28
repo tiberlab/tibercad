@@ -10,8 +10,8 @@ class SimulationInterface;
 
 //! Implementation of direct recombination
 /*!
- * This class implements direct recombination processes that can be
- * modeled by \f[R_{direct}=C(np-n_i^2)\f]
+ * This class implements a recombination processes that can be
+ * modeled by \f[R_{decay}=Cn(1 - exp(E_{F,n}/k_BT))\f] where \c n is the density of the carriers
  */
 class TBDLLOCAL ExcitonDecay : public RecombinationModelInterface
 {

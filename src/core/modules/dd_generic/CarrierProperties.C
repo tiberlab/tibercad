@@ -23,7 +23,6 @@ CarrierProperties::CarrierProperties(const ModelOptions& options) :
     _carrier_id(DriftDiffusionProperties::unknown_carrier_id),
     _charge(-1),
     _spin(0.5),
-    _is_exciton(false),
     _is_dopant(false),
     _dos_factor(pow(2.0 * M_PI *
         Constants::me / (Constants::h * Constants::h) *
@@ -63,13 +62,6 @@ CarrierProperties::CarrierProperties(const ModelOptions& options) :
 
   _charge = get_option("charge", _charge);
   _spin = get_option("spin", _spin);
-  _is_exciton = get_option("exciton", _is_exciton);
-
-  //_exciton_carriers.resize(0);
-  if (_is_exciton)
-  {
-    _spin = get_option("spin", 0.0);
-  }
 
   _particle = (_charge <= 0.0) ? 'e' : 'h';
 

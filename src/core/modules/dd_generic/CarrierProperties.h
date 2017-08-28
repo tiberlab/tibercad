@@ -81,9 +81,6 @@ class CarrierProperties : public DriftDiffusionModelInterface
     //! Get the particle spin  in units of \c h/2pi
     double get_spin(void) const;
 
-    //! Tell if the carrier is an exciton
-    const bool is_exciton(void) const;
-
     //! Tell if the carrier is a dopant
     const bool is_dopant(void) const;
 
@@ -178,9 +175,6 @@ class CarrierProperties : public DriftDiffusionModelInterface
     //! The particle spin in units of \c h/2pi
     double _spin;
 
-    //! Tell if the carrier is an exciton
-    bool _is_exciton;
-
     //! Tell if the carrier is a dopant
     bool _is_dopant;
 
@@ -265,12 +259,6 @@ CarrierProperties::get_particle_name(void) const
   return(_particle_name);
 }
 
-inline
-const bool
-CarrierProperties::is_exciton(void) const
-{
-  return(_is_exciton);
-}
 
 /*
 inline

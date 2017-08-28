@@ -6,16 +6,11 @@
 #include "SimulationEnvironment.h"
 #include "Messages.h"
 
-#include "mesh_base.h"
-#include "quadrature.h"
-
 #include "TiberModule.h"
 
 
 using namespace std;
 
-ExcitonEnergyTransfer::QRecMap
-ExcitonEnergyTransfer::_qrec_vals;
 
 void
 ExcitonEnergyTransfer::read_database(void)
@@ -44,11 +39,6 @@ ExcitonEnergyTransfer::do_init(void)
 
   const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
 
-  for (auto name : get_carrier_names())
-  {
-    if (!dd.get_carrier_properties(name)->is_exciton())
-      throw InitFailedException("Recombination '" + get_default_name() + ": carrier '" + name + "' is not an exciton");
-  }
 
   _id_d = this->get_carrier_ids()[0];
   _id_a = this->get_carrier_ids()[1];
@@ -66,20 +56,6 @@ ExcitonEnergyTransfer::do_init(void)
   _Kf = (get_option("forster", true)) ? pow(_Rf / _R_da, 6.0) / _tau_rad            : 0.0; //Forster rate
   _Kd = (get_option("dexter", true) ) ? 1e3 * exp(2.0*(_Rd - _R_da) / RBeff) / _tau : 0.0; //Dexter rate
 
-  string quantumsim = get_option("optics_simulation", "");
-  if (!quantumsim.empty())
-  {
-    _quantum_optics = SimulationInterface::find_simulation(quantumsim);
-    if (_quantum_optics == NULL)
-      throw InitFailedException("Cannot find optics simulation \'" + quantumsim + "\'");
-
-    _rec_id = _quantum_optics->get_solution_id("Recombination");
-    if (_rec_id == INVALID_ID)
-      throw InitFailedException("Simulation \'" + quantumsim + "\'" +
-          " does not have the needed solution \'Recombination\'");
-
-    // TODO should check for consistency of regions
-  }
 
 }
 
