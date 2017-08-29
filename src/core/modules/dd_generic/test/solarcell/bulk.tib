@@ -1,0 +1,216 @@
+
+# Description of  the  device physical regions
+Device
+{
+  meshfile = bulk.msh
+  material = GaAs
+
+
+   Region bulk 
+   {
+     Doping { Nd = 1e15 type = donor}
+   }
+
+   Region ndop 
+   {
+     Doping { Nd = 1e19 type = donor }
+   }
+
+   Region pdop 
+   {
+     Doping { Nd = 1e19 type = acceptor }
+   }
+
+
+}
+
+
+Module dd_generic
+{ 
+
+  name = driftdiffusion
+  plot = (ElPotential, QFermi, Density, RefEnergy, Mobility,
+          IonizedDonors, Flux, NetRecombination, ContactCurrent)
+
+  #Solver trustregion { max_step = 100 }
+  Solver
+  {
+    #step_tolerance = 0.01
+    max_iterations = 20
+  }
+
+  Physics
+  {
+    doping
+    {
+      donor_reference_carrier = electron
+      acceptor_reference_carrier = hole
+    }
+
+    carrier exciton
+    {
+      regions = bulk
+      charge = 0
+      spin = 0
+      density_of_states gauss
+      {
+        level = 1.4
+        sigma = 0.05
+        N0 = 1e18
+      }
+    }
+
+
+    carrier electron
+    {
+      #regions = (bulk, ndop)
+
+      #density_of_states gauss
+      #{
+      #  level = 3.5
+      #  sigma = 0.13
+      #  N0 = 1e19
+      #}
+    }
+
+
+    carrier hole
+    {
+      #regions = (bulk, pdop)
+
+      #density_of_states bulk
+      #{
+      #  level = 0.0
+      #  sigma = 0.11
+      #  N0 = 1e19
+      #}
+    }
+
+    mobility constant
+    {
+      carriers = (electron, hole)
+      mu = 1000
+    }
+
+    mobility constant
+    {
+      carriers = (exciton)
+      mu = 10
+    }
+
+
+    recombination direct 
+    {
+      carriers = (electron, hole)
+      C = 1e-9
+    }
+
+    Rrecombination srh
+    {
+      carriers = (electron, hole)
+    }
+
+
+    recombination exciton_generation
+    {
+      regions = bulk
+      carriers = (electron, hole, exciton)
+      gamma = 1e-24
+      plot_name = "gen"
+    }
+
+    recombination exciton_decay
+    {
+      regions = bulk
+      carriers = (exciton)
+      tau = 1e-6
+      plot_name = "decay"
+    }
+
+    recombination optical
+    {
+      regions = bulk
+      carriers = exciton
+      multiplier = $x[0]
+      generation = 1e21
+      plot_name = "optical"
+    }
+
+  }   
+
+
+  Contact anode
+  {
+    type = ohmic
+    voltage = $Vb
+    isolated_carriers = electron
+  }
+
+  Contact cathode
+  {
+    type = ohmic
+    voltage = 0.0
+    isolated_carriers = hole
+  }
+
+}  
+
+
+
+Module sweep
+{
+  solve = driftdiffusion
+  variable = $Vb
+  start = 0.0
+  stop = 1.5
+  steps = 15
+  #plot_data = true
+}
+
+
+Module sweep
+{
+  name = sweep_back
+  solve = driftdiffusion
+  variable = $Vb
+  start = 1.5
+  stop = 0
+  steps = 30
+  plot_data = true
+}
+
+
+Module sweep
+{
+  name = sweep_gen
+  solve = driftdiffusion
+  variable = $x
+  type = log
+  start = 1e-18
+  stop = 1
+  #plot_data = true
+}
+
+
+
+Simulation
+{
+  temperature = 300
+  solve = (driftdiffusion, sweep, sweep_gen, sweep_back)
+  resultpath = output
+  output_format = grace
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -17,7 +17,10 @@ class Elem;
 //! Implementation of optical generation
 /*!
  * This class implements optical generation processes that can be
- * modeled by \f[G_{x}= G]
+ * modeled by a constant.
+ * Two ways are possible: promote a particle between two states (bands),
+ * requiring the specification of two carriers, or production of a single
+ * carrier (e.g. exciton).
  *
  */
 class TBDLLOCAL OpticalGeneration : public RecombinationModelInterface
