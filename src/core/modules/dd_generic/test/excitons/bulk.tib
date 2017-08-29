@@ -116,7 +116,7 @@ Module dd_generic
     {
       regions = bulk
       carriers = (electron, hole, exciton)
-      gamma = 1e-6
+      gamma = 1e-24
       plot_name = "gen"
     }
 
