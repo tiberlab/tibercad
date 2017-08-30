@@ -2359,7 +2359,7 @@ SimulationInterface::get_solution(const libMesh::Elem* elem,
     {
       case SolutionDescriptor::CELL:
       case SolutionDescriptor::NODES:
-        values[it->first].resize(nn * n_comp);
+        values[it->first].resize(nn * n_comp, 0.0);
         break;
 
       default:
