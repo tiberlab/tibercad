@@ -202,9 +202,9 @@ Ramp::ramp(void)
       if (step == 0) throw SolveFailedException("Cannot decrease step size, is already 0");
 
       value = oldvalue;
-      VariableValue::set_variable_value(_variable, value);
-      for (int i = 0; i < num_sim; i++)
-        _simulations[i]->solve();
+      //VariableValue::set_variable_value(_variable, value);
+      //for (int i = 0; i < num_sim; i++)
+      //  _simulations[i]->solve();
     }
   }
   while (abs(_goal - value) > 1e9 * (abs(_goal) * numeric_limits<double>::epsilon()
