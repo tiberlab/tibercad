@@ -418,7 +418,7 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
       ElPotential,      /*!< electric potential */
       ElField,          /*!< electric field vector */
       Polarization,     /*!< total electric polarization */
-      TotCurrentDensity,   /*!< total electric current density */
+      TotalCurrentDensity,   /*!< total electric current density */
       IonizedDonors,    /*!< ionized donor density */
       IonizedAcceptors, /*!< ionized acceptor density */
       IonizedElectronTraps, /*!< trapped electron density */
@@ -427,7 +427,7 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
       IQE,              /*!< Internal quantum efficiency */
       ContactCurrent   = 100,  /*!< base number for contact currents */
       ContactVoltage   = 200,  /*!< base number for contact voltages */
-      LAST               /*!< this is used to know the first free number */
+      LAST             = 300,  /*!< this is used to know the first free number */
     };
 
     //! Base index for quasi Fermi energies

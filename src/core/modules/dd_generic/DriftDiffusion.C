@@ -1854,13 +1854,15 @@ DriftDiffusion::do_setup_solution_variables(void)
     if (plot_solution("CurrentDensity"))
           add_plot_variable(_curr_base + i);
 
-    declare_solution_ext(_carriers[i] + "ThElPower", _thelpower_base + i, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "eV/K");
+    //declare_solution_ext(_carriers[i] + "ThElPower", _thelpower_base + i, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "eV/K");
 
     declare_solution_ext(_carriers[i] + "Joule", _joule_base + i, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "W/cm^3");
+    if (plot_solution("JouleHeat"))
+          add_plot_variable(_joule_base + i);
 
-    declare_solution_ext(_carriers[i] + "PowerFlux", _powerflux_base + i, SolutionDescriptor::VECTOR, SolutionDescriptor::NODES, "W/cm^2");
+    //declare_solution_ext(_carriers[i] + "PowerFlux", _powerflux_base + i, SolutionDescriptor::VECTOR, SolutionDescriptor::NODES, "W/cm^2");
 
-    declare_solution_ext(_carriers[i] + "Peltier", _peltier_base + i, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "W/cm^3");
+    //declare_solution_ext(_carriers[i] + "Peltier", _peltier_base + i, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "W/cm^3");
 
 
 
@@ -1871,10 +1873,12 @@ DriftDiffusion::do_setup_solution_variables(void)
 
   }
 
-  declare_solution_ext("TotalRecombinationHeat", _recheat_base, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "W/cm^3");
+  //declare_solution_ext("TotalRecombinationHeat", _recheat_base, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "W/cm^3");
   declare_solution_ext("TotalJouleHeat", _joule_base + _carriers.size(), SolutionDescriptor::REAL, SolutionDescriptor::NODES, "W/cm^3");
-  declare_solution_ext("TotalPowerFlux", _powerflux_base + _carriers.size(), SolutionDescriptor::VECTOR, SolutionDescriptor::NODES, "W/cm^2");
-  declare_solution_ext("TotalPeltierHeat", _peltier_base + _carriers.size(), SolutionDescriptor::REAL, SolutionDescriptor::NODES, "W/cm^3");
+  if (plot_solution("JouleHeat"))
+    add_plot_variable(_joule_base + _carriers.size());
+  //declare_solution_ext("TotalPowerFlux", _powerflux_base + _carriers.size(), SolutionDescriptor::VECTOR, SolutionDescriptor::NODES, "W/cm^2");
+  //declare_solution_ext("TotalPeltierHeat", _peltier_base + _carriers.size(), SolutionDescriptor::REAL, SolutionDescriptor::NODES, "W/cm^3");
 
   unsigned int n_rec = 0;
   for (auto& rec : _rec_models)
@@ -1903,7 +1907,9 @@ DriftDiffusion::do_setup_solution_variables(void)
 
   declare_solution(Polarization, VECTOR, CELL, "C/m^2");
 
-  declare_solution(TotCurrentDensity, VECTOR, CELL, "A/cm^2");
+  declare_solution(TotalCurrentDensity, VECTOR, CELL, "A/cm^2");
+  if (plot_solution("CurrentDensity"))
+    add_plot_variable(TotalCurrentDensity);
 
   declare_solution(IonizedDonors, REAL, NODES, "cm^-3");
   declare_solution(IonizedAcceptors, REAL, NODES, "cm^-3");
@@ -2313,6 +2319,30 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
         values[IonizedAcceptors][n] = sc->get_ionized_acceptor_density();
     }
 
+    for (unsigned int v = 0; v < n_vars; ++v)
+    {
+      if (sc->get_carrier_properties(v) != nullptr)
+      {
+        double q = sc->get_carrier_properties(v)->get_charge();
+        double sign = (q > 0) ? -1 : 1;
+        double joule_loc = sign * Constants::e * (flux[v] * grad_qf_loc[v]);
+        if (values.count(_joule_base + v))
+        {
+          values[_joule_base + v][n] = joule_loc;
+        }
+
+        if (values.count(_joule_base + n_vars))
+        {
+          values[_joule_base + n_vars][n] += joule_loc;
+        }
+      }
+      else
+      {
+        if (values.count(_joule_base + v))
+          values[_joule_base + v][n] = 0;
+      }
+    }
+
     /*
     bool trapped_electrons = values.count(IonizedElectronTraps);
     bool trapped_holes = values.count(IonizedHoleTraps);
@@ -2503,11 +2533,11 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     values[Polarization][2] = polariz(2) / np;
   }
 
-  if (values.count(TotCurrentDensity))
+  if (values.count(TotalCurrentDensity))
   {
-    values[TotCurrentDensity][0] = curr_tot(0) / np;
-    values[TotCurrentDensity][1] = curr_tot(1) / np;
-    values[TotCurrentDensity][2] = curr_tot(2) / np;
+    values[TotalCurrentDensity][0] = curr_tot(0) / np;
+    values[TotalCurrentDensity][1] = curr_tot(1) / np;
+    values[TotalCurrentDensity][2] = curr_tot(2) / np;
   }
 
   for (unsigned int v = 0; v < n_vars; ++v)
