@@ -19,15 +19,8 @@ HoppingMobility::do_init(void)
 
 double HoppingMobility::get_mobility(void)
 {
-  double dens;
-  if (get_carrier_type() == 'e')
-  {
-    dens = get_driftdiffusionproperties().get_electron_density();
-  }
-  else
-  {
-    dens = get_driftdiffusionproperties().get_hole_density();
-  }
+  ID id = get_carrier();
+  double dens = get_driftdiffusionproperties().get_q_density(id);
   
   double F = get_driftdiffusionproperties().get_electric_field().size();
   double kT = get_driftdiffusionproperties().get_lattice_temperature();
@@ -73,18 +66,12 @@ HoppingMobility::get_derivative_potential(void)
 {
   double kT = get_driftdiffusionproperties().get_lattice_temperature();
   double mu, dens, dens_der;
-  if (get_carrier_type() == 'e')
-  {
-    mu = get_driftdiffusionproperties().get_electron_mobility();
-    dens = get_driftdiffusionproperties().get_electron_density();
-    dens_der = get_driftdiffusionproperties().get_electron_density_derivative();
-  }
-  else
-  {
-    mu = get_driftdiffusionproperties().get_hole_mobility();
-    dens = get_driftdiffusionproperties().get_hole_density();
-    dens_der = get_driftdiffusionproperties().get_hole_density_derivative();
-  }
+
+  ID id = get_carrier();
+  mu = get_driftdiffusionproperties().get_q_mobility(id);
+  dens = get_driftdiffusionproperties().get_q_density(id);
+  dens_der = get_driftdiffusionproperties().get_q_density_derivative(id);
+
   double n_dens = dens / _N0;
   if (n_dens > 0.1)
   {
@@ -102,15 +89,9 @@ HoppingMobility::get_derivative_potential(void)
 void
 HoppingMobility::get_derivative_grad_potential(libMesh::RealGradient& dm)
 {
-  double mu;
-  if (get_carrier_type() == 'e')
-  {
-    mu = get_driftdiffusionproperties().get_electron_mobility();
-  }
-  else
-  {
-    mu = get_driftdiffusionproperties().get_hole_mobility();
-  }
+  ID id = get_carrier();
+  double mu = get_driftdiffusionproperties().get_q_mobility(id);
+
   double F = get_driftdiffusionproperties().get_electric_field().size();
   double kT = get_driftdiffusionproperties().get_lattice_temperature();
   double s = _sigma / kT;

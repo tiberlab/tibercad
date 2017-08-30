@@ -80,10 +80,12 @@ GaussDOS::do_init(void)
 
 double GaussDOS::erfc(double x) const
 {
+  // TODO ec is set to larger values than before. What would be 'correct'
+  // values??
 
   if (fabs(x)<=4)
   {
-    const double ec = 1e-9;
+    const double ec = 1e-7;
     double e;
 
     int n = 0;
@@ -129,7 +131,7 @@ double GaussDOS::inverfc(double x) const
 	
   if (x>=0.003 && x<=1.997)
   {
-    const double ec = 1e-7;
+    const double ec = 1e-3;
     double e;
 	
     double Sn;
