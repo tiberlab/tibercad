@@ -216,6 +216,8 @@ BulkDOS::calculate_density_and_derivative(double Ef, double Epot, double kT, dou
   const double arg_min = -50;
   const double min_dens = 1e-64;
 
+  _th_el_power = 0;
+
   for (int i = 0; i < _ref_energies.size(); ++i)
   {
     double dens, der;
@@ -262,7 +264,20 @@ BulkDOS::calculate_density_and_derivative(double Ef, double Epot, double kT, dou
 
     density += dens;
     derivative += der;
+
+    // calculate thermoelectric power
+    double temp = kT / Constants::k_B;
+    double Pth = -dens / der * 1.5 / temp + Constants::k_Boltzmann * (arg - 1);
+    if (get_particle() == 'h')
+    {
+      Pth *= -1;
+    }
+    _th_el_power += dens * Pth;
+
   }
+
+  _th_el_power /= density;
+
 
   return make_pair(density, derivative);
 }

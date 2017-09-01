@@ -84,22 +84,6 @@ CarrierProperties::do_init(void)
 void
 CarrierProperties::do_reinit(void)
 {
-  /*
-  if (_is_exciton)
-  {
-    double DOS = 0.0;
-
-    for (auto exc : _exciton_carriers)
-    {
-      double N = get_driftdiffusionproperties().get_carrier_properties(exc)->get_effective_DOS(); 
-      N = pow(N, 2.0/3.0);
-      DOS += N;
-    }
-
-    DOS = pow(DOS, 3.0/2.0);
-    _dos_model->set_effective_DOS(DOS);
-  }
-  */
 }
 
 void
@@ -216,6 +200,12 @@ CarrierProperties::get_effective_mass(void) const
   return(_dos_model->get_effective_mass()[i]);
 }
 
+
+double
+CarrierProperties::get_thermoelectric_power(void) const
+{
+  return _dos_model->get_thermoelectric_power();
+}
 
 
 std::pair<double, double>

@@ -62,6 +62,11 @@ class CarrierProperties : public DriftDiffusionModelInterface
      */
     std::pair<double, double> get_density_and_derivative(double Ef, double Epot) const;
 
+
+    //! Get the thermoelectric power
+    double get_thermoelectric_power(void) const;
+
+
     //! Set the band edge
     void set_band_edge(double band_edge);
 

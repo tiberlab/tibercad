@@ -39,6 +39,7 @@ class TBDLEXPORT DensityOfStates : public PhysicalModelInterface
     /*!
      * \return the density of occupied states in cm^-3
      * for the given quasi Fermi-level \c Ef and the derivative
+     * w.r.t the quasi Fermi-level
      *
      * \param Ef quasi Fermi-level in eV
      * \param Epot potential energy (electrostatic energy) in eV
@@ -100,6 +101,12 @@ class TBDLEXPORT DensityOfStates : public PhysicalModelInterface
     //! Read the _fixed_DOS flag
     bool get_fixed_dos(void) const { return _fixed_DOS; }
 
+    //! Get the thermoelectric power
+    /*!
+     * Must be called after \c calculate_density_and_derivative()
+     */
+    double get_thermoelectric_power(void) const;
+
 
   protected:
 
@@ -117,14 +124,21 @@ class TBDLEXPORT DensityOfStates : public PhysicalModelInterface
     calculate_density_and_derivative(double Ef, double Epot, 
               double kT, double kTlattice, const Elem* elem, const Point& p) const = 0;
 
-    //overloading for Trap.C
+    //! overloading for Trap.C
     virtual std::pair<double, double>
     calculate_density_and_derivative(double Ef, double Epot, double kT, double kTlattice) const = 0;
 
-    // Do we have a quantum density?
+    //! Do we have a quantum density?
     bool& is_quantum_density(void);
 
+    //! Set the thermoelectric power
+    double& thermoelectric_power(void);
 
+    //! The thermoelectric power
+    /*!
+     * The thermoelectric power is calculated in \c calculate_density_and_derivative()
+     */
+    mutable double _th_el_power;
 
   private:
 
@@ -157,6 +171,8 @@ class TBDLEXPORT DensityOfStates : public PhysicalModelInterface
 
     //! \c true if the last calculated density is a quantum density
     bool _is_quantum;
+
+
 
 };
 
@@ -247,6 +263,21 @@ bool
 DensityOfStates::has_quantum_density(void) const
 {
   return _use_quantum;
+}
+
+
+inline
+double
+DensityOfStates::get_thermoelectric_power(void) const
+{
+  return _th_el_power;
+}
+
+inline
+double&
+DensityOfStates::thermoelectric_power(void)
+{
+  return _th_el_power;
 }
 
 

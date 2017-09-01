@@ -45,6 +45,9 @@ DDHeatSource::do_init(void)
       ID_set.insert(_simul->get_solution_id(src));
     }
   }
+
+  if (ID_set.count(INVALID_ID))
+   throw InitFailedException("Invalid heat sources defined in heat source model");
 }
 
 void

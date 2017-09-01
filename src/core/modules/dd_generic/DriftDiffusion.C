@@ -1854,7 +1854,9 @@ DriftDiffusion::do_setup_solution_variables(void)
     if (plot_solution("CurrentDensity"))
           add_plot_variable(_curr_base + i);
 
-    //declare_solution_ext(_carriers[i] + "ThElPower", _thelpower_base + i, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "eV/K");
+    declare_solution_ext(_carriers[i] + "ThElPower", _thelpower_base + i, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "eV/K");
+    if (plot_solution("ThermoelectricPower"))
+          add_plot_variable(_thelpower_base + i);
 
     declare_solution_ext(_carriers[i] + "Joule", _joule_base + i, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "W/cm^3");
     if (plot_solution("JouleHeat"))
@@ -2159,6 +2161,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     double oldu  = 0.0;
     vector<double> oldqf(n_vars, 0.0);
     double T  = 0.0;
+    vector<double> thel_pow(n_vars, 0.0);
 
     libMesh::RealGradient e_field(0);
     vector<libMesh::RealGradient> grad_qf_loc(n_vars, 0);
@@ -2224,7 +2227,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
       double q = sc->get_carrier_properties(v)->get_charge();
       double sign = (q > 0) ? 1 : -1;
       double sigma = sc->get_q_conductivity(v);
-      //double thel_pow = sc->get_carrier_properties(v)->get_thermoelectric_power();
+      thel_pow[v] = sc->get_carrier_properties(v)->get_thermoelectric_power();
       RealGradient flux_loc = - sign * sigma * grad_qf_loc[v];
       flux[v] += flux_loc;
       curr[v] += Constants::e * q  * flux_loc;
@@ -2272,6 +2275,10 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
       if (values.count(_conductivity_base + v))
         values[_conductivity_base + v][n] = Constants::e * sc->get_q_conductivity(v);
+
+      if (values.count(_thelpower_base + v))
+        values[_thelpower_base + v][n] = thel_pow[v];
+
     }
 
     /*
