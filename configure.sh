@@ -34,7 +34,7 @@ BOOST="${SDKDIR}"
 CONFIGOPTS="--with-boost-prefix=$BOOST --with-boost-libdir=${BOOST}/${ARCH}-linux/lib"
 
 SVN=svn-1.6.5
-if test "$(cat /etc/debian_version)" = "8.8"
+if test "$(cat /etc/debian_version | awk -F . '{print $1}')" = "8"
 then
   SVN=svn-1.9.5
 fi
