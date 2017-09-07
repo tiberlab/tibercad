@@ -75,9 +75,9 @@ void TiberPetscLinearSolver::init(const char*)
     //ierr = KSPGetPC(_ksp, &_pc);
     //TiberPetscUtils::checkerr(ierr);
 
-    // We start with 0 for the correction
-    //ierr = KSPSetInitialGuessNonzero(_ksp, PETSC_TRUE);
-    //TiberPetscUtils::checkerr(ierr);
+    // We use the provided vector as initial guess
+    ierr = KSPSetInitialGuessNonzero(_ksp, PETSC_TRUE);
+    TiberPetscUtils::checkerr(ierr);
 
     // Set the options from user-input (for tests only)
     //ierr = KSPSetFromOptions (_ksp);
@@ -240,9 +240,9 @@ TiberPetscLinearSolver::do_solve(SparseMatrix<Number>&  matrix_in,
   // Solve the linear system
   ierr = KSPSolve(_ksp, rhs->vec(), solution->vec());
 
-  //KSPConvergedReason reason;
-  //KSPGetConvergedReason(_ksp, &reason);
-  //std::cerr << "KSP convergence reason: " << reason << std::endl;
+  KSPConvergedReason reason;
+  KSPGetConvergedReason(_ksp, &reason);
+  std::cerr << "KSP convergence reason: " << reason << std::endl;
   TiberPetscUtils::checkerr(ierr);
 
   return check_convergence();

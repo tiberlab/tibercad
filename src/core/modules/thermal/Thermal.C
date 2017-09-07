@@ -62,21 +62,11 @@ Thermal::do_init(void)
   system.attach_assemble_function(assemble);
   system.init();
 
-  libMesh::NumericVector<double>& solution = system.get_solution_vector();
+  libMesh::NumericVector<double>& solution = system.get_local_solution_vector();
   solution.zero();
   solution.add(SimulationOptions::T);
   solution.close();
-
-}
-
-
-libMesh::NumericVector<double>&
-Thermal::do_get_solution_vector(void)
-{
-
-  TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
-  system.get_solution_vector().close();
-  return system.get_solution_vector();
+  system.update();
 
 }
 
@@ -517,7 +507,9 @@ Thermal::do_assemble(libMesh::EquationSystems& es, const std::string& system_nam
    }//Elem
    
    system_fourier.matrix->close();
+   //system_fourier.matrix->print_matlab("K.m");
    system_fourier.rhs->close();
+   //system_fourier.rhs->print_matlab("f.m");
 }
 
 
