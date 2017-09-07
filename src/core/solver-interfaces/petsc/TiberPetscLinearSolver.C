@@ -75,9 +75,12 @@ void TiberPetscLinearSolver::init(const char*)
     //ierr = KSPGetPC(_ksp, &_pc);
     //TiberPetscUtils::checkerr(ierr);
 
-    // We use the provided vector as initial guess
-    ierr = KSPSetInitialGuessNonzero(_ksp, PETSC_TRUE);
-    TiberPetscUtils::checkerr(ierr);
+    if (get_option("use_initial_guess", false))
+    {
+      // We use the provided vector as initial guess
+      ierr = KSPSetInitialGuessNonzero(_ksp, PETSC_TRUE);
+      TiberPetscUtils::checkerr(ierr);
+    }
 
     // Set the options from user-input (for tests only)
     //ierr = KSPSetFromOptions (_ksp);
@@ -465,6 +468,8 @@ TiberPetscLinearSolver::do_parse_options(void)
   */
 
   _solver_package = get_option("solver_package", "");
+  // dummy read
+  get_option("use_initial_guess", false);
 
   _monitor = get_option("monitor", false);
   _xmonitor = get_option("xmonitor", false);
