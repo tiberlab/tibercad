@@ -240,9 +240,9 @@ TiberPetscLinearSolver::do_solve(SparseMatrix<Number>&  matrix_in,
   // Solve the linear system
   ierr = KSPSolve(_ksp, rhs->vec(), solution->vec());
 
-  KSPConvergedReason reason;
-  KSPGetConvergedReason(_ksp, &reason);
-  std::cerr << "KSP convergence reason: " << reason << std::endl;
+  //KSPConvergedReason reason;
+  //KSPGetConvergedReason(_ksp, &reason);
+  //std::cerr << "KSP convergence reason: " << reason << std::endl;
   TiberPetscUtils::checkerr(ierr);
 
   return check_convergence();
