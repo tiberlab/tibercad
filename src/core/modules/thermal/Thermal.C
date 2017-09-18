@@ -423,8 +423,8 @@ Thermal::do_assemble(libMesh::EquationSystems& es, const std::string& system_nam
    libMesh::DenseMatrix<Number> Ke;
    libMesh::DenseVector<Number> Fe;
 
-  MeshBase::const_element_iterator       el     = this->active_local_elements_begin();
-  const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
+   MeshBase::const_element_iterator       el     = this->active_local_elements_begin();
+   const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
    for ( ; el != end_el ; ++el)
    {
 
