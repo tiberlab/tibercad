@@ -4729,18 +4729,11 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
           R.insert( make_pair(var, sc->get_net_q_recombination_rate(var)) );
           mu.insert( make_pair(var, sc->get_q_mobility(var)) );
           sigma.insert( make_pair(var, sc->get_q_conductivity(var) / (mu0 * C0_q)) );
-
+          tep.insert( make_pair(var, sc->get_carrier_properties(v)->get_thermoelectric_power());
         }
       }
       //double Nd = sc->get_ionized_donor_density();
       //double Na = sc->get_ionized_acceptor_density();
-
-      /*
-      // Get the thermoelectric power
-      sc->compute_thermoelectric_powers();
-      double eTEpower =  sc->get_electron_thermoelectric_power() / phi0;
-      double hTEpower =  sc->get_hole_thermoelectric_power() / phi0;
-      */
 
       const libMesh::RealTensor& permittivity = sc->get_relative_permittivity();
 
@@ -4795,7 +4788,6 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                 Kvv[var].at(var)(i,j) += sigma[var] * laplace / scalev.at(var)(i);
             }
           }
-          //cout<<"scale"<<var<<"("<<i<<") = "<<scalev.at(var)(i)<<endl;
 
           if ((var == u_var) && !(coupling & POISSON))
             Kvv[var].at(var)(i,i) += 1.0;
