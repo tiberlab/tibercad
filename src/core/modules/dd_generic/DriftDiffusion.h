@@ -408,7 +408,7 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
 
   
     // for nicer code
-    typedef std::map<const Boundary*, double> ContactData;
+    typedef std::map<std::string, double> ContactData;
     typedef std::set<unsigned int> DofList;
 
 
@@ -475,12 +475,12 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
 
         libMesh::NumericVector<double>* get_testfunction(int i);
 
-        libMesh::NumericVector<double>* get_testfunction(const Boundary* bd);
+        libMesh::NumericVector<double>* get_testfunction(const std::string& bd);
 
       private:
         DriftDiffusion* _dd;
 
-        std::map<const Boundary*, int> _boundaries;
+        std::map<std::string, int> _boundaries;
 
         void plot(void);
         void build_nodal_results(std::vector<double>& results,

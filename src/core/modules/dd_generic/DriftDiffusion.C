@@ -487,7 +487,7 @@ DriftDiffusion::do_solve(void)
     for ( ; it != end; ++it)
     {
       ElectricalContact* bd = dynamic_cast<ElectricalContact*>(
-          it->first->models_begin()->second);
+          this->get_environment().get_boundary(it->first)->models_begin()->second);
 
       if (bd != NULL)
       {
@@ -597,8 +597,13 @@ DriftDiffusion::do_solve(void)
 
   for (it = _boundary_currents.begin(); it != end; ++it)
   {
+    Boundary* bnd = this->get_environment().get_boundary(it->first);
+
+    if (bnd == nullptr)
+      continue;
+
     DDInterfaceModel* ifmod =
-        static_cast<DDInterfaceModel*>(it->first->models_begin()->second);
+        static_cast<DDInterfaceModel*>(bnd->models_begin()->second);
 
     // we print only contacts with a current
     if (!ifmod->has_current())
@@ -606,7 +611,7 @@ DriftDiffusion::do_solve(void)
 
     ostringstream os;
     os << setprecision(6);
-    os << it->first->get_name();
+    os << it->first;
     ElectricalContact* cnt = dynamic_cast<ElectricalContact*>(ifmod);
     if (cnt != NULL)
     {
@@ -629,7 +634,7 @@ DriftDiffusion::do_solve(void)
     else
       os.width(2 * width - os.tellp());
     os << "";
-    os << it->second * it->first->get_area_factor();
+    os << it->second * bnd->get_area_factor();
 
     Messages::info(os.str());
   }
@@ -807,7 +812,7 @@ DriftDiffusion::do_equilibrium(void)
   const ContactData::iterator end(sim_voltages.end());
   for ( ; it != end; ++it)
   {
-    const Boundary* bd = it->first;
+    const Boundary* bd = this->get_environment().get_boundary(it->first);
     vector<ID> ids;
     bd->get_region_ids(ids);
     for (unsigned int i = 0; i < ids.size(); i++)
@@ -819,7 +824,7 @@ DriftDiffusion::do_equilibrium(void)
 
       if (cnt != NULL)
       {
-        sim_voltages[bd] = cnt->get_simulation_voltage();
+        sim_voltages[bd->get_name()] = cnt->get_simulation_voltage();
         cnt->set_simulation_voltage(0.0);
       }
     }
@@ -852,7 +857,7 @@ DriftDiffusion::do_equilibrium(void)
   it = sim_voltages.begin();
   for ( ; it != end; ++it)
   {
-    const Boundary* bd = it->first;
+    const Boundary* bd = this->get_environment().get_boundary(it->first);
     vector<ID> ids;
     bd->get_region_ids(ids);
     for (unsigned int i = 0; i < ids.size(); i++)
@@ -863,7 +868,7 @@ DriftDiffusion::do_equilibrium(void)
           dynamic_cast<ElectricalContact*>(mb->get_model(get_id()));
 
       if (cnt != NULL)
-        cnt->set_simulation_voltage(sim_voltages[bd]);
+        cnt->set_simulation_voltage(sim_voltages[bd->get_name()]);
     }
   }
 
@@ -1090,8 +1095,12 @@ DriftDiffusion::calculate_iqe(void)
     ContactData::const_iterator it(_boundary_currents.begin());
     for ( ; it != _boundary_currents.end(); ++it)
     {
+      const Boundary* bnd = this->get_environment().get_boundary(it->first);
+      if (bnd == nullptr)
+        continue;
+
       DDInterfaceModel* ifmod =
-          static_cast<DDInterfaceModel*>(it->first->models_begin()->second);
+          static_cast<DDInterfaceModel*>(bnd->models_begin()->second);
 
       // we print only contacts with a current
       if (!ifmod->has_current())
@@ -1438,7 +1447,7 @@ DriftDiffusion::RSTFSys::solve(void)
   assemble();
 
   // we need to solve for every contact
-  map<const Boundary*, int>::iterator bdit(_boundaries.begin());
+  auto bdit(_boundaries.begin());
   for ( ; bdit != _boundaries.end(); ++bdit)
   {
     int i = bdit->second;
@@ -1468,11 +1477,11 @@ DriftDiffusion::RSTFSys::get_testfunction(int i)
 }
 
 libMesh::NumericVector<double>*
-DriftDiffusion::RSTFSys::get_testfunction(const Boundary* bd)
+DriftDiffusion::RSTFSys::get_testfunction(const string& bd)
 {
   libMesh::NumericVector<double>* vec = NULL;
 
-  map<const Boundary*, int>::iterator bdit(_boundaries.find(bd));
+  auto bdit(_boundaries.find(bd));
   if (bdit != _boundaries.end())
   {
     ostringstream os;
@@ -1491,7 +1500,7 @@ DriftDiffusion::RSTFSys::user_assembly(void)
   const unsigned int var = variable_number("u");
 
   vector<libMesh::NumericVector<double>*> rhsides(_boundaries.size());
-  map<const Boundary*, int>::iterator bdit(_boundaries.begin());
+  auto bdit(_boundaries.begin());
   for ( ; bdit != _boundaries.end(); ++bdit)
   {
     int i = bdit->second;
@@ -1551,7 +1560,7 @@ DriftDiffusion::RSTFSys::user_assembly(void)
 
       if (bd != NULL)
       {
-        map<const Boundary*, int>::iterator bdit(_boundaries.find(bd));
+        auto bdit(_boundaries.find(bd->get_name()));
         if (bdit != _boundaries.end())
         {
           // the internal number of the boundary
@@ -1574,7 +1583,7 @@ DriftDiffusion::RSTFSys::user_assembly(void)
     //dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
 
     matrix->add_matrix(Ke, dof_indices);
-    map<const Boundary*, int>::iterator bdit(_boundaries.begin());
+    auto bdit(_boundaries.begin());
     for ( ; bdit != _boundaries.end(); ++bdit)
     {
       rhsides[bdit->second]->add_vector(Fe[bdit->second], dof_indices);
@@ -1613,7 +1622,7 @@ DriftDiffusion::RSTFSys::build_nodal_results(vector<double>& results,
   legend.resize(_boundaries.size());
 
   vector<libMesh::NumericVector<double>*> rhsides(_boundaries.size());
-  map<const Boundary*, int>::iterator bdit(_boundaries.begin());
+  auto bdit(_boundaries.begin());
   for ( ; bdit != _boundaries.end(); ++bdit)
   {
     int i = bdit->second;
@@ -1652,7 +1661,7 @@ DriftDiffusion::RSTFSys::build_nodal_results(vector<double>& results,
     for (unsigned int n = 0; n < elem->n_nodes(); n++)
     {
       unsigned int id = elem->node(n) * _boundaries.size();
-      map<const Boundary*, int>::iterator bdit(_boundaries.begin());
+      auto bdit(_boundaries.begin());
       for ( ; bdit != _boundaries.end(); ++bdit)
       {
         int i = bdit->second;
@@ -1762,8 +1771,8 @@ DriftDiffusion::do_init(void)
       const Boundary* bnd = get_environment().get_boundary(mod->get_name());
       if (bnd != NULL)
       {
-        _boundary_currents[bnd] = 0.0;
-        _voltages[bnd] = 0.0;
+        _boundary_currents[bnd->get_name()] = 0.0;
+        _voltages[bnd->get_name()] = 0.0;
       }
     }
 
@@ -2228,29 +2237,12 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
       double sign = (q > 0) ? 1 : -1;
       double sigma = sc->get_q_conductivity(v);
       thel_pow[v] = sc->get_carrier_properties(v)->get_thermoelectric_power();
-      RealGradient flux_loc = - sign * sigma * grad_qf_loc[v];
+      RealGradient flux_loc = - sign * sigma * (grad_qf_loc[v] + thel_pow[v] * grad_T_loc);
       flux[v] += flux_loc;
       curr[v] += Constants::e * q  * flux_loc;
       curr_tot += Constants::e * q * flux_loc;
     }
-    /*
-    sc->compute_thermoelectric_powers();
-    double Pn =  sc->get_electron_thermoelectric_power();
-    double Pp =  sc->get_hole_thermoelectric_power();
 
-    //sc->calculate_net_recombination_rates();
-
-    double sigma_e = Constants::e * sc->get_electron_conductivity();
-    double sigma_h = Constants::e * sc->get_hole_conductivity();
-
-    libMesh::RealGradient dfn = grad_en_loc + Pn * grad_T_loc;
-    libMesh::RealGradient dfp = grad_ep_loc + Pp * grad_T_loc;
-
-    libMesh::RealGradient jn_loc = -sigma_e * dfn;
-    libMesh::RealGradient jp_loc = -sigma_h * dfp;
-    jn += jn_loc;
-    jp += jp_loc;
-    */
 
     el_field += e_field;
     polariz += sc->get_total_polarization();
@@ -2300,19 +2292,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
     */
 
-    /*
-    if (values.count(eMobility))
-      values[eMobility][n] = sc->get_electron_mobility();
 
-    if (values.count(hMobility))
-      values[hMobility][n] = sc->get_hole_mobility();
-
-    if (values.count(eConductivity))
-      values[eConductivity][n] = sigma_e;
-
-    if (values.count(hConductivity))
-      values[hConductivity][n] = sigma_h;
-    */
 
     bool ionized_donors = values.count(IonizedDonors);
     bool ionized_acceptors = values.count(IonizedAcceptors);
@@ -2434,53 +2414,10 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
       n_rec++;
     }
 
+
+
+
     /*
-      bool get_recomb_e = values.count(eNetRecombination);
-      bool get_recomb_h = values.count(hNetRecombination);
-      bool get_recomb = get_recomb_e || get_recomb_h;
-      double tot_rec_e = 0;
-      double tot_rec_h = 0;
-
-      bool need_recomb = get_recomb;
-      set<ID>::const_iterator rec_it(_recombination_ids.begin());
-      for ( ; rec_it != _recombination_ids.end(); ++rec_it)
-      {
-        need_recomb |= values.count(*rec_it + eNetRecombination) ||
-            values.count(*rec_it + hNetRecombination);
-      }
-
-      if (need_recomb)
-      {
-        // loop over all recombination ids
-        rec_it = _recombination_ids.begin();
-        for ( ; rec_it != _recombination_ids.end(); ++rec_it)
-        {
-          bool requested_e = values.count(*rec_it + eNetRecombination);
-          bool requested_h = values.count(*rec_it + hNetRecombination);
-          pair<double, double> rec;
-          if (get_recomb || requested_e || requested_h)
-            rec = sc->get_net_recombination_rate(*rec_it);
-
-          if (requested_e)
-            values[*rec_it + eNetRecombination][n] = rec.first;
-          if (requested_h)
-            values[*rec_it + hNetRecombination][n] = rec.second;
-
-          if (get_recomb)
-          {
-            tot_rec_e += rec.first;
-            tot_rec_h += rec.second;
-          }
-        }
-
-        if (get_recomb_e)
-          values[eNetRecombination][n] = tot_rec_e;
-        if (get_recomb_h)
-          values[hNetRecombination][n] = tot_rec_h;
-      }
-    }
-
-
     {
       bool ept = values.count(ePeltier);
       bool hpt = values.count(hPeltier);
@@ -2726,9 +2663,9 @@ DriftDiffusion::calculate_mean_fermi_levels(void)
           // the jacobian x weight x scaling
           double J = JxW_face[qp];
 
-          _boundary_eqfermi[bd] += J * en * phi0;
-          _boundary_hqfermi[bd] += J * ep * phi0;
-          boundary_area[bd] += J;
+          _boundary_eqfermi[bd->get_name()] += J * en * phi0;
+          _boundary_hqfermi[bd->get_name()] += J * ep * phi0;
+          boundary_area[bd->get_name()] += J;
         }
 
         ifmodels[sm] = bd;
@@ -2764,7 +2701,7 @@ DriftDiffusion::calculate_mean_fermi_levels(void)
     reffermi_e[sit->first] = 0;
     double count = bdset.size();
     for (set<Boundary*>::iterator bdit(bdset.begin()); bdit != bdset.end(); ++bdit)
-      reffermi_e[sit->first] += _boundary_eqfermi[*bdit] / count;
+      reffermi_e[sit->first] += _boundary_eqfermi[(*bdit)->get_name()] / count;
   }
 
 
@@ -2797,7 +2734,7 @@ DriftDiffusion::calculate_currents_rstf_global(void)
   // now we have certainly the RSTFs prepared
 
   // put all RSTFs into a map
-  map<const Boundary*, libMesh::NumericVector<double>*> rstf;
+  map<string, libMesh::NumericVector<double>*> rstf;
 
   {
     ContactData::iterator it = _boundary_currents.begin();
@@ -3014,15 +2951,14 @@ DriftDiffusion::calculate_currents_rstf_global(void)
       for (unsigned int n = 0; n < elem->n_nodes(); n++)
       {
         // do this for each contact
-        map<const Boundary*, libMesh::NumericVector<double>*>::iterator rstf_it(rstf.begin());
+        auto rstf_it(rstf.begin());
         for ( ; rstf_it != rstf.end(); ++rstf_it)
         {
-          const Boundary* bd = rstf_it->first;
           const libMesh::NumericVector<double>& sol = *rstf_it->second;
 
           for (auto& var : qf_vars)
           {
-            _boundary_currents[bd] -= (curr[var] * dphi[n][qp] +
+            _boundary_currents[rstf_it->first] -= (curr[var] * dphi[n][qp] +
                 net_rate * phi[n][qp]) * sol(dof_indices_rstf[n]);
           }
 
@@ -3218,7 +3154,7 @@ DriftDiffusion::calculate_currents_rstf_compact(void)
       {
         for (auto& var : qf_vars)
         {
-          _boundary_currents[boundary] -= (curr[var] * dphi[n][qp] +
+          _boundary_currents[boundary->get_name()] -= (curr[var] * dphi[n][qp] +
               net_rate * phi[n][qp]) * weight[n];
         }
       }
@@ -3251,7 +3187,7 @@ DriftDiffusion::calculate_field_emission(void)
       const Boundary* bnd = get_environment().get_boundary(mod->get_name());
       if (bnd != NULL)
       {
-        fe_currents[bnd] = 0.0;
+        fe_currents[bnd->get_name()] = 0.0;
       }
     }
   }
@@ -3414,7 +3350,7 @@ DriftDiffusion::calculate_field_emission(void)
           of << "9.11e-31 -1.6e-19 " << current << "\n";
         }
 
-        fe_currents[boundary] += current;
+        fe_currents[boundary->get_name()] += current;
       }
     } // end loop over elem sides
   } // end loop over elements
@@ -3426,7 +3362,7 @@ DriftDiffusion::calculate_field_emission(void)
   for (ContactData::iterator it(fe_currents.begin()); it != fe_currents.end(); ++it)
   {
     ostringstream os;
-    os << (*it).first->get_name() << ": " << (*it).second << "" << endl;
+    os << (*it).first << ": " << (*it).second << "" << endl;
     m.info(os.str());
   }
 }
@@ -4332,9 +4268,10 @@ DriftDiffusion::get_solution_secure(map<ID, vector<double> >& values)
       const ContactData::iterator end(_boundary_currents.end());
       for (; it != end; ++it)
       {
-        if (tokens[0] == it->first->get_name())
+        if (tokens[0] == it->first)
         {
-          double curr = it->second * it->first->get_area_factor();
+          const Boundary* bnd = this->get_environment().get_boundary(it->first);
+          double curr = it->second * bnd->get_area_factor();
           values[id] = vector<double>(1, curr);
           break;
         }
@@ -4729,7 +4666,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
           R.insert( make_pair(var, sc->get_net_q_recombination_rate(var)) );
           mu.insert( make_pair(var, sc->get_q_mobility(var)) );
           sigma.insert( make_pair(var, sc->get_q_conductivity(var) / (mu0 * C0_q)) );
-          tep.insert( make_pair(var, sc->get_carrier_properties(v)->get_thermoelectric_power());
+          tep.insert( make_pair(var, sc->get_carrier_properties(var)->get_thermoelectric_power()) );
         }
       }
       //double Nd = sc->get_ionized_donor_density();
@@ -4915,45 +4852,30 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                     Kvv.at(var).at(u_var)(i,j) += pot_fac * dsigma_x_phi + (dmu_u_x_phi + dmu_grad_u_x_dphi) * lap[var];
 
                   Kvv.at(var).at(var)(i,j) += (dmu_grad_f_x_dphi - dmu_u_x_phi) * lap[var] - dsigma_x_phi;
+
+
+
+                  // contribution of the Seebeck effect ->residual_derivative
+                  double dsigma_e_x_phi_x_P = dsigma[var] * phi[j][qp] * tep[var];
+
+                  for (unsigned int k = 0; k < n_dofs; k++)
+                  {
+                    double laplace = dphi[i][qp] * dphi[k][qp];
+
+                    double elem_contrib =
+                        dsigma_e_x_phi_x_P * laplace * T_nodes[k] / scalev.at(var)(i);
+
+                    Kvv.at(var).at(var)(i,j) -= elem_contrib;
+
+                    if (coupling & POISSON)
+                      Kvv.at(var).at(u_var)(i,j) += elem_contrib;
+
+                  }
+
                 }
-              }
-            }
-
-
-            /*
-            // contribution of the Seebeck effect ->residual_derivative
-            double dsigma_e_x_phi_x_Pe = dsigma_e * phi[j][qp] * eTEpower;
-            double dsigma_h_x_phi_x_Ph = dsigma_h * phi[j][qp] * hTEpower;
-
-            for (unsigned int k = 0; k < n_dofs; k++)
-            {
-              double laplace = dphi[i][qp] * dphi[k][qp];
-
-              if (coupling & ECURRENT)
-              {
-                double elem_contrib =
-                  dsigma_e_x_phi_x_Pe * laplace * T_nodes[k] / scalen(i);
-
-		Knn(i,j) -= elem_contrib;
-
-                if (coupling & POISSON)
-		  Knu(i,j) += elem_contrib;
 
               }
-
-              if (coupling & HCURRENT)
-              {
-                double elem_contrib =
-                  dsigma_h_x_phi_x_Ph * laplace * T_nodes[k] / scalep(i);
-
-		Kpp(i,j) -= elem_contrib;
-
-		if (coupling & POISSON)
-		  Kpu(i,j) += elem_contrib;
-
-		}
             }
-            */
 
 
             
@@ -4963,11 +4885,13 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
             if (coupling & POISSON)
             {
               Kvv[u_var].at(u_var)(i,j) -= drho[u_var] * phi_i_x_phi_j / scalev.at(u_var)(i);
+              //Kvv[u_var].at(u_var)(i,i) -= drho[u_var] * phi_i_x_phi_j / scalev.at(u_var)(i);
 
               for (auto&& var : q_var)
               {
                 if ( (var != u_var) && (coupling & CURRENTS) )
                   Kvv[u_var].at(var)(i,j) -= drho[var] * phi_i_x_phi_j / scalev.at(u_var)(i);
+                  //Kvv[u_var].at(var)(i,i) -= drho[var] * phi_i_x_phi_j / scalev.at(u_var)(i);
               }
             }
 
@@ -4979,10 +4903,9 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                 {
                   const char ct = sc->get_carrier_properties(vari)->get_carrier_type();
                   double sign = (ct == 'e') ? 1.0 : -1.0;
-                  //if ((coupling & POISSON) && _options.exact_newton)
-                    //Kvv.at(vari).at(u_var)(i,j) -= sign * dR[vari][u_var] * phi_i_x_phi_j / scalev.at(vari)(i);
 
                   for (auto&& varj : q_var)
+                    //Kvv[vari].at(varj)(i,i) -= sign * dR[vari][varj] * phi_i_x_phi_j / scalev.at(vari)(i);
                     Kvv[vari].at(varj)(i,j) -= sign * dR[vari][varj] * phi_i_x_phi_j / scalev.at(vari)(i);
                 }
               }
@@ -5037,7 +4960,21 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
               double sign = (ct == 'e') ? 1.0 : -1.0;
 
               if (coupling & CURRENTS)
+              {
                 Fv.at(var)(i) -= sign * net_recomb;
+
+                double sigma_x_P_x_J = J * sigma[var] * tep[var] / scalev.at(var)(i);
+                if (sigma_x_P_x_J != 0)
+                {
+                  // include Seebeck contribution -> Residual
+                  for (unsigned int k = 0; k < n_dofs; k++)
+                  {
+                    Real laplace = dphi[i][qp] * dphi[k][qp];
+
+                    Fv.at(var)(i) += sigma_x_P_x_J * laplace * T_nodes[k];
+                  }
+                }
+              }
               else
                 Fv.at(var)(i) -= Xv.at(var)(i);
             }
@@ -5045,27 +4982,9 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
           }
         }
 
-        /*
-        // include Seebeck contribution -> Residual
-	for (unsigned int i = 0; i < n_dofs; i++)
-	{
-	  for (unsigned int k = 0; k < n_dofs; k++)
-	  {
-	    Real laplace = dphi[i][qp] * dphi[k][qp];
-
-	    if (coupling & ECURRENT)
-	      Fn(i) += sigma_e_x_Pe_x_J * laplace * T_nodes[k] / scalen(i);
-
-	    if (coupling & HCURRENT)
-	      Fp(i) += sigma_h_x_Ph_x_J * laplace * T_nodes[k] / scalep(i);
-	  }
-	}
-        */
-
       }  //end residual
 
     } // end loop over quadrature points
-    //cerr << Fe << "\n";
 
 
     map<unsigned int, vector<double> > dirichlet_jac;
@@ -5317,7 +5236,6 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                   const char ct = sc->get_carrier_properties(var)->get_carrier_type();
                   double sign = (ct == 'e') ? 1.0 : -1.0;
                   Fv.at(var)(i) -= sign * value_v[var] * phi_face[i][qp] * scale_v;
-                  //cout<<"F"<<ct<<"("<<i<<") = "<<Fv.at(var)(i)<< " value = "<<value_v[var]<<" scale = "<<scale_v<<endl;
                 }
 
               } //end q_var_bc loop
@@ -5516,13 +5434,14 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
     /*
     if (coupling & ELECTRONS)
     {
-      ostringstream os;
-      os << "_" << __private_counter << ".m";
-      ostringstream ms;
-      ms << "writing " << "J" << os.str() << "\n";
-      Messages::info(ms.str());
-      jacobian->print_matlab("J" + os.str());
-      sysmat.print_matlab("precond" + os.str());
+      jacobian->print_matlab("J.m");
+      //ostringstream os;
+      //os << "_" << __private_counter << ".m";
+      //ostringstream ms;
+      //ms << "writing " << "J" << os.str() << "\n";
+      //Messages::info(ms.str());
+      //jacobian->print_matlab("J" + os.str());
+      //sysmat.print_matlab("precond" + os.str());
     }
     if (coupling & ELECTRONS) __private_counter++;
     //if (__private_counter == 2) exit(0);
