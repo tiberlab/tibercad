@@ -302,11 +302,8 @@ KPBulkDOS::calculate_density_and_derivative(double Ef, double Epot,
 
     // calculate thermoelectric power
     double temp = kT / Constants::k_B;
-    double Pth = -dens / der * 1.5 / temp + Constants::k_Boltzmann * (arg - 1);
-    if (get_particle() == 'h')
-    {
-      Pth *= -1;
-    }
+    double Pth = dens / der * 1.5 / temp + Constants::k_Boltzmann * (1 - arg);
+
     _th_el_power += dens * Pth;
 
   }

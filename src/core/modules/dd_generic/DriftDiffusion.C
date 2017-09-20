@@ -2237,7 +2237,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
       double sign = sc->get_carrier_properties(v)->get_charge_sign();
       double sigma = sc->get_q_conductivity(v);
       thel_pow[v] = sc->get_carrier_properties(v)->get_thermoelectric_power();
-      RealGradient flux_loc = - sign * sigma * (grad_qf_loc[v] + thel_pow[v] * grad_T_loc);
+      RealGradient flux_loc = -sigma * (sign * grad_qf_loc[v] + thel_pow[v] * grad_T_loc);
       flux[v] += flux_loc;
       curr[v] += Constants::e * q  * flux_loc;
       curr_tot += Constants::e * q * flux_loc;
@@ -2960,7 +2960,7 @@ DriftDiffusion::calculate_currents_rstf_global(void)
       vector<RealGradient> curr(n_vars);
       for (auto& var : qf_vars)
       {
-        double sign = 1;//sc->get_carrier_properties(var)->get_charge_sign();
+        double sign = sc->get_carrier_properties(var)->get_charge_sign();
         double P = sc->get_carrier_properties(var)->get_thermoelectric_power();
         curr[var] = JxW[qp] * sigma[var] * (grad_qf[var] + sign * P * dT);
       }
@@ -4873,8 +4873,9 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 
 
 
+                  double sign = sc->get_carrier_properties(var)->get_charge_sign();
                   // contribution of the Seebeck effect ->residual_derivative
-                  double dsigma_e_x_phi_x_P = dsigma[var] * phi[j][qp] * tep[var];
+                  double dsigma_e_x_phi_x_P = sign * dsigma[var] * phi[j][qp] * tep[var];
 
                   for (unsigned int k = 0; k < n_dofs; k++)
                   {
@@ -4919,12 +4920,10 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
               {
                 if (vari != u_var)
                 {
-                  const char ct = sc->get_carrier_properties(vari)->get_carrier_type();
-                  double sign = (ct == 'e') ? 1.0 : -1.0;
+                  double sign = sc->get_carrier_properties(vari)->get_charge_sign();
 
                   for (auto&& varj : q_var)
-                    //Kvv[vari].at(varj)(i,i) -= sign * dR[vari][varj] * phi_i_x_phi_j / scalev.at(vari)(i);
-                    Kvv[vari].at(varj)(i,j) -= sign * dR[vari][varj] * phi_i_x_phi_j / scalev.at(vari)(i);
+                    Kvv[vari].at(varj)(i,j) += sign * dR[vari][varj] * phi_i_x_phi_j / scalev.at(vari)(i);
                 }
               }
             }
@@ -4974,14 +4973,13 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
             {
               long double net_recomb = J_x_R[var] * phi[i][qp] / scalev.at(var)(i);
 
-              const char ct = sc->get_carrier_properties(var)->get_carrier_type();
-              double sign = (ct == 'e') ? 1.0 : -1.0;
+              double sign = sc->get_carrier_properties(var)->get_charge_sign();
 
               if (coupling & CURRENTS)
               {
-                Fv.at(var)(i) -= sign * net_recomb;
+                Fv.at(var)(i) += sign * net_recomb;
 
-                double sigma_x_P_x_J = J * sigma[var] * tep[var] / scalev.at(var)(i);
+                double sigma_x_P_x_J = J * sign * sigma[var] * tep[var] / scalev.at(var)(i);
                 if (sigma_x_P_x_J != 0)
                 {
                   // include Seebeck contribution -> Residual
