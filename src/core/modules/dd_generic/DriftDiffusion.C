@@ -1884,7 +1884,7 @@ DriftDiffusion::do_setup_solution_variables(void)
 
   }
 
-  //declare_solution_ext("TotalRecombinationHeat", _recheat_base, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "W/cm^3");
+  declare_solution_ext("TotalRecombinationHeat", _recheat_base, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "W/cm^3");
   declare_solution_ext("TotalJouleHeat", _joule_base + _carriers.size(), SolutionDescriptor::REAL, SolutionDescriptor::NODES, "W/cm^3");
   if (plot_solution("JouleHeat"))
     add_plot_variable(_joule_base + _carriers.size());
@@ -2234,7 +2234,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     for (auto& v : q_var)
     {
       double q = sc->get_carrier_properties(v)->get_charge();
-      double sign = (q > 0) ? 1 : -1;
+      double sign = sc->get_carrier_properties(v)->get_charge_sign();
       double sigma = sc->get_q_conductivity(v);
       thel_pow[v] = sc->get_carrier_properties(v)->get_thermoelectric_power();
       RealGradient flux_loc = - sign * sigma * (grad_qf_loc[v] + thel_pow[v] * grad_T_loc);
@@ -2306,6 +2306,8 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
         values[IonizedAcceptors][n] = sc->get_ionized_acceptor_density();
     }
 
+
+
     for (unsigned int v = 0; v < n_vars; ++v)
     {
       if (sc->get_carrier_properties(v) != nullptr)
@@ -2363,14 +2365,17 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
       values[hPowerFlux][3 * n + 2] = (Pp * T + ep) * jp_loc(2);
     }
 
-    if (values.count(eThElPower))
-      values[eThElPower][n] = Pn;
 
-    if (values.count(hThElPower))
-      values[hThElPower][n] = Pp;
     */
 
     bool need_recomb = false;
+
+    if (values.count(_recheat_base))
+    {
+      values[_recheat_base][n] = 0;
+      need_recomb = true;
+    }
+
     for (unsigned int v = 0; v < n_vars; ++v)
     {
       if (values.count(_net_rec_base + v))
@@ -2415,6 +2420,27 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     }
 
 
+    if (values.count(_recheat_base))
+    {
+      DriftDiffusionProperties::RecombinationModelIterator recit(sc->recombination_models_begin());
+      DriftDiffusionProperties::RecombinationModelIterator recend(sc->recombination_models_end());
+
+      for ( ; recit != recend; ++recit)
+      {
+        vector<double> R(_carriers.size(), 0.0);
+        vector<vector<double>> dR( _carriers.size(), vector<double>(_carriers.size() + 1, 0.0) );
+
+        (recit->second)->get_net_rate_and_derivatives(R, dR);
+
+        for (auto& v : q_var)
+        {
+          double sign = sc->get_carrier_properties(v)->get_charge_sign();
+          double P = thel_pow[v];
+          double H = Constants::e * R[v] * (sign * qf[v] + T * P);
+          values[_recheat_base][n] += H;
+        }
+      }
+    }
 
 
     /*
@@ -2896,19 +2922,10 @@ DriftDiffusion::calculate_currents_rstf_global(void)
       sc->calculate_mobilities();
       sc->calculate_net_recombination_rates();
 
-      /*
-      //Get the thermoelectric power
-      sc->compute_thermoelectric_powers();
-      double Pn =  sc->get_electron_thermoelectric_power() / phi0;
-      double Pp =  sc->get_hole_thermoelectric_power() / phi0;
-      */
 
       vector<double> sigma(n_vars, 0.0);
       for (auto& var : qf_vars)
       {
-        //sigma[var] = sc->get_carrier_properties(var)->get_charge() *
-        //    Constants::e * sc->get_q_conductivity(var);
-
         sigma[var] = Constants::e * sc->get_q_conductivity(var);
       }
 
@@ -2940,12 +2957,12 @@ DriftDiffusion::calculate_currents_rstf_global(void)
       }
       */
 
-      //libMesh::RealGradient je(JxW[qp] * phi0 * (sigma_e * (dEfn + Pn * dT)));
-      //libMesh::RealGradient jh(JxW[qp] * phi0 * (sigma_h * (dEfp + Pp * dT)));
       vector<RealGradient> curr(n_vars);
       for (auto& var : qf_vars)
       {
-        curr[var] = JxW[qp] * sigma[var] * grad_qf[var];
+        double sign = 1;//sc->get_carrier_properties(var)->get_charge_sign();
+        double P = sc->get_carrier_properties(var)->get_thermoelectric_power();
+        curr[var] = JxW[qp] * sigma[var] * (grad_qf[var] + sign * P * dT);
       }
 
       for (unsigned int n = 0; n < elem->n_nodes(); n++)
@@ -4666,7 +4683,8 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
           R.insert( make_pair(var, sc->get_net_q_recombination_rate(var)) );
           mu.insert( make_pair(var, sc->get_q_mobility(var)) );
           sigma.insert( make_pair(var, sc->get_q_conductivity(var) / (mu0 * C0_q)) );
-          tep.insert( make_pair(var, sc->get_carrier_properties(var)->get_thermoelectric_power()) );
+          tep.insert( make_pair(var,
+              sc->get_carrier_properties(var)->get_thermoelectric_power() / phi0) );
         }
       }
       //double Nd = sc->get_ionized_donor_density();

@@ -89,9 +89,13 @@ class CarrierProperties : public DriftDiffusionModelInterface
     //! Tell if the carrier is a dopant
     const bool is_dopant(void) const;
 
-    // ! Return the charge carriers names associated to an exciton
-    //std::vector<std::string> get_exciton_carriers(void) const;
-
+    //! Get the sign of the charge
+    /*!
+     * 0 charge is returned as negative sign, because formulation
+     * of carrier flux is such that it is consistent with the
+     * formulas for electrons.
+     */
+    int get_charge_sign(void) const;
 
     //! Do we have quantum density?
     /*!
@@ -249,6 +253,14 @@ CarrierProperties::get_charge(void) const
 {
   return(_charge);
 }
+
+inline
+int
+CarrierProperties::get_charge_sign(void) const
+{
+  return((_charge > 0) ? 1 : -1);
+}
+
 
 inline
 double
