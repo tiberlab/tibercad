@@ -70,6 +70,9 @@ class TBDLEXPORT RecombinationModelInterface : public DriftDiffusionModelInterfa
     //! Get the plot name
     const std::string& get_plot_name(void) const;
 
+    //! Is this a radiative rate?
+    bool is_radiative(void) const;
+
 
   protected:
 
@@ -96,6 +99,9 @@ class TBDLEXPORT RecombinationModelInterface : public DriftDiffusionModelInterfa
     //! Reorder ids according to a module specific order
     void reorder_ids(const std::vector<std::string>& new_order);
 
+    //! Is this a radiative rate?
+    bool& set_radiative(void);
+
 
   private:
 
@@ -115,6 +121,9 @@ class TBDLEXPORT RecombinationModelInterface : public DriftDiffusionModelInterfa
      */
     std::string _plot_name;
 
+    //! Is this a radiative rate?
+    bool _is_radiative;
+
 };
 
 
@@ -125,7 +134,8 @@ class TBDLEXPORT RecombinationModelInterface : public DriftDiffusionModelInterfa
 inline
 RecombinationModelInterface::RecombinationModelInterface(const ModelOptions& options)
  : DriftDiffusionModelInterface(options),
-   _tunneling_boundary(NULL)
+   _tunneling_boundary(NULL),
+   _is_radiative(false)
 {
 
 }
@@ -181,6 +191,20 @@ const std::vector<ID>&
 RecombinationModelInterface::get_carrier_ids(void) const
 {
   return(_carrier_ids);
+}
+
+inline
+bool&
+RecombinationModelInterface::set_radiative(void)
+{
+  return(_is_radiative);
+}
+
+inline
+bool
+RecombinationModelInterface::is_radiative(void) const
+{
+  return(_is_radiative);
 }
 
 

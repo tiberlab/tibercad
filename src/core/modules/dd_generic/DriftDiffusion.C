@@ -2427,17 +2427,28 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
       for ( ; recit != recend; ++recit)
       {
-        vector<double> R(_carriers.size(), 0.0);
-        vector<vector<double>> dR( _carriers.size(), vector<double>(_carriers.size() + 1, 0.0) );
-
-        (recit->second)->get_net_rate_and_derivatives(R, dR);
-
-        for (auto& v : q_var)
+        //if (! (recit->second)->is_radiative())
         {
-          double sign = sc->get_carrier_properties(v)->get_charge_sign();
-          double P = thel_pow[v];
-          double H = Constants::e * R[v] * (sign * qf[v] + T * P);
-          values[_recheat_base][n] += H;
+          vector<double> R(_carriers.size(), 0.0);
+          vector<vector<double>> dR( _carriers.size(), vector<double>(_carriers.size() + 1, 0.0) );
+
+          (recit->second)->get_net_rate_and_derivatives(R, dR);
+
+          for (auto& v : q_var)
+          {
+            double sign = sc->get_carrier_properties(v)->get_charge_sign();
+            double P = thel_pow[v];
+            double H = Constants::e * R[v] * (sign * qf[v] + T * P);
+            values[_recheat_base][n] += H;
+
+
+            if ((recit->second)->is_radiative())
+            {
+              double energy = 0;
+              values[_recheat_base][n] += sign * Constants::e * R[v] * sc->get_carrier_band_edge(v);
+            }
+          }
+
         }
       }
     }

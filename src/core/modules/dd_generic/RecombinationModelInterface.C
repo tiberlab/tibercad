@@ -13,6 +13,8 @@ RecombinationModelInterface::do_init(void)
   _plot_name = get_option("plot_name", "");
   get_option("carriers", _carriers);
 
+  _is_radiative = get_option("radiative", _is_radiative);
+
   // to be sure
   _carrier_ids.resize(0);
 
