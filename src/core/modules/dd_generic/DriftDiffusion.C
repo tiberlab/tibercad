@@ -3847,8 +3847,7 @@ DriftDiffusion::build_local_scaling(void)
   const double mu0 = scaling.get_mobility_scaling();
   const double l2 = scaling.get_lambda_squared() * Constants::e0 * 1e-2;
   // scaling for recombination rates
-  double R0_e = C0 / scaling.get_time_scaling();
-  double R0_h = C0 / scaling.get_time_scaling();
+  double R0 = C0 / scaling.get_time_scaling();
 
   double C0_q = C0;
   C0_q = 1.0;
@@ -4013,12 +4012,14 @@ DriftDiffusion::build_local_scaling(void)
       sc->calculate_traps();
       sc->calculate_ionized_dopants();
       sc->calculate_mobilities();
+      sc->calculate_net_recombination_rates();
 
       const libMesh::RealTensor& permittivity = sc->get_relative_permittivity();
 
       double l2_eps = JxW[qp] * l2;
 
       map<unsigned int, double> sigma, ddens_dphi;
+      map<unsigned int, map<unsigned int, long double>> dR;
 
       for (auto var : q_var)
       {
@@ -4052,6 +4053,15 @@ DriftDiffusion::build_local_scaling(void)
         {
           double drho_v = sc->get_charge_density_derivative(var) * phi0 / C0;
           drho += drho_v;
+
+          for (auto&& varj : q_var)
+          {
+            long double dR_dEf_tmp = sc->get_net_q_recombination_rate_derivatives(var)[varj];
+            long double dR_tmp = dR_dEf_tmp * phi0 / R0;
+
+            dR[var][varj] = dR_tmp;
+          }
+
         }
       }
       drho *= -JxW[qp];
@@ -4062,8 +4072,10 @@ DriftDiffusion::build_local_scaling(void)
 
         for (auto&& scale : scaleq)
         {
-          scale.second(i) += sigma[scale.first] * (dphi[i][qp] * dphi[i][qp]);
-                             //- dRn[1] * phi_i_x_phi_j;
+          const char ct = sc->get_carrier_properties(scale.first)->get_carrier_type();
+          double sign = (ct == 'e') ? 1.0 : -1.0;
+          scale.second(i) += sigma[scale.first] * (dphi[i][qp] * dphi[i][qp])
+                             -sign * dR[scale.first][scale.first] * phi_i_x_phi_j;
         }
 
         scaleu(i) +=
