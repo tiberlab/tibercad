@@ -54,26 +54,8 @@ GenericRecombination::do_init(void)
 {
   RecombinationModelInterface::do_init();
 
-  if (get_carrier_names().size() != 2)
-    throw InitFailedException("Generic recombination model needs exactly "
-        "two recombining carriers");
-
   get_parameter("C", C_);
 
-  string quantumsim = get_option("optics_simulation", "");
-  if (!quantumsim.empty())
-  {
-    _quantum_optics = SimulationInterface::find_simulation(quantumsim);
-    if (_quantum_optics == NULL)
-      throw InitFailedException("Cannot find optics simulation \'" + quantumsim + "\'");
-
-    _rec_id = _quantum_optics->get_solution_id("Recombination");
-    if (_rec_id == INVALID_ID)
-      throw InitFailedException("Simulation \'" + quantumsim + "\'" +
-          " does not have the needed solution \'Recombination\'");
-
-    // TODO should check for consistency of regions
-  }
 
 }
 
@@ -147,69 +129,7 @@ GenericRecombination::calculate_rate_and_derivatives(std::vector<double>& R, std
       swap(E1, E2);
     }
 
-    /*
-    / *if ((ct1 == 'e') && (E1 < E2))
-    {
-      swap(id1, id2);
-      swap(E1, E2);
-    }
-    else if ((ct1 == 'h') && (E2 < E1))
-    {
-      swap(id1, id2);
-      swap(E1, E2);
-    }* /
 
-    if (E1 < E2)
-    {
-      swap(id1, id2);
-      swap(E1, E2);
-    }
-
-    // now E1 > E2 for electrons
-    //     E2 > E1 for holes
-
-
-    //double n1  = dd.get_q_density(id1);
-    //double n2  = dd.get_q_density(id2);
-    //double N1  = dd.get_carrier_properties(id1)->get_effective_DOS();
-    //double N2  = dd.get_carrier_properties(id2)->get_effective_DOS();
-    //double dn1 = dd.get_q_density_derivative(id1);
-    //double dn2 = dd.get_q_density_derivative(id2);
-    double Ef1 = -dd.get_q_fermi_potential(id1);
-    double Ef2 = -dd.get_q_fermi_potential(id2);
-    double beta = 1/kT; //(ct1 == 'e') ? 1.0/kT : -1.0/kT;
-
-    double exponential = exp((Ef2 - Ef1) * beta);
-    double stat = 1.0 - exponential;
-
-    auto occ1 = fermi_dirac((E1 - Ef1) * beta);
-    double f1 = occ1.first;
-    double df1 = occ1.second;
-
-    auto occ2 = fermi_dirac((Ef2 - E2) * beta);
-    double f2 = occ2.first;
-    double df2 = -occ2.second;
-
-    R[id1] = C_ * f1 * f2 * stat;
-    R[id2] = -R[id1];
-
-    double dRE1 = C_ * df1 * f2 * stat;
-    double dRE2 = C_ * f1 * df2 * stat;
-
-
-    double dR0 =  -(dRE1 + dRE2) * beta;
-    double dR1 = -dRE1 * beta + C_ * f1 * f2 * beta * exponential;
-    double dR2 = -dRE2 * beta - C_ * f1 * f2 * beta * exponential;
-
-    dPotentials[id1][id1] = - dR1;
-    dPotentials[id1][id2] = - dR2;
-    dPotentials[id2][id1] = dR1;
-    dPotentials[id2][id2] = dR2;
-    dPotentials[id1][dd.n_known_carriers()] =  dR0;
-    dPotentials[id2][dd.n_known_carriers()] = -dR0;
-    */
-
-    ///*
     double n1  = dd.get_q_density(id1);
     double n2  = dd.get_q_density(id2);
     double N1  = 100 * dd.get_carrier_properties(id1)->get_effective_DOS();
@@ -239,82 +159,5 @@ GenericRecombination::calculate_rate_and_derivatives(std::vector<double>& R, std
     dPotentials[id2][id2] = -dR2;
     dPotentials[id1][dd.n_known_carriers()] =  dR0;
     dPotentials[id2][dd.n_known_carriers()] = -dR0;
-    //*/
-  }
-}
-
-void
-GenericRecombination::do_reinit(void)
-{
-  if (_quantum_optics != NULL)
-  {
-    SimulationInterface* sim = SimulationInterface::get_simulation(get_simulator_id());
-    unsigned int seqnum = sim->get_solve_sequence_number();
-
-    QRecMap::iterator it(_qrec_vals.find(make_pair(_quantum_optics, sim)));
-    if ((it != _qrec_vals.end()) && ((it->second).first == seqnum))
-      C_ = (it->second).second;
-    else
-    {
-      map<ID, vector<double> > data;
-      data[_rec_id];
-
-      if (_quantum_optics->get_solution(data))
-      {
-        double rec = data[_rec_id][0];
-        Messages::info("Recalculate radiative recombination parameter: ", false);
-
-        // now we have to integrate the term (np - ni^2)
-        // for that, we have to loop over all elements
-        // TODO this has to be checked for parallel execution
-
-        const SimulationEnvironment& env = sim->get_environment();
-
-        data.clear();
-        // TODO IntrinsicDensity is currently missing
-        ID edens_id = sim->get_solution_id("eDensity");
-        ID hdens_id = sim->get_solution_id("hDensity");
-        //ID idens_id = sim->get_solution_id("IntrinsicDensity");
-        data[edens_id];
-        data[hdens_id];
-
-        unsigned int dim = sim->get_mesh().mesh_dimension();
-        libMesh::UniquePtr<libMesh::FEBase> fe(sim->build_finite_element(dim, libMesh::FEType()));
-        libMesh::UniquePtr<libMesh::QBase> qrule(libMesh::QBase::build(libMeshEnums::QGAUSS, dim, libMeshEnums::FIFTH));
-        fe->attach_quadrature_rule(qrule.get());
-
-        const vector<Real>& JxW = fe->get_JxW();
-
-        double tot_rec = 0.0;
-
-        MeshBase::const_element_iterator it = sim->active_local_elements_begin();
-        const MeshBase::const_element_iterator end = sim->active_local_elements_end();
-        for ( ; it != end; ++it)
-        {
-          const libMesh::Elem* elem = *it;
-          if (_quantum_optics->includes_region(elem->subdomain_id()))
-          {
-            fe->reinit(elem);
-
-            if (sim->get_solution(elem, data, qrule->get_points(), true))
-            {
-              for (int n = 0; n < qrule->n_points(); ++n)
-              {
-                double np = data[edens_id][n] * data[hdens_id][n];
-                tot_rec += JxW[n] * np;
-              }
-            }
-          }
-        }
-
-        C_ = rec / tot_rec;
-        _qrec_vals[make_pair(_quantum_optics, sim)] = make_pair(seqnum, C_);
-
-        ostringstream os;
-        os << "B = " << rec / tot_rec << endl;
-        Messages::info(os.str());
-        Messages::newline();
-      }
-    }
   }
 }

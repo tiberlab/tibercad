@@ -61,8 +61,11 @@ class TBDLEXPORT RecombinationModelInterface : public DriftDiffusionModelInterfa
     //! Get the associated tunneling contact pointer, or NULL
     const Boundary* get_tunneling_contact(void);
 
-    //! Get the IDs of the recombining carrers;
+    //! Get the IDs of the recombining carriers
     const std::vector<ID>& get_carrier_ids(void) const;
+
+    //! Get the exponents associated with the recombining carriers
+    const std::vector<double>& get_exponents(void) const;
 
     //! Get the names of the recombining carriers
     const std::vector<std::string>& get_carrier_names(void) const;
@@ -102,6 +105,9 @@ class TBDLEXPORT RecombinationModelInterface : public DriftDiffusionModelInterfa
     //! Is this a radiative rate?
     bool& set_radiative(void);
 
+    //! Set the exponents
+    void set_exponents(const std::vector<double>& exponents);
+
 
   private:
 
@@ -113,6 +119,9 @@ class TBDLEXPORT RecombinationModelInterface : public DriftDiffusionModelInterfa
 
     //! The global IDs for the carriers
     std::vector<ID> _carrier_ids;
+
+    //! The exponents for the carriers
+    std::vector<double> _exponents;
 
     //! The plot name used to plot separately each recombination model
     /*! If two recombination models have the same plot name
@@ -177,6 +186,20 @@ const std::vector<std::string>&
 RecombinationModelInterface::get_carrier_names(void) const
 {
   return(_carriers);
+}
+
+inline
+const std::vector<double>&
+RecombinationModelInterface::get_exponents(void) const
+{
+  return(_exponents);
+}
+
+inline
+void
+RecombinationModelInterface::set_exponents(const std::vector<double>& exponents)
+{
+  _exponents = exponents;
 }
 
 inline

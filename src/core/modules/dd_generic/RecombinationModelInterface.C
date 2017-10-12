@@ -12,6 +12,7 @@ RecombinationModelInterface::do_init(void)
 
   _plot_name = get_option("plot_name", "");
   get_option("carriers", _carriers);
+  get_option("exponents", _exponents);
 
   _is_radiative = get_option("radiative", _is_radiative);
 
@@ -40,6 +41,17 @@ RecombinationModelInterface::do_init(void)
     _carrier_ids.push_back(id);
 
     used_ids.insert(id);
+  }
+
+  if (_exponents.size() == 0)
+  {
+    _exponents.resize(_carriers.size(), 1);
+  }
+
+  if (_exponents.size() != _carriers.size())
+  {
+    throw InitFailedException("Recombination '" + get_default_name() +
+        "': number of exponents inconsistent with number of carriers");
   }
 
   // for the case of electrons and holes we put them in a standard order
