@@ -401,19 +401,7 @@ Control::setup_module(Device* device, const ModelOptions& opts)
     env = &sim->get_environment();
 
 
-    // the physical models
-    ModelOptions physopts;
 
-    // put them all together, if someone makes more than one Physics block ...
-    {
-      ModelOptions::const_submodel_iterator it = opts.submodels_begin("Physics");
-      const ModelOptions::const_submodel_iterator end = opts.submodels_end("Physics");
-      for ( ; it != end; ++it)
-      {
-        physopts += it->second;
-        physopts.set_key((it->second).get_key());
-      }
-    }
 
     //
     // and now... the boundary conditions
@@ -440,13 +428,18 @@ Control::setup_module(Device* device, const ModelOptions& opts)
 
 
 
+
     //
     // Next, we create all lower dimensional submodels
     //
     // NOTE: only definitions with correct space dimensions will be
     //       added to the different PhysicalObject instances
 
+    ModelOptions::const_submodel_iterator it = opts.submodels_begin("Physics");
+    const ModelOptions::const_submodel_iterator end = opts.submodels_end("Physics");
+    for ( ; it != end; ++it)
     {
+      ModelOptions physopts = it->second;
 
       ModelOptions::submodel_iterator it = physopts.submodels_begin();
       const ModelOptions::submodel_iterator end = physopts.submodels_end();
@@ -553,6 +546,20 @@ Control::setup_module(Device* device, const ModelOptions& opts)
     }
     m.unindent();
 
+
+    // the physical models
+    ModelOptions physopts;
+
+    // put them all together, if someone makes more than one Physics block ...
+    {
+      ModelOptions::const_submodel_iterator it = opts.submodels_begin("Physics");
+      const ModelOptions::const_submodel_iterator end = opts.submodels_end("Physics");
+      for ( ; it != end; ++it)
+      {
+        physopts += it->second;
+        physopts.set_key((it->second).get_key());
+      }
+    }
 
     //
     // now we have to create the bulk models
