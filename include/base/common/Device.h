@@ -13,9 +13,9 @@
 #include "DeviceException.h"
 #include "QuantumContact.h"
 
-#include "elem.h"
-#include "point.h"
-#include "parallel.h"
+#include "libmesh/elem.h"
+#include "libmesh/point.h"
+#include "libmesh/parallel.h"
 
 #include <vector>
 #include <set>

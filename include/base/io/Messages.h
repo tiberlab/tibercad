@@ -3,7 +3,10 @@
 #ifndef _MESSAGES_H_
 #define _MESSAGES_H_
 
-#include "tiber_dll.h"
+#include "TiberCad.h"
+//#include "tiber_dll.h"
+
+//#include "libmesh/parallel.h"
 
 #include <string>
 #include <iostream>
@@ -65,7 +68,8 @@ class Messages
         const std::string& name = "");
 
     //! Set the log file
-    static void set_log_file(const std::string& logfile);
+    static void set_log_file(const std::string& logfile,
+        const libMesh::Parallel::Communicator& comm, int rank);
 
     //! Close the log file
     static void close_log_file(void);
@@ -137,6 +141,13 @@ class Messages
 
     //! The local indentation
     int _indent_loc;
+
+
+    //! The MPI communicator associated with the logger
+    static libMesh::Parallel::Communicator _mpi_comm;
+
+    //! The rank on the communicator that should write to the file
+    static int _rank;
 };
 
 
@@ -145,37 +156,7 @@ class Messages
 // inline methods
 //
 
-inline
-Messages::Messages(void) : _indent_loc(0) { }
 
-
-inline
-Messages::~Messages(void)
-{
-  //newline();
-  _indent -= _indent_loc;
-}
-
-
-inline
-void
-Messages::indent(void)
-{
-  _indent_loc++;
-  _indent++;
-}
-
-
-inline
-void
-Messages::unindent(void)
-{
-  if (_indent_loc > 0)
-  {
-    _indent_loc--;
-    _indent--;
-  }
-}
 
 
 inline

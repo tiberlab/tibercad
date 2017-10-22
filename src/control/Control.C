@@ -265,17 +265,19 @@ Control::setup_globals(const ModelOptions& opts)
     logfile = _outputdir + "/" + Utils::basename(_inputfile) + ".log";
 
 
+
   // for the moment, if several processes try to use the same log file
   // we let everyone use a different one
   //if (TiberCad::get_mpi_comm().semiverify(&logfile))
   //{
-    logfile = logfile + "." + to_string(TiberCad::get_mpi_comm().rank());
+  //  logfile = logfile + "." + to_string(TiberCad::get_mpi_comm().rank());
   //}
+  logfile = logfile + "." + InputParser::get_defined("MPI_DEV_KEY");
 
 
   Messages::info("Writing log to " + logfile);
 
-  Messages::set_log_file(logfile);
+  Messages::set_log_file(logfile, _device->get_communicator(), 0);
 
   {
     ostringstream os;

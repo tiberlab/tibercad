@@ -8,7 +8,6 @@
 #include "TeeStream.h"
 #include "TypeDefs.h"
 #include "InitFailedException.h"
-#include "TiberCad.h"
 #include "Utils.h"
 #include "tiber_config.h"
 
@@ -77,6 +76,18 @@ Messages::_cout(&std::cout);
 ofstream
 Messages::nullstream("/dev/null");
 
+libMesh::Parallel::Communicator
+Messages::_mpi_comm;
+
+int
+Messages::_rank = 0;
+
+
+
+Messages::Messages(void) :
+  _indent_loc(0)
+{
+}
 
 
 void
@@ -99,9 +110,12 @@ Messages::set_stdout(std::ostream& os)
 
 
 void
-Messages::set_log_file(const string& logfile)
+Messages::set_log_file(const string& logfile, const libMesh::Parallel::Communicator& comm, int rank)
 {
   using namespace boost::filesystem;
+
+  _mpi_comm = comm;
+  _rank = rank;
 
 #if BOOST_VERSION >= 104700
   path logpath(logfile);
@@ -137,22 +151,28 @@ Messages::set_log_file(const string& logfile)
   if (_log.fail() || !_log.good())
     throw InitFailedException("cannot open logfile for writing.");
 
-  time_t now;
-  time(&now);
-  _log << Messages::endl;
-  _log << "Log start: " << ctime(&now) << Messages::endl;
-  _log << Messages::endl;
+  if (_mpi_comm.rank() == _rank)
+  {
+    time_t now;
+    time(&now);
+    _log << Messages::endl;
+    _log << "Log start: " << ctime(&now) << Messages::endl;
+    _log << Messages::endl;
+  }
 }
 
 
 void
 Messages::close_log_file(void)
 {
-  time_t now;
-  time(&now);
-  _log << Messages::endl;
-  _log << "Log end: " << ctime(&now) << Messages::endl;
-  _log << Messages::endl;
+  if (_mpi_comm.rank() == _rank)
+  {
+    time_t now;
+    time(&now);
+    _log << Messages::endl;
+    _log << "Log end: " << ctime(&now) << Messages::endl;
+    _log << Messages::endl;
+  }
   _log.close();
 }
 
@@ -161,29 +181,32 @@ Messages::close_log_file(void)
 void
 Messages::warning(const string& msg)
 {
-  TeeStream ts(*_cout, _log);
-  ts << Messages::endl;
-#ifdef _WIN32
-  HANDLE hstdout = GetStdHandle(STD_OUTPUT_HANDLE);
-  CONSOLE_SCREEN_BUFFER_INFO csbi;
-  GetConsoleScreenBufferInfo(hstdout, &csbi);
-  SetConsoleTextAttribute(hstdout, FOREGROUND_GREEN | FOREGROUND_BLUE);
-#else
-  *_cout << yellowb;
-#endif
-  _log << "*** ";
-  ts << "Warning: ";
-#ifdef _WIN32
-  SetConsoleTextAttribute(hstdout, csbi.wAttributes);
-#else
-  *_cout << normal;
-#endif
-  ts << msg << endl << flush;
-
-  if (stop_on_warning())
+  if (_mpi_comm.rank() == _rank)
   {
-    *_cout << "press any key to continue ...";
-    cin.get();
+    TeeStream ts(*_cout, _log);
+    ts << Messages::endl;
+#ifdef _WIN32
+    HANDLE hstdout = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    GetConsoleScreenBufferInfo(hstdout, &csbi);
+    SetConsoleTextAttribute(hstdout, FOREGROUND_GREEN | FOREGROUND_BLUE);
+#else
+    *_cout << yellowb;
+#endif
+    _log << "*** ";
+    ts << "Warning: ";
+#ifdef _WIN32
+    SetConsoleTextAttribute(hstdout, csbi.wAttributes);
+#else
+    *_cout << normal;
+#endif
+    ts << msg << endl << flush;
+
+    if (stop_on_warning())
+    {
+      *_cout << "press any key to continue ...";
+      cin.get();
+    }
   }
 
   _warning_count++;
@@ -227,31 +250,65 @@ Messages::error(const string& msg)
 void
 Messages::info(const string& msg, bool newline)
 {
-  static bool contd = false;
-
-  vector<string> lines;
-  Utils::tokenize(msg, lines, "\n");
-
-  TeeStream ts(*_cout, _log);
-
-  size_t nl = lines.size();
-
-  for (size_t l = 0; l < nl; l++)
+  if (_mpi_comm.rank() == _rank)
   {
-    if (!contd)
-      for (int i = 0; i < _indent * _indent_width; i++)
-        ts << " ";
-    ts << lines[l];
-    if (newline || (l < nl - 1)) ts << endl;
+    static bool contd = false;
 
-    ts << flush;
+    vector<string> lines;
+    Utils::tokenize(msg, lines, "\n");
+
+    TeeStream ts(*_cout, _log);
+
+    size_t nl = lines.size();
+
+    for (size_t l = 0; l < nl; l++)
+    {
+      if (!contd)
+        for (int i = 0; i < _indent * _indent_width; i++)
+          ts << " ";
+      ts << lines[l];
+      if (newline || (l < nl - 1)) ts << endl;
+
+      ts << flush;
+    }
+
+    if (newline) contd = false;
+    else contd = true;
   }
-
-  if (newline) contd = false;
-  else contd = true;
 
 }
 
+
+
+Messages::~Messages(void)
+{
+  //newline();
+  _indent -= _indent_loc;
+}
+
+
+
+void
+Messages::indent(void)
+{
+  if (_mpi_comm.rank() == _rank)
+  {
+    _indent_loc++;
+    _indent++;
+  }
+}
+
+
+
+void
+Messages::unindent(void)
+{
+  if ((_mpi_comm.rank() == _rank) && (_indent_loc > 0))
+  {
+    _indent_loc--;
+    _indent--;
+  }
+}
 
 void
 Messages::debug(const string& msg)
@@ -268,34 +325,40 @@ Messages::debug(const string& msg)
 void
 Messages::newline(void)
 {
-  TeeStream ts(*_cout, _log);
-  ts << endl << flush;
+  if (_mpi_comm.rank() == _rank)
+  {
+    TeeStream ts(*_cout, _log);
+    ts << endl << flush;
+  }
 }
 
 void
 Messages::frameline(const std::string& start, const char ch, const std::string& name)
 {
-  //ostringstream os;
-  //os << start;
-  //os.fill(ch);
-  //os.width(Messages::available_width() - start.length());
-  //os << "" << Messages::endl;
+  if (_mpi_comm.rank() == _rank)
+  {
+    //ostringstream os;
+    //os << start;
+    //os.fill(ch);
+    //os.width(Messages::available_width() - start.length());
+    //os << "" << Messages::endl;
 
-  int w = Messages::available_width();
-  int wn = name.length();
-  int wc = wn > 0 ? 2 : 0;
-  string s;
-  s.reserve(w);
-  s += start;
-  w -= start.length() + 2*wc + name.length();
-  for (int i = 0; i < w / 2; i++)
-    s += ch;
-  if (wn > 0) s += " (";
-  s += name;
-  if (wn > 0) s += ") ";
-  for (int i = 0; i < (w / 2 + w % 2); i++)
-    s += ch;
-  Messages::info(s);
+    int w = Messages::available_width();
+    int wn = name.length();
+    int wc = wn > 0 ? 2 : 0;
+    string s;
+    s.reserve(w);
+    s += start;
+    w -= start.length() + 2*wc + name.length();
+    for (int i = 0; i < w / 2; i++)
+      s += ch;
+    if (wn > 0) s += " (";
+    s += name;
+    if (wn > 0) s += ") ";
+    for (int i = 0; i < (w / 2 + w % 2); i++)
+      s += ch;
+    Messages::info(s);
+  }
 
 }
 

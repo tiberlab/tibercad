@@ -55,7 +55,7 @@ class InputParser
   static bool defined(const std::string& name);
 
   //! Get the value of a defined macro
-  std::string get_defined(const std::string& name);
+  static std::string get_defined(const std::string& name);
 
   //! In-place expansion of macro
   void expand_macro(std::string& in);

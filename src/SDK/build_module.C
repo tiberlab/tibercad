@@ -161,6 +161,8 @@ void check_dependency(const ModelOptions& options, const string& modulename,
 int main(int argc, char** argv)
 {
 
+  //MPI_Init(&argc, &argv);
+
   string global_config_file;
   opterr = 0;
   int c;
@@ -786,7 +788,7 @@ check_dependency(const ModelOptions& options, const string& modulename,
 
 
 
-void process_module(const string& name, const ModelOptions& options)
+void process_module(const string& , const ModelOptions& options)
 {
 
 
