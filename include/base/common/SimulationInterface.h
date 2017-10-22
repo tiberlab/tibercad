@@ -314,6 +314,15 @@ class SimulationInterface : public TiberModelObject
     unsigned int get_solve_sequence_number(void) const;
 
 
+    /*!
+     * \brief Analyze the numerical errors
+     *
+     * This method calls do_analyze_errors(), which should report
+     * information on the numerical errors
+     */
+    void analyze_errors(void);
+
+
     //! Write results to file
     /*!
      * This method calls do_plot() after some health checks
@@ -977,6 +986,12 @@ class SimulationInterface : public TiberModelObject
 
     //! Increment the solve sequence number
     void increment_solve_sequence_number(void);
+
+
+    /*!
+     * \brief Do the calculation of the numerical errors
+     */
+    void do_analyze_errors(const ModelOptions& options);
 
 
     //! Find excluded DoFs

@@ -1120,11 +1120,31 @@ SimulationInterface::solve(void)
   Messages::newline();
   Messages::info(os.str());
 
+  this->analyze_errors();
+
   Messages::frameline("<<<<",'-');
 
 }
 
 
+void
+SimulationInterface::analyze_errors(void)
+{
+  if (get_options().has_submodel("ErrorAnalysis"))
+  {
+    Messages m;
+    m.info("Performing analysis of numerical errors");
+    m.indent();
+    this->do_analyze_errors((get_options().submodels_begin("ErrorAnalysis"))->second);
+    m.unindent();
+  }
+}
+
+void
+SimulationInterface::do_analyze_errors(const ModelOptions& options)
+{
+  Messages::info("Not implemented yet");
+}
 
 libMesh::NumericVector<double>&
 SimulationInterface::do_get_solution_vector(void)
