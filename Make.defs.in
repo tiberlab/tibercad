@@ -10,6 +10,28 @@ prefix := @prefix@
 exec_prefix := @exec_prefix@
 libdir := @libdir@
 
+# use or not PARDISO
+enable_pardiso := @ENABLE_PARDISO@
+
+# do we have DFTB?
+enable_dftb := @ENABLE_DFTB@
+
+# do we have HETERO?
+enable_hetero := @ENABLE_HETERO@
+
+# do we have UPTIGHT?
+enable_uptight := @ENABLE_UPTIGHT@
+
+# do we have license checking?
+enable_license_check := @LICENSE_CHECK@
+
+# do we have MKL?
+have_mkl := @HAVE_MKL@
+
+# do we have CUDA toolkit
+have_cuda := @HAVE_CUDA@
+
+
 # The OS
 hostos := @host_os@
 

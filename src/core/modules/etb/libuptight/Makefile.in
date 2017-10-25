@@ -37,7 +37,7 @@ libuptight_$(ARCH).a: checkout
 	@echo "Updating libuptight ..."
 	@cd src; $(SVN) -r $(UPTREV) up;  $(SVN) -r $(UPTREV) up lib_uptight;  $(SVN) -r $(UPTREV) up api; \
 	echo "Compiling libuptight ..."; \
-	CC=$(CC) CXX=$(CXX) FC=$(FC) ./configure $(CUDACONF) $(MKLCONF); \
+	CC=$(CC) CXX=$(CXX) FC=$(FC) ./configure $(CUDACONF) $(MKLCONF) --with-subversion=$(SVN); \
 	$(MAKE) -C api libuptight; 
 	@mv src/api/libuptight_$(ARCH).a .	
 	@cp src/api/fortran.h .

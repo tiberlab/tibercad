@@ -45,7 +45,7 @@ core: $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext)
 .PHONY: $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext)
 $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext): src
 	@echo "Linking $(dll_prefix)$(TIBERLIBNAME)$(shared_libext) ..."
-	@$(CXX) -shared $(CXXFLAGS) $(TIBER_OBJECTS) \
+	@$(CXX) -shared $(TIBER_OBJECTS) \
 		-o $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext) \
 		$(MODULE_LIBS) $(DLLNAME) $(TENSORLIB) $(LDFLAGS)
 		

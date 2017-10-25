@@ -36,18 +36,10 @@ all: tibercad
 tibercad: $(objects) 
 	@echo "Compiling tibercad executable ..."
 	@mkdir -p $(topdir)/$(ARCH)/bin
-	@$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/$(ARCH)/bin/tibercad$(SUFF) \
+	@$(CXX) $(objects) -o $(topdir)/$(ARCH)/bin/tibercad$(SUFF) \
 		-L$(libdir) \
 		-l$(TIBERLIBNAME) $(ADDITIONAL_LIBS) $(LDFLAGS)  $(PACKAGEFLAGS)
 
-
-tibercad_static: $(objects)
-	@echo "Compiling statically linked tibercad executable ..."
-	@$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/$(ARCH)/bin/tibercad_static$(SUFF) \
-		-L$(libdir) \
-		-Wl,-rpath,$(libdir) -Wl,-Bstatic -ltibercad -Wl,-Bdynamic \
-		$(ADDITIONAL_LIBS) \
-		$(MODULE_LIBS) $(LDFLAGS) $(PACKAGEFLAGS) -fPIC
 
 
 
