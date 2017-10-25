@@ -3802,7 +3802,7 @@ DriftDiffusion::build_local_scaling(void)
       double dn_dphi = sc->get_electron_density_derivative();
       double dp_dphi = sc->get_hole_density_derivative();
 
-      /*
+      ///*
       long double dRn_dn =
           sc->get_net_electron_recombination_rate_derivatives()[0];
       long double dRn_dp =
@@ -3818,7 +3818,7 @@ DriftDiffusion::build_local_scaling(void)
       dRp[1] = -dRp_dn * dn_dphi * phi0 / R0_h;
       dRp[2] = -dRp_dp * dp_dphi * phi0 / R0_h;
       dRp[0] = -(dRp[1] + dRp[2]);
-      */
+      //*/
 
       double drhovec[2];
       sc->get_charge_density_derivatives(drhovec);
@@ -3835,17 +3835,14 @@ DriftDiffusion::build_local_scaling(void)
         double phi_i_x_phi_j = JxW[qp] * phi[i][qp] * phi[i][qp];
 
         scalen(i) +=
-            //sigma_e * phi_i_x_phi_j;
-            sigma_e * (dphi[i][qp] * dphi[i][qp]);
-            //- dRn[1] * phi_i_x_phi_j;
+            sigma_e * (dphi[i][qp] * dphi[i][qp])
+            - dRn[1] * phi_i_x_phi_j;
 
         scalep(i) +=
-            //sigma_h * phi_i_x_phi_j;
-            sigma_h * (dphi[i][qp] * dphi[i][qp]);
-            //+ dRp[2] * phi_i_x_phi_j;
+            sigma_h * (dphi[i][qp] * dphi[i][qp])
+            + dRp[2] * phi_i_x_phi_j;
 
         scaleu(i) +=
-            //phi_i_x_phi_j;
 	  l2_eps * (dphi[i][qp] * (permittivity * dphi[i][qp])) -
             drho * phi[i][qp] * phi[i][qp];
       }
