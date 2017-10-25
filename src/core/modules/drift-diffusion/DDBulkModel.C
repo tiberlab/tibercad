@@ -567,7 +567,7 @@ DDBulkModel::calculate_equilibrium_properties(void)
   //set_carrier_temperatures(kT, kT);
 
   /* for testing
-  ofstream of("charge.dat");
+  ofstream of("charge_" + get_owner()->get_name() + ".dat");
   double I = Ec + 0.2 - (Ev -0.2);
   double h = I / 10000;
   of << "# " << Ec << " " << Ev << "\n";
@@ -612,12 +612,10 @@ DDBulkModel::calculate_equilibrium_properties(void)
 
     //cout << "x = " << x << " f = " << f << " df = " << df << endl;
 
-    if (f > 0) xmin = x;
-    else if (f < 0) xmax = x;
-
     residual_dens = fabs(f);
 
     double dx = 0.0;
+    y = x;
     if (residual_dens > ParticleDensity::MINDENSITY)
     {
       // At low temperatures everything is very sensitive on dx, so we don't
@@ -625,16 +623,15 @@ DDBulkModel::calculate_equilibrium_properties(void)
       // have any impact
       dx = - f / df;
 
-      y = x + dx;
+      y += dx;
+
       // we limit Ef to (xmin, xmax)
       if (y > xmax)
-        dx = 0.5 * (xmax - x);
+        y = 0.5 * (xmax + x);
       else if (y < xmin)
-        dx = 0.5 * (xmin - x);
+        y = 0.5 * (xmin + x);
 
     }
-
-    y = x + dx;
 
     error = fabs(dx);
     //cout << "x = " << y << " error = " << dx << " res. dens. = "
