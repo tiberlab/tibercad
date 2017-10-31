@@ -305,7 +305,7 @@ SRHRecombination::get_net_recombination_rates(double& recomb_e,
       else
         dE_n = Ec - Et;
     }
-    double gamman = _tat->get_gamma(dd.get_electric_field().size() * 100, T, dE_n);
+    double gamman = _tat->get_gamma(dd.get_electric_field().norm() * 100, T, dE_n);
     gamman = 1.0 / (gamman + 1);
     tau_n *= gamman;
 
@@ -319,7 +319,7 @@ SRHRecombination::get_net_recombination_rates(double& recomb_e,
       else
         dE_p = Et- Ev;
     }
-    double gammap = _tat->get_gamma(dd.get_electric_field().size() * 100, T, dE_p);
+    double gammap = _tat->get_gamma(dd.get_electric_field().norm() * 100, T, dE_p);
     gammap = 1.0 / (gammap + 1);
     tau_p *= gammap;
     //std::cerr << gamman << " "  << gammap << std::endl;
@@ -432,7 +432,7 @@ SRHRecombination::get_net_recombination_rate_derivatives(
       else
         dE_n = Ec - Et;
     }
-    double gamman = _tat->get_gamma(dd.get_electric_field().size() * 100, T, dE_n);
+    double gamman = _tat->get_gamma(dd.get_electric_field().norm() * 100, T, dE_n);
     gamman = 1.0 / (gamman + 1);
     tau_n *= gamman;
 
@@ -446,7 +446,7 @@ SRHRecombination::get_net_recombination_rate_derivatives(
       else
         dE_p = Et - Ev;
     }
-    double gammap = _tat->get_gamma(dd.get_electric_field().size() * 100, T, dE_p);
+    double gammap = _tat->get_gamma(dd.get_electric_field().norm() * 100, T, dE_p);
     gammap = 1.0 / (gammap + 1);
     tau_p *= gammap;
   }

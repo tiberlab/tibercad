@@ -61,13 +61,13 @@ FieldAssistedMobility::get_mobility(void)
     get_driftdiffusionproperties().get_grad_fermi_e() :
     get_driftdiffusionproperties().get_grad_fermi_h();
 
-  E = grad_fermi.size();
+  E = grad_fermi.norm();
 
   if ((_force == EFIELD) && (E > 1e-6))
     E = grad_fermi * get_driftdiffusionproperties().get_electric_field() / E;
   */
 
-  E = get_driftdiffusionproperties().get_electric_field().size();
+  E = get_driftdiffusionproperties().get_electric_field().norm();
 
   double arg = std::sqrt(E / _E0);
 
@@ -93,15 +93,15 @@ FieldAssistedMobility::get_derivative_grad_fermi(libMesh::RealGradient& dm)
   //double T = get_driftdiffusionproperties().get_lattice_temperature();
   //double E = 0.0;
   //if (get_carrier_type() == 'e')
-  //  E = get_driftdiffusionproperties().get_grad_fermi_e().size();
+  //  E = get_driftdiffusionproperties().get_grad_fermi_e().norm();
   //else
-  //  E = get_driftdiffusionproperties().get_grad_fermi_h().size();
+  //  E = get_driftdiffusionproperties().get_grad_fermi_h().norm();
 /*
   if ((_force == EFIELD) && (E > 1.0))
   {
 
     double mu = get_mobility();
-    E = get_driftdiffusionproperties().get_electric_field().size();
+    E = get_driftdiffusionproperties().get_electric_field().norm();
     double tmp = 0.5 / (std::sqrt(E * _E0) * E);
 
 

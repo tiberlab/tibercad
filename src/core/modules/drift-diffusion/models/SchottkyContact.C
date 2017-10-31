@@ -125,23 +125,23 @@ SchottkyContact::do_compute(void)
     const libMesh::RealGradient& eps_e_field = permittivity * e_field;
     double epsilon = Constants::e0 / (Constants::e * 100);
 
-    if (e_field.size() != 0 && !std::isnan(e_field.size()) )
+    if (e_field.norm() != 0 && !std::isnan(e_field.norm()) )
     {
-      epsilon = (Constants::e0 / (Constants::e * 100)) * eps_e_field.size() /  e_field.size();   //this MUST be changed, it works only for homogeneous materials
+      epsilon = (Constants::e0 / (Constants::e * 100)) * eps_e_field.norm() /  e_field.norm();   //this MUST be changed, it works only for homogeneous materials
     }
 
     if (_barrier_lowering )
     {
       if (_band == 'c')
       {
-        double delta = sqrt(e_field.size() / (4 * pi * epsilon));
+        double delta = sqrt(e_field.norm() / (4 * pi * epsilon));
         val += delta;
         //std::cout<<"efield="<<e_field.size()<<" epsilon="<<epsilon<<std::endl;
         //std::cout<<sqrt(e_field.size() / (4 * pi * epsilon))<<std::endl;
       }
       else
       {
-        double delta = sqrt(e_field.size() / (4 * pi * epsilon));
+        double delta = sqrt(e_field.norm() / (4 * pi * epsilon));
         val -= delta;
       }
     }
@@ -154,11 +154,11 @@ SchottkyContact::do_compute(void)
       double vp0 = 16 * pi * epsilon * h_temp * h_temp * get_bulk_dd_properties()->get_hole_mobility();
 
       double e_rC = 1 / (4 * pi * epsilon * e_temp);
-      double e_f = e_rC * e_field.size() / e_temp;
+      double e_f = e_rC * e_field.norm() / e_temp;
       //std::cout<<e_rC / e_temp<<std::endl;
       double e_psi = (1 + sqrt(e_f) - sqrt(1 + 2*sqrt(e_f))) / e_f;
       double h_rC = 1 / (4 * pi * epsilon * h_temp);
-      double h_f = h_rC * e_field.size() / h_temp;
+      double h_f = h_rC * e_field.norm() / h_temp;
       double h_psi = (1 + sqrt(h_f) - sqrt(1 + 2*sqrt(h_f))) / h_f;
       double vnE = vn0 * (1/(e_psi * e_psi) - e_f) / 4;
       double vpE = vp0 * (1/(h_psi * h_psi) - h_f) / 4;

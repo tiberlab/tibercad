@@ -47,7 +47,7 @@ Band2Band::get_net_recombination_rates(double& recomb_e,
   double ni = dd.get_intrinsic_density();
   double gn = dd.get_electron_gamma();
   double gp = dd.get_hole_gamma();
-  double E = dd.get_electric_field().size() + 1e-3;
+  double E = dd.get_electric_field().norm() + 1e-3;
 
   double D = (n * p - ni * ni * gn * gp) / ((p + ni) * (n + ni));
   recomb_e = recomb_h = _B_param * D * pow(E, _sigma) * exp(-_E0 / E);
@@ -66,7 +66,7 @@ Band2Band::get_net_recombination_rate_derivatives(
   double ni = dd.get_intrinsic_density();
   double gn = dd.get_electron_gamma();
   double gp = dd.get_hole_gamma();
-  double E = dd.get_electric_field().size() + 1e-3;
+  double E = dd.get_electric_field().norm() + 1e-3;
 
   double D = (n * p - ni * ni * gn * gp) / ((p + ni) * (n + ni));
   double recomb = _B_param * pow(E, _sigma) * exp(-_E0 / E);
