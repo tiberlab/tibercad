@@ -431,17 +431,22 @@ Control::setup_module(Device* device, const ModelOptions& opts)
 
 
 
+    // the bulk physical models, all together
+    ModelOptions bulk_opts;
+
+
     //
     // Next, we create all lower dimensional submodels
+    // At the same time, we put all bulk Physics blocks together
     //
     // NOTE: only definitions with correct space dimensions will be
     //       added to the different PhysicalObject instances
 
-    ModelOptions::const_submodel_iterator it = opts.submodels_begin("Physics");
-    const ModelOptions::const_submodel_iterator end = opts.submodels_end("Physics");
-    for ( ; it != end; ++it)
+    ModelOptions::const_submodel_iterator ph_it = opts.submodels_begin("Physics");
+    const ModelOptions::const_submodel_iterator ph_end = opts.submodels_end("Physics");
+    for ( ; ph_it != ph_end; ++ph_it)
     {
-      ModelOptions physopts = it->second;
+      ModelOptions physopts = ph_it->second;
 
       ModelOptions::submodel_iterator it = physopts.submodels_begin();
       const ModelOptions::submodel_iterator end = physopts.submodels_end();
@@ -545,24 +550,14 @@ Control::setup_module(Device* device, const ModelOptions& opts)
         if (add)
           physopts.delete_submodel(tmpit);
       }
+
+      // now add the remaining content to the common Physics options
+      bulk_opts += physopts;
+      bulk_opts.set_key((ph_it->second).get_key());
     }
     m.unindent();
 
-
-    // the physical models
-    ModelOptions physopts;
-
-    // put them all together, if someone makes more than one Physics block ...
-    {
-      ModelOptions::const_submodel_iterator it = opts.submodels_begin("Physics");
-      const ModelOptions::const_submodel_iterator end = opts.submodels_end("Physics");
-      for ( ; it != end; ++it)
-      {
-        physopts += it->second;
-        physopts.set_key((it->second).get_key());
-      }
-    }
-
+    
     //
     // now we have to create the bulk models
     //
@@ -600,7 +595,7 @@ Control::setup_module(Device* device, const ModelOptions& opts)
         //string crystal_structure(mat->get_structure());
 
         // that's not elegant, but it works
-        ModelOptions opts(physopts);
+        ModelOptions opts(bulk_opts);
         opts.delete_all_submodels();
 
         // we add the crystal structure for bulk materials as this could
@@ -613,8 +608,8 @@ Control::setup_module(Device* device, const ModelOptions& opts)
         // NOTE: different submodels could have the same identifier
         //
         {
-          ModelOptions::submodel_iterator it = physopts.submodels_begin();
-          const ModelOptions::submodel_iterator end = physopts.submodels_end();
+          ModelOptions::submodel_iterator it = bulk_opts.submodels_begin();
+          const ModelOptions::submodel_iterator end = bulk_opts.submodels_end();
           for ( ; it != end; ++it)
           {
             bool add = true;

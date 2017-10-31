@@ -44,7 +44,7 @@ TiberNonlinTR::do_solve(void)
 
   assert(_assemble != NULL);
 
-  NumericVector<Number>& u = get_solution_vector();
+  NumericVector<Number>& u = get_local_solution_vector();
   if (!u.closed()) u.close();
   NumericVector<Number>& du = *current_local_solution;
   libMesh::UniquePtr<NumericVector<Number> > u_old_ptr = u.clone();
