@@ -181,15 +181,13 @@ Ramp::ramp(void)
     }
     catch (SolveFailedException& e)
     {
-      /*
       for (int i = 0; i < num_sim; i++)
       {
         _simulations[i]->set_to_remembered_solution(_old_sol_ids[i]);
-        TiberCad::prepend_to_filename_suffix("_reloaded");
-        _simulations[i]->plot();
-        TiberCad::drop_first_filename_suffix();
+        //TiberCad::prepend_to_filename_suffix("_reloaded");
+        //_simulations[i]->plot();
+        //TiberCad::drop_first_filename_suffix();
       }
-      */
 
       currstep /= 2.0;
 
@@ -202,7 +200,7 @@ Ramp::ramp(void)
       if (step == 0) throw SolveFailedException("Cannot decrease step size, is already 0");
 
       value = oldvalue;
-      //VariableValue::set_variable_value(_variable, value);
+      VariableValue::set_variable_value(_variable, value);
       //for (int i = 0; i < num_sim; i++)
       //  _simulations[i]->solve();
     }
