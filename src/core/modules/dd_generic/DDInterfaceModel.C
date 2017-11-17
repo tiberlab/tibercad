@@ -177,6 +177,7 @@ DDInterfaceModel::do_init(void)
 
   //set_conduction_band(&_ddprop_A->get_conduction_band());
   //set_valence_band(&_ddprop_A->get_valence_band());
+
   set_carrier_properties(_ddprop_A->get_carrier_properties());
 
   // to setup common submodels
@@ -278,25 +279,39 @@ DDInterfaceModel::reinit(const Elem* elem, int side)
   //    TODO check if there is an explicit band model
   _ddprop_A->reinit(elem);
 
-  //set_conduction_band(&_ddprop_A->get_conduction_band());
-  //set_valence_band(&_ddprop_A->get_valence_band());
-  set_carrier_properties(_ddprop_A->get_carrier_properties());
 
-  /*
-  // this one may be NULL
-  if (_ddprop_B != NULL)
+  map<ID, CarrierProperties*> carriers(_ddprop_A->get_carrier_properties());
+  if (_ddprop_B != nullptr)
   {
     _ddprop_B->reinit(elem);
-    double cb_A = _ddprop_A->get_conduction_band_edge();
-    double vb_A = _ddprop_A->get_valence_band_edge();
 
-    if (_ddprop_B->get_conduction_band_edge() < cb_A)
-      set_conduction_band(&_ddprop_B->get_conduction_band());
+    // for two-sided case, put for each particle the on with the lower
+    // reference energy
+    const auto carriersB(_ddprop_B->get_carrier_properties());
 
-    if (_ddprop_B->get_valence_band_edge() > vb_A)
-      set_valence_band(&_ddprop_B->get_valence_band());
+    for (auto&& it : carriers)
+    {
+      if (carriersB.count(it.first))
+      {
+        CarrierProperties* propB = (carriersB.find(it.first))->second;
+        CarrierProperties* propA = it.second;
+
+        if (propA->get_band_edge() > propB->get_band_edge())
+        {
+          if (propA->get_charge() >= 0)
+            carriers[it.first] = propB;
+        }
+        else
+        {
+          if (propA->get_charge() < 0)
+            carriers[it.first] = propB;
+        }
+      }
+    }
+
   }
-  */
+  set_carrier_properties(carriers);
+
 
   // we can get the lattice temperature from the bulk model
   double kT = _ddprop_A->get_lattice_temperature();
@@ -371,6 +386,7 @@ DDInterfaceModel::compute()
     _jacobian[0][1] -= dq_dEfn;
     _jacobian[0][2] -= dq_dEfp;
   }
+  */
 
   if (get_number_of_recombination_models() > 0)
   {
@@ -378,24 +394,21 @@ DDInterfaceModel::compute()
 
     int div = is_internal_boundary() ? 2 : 1;
 
-    _coeff_g[1] += pd.electron_recombination_rate / div;
-    double dRn_dEfn = -pd.electron_recombination_rate_derivatives[0] *
-        pd.electron_density_derivative / div;
-    double dRn_dEfp = -pd.electron_recombination_rate_derivatives[1] *
-        pd.hole_density_derivative / div;
-    _jacobian[1][0] -= dRn_dEfn + dRn_dEfp;
-    _jacobian[1][1] += dRn_dEfn;
-    _jacobian[1][2] += dRn_dEfp;
+    for (unsigned int i = 0; i < n_known_carriers(); i++)
+    {
 
-    _coeff_g[2] += pd.hole_recombination_rate / div;
-    double dRp_dEfn = -pd.hole_recombination_rate_derivatives[0] *
-        pd.electron_density_derivative / div;
-    double dRp_dEfp = -pd.hole_recombination_rate_derivatives[1] *
-        pd.hole_density_derivative / div;
-    _jacobian[2][0] -= dRp_dEfn + dRp_dEfp;
-    _jacobian[2][1] += dRp_dEfn;
-    _jacobian[2][2] += dRp_dEfp;
+      _coeff_g[i] += pd.q_recombination_rate[i] / div;
+
+      for (unsigned int j = 0; j <= n_known_carriers(); j++)
+      {
+        double dRn_dEf = pd.q_recombination_rate_derivatives[i][j] / div;
+        _jacobian[i][j] += dRn_dEf;
+      }
+    }
+
   }
+
+  /*
   }
 
   if (_eflux_controlled)
