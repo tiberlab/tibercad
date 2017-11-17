@@ -1106,8 +1106,8 @@ and interfaces. Contacts are boundary models that allow a nonzero normal electri
 current. The applied voltage is specified with the option ``voltage`` . 
 
 A variable can be assigned to this, using the $-syntax. On ohmic or schottky contacts one can define surface
-recombination velocities for electrons and holes using the options ``rec_velocity_e`` and 
-``rec_velocity_h`` . This will impose Robin type boundary conditions for the continuity
+recombination velocities for electrons and holes using the options ``rec_velocity_n`` and 
+``rec_velocity_p`` . This will impose Robin type boundary conditions for the continuity
 equations of the form
 
 .. math::
