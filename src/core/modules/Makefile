@@ -12,8 +12,6 @@ subdirs += dd_generic
 #subdirs += interpolation
 subdirs += quantumespresso
 subdirs += imagereader
-#subdirs += drift-diffusion_hostguest
-#subdirs += excitons2 excitons_ST
 #subdirs += maxwell maxwellabsorption 
 
 include $(topdir)/Make.common
