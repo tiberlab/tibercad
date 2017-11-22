@@ -32,7 +32,7 @@ ExcitonISC::do_init(void)
 
   get_parameter("C", _C);
 
-  const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
+  const DriftDiffusionProperties& dd = get_bulk_driftdiffusionproperties();
   vector<double> spin;
   for (auto name : get_carrier_names())
   {

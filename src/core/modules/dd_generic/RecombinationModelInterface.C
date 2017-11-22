@@ -24,12 +24,12 @@ RecombinationModelInterface::do_init(void)
 
   for ( auto it : _carriers)
   {
-    ID id = get_driftdiffusionproperties().get_carrier_id(it);
+    ID id = get_bulk_driftdiffusionproperties().get_carrier_id(it);
     if (id == DriftDiffusionProperties::unknown_carrier_id)
       throw InitFailedException("Recombination '" + get_default_name() +
           "': carrier '" + (it) + "' not found in module");
 
-    const CarrierProperties* cp = get_driftdiffusionproperties().get_carrier_properties(id);
+    const CarrierProperties* cp = get_bulk_driftdiffusionproperties().get_carrier_properties(id);
     if ( cp == nullptr)
       throw InitFailedException("Recombination '" + get_default_name() +
           "': carrier '" + (it) + "' not defined in the same regions as the recombination model");

@@ -117,7 +117,6 @@ DirectRecombination::calculate_rate_and_derivatives(std::vector<double>& R, std:
     double q1 = dd.get_carrier_properties(id1)->get_charge();
     double q2 = dd.get_carrier_properties(id2)->get_charge();
 
-    //cerr << "n1 = " << n1 << " n2 = " << n2 << endl;
 
     //double E01 = dd.get_carrier_properties(id1)->get_band_edge();
     //double E02 = dd.get_carrier_properties(id2)->get_band_edge();
@@ -128,6 +127,7 @@ DirectRecombination::calculate_rate_and_derivatives(std::vector<double>& R, std:
 
     R[id1] = g * stat_fac;
     R[id2] = g * stat_fac;
+    //cerr << "n1 = " << n1 << " n2 = " << n2 << " -> " << R[id1] << endl;
 
     double dR0 = stat_fac * C_ * (n2 * dn1 + n1 * dn2);
     double dR1 = -C_ * n2 * (dn1 * stat_fac + beta * n1 * exponential);

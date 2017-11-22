@@ -547,15 +547,7 @@ DriftDiffusion::do_solve(void)
 
   try
   {
-    switch (_options.solver_method)
-    {
-      case GUMMEL:
-        //solve_gummel();
-        break;
-      default: // Newton method
-        do_newton();
-        break;
-    }
+    do_newton();
   }
   catch (::SolverException& e)
   {
@@ -574,7 +566,7 @@ DriftDiffusion::do_solve(void)
   // calculate the currents to print them on screen
   calculate_currents();
   calculate_iqe();
-  //calculate_surface_recombination();
+  calculate_surface_recombination();
 
 
   ContactData::iterator it(_boundary_currents.begin());
@@ -3643,16 +3635,12 @@ DriftDiffusion::calculate_currents_surfint(void)
 void
 DriftDiffusion::calculate_surface_recombination(void)
 {
-  Messages::warning("Current by surface integration is not implemented.\n");
-
-/*
-  // we only do something if we are on processor 0
-  //if (get_communicator().rank() != 0)
-    return;
+  //Messages::warning("Current by surface integration is not implemented.\n");
 
   TiberNonlinearSystem* system = &get_equation_system<TiberNonlinearSystem>();
 
-  const libMesh::NumericVector<Number>& solution = get_solution_vector();
+  // need the ghosted solution vector
+  const libMesh::NumericVector<Number>& solution = system->get_solution_vector();
 
   // aliases for nicer code
   const MeshBase& mesh = system->get_mesh();
@@ -3668,8 +3656,12 @@ DriftDiffusion::calculate_surface_recombination(void)
 
   // numeric ids corresponding to the variables
   const unsigned int u_var = system->variable_number("potential");
-  unsigned int en_var = system->variable_number("fermi_e");
-  unsigned int ep_var = system->variable_number("fermi_h");
+
+  const unsigned int n_vars = _carriers.size();
+  // the carriers
+  vector<unsigned int> qf_var_num(n_vars);
+  for (unsigned int i = 0; i < n_vars; ++i)
+    qf_var_num[i] = system->variable_number(_carriers[i]);
 
   libMesh::FEType fe_type = system->variable_type(u_var);
 
@@ -3702,14 +3694,12 @@ DriftDiffusion::calculate_surface_recombination(void)
   const vector<Point>& face_normals = fe_face->get_normals();
 
   vector<unsigned int> dof_indices_u;
-  vector<unsigned int> dof_indices_en;
-  vector<unsigned int> dof_indices_ep;
+  // dof indices of all QF potentials
+  vector<vector<unsigned int>> dof_indices_qf(n_vars);
 
   // the total recombination current
   double current = 0.0;
 
-  //BoundaryElementMap::iterator el(env.boundary_elements_begin());
-  //BoundaryElementMap::iterator end_el(env.boundary_elements_end());
   MeshBase::const_element_iterator el =
                                   this->active_local_elements_begin();
   const MeshBase::const_element_iterator end_el =
@@ -3724,8 +3714,15 @@ DriftDiffusion::calculate_surface_recombination(void)
 
     // get DOF indices
     dof_map.dof_indices(elem, dof_indices_u, u_var);
-    dof_map.dof_indices(elem, dof_indices_en, en_var);
-    dof_map.dof_indices(elem, dof_indices_ep, ep_var);
+
+    // these are the variables actually present in the element
+    set<unsigned int> qf_vars;
+    for (unsigned int i = 0; i < n_vars; ++i)
+    {
+      dof_map.dof_indices(elem, dof_indices_qf[i], qf_var_num[i]);
+      if (dof_indices_qf[i].size() > 0)
+        qf_vars.insert(i);
+    }
 
     //DDBulkModel* sc =
     //  dynamic_cast<DDBulkModel*>(get_physical_model(subdomain));
@@ -3749,32 +3746,41 @@ DriftDiffusion::calculate_surface_recombination(void)
         {
           // get the solution value at the quadrature point
           Real u  = 0.0;
-          Real en = 0.0;
-          Real ep = 0.0;
-          Real dEfn = 0.0;
-          Real dEfp = 0.0;
           libMesh::RealGradient e_field(0);
+
+          vector<Real> qf(n_vars, 0.0);
+          vector<RealGradient> grad_qf(n_vars, 0);
+
           for (unsigned int i = 0; i < phi_size; i++)
           {
             u  += phi[i][qp] * solution(dof_indices_u[i]);
-            en += phi[i][qp] * solution(dof_indices_en[i]);
-            ep += phi[i][qp] * solution(dof_indices_ep[i]);
+            e_field += dphi[i][qp] * solution(dof_indices_u[i]);
 
             double tmp = dphi[i][qp] * face_normals[qp];
-            dEfn += tmp * solution(dof_indices_en[i]);
-            dEfp += tmp * solution(dof_indices_ep[i]);
+            for (auto& var : qf_vars)
+            {
+              qf[var] += phi[i][qp] * phi0 * solution(dof_indices_qf[var][i]);
 
-            e_field += dphi[i][qp] * solution(dof_indices_u[i]);
+              grad_qf[var] += tmp * dphi[i][qp] * phi0 * solution(dof_indices_qf[var][i]);
+            }
+
           }
 
           // prepare for calculating local properties
           sm->set_coordinates(q_point[qp]);
-          sm->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
+          sm->set_el_potential(phi0 * u);
           sm->set_electric_field(-phi0 * e_field);
-          sm->set_grad_fermi_e(phi0 * dEfn);
-          sm->set_grad_fermi_h(phi0 * dEfp);
+
+          for (auto& var : qf_vars)
+          {
+            sm->set_fermi_potential(var, qf[var]);
+            sm->set_grad_fermi(var, grad_qf[var]);
+          }
+
           sm->set_face_normal(face_normals[qp]);
           sm->compute();
+
+          //vector<double> value_v(_carriers.size() + 1, 0.0);
 
           const vector<double>& coeff_a = sm->get_a();
           const vector<double>& coeff_g = sm->get_g();
@@ -3785,17 +3791,17 @@ DriftDiffusion::calculate_surface_recombination(void)
           //else
           //  value_u = coeff_g[0] / phi0;
 
-          double value_n = 0;
-          if (sm->get_type(1) != DDInterfaceModel::DIRICHLET)
-            value_n = (coeff_g[1] - coeff_a[1] * en);
+          for (auto&& var : qf_vars)
+          {
+            if (var != u_var)
+            {
+              double value = 0.0;
+              if (sm->get_type(var) != DDInterfaceModel::DIRICHLET)
+                value = (coeff_g[var] - coeff_a[var] * qf[var] * phi0);
 
-
-          double value_p = 0;
-          if (sm->get_type(2) != DDInterfaceModel::DIRICHLET)
-            value_p = (coeff_g[2] - coeff_a[2] * ep);
-
-
-          current += JxW[qp] * 0.5 * (value_n + value_p);
+              current += JxW[qp] * 0.5 * value;
+            }
+          }
 
         } // end loop over quadrature points
       }
@@ -3808,7 +3814,7 @@ DriftDiffusion::calculate_surface_recombination(void)
   ostringstream rec;
   rec << "Surface recombination current = " << current * Constants::e << "\n";
   Messages::info(rec.str());
-*/
+
 }
 
 

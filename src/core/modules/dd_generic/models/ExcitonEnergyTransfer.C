@@ -37,7 +37,7 @@ ExcitonEnergyTransfer::do_init(void)
   if (get_carrier_names().size() != 2)
     throw InitFailedException("Exciton EnergyTransfer model needs exactly two recombining carriers");
 
-  const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
+  const DriftDiffusionProperties& dd = get_bulk_driftdiffusionproperties();
 
 
   _id_d = this->get_carrier_ids()[0];

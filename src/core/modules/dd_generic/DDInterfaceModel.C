@@ -285,7 +285,7 @@ DDInterfaceModel::reinit(const Elem* elem, int side)
   {
     _ddprop_B->reinit(elem);
 
-    // for two-sided case, put for each particle the on with the lower
+    // for two-sided case, put for each particle the one with the lower
     // reference energy
     const auto carriersB(_ddprop_B->get_carrier_properties());
 
@@ -298,12 +298,12 @@ DDInterfaceModel::reinit(const Elem* elem, int side)
 
         if (propA->get_band_edge() > propB->get_band_edge())
         {
-          if (propA->get_charge() >= 0)
+          if (propA->get_charge() <= 0)
             carriers[it.first] = propB;
         }
         else
         {
-          if (propA->get_charge() < 0)
+          if (propA->get_charge() > 0)
             carriers[it.first] = propB;
         }
       }
@@ -336,7 +336,6 @@ DDInterfaceModel::compute()
   }
   calculate_densities();
   calculate_traps();
-
   do_compute();
 
   for (auto&& c : _zero_flux)

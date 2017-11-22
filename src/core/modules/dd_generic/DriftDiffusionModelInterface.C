@@ -11,7 +11,7 @@ DriftDiffusionModelInterface::T0 = Constants::k_B * 300.0;
 
 
 DriftDiffusionProperties&
-DriftDiffusionModelInterface::get_driftdiffusionproperties(void) const
+DriftDiffusionModelInterface::get_bulk_driftdiffusionproperties(void) const
 {
   if (get_material() == NULL)
     throw RuntimeException("Drift-Diffusion model \'" + get_name()
@@ -19,4 +19,17 @@ DriftDiffusionModelInterface::get_driftdiffusionproperties(void) const
 
   return dynamic_cast<DriftDiffusionProperties&>(*
       get_material()->get_model(get_simulator_id()));
+
+}
+
+DriftDiffusionProperties&
+DriftDiffusionModelInterface::get_driftdiffusionproperties(void) const
+{
+  if (get_owner() == NULL)
+    throw RuntimeException("Drift-Diffusion model \'" + get_name()
+      + "\' has no bulk material assigned but needs it.");
+
+  return dynamic_cast<DriftDiffusionProperties&>(*
+      get_owner()->get_model(get_simulator_id()));
+
 }

@@ -28,17 +28,6 @@ ExcitonTTAInterpolated::do_init(void)
 {
   RecombinationModelInterface::do_init();
 
-  const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
-  /*for (auto name : get_carrier_names())
-  {
-    if (!dd.get_carrier_properties(name)->is_exciton())
-      throw InitFailedException("Recombination '" + get_default_name() + ": carrier '" + name + "' is not an exciton");
-
-    if (dd.get_carrier_properties(name)->get_spin() != 1.0)
-      throw InitFailedException("Recombination '" + get_default_name() + ": exciton '" + name + "' is not an triplet");
-
-  }*/
-
   string sim = get_option("interpolation_module", "");
   _interpolation_sim = SimulationInterface::find_simulation(sim);
 

@@ -78,7 +78,7 @@ CarrierProperties::~CarrierProperties(void)
 void
 CarrierProperties::do_init(void)
 {
-  _carrier_id = this->get_driftdiffusionproperties().get_carrier_id(_particle_name);
+  _carrier_id = this->get_bulk_driftdiffusionproperties().get_carrier_id(_particle_name);
 }
 
 void
