@@ -122,7 +122,8 @@ public:
    */
   void extract_statistics(std::map<Specie, std::vector<unsigned int>>& stats,
       const std::set<ID>& regions, double cutoff = 0.5,
-      double y = 0, double z = 0) const;
+      double y = 0, double z = 0,
+      const ModelOptions& opt = ModelOptions()) const;
 
   //! Extract statistics in volume around a single atom
   /*!
@@ -216,13 +217,14 @@ public:
                               std::vector<double>& frac);
 
   //! extract alloy statistics
-  void extract_alloy_statistics(const ModelOptions& );
+  void extract_alloy_statistics(const ModelOptions& opt);
 
   //! plot alloy composition on a vtk file
-  void plot_alloy_composition(const ModelOptions& );
+  void plot_alloy_composition(const ModelOptions& opt);
 
   //! compute radial distribution
   void radial_distribution(std::string suffix = "");
+
 
 private:
 
