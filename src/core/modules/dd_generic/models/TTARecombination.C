@@ -9,32 +9,6 @@
 
 using namespace std;
 
-namespace {
-  pair<double, double> fermi_dirac(double E)
-  {
-    double f = 0, deriv = 0;
-    double arg = E;
-    if (arg > 50)
-    {
-      f = exp(-arg);
-      deriv = -f;
-    }
-    else if (arg < -50)
-    {
-      deriv = -exp(arg);
-      f = 1 + deriv;
-    }
-    else
-    {
-      double expfac = exp(arg);
-      double denom = 1.0 + expfac;
-      f = 1.0 / denom;
-      deriv = -expfac * f / denom;
-    }
-
-    return make_pair(f, deriv);
-  }
-}
 
 /*
 void
@@ -93,7 +67,7 @@ TTARecombination::calculate_rate_and_derivatives(std::vector<double>& R, std::ve
 
   R[id1] = g * stat_fac;
 
-  double dR0 = stat_fac * C_ * 2 * n1 * dn1;
+  double dR0 = -stat_fac * C_ * 2 * n1 * dn1;
   double dR1 = -g * 2 * beta * exponential;
 
   dPotentials[id1][id1] = dR0 + dR1;

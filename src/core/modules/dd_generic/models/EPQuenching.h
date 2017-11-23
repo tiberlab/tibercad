@@ -1,34 +1,35 @@
 // $Id$
 
-#ifndef _TTARECOMBINATION_H_
-#define _TTARECOMBINATION_H_
+#ifndef _EPQUENCHING_H_
+#define _EPQUENCHING_H_
 
 #include "RecombinationModelInterface.h"
 #include "TypeDefs.h"
 
 class SimulationInterface;
 
-//! Implementation of triplet-triplet annihilation
+//! Implementation of a triplet-polaron quenching
 /*!
- * Triplet-triplet annihilation (TTA) is
- * modeled by \f[R=C n_T^{2}(1-exp{-2/kT\phi_T}\f]
+ * Triplet-polaron quenching (EPQ) is modeled as
+ * \f[R=C n_i n_T (1-exp^{-\phi_T / kT}\f]
+ * where \f$n_i\f$ is the quenching particle density (e.g. electron)
  */
-class TBDLLOCAL TTARecombination : public RecombinationModelInterface
+class TBDLLOCAL EPQuenching : public RecombinationModelInterface
 {
 
   public:
 
     //! Destructor
-    virtual ~TTARecombination(void) {};
+    virtual ~EPQuenching(void) {};
 
     //! Create a ConstantMobility object
-    static TTARecombination* create(const ModelOptions& options);
+    static EPQuenching* create(const ModelOptions& options);
 
     
   protected:
 
     //! Constructor
-    TTARecombination(const ModelOptions& options);
+    EPQuenching(const ModelOptions& options);
 
 
     //! \copydoc RecombinationModelInterface::do_init()
@@ -44,6 +45,9 @@ class TBDLLOCAL TTARecombination : public RecombinationModelInterface
     //! Recombination rate parameter
     double C_;
 
+    //! The quenching particle
+    int _quencher;
+
 };
 
 
@@ -53,7 +57,7 @@ class TBDLLOCAL TTARecombination : public RecombinationModelInterface
 // 
 
 inline
-TTARecombination::TTARecombination(const ModelOptions& options)
+EPQuenching::EPQuenching(const ModelOptions& options)
   : RecombinationModelInterface(options),
     C_(0.0)
 {
@@ -61,10 +65,10 @@ TTARecombination::TTARecombination(const ModelOptions& options)
 
 
 inline
-TTARecombination*
-TTARecombination::create(const ModelOptions& options)
+EPQuenching*
+EPQuenching::create(const ModelOptions& options)
 {
-  return new TTARecombination(options);
+  return new EPQuenching(options);
 }
 
 
@@ -72,4 +76,4 @@ TTARecombination::create(const ModelOptions& options)
 
 
 
-#endif // _TTARECOMBINATION_H__
+#endif // _EPQUENCHING_H__

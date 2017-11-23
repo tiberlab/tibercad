@@ -11,7 +11,7 @@ class SimulationInterface;
 //! Implementation of a generic recombination model with constant parameter
 /*!
  * This class implements recombination processes that can be
- * modeled by \f[R=C\prod_i n_i^{\alpha_i}(1-1/kT\sum_i\pm\alpha_i\phi_i\f]
+ * modeled by \f[R=C\prod_i n_i^{\alpha_i}(1-\exp{1/kT\sum_i\pm\alpha_i\phi_i}\f]
  */
 class TBDLLOCAL GenericRecombination : public RecombinationModelInterface
 {
