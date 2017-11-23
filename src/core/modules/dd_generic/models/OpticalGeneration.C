@@ -29,6 +29,7 @@ OpticalGeneration::do_init(void)
         "one or two carriers");
 
   get_parameter("multiplier", _multiplier);
+  get_parameter("use_occupation_factors", _use_occupation);
  
   double val;
   if ((is >> val) || (gen_str[0] == '$'))
@@ -62,7 +63,7 @@ OpticalGeneration::do_init(void)
 
       _gen_id[i] = _generation_model[i]->get_solution_id("Generation");
     }
-   }
+  }
 }
 
 void
@@ -86,7 +87,7 @@ OpticalGeneration::calculate_rate_and_derivatives(std::vector<double>& R,
           vector<Point>(1, dd.get_coordinates())))
         _generation += tmp[0];
     }
-/*
+    /*
     if (_read_file == true)
     {
       DriftDiffusionProperties& dd = get_driftdiffusionproperties();
@@ -95,10 +96,11 @@ OpticalGeneration::calculate_rate_and_derivatives(std::vector<double>& R,
       // prendere le cooridnate e passarle al file read_file
       _generation = _sun * read_file(&gen_file, 1);
     }
-*/
+     */
   }
 
   double rate = _multiplier * _generation;
+
 
   if (get_carrier_names().size() == 1)
   {
@@ -142,10 +144,11 @@ OpticalGeneration::calculate_rate_and_derivatives(std::vector<double>& R,
     // energies are referred to negatively charged particles, so
     // taking away one negative carrier means adding one 'hole'
 
+    const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
+
     ID id1 = this->get_carrier_ids()[0];
     ID id2 = this->get_carrier_ids()[1];
 
-    const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
 
     double kT = dd.get_lattice_temperature();
 
@@ -199,7 +202,7 @@ OpticalGeneration::calculate_rate_and_derivatives(std::vector<double>& R,
     //    " " << ch2 << " " << E2 << " " << Ef2 << " " << f2 << endl;
 
     // R = rate * g1 * g2;
-    double g1, g2, dg1, dg2;
+    double g1 = 1, g2 = 1, dg1 = 0, dg2 = 0;
     double sign1 = 1, sign2 = 1;
 
     if (ch1 > 0)
@@ -227,8 +230,11 @@ OpticalGeneration::calculate_rate_and_derivatives(std::vector<double>& R,
       sign2 = -1;
     }
 
-    //g1 = g2 = 1;
-    //dg1 = dg2 = 0;
+    if (!_use_occupation)
+    {
+      g1 = g2 = 1;
+      dg1 = dg2 = 0;
+    }
 
     R[id1] = sign1 * rate * g1 * g2;
     R[id2] = sign2 * rate * g1 * g2;

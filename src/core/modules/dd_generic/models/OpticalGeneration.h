@@ -62,6 +62,9 @@ class TBDLLOCAL OpticalGeneration : public RecombinationModelInterface
     //! A multiplier
     double _multiplier;
 
+    //! Use or not occupation of initial/final states
+    bool _use_occupation;
+
     //! The generation model
     std::vector<SimulationInterface*> _generation_model;
 
@@ -81,7 +84,8 @@ inline
 OpticalGeneration::OpticalGeneration(const ModelOptions& options)
   : RecombinationModelInterface(options),
     _generation(0.0),
-    _multiplier(1.0)
+    _multiplier(1.0),
+    _use_occupation(false)
 {
 }
 
