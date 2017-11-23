@@ -252,6 +252,24 @@ Module dd_generic
     }
 
 
+    Rrecombination exciton_tta
+    {
+      regions = eml
+      plot_name = tta
+      carriers = triplet
+      C = 1e-10
+    }
+
+    Rrecombination exciton_tpq
+    {
+      regions = eml
+      plot_name = tpq
+      carriers = triplet
+      quencher = eguest
+      C = 1e-12
+    } 
+
+
   }
 
   Contact anode
