@@ -1,0 +1,131 @@
+Device
+{
+  meshfile = pin.msh
+  material = AlAs
+  x = 0.3
+
+
+   Region intrinsic 
+   {
+     Doping { Nd = 1e19 type = donor}
+     material = AlP
+   }
+
+   Region ndop 
+   {
+     material = AlP
+     Doping { Nd = 1e19 type = donor }
+   }
+
+   Region pdop 
+   {
+     Doping { Nd = 1e19 type = acceptor }
+   }
+
+
+}
+
+
+Module dd_generic
+{ 
+
+  name = driftdiffusion
+  plot = (RefEnergy, QFermi, Density, Flux, NetRecombination, ContactCurrents, TotalRecombinationHeat)
+
+  Physics
+  {
+
+    carrier electron
+    {
+      density_of_states bulk_kp
+      {
+      }
+    }
+
+    carrier hole
+    {
+      density_of_states bulk_kp
+      {
+      }
+    }
+
+    mobility constant
+    {
+      carriers = electron
+    }
+
+    mobility constant
+    {
+      carriers = hole
+    }
+
+
+
+    recombination direct
+    {
+      plot_name = "direct"
+      carriers = (electron, hole)
+      radiative = true
+    }
+
+    recombination direct
+    {
+      carriers = (electron, hole)
+      regions = AlP/AlAs
+      C = 1e-15
+    }
+
+  }   
+
+
+  Contact anode
+  {
+    type = ohmic
+    isolated_carriers = electron
+    voltage = $Vb
+  }
+
+  Contact cathode
+  {
+    type = ohmic
+    isolated_carriers = hole
+    voltage = 0.0
+  }
+
+}  
+
+
+
+Module sweep
+{
+  solve = driftdiffusion
+  variable = $Vb
+  start = 0.0
+  stop = 2
+  steps = 40
+  plot_data = true
+}
+
+
+
+Simulation
+{
+  temperature = 300
+  solve = sweep
+  resultpath = output
+  output_format = grace
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
