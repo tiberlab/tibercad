@@ -2299,14 +2299,16 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     }
 
 
+    if (values.count(_joule_base + n_vars))
+      values[_joule_base + n_vars][n] = 0.0;
 
     for (unsigned int v = 0; v < n_vars; ++v)
     {
       if (sc->get_carrier_properties(v) != nullptr)
       {
         double q = sc->get_carrier_properties(v)->get_charge();
-        double sign = (q > 0) ? -1 : 1;
-        double joule_loc = sign * Constants::e * (flux[v] * grad_qf_loc[v]);
+        double sign = sc->get_carrier_properties(v)->get_charge_sign();
+        double joule_loc = -sign * Constants::e * (flux[v] * grad_qf_loc[v]);
         if (values.count(_joule_base + v))
         {
           values[_joule_base + v][n] = joule_loc;
