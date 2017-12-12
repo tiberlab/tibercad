@@ -103,6 +103,7 @@ DirectRecombination::calculate_rate_and_derivatives(std::vector<double>& R, std:
 
   if (ct1 != ct2)
   {
+    // this is the standard direct recombination for electrons hole pairs
     if (ct1 != 'e')
       swap(id1, id2);
 
@@ -144,13 +145,15 @@ DirectRecombination::calculate_rate_and_derivatives(std::vector<double>& R, std:
   {
     double E1  = dd.get_carrier_properties(id1)->get_band_edge();
     double E2  = dd.get_carrier_properties(id2)->get_band_edge();
+    double q1  = dd.get_carrier_properties(id1)->get_charge();
+    double q2  = dd.get_carrier_properties(id2)->get_charge();
 
-    if ((ct1 == 'e') && (E1 < E2))
+    if ((ct1 == 'e') && (E2 < E1))
     {
       swap(id1, id2);
       swap(E1, E2);
     }
-    else if ((ct1 == 'h') && (E2 < E1))
+    else if ((ct1 == 'h') && (E1 < E2))
     {
       swap(id1, id2);
       swap(E1, E2);
@@ -167,18 +170,26 @@ DirectRecombination::calculate_rate_and_derivatives(std::vector<double>& R, std:
     double Ef2 = -dd.get_q_fermi_potential(id2);
     double beta = (ct1 == 'e') ? 1.0/kT : -1.0/kT;
 
-    double thermal = 1; //exp( 0.5*beta*(E1-E2) - 0.5*fabs(beta*(E1-E2)) );
-    double exponential = exp((Ef2 - Ef1) * beta);
-    double stat = 1.0 - exponential;
+    double thermal = exp(-fabs(E2 - E1) / kT);
+    double exponential1 = exp((Ef2 - Ef1) * beta);
+    double exponential2 = exp((Ef1 - Ef2) * beta);
+    double stat1 = 1.0 - exponential1;
+    double stat2 = 1.0 - exponential2;
+
+    double C1 = 0.5*C_*thermal;
+    double C2 = 0.5*C_;
 
     // TODO N2 should be the maximum density for n2, but now its 100*Nc
-    R[id1] = C_ * thermal * stat * n1 * (N2 - n2);
+    R[id1] = C1 * stat1 * n1 * (N2 - n2) - C2 * stat2 * n2 * (N1 - n1);
     R[id2] = -R[id1];
 
 
-    double dR0 =  C_ * thermal * stat * ( (N2 - n2)*dn1 - n1*dn2 );
-    double dR1 = -C_ * thermal * (N2 - n2) * ( dn1 * stat + beta * n1 * exponential);
-    double dR2 = -C_ * thermal * n1 * (-dn2 * stat - beta * (N2 - n2) * exponential);
+    double dR0 =  C1 * stat1 * ( (N2 - n2)*dn1 - n1*dn2 )
+        - C2 * stat2 * ( (N1 - n1)*dn2 - n2 * dn1 );
+    double dR1 = -C1 * (N2 - n2) * ( dn1 * stat1 + beta * n1 * exponential1)
+        - C2 * n2 * ( dn1 * stat2 + beta * (N1 - n1) * exponential2);
+    double dR2 = -C1 * n1 * (-dn2 * stat1 - beta * (N2 - n2) * exponential1)
+        + C2 * (N1 - n1) * (dn2 * stat2 + beta * n2 * exponential2);
 
     dPotentials[id1][id1] =  dR1;
     dPotentials[id1][id2] =  dR2;
