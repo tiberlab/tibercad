@@ -117,9 +117,6 @@ class TBDLLOCAL Elasticity : public SimulationInterface
     };
 
 
-  //!node connection
-  std::vector<unsigned short int> node_conn;
-
   //! The accumulated elemental strain, used for shape deformation
   HashMap<const Elem*, SymTensor>::Type _accumulated_strain;
 
@@ -143,7 +140,6 @@ class TBDLLOCAL Elasticity : public SimulationInterface
      *
      * \note The name "all" is used to plot all solutions
      */
-
   struct options
   {
     ID magnification;   //!< Magnification  

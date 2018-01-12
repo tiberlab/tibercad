@@ -90,22 +90,6 @@ Elasticity::do_init(void)
 
   int n_elem = 0;
   
-  //Create node connection
-  const unsigned int nn  = get_mesh().n_nodes();
-  node_conn.resize(nn);
-  {
-    vector<unsigned short int> node_conn_local(node_conn.size());
-    
-    
-    MeshBase::const_element_iterator       el     = this->active_local_elements_begin();
-    const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
-    
-    for ( ; el != end_el; ++el, ++n_elem)
-      for (unsigned int n = 0; n < (*el)->n_nodes(); n++)
-	node_conn_local[(*el)->node(n)]++;
-
-    node_conn = node_conn_local;
-  }
   
   // prepare the vector for the accumulated strain
   // TODO this would not work very well with mesh refinement and needs to be improved,
@@ -201,6 +185,7 @@ Elasticity::do_solve(void)
     system.solution->zero();
 
     system.solve();
+    system.update();
     sol->add(1.0,*(system.current_local_solution));
     
     double tot_norm = sol->l2_norm();
@@ -847,7 +832,7 @@ Elasticity::do_assemble(libMesh::EquationSystems& es, const std::string& system_
 
   system.matrix->close();
   //system.matrix->print_matlab("K.m");
-  //system.rhs->close();
+  system.rhs->close();
   //system.rhs->print_matlab("F.m");
 
 }
