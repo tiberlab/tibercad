@@ -105,8 +105,10 @@ KPBulkDOS::do_reinit(const Elem* elem)
       data))
   {
     effective_dos() = data.eff_dos;
+    band_edge() = data.ref_energy;
     reference_energy() = data.ref_energy;
     effective_mass() = data.dos_mass;
+    dos_mass() = data.dos_mass;
   }
   else
   {
