@@ -292,7 +292,7 @@ Device::setup_mesh(void)
        << "number of elements  : " << setw(7) << setfill(' ') << _mesh->n_elem() << endl
        << "number of subdomains: " << setw(7) << setfill(' ') 
        << _mesh_region_info->n_subdomains() << endl
-       << "number of boundaries: " << setw(7) << setfill(' ') << _boundary_nodes->size();
+       << "number of boundaries: " << setw(7) << setfill(' ') << _bd_regions->n_subdomains();
     m.info(os.str());
   }
   m.newline();
@@ -959,9 +959,12 @@ Device::get_boundary_object(ID id)
       {
         // first get ids of the regions on both sides
         const IDSet& ids = _bd_regions->get_contiguous_regions_for_side(id);
-        assert(ids.size() == 2);
+        //assert(ids.size() == 2);
         ID idA = *(ids.begin());
-        ID idB = *(++(ids.begin()));
+        ID idB = idA;
+        if (ids.size() == 2)
+          ID idB = *(++(ids.begin()));
+
         Material* matA = get_material(idA);
         Material* matB = get_material(idB);
         ModelOptions opts;

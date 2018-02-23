@@ -147,8 +147,7 @@ class TBDLLOCAL BoundaryRegions : public MeshRegionInfo
 
     //! Get contiguous regions for a given side ID
     /*!
-     * The size of the set returned is always 2 (unless the side ID does
-     * not exist, in which case an empty set is returned).
+     * An empty set indicates that boundary \c id does not exist.
      * If one of the IDs is INVALID_ID it means that \c ID belongs
      * to an external boundary.
      */
