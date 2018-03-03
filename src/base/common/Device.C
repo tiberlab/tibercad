@@ -963,7 +963,7 @@ Device::get_boundary_object(ID id)
         ID idA = *(ids.begin());
         ID idB = idA;
         if (ids.size() == 2)
-          ID idB = *(++(ids.begin()));
+          idB = *(++(ids.begin()));
 
         Material* matA = get_material(idA);
         Material* matB = get_material(idB);
