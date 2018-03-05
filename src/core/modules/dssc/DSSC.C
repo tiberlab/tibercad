@@ -1017,6 +1017,11 @@ DSSC::do_init(void)
 
   _device = &get_environment().get_device();
 
+  if ((_device->get_communicator().size() > 1) && (_device->get_communicator().rank() == 0))
+  {
+    throw InitFailedException("Module DSSC is currently only available in serial version.");
+  }
+
   find_dirichlet_nodes();
   find_internal_boundary_nodes();
 
