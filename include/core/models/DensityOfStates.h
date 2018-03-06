@@ -34,6 +34,9 @@ class TBDLEXPORT DensityOfStates : public PhysicalModelInterface
     void set_effective_DOS(double DOS);
 
 
+    //! Get the total state density
+    double get_total_state_density(void);
+
 
     //! Get occupied states
     /*!
@@ -173,6 +176,14 @@ class TBDLEXPORT DensityOfStates : public PhysicalModelInterface
     bool _is_quantum;
 
 
+    //! The total density of states
+    /*!
+     * The density calculated from the module will always be limited
+     * to this amount. In some cases this is artificial, however it is 
+     * consistent with reality inasmuch as any band has a finite bandwidth
+     * */
+    double _total_density;
+
 
 };
 
@@ -193,6 +204,14 @@ DensityOfStates::set_effective_DOS(double DOS)
 {
   if (!_fixed_DOS)
     _effective_dos = DOS;
+}
+
+
+inline
+double
+DensityOfStates::get_total_state_density(void)
+{
+  return _total_density;
 }
 
 
