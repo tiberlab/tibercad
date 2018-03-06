@@ -73,7 +73,7 @@ DSSCGeneration::do_init(void)
       break;
   }
 
-  double len = _direction.size();
+  double len = _direction.norm();
   _direction /= len;
 
   // light intensity is given in x sun
