@@ -256,7 +256,6 @@ void
 EigenvalueProblem::plot_dispersion(const std::string& filename)
 {
  
-  std::cout<<"Compute Dispersion ..." << std::endl;  
   const MeshBase* kmesh = _kspace->get_k_mesh();
   unsigned int number_of_k_points = kmesh->n_nodes();
 

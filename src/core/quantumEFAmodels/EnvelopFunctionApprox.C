@@ -1887,8 +1887,9 @@ bool EnvelopFunctionApprox::read_SLEPC_solution(void)
     else
       solver_opt.spectrum_shift += 0.3;  //!? Rise a little the guess and restart  
 
-    solver_opt.number_of_eigenstates = opt.num_el_states - n_eig + opt.num_hl_states + 1;
   }
+  // if not all are found, look for so many electron states:
+  solver_opt.number_of_eigenstates = opt.num_el_states - (n_eig - opt.num_hl_states) + 1;
 
   if (foundall)
   {
@@ -1918,8 +1919,8 @@ bool EnvelopFunctionApprox::read_SLEPC_solution(void)
       else
         solver_opt.spectrum_shift -= 0.3;  //!? Lower a little the guess and restart
 
-      solver_opt.number_of_eigenstates = n_eig + 1;
     }
+    solver_opt.number_of_eigenstates = n_eig + 1;
 
     //redeclare_solutions();
   }
