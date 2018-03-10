@@ -58,28 +58,38 @@ AtomisticStructure::AtomisticStructure(const std::string& name)
   N_atoms= 0;
 }
 
+AtomisticStructure::AtomisticStructure(const AtomisticStructure& other) :
+  AtomisticBasis(other),
+  _options(other._options),
+  _name(other._name),
+  _scale(other._scale),
+  _IDset(other._IDset),
+  _is_initialized(other._is_initialized),
+  _random_alloy(other._random_alloy),
+  _device(other._device),
+  _N_without_H(other._N_without_H),
+  _virtual_atom_types(other._virtual_atom_types),
+  _virtual_type_idx(other._virtual_type_idx)
+{
+}
+
 
 AtomisticStructure::~AtomisticStructure(void)
 {
-  if (_bondmap != NULL) delete _bondmap;
 }
 
 
 AtomisticStructure*
 AtomisticStructure::create()
 {
-  AtomisticStructure* st =  NULL;
-  st = new AtomisticStructure();
+  AtomisticStructure* st = new AtomisticStructure();
   return st;
 }
 
 AtomisticStructure*
 AtomisticStructure::create(const AtomisticStructure& as)
 {
-  AtomisticStructure* st =  NULL;
-  st = new AtomisticStructure();
-
-  *st = as;
+  AtomisticStructure* st = new AtomisticStructure(as);
 
   return st;
 }
@@ -389,14 +399,9 @@ AtomisticStructure::init_mesh_structure()
 
 
   // Copy the structure back from the generator here
-  // This callback scheme is not that elegant ... 
-  //_as->set_structure_atoms(_structure_basis);
-  //_as->set_ttype_lattice_vectors(_period);
-  //_as->set_N_atoms( _structure_basis.size() );
-  //_as->set_N_types( atom_types.size() );
-  //_as->set_atom_types(atom_types);
   generator->finalize();
 
+  _elem_to_atoms.clear();
   for (size_t i = 0; i < _atoms.size(); ++i)
     _elem_to_atoms[_atoms[i].get_elem()].push_back(i);
  
@@ -450,6 +455,7 @@ AtomisticStructure::associate_elements()
   std::vector<Atom>::iterator atom = _atoms.begin();
 
   unsigned int dim =  _device->get_mesh().mesh_dimension();
+  _elem_to_atoms.clear();
 
   size_t n_atoms = _atoms.size();
   Utils::Progress prog("Assign elements", n_atoms);

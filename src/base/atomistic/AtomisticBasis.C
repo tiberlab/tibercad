@@ -18,17 +18,28 @@ using namespace std;
 
 AtomisticBasis::~AtomisticBasis(void)
 {
-  if (_bondmap != NULL) delete _bondmap;
+  if (_bondmap != nullptr) delete _bondmap;
 }
 
 AtomisticBasis::AtomisticBasis(void)
-:_bondmap(NULL),
+:_bondmap(nullptr),
  _lattice_vectors(9,0.0),
  _periodicity({0, 0, 0})
 {
 
 }
 
+
+AtomisticBasis::AtomisticBasis(const AtomisticBasis& other) :
+  _bondmap(nullptr),
+  _atoms(other._atoms),
+  _lattice_vectors(other._lattice_vectors),
+  N_atoms(other.N_atoms),
+  N_types(other.N_types),
+  _atom_types(other._atom_types),
+  _periodicity(other._periodicity)
+{
+}
 
 
 void

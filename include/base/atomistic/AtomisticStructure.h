@@ -281,14 +281,14 @@ private:
   //! set the labels (used e.g. when reading xyz)
   void set_labels(void);
 
-  //! Scale factor (from mesh_units to amstrong mesh_units/1e-10)
-  double _scale;
-
   //! Options for the structure (from Atomistic Region)
   ModelOptions _options;
 
   //! Name of the structure (will be the same of associated Atomistic region)
   std::string _name;
+
+  //! Scale factor (from mesh_units to amstrong mesh_units/1e-10)
+  double _scale;
 
 
   //! Set of mesh regions covered by atomistic structure (numbers: mesh regions)

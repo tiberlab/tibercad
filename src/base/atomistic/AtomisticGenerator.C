@@ -301,7 +301,7 @@ AtomisticGenerator::finalize(void)
   //--------------------------------------------------------------------------------------------------
 
   Atom tmp_atom;
-  //TODO:not safe, better swap arrays, so then we can delete AtomisticGenerator instance
+  
   _as->set_structure_atoms(_structure_basis);
   
   _as->set_ttype_lattice_vectors(_period);
