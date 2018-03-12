@@ -52,7 +52,6 @@ Module driftdiffusion
 
     linear_solver
     {
-      method = pconly
       preconditioner = lu
     }
   }
