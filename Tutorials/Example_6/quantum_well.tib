@@ -128,7 +128,6 @@ Module  driftdiffusion
 
 
 Module  efaschroedinger
-
 {
   
   name = quantum_el
