@@ -9,6 +9,13 @@ Device
   meshfile = led_spectrum.msh 
   mesh_units = 1e-9       #nm 
 
+  Parallel
+  {
+    # this will do FEM calculations in serial, but when started
+    # with more than 1 MPI process will calculate k-points for
+    # spectrum in parallel
+    mpi_processes_per_mesh = 1
+  }
 
   y-growth-direction = (1,0,-1,0)
   z-growth-direction = (-1,2,-1,0)
