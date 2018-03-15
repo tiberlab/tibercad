@@ -1309,6 +1309,23 @@ SimulationInterface::plot_meshdata(void)
 
   const MeshBase& mesh = get_mesh();
 
+  // The device communicator might be larger than the mesh communicator.
+  // In that case, we do the work only on one group of processes
+
+  bool do_write = true;
+
+  if (this->get_communicator().size() > this->get_mesh().comm().size())
+  {
+    unsigned int dev_rank = this->get_communicator().rank();
+    this->get_mesh().comm().broadcast(dev_rank);
+    unsigned int min_rank = dev_rank;
+    this->get_communicator().min(min_rank);
+
+    if (dev_rank != min_rank)
+      return;
+      //do_write = false;
+  }
+
   // we write only on mesh part associated to this simulation
 
   MeshBase::const_element_iterator it = this->active_local_elements_begin();
@@ -1473,8 +1490,6 @@ SimulationInterface::plot_meshdata(void)
       writer->write();
     }
   }
-
-  //do_plot_old();
 
 }
 
