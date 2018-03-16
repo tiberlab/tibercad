@@ -253,25 +253,36 @@ ModelOptions::delete_all_submodels(void)
 void
 ModelOptions::print_all(void) const
 {
-  cout << "ModelOptions content: {" << endl;
+  Messages m;
+  m.info("ModelOptions content: {");
   OptionsMap::const_iterator it = _options.begin();
   const OptionsMap::const_iterator end = _options.end();
 
+  m.indent();
   for ( ; it != end; ++it)
-    cout << it->first << " -> " << it->second << endl;
+  {
+    ostringstream os;
+    os << it->first << " -> " << it->second << endl;
+    m.info(os.str());
+  }
 
+  m.indent();
   if (!_submodels.empty())
   {
-    cout << "Submodels:" << endl;
+    ostringstream os;
+    os << "Submodels:" << endl;
+    m.info(os.str());
     const_submodel_iterator it(_submodels.begin());
     const const_submodel_iterator end(_submodels.end());
     for ( ; it != end; ++it)
     {
-      cout << it->first << ":\n";
+      ostringstream os;
+      os << it->first << ":\n";
+      m.info(os.str());
       (it->second).print_all();
     }
   }
-  cout << "}" << endl;
+  m.info("}");
 }
 
 
