@@ -51,7 +51,7 @@ class TiberModelObject
      * special methods.
      * Options have to be specified at creation time.
      */
-    void set_options(const ModelOptions& options);
+    void set_options(const ModelOptions& options, bool add = false);
 
     //! Get the options for this model
     const ModelOptions& get_options(void) const;
@@ -328,9 +328,12 @@ class TiberModelObject
 
 inline
 void
-TiberModelObject::set_options(const ModelOptions& options)
+TiberModelObject::set_options(const ModelOptions& options, bool add)
 {
-  _options += options;
+  if (add)
+    _options += options;
+  else
+    _options = options;
 }
 
 
