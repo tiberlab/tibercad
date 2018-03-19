@@ -29,6 +29,7 @@ ModelOptions::ModelOptions(const ModelOptions& other)
 
   _key = other._key;
   _name = other._name;
+  _used = other._used;
 }
 
 
@@ -200,6 +201,7 @@ ModelOptions::operator+=(const ModelOptions& rhs)
     _key = rhs._key;
   if (!rhs._name.empty())
     _name = rhs._name;
+
 
   OptionsMap::const_iterator it(rhs._options.begin());
   const OptionsMap::const_iterator end(rhs._options.end());
