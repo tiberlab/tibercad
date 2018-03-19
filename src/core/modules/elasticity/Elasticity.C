@@ -179,7 +179,8 @@ Elasticity::do_solve(void)
   do {
 
     accumulate_strain();
-    apply_shape_deformation();
+    if (myopt.non_linear_strain == true)
+      apply_shape_deformation();
     //if (shape_iteration == 1)
     //  internal_strain_correction(NULL);
     system.solution->zero();
