@@ -1316,7 +1316,6 @@ DriftDiffusion::rebuild_equation_system(void)
   }
 
 
-
   ModelOptions& solveropts = get_solver_options();
   if (solveropts.get_option("absolute_tolerance", -1.0) < 0)
     solveropts["absolute_tolerance"] = "1e-15";
@@ -1969,6 +1968,19 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
       exclude_h = true;
   }
 
+  // with this we can decide whether we need to calculate more involved things
+  bool basic_only = false;
+  set<ID> ids;
+  for (auto it(values.begin()); it != values.end(); ++it)
+    ids.insert(it->first);
+
+  ids.erase(ElPotential);
+  ids.erase(ElField);
+  ids.erase(eQFermi);
+  ids.erase(hQFermi);
+
+  if (ids.empty())
+    basic_only = true;
 
 
   libMesh::FEType fe_type = system->variable_type(u_var);
@@ -2067,54 +2079,6 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
     el_pot = u;
 
-
-    sc->set_coordinates(real_pts[n]);
-
-    sc->set_potentials(u, en, ep);
-    sc->set_old_potentials(phi0 * oldu, phi0 * olden, phi0 * oldep);
-
-    sc->set_electric_field(e_field);
-    sc->set_grad_fermi_e(grad_en_loc);
-    sc->set_grad_fermi_h(grad_ep_loc);
-
-    sc->calculate_densities();
-
-    double edens = (sc->is_dielectric() ? 0.0 : sc->get_electron_density());
-    double hdens = (sc->is_dielectric() ? 0.0 : sc->get_hole_density());
-    //double edens = sc->get_electron_density();
-    //double hdens = sc->get_hole_density();
-
-    sc->calculate_mobilities();
-
-    sc->compute_thermoelectric_powers();
-    double Pn =  sc->get_electron_thermoelectric_power();
-    double Pp =  sc->get_hole_thermoelectric_power();
-
-    //sc->calculate_net_recombination_rates();
-
-    double sigma_e = Constants::e * sc->get_electron_conductivity();
-    double sigma_h = Constants::e * sc->get_hole_conductivity();
-
-    libMesh::RealGradient dfn = grad_en_loc + Pn * grad_T_loc;
-    libMesh::RealGradient dfp = grad_ep_loc + Pp * grad_T_loc;
-
-    libMesh::RealGradient jn_loc = -sigma_e * dfn;
-    libMesh::RealGradient jp_loc = -sigma_h * dfp;
-    jn += jn_loc;
-    jp += jp_loc;
-
-    el_field += e_field;
-    polariz += sc->get_total_polarization();
-
-    if (values.count(ArtificialDiffusion))
-    {
-      RealGradient chempot(e_field + grad_en_loc);
-      double x0 = this->get_mesh_units();
-      double art_diff = 0.5 * sc->get_electron_mobility() * x0 * elem->hmax() *
-          sc->get_electron_density_derivative() * chempot.norm();
-      values[ArtificialDiffusion][n] = art_diff;
-    }
-
     if (values.count(ElPotential))
       values[ElPotential][n] = u - _reference_potential;
 
@@ -2124,183 +2088,235 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     if (values.count(hQFermi))
       values[hQFermi][n] = -ep;
 
-    if (values.count(Ec))
-      values[Ec][n] = sc->get_conduction_band_edge() - u;
+    el_field += e_field;
 
-    if (values.count(Ev))
-      values[Ev][n] = sc->get_valence_band_edge() - u;
-
-    if (values.count(Ec0))
-      values[Ec0][n] = sc->get_conduction_band_edge();
-
-    if (values.count(Ev0))
-      values[Ev0][n] = sc->get_valence_band_edge();
-
-    if (values.count(Eg))
-      values[Eg][n] =
-        sc->get_conduction_band_edge() - sc->get_valence_band_edge();
-
-    if (values.count(eDensity))
-      values[eDensity][n] = edens;
-
-    if (values.count(hDensity))
-      values[hDensity][n] = hdens;
-
-    if (values.count(ChargeDensity))
+    if (!basic_only)
     {
-      sc->calculate_ionized_dopants();
-      values[ChargeDensity][n] = sc->get_charge_density();
-    }
+      sc->set_coordinates(real_pts[n]);
 
-    if (values.count(IntrinsicDensity))
-      values[IntrinsicDensity][n] = sc->get_intrinsic_density();
+      sc->set_potentials(u, en, ep);
+      sc->set_old_potentials(phi0 * oldu, phi0 * olden, phi0 * oldep);
 
-    if (values.count(eMobility))
-      values[eMobility][n] = sc->get_electron_mobility();
+      sc->set_electric_field(e_field);
+      sc->set_grad_fermi_e(grad_en_loc);
+      sc->set_grad_fermi_h(grad_ep_loc);
 
-    if (values.count(hMobility))
-      values[hMobility][n] = sc->get_hole_mobility();
+      sc->calculate_densities();
 
-    if (values.count(eConductivity))
-      values[eConductivity][n] = sigma_e;
+      double edens = (sc->is_dielectric() ? 0.0 : sc->get_electron_density());
+      double hdens = (sc->is_dielectric() ? 0.0 : sc->get_hole_density());
+      //double edens = sc->get_electron_density();
+      //double hdens = sc->get_hole_density();
 
-    if (values.count(hConductivity))
-      values[hConductivity][n] = sigma_h;
+      sc->calculate_mobilities();
 
-    bool ionized_donors = values.count(IonizedDonors);
-    bool ionized_acceptors = values.count(IonizedAcceptors);
-    if (ionized_donors || ionized_acceptors)
-    {
-      sc->calculate_ionized_dopants();
-      if (ionized_donors)
-        values[IonizedDonors][n] = sc->get_ionized_donor_density();
+      sc->compute_thermoelectric_powers();
+      double Pn =  sc->get_electron_thermoelectric_power();
+      double Pp =  sc->get_hole_thermoelectric_power();
 
-      if (ionized_acceptors)
-        values[IonizedAcceptors][n] = sc->get_ionized_acceptor_density();
-    }
+      //sc->calculate_net_recombination_rates();
 
-    bool trapped_electrons = values.count(IonizedElectronTraps);
-    bool trapped_holes = values.count(IonizedHoleTraps);
-    if (trapped_electrons || trapped_holes)
-    {
-      sc->calculate_traps();
-      if (trapped_electrons)
-        values[IonizedElectronTraps][n] = sc->get_ionized_electron_traps();
+      double sigma_e = Constants::e * sc->get_electron_conductivity();
+      double sigma_h = Constants::e * sc->get_hole_conductivity();
 
-      if (trapped_holes)
-        values[IonizedHoleTraps][n] = sc->get_ionized_hole_traps();
-    }
+      libMesh::RealGradient dfn = grad_en_loc + Pn * grad_T_loc;
+      libMesh::RealGradient dfp = grad_ep_loc + Pp * grad_T_loc;
 
-    if (values.count(eJoule))
-      values[eJoule][n] = -(jn_loc * dfn);
+      libMesh::RealGradient jn_loc = -sigma_e * dfn;
+      libMesh::RealGradient jp_loc = -sigma_h * dfp;
+      jn += jn_loc;
+      jp += jp_loc;
 
-    if (values.count(hJoule))
-      values[hJoule][n] = -(jp_loc * dfp);
+      polariz += sc->get_total_polarization();
 
-    if (values.count(ePowerFlux))
-    {
-      values[ePowerFlux][3 * n] = (Pn * T + en) * jn_loc(0);
-      values[ePowerFlux][3 * n + 1] = (Pn * T + en) * jn_loc(1);
-      values[ePowerFlux][3 * n + 2] = (Pn * T + en) * jn_loc(2);
-    }
-
-    if (values.count(hPowerFlux))
-    {
-      values[hPowerFlux][3 * n] = (Pp * T + ep) * jp_loc(0);
-      values[hPowerFlux][3 * n + 1] = (Pp * T + ep) * jp_loc(1);
-      values[hPowerFlux][3 * n + 2] = (Pp * T + ep) * jp_loc(2);
-    }
-
-    if (values.count(eThElPower))
-      values[eThElPower][n] = Pn;
-
-    if (values.count(hThElPower))
-      values[hThElPower][n] = Pp;
-
-    {
-      bool get_recomb_e = values.count(eNetRecombination);
-      bool get_recomb_h = values.count(hNetRecombination);
-      bool get_recomb = get_recomb_e || get_recomb_h;
-      double tot_rec_e = 0;
-      double tot_rec_h = 0;
-
-      bool need_recomb = get_recomb;
-      set<ID>::const_iterator rec_it(_recombination_ids.begin());
-      for ( ; rec_it != _recombination_ids.end(); ++rec_it)
+      if (values.count(ArtificialDiffusion))
       {
-        need_recomb |= values.count(*rec_it + eNetRecombination) ||
-            values.count(*rec_it + hNetRecombination);
+        RealGradient chempot(e_field + grad_en_loc);
+        double x0 = this->get_mesh_units();
+        double art_diff = 0.5 * sc->get_electron_mobility() * x0 * elem->hmax() *
+            sc->get_electron_density_derivative() * chempot.norm();
+        values[ArtificialDiffusion][n] = art_diff;
       }
 
-      if (need_recomb)
+
+      if (values.count(Ec))
+        values[Ec][n] = sc->get_conduction_band_edge() - u;
+
+      if (values.count(Ev))
+        values[Ev][n] = sc->get_valence_band_edge() - u;
+
+      if (values.count(Ec0))
+        values[Ec0][n] = sc->get_conduction_band_edge();
+
+      if (values.count(Ev0))
+        values[Ev0][n] = sc->get_valence_band_edge();
+
+      if (values.count(Eg))
+        values[Eg][n] =
+            sc->get_conduction_band_edge() - sc->get_valence_band_edge();
+
+      if (values.count(eDensity))
+        values[eDensity][n] = edens;
+
+      if (values.count(hDensity))
+        values[hDensity][n] = hdens;
+
+      if (values.count(ChargeDensity))
       {
-        // loop over all recombination ids
-        rec_it = _recombination_ids.begin();
+        sc->calculate_ionized_dopants();
+        values[ChargeDensity][n] = sc->get_charge_density();
+      }
+
+      if (values.count(IntrinsicDensity))
+        values[IntrinsicDensity][n] = sc->get_intrinsic_density();
+
+      if (values.count(eMobility))
+        values[eMobility][n] = sc->get_electron_mobility();
+
+      if (values.count(hMobility))
+        values[hMobility][n] = sc->get_hole_mobility();
+
+      if (values.count(eConductivity))
+        values[eConductivity][n] = sigma_e;
+
+      if (values.count(hConductivity))
+        values[hConductivity][n] = sigma_h;
+
+      bool ionized_donors = values.count(IonizedDonors);
+      bool ionized_acceptors = values.count(IonizedAcceptors);
+      if (ionized_donors || ionized_acceptors)
+      {
+        sc->calculate_ionized_dopants();
+        if (ionized_donors)
+          values[IonizedDonors][n] = sc->get_ionized_donor_density();
+
+        if (ionized_acceptors)
+          values[IonizedAcceptors][n] = sc->get_ionized_acceptor_density();
+      }
+
+      bool trapped_electrons = values.count(IonizedElectronTraps);
+      bool trapped_holes = values.count(IonizedHoleTraps);
+      if (trapped_electrons || trapped_holes)
+      {
+        sc->calculate_traps();
+        if (trapped_electrons)
+          values[IonizedElectronTraps][n] = sc->get_ionized_electron_traps();
+
+        if (trapped_holes)
+          values[IonizedHoleTraps][n] = sc->get_ionized_hole_traps();
+      }
+
+      if (values.count(eJoule))
+        values[eJoule][n] = -(jn_loc * dfn);
+
+      if (values.count(hJoule))
+        values[hJoule][n] = -(jp_loc * dfp);
+
+      if (values.count(ePowerFlux))
+      {
+        values[ePowerFlux][3 * n] = (Pn * T + en) * jn_loc(0);
+        values[ePowerFlux][3 * n + 1] = (Pn * T + en) * jn_loc(1);
+        values[ePowerFlux][3 * n + 2] = (Pn * T + en) * jn_loc(2);
+      }
+
+      if (values.count(hPowerFlux))
+      {
+        values[hPowerFlux][3 * n] = (Pp * T + ep) * jp_loc(0);
+        values[hPowerFlux][3 * n + 1] = (Pp * T + ep) * jp_loc(1);
+        values[hPowerFlux][3 * n + 2] = (Pp * T + ep) * jp_loc(2);
+      }
+
+      if (values.count(eThElPower))
+        values[eThElPower][n] = Pn;
+
+      if (values.count(hThElPower))
+        values[hThElPower][n] = Pp;
+
+      {
+        bool get_recomb_e = values.count(eNetRecombination);
+        bool get_recomb_h = values.count(hNetRecombination);
+        bool get_recomb = get_recomb_e || get_recomb_h;
+        double tot_rec_e = 0;
+        double tot_rec_h = 0;
+
+        bool need_recomb = get_recomb;
+        set<ID>::const_iterator rec_it(_recombination_ids.begin());
         for ( ; rec_it != _recombination_ids.end(); ++rec_it)
         {
-          bool requested_e = values.count(*rec_it + eNetRecombination);
-          bool requested_h = values.count(*rec_it + hNetRecombination);
-          pair<double, double> rec;
-          if (get_recomb || requested_e || requested_h)
-            rec = sc->get_net_recombination_rate(*rec_it);
-
-          if (requested_e)
-            values[*rec_it + eNetRecombination][n] = rec.first;
-          if (requested_h)
-            values[*rec_it + hNetRecombination][n] = rec.second;
-
-          if (get_recomb)
-          {
-            tot_rec_e += rec.first;
-            tot_rec_h += rec.second;
-          }
+          need_recomb |= values.count(*rec_it + eNetRecombination) ||
+              values.count(*rec_it + hNetRecombination);
         }
 
-        if (get_recomb_e)
-          values[eNetRecombination][n] = tot_rec_e;
-        if (get_recomb_h)
-          values[hNetRecombination][n] = tot_rec_h;
+        if (need_recomb)
+        {
+          // loop over all recombination ids
+          rec_it = _recombination_ids.begin();
+          for ( ; rec_it != _recombination_ids.end(); ++rec_it)
+          {
+            bool requested_e = values.count(*rec_it + eNetRecombination);
+            bool requested_h = values.count(*rec_it + hNetRecombination);
+            pair<double, double> rec;
+            if (get_recomb || requested_e || requested_h)
+              rec = sc->get_net_recombination_rate(*rec_it);
+
+            if (requested_e)
+              values[*rec_it + eNetRecombination][n] = rec.first;
+            if (requested_h)
+              values[*rec_it + hNetRecombination][n] = rec.second;
+
+            if (get_recomb)
+            {
+              tot_rec_e += rec.first;
+              tot_rec_h += rec.second;
+            }
+          }
+
+          if (get_recomb_e)
+            values[eNetRecombination][n] = tot_rec_e;
+          if (get_recomb_h)
+            values[hNetRecombination][n] = tot_rec_h;
+        }
       }
-    }
 
 
-    {
-      bool ept = values.count(ePeltier);
-      bool hpt = values.count(hPeltier);
-
-      if (ept || hpt)
-        sc->compute_thermoelectric_power_gradient();
-
-      if (ept)
       {
-        libMesh::RealGradient PnGrad = sc->get_electron_thermoelectric_power_gradient();
-        values[ePeltier][n] =  -T * (PnGrad * jn_loc);
+        bool ept = values.count(ePeltier);
+        bool hpt = values.count(hPeltier);
+
+        if (ept || hpt)
+          sc->compute_thermoelectric_power_gradient();
+
+        if (ept)
+        {
+          libMesh::RealGradient PnGrad = sc->get_electron_thermoelectric_power_gradient();
+          values[ePeltier][n] =  -T * (PnGrad * jn_loc);
+        }
+
+        if (hpt)
+        {
+          libMesh::RealGradient PpGrad = sc->get_hole_thermoelectric_power_gradient();
+          values[hPeltier][n] =  -T * (PpGrad * jp_loc);
+        }
       }
 
-      if (hpt)
+      if (values.count(RecombHeat))
       {
-        libMesh::RealGradient PpGrad = sc->get_hole_thermoelectric_power_gradient();
-        values[hPeltier][n] =  -T * (PpGrad * jp_loc);
-      }
-    }
+        vector<ID> rec_model_ids;
+        int n_rec = sc->get_net_recombination_rate_IDs(rec_model_ids);
+        double rec_e = 0;
+        double rec_h = 0;
+        for (int i = 0; i < n_rec; i++)
+        {
+          pair<double, double> rec(sc->get_net_recombination_rate(rec_model_ids[i]));
+          rec_e += rec.first;
+          rec_h += rec.second;
+        }
 
-    if (values.count(RecombHeat))
-    {
-      vector<ID> rec_model_ids;
-      int n_rec = sc->get_net_recombination_rate_IDs(rec_model_ids);
-      double rec_e = 0;
-      double rec_h = 0;
-      for (int i = 0; i < n_rec; i++)
-      {
-        pair<double, double> rec(sc->get_net_recombination_rate(rec_model_ids[i]));
-        rec_e += rec.first;
-        rec_h += rec.second;
+        values[RecombHeat][n] = Constants::e * (rec_h * (ep + T * Pp) -
+            rec_e * (en + T * Pn));
       }
 
-      values[RecombHeat][n] = Constants::e * (rec_h * (ep + T * Pp) -
-          rec_e * (en + T * Pn));
     }
-
   }
 
 
