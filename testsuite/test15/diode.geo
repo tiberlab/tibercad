@@ -1,4 +1,4 @@
-scale = 20;
+scale = 1;
 
 Point(1) = {-50 * scale,0,0,0.5 * scale};
 Point(2) = {0,0,0,0.002 * scale};
