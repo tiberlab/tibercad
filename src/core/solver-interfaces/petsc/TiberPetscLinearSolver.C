@@ -143,7 +143,7 @@ TiberPetscLinearSolver::do_solve(SparseMatrix<Number>&  matrix_in,
   rhs->close();
 
   std::string ksp_type(_ksp_type);
-  // if we have LU on a single process, them we can use preconditioner only
+  // if we have LU on a single process, then we can use preconditioner only
   if (this->comm().size() == 1)
     if ((_pc_type == PCLU) && (matrix == precond))
       ksp_type = KSPPREONLY;
@@ -442,30 +442,6 @@ TiberPetscLinearSolver::do_parse_options(void)
   _ksp_type = TiberPetscUtils::extract_KSPType(get_options());
 
   _pc_type = TiberPetscUtils::extract_PCType(get_options());
-
-  // for now we override in MPI with jacobi
-  /*
-  if ((this->comm().size() > 1) &&
-      ((_pc_type == "lu") || (_pc_type == "ilu")))
-  {
-    static int warned = 0;
-    if (warned < 5)
-    {
-      std::ostringstream os;
-      os << "PETSc linear solver cannot use '" << _pc_type <<
-          "' as preconditioner when running in parallel. "
-          "\nFalling back to 'jacobi'";
-
-      warned++;
-      if (warned == 5)
-        os << " (will suppress further messages of this type)";
-
-      Messages::warning(os.str());
-    }
-
-    _pc_type = "jacobi";
-  }
-  */
 
   _solver_package = get_option("solver_package", "");
   // dummy read
