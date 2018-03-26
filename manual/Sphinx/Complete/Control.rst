@@ -148,7 +148,11 @@ Options and parameters:
  ``solve`` :  (list of)  string(s)
    the simulations to be solved
 
-The observed variable on which convergence control and relaxation is done is the system variable of the last simulation specified in  ``solve``.
+ ``convergence_check`` : string [optional]
+   the name of the simulation to be used for checking convergence
+
+The observed variable on which convergence control and relaxation is done is the system variable of the last simulation specified in  ``solve``, if
+not specified explicitly by the ``convergence_check`` option.
 
 
 Example::
