@@ -420,8 +420,7 @@ DDBulkModel::do_reinit(const Elem* elem)
 
   if (get_element() != elem)
   {
-    set_element(elem);
-    set_coordinates(elem->centroid());
+    set_coordinates(elem, elem->centroid());
 
     // get the nodal temperatures
     get_temperature_interface().get_temperature(elem, _nodal_lattice_vt);

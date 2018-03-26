@@ -189,7 +189,7 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
     assert(_device->get_material(elem->subdomain_id()) != NULL);
     DDBulkModel* sc = get_bulk_model<DDBulkModel>(elem);
 
-    sc->set_coordinates(elem->centroid());
+    sc->set_coordinates(elem, elem->centroid());
     sc->set_potentials(sc->get_equilibrium_fermi_level());
     sc->set_electric_field(libMesh::RealGradient(0));
     sc->set_grad_fermi_e(libMesh::RealGradient(0));
@@ -654,7 +654,7 @@ DriftDiffusion::calculate_weights(void)
 
     for (unsigned int i = 0; i < elem->n_nodes(); i++)
     {
-      sc->set_coordinates(elem->point(i));
+      sc->set_coordinates(elem, elem->point(i));
 
       unsigned int dofu =
         elem->get_node(i)->dof_number(system.number(), var_u, 0);
@@ -1999,6 +1999,8 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
   assert(sc != NULL);
 
+  sc->push_point_data();
+
   sc->reinit(elem);
 
   fe->reinit(elem, &points);
@@ -2092,7 +2094,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
     if (!basic_only)
     {
-      sc->set_coordinates(real_pts[n]);
+      sc->set_coordinates(elem, real_pts[n]);
 
       sc->set_potentials(u, en, ep);
       sc->set_old_potentials(phi0 * oldu, phi0 * olden, phi0 * oldep);
@@ -2316,8 +2318,9 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
             rec_e * (en + T * Pn));
       }
 
-    }
+    } // !basic_only
   }
+  sc->pop_point_data();
 
 
   // the cell based solutions
@@ -2751,7 +2754,7 @@ DriftDiffusion::calculate_currents_rstf_global(void)
 
       // prepare for calculating local properties
       //sc->set_coordinates(elem->centroid());  ????? 2012-08-31
-      sc->set_coordinates(q_point[qp]);
+      sc->set_coordinates(elem, q_point[qp]);
 
 
       sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
@@ -2953,7 +2956,7 @@ DriftDiffusion::calculate_currents_rstf_compact(void)
 
       // prepare for calculating local properties
       //sc->set_coordinates(elem->centroid());  ????? 2012-08-31
-      sc->set_coordinates(q_point[qp]);
+      sc->set_coordinates(elem, q_point[qp]);
 
 
       sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
@@ -3337,7 +3340,7 @@ DriftDiffusion::calculate_currents_surfint(void)
             }
 
             // prepare for calculating local properties
-            sc->set_coordinates(q_point[qp]);
+            sc->set_coordinates(elem, q_point[qp]);
 
 
             sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
@@ -3404,7 +3407,7 @@ DriftDiffusion::calculate_currents_surfint(void)
           }
 
           // prepare for calculating local properties
-          sc->set_coordinates(elem->point(s));
+          sc->set_coordinates(elem, elem->point(s));
 
 
           sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
@@ -3574,7 +3577,7 @@ DriftDiffusion::calculate_surface_recombination(void)
           }
 
           // prepare for calculating local properties
-          sm->set_coordinates(q_point[qp]);
+          sm->set_coordinates(elem, q_point[qp]);
           sm->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
           sm->set_electric_field(-phi0 * e_field);
           sm->set_grad_fermi_e(phi0 * dEfn);
@@ -3793,7 +3796,7 @@ DriftDiffusion::build_local_scaling(void)
       //cout<<"u = "<<u<<" v = "<<en<<" w = "<<ep<<endl;
 
       // prepare for calculating local properties
-      sc->set_coordinates(q_point[qp]);
+      sc->set_coordinates(elem, q_point[qp]);
 
 
       sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
@@ -4471,7 +4474,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
       }
 
       // prepare for calculating local properties
-      sc->set_coordinates(q_point[qp]);
+      sc->set_coordinates(elem, q_point[qp]);
 
       sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
       sc->set_old_potentials(phi0 * oldu, phi0 * olden, phi0 * oldep);
@@ -4938,7 +4941,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
           //cout<<"u2 = "<<u<<endl;
 
           sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
-          sc->set_coordinates(q_point_face[qp]);
+          sc->set_coordinates(elem, q_point_face[qp]);
           sc->set_electric_field(phi0 / x0 * e_field);
           sc->set_grad_fermi_e(phi0 / x0 * grad_en);
           sc->set_grad_fermi_h(phi0 / x0 * grad_ep);
@@ -4961,7 +4964,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
           //  jp = -(sigma_h * grad_ep + Pp * grad_T) * face_normals[qp] / x0;
 
           sm->set_face_normal(face_normals[qp]);
-          sm->set_coordinates(q_point_face[qp]);
+          sm->set_coordinates(elem, q_point_face[qp]);
           sm->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
           sm->set_electric_field(phi0 / x0 * e_field);
           sm->set_grad_fermi_e(phi0 / x0 * grad_en);

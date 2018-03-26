@@ -280,7 +280,6 @@ DDInterfaceModel::do_init(void)
 void
 DDInterfaceModel::reinit(const Elem* elem, int side)
 {
-  set_element(elem);
   _side = side;
 
   // 1. setup the two bulk models
