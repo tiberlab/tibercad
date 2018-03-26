@@ -325,6 +325,8 @@ Thermal::get_solution_secure(const Elem* elem,
 
    ID subdomain = elem->subdomain_id();
 
+   bool temp_only = (values.count(LatticeTemp) && (values.size() == 1));
+
    fe->reinit(elem, &p);
 
    dof_map.dof_indices(elem, dof_indices, u_var);
@@ -342,37 +344,40 @@ Thermal::get_solution_secure(const Elem* elem,
       if (values.count(LatticeTemp))
 	values[LatticeTemp][n] = T;
    
-      mod.calculate(elem,real_pts[n], T);
-
-      if (values.count(ThermalFlux))  
+      if (!temp_only)
       {
+        mod.calculate(elem,real_pts[n], T);
 
-        libMesh::RealGradient heat_flux(0);
-	for (ID alpha = 0; alpha<dof_indices.size() ;alpha ++)
-	  heat_flux -= solution(dof_indices[alpha]) * (kappa * dphi[alpha][n]);
-	
-	
+        if (values.count(ThermalFlux))  
+        {
 
-	for (ID d = 0; d < dim; d++)
-	  values[ThermalFlux][d + 3 * n] = heat_flux(d);
-	
-      }
+          libMesh::RealGradient heat_flux(0);
+          for (ID alpha = 0; alpha<dof_indices.size() ;alpha ++)
+            heat_flux -= solution(dof_indices[alpha]) * (kappa * dphi[alpha][n]);
 
-      
-      if (values.count(ThermCond))
-      {
-	const libMesh::RealTensor& kappa = mod.get_total_thermal_conductivity();
-	values[ThermCond][0 + 3 * n] = kappa(0,0);
-	values[ThermCond][1 + 3 * n] = kappa(1,1);
-	values[ThermCond][2 + 3 * n] = kappa(2,2);
-      }
-      
-      if (values.count(HeatSource))
-      {
-	
-	Real H = mod.get_total_heat_source();
-	values[HeatSource][n] = H;
-	
+
+
+          for (ID d = 0; d < dim; d++)
+            values[ThermalFlux][d + 3 * n] = heat_flux(d);
+
+        }
+
+
+        if (values.count(ThermCond))
+        {
+          const libMesh::RealTensor& kappa = mod.get_total_thermal_conductivity();
+          values[ThermCond][0 + 3 * n] = kappa(0,0);
+          values[ThermCond][1 + 3 * n] = kappa(1,1);
+          values[ThermCond][2 + 3 * n] = kappa(2,2);
+        }
+
+        if (values.count(HeatSource))
+        {
+
+          Real H = mod.get_total_heat_source();
+          values[HeatSource][n] = H;
+
+        }
       }
       
     }
