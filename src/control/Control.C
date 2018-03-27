@@ -224,7 +224,12 @@ Control::init(void)
           opts.get_option("resultpath", ".")));
 
     if (!opts.find_option("output_format"))
-      opts.set_option("output_format", global_opts.get_option("output_format", "vtk"));
+    {
+      string default_format = "vtk";
+      if (_device->get_mesh().mesh_dimension() == 1)
+        default_format = "grace";
+      opts.set_option("output_format", global_opts.get_option("output_format", default_format));
+    }
 
     if (!opts.find_option("binary_output"))
       opts.set_option("binary_output", global_opts.get_option("binary_output", "true"));
