@@ -18,7 +18,7 @@ ifeq ($(enable_license_check), yes)
 else
 .$(ARCH)/liblicense.a: $(objects)
 	@echo "Creating $@ ..."
-	@$(AR) cu $@ $(objects)
+	$(AR) cr $@ $(objects)
 	@$(RANLIB) $@
 endif
 
