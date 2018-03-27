@@ -17,6 +17,7 @@
 #include "TiberLinearSystem.h"
 #include "SolveFailedException.h"
 #include "FowlerNordheim.h"
+#include "License.h"
 
 
 // libmesh includes
@@ -104,8 +105,21 @@ DriftDiffusion::DriftDiffusion(const ModelOptions& options)
 DriftDiffusion::~DriftDiffusion(void)
 {
   cleanup_solver();
+
+  if (TiberCad::get_mpi_comm().rank() == 0)
+      License::check_in("driftdiffusion", 1);
 }
 
+
+DriftDiffusion*
+DriftDiffusion::create(const ModelOptions& options)
+{
+  if (TiberCad::get_mpi_comm().rank() == 0)
+    License::check_out("driftdiffusion",
+        TiberCad::major_version(), 0, 1);
+
+  return new DriftDiffusion(options);
+}
 
 
 
