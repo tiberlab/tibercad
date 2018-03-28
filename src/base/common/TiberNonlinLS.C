@@ -263,6 +263,7 @@ TiberNonlinLS::do_solve(void)
     draw_point(i, norm_res);
 
     tol *= tol;
+    tol = (tol < 1e-12) ? 1e-12 : tol;
 
 
     //if (norm_du < eps)
