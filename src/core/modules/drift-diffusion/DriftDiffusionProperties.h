@@ -265,14 +265,6 @@ class DriftDiffusionProperties : public PhysicalModel
     void pop_point_data(void);
 
 
-    // ! (Re-)Initialize for the given element
-    /* !
-     * \c reinit() calls \c prepare_element_data() which needs to be
-     * implemented in derived classes
-     */
-    //void reinit(const libMesh::Elem* elem);
-
-
     //! Set the coupling type
     void set_coupling_type(DriftDiffusionDefs::Coupling coupling)
       { _coupling = (int) coupling; };
@@ -808,6 +800,9 @@ class DriftDiffusionProperties : public PhysicalModel
     //! Tells if we are doing equilibrium calculation
     bool has_solution(void) const;
 
+    //! Get the temperature interface
+    TemperatureInterface& get_temperature_interface(void);
+
 
 
   protected:
@@ -848,9 +843,6 @@ class DriftDiffusionProperties : public PhysicalModel
     //! Get the strain as writable reference
     Tensor2Sym& get_strain(void);
 
-
-    //! Get the temperature interface
-    TemperatureInterface& get_temperature_interface(void);
 
     // ! Get the strain interface
     //StrainInterface& get_strain_interface(void);

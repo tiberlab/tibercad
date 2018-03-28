@@ -2010,16 +2010,17 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
   const vector<Point>& real_pts = fe->get_xyz();
 
   DDBulkModel* sc = get_bulk_model<DDBulkModel>(elem);
-
   assert(sc != NULL);
 
   sc->push_point_data();
 
-  sc->reinit(elem);
+  if (!basic_only)
+    sc->reinit(elem);
 
   fe->reinit(elem, &points);
 
-  vector<double> T_nodes = sc->get_temperature_at_nodes();
+  vector<double>& T_nodes = sc->get_temperature_at_nodes();
+  sc->get_temperature_interface().get_temperature(elem, T_nodes);
 
   dof_map.dof_indices(elem, dof_indices_u, u_var);
   dof_map.dof_indices(elem, dof_indices_en, en_var);

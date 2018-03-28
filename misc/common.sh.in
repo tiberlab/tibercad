@@ -88,7 +88,7 @@ echo "*************************************************"
 if [ -d ${TOPDIR}/SDK/${TCHOST}/lib/gcc ]
 then
   export PATH=${TOPDIR}/SDK/${TCHOST}/bin:${PATH}
-  export LD_LIBRARY_PATH=${TOPDIR}/SDK/${TCHOST}/lib
+  export LD_LIBRARY_PATH=${TOPDIR}/SDK/${TCHOST}/lib:${TOPDIR}/SDK/${TCHOST}/lib64
 fi
 
 #CC=${CC:-"${pre}gcc${gcc_version}"}
@@ -104,14 +104,14 @@ CPP="@CPP@"
 CC="@CC@"
 CXX="@CXX@"
 FC="@FC@"
-#F90="${F90:-$FC}"
+F90="${F90:-$FC}"
 F77="${F77:-$FC}"
 RANLIB="@RANLIB@"
 
 
 #if [ "x$pre" != "x" ] || [ "x$gcc_version" != "x" ]
 #then
-  export CC CXX F77 FC RANLIB LD AR CPP
+  export CC CXX F77 FC F90 RANLIB LD AR CPP
 #fi
 
 # compiler flags
@@ -164,8 +164,8 @@ if [ "$MKL" = y ]; then
 #    LAPACK_LIBS="${LDFLAGS} -L${MKLDIR}/lib/em64t -Wl,-rpath,${MKLDIR}/lib/em64t"
     #LAPACKLIBS="--with-blas-lapack-lib=[-Xlinker,--no-as-needed,-Xlinker,-rpath,-Xlinker,${MKLDIR}/lib/intel64,-L${MKLDIR}/lib/intel64,-lmkl_intel_lp64,-lmkl_intel_thread,-lmkl_core,-liomp5,-lm,-lpthread]"
     LAPACKLIBS="--with-blas-lapack-lib=\"-Wl,--no-as-needed -Wl,-rpath,${MKLDIR}/lib/intel64 -L${MKLDIR}/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread\""
-    LDFLAGS="${LDFLAGS} -L${MKLDIR}/lib/intel64 -L${FLIBDIR} -Wl,-rpath,${FLIBDIR} -Wl,-rpath,${MKLDIR}/lib/intel64"
-    LAPACK_LIBS="${LDFLAGS} -L${MKLDIR}/lib/intel64 -L${FLIBDIR}  -Wl,-rpath,${FLIBDIR} -Wl,-rpath,${MKLDIR}/lib/intel64 -Wl,--no-as-needed -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread"
+    LDFLAGS="${LDFLAGS} -L${MKLDIR}/lib/intel64 -Wl,-rpath,${MKLDIR}/lib/intel64"
+    LAPACK_LIBS="${LDFLAGS} -L${MKLDIR}/lib/intel64 -Wl,-rpath,${MKLDIR}/lib/intel64 -Wl,--no-as-needed -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread"
  
   else
     LAPACKLIBS="--with-blas-lapack-lib=[-L${MKLDIR}/lib/32,-lmkl_intel,-lmkl_intel_thread,-lmkl_core,-liomp5,-lm,-lpthread]"

@@ -4,7 +4,7 @@ TIBERVER=@TIBERVERSION@
 
 ARCH=`uname -m`-linux
 
-GMSHVER=2.8.4
+GMSHVER=@GMSHVER@
 
 
 

@@ -46,9 +46,9 @@ if [ ! -d libmesh-${LIBMESHVERSION}-$TCHOST ]; then
     patch -p0 -d libmesh-${LIBMESHVERSION}-$TCHOST < ${PATCH}
   fi
 
-  if [ "$target_os" == "win32" && -e $WINPATCH ]; then
-    patch -p0 -d libmesh-${LIBMESHVERSION}-$TCHOST < $WINPATCH
-  fi
+#  if [ "$target_os" == "win32" && -e $WINPATCH ]; then
+#    patch -p0 -d libmesh-${LIBMESHVERSION}-$TCHOST < $WINPATCH
+#  fi
 fi
 
 

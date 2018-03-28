@@ -1,6 +1,6 @@
-#!/bin/sh
+#!/bin/bash
 
-GMSHVER=2.16.0
+GMSHVER=3.0.6
 
 make_windows_package () {
 
@@ -32,6 +32,8 @@ make_windows_package () {
   fi
   cp -r ${topdir}/Tutorials/[^.]* ${files}/examples
   # for now:
+  rm -rf ${topdir}/${ARCH}/modules/dd_generic
+  rm -rf ${topdir}/${ARCH}/modules/excitons
   rm -rf ${files}/examples/Modules
   #rm -rf ${files}/examples/Example_1[7-9]
   #rm -rf ${files}/examples/Example_2[0-9]
@@ -168,7 +170,7 @@ prepare_linux_package () {
   mkdir -p ${files}/materials
   mkdir -p ${files}/tools
 
-  cp ${topdir}/installer/linux/tar/install ${files}
+  sed -e "s/@GMSHVER@/${GMSHVER}/" ${topdir}/installer/linux/tar/install > ${files}/install
   chmod a+x ${files}/install
   #cp ${topdir}/installer/linux/tar/tibercad.sh ${files}/bin
   #chmod a+x ${files}/bin/tibercad.sh
@@ -204,6 +206,8 @@ prepare_linux_package () {
   #rm -rf ${files}/${ARCH}/modules/empirical_tb
   #rm -rf ${files}/${ARCH}/modules/vff
   rm -rf ${files}/${ARCH}/modules/negf
+  rm -rf ${files}/${ARCH}/modules/dd_generic
+  rm -rf ${files}/${ARCH}/modules/polarizationgrid
   #
   #
   cp ${topdir}/share/tibercad.ico ${files}/share
@@ -222,7 +226,7 @@ prepare_linux_package () {
     cp ${topdir}/manual/Sphinx/Complete/_build/latex/tiberCAD-manual.pdf ${files}/doc/UserManual.pdf
   fi
 
-  cp -r ${topdir}/Tutorials/[^.]* ${files}/examples
+  cp -r ${topdir}/Tutorials/* ${files}/examples
   # for now:
   rm -rf ${files}/examples/Modules
 
@@ -233,20 +237,20 @@ prepare_linux_package () {
   cp ${topdir}/materials/*.dat ${files}/materials
   cp ${topdir}/materials/*.etb ${files}/materials
 
-  if [ ! -d ${topdir}/contrib/gmsh-${GMSHVER}-Linux ]
+  if [ ! -d ${topdir}/contrib/gmsh-${GMSHVER}-Linux64 ]
   then
     wget http://www.geuz.org/gmsh/bin/Linux/gmsh-${GMSHVER}-Linux64.tgz
     tar -C ${topdir}/contrib/ -zxf gmsh-${GMSHVER}-Linux64.tgz
     rm -f gmsh-${GMSHVER}-Linux64.tgz
   fi
-  if [ -d ${topdir}/contrib/gmsh-${GMSHVER}-Linux ]
+  if [ -d ${topdir}/contrib/gmsh-${GMSHVER}-Linux64 ]
   then
-    if [ ! -f ${topdir}/contrib/gmsh-${GMSHVER}-Linux/gmsh.pdf ]
+    if [ ! -f ${topdir}/contrib/gmsh-${GMSHVER}-Linux64/gmsh.pdf ]
     then
       wget http://www.geuz.org/gmsh/doc/texinfo/gmsh.pdf
-      mv gmsh.pdf ${topdir}/contrib/gmsh-${GMSHVER}-Linux
+      mv gmsh.pdf ${topdir}/contrib/gmsh-${GMSHVER}-Linux64
     fi
-    cp -r  ${topdir}/contrib/gmsh-${GMSHVER}-Linux ${files}/tools/gmsh
+    cp -r  ${topdir}/contrib/gmsh-${GMSHVER}-Linux64 ${files}/tools/gmsh
     rm -rf ${files}/tools/gmsh/include
     chmod a+x ${files}/tools/gmsh/bin/gmsh
   fi
@@ -280,7 +284,7 @@ prepare_darwin_package () {
   mkdir -p ${files}/materials
   mkdir -p ${files}/tools
 
-  cp ${topdir}/installer/linux/tar/install ${files}
+  sed -e "s/@GMSHVER@/${GMSHVER}/" ${topdir}/installer/linux/tar/install > ${files}/install
   chmod a+x ${files}/install
   #cp ${topdir}/installer/linux/tar/tibercad.sh ${files}/bin
   #chmod a+x ${files}/bin/tibercad.sh
