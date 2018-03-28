@@ -16,6 +16,7 @@
 #include "EigenSolver.h"
 #include "RotatedCrystal.h"
 #include "Utils.h"
+#include "License.h"
 
 #include "libmesh/mesh.h"
 #include "libmesh/dof_map.h"
@@ -46,6 +47,10 @@ ETB::ETB(const ModelOptions& options)
 
 ETB* ETB::create(const ModelOptions& options)
 {
+  if (TiberCad::get_mpi_comm().rank() == 0)
+    License::check_out("etb",
+        TiberCad::major_version(), 0, 1);
+
   return new ETB(options);
 }
 
@@ -65,6 +70,9 @@ ETB::~ETB(void)
   _map_ID_Evb.clear();
   _map_ID_Ecb.clear();
   _ion_num_orbitals.clear();
+
+  if (TiberCad::get_mpi_comm().rank() == 0)
+    License::check_in("etb", 1);
 }
 
 ETB::UptOptions::UptOptions(void)

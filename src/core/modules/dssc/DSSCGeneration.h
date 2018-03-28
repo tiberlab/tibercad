@@ -116,11 +116,6 @@ class DSSCGeneration : public SimulationInterface
 // inline member functions
 //
 
-inline
-DSSCGeneration*
-DSSCGeneration::create(const ModelOptions& options)
-{
-  return new DSSCGeneration(options);
-}
+
 
 

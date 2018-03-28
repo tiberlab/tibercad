@@ -5,6 +5,7 @@
 #include "SimulationEnvironment.h"
 #include "Material.h"
 #include "Database.h"
+#include "License.h"
 
 #include "TiberModule.h"
 
@@ -28,9 +29,21 @@ DSSCGeneration::DSSCGeneration(const ModelOptions& options) :
 
 DSSCGeneration::~DSSCGeneration(void)
 {
+  if (TiberCad::get_mpi_comm().rank() == 0)
+      License::check_in("dssc_generation", 1);
 
 }
 
+
+DSSCGeneration*
+DSSCGeneration::create(const ModelOptions& options)
+{
+  if (TiberCad::get_mpi_comm().rank() == 0)
+      License::check_out("dssc_generation",
+          TiberCad::major_version(), 0, 1);
+
+  return new DSSCGeneration(options);
+}
 
 void
 DSSCGeneration::parse_options(void)

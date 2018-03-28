@@ -3,6 +3,7 @@
 // module includes
 #include "SimulationInterface.h"
 #include "DSSC.h"
+#include "License.h"
 #include "SimulationEnvironment.h"
 #include "Scaling.h"
 #include "Material.h"
@@ -68,6 +69,20 @@ DSSC::DSSC(const ModelOptions& options)
 DSSC::~DSSC(void)
 {
   cleanup_solver();
+
+  if (TiberCad::get_mpi_comm().rank() == 0)
+      License::check_in("dssc", 1);
+}
+
+
+DSSC*
+DSSC::create(const ModelOptions& options)
+{
+  if (TiberCad::get_mpi_comm().rank() == 0)
+    License::check_out("dssc",
+      TiberCad::major_version(), 0, 1);
+
+  return new DSSC(options);
 }
 
 
