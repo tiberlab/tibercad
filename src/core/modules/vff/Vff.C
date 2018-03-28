@@ -3,6 +3,7 @@
 #include "Vff.h"
 #include "VffModel.h"
 #include "Messages.h"
+#include "License.h"
 #include "AtomisticStructure.h"
 #include "Specie.h"
 #include "OptGpl.h"
@@ -42,11 +43,18 @@ Vff::Vff(const ModelOptions& options) :
 Vff::~Vff(void)
 {
   // there's nothing to be done
+
+  if (TiberCad::get_mpi_comm().rank() == 0)
+      License::check_in("vff", 1);
 }
 
 Vff*
 Vff::create(const ModelOptions& options)
 {
+  if (TiberCad::get_mpi_comm().rank() == 0)
+    License::check_out("vff",
+        TiberCad::major_version(), 0, 1);
+
   return new Vff(options);
 }
 
