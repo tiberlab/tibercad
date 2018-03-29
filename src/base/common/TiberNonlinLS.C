@@ -96,12 +96,22 @@ TiberNonlinLS::do_solve(void)
 
     du.zero();
 
-    // solve the linear system
-    if (this->have_matrix("Preconditioner"))
-      get_linear_solver()->solve(*matrix, this->get_matrix("Preconditioner"),
-          du, *rhs);
-    else
-      get_linear_solver()->solve(*matrix, du, *rhs);
+    try {
+      // solve the linear system
+      if (this->have_matrix("Preconditioner"))
+        get_linear_solver()->solve(*matrix, this->get_matrix("Preconditioner"),
+            du, *rhs);
+      else
+        get_linear_solver()->solve(*matrix, du, *rhs);
+    }
+    catch (...)
+    {
+      // reset the old linear tolerance
+      get_linear_solver()->set_linear_rtol(tol_orig);
+
+      throw;
+    }
+
 
     du.close();
 
@@ -213,6 +223,9 @@ TiberNonlinLS::do_solve(void)
     //if ((norm_res > norm_rhs) || isnan(norm_res))
     if (std::isnan(norm_res))
     {
+      // reset the old linear tolerance
+      get_linear_solver()->set_linear_rtol(tol_orig);
+
       //cout << endl;
       throw (SNESDivergedError(-4, i, norm_rhs));
     }
@@ -274,6 +287,9 @@ TiberNonlinLS::do_solve(void)
     }
     else if (i == get_nonlinear_max_it())
     {
+      // reset the old linear tolerance
+      get_linear_solver()->set_linear_rtol(tol_orig);
+
       //cout << endl << flush;
       throw (PetscDivergedError(-3, i, norm_rhs));
     }
