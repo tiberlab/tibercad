@@ -175,6 +175,7 @@ prepare_linux_package () {
   #cp ${topdir}/installer/linux/tar/tibercad.sh ${files}/bin
   #chmod a+x ${files}/bin/tibercad.sh
 
+  export LD_LIBRARY_PATH=${topdir}/${ARCH}/lib:${topdir}/SDK/${ARCH}/lib:${topdir}/SDK/lib
   # get some of the libraries
   libs=`ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep boost | awk '{print $3}'`
   libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep lapack | awk '{print $3}'`"
@@ -190,13 +191,21 @@ prepare_linux_package () {
   libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep petsc | awk '{print $3}'`"
   libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep slepc | awk '{print $3}'`"
   libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep libz | awk '{print $3}'`"
+  libs="$libs `ldd ${topdir}/SDK/bin/mpiexec.hydra | grep libnuma | awk '{print $3}'`"
   cp /usr/pack/intel_mkl-11.2-ma/mkl/lib/intel64/libmkl_def.so ${files}/${ARCH}/lib
   cp $libs ${files}/${ARCH}/lib
   cp ${topdir}/SDK/bin/mpiexec.hydra ${files}/${ARCH}/bin
   cp ${topdir}/SDK/bin/hydra_pmi_proxy ${files}/${ARCH}/bin
   cp ${topdir}/SDK/${ARCH}/bin/mpiexec.hydra ${files}/${ARCH}/bin
   cp ${topdir}/${ARCH}/bin/tibercad ${files}/${ARCH}/bin/tibercad
+  #
+  # adjust rpath
+  #
+  patchelf --set-rpath '$ORIGIN:$ORIGIN/../lib' ${files}/${ARCH}/bin/tibercad
+  patchelf --set-rpath '$ORIGIN:$ORIGIN/../lib' ${files}/${ARCH}/bin/mpiexec.hydra
+  patchelf --set-rpath '$ORIGIN:$ORIGIN/../lib' ${files}/${ARCH}/bin/hydra_pmi_proxy
   chmod a+x ${files}/${ARCH}/bin/tibercad
+
   cp ${topdir}/${ARCH}/lib/lib*.so* ${files}/${ARCH}/lib
   cp -r ${topdir}/${ARCH}/modules ${files}/${ARCH}
   #
