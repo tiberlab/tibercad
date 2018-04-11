@@ -1251,7 +1251,7 @@ void AtomisticGenerator::passivate()
 
           Point position = _super_basis[i].get_position() +
                          ( ( bonded_rel_position) /
-                             bonded_rel_position.size() *
+                             bonded_rel_position.norm() *
                                          hydrogen_distance); 
 
           tmp.set_position(position);
