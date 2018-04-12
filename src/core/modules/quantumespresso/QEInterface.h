@@ -71,6 +71,51 @@ class QEInterface : public SimulationInterface
     //! Output directory for QE
     std::string _qe_outdir;
 
+    //! degauss value for pdos
+    double _qe_degauss; //
+
+    //! DeltaE value for pdos
+    double _qe_DeltaE; //
+
+    //! Emin value for pdos
+    double _qe_Emin; //
+
+    //! Emax value for pdos
+    double _qe_Emax; //
+
+    //! filplot option for pp.el1
+    std::string _qe_filplot; //
+
+    //! fileout for pp.el1
+    std::string _qe_fileout; //
+
+    //! plot_num for pp.el1
+    int _qe_plot_num; //
+
+    //! kpoint for pp.el1
+    int _qe_kpoint; //
+
+    //! nfile option for pp.el1
+    int _qe_nfile; //
+
+    //! iflag for pp.el1
+    int _qe_iflag; //
+
+    //! nx for pp.el1
+    int _qe_nx; //
+
+    //! ny for pp.el1
+    int _qe_ny; //
+
+    //! nz for pp.el1
+    int _qe_nz; //
+
+    //! output format for pp.el1
+    int _qe_pp_outputformat; //
+
+    //! weight for pp.el1
+    double _qe_weight; //
+
 };
 
 
