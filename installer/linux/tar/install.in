@@ -291,6 +291,7 @@ esac
 
 
 export TIBERCADROOT
+export LMX_LICENSE_PATH="\${LMX_LICENSE_PATH}:\${TIBERCADROOT}/license"
 
 
 # stack size limit / VM may be too small
@@ -331,6 +332,8 @@ read answer
 case \$answer in
   y|yes|Y|YES|Yes)
     cd \${instpath}
+
+    # first all files
     exec<\${instpath}/files.lst
     while read line
     do
@@ -346,11 +349,20 @@ case \$answer in
       elif test -L \$file 
       then
         rm -f \$file
-      else
+      fi
+    done
+
+    exec<\${instpath}/files.lst
+    while read line
+    do
+      file=\`echo \$line | awk '{print \$2}'\`
+      if test -d \$file 
+      then
         directory=\`echo \$file | sed 's/\${instpath}\///'\`
         rmdir -p \$directory >& /dev/null
       fi
     done
+
     rm -f \${instpath}/bin/uninstall
     rm -f \${instpath}/files.lst
     cd ..
@@ -422,15 +434,15 @@ read -e answer
 if [ ! -f $answer ]
 then
   echo "The path you provided cannot be used."
-  echo "Don't forget to copy your license file to $instpath/license/tibercad.lic after installation."
+  echo "Don't forget to copy your license file to $instpath/license/tiberlab.lic after installation."
 else
   if [ -z $answer ]
   then
-    echo "Don't forget to copy your license file to $instpath/license/tibercad.lic after installation."
+    echo "Don't forget to copy your license file to $instpath/license/tiberlab.lic after installation."
   else
-    echo "Copying $answer to $instpath/license/tibercad.lic"
+    echo "Copying $answer to $instpath/license/tiberlab.lic"
     mkdir -p $instpath/license
-    cp $answer $instpath/license/tibercad.lic
+    cp $answer $instpath/license/tiberlab.lic
   fi
 fi
 
@@ -446,5 +458,5 @@ esac
 
 echo ""
 echo "Thank you for having installed TiberCAD."
-echo "Please report bugs to support@tibercad.org"
+echo "Please report bugs to support@tiberlab.com"
 echo ""
