@@ -704,16 +704,22 @@ we enforce zero total electric displacement field (:math:`D`) along the simulati
    plot = (ElPotential,ElField,eDensity,Ec,Ev,Polarization,IonizedDonors)
 
 
+
 By ::
 
-  strain_simulation = elasticity
+    strain_simulation = elasticity 
 
 we specify the strain simulation, which will provide the strain map. ::
 
-  Physics
-  {
-    strain_simulation = elasticity   
-  }
+    Physics
+    {
+     band_properties 
+      {
+        density_of_states bulk_kp 
+        {
+        strain_simulation = elasticity 
+        }
+      }
 
     Contact Lower
     {

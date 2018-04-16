@@ -60,7 +60,7 @@ General Options
 
 
 
-The  following kewords may  be  defined in **Atomistic**  block
+The  following keywords may  be  defined in **Atomistic**  block
 
 
  ``regions`` : string

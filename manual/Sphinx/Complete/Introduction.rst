@@ -9,8 +9,8 @@ Introduction
 Installation instructions
 ===================================
 
-In the following, ``installpath`` denotes the directory where tiberCAD 2.0.0 gets installed.
-Version 2.5.0 of ``GMSH`` (http://www.geuz.org/gmsh) will be installed together with
+In the following, ``installpath`` denotes the directory where tiberCAD  gets installed.
+A recent version  of ``GMSH`` (http://www.geuz.org/gmsh) will be installed together with
 tiberCAD.
 
 Prerequisites
@@ -27,7 +27,8 @@ installation directory of tiberCAD.
 Windows installation procedure
 --------------------------------------
 
-To install tiberCAD in Windows, please run the setup program ``tibercad-2.0.0-i686-mingw32_setup.exe`` .
+To install tiberCAD in Windows, please run the setup program. 
+``tibercad-3.0.0-i686-w64-mingw32_setup.exe`` .
 
 During the installation you can choose the installation directory. 
 After finishing installation, copy your license file ``tibercad.lic`` into the ``license`` subdirectory of the tiberCAD
@@ -48,9 +49,8 @@ installation directory (``installpath/license``), without changing the filename.
     \hline
     \hline
      &    \\
-    \texttt{tiberCAD-2.0.0-i686-mingw32\_setup.exe} & Windows 32-bit     \\
-    \texttt{tiberCAD-2.0.0-i686-linux\_installer.sh} & Linux 32-bit \\
-    \texttt{tiberCAD-2.0.0-x86\_64-linux\_installer.sh} & Linux 64-bit \\
+    \texttt{tiberCAD-3.0.0-i686-w64-mingw32\_setup.exe} & Windows 32-bit     \\
+    \texttt{tiberCAD-3.0.0-x86\_64-linux\_installer.sh} & Linux 64-bit \\
     \hline
     \end{tabular}
     \caption*{Installer Packages}
@@ -58,11 +58,16 @@ installation directory (``installpath/license``), without changing the filename.
 
 
 
+..    \texttt{tiberCAD-3.0.0-i686-linux\_installer.sh} & Linux 32-bit \\
+
+
 Linux installation procedure
 ------------------------------------
 
 To install tiberCAD under Linux, download and run the self-extracting installer
-``tibercad-2.0.0-ARCH_installer.sh``, where ARCH corresponds to your hardware architecture,
+``tibercad-3.x-x86_64-linux_installer.sh``
+
+.. ``tibercad-3.x-ARCH_installer.sh``, where ARCH corresponds to your hardware architecture,
 and follow the installation instructions.
 
 After installation, copy your license file ``tibercad.lic`` into the ``license`` subdirectory
@@ -95,8 +100,11 @@ Windows
 
 Open Windows Explorer and go to the tiberCAD installation directory. If you have
 write permission in the installation directory, you can browse to an example directory
-and start the simulation by double clicking the input file, e.g. ``bulk.tib`` in :ref:`tut0step1` . If
-not, copy the whole directory to a location in your personal area and run the examples
+and start the simulation by double clicking the input file, e.g. ``bulk.tib``.
+
+.. in :ref:`tut0step1`  
+
+If not, copy the whole directory to a location in your personal area and run the examples
 from there.
 
 If you cannot run tiberCAD by double clicking a tiberCAD input file (the files with extension ``.tib``), then the input
@@ -116,9 +124,13 @@ start the tiberCAD executable using the absolute path (``installpath/bin/tiberca
 
 Copy the directory of the example you want to run to your home directory
 or any place you have write permissions for. Change to the example directory and
-run tiberCAD by (assuming :ref:`tut0step1` )
+run tiberCAD by e.g. 
 
   ``$ tibercad bulk.tib``
+
+.. (assuming :ref:`tut0step1` )
+
+ 
 
 
 Bug reports / Feedback
@@ -132,7 +144,7 @@ the program:
 ::
 
   $ tibercad -v
-  tiberCAD version 2.0.0 (x86_64-linux)
+  tiberCAD version 3.0.0 (x86_64-linux)
 
 
 
