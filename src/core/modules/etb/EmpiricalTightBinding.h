@@ -89,6 +89,7 @@ class ETB : public TightBinding
     double e_max;
     bool read_states;
     int dynamic;
+    double bitoff;
     int solver_flag;
   };
 

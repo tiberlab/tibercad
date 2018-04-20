@@ -135,7 +135,7 @@ public:
   void lanczos_diag (int st_vb, int st_cb, int n_vb, int n_cb, double guess_vb, double guess_cb,
                      int min_iter, int long_iter, int max_iter, 
                      double fast_tol, double long_tol, double ort_tol,
-		                 int dynamic);
+		                 int dynamic, double bitoffset);
 
   //! Interface for Jacobi-Davidson
   void jacobidavidson(int st_cb, int st_vb, int n_vb, int n_cb, double guess_vb, double guess_cb,

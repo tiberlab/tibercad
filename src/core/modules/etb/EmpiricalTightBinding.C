@@ -637,12 +637,12 @@ ETB::call_uptight(void)
     Messages::info("\n("+get_name()+") solving using lanczos");
 
     inst->lanczos_diag(_upt_solver_options.start_vb, _upt_solver_options.start_cb, 
-		     _upt_solver_options.n_vb, _upt_solver_options.n_cb,
-                     _upt_solver_options.guess_vb, _upt_solver_options.guess_cb,
-                     _upt_solver_options.min_iter, _upt_solver_options.long_iter,
-                     _upt_solver_options.max_iter, _upt_solver_options.fast_tol,
-                     _upt_solver_options.long_tol, _upt_solver_options.ort_tol,
-		                _upt_solver_options.dynamic);
+		                   _upt_solver_options.n_vb, _upt_solver_options.n_cb,
+                       _upt_solver_options.guess_vb, _upt_solver_options.guess_cb,
+                       _upt_solver_options.min_iter, _upt_solver_options.long_iter,
+                       _upt_solver_options.max_iter, _upt_solver_options.fast_tol,
+                       _upt_solver_options.long_tol, _upt_solver_options.ort_tol,
+		                   _upt_solver_options.dynamic, _upt_solver_options.bitoff);
   }
   else if (_upt_solver_options.solver.compare("feast") == 0) 
   {
@@ -1082,7 +1082,8 @@ void ETB::parse_options(void)
 
   bool flag = solopts.get_option("dynamic_search",true);
   if (flag) _upt_solver_options.dynamic = 1;
-  
+  _upt_solver_options.bitoff = solopts.get_option("dynamic_offset", 0.1);
+
   //Feast options
   _upt_solver_options.e_min =  solopts.get_option("Emin", 0.0);
   _upt_solver_options.e_max =  solopts.get_option("Emax", 3.0);
