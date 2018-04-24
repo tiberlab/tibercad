@@ -21,9 +21,13 @@ that the system of PDEs to be solved reads as follows
 
    -\nabla(\varepsilon\nabla\varphi - \mathbf{P}) & =  -e(n - p - N_d^+ + N_a^-) \\
    -\nabla(\mu_n n ( \nabla\phi_n + P_n \nabla T)  ) & =  R \\
-   -\nabla(\mu_p p (\nabla\phi_p + P_p \nabla T) ) & =  -R 
+   -\nabla(\mu_p p (\nabla\phi_p + P_p \nabla T) ) & =  -R
+
+
+
+
  
-:math:`P` is the electric polarization due to e.g. piezoelectric effects.
+where :math:`P` is the electric polarization due to e.g. piezoelectric effects.
 :math:`N_d^+` and :math:`N_a^-` are the densities of ionized donors and acceptors, respectively.
 :math:`R` is the net recombination rate, i.e. recombination rate minus generation rate, and :math:`P_n` and :math:`P_p` are the electron
 and hole thermoelectric powers, respectively. The models for the mobilities and the net
