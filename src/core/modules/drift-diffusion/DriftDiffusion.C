@@ -926,6 +926,8 @@ DriftDiffusion::calculate_iqe(void)
   fe->attach_quadrature_rule(qrule.get());
 
   const vector<Real>& JxW = fe->get_JxW();
+  const vector<Point>& q_point = fe->get_xyz();
+  const vector<vector<Real> >&  phi = fe->get_phi();
 
   // the finite element for boundary integration
   libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type));
@@ -992,11 +994,11 @@ DriftDiffusion::calculate_iqe(void)
       Raug += JxW[qp] * augdata[qp];
     }
 
-    for (unsigned int s = 0; s < elem->n_sides(); s++)
-    {
+    //for (unsigned int s = 0; s < elem->n_sides(); s++)
+    //{
 
-      Material* mat = get_material(elem);
-      DDInterfaceModel* sm = get_interface_model<DDInterfaceModel>(elem, s);
+    //  Material* mat = get_material(elem);
+    //  DDInterfaceModel* sm = get_interface_model<DDInterfaceModel>(elem, s);
 
       //bool true_boundary = environment.is_outer_boundary(ElementSide(elem, s));
 
@@ -1012,7 +1014,7 @@ DriftDiffusion::calculate_iqe(void)
       //  {
       //  }
       //}
-    }
+    //}
 
     _iqe += iqe_el;
   }
