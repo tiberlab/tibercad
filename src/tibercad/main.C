@@ -299,14 +299,17 @@ int main (int argc, char** argv)
     Messages::close_log_file();
 
     Messages::info("Goodbye");
+
+    tibercad.cleanup();
   }
+
 
 
   /*
    * As last thing, finalize MPI
    */
-  MPI_Finalize();
+  //  MPI_Finalize();
 
-  return error;
+  return(error);
 }
 

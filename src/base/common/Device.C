@@ -101,7 +101,8 @@ Device::Device(const ModelOptions& options)
   else
   {
     // TODO not sure if we should duplicate here?
-    _mpi_comm = TiberCad::get_mpi_comm();
+    //_mpi_comm = TiberCad::get_mpi_comm();
+    _mpi_comm.duplicate(TiberCad::get_mpi_comm());
 
     if (nodes_per_device > comm.size())
       throw InitFailedException("Too many MPI nodes requested for device");
@@ -160,6 +161,9 @@ Device::~Device(void)
     delete nit->second;
 
   _material_map.clear();
+
+  _mesh_comm.clear();
+  _mpi_comm.clear();
 
   delete _eq_system;
   delete _boundary_nodes;

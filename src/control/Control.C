@@ -134,10 +134,11 @@ Control::~Control(void)
     SimulationInterface::destroy(sim);
   }
 
-  Device::destroy(_device);
-
   // clear all variables
   VariableValue::clear_all();
+
+  // This gives a problem with some MPI comm
+  //Device::destroy(_device);
 
 }
 
