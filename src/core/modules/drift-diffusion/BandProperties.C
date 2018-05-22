@@ -37,7 +37,6 @@ BandProperties::BandProperties(const ModelOptions& options) :
 
 BandProperties::~BandProperties(void)
 {
-  destroy(_dos_model);
 }
 
 

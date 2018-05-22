@@ -18,8 +18,8 @@ PhysicalObject::PhysicalObject(ObjectType type, const ModelOptions& options)
 
 PhysicalObject::~PhysicalObject(void)
 {
-  ModelMap::const_iterator it(_models.begin());
-  const ModelMap::const_iterator end(_models.end());
+  ModelMap::iterator it(_models.begin());
+  const ModelMap::iterator end(_models.end());
   for ( ; it != end; ++it)
     destroy(it->second);
 
