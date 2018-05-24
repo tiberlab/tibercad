@@ -3,7 +3,7 @@
 Device
 {
   meshfile = bulk.msh
-  material = Si
+  material = GaAs
 
 
    Region bulk 
@@ -30,7 +30,7 @@ Module dd_generic
 
   name = driftdiffusion
   plot = (ElPotential, QFermi, Density, RefEnergy, Mobility,
-          IonizedDonors, Flux, NetRecombination)
+          IonizedDonors, Flux, NetRecombination, ContactCurrent)
 
   #Solver trustregion { max_step = 100 }
   Solver
@@ -53,79 +53,77 @@ Module dd_generic
 
       density_of_states gauss
       {
-        level = 1.9
+        level = 0.5
         sigma = 0.15
         N0 = 1e18
       }
     }
 
-    carrier
+    carrier hguest
     {
-      name = hguest
       regions = bulk
       charge = 1
 
       density_of_states gauss
       {
-        level = 1.2
+        level = -0.4
         sigma = 0.1
         N0 = 1e18
       }
     }
 
-
-
-    carrier
+    carrier electron
     {
-      name = electron
-      #regions = (bulk, ndop)
-
-      density_of_states bulk
-      {
-        level = 2.1
-        sigma = 0.13
-        N0 = 1e19
-      }
     }
 
 
-    carrier
+    carrier hole
     {
-      name = hole
-      #regions = (bulk, pdop)
-
-      density_of_states bulk
-      {
-        level = 1.4
-        sigma = 0.11
-        N0 = 1e19
-      }
     }
 
     mobility constant
     {
       carriers = (electron, hole)
-      mu = 1000
+      #mu = 1000
     }
 
     mobility constant
     {
       carriers = (eguest, hguest)
-      mu = 10
+      mu = 1
     }
 
     recombination direct 
     {
+      plot_name = "hh"
       carriers = (electron, hole)
-      C = 1e-10
     }
 
-    #recombination direct 
-    #{
-    #  regions = bulk
-    #  carriers = (electron, eguest)
-    #  C = 1e-10
-    #}
+    recombination direct 
+    {
+      regions = bulk
+      plot_name = "e-capture"
+      carriers = (electron, eguest)
+      C = 1e-10
+    }
+   
+    recombination direct 
+    {
+      regions = bulk
+      plot_name = "h-capture"
+      carriers = (hole, hguest)
+      C = 1e-11
+    }
+
+    recombination direct 
+    {
+      regions = bulk
+      plot_name = "gg"
+      carriers = (eguest, hguest)
+      C = 1e-8
+    }
+   
+
 
     #recombination direct 
     #{
@@ -167,8 +165,8 @@ Module sweep
   solve = driftdiffusion
   variable = $Vb
   start = 0.0
-  stop = 1
-  steps = 10
+  stop = 2
+  steps = 20
   plot_data = true
 }
 

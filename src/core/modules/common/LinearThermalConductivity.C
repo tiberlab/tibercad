@@ -54,7 +54,7 @@ LinearThermalConductivity::do_init(void)
 
 
 void 
-LinearThermalConductivity::calculate(const libMesh::Elem* elem, const libMesh::Point& point)
+LinearThermalConductivity::calculate(const libMesh::Elem* , const libMesh::Point& point, double )
 {
    
   double x = point(0);

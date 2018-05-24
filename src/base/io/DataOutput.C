@@ -215,6 +215,17 @@ DataOutput::get_zone_ids(std::set<ID>& zone_ids) const
 {
   for (auto&& it : _data)
     zone_ids.insert(it.first);
+
+  if (zone_ids.empty())
+  {
+    // put al local mesh ids
+    auto it = _mesh->local_elements_begin();
+    const auto end = _mesh->local_elements_end();
+    for ( ; it != end; ++it)
+    {
+      zone_ids.insert((*it)->subdomain_id());
+    }
+  }
 }
 
 

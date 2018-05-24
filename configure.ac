@@ -280,7 +280,7 @@ AC_CONFIG_FILES([Make.common
                  doc/Makefile
                  src/tibercad/Makefile
                  src/utils/SLEPC/Makefile
-                 src/core/modules/etb/libuptight/Make.defs
+                 src/core/modules/etb/libuptight/Makefile
                  contrib/crypto++/make.defs
                  installer/Makefile
 		 installer/windows/tibercad.bim

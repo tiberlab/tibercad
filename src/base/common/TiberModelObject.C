@@ -298,7 +298,7 @@ TiberModelObject::create_from_function(create_t create, destroy_t destroy,
 void
 TiberModelObject::destroy(TiberModelObject* p)
 {
-  if (p != NULL)
+  if (p != nullptr)
   {
     Messages m;
     ostringstream os;

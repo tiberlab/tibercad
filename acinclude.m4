@@ -178,6 +178,7 @@ AC_DEFUN([TC_CUDA],
   HAVE_CUDA="${tc_cv_cuda_dir:-no}"
   if test "$HAVE_CUDA" != no
   then
+    CUDA_DIR=$tc_cv_cuda_dir
     CUDA_INCLUDEDIR="$tc_cv_cuda_dir/include"
     HAVE_CUDA="yes"
     case $host in
@@ -185,6 +186,7 @@ AC_DEFUN([TC_CUDA],
       i?86-*-*) CUDA_LIBS="-L$tc_cv_cuda_dir/lib32 -Wl,-rpath,$tc_cv_cuda_dir/lib32 -lcublas -lcusparse -lcurand -lcudart -lrt" ;;
       *) tc_cv_cuda_dir="no"; HAVE_CUDA="no"; CUDA_LIBDIR= ; CUDA_INCLUDEDIR= ;;
     esac
+    AC_SUBST([CUDA_DIR])
     AC_SUBST([CUDA_LIBS])
     AC_SUBST([CUDA_INCLUDEDIR])
     AC_SUBST([HAVE_CUDA])
@@ -204,6 +206,7 @@ AC_DEFUN([TC_MKL],
   HAVE_MKL="${tc_cv_mkl_dir:-no}"
   if test "$HAVE_MKL" != no
   then
+    MKL_DIR=$tc_cv_mkl_dir
     MKL_INCLUDEDIR="$tc_cv_mkl_dir/include"
     HAVE_MKL="yes"
     case $host in
@@ -213,6 +216,7 @@ dnl      x86_64-*-*) MKL_LIBS="-L$tc_cv_mkl_dir/mkl/lib/intel64 -Wl,-rpath,$tc_c
       i?86-*-*) MKL_LIBS="-L$tc_cv_mkl_dir/lib/32 -Wl,-rpath,$tc_cv_mkl_dir/lib/32 -lmkl_intel -lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread" ;;
       *) tc_cv_mkl_dir="no"; HAVE_MKL="no"; MKL_LIBDIR= ; MKL_INCLUDEDIR= ;;
     esac
+    AC_SUBST([MKL_DIR])
     AC_SUBST([MKL_LIBS])
     AC_SUBST([MKL_INCLUDEDIR])
     AC_SUBST([HAVE_MKL])

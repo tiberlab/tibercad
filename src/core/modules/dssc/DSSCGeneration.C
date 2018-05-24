@@ -5,6 +5,7 @@
 #include "SimulationEnvironment.h"
 #include "Material.h"
 #include "Database.h"
+#include "License.h"
 
 #include "TiberModule.h"
 
@@ -28,9 +29,21 @@ DSSCGeneration::DSSCGeneration(const ModelOptions& options) :
 
 DSSCGeneration::~DSSCGeneration(void)
 {
+  if (TiberCad::get_mpi_comm().rank() == 0)
+      License::check_in("dssc_generation", 1);
 
 }
 
+
+DSSCGeneration*
+DSSCGeneration::create(const ModelOptions& options)
+{
+  if (TiberCad::get_mpi_comm().rank() == 0)
+      License::check_out("dssc_generation",
+          TiberCad::major_version(), 0, 1);
+
+  return new DSSCGeneration(options);
+}
 
 void
 DSSCGeneration::parse_options(void)
@@ -73,7 +86,7 @@ DSSCGeneration::do_init(void)
       break;
   }
 
-  double len = _direction.size();
+  double len = _direction.norm();
   _direction /= len;
 
   // light intensity is given in x sun
@@ -217,7 +230,7 @@ DSSCGeneration::_calculate_distances(void)
   unsigned short sysnr = system.number();
   unsigned short var = system.variable_number("d");
 
-  libMesh::NumericVector<double>& solution = system.get_solution_vector();
+  libMesh::NumericVector<double>& solution = system.get_local_solution_vector();
 
   const unsigned int dim = get_mesh().mesh_dimension();
 
@@ -365,7 +378,7 @@ DSSCGeneration::_calculate_distances(void)
 
   }
   solution.close();
-  //system.update();
+  system.update();
 
 }
 

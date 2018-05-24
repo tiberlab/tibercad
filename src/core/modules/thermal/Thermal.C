@@ -7,6 +7,8 @@
 #include "Messages.h"
 #include "SimulationOptions.h"
 #include "ModelOptions.h"
+#include "License.h"
+
 
 #include "libmesh/equation_systems.h"
 #include "libmesh/dof_map.h"
@@ -42,6 +44,10 @@ Thermal::create(const ModelOptions& options)
 {
   // we could use the options to create different implementations
   // or something like that.
+  if (TiberCad::get_mpi_comm().rank() == 0)
+    License::check_out("thermal",
+        TiberCad::major_version(), 0, 1);
+
   return new Thermal(options);
 }
 
@@ -52,7 +58,7 @@ Thermal::do_init(void)
 {
   parse_options();
 
-  ID  dim = get_mesh().mesh_dimension();
+  ID dim = get_mesh().mesh_dimension();
 
   create_equation_system("linear");
   TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
@@ -62,35 +68,11 @@ Thermal::do_init(void)
   system.attach_assemble_function(assemble);
   system.init();
 
-
-  //Create node connection
-  const unsigned int nn  = get_mesh().n_nodes();
-  node_conn.resize(0);
-  node_conn.resize(nn, 0);
-  {
-    vector<unsigned short int> node_conn_local(node_conn.size());
-
-
-    MeshBase::const_element_iterator       el     = this->active_local_elements_begin();
-    const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
-
-    for ( ; el != end_el; ++el)
-      for (unsigned int n = 0; n < (*el)->n_nodes(); n++)
-	node_conn[(*el)->node(n)]++;
-
-    this->get_solver_communicator().sum(node_conn);
-  }
-
-}
-
-
-libMesh::NumericVector<double>&
-Thermal::do_get_solution_vector(void)
-{
-
-  TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
-  system.get_solution_vector().close();
-  return system.get_solution_vector();
+  libMesh::NumericVector<double>& solution = system.get_local_solution_vector();
+  solution.zero();
+  solution.add(SimulationOptions::T);
+  solution.close();
+  system.update();
 
 }
 
@@ -101,7 +83,8 @@ Thermal::do_get_solution_vector(void)
 //-------------------------------------------------------------------------//
 Thermal::~Thermal()
 {
-   
+  if (TiberCad::get_mpi_comm().rank() == 0)
+      License::check_in("thermal", 1);
 
 }
 
@@ -199,6 +182,7 @@ Thermal::compute_power_emitted()
   //Gray System
   libMesh::EquationSystems& es = get_equation_systems();
   TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
+  const libMesh::NumericVector<Number>& solution = system.get_solution_vector();
   libMesh::DofMap& dof_map = system.get_dof_map();
   std::vector<unsigned int> dof_indices;
   //-----------------------------------------------
@@ -211,6 +195,7 @@ Thermal::compute_power_emitted()
   libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
   libMesh::QGauss qrule(dim,libMesh::FIFTH);
   fe->attach_quadrature_rule(&qrule);
+  const vector<vector<Real> >& phi = fe->get_phi();
   const std::vector<Real>& JxW = fe->get_JxW();
   const std::vector<Point>& q_point = fe->get_xyz();
   //--------------------------
@@ -232,6 +217,7 @@ Thermal::compute_power_emitted()
 
     const Elem* elem = *it;
     dof_map.dof_indices(elem, dof_indices);
+    const unsigned int n_dofs = dof_indices.size();
 
     fe->reinit(elem);
 
@@ -240,7 +226,11 @@ Thermal::compute_power_emitted()
     //Energy emitted
     for (ID qp = 0; qp <  qrule.n_points(); qp++)
     {
-      mod.calculate(elem,q_point[qp]);
+      double T  = 0.0;
+      for (unsigned int i = 0; i < n_dofs; i++)
+        T += phi[i][qp] * solution(dof_indices[i]);
+
+      mod.calculate(elem, q_point[qp], T);
       Real H = mod.get_total_heat_source();
       total_heat_source += H * JxW[qp];
     }
@@ -342,6 +332,8 @@ Thermal::get_solution_secure(const Elem* elem,
 
    ID subdomain = elem->subdomain_id();
 
+   bool temp_only = (values.count(LatticeTemp) && (values.size() == 1));
+
    fe->reinit(elem, &p);
 
    dof_map.dof_indices(elem, dof_indices, u_var);
@@ -352,46 +344,47 @@ Thermal::get_solution_secure(const Elem* elem,
 
    for (unsigned int n = 0; n < np; n++)
     {
-      mod.calculate(elem,real_pts[n]);
-      
+      double T  = 0.0;
+      for (unsigned int i = 0; i < n_dofs; i++)
+        T += phi[i][n] * solution(dof_indices[i]);
+
       if (values.count(LatticeTemp))
-      {
-	double T  = 0.0;
-	for (unsigned int i = 0; i < n_dofs; i++)
-	  T += phi[i][n] * solution(dof_indices[i]);
-	
 	values[LatticeTemp][n] = T;
-      }
    
-      if (values.count(ThermalFlux))  
+      if (!temp_only)
       {
+        mod.calculate(elem,real_pts[n], T);
 
-        libMesh::RealGradient heat_flux(0);
-	for (ID alpha = 0; alpha<dof_indices.size() ;alpha ++)
-	  heat_flux -= solution(dof_indices[alpha]) * (kappa * dphi[alpha][n]);
-	
-	
+        if (values.count(ThermalFlux))  
+        {
 
-	for (ID d = 0; d < dim; d++)
-	  values[ThermalFlux][d + 3 * n] = heat_flux(d);
-	
-      }
+          libMesh::RealGradient heat_flux(0);
+          for (ID alpha = 0; alpha<dof_indices.size() ;alpha ++)
+            heat_flux -= solution(dof_indices[alpha]) * (kappa * dphi[alpha][n]);
 
-      
-      if (values.count(ThermCond))
-      {
-	const libMesh::RealTensor& kappa = mod.get_total_thermal_conductivity();
-	values[ThermCond][0 + 3 * n] = kappa(0,0);
-	values[ThermCond][1 + 3 * n] = kappa(1,1);
-	values[ThermCond][2 + 3 * n] = kappa(2,2);
-      }
-      
-      if (values.count(HeatSource))
-      {
-	
-	Real H = mod.get_total_heat_source();
-	values[HeatSource][n] = H;
-	
+
+
+          for (ID d = 0; d < dim; d++)
+            values[ThermalFlux][d + 3 * n] = heat_flux(d);
+
+        }
+
+
+        if (values.count(ThermCond))
+        {
+          const libMesh::RealTensor& kappa = mod.get_total_thermal_conductivity();
+          values[ThermCond][0 + 3 * n] = kappa(0,0);
+          values[ThermCond][1 + 3 * n] = kappa(1,1);
+          values[ThermCond][2 + 3 * n] = kappa(2,2);
+        }
+
+        if (values.count(HeatSource))
+        {
+
+          Real H = mod.get_total_heat_source();
+          values[HeatSource][n] = H;
+
+        }
       }
       
     }
@@ -404,6 +397,7 @@ void
 Thermal::do_assemble(libMesh::EquationSystems& es, const std::string& system_name)
 {
   TiberLinearSystem& system_fourier = get_equation_system<TiberLinearSystem>();
+   const libMesh::NumericVector<Number>& solution = system_fourier.get_solution_vector();
 
    const MeshBase& mesh = get_mesh();
 
@@ -441,8 +435,8 @@ Thermal::do_assemble(libMesh::EquationSystems& es, const std::string& system_nam
    libMesh::DenseMatrix<Number> Ke;
    libMesh::DenseVector<Number> Fe;
 
-  MeshBase::const_element_iterator       el     = this->active_local_elements_begin();
-  const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
+   MeshBase::const_element_iterator       el     = this->active_local_elements_begin();
+   const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
    for ( ; el != end_el ; ++el)
    {
 
@@ -463,7 +457,11 @@ Thermal::do_assemble(libMesh::EquationSystems& es, const std::string& system_nam
      // loop over the quadrature points
      for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
      {
-       mod.calculate(elem, q_point[qp]);
+       double T  = 0.0;
+       for (unsigned int i = 0; i < n_dofs; i++)
+         T += phi[i][qp] * solution(dof_indices[i]);
+
+       mod.calculate(elem, q_point[qp], T);
        
        const libMesh::RealTensor& kappa = mod.get_total_thermal_conductivity();
        double heat_source = mod.get_total_heat_source();
@@ -521,7 +519,9 @@ Thermal::do_assemble(libMesh::EquationSystems& es, const std::string& system_nam
    }//Elem
    
    system_fourier.matrix->close();
+   //system_fourier.matrix->print_matlab("K.m");
    system_fourier.rhs->close();
+   //system_fourier.rhs->print_matlab("f.m");
 }
 
 

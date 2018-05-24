@@ -1,7 +1,7 @@
 // $Id: ExcitonISC.h 3414 2012-09-10 20:40:28Z maufder $
 
 #ifndef _EXCITONISC_H_
-#define _EXCITONDISC_H_
+#define _EXCITONISC_H_
 
 #include "RecombinationModelInterface.h"
 #include "TypeDefs.h"

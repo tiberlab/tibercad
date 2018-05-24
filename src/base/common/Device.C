@@ -101,7 +101,8 @@ Device::Device(const ModelOptions& options)
   else
   {
     // TODO not sure if we should duplicate here?
-    _mpi_comm = TiberCad::get_mpi_comm();
+    //_mpi_comm = TiberCad::get_mpi_comm();
+    _mpi_comm.duplicate(TiberCad::get_mpi_comm());
 
     if (nodes_per_device > comm.size())
       throw InitFailedException("Too many MPI nodes requested for device");
@@ -160,6 +161,9 @@ Device::~Device(void)
     delete nit->second;
 
   _material_map.clear();
+
+  _mesh_comm.clear();
+  _mpi_comm.clear();
 
   delete _eq_system;
   delete _boundary_nodes;
@@ -274,7 +278,7 @@ Device::setup_mesh(void)
 
   // TODO only for now (back compatibility)
   delete _boundary_nodes;
-  _boundary_nodes = new map<ID, vector<ID> >();
+  _boundary_nodes = new map<ID, vector<unsigned int> >();
   _bd_regions->get_bc_node_map(*_boundary_nodes);
 
 
@@ -292,7 +296,7 @@ Device::setup_mesh(void)
        << "number of elements  : " << setw(7) << setfill(' ') << _mesh->n_elem() << endl
        << "number of subdomains: " << setw(7) << setfill(' ') 
        << _mesh_region_info->n_subdomains() << endl
-       << "number of boundaries: " << setw(7) << setfill(' ') << _boundary_nodes->size();
+       << "number of boundaries: " << setw(7) << setfill(' ') << _bd_regions->n_subdomains();
     m.info(os.str());
   }
   m.newline();
@@ -959,9 +963,12 @@ Device::get_boundary_object(ID id)
       {
         // first get ids of the regions on both sides
         const IDSet& ids = _bd_regions->get_contiguous_regions_for_side(id);
-        assert(ids.size() == 2);
+        //assert(ids.size() == 2);
         ID idA = *(ids.begin());
-        ID idB = *(++(ids.begin()));
+        ID idB = idA;
+        if (ids.size() == 2)
+          idB = *(++(ids.begin()));
+
         Material* matA = get_material(idA);
         Material* matB = get_material(idB);
         ModelOptions opts;

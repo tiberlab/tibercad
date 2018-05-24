@@ -550,7 +550,7 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
 
         // plot results if required
         if ((_plot_data == EACH) ||
-            (_plot_data == LAST) && (i == (n - 1)))
+            ((_plot_data == LAST) && (i == (n - 1))))
           _simulations[j]->plot();
 
         // update "something-vs.-sweepvariable" files

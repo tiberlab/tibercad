@@ -38,7 +38,7 @@ AugmentSparsityForMassConservation::augment_sparsity_pattern(
   for ( ; it != end; ++it)
   {
     dof_id_type dof = it->first;
-    cerr << "    DOF id : " << dof << endl;
+    //cerr << "    DOF id : " << dof << endl;
 
     if ((dof >= dof_map.first_dof()) &&
         (dof < dof_map.end_dof()))

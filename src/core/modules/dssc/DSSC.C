@@ -3,6 +3,7 @@
 // module includes
 #include "SimulationInterface.h"
 #include "DSSC.h"
+#include "License.h"
 #include "SimulationEnvironment.h"
 #include "Scaling.h"
 #include "Material.h"
@@ -68,6 +69,20 @@ DSSC::DSSC(const ModelOptions& options)
 DSSC::~DSSC(void)
 {
   cleanup_solver();
+
+  if (TiberCad::get_mpi_comm().rank() == 0)
+      License::check_in("dssc", 1);
+}
+
+
+DSSC*
+DSSC::create(const ModelOptions& options)
+{
+  if (TiberCad::get_mpi_comm().rank() == 0)
+    License::check_out("dssc",
+      TiberCad::major_version(), 0, 1);
+
+  return new DSSC(options);
 }
 
 
@@ -1016,6 +1031,11 @@ DSSC::do_init(void)
 {
 
   _device = &get_environment().get_device();
+
+  if ((_device->get_communicator().size() > 1) && (_device->get_communicator().rank() == 0))
+  {
+    throw InitFailedException("Module DSSC is currently only available in serial version.");
+  }
 
   find_dirichlet_nodes();
   find_internal_boundary_nodes();

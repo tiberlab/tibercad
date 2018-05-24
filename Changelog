@@ -6,9 +6,11 @@ New features:
 	- improved MPI parallelization: can assign communicators
 	  to devices and modules
 	- k-integration can parallelize automatically
+	- contacts can be defined embedded in single regions
 
 Bug fixes:
 	- fixed a bug in dssc_generation
+	- fixed a bug for strain corrected bulk band parameters
 
 
 Version 2.6.0

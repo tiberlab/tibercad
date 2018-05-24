@@ -60,6 +60,12 @@ class TiberCad
      */
     void init(const std::string& inputfile);
 
+    //! A cleanup routine
+    /*!
+     * This routine calls close() of libmesh and other libraries, if needed
+     */
+    void cleanup(void);
+
 
     //! Start simulations
     void run(void);
@@ -142,20 +148,11 @@ class TiberCad
 
 
     //! Get our MPI Communicator
-    //static const libMesh::Parallel::Communicator& get_mpi_comm(void);
-
-    //! Get our MPI Communicator
     static libMesh::Parallel::Communicator& get_mpi_comm(void);
 
 
 
   private:
-
-    //! A cleanup routine
-    /*!
-     * This routine calls close() of libmesh and other libraries, if needed
-     */
-    void cleanup(void);
 
 
     //! The TiberCAD major version
@@ -176,6 +173,9 @@ class TiberCad
 
     //! A counter to assure that there is only one instance of this class
     static unsigned int _object_counter;
+
+    //! Control variable to check whether we are initialized
+    static bool _is_initialized;
 
 
     //! The installation root directory

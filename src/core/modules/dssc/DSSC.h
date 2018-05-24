@@ -542,13 +542,6 @@ class DSSC : public SimulationInterface
 //
 
 
-inline
-DSSC*
-DSSC::create(const ModelOptions& options)
-{
-  return new DSSC(options);
-}
-
 
 inline
 unsigned int

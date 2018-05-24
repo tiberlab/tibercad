@@ -60,8 +60,12 @@ class TiberLinearSystem : public TiberEqSystem, public libMesh::LinearImplicitSy
     virtual void user_initialization(void);
 
 
-    //! Get the solution vector
+    //! Get the solution vector including ghost values
     virtual libMesh::NumericVector<double>& get_solution_vector(void);
+
+
+    //! Get the local solution vector without ghost values
+    virtual libMesh::NumericVector<double>& get_local_solution_vector(void);
 
 
 
@@ -88,6 +92,14 @@ libMesh::NumericVector<double>&
 TiberLinearSystem::get_solution_vector(void)
 {
   return *current_local_solution;
+}
+
+
+inline
+libMesh::NumericVector<double>&
+TiberLinearSystem::get_local_solution_vector(void)
+{
+  return *solution;
 }
 
 

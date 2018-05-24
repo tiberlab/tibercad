@@ -159,3 +159,27 @@
  
    virtual element_iterator ghost_elements_begin () libmesh_override;
    virtual element_iterator ghost_elements_end () libmesh_override;
+--- src/base/libmesh.C.orig	2018-03-15 14:36:10.274926555 +0100
++++ src/base/libmesh.C	2018-03-16 08:45:00.641571627 +0100
+@@ -648,21 +648,6 @@
+   ReferenceCounter::print_info ();
+ 
+ 
+-  // Print an informative message if we detect a memory leak
+-  if (ReferenceCounter::n_objects() != 0)
+-    {
+-      libMesh::err << "Memory leak detected!"
+-                   << std::endl;
+-
+-#if !defined(LIBMESH_ENABLE_REFERENCE_COUNTING) || defined(NDEBUG)
+-
+-      libMesh::err << "Compile in DEBUG mode with --enable-reference-counting"
+-                   << std::endl
+-                   << "for more information"
+-                   << std::endl;
+-#endif
+-
+-    }
+ 
+   //  print the perflog to individual processor's file.
+   libMesh::perflog.print_log();

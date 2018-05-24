@@ -16,6 +16,7 @@
 #include "NodeObject.h"
 #include "Alloy.h"
 #include "Embracing.h"
+#include "RuntimeException.h"
 
 #include "Variable.h"
 
@@ -1119,19 +1120,39 @@ SimulationInterface::solve(void)
   Messages::newline();
   Messages::info(os.str());
 
+  this->analyze_errors();
+
   Messages::frameline("<<<<",'-');
 
 }
 
 
+void
+SimulationInterface::analyze_errors(void)
+{
+  if (get_options().has_submodel("ErrorAnalysis"))
+  {
+    Messages m;
+    m.info("Performing analysis of numerical errors");
+    m.indent();
+    this->do_analyze_errors((get_options().submodels_begin("ErrorAnalysis"))->second);
+    m.unindent();
+  }
+}
+
+void
+SimulationInterface::do_analyze_errors(const ModelOptions& options)
+{
+  Messages::info("Not implemented yet");
+}
 
 libMesh::NumericVector<double>&
 SimulationInterface::do_get_solution_vector(void)
 {
   assert(_systems.size() > 0);
 
-  get_equation_system<TiberEqSystem>(0).get_solution_vector().close();
-  return get_equation_system<TiberEqSystem>(0).get_solution_vector();
+  get_equation_system<TiberEqSystem>(0).get_local_solution_vector().close();
+  return get_equation_system<TiberEqSystem>(0).get_local_solution_vector();
 }
 
 
@@ -1141,6 +1162,9 @@ SimulationInterface::do_set_solution_vector(
     const libMesh::NumericVector<double>& new_solution)
 {
   get_solution_vector() = new_solution;
+  if (_systems.size() > 0)
+    get_equation_system<libMesh::System>(0).update();
+
 }
 
 
@@ -1285,10 +1309,27 @@ SimulationInterface::plot_meshdata(void)
 
   const MeshBase& mesh = get_mesh();
 
+  // The device communicator might be larger than the mesh communicator.
+  // In that case, we do the work only on one group of processes
+
+  bool do_write = true;
+
+  if (this->get_communicator().size() > this->get_mesh().comm().size())
+  {
+    unsigned int dev_rank = this->get_communicator().rank();
+    this->get_mesh().comm().broadcast(dev_rank);
+    unsigned int min_rank = dev_rank;
+    this->get_communicator().min(min_rank);
+
+    if (dev_rank != min_rank)
+      return;
+      //do_write = false;
+  }
+
   // we write only on mesh part associated to this simulation
 
   MeshBase::const_element_iterator it = this->active_local_elements_begin();
-  const MeshBase::const_element_iterator end = this->active_local_elements_end();
+  MeshBase::const_element_iterator end = this->active_local_elements_end();
   //libMesh::MeshBase::const_element_iterator it = mesh.active_elements_begin();
   //const libMesh::MeshBase::const_element_iterator end = mesh.active_elements_end();
 
@@ -1362,7 +1403,9 @@ SimulationInterface::plot_meshdata(void)
 
 
   //for (it = mesh.active_elements_begin(); it != end; ++it)
-  for (it = this->active_local_elements_begin(); it != end; ++it)
+  //for (it = this->active_local_elements_begin(); it != end; ++it)
+  end = (this->get_mesh()).active_local_subdomains_elements_end(this->get_region_ids());
+  for (it = (this->get_mesh()).active_local_subdomains_elements_begin(this->get_region_ids()); it != end; ++it)
   {
     const Elem* elem = *it;
 
@@ -1447,8 +1490,6 @@ SimulationInterface::plot_meshdata(void)
       writer->write();
     }
   }
-
-  //do_plot_old();
 
 }
 
@@ -1749,6 +1790,11 @@ SimulationInterface::do_load_data(istream& is)
       is.getline(buf, bufsize);
     }
 
+    solution.close();
+
+    if (_systems.size() > 0)
+      get_equation_system<libMesh::System>(0).update();
+
     has_read = true;
   }
 
@@ -1852,7 +1898,12 @@ SimulationInterface::do_set_to_remembered_solution(ID id)
   map<ID, libMesh::NumericVector<double>*>::iterator it(_remembered_solutions.find(id));
 
   if (it != end)
+  {
     get_solution_vector() = *(it->second);
+
+    if (_systems.size() > 0)
+      get_equation_system<libMesh::System>(0).update();
+  }
 }
 
 
@@ -1945,7 +1996,12 @@ void
 SimulationInterface::do_scale_solution(double factor)
 {
   if (has_solution_vector())
+  {
     get_solution_vector().scale(factor);
+
+    if (_systems.size() > 0)
+      get_equation_system<libMesh::System>(0).update();
+  }
 }
 
 
@@ -1959,6 +2015,9 @@ SimulationInterface::do_add_scaled_remembered_solution(ID id, double factor)
   if (it != end)
   {
     get_solution_vector().add(factor, *(it->second));
+
+    if (_systems.size() > 0)
+      get_equation_system<libMesh::System>(0).update();
   }
 }
 
@@ -2335,7 +2394,7 @@ SimulationInterface::get_solution(const libMesh::Elem* elem,
     {
       case SolutionDescriptor::CELL:
       case SolutionDescriptor::NODES:
-        values[it->first].resize(nn * n_comp);
+        values[it->first].resize(nn * n_comp, 0.0);
         break;
 
       default:
@@ -2623,6 +2682,28 @@ SimulationInterface::get_solution(map<ID, vector<double> >& values)
 }
 
 
+std::pair<double, double> 
+SimulationInterface::get_value_and_derivative(
+  ID value_id, std::map<ID, double> params, ID dvar_id )
+{
+  if (!_value_id_map.count(value_id))
+    return make_pair(0.0, 0.0);
+
+  if (!_param_id_map[value_id].count(dvar_id))
+    dvar_id = INVALID_ID;
+  for (auto param : params)
+  {
+    if (!_param_id_map[value_id].count(param.first))
+      return make_pair(0.0, 0.0);
+  }
+  return get_value_and_derivative_secure(value_id, params, dvar_id);
+}
+
+std::pair<double, double> 
+SimulationInterface::get_value_and_derivative_secure(
+  ID value_id, std::map<ID, double> params, ID dvar_id )
+{
+}
 
 void
 SimulationInterface::get_solution_secure(const Elem*,
@@ -3305,3 +3386,37 @@ SimulationInterface::project_on_tensor_grid(void)
     delete fstreams[0][0];
   }
 }
+
+////
+void
+SimulationInterface::add_value(std::string name)
+{
+  if (!_value_map.count(name))
+  {
+    ID id = _value_map.size();
+
+    _value_map.insert( make_pair(name, id) );
+    _param_map.insert( make_pair( id, std::map<std::string, ID>() ) );
+    _value_id_map.insert( make_pair(id, name) );
+    _param_id_map.insert( make_pair( id, std::map<ID, std::string>() ) );
+  }
+}
+
+void 
+SimulationInterface::add_parameter(std::string name, ID value_id)
+{
+  if (!_param_map.count(value_id))
+    throw RuntimeException("Cannot add Parameter '" + name + "'since its corresponding Value id does not exist");
+
+  if (!_param_map[value_id].count(name))
+  {
+    ID id = _param_map[value_id].size();
+
+   _param_map[value_id].insert( make_pair( name, id) );
+   _param_id_map[value_id].insert( make_pair( id, name) );
+  }
+}
+
+
+
+////

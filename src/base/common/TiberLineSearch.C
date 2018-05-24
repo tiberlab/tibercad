@@ -24,7 +24,7 @@ TiberLineSearch::TiberLineSearch(libMesh::EquationSystems& es,
   _divergence_tol(4.0)
 {
   // add a vector for the solution
-  add_vector("sol", true, libMesh::GHOSTED);
+  //add_vector("sol", true, libMesh::GHOSTED);
 }
 
 

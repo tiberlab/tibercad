@@ -15,6 +15,33 @@
 
 using namespace std;
 
+namespace {
+  pair<double, double> fermi_dirac(double E)
+  {
+    double f = 0, deriv = 0;
+    double arg = E;
+    if (arg > 50)
+    {
+      f = exp(-arg);
+      deriv = -f;
+    }
+    else if (arg < -50)
+    {
+      deriv = -exp(arg);
+      f = 1 + deriv;
+    }
+    else
+    {
+      double expfac = exp(arg);
+      double denom = 1.0 + expfac;
+      f = 1.0 / denom;
+      deriv = -expfac * f / denom;
+    }
+
+    return make_pair(f, deriv);
+  }
+}
+
 DirectRecombination::QRecMap
 DirectRecombination::_qrec_vals;
 
@@ -63,6 +90,7 @@ DirectRecombination::do_init(void)
 void
 DirectRecombination::calculate_rate_and_derivatives(std::vector<double>& R, std::vector<std::vector<double>>& dPotentials)
 {
+
   ID id1 = this->get_carrier_ids()[0];
   ID id2 = this->get_carrier_ids()[1];
 
@@ -75,6 +103,7 @@ DirectRecombination::calculate_rate_and_derivatives(std::vector<double>& R, std:
 
   if (ct1 != ct2)
   {
+    // this is the standard direct recombination for electrons hole pairs
     if (ct1 != 'e')
       swap(id1, id2);
 
@@ -89,6 +118,7 @@ DirectRecombination::calculate_rate_and_derivatives(std::vector<double>& R, std:
     double q1 = dd.get_carrier_properties(id1)->get_charge();
     double q2 = dd.get_carrier_properties(id2)->get_charge();
 
+
     //double E01 = dd.get_carrier_properties(id1)->get_band_edge();
     //double E02 = dd.get_carrier_properties(id2)->get_band_edge();
 
@@ -98,6 +128,7 @@ DirectRecombination::calculate_rate_and_derivatives(std::vector<double>& R, std:
 
     R[id1] = g * stat_fac;
     R[id2] = g * stat_fac;
+    //cerr << "n1 = " << n1 << " n2 = " << n2 << " -> " << R[id1] << endl;
 
     double dR0 = stat_fac * C_ * (n2 * dn1 + n1 * dn2);
     double dR1 = -C_ * n2 * (dn1 * stat_fac + beta * n1 * exponential);
@@ -112,32 +143,53 @@ DirectRecombination::calculate_rate_and_derivatives(std::vector<double>& R, std:
   }
   else
   {
-    double n1  = dd.get_q_density(id1);
-    double n2  = dd.get_q_density(id2);
-    double N1  = dd.get_carrier_properties(id1)->get_effective_DOS();
-    double N2  = dd.get_carrier_properties(id2)->get_effective_DOS();
-    double dn1 = dd.get_q_density_derivative(id1);
-    double dn2 = dd.get_q_density_derivative(id2);
     double E1  = dd.get_carrier_properties(id1)->get_band_edge();
     double E2  = dd.get_carrier_properties(id2)->get_band_edge();
+    double q1  = dd.get_carrier_properties(id1)->get_charge();
+    double q2  = dd.get_carrier_properties(id2)->get_charge();
+
+    if ((ct1 == 'e') && (E2 < E1))
+    {
+      swap(id1, id2);
+      swap(E1, E2);
+    }
+    else if ((ct1 == 'h') && (E1 < E2))
+    {
+      swap(id1, id2);
+      swap(E1, E2);
+    }
+
+
+    double n1  = dd.get_q_density(id1);
+    double n2  = dd.get_q_density(id2);
+    double N1  = 100 * dd.get_carrier_properties(id1)->get_effective_DOS();
+    double N2  = 100 * dd.get_carrier_properties(id2)->get_effective_DOS();
+    double dn1 = dd.get_q_density_derivative(id1);
+    double dn2 = dd.get_q_density_derivative(id2);
     double Ef1 = -dd.get_q_fermi_potential(id1);
     double Ef2 = -dd.get_q_fermi_potential(id2);
     double beta = (ct1 == 'e') ? 1.0/kT : -1.0/kT;
 
-    double thermal = exp( 0.5*beta*(E1-E2) - 0.5*fabs(beta*(E1-E2)) );
-    double exponential = exp((Ef2 - Ef1) * beta);
-    double stat = 1.0 - exponential;
+    double thermal = exp(-fabs(E2 - E1) / kT);
+    double exponential1 = exp((Ef2 - Ef1) * beta);
+    double exponential2 = exp((Ef1 - Ef2) * beta);
+    double stat1 = 1.0 - exponential1;
+    double stat2 = 1.0 - exponential2;
 
-    R[id1] = C_ * thermal * stat * n1 * (N2 - n2);
+    double C1 = 0.5*C_*thermal;
+    double C2 = 0.5*C_;
+
+    // TODO N2 should be the maximum density for n2, but now its 100*Nc
+    R[id1] = C1 * stat1 * n1 * (N2 - n2) - C2 * stat2 * n2 * (N1 - n1);
     R[id2] = -R[id1];
 
-    //if (ct1 == 'e')
-      //cout<<"Ef1 = "<<Ef1<<" Ef2 = "<<Ef2<<" stat = "<<stat<<" R1 = "<<R[id1]<<endl;
-    //cout<<"R = "<<R[id1]<<" stat = "<<stat<<" thermal = "<<thermal<<" n1 = "<<n1<<" N2 = "<<N2<<endl;
 
-    double dR0 =  C_ * thermal * stat * ( (N2 - n2)*dn1 - n1*dn2 );
-    double dR1 = -C_ * thermal * (N2 - n2) * ( dn1 * stat + beta * n1 * exponential);
-    double dR2 = -C_ * thermal * n1 * (-dn2 * stat - beta * (N2 - n2) * exponential);
+    double dR0 =  C1 * stat1 * ( (N2 - n2)*dn1 - n1*dn2 )
+        - C2 * stat2 * ( (N1 - n1)*dn2 - n2 * dn1 );
+    double dR1 = -C1 * (N2 - n2) * ( dn1 * stat1 + beta * n1 * exponential1)
+        - C2 * n2 * ( dn1 * stat2 + beta * (N1 - n1) * exponential2);
+    double dR2 = -C1 * n1 * (-dn2 * stat1 - beta * (N2 - n2) * exponential1)
+        + C2 * (N1 - n1) * (dn2 * stat2 + beta * n2 * exponential2);
 
     dPotentials[id1][id1] =  dR1;
     dPotentials[id1][id2] =  dR2;

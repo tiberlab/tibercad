@@ -3,8 +3,6 @@
 #ifndef _LINEARTHERMALCONDUCTIVITY_H_
 #define _LINEARTHERMALCONDUCTIVITY_H_
 
-#include "ThermalConductivityModel.h"
-
 #include "point.h"
 #include "tensor_value.h"
 #include "vector_value.h"
@@ -12,6 +10,7 @@
 #include "tiber_dll.h"
 
 #include "elem.h"
+#include "ThermalConductivityModel.h"
 
 
 
@@ -30,7 +29,7 @@ public:
   //! Creator function
   static LinearThermalConductivity* create(const ModelOptions& options);
   
- virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point);
+ virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point, double temperature);
   
 protected:
   

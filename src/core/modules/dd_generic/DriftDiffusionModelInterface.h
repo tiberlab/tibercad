@@ -34,6 +34,14 @@ class TBDLEXPORT DriftDiffusionModelInterface : public PhysicalModelInterface
     DriftDiffusionProperties& get_driftdiffusionproperties(void) const;
 
 
+    //! Get a reference to the DriftDiffusionProperties object
+    /*!
+     * \return a reference to the DriftDiffusionProperties object this
+     * model belongs to
+     */
+    DriftDiffusionProperties& get_bulk_driftdiffusionproperties(void) const;
+
+
   protected:
 
     //! Empty constructor

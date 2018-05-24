@@ -9,6 +9,154 @@ Controlling the Simulation
 Tools for Simulation
 ================
 
+.. _Parallel:
+
+
+Parallel execution
+---------
+
+tiberCAD may be executed in parallel on a number *n* of processors by typing:
+
+   
+  ``tibercad`` -n   **<number_MPI_proc>**  *input_file_name*
+
+
+where **<number_MPI_proc>** is the chosen number *n* of processors.
+
+In the ``Device`` section it is possible to define a set of options for the parallel execution 
+using a block with the keyword ``Parallel``.
+
+For example:
+
+::
+   
+  Parallel
+  {
+    mpi_processes_per_device = 2 # 4 
+    
+    mpi_processes_per_mesh   = 1
+  }
+
+
+The  following options may  be  defined in **Parallel**  block
+
+
+ ``mpi_processes_per_device`` : integer, (*default = number_MPI_proc*)       
+    defines the number of devices to be processed in parallel, given by *number_MPI_proc/mpi_processes_per_device* 
+
+ ``mpi_processes_per_mesh`` : integer , (*default = mpi_processes_per_device*)
+    defines the number of processes for FEM calculations; if 1, then FEM calculations are executed in serial; 
+    max value is *mpi_processes_per_device*
+
+By default, FEM solvers will be parallelized on the defined number of MPI processes, that is ``mpi_processes_per_device`` and  ``mpi_processes_per_mesh`` are set to the value of **number_MPI_proc**.
+
+All the other solvers, such as atomistic solvers, will be  parallelized on the defined number of MPI processes.
+
+
+When a simulation requires a calculation in **k**-space, such as a **k**-integration, this calculation is automatically parallelized on a number of processes given by 
+*mpi_processes_per_device/mpi_processes_per_mesh*
+
+Current limitations
+^^^^^^^^^^^^^^^^^^^^^^^
+
+It is not possible to perform a parallel simulation of a device where different portions of the mesh are assigned to  different Modules. 
+
+
+.. warning::
+             A Simulation can be parallelized only if **ALL** the Modules are applied to the same set of Physical Regions
+
+
+It is not currently possible to run Module DSC in parallel.
+
+
+Examples
+^^^^^^^^^^^^^^^^^^^^^^^
+
+In multiscale simulations including both FEM-based and atomistic Modules (e.g. ETB), it is convenient to run in parallel only the atomistic solver, much more time-consuming and computational heavy, while FEM Modules, such as Drift-Diffusion, can be  solved serially.
+ 
+This can be done quite easily in this way:
+
+::
+
+	Device
+	{
+  	meshfile = InAs_qw.msh 
+
+  	# if run in parallel, only TB part will be parallelized
+  	Parallel
+  	{
+    	    mpi_processes_per_mesh = 1
+ 	}
+ 	...........................
+
+Here, when executed in parallel, only the atomistic solvers (**VFF**, **ETB**) will be parallelized.
+
+
+When running in parallel with MPI, the default is to have one single device and run solvers in parallel.
+It may be the case that  we want to run simulations of a certain number of devices in parallel, with or without parallel solvers.
+This can happen for example when one wants to perform a set of simulations of a device including a random alloy material in the active region, so that to  generate a statistical set of solutions.
+This is possible by defining appropriately the keyword *mpi_processes_per_device*.
+
+For example with 
+
+**number_MPI_proc** = 4 
+
+let's consider a Tight-binding calculation on an atomistic random alloy structure: 
+
+::
+
+  	Parallel
+  	{
+    	    	mpi_processes_per_device = 2 
+		# let's do FEM calculations in serial
+    		mpi_processes_per_mesh   = 1
+
+ 	}
+
+
+        ...........................
+
+
+ 	Atomistic tb
+  	{
+    	reference_region = qbarrierl
+    	regions = atomistic
+    	passivation = yes
+    	print = (xyz)
+
+    	random_alloy = true
+
+    	# we put an implicit seed here, for repeatability (and reload)
+   	 random_generator_seed = MPI_DEV_KEY
+	# same random seed for each device process group
+
+    	supercell_size_z = 20 
+    	supercell_size_y = 20  
+
+    	# write out statistics of alloy
+    	alloy_statistics = true
+    	alloy_statistics {}
+
+  	}
+
+
+Two devices  will be simulated (with a different random alloy), each one with a parallelization on 2 processes.
+This is set by ::
+
+   mpi_processes_per_device = 2
+
+
+
+Note that in this case *mpi_processes_per_mesh* may be only 1 (serial) or 2 (FEM paralleized on 2 processes, which is the default in this case)
+If *mpi_processes_per_device = 1* , then 4 different devices are simulated, with no parallelization.
+In this case *mpi_processes_per_mesh* must be 1.
+
+If *mpi_processes_per_device = 4*, then only one device is simulated, with a parallelization on 4 processes
+
+
+Note that with *random_generator_seed* we fix the same random seed for each device process group, so that parallelized jobs keep the same random alloy  structure.
+ 
+
 
 .. _Variable:
 
@@ -148,7 +296,11 @@ Options and parameters:
  ``solve`` :  (list of)  string(s)
    the simulations to be solved
 
-The observed variable on which convergence control and relaxation is done is the system variable of the last simulation specified in  ``solve``.
+ ``convergence_check`` : string [optional]
+   the name of the simulation to be used for checking convergence
+
+The observed variable on which convergence control and relaxation is done is the system variable of the last simulation specified in  ``solve``, if
+not specified explicitly by the ``convergence_check`` option.
 
 
 Example::

@@ -169,7 +169,7 @@ BondMap::process_atoms(const std::vector<Atom>& basis,
       {
         for (unsigned int n = 0; n < put_here; n++){
           
-          if ((*this)[i][n] == j && libMesh::Point(_translation[i][n] - per).size() < 1e-6)
+          if ((*this)[i][n] == j && libMesh::Point(_translation[i][n] - per).norm() < 1e-6)
           {
             not_already_signed = false;
             break;

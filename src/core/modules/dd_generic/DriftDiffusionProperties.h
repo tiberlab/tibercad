@@ -736,7 +736,7 @@ class DriftDiffusionProperties : public PhysicalModel
     libMesh::RealGradient _old_electric_field;
 
 
-    //! The total electric polarization
+    // ! The total electric polarization
     //RealVectorValue _polarization;
 
     //! The relative permittivity tensor
@@ -786,11 +786,11 @@ class DriftDiffusionProperties : public PhysicalModel
     std::multimap<ID, RecombinationModelInterface*> _recombination_models;
 
 
-    //! The thermoelectric power
+    // ! The thermoelectric power
     //ThermoelectricPower* _thermoelectric_power;
 
 
-    //! The polarization models
+    // ! The polarization models
     //std::vector<PolarizationModel*> _pm;
 
 

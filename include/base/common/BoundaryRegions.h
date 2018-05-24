@@ -147,8 +147,7 @@ class TBDLLOCAL BoundaryRegions : public MeshRegionInfo
 
     //! Get contiguous regions for a given side ID
     /*!
-     * The size of the set returned is always 2 (unless the side ID does
-     * not exist, in which case an empty set is returned).
+     * An empty set indicates that boundary \c id does not exist.
      * If one of the IDs is INVALID_ID it means that \c ID belongs
      * to an external boundary.
      */
@@ -201,7 +200,7 @@ class TBDLLOCAL BoundaryRegions : public MeshRegionInfo
     void prepare_for_use(void);
 
 
-    void get_bc_node_map(std::map<ID, std::vector<ID> >& nodemap) const;
+    void get_bc_node_map(std::map<ID, std::vector<unsigned int> >& nodemap) const;
 
 
     //! Get the side iterator for a given set of boundary IDs
@@ -236,7 +235,6 @@ class TBDLLOCAL BoundaryRegions : public MeshRegionInfo
 
 
     //! All IDs associated to sides
-    //IDHashSet _side_ids;
     std::set<ID> _side_ids;
 
 
@@ -248,8 +246,7 @@ class TBDLLOCAL BoundaryRegions : public MeshRegionInfo
     ElemEdgeMap _edges;
 
 
-    //! All IDs associated to sides
-    //IDHashSet _edge_ids;
+    //! All IDs associated to edges
     std::set<ID> _edge_ids;
 
 
@@ -257,8 +254,7 @@ class TBDLLOCAL BoundaryRegions : public MeshRegionInfo
     NodeMap _nodes;
 
 
-    //! All IDs associated to sides
-    //IDHashSet _node_ids;
+    //! All IDs associated to nodes
     std::set<ID> _node_ids;
 
 

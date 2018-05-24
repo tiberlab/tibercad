@@ -64,8 +64,8 @@ fi
 PREFIX=${WORKDIR}/dep
 EPREFIX=$PREFIX
 
-simplebuild http://ftp.sunet.se/pub/gnu/gmp gmp-5.1.3.tar.bz2 --enable-cxx --enable-mpbsd
-simplebuild http://www.mpfr.org/mpfr-current mpfr-3.1.2.tar.bz2 --with-gmp=${EPREFIX}
+simplebuild http://ftp.sunet.se/mirror/gnu.org/gnu/gmp gmp-5.1.3.tar.bz2 --enable-cxx --enable-mpbsd
+simplebuild http://www.mpfr.org/mpfr-3.1.2 mpfr-3.1.2.tar.bz2 --with-gmp=${EPREFIX}
 simplebuild http://www.multiprecision.org/mpc/download mpc-1.0.1.tar.gz --with-gmp-include=${EPREFIX}/include --with-gmp-lib=${EPREFIX}/lib --with-mpfr-include=${PREFIX}/include --with-mpfr-lib=${EPREFIX}/lib
 #simplebuild http://www.cs.unipr.it/ppl/Download/ftp/releases/0.10.2/ ppl-0.10.2.tar.bz2 --with-libgmpxx-prefix=${EPREFIX} --with-cxxflags="-I ${PREFIX}/include"
 export CXXFLAGS="-I ${PREFIX}/include -I ${EPREFIX}/include"
@@ -95,10 +95,10 @@ then
   make bootstrap
   make install
 
-  cd ${EPREFIX}
+  #cd ${EPREFIX}
   #./${ARCH}/bin/gcc -dumpspecs > ./${ARCH}/lib/gcc/${GCCARCH}/${VERSION}/specs
   #patch -p0 -l <${WORKDIR}/specs.patch
-  rm bin/${GCCARCH}*
+  rm ${EPREFIX}/bin/${GCCARCH}*
 
   startfiledir=$(dirname "$(find /usr/lib -name crti.o)")
   cp ${startfiledir}/crt*.o ${EPREFIX}/lib

@@ -7,12 +7,8 @@ include $(topdir)/Make.common
 
 # we have to compile each module
 subdirs := Tensor SLEPC 
-ifeq ($(enable_dftb), yes)
- subdirs += DFTB
-endif
-ifeq ($(enable_license_check), yes)
- subdirs += license
-endif
+subdirs += license
+
 ifeq ($(enable_hetero), yes)
  subdirs += HETERO
 endif

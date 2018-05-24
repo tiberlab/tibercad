@@ -72,10 +72,8 @@ ElectricalContact::do_compute(void)
       std::pair<double, double> dens(cp->get_density_and_derivative(0, _contact_fermilevel));
       double dens0 = dens.first; 
 
-      //std::cout<<"vrec_["<<carrier<<"] ="<<_vrec[carrier]<<" dens="<<pd.q_density[carrier]<<" dens0="<<dens0<<std::endl;
       double R = _vrec[carrier] * (pd.q_density[carrier] - dens0);
       double dR = _vrec[carrier] * pd.q_density_derivative[carrier];
-      //std::cout<<"dR["<<carrier<<"] ="<<dR<<std::endl;
 
       coeff_g(carrier) += R;
       jacobian(carrier, n_known_carriers()) += dR;

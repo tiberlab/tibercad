@@ -1,0 +1,821 @@
+
+Log start: Wed Sep 20 11:25:00 2017
+
+
+tiberCAD release 3.0.0 (rev. 4462, x86_64-linux)
+
+Input file: bulk.tib
+
+Initialize global simulation options
+  Simulation temperature: 300 K
+  Database search path  : .
+  Log file              : output/bulk.log.0
+
+Setup mesh
+  Reading mesh file 'bulk.msh ...
+    mesh reading time: 0h 0m 0.016s
+    mesh preparation time: 0h 0m 0.0023s
+    bd_regions preparation time: 0h 0m 2.1e-05s
+
+    mesh units          : 1e-06 m
+    mesh dimension      :       1
+    number of nodes     :    1001
+    number of elements  :    1000
+    number of subdomains:       1
+    number of boundaries:       2
+
+Create materials ...
+  Added material Si for region 'bulk' (mesh regions 1)
+    (using datafile /home/maufder/Projects/TIBERCAD/trunk/materials/Si.dat)
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+Creation of materials done.
+
+Setting up simulation of type 'dd_generic' ...
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/dd_generic/dd_generic.so)
+  Adding boundary 'anode'
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/dd_generic/ddbnd_ohmic.so)
+  Adding boundary 'cathode'
+Creating bulk models... 
+  Region: bulk
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/dd_generic/ddbulk_default.so)
+
+Setting up simulation of type 'thermal' ...
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/thermal/thermal.so)
+  Adding boundary 'anode'
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/thermal/thermal_bnd_heat_reservoir.so)
+  Adding boundary 'cathode'
+Creating bulk models... 
+  Region: bulk
+
+Setting up simulation of type 'selfconsistent' ...
+
+Setting up simulation of type 'sweep' ...
+
+Setting up simulation of type 'sweep' ...
+
+Setting up bulk models ...
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/dd_generic/carrier.so)
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/dd_generic/recombination_srh.so)
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/permittivity_constant.so)
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/dd_generic/mobility_constant.so)
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/density_of_states_bulk_kp.so)
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge, spin
+
+*** Warning: found unused options in block bulk_ham (bulk_kp): charge, spin
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge, spin
+
+*** Warning: found unused options in block kp (bulk_kp): charge, spin
+
+*** Warning: found unused options in block density_of_states (bulk_kp): charge
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge, spin
+
+*** Warning: found unused options in block bulk_ham (bulk_kp): charge, spin
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge, spin
+
+*** Warning: found unused options in block kp (bulk_kp): charge, spin
+
+*** Warning: found unused options in block density_of_states (bulk_kp): charge
+
+*** Warning: found unused options in block constant (constant): carriers, exponent
+
+*** Warning: found unused options in block constant (constant): carriers, exponent
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/thermal_conductivity_constant.so)
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/heat_source_joule.so)
+
+Setting up lower dimensional (boundary) models ...
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge, spin
+
+*** Warning: found unused options in block bulk_ham (bulk_kp): charge, spin
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge, spin
+
+*** Warning: found unused options in block kp (bulk_kp): charge, spin
+
+*** Warning: found unused options in block density_of_states (bulk_kp): charge
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge, spin
+
+*** Warning: found unused options in block bulk_ham (bulk_kp): charge, spin
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge, spin
+
+*** Warning: found unused options in block kp (bulk_kp): charge, spin
+
+*** Warning: found unused options in block density_of_states (bulk_kp): charge
+
+*** Warning: found unused options in block constant (constant): carriers, exponent
+
+*** Warning: found unused options in block constant (constant): carriers, exponent
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge, spin
+
+*** Warning: found unused options in block bulk_ham (bulk_kp): charge, spin
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge, spin
+
+*** Warning: found unused options in block kp (bulk_kp): charge, spin
+
+*** Warning: found unused options in block density_of_states (bulk_kp): charge
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge, spin
+
+*** Warning: found unused options in block bulk_ham (bulk_kp): charge, spin
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge, spin
+
+*** Warning: found unused options in block kp (bulk_kp): charge, spin
+
+*** Warning: found unused options in block density_of_states (bulk_kp): charge
+
+*** Warning: found unused options in block constant (constant): carriers, exponent
+
+*** Warning: found unused options in block constant (constant): carriers, exponent
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for driftdiffusion (dd_generic)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+
+Available solution variables:
+------------------------------------------------------------------
+Name                     Units          Type      Association Plot
+------------------------------------------------------------------
+ElPotential              V              real      nodal       y
+ElField                  V/cm           vector    cell        n
+Polarization             C/m^2          vector    cell        n
+TotalCurrentDensity      A/cm^2         vector    cell        y
+IonizedDonors            cm^-3          real      nodal       n
+IonizedAcceptors         cm^-3          real      nodal       n
+IQE                                     real      none        n
+anode.current            A/cm^2         real      none        y
+cathode.current          A/cm^2         real      none        y
+electronQFermi           eV             real      nodal       y
+holeQFermi               eV             real      nodal       y
+electronRefEnergy        eV             real      nodal       y
+holeRefEnergy            eV             real      nodal       y
+electronDensity          cm^-3          real      nodal       y
+holeDensity              cm^-3          real      nodal       y
+electronMobility         cm^2/(V*s)     real      nodal       y
+holeMobility             cm^2/(V*s)     real      nodal       y
+electronConductivity     S/cm           real      nodal       y
+holeConductivity         S/cm           real      nodal       y
+electronFlux             1/(s*cm^2)     vector    cell        y
+holeFlux                 1/(s*cm^2)     vector    cell        y
+electronCurrentDensity   A/cm^2         vector    cell        y
+holeCurrentDensity       A/cm^2         vector    cell        y
+electronJoule            W/cm^3         real      nodal       n
+holeJoule                W/cm^3         real      nodal       n
+TotalJouleHeat           W/cm^3         real      nodal       n
+electronThElPower        eV/K           real      nodal       y
+holeThElPower            eV/K           real      nodal       y
+TotalRecombinationHeat   W/cm^3         real      nodal       n
+electronNetRecombination 1/(s*cm^3)     real      nodal       y
+holeNetRecombination     1/(s*cm^3)     real      nodal       y
+RegionIDs                               real      cell        n
+------------------------------------------------------------------
+
+Output directory      : output
+Output file format    : grace
+Output file basename  : driftdiffusion
+
+
+solving for : poisson electrons holes 
+using local scaling
+
+# Region bulk, Si
+  using lattice temperature from: thermal
+  Carrier:
+    name = electron, charge = -1, spin = 0.5
+    DOS: bulk_kp
+      band edge :  4.44348  2.69348  2.69348  2.69348  2.69348  2.22348  2.22348  2.22348
+      eff. mass :  0.156  0.288442  0.288442  0.288442  0.288442  0.320972  0.320972  0.320972
+      degeneracy:  2  4  4  4  4  4  4  4
+    Band edge = 2.22348, N0 = 1.54618e+18 cm^-3
+    m_dos = 0.320972, v_th = 2.06151e+07 cm/s
+  Carrier:
+    name = hole, charge = 1, spin = 0.5
+    DOS: bulk_kp
+      band edge :  1.06067  1.10467  1.10467
+      eff. mass :  0.232018  0.224931  1.57126
+      degeneracy:  2  2  2
+    Band edge = 1.10467, N0 = 2.80451e+18 cm^-3
+    m_dos = 1.57126, v_th = 9.3174e+06 cm/s
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for thermal (thermal)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+
+Available solution variables:
+------------------------------------------------------------------
+Name                     Units          Type      Association Plot
+------------------------------------------------------------------
+LatticeTemp              K              real      nodal       y
+ThermalFlux              W/m^2          vector    nodal       y
+HeatSource               W/m^3          real      nodal       y
+ThermCond                W/m K          vector    nodal       n
+MaxTemp                  K              real      none        n
+RegionIDs                               real      cell        n
+------------------------------------------------------------------
+
+Output directory      : output
+Output file format    : grace
+Output file basename  : thermal
+
+
+# Region bulk, Si
+  Thermal conductivity:
+    Kxx: 150 W/(m K)
+    Kyy: 150 W/(m K)
+    Kzz: 150 W/(m K)
+
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for selfconsistent (selfconsistent)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+
+Output directory      : output
+Output file format    : grace
+Output file basename  : selfconsistent
+
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for sweep (sweep)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+
+Output directory      : output
+Output file format    : grace
+Output file basename  : sweep
+
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for sweep_t (sweep)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+
+Output directory      : output
+Output file format    : grace
+Output file basename  : sweep_t
+
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+We solve: sweep_t 
+
+>>>>-------------------------------- (sweep_t) ---------------------------------
+  Ramping to sweep value $temp = 300
+
+*** Warning: selfconsistent has never been solved before ramping.
+  Trying $temp = 300
+
+  >>>>---------------------------- (selfconsistent) ----------------------------
+
+    >>>>--------------------------- (driftdiffusion) ---------------------------
+      Setting max_iterations for nonlinear solver to 150
+      Solving equilibrium
+
+      iterations: 1, |du| = 5.68165e-15, |r| = 1.78963e-13
+      Equilibrium done
+
+    Solve time: 0h 0m 0.15s
+    <<<<------------------------------------------------------------------------
+
+    >>>>------------------------------ (thermal) -------------------------------
+      Maximum temperature : 300 K
+
+    Solve time: 0h 0m 0.061s
+    <<<<------------------------------------------------------------------------
+    selfconsistent (Relaxation): iteration 0
+      correction (max norm):  1.37959e-10
+      relative error (l2)  :  2.47146e-13
+
+  Solve time: 0h 0m 0.21s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $temp = 310
+  Trying $temp = 310
+
+  >>>>---------------------------- (selfconsistent) ----------------------------
+
+    >>>>--------------------------- (driftdiffusion) ---------------------------
+
+      iterations: 1, |du| = 1.87036e-11, |r| = 2.99594e-13
+
+      contact name:       voltage:            current:
+      anode               0                  -2.71167e-12
+      cathode             0                   2.71167e-12
+
+    Solve time: 0h 0m 0.54s
+    <<<<------------------------------------------------------------------------
+
+    >>>>------------------------------ (thermal) -------------------------------
+      Maximum temperature : 309.999 K
+
+    Solve time: 0h 0m 0.13s
+    <<<<------------------------------------------------------------------------
+    selfconsistent (Relaxation): iteration 0
+      correction (max norm):  9.9985
+      relative error (l2)  :  0.0192484
+
+    >>>>--------------------------- (driftdiffusion) ---------------------------
+      it 1, |du| = 0.145256, |r| = 0.148273  alpha = 1
+      it 2, |du| = 0.0105534, |r| = 0.000538111  alpha = 1
+
+      iterations: 3, |du| = 5.46284e-05, |r| = 9.49026e-09
+
+      contact name:       voltage:            current:
+      anode               0                   96.8245
+      cathode             0                  -96.8245
+
+    Solve time: 0h 0m 1.5s
+    <<<<------------------------------------------------------------------------
+
+    >>>>------------------------------ (thermal) -------------------------------
+      Maximum temperature : 309.999 K
+
+    Solve time: 0h 0m 0.13s
+    <<<<------------------------------------------------------------------------
+    selfconsistent (Relaxation): iteration 1
+      correction (max norm):  2.24688e-06
+      relative error (l2)  :  5.26476e-09
+
+  Solve time: 0h 0m 2.3s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $temp = 320
+  Trying $temp = 320
+
+  >>>>---------------------------- (selfconsistent) ----------------------------
+
+    >>>>--------------------------- (driftdiffusion) ---------------------------
+
+      iterations: 1, |du| = 2.31129e-07, |r| = 4.06045e-13
+
+      contact name:       voltage:            current:
+      anode               0                   96.8245
+      cathode             0                  -96.8245
+
+    Solve time: 0h 0m 0.53s
+    <<<<------------------------------------------------------------------------
+
+    >>>>------------------------------ (thermal) -------------------------------
+      Maximum temperature : 319.997 K
+
+    Solve time: 0h 0m 0.13s
+    <<<<------------------------------------------------------------------------
+    selfconsistent (Relaxation): iteration 0
+      correction (max norm):  9.9985
+      relative error (l2)  :  0.018932
+
+    >>>>--------------------------- (driftdiffusion) ---------------------------
+      it 1, |du| = 0.147205, |r| = 0.148085  alpha = 1
+      it 2, |du| = 0.0105363, |r| = 0.000523462  alpha = 1
+
+      iterations: 3, |du| = 8.98658e-05, |r| = 9.12056e-09
+
+      contact name:       voltage:            current:
+      anode               0                   187.367
+      cathode             0                  -187.367
+
+    Solve time: 0h 0m 1.4s
+    <<<<------------------------------------------------------------------------
+
+    >>>>------------------------------ (thermal) -------------------------------
+      Maximum temperature : 319.997 K
+
+    Solve time: 0h 0m 0.13s
+    <<<<------------------------------------------------------------------------
+    selfconsistent (Relaxation): iteration 1
+      correction (max norm):  1.50283e-05
+      relative error (l2)  :  3.45542e-08
+
+  Solve time: 0h 0m 2.2s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $temp = 330
+  Trying $temp = 330
+
+  >>>>---------------------------- (selfconsistent) ----------------------------
+
+    >>>>--------------------------- (driftdiffusion) ---------------------------
+
+      iterations: 1, |du| = 8.1144e-07, |r| = 3.47578e-12
+
+      contact name:       voltage:            current:
+      anode               0                   187.367
+      cathode             0                  -187.367
+
+    Solve time: 0h 0m 0.52s
+    <<<<------------------------------------------------------------------------
+
+    >>>>------------------------------ (thermal) -------------------------------
+      Maximum temperature : 329.996 K
+
+    Solve time: 0h 0m 0.13s
+    <<<<------------------------------------------------------------------------
+    selfconsistent (Relaxation): iteration 0
+      correction (max norm):  9.9985
+      relative error (l2)  :  0.0186242
+
+    >>>>--------------------------- (driftdiffusion) ---------------------------
+      it 1, |du| = 0.149086, |r| = 0.147808  alpha = 1
+      it 2, |du| = 0.01051, |r| = 0.000508722  alpha = 1
+
+      iterations: 3, |du| = 0.000123361, |r| = 8.90058e-09
+
+      contact name:       voltage:            current:
+      anode               0                   271.966
+      cathode             0                  -271.966
+
+    Solve time: 0h 0m 1.4s
+    <<<<------------------------------------------------------------------------
+
+    >>>>------------------------------ (thermal) -------------------------------
+      Maximum temperature : 329.996 K
+
+    Solve time: 0h 0m 0.13s
+    <<<<------------------------------------------------------------------------
+    selfconsistent (Relaxation): iteration 1
+      correction (max norm):  3.90117e-05
+      relative error (l2)  :  8.74528e-08
+
+  Solve time: 0h 0m 2.2s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $temp = 340
+  Trying $temp = 340
+
+  >>>>---------------------------- (selfconsistent) ----------------------------
+
+    >>>>--------------------------- (driftdiffusion) ---------------------------
+
+      iterations: 1, |du| = 1.86396e-06, |r| = 1.62483e-11
+
+      contact name:       voltage:            current:
+      anode               0                   271.966
+      cathode             0                  -271.966
+
+    Solve time: 0h 0m 0.53s
+    <<<<------------------------------------------------------------------------
+
+    >>>>------------------------------ (thermal) -------------------------------
+      Maximum temperature : 339.994 K
+
+    Solve time: 0h 0m 0.13s
+    <<<<------------------------------------------------------------------------
+    selfconsistent (Relaxation): iteration 0
+      correction (max norm):  9.9985
+      relative error (l2)  :  0.0183249
+
+    >>>>--------------------------- (driftdiffusion) ---------------------------
+      it 1, |du| = 0.162351, |r| = 0.147454  alpha = 1
+      it 2, |du| = 0.0168971, |r| = 0.000494019  alpha = 1
+
+      iterations: 3, |du| = 0.000153193, |r| = 8.83055e-09
+
+      contact name:       voltage:            current:
+      anode               0                   350.949
+      cathode             0                  -350.949
+
+    Solve time: 0h 0m 1.5s
+    <<<<------------------------------------------------------------------------
+
+    >>>>------------------------------ (thermal) -------------------------------
+      Maximum temperature : 339.994 K
+
+    Solve time: 0h 0m 0.13s
+    <<<<------------------------------------------------------------------------
+    selfconsistent (Relaxation): iteration 1
+      correction (max norm):  7.25403e-05
+      relative error (l2)  :  1.58626e-07
+
+  Solve time: 0h 0m 2.2s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $temp = 350
+  Trying $temp = 350
+
+  >>>>---------------------------- (selfconsistent) ----------------------------
+
+    >>>>--------------------------- (driftdiffusion) ---------------------------
+
+      iterations: 1, |du| = 4.03766e-06, |r| = 5.02893e-11
+
+      contact name:       voltage:            current:
+      anode               0                   350.949
+      cathode             0                  -350.949
+
+    Solve time: 0h 0m 0.53s
+    <<<<------------------------------------------------------------------------
+
+    >>>>------------------------------ (thermal) -------------------------------
+      Maximum temperature : 349.993 K
+
+    Solve time: 0h 0m 0.13s
+    <<<<------------------------------------------------------------------------
+    selfconsistent (Relaxation): iteration 0
+      correction (max norm):  9.9985
+      relative error (l2)  :  0.0180336
+
+    >>>>--------------------------- (driftdiffusion) ---------------------------
+      it 1, |du| = 0.219639, |r| = 0.147033  alpha = 1
+      it 2, |du| = 0.0270288, |r| = 0.000479454  alpha = 1
+
+      iterations: 3, |du| = 0.000194678, |r| = 9.74112e-09
+
+      contact name:       voltage:            current:
+      anode               0                   424.63
+      cathode             0                  -424.63
+
+    Solve time: 0h 0m 1.5s
+    <<<<------------------------------------------------------------------------
+
+    >>>>------------------------------ (thermal) -------------------------------
+      Maximum temperature : 349.993 K
+
+    Solve time: 0h 0m 0.13s
+    <<<<------------------------------------------------------------------------
+    selfconsistent (Relaxation): iteration 1
+      correction (max norm):  0.000114094
+      relative error (l2)  :  2.43536e-07
+
+  Solve time: 0h 0m 2.3s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $temp = 360
+  Trying $temp = 360
+
+  >>>>---------------------------- (selfconsistent) ----------------------------
+
+    >>>>--------------------------- (driftdiffusion) ---------------------------
+
+      iterations: 1, |du| = 7.966e-06, |r| = 1.23967e-10
+
+      contact name:       voltage:            current:
+      anode               0                   424.63
+      cathode             0                  -424.63
+
+    Solve time: 0h 0m 0.53s
+    <<<<------------------------------------------------------------------------
+
+    >>>>------------------------------ (thermal) -------------------------------
+      Maximum temperature : 359.991 K
+
+    Solve time: 0h 0m 0.13s
+    <<<<------------------------------------------------------------------------
+    selfconsistent (Relaxation): iteration 0
+      correction (max norm):  9.9985
+      relative error (l2)  :  0.0177502
+
+    >>>>--------------------------- (driftdiffusion) ---------------------------
+      it 1, |du| = 0.284937, |r| = 0.146555  alpha = 1
+      it 2, |du| = 0.0415433, |r| = 0.000465117  alpha = 1
+
+      iterations: 3, |du| = 0.0003758, |r| = 1.66341e-08
+
+      contact name:       voltage:            current:
+      anode               0                   493.309
+      cathode             0                  -493.309
+
+    Solve time: 0h 0m 1.5s
+    <<<<------------------------------------------------------------------------
+
+    >>>>------------------------------ (thermal) -------------------------------
+      Maximum temperature : 359.991 K
+
+    Solve time: 0h 0m 0.13s
+    <<<<------------------------------------------------------------------------
+    selfconsistent (Relaxation): iteration 1
+      correction (max norm):  0.000162281
+      relative error (l2)  :  3.38346e-07
+
+  Solve time: 0h 0m 2.3s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $temp = 370
+  Trying $temp = 370
+
+  >>>>---------------------------- (selfconsistent) ----------------------------
+
+    >>>>--------------------------- (driftdiffusion) ---------------------------
+
+      iterations: 1, |du| = 1.33835e-05, |r| = 2.71951e-10
+
+      contact name:       voltage:            current:
+      anode               0                   493.309
+      cathode             0                  -493.309
+
+    Solve time: 0h 0m 0.54s
+    <<<<------------------------------------------------------------------------
+
+    >>>>------------------------------ (thermal) -------------------------------
+      Maximum temperature : 369.99 K
+
+    Solve time: 0h 0m 0.13s
+    <<<<------------------------------------------------------------------------
+    selfconsistent (Relaxation): iteration 0
+      correction (max norm):  9.9985
+      relative error (l2)  :  0.0174744
+
+    >>>>--------------------------- (driftdiffusion) ---------------------------
+      it 1, |du| = 0.356536, |r| = 0.146027  alpha = 1
+      it 2, |du| = 0.0605213, |r| = 0.00045119  alpha = 1
+
+      iterations: 3, |du| = 0.000898112, |r| = 4.2751e-08
+
+      contact name:       voltage:            current:
+      anode               0                   557.273
+      cathode             0                  -557.273
+
+    Solve time: 0h 0m 1.5s
+    <<<<------------------------------------------------------------------------
+
+    >>>>------------------------------ (thermal) -------------------------------
+      Maximum temperature : 369.99 K
+
+    Solve time: 0h 0m 0.13s
+    <<<<------------------------------------------------------------------------
+    selfconsistent (Relaxation): iteration 1
+      correction (max norm):  0.000215833
+      relative error (l2)  :  4.39836e-07
+
+  Solve time: 0h 0m 2.3s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $temp = 380
+  Trying $temp = 380
+
+  >>>>---------------------------- (selfconsistent) ----------------------------
+
+    >>>>--------------------------- (driftdiffusion) ---------------------------
+
+      iterations: 1, |du| = 2.00538e-05, |r| = 6.1732e-10
+
+      contact name:       voltage:            current:
+      anode               0                   557.273
+      cathode             0                  -557.273
+
+    Solve time: 0h 0m 0.54s
+    <<<<------------------------------------------------------------------------
+
+    >>>>------------------------------ (thermal) -------------------------------
+      Maximum temperature : 379.988 K
+
+    Solve time: 0h 0m 0.13s
+    <<<<------------------------------------------------------------------------
+    selfconsistent (Relaxation): iteration 0
+      correction (max norm):  9.9985
+      relative error (l2)  :  0.017206
+
+    >>>>--------------------------- (driftdiffusion) ---------------------------
+      it 1, |du| = 0.430155, |r| = 0.14546  alpha = 1
+      it 2, |du| = 0.0828636, |r| = 0.000438906  alpha = 1
+      it 3, |du| = 0.00193973, |r| = 1.18293e-07  alpha = 1
+
+      iterations: 4, |du| = 2.73456e-05, |r| = 1.57373e-09
+
+      contact name:       voltage:            current:
+      anode               0                   616.797
+      cathode             0                  -616.797
+
+    Solve time: 0h 0m 2s
+    <<<<------------------------------------------------------------------------
+
+    >>>>------------------------------ (thermal) -------------------------------
+      Maximum temperature : 379.988 K
+
+    Solve time: 0h 0m 0.13s
+    <<<<------------------------------------------------------------------------
+    selfconsistent (Relaxation): iteration 1
+      correction (max norm):  0.000273595
+      relative error (l2)  :  5.45306e-07
+
+  Solve time: 0h 0m 2.8s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $temp = 390
+  Trying $temp = 390
+
+  >>>>---------------------------- (selfconsistent) ----------------------------
+
+    >>>>--------------------------- (driftdiffusion) ---------------------------
+
+      iterations: 1, |du| = 2.86558e-05, |r| = 7.50457e-10
+
+      contact name:       voltage:            current:
+      anode               0                   616.797
+      cathode             0                  -616.797
+
+    Solve time: 0h 0m 0.55s
+    <<<<------------------------------------------------------------------------
+
+    >>>>------------------------------ (thermal) -------------------------------
+      Maximum temperature : 389.987 K
+
+    Solve time: 0h 0m 0.13s
+    <<<<------------------------------------------------------------------------
+    selfconsistent (Relaxation): iteration 0
+      correction (max norm):  9.9985
+      relative error (l2)  :  0.0169448
+
+    >>>>--------------------------- (driftdiffusion) ---------------------------
+      it 1, |du| = 0.499853, |r| = 0.144868  alpha = 1
+      it 2, |du| = 0.106306, |r| = 0.000437875  alpha = 1
+      it 3, |du| = 0.00355373, |r| = 3.20006e-07  alpha = 1
+
+      iterations: 4, |du| = 4.93078e-05, |r| = 4.06747e-09
+
+      contact name:       voltage:            current:
+      anode               0                   672.141
+      cathode             0                  -672.141
+
+    Solve time: 0h 0m 2s
+    <<<<------------------------------------------------------------------------
+
+    >>>>------------------------------ (thermal) -------------------------------
+      Maximum temperature : 389.987 K
+
+    Solve time: 0h 0m 0.14s
+    <<<<------------------------------------------------------------------------
+    selfconsistent (Relaxation): iteration 1
+      correction (max norm):  0.00033456
+      relative error (l2)  :  6.52563e-07
+
+  Solve time: 0h 0m 2.8s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $temp = 400
+  Trying $temp = 400
+
+  >>>>---------------------------- (selfconsistent) ----------------------------
+
+    >>>>--------------------------- (driftdiffusion) ---------------------------
+
+      iterations: 1, |du| = 3.78981e-05, |r| = 1.17023e-09
+
+      contact name:       voltage:            current:
+      anode               0                   672.141
+      cathode             0                  -672.141
+
+    Solve time: 0h 0m 0.55s
+    <<<<------------------------------------------------------------------------
+
+    >>>>------------------------------ (thermal) -------------------------------
+      Maximum temperature : 399.985 K
+
+    Solve time: 0h 0m 0.13s
+    <<<<------------------------------------------------------------------------
+    selfconsistent (Relaxation): iteration 0
+      correction (max norm):  9.9985
+      relative error (l2)  :  0.0166904
+
+    >>>>--------------------------- (driftdiffusion) ---------------------------
+      it 1, |du| = 0.559859, |r| = 0.1443  alpha = 1
+      it 2, |du| = 0.128161, |r| = 0.000505483  alpha = 1
+      it 3, |du| = 0.00554732, |r| = 8.18064e-07  alpha = 1
+
+      iterations: 4, |du| = 7.48181e-05, |r| = 8.69283e-09
+
+      contact name:       voltage:            current:
+      anode               0                   723.553
+      cathode             0                  -723.553
+
+    Solve time: 0h 0m 2s
+    <<<<------------------------------------------------------------------------
+
+    >>>>------------------------------ (thermal) -------------------------------
+      Maximum temperature : 399.985 K
+
+    Solve time: 0h 0m 0.13s
+    <<<<------------------------------------------------------------------------
+    selfconsistent (Relaxation): iteration 1
+      correction (max norm):  0.000397802
+      relative error (l2)  :  7.59779e-07
+
+  Solve time: 0h 0m 2.8s
+  <<<<--------------------------------------------------------------------------
+
+Solve time: 0h 0m 28s
+<<<<----------------------------------------------------------------------------
+
+Total solve time: 0h 0m 28s
+Simulation finished.
+
+37 warnings during run
+0 errors detected
+
+
+Log end: Wed Sep 20 11:25:28 2017
+
+

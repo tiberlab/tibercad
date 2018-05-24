@@ -31,6 +31,7 @@ class ETB : public TightBinding
     int max_TB_order;
     bool harrison_flag;
     bool relat_flag;
+    bool pdos_flag;
     bool potential_flag;
     bool band_shift_flag;
     bool opt_flag;
@@ -88,6 +89,7 @@ class ETB : public TightBinding
     double e_max;
     bool read_states;
     int dynamic;
+    double bitoff;
     int solver_flag;
   };
 
@@ -121,6 +123,9 @@ class ETB : public TightBinding
 
   //! compute state density for a single state
   void compute_eigenvector_mag(unsigned int, std::vector<double>&);
+
+  //! compute projected density of states for each atom
+  void compute_pdos(void);
 
   //! print out H in matlab format 
   void print_H(const std::string& outpath) const;
@@ -317,7 +322,6 @@ bool ETB::is_relativistic(void)
   return _upt_options.relat_flag;
 
 }
-
 
 //-------------------------------------------------------------------------
 

@@ -27,11 +27,7 @@ class TBDLEXPORT ExcitonGaussDOS : public DensityOfStates
     //! Constructor
     ExcitonGaussDOS(const ModelOptions& options);
 
-    //! Read band edge, mass, degeneracy from database
-    /*!
-     * This will only read from the database if the \c particle option
-     * is provided as \c electron or \c hole
-     */
+    //! Read parameters from database
     virtual void read_database(void);
 
     virtual void do_init(void);
@@ -62,6 +58,9 @@ class TBDLEXPORT ExcitonGaussDOS : public DensityOfStates
 
     //! The gaussian DOS variance
     double _sigma;
+
+    //! The exciton energy without considering binding energy (= gap)
+    double _energy;
 
     //! Trapezoidal integration
     double _trapez(std::vector<double>& x, std::vector<double>& y) const;

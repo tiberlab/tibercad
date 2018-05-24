@@ -170,10 +170,10 @@ void UptWrapper::compute_P_matrix(int poldir, char* sprs_fmt)
 void UptWrapper::lanczos_diag(int st_vb, int st_cb, int n_vb, int n_cb, double guess_vb, double guess_cb,
                                 int min_iter, int long_iter, int max_iter,
 				                        double fast_tol, double long_tol, double ort_tol,
-				                      int dynamic) {
+				                      int dynamic, double bitoff) {
 
   f77_upt_lanczosdiag(_handler, st_vb, st_cb, n_vb, n_cb, guess_vb, guess_cb, min_iter, long_iter,
-		       max_iter, fast_tol, long_tol, ort_tol, dynamic);
+		       max_iter, fast_tol, long_tol, ort_tol, dynamic, bitoff);
 
 
 }

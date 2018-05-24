@@ -49,7 +49,7 @@ ThermalModel::do_init(void)
 
 
 void
-ThermalModel::calculate(const Elem* elem, const Point& point)
+ThermalModel::calculate(const Elem* elem, const Point& point, double temperature)
 {
   //Heat Source
   _heat_source = 0.0;
@@ -60,7 +60,7 @@ ThermalModel::calculate(const Elem* elem, const Point& point)
     _heat_source +=  _hsm[n]->get_heat_source();
   }
 
-  _tcm->calculate(elem,point);
+  _tcm->calculate(elem, point, temperature);
   _kappa = _tcm->get_thermal_conductivity();
 
 }

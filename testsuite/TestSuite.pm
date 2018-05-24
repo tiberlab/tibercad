@@ -320,6 +320,11 @@ sub read_configuration($) {
          last SWITCH;
        };
 
+       /\s*svn\s*=(.+)/ && do {
+         $options{'svn'} = trim($1);
+         last SWITCH;
+       };
+
        /\s*package_name\s*=(.+)/ && do {
          $options{'package'} = trim($1);
          last SWITCH;

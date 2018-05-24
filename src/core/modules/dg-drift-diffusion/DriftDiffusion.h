@@ -122,6 +122,7 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
       eConductivity,    /*!< electron conductivity */
       hConductivity,    /*!< hole conductivity */
       ElField,          /*!< electric field vector */
+      Displacement,
       Polarization,     /*!< total electric polarization */
       CurrentDensity,   /*!< total electric current density */
       //eFlux,            /*!< electron flux */
@@ -145,8 +146,9 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
       eNetRecombination = 100,  /*!< base number for el recombination models */
       hNetRecombination = 200,  /*!< base number for hl recombination models */
       ContactCurrent   = 300,  /*!< base number for contact currents */
-      ContactVoltage   = 400   /*!< base number for contact voltages */
-
+      ContactVoltage   = 400,   /*!< base number for contact voltages */
+      gradient_p,
+      gradient_n
     };
 
 
@@ -293,6 +295,9 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
 
         //! Whether or not to enforce local charge neutrality
         bool local_neutrality;
+
+        //! Whether or not to use local preconditioner
+        bool local_preconditioner;
 
 
         private:
@@ -568,10 +573,10 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
 
 
     //! If true, local density scaling should be applied
-    bool _do_local_scaling;
+    //bool _do_matrix_scaling;
 
     //! Calculate the local density scaling on each node
-    void build_local_scaling(void);
+    //void build_local_scaling(void);
 
     /**
      * The number of nonlinear iterations needed

@@ -5,6 +5,7 @@
 #include "EmpiricalTightBinding.h"
 #include "PhysicalModel.h"
 #include "AtomisticStructure.h"
+#include "Atom.h"
 #include "SimulationOptions.h"
 #include "TiberLinearSystem.h"
 #include "TiberCad.h"
@@ -16,6 +17,7 @@
 #include "EigenSolver.h"
 #include "RotatedCrystal.h"
 #include "Utils.h"
+#include "License.h"
 
 #include "libmesh/mesh.h"
 #include "libmesh/dof_map.h"
@@ -46,6 +48,10 @@ ETB::ETB(const ModelOptions& options)
 
 ETB* ETB::create(const ModelOptions& options)
 {
+  if (TiberCad::get_mpi_comm().rank() == 0)
+    License::check_out("etb",
+        TiberCad::major_version(), 0, 1);
+
   return new ETB(options);
 }
 
@@ -65,6 +71,9 @@ ETB::~ETB(void)
   _map_ID_Evb.clear();
   _map_ID_Ecb.clear();
   _ion_num_orbitals.clear();
+
+  if (TiberCad::get_mpi_comm().rank() == 0)
+    License::check_in("etb", 1);
 }
 
 ETB::UptOptions::UptOptions(void)
@@ -72,6 +81,7 @@ ETB::UptOptions::UptOptions(void)
  max_TB_order(2),
  harrison_flag(1),
  relat_flag(0),
+ pdos_flag(false),
  potential_flag(0),
  opt_flag(0),
  poldir(1),
@@ -627,12 +637,12 @@ ETB::call_uptight(void)
     Messages::info("\n("+get_name()+") solving using lanczos");
 
     inst->lanczos_diag(_upt_solver_options.start_vb, _upt_solver_options.start_cb, 
-		     _upt_solver_options.n_vb, _upt_solver_options.n_cb,
-                     _upt_solver_options.guess_vb, _upt_solver_options.guess_cb,
-                     _upt_solver_options.min_iter, _upt_solver_options.long_iter,
-                     _upt_solver_options.max_iter, _upt_solver_options.fast_tol,
-                     _upt_solver_options.long_tol, _upt_solver_options.ort_tol,
-		                _upt_solver_options.dynamic);
+		                   _upt_solver_options.n_vb, _upt_solver_options.n_cb,
+                       _upt_solver_options.guess_vb, _upt_solver_options.guess_cb,
+                       _upt_solver_options.min_iter, _upt_solver_options.long_iter,
+                       _upt_solver_options.max_iter, _upt_solver_options.fast_tol,
+                       _upt_solver_options.long_tol, _upt_solver_options.ort_tol,
+		                   _upt_solver_options.dynamic, _upt_solver_options.bitoff);
   }
   else if (_upt_solver_options.solver.compare("feast") == 0) 
   {
@@ -915,6 +925,11 @@ ETB::plot_atomisticdata(void)
     inst->write_states();
   }
 
+  if (_upt_options.pdos_flag == true)
+  {
+  compute_pdos();
+  }
+
 }
 	
 
@@ -958,6 +973,8 @@ void ETB::parse_options(void)
   _upt_options.check_bondmap = get_option("check_bondmap", false);
 
   _upt_options.relat_flag = get_option("relativistic", true);
+
+  _upt_options.pdos_flag = get_option("write_pdos", false);
 
   _upt_options.temperature = get_option("temperature", SimulationOptions::temperature);
 
@@ -1065,7 +1082,8 @@ void ETB::parse_options(void)
 
   bool flag = solopts.get_option("dynamic_search",true);
   if (flag) _upt_solver_options.dynamic = 1;
-  
+  _upt_solver_options.bitoff = solopts.get_option("dynamic_offset", 0.1);
+
   //Feast options
   _upt_solver_options.e_min =  solopts.get_option("Emin", 0.0);
   _upt_solver_options.e_max =  solopts.get_option("Emax", 3.0);
@@ -1476,6 +1494,64 @@ ETB::compute_eigenvector_mag(unsigned int eigenstate, std::vector<double>& densa
   }
 }
 
+void ETB::compute_pdos(void)
+{
+  string out_path = get_output_directory();
+  const std::vector<Atom>& atom = get_atomistic_structure()->get_structure_atoms();
+  unsigned int n = _solution.size();
+  unsigned int N_atoms_wo_H = get_atomistic_structure()->get_N_without_H();
+
+  unsigned int k = 0;
+  unsigned int k_at = 0;
+
+  double s = 0.01;
+  unsigned int step = 1000;
+  std::vector<double> atom_pdos(step+1);
+
+  double emin = _solution[0].eigen_energy;
+  double emax = _solution[0].eigen_energy;
+  for (unsigned int i = 1; i < n; i++)
+  {
+    if(_solution[i].eigen_energy < emin){emin = _solution[i].eigen_energy;}
+    if(_solution[i].eigen_energy > emax){emax = _solution[i].eigen_energy;}
+  }
+  double de = (emax-emin)/step;
+
+  for (unsigned int j = 0; j < N_atoms_wo_H; j++)
+  {
+
+    ofstream tb_pdos(out_path + "/pdos" + to_string(j+1) + ".dat");
+
+    tb_pdos << "#eV   pdos   " << atom[j].get_specie() << endl;
+
+    for(unsigned int i = 0; i <= step; i++){atom_pdos[i] = 0.0; }
+
+    for (unsigned int i = 0; i < n; i++)
+    {
+
+      double atom_sum = 0.0;
+
+      for (k = k_at; k < k_at + _ion_num_orbitals[j]; k++)
+      {
+        atom_sum += std::norm(_solution[i].eigen_vector[k]);
+      }
+
+      for (unsigned int l = 0; l <= step; l++)
+      {
+        atom_pdos[l] += atom_sum*1/(sqrt(2*3.141592653589793*s*s))*exp(-0.5*(((emin + l*de)-_solution[i].eigen_energy)/s)*(((emin + l*de)-_solution[i].eigen_energy)/s));
+      }
+
+    }
+
+    for (unsigned int l = 0; l <= step; l++)
+    {
+      tb_pdos << emin + l*de << "  " << atom_pdos[l] << endl;
+    }
+
+    k_at = k;
+
+  }
+}
 
 void ETB::get_valence_band_shifts(const Material* mat)
 {
@@ -1502,7 +1578,6 @@ void ETB::get_valence_band_shifts(const Material* mat)
     _map_pairs_Evb[make_pair(Specie(atom2), Specie(atom1))] = vb;
   }
 }
-
 
 void ETB::get_bulk_edges(void)
 {

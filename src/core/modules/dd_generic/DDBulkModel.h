@@ -335,7 +335,6 @@ class DDBulkModel : public DriftDiffusionProperties
     //! The relaxation factor for the polarization
     double _relax_polariz;
 
-    //New generic model
 
     //! Carrier mobilities
     std::map<ID, MobilityModelInterface*> _q_mobility;
@@ -346,87 +345,6 @@ class DDBulkModel : public DriftDiffusionProperties
 //
 // inline members
 //
-
-
-
-
-
-
-
-
-
-
-//inline
-//void
-//DDBulkModel::set_lattice_temperature(double T)
-//{
-//  _lattice_vt = T * Constants::k_B;
-//}
-
-
-
-//inline
-//double
-//DDBulkModel::get_lattice_temperature(void) const
-//{
-//  return _lattice_vt;
-//}
-
-
-/*
-inline
-const Elem*
-DDBulkModel::get_element(void) const
-{
-  return _elem;
-}
-*/
-
-
-/*
-inline
-double
-DDBulkModel::get_charge_density(void) const
-{
-  long double dens = static_cast<long double>(get_pd().hole_density) -
-      static_cast<long double>(get_pd().electron_density) +
-      static_cast<long double>(get_pd().ionized_donor_density) -
-      static_cast<long double>(get_pd().ionized_acceptor_density) +
-      static_cast<long double>(get_pd().ionized_electron_traps) +
-      static_cast<long double>(get_pd().ionized_hole_traps);
-
-  return static_cast<double>(dens);
-  //return get_hole_density() - get_electron_density() +
-  //  get_ionized_donor_density() - get_ionized_acceptor_density()
-  //  + get_ionized_electron_traps() + get_ionized_hole_traps();
-}
-
-
-inline
-void
-DDBulkModel::get_charge_density_derivatives(
-    double derivatives[2]) const
-{
-  long double der0 = static_cast<long double>(get_electron_density_derivative())
-      - static_cast<long double>(get_ionized_donor_density_derivative())
-      - static_cast<long double>(get_pd().ionized_traps_derivative[0]);
-
-  long double der1 = -static_cast<long double>(get_hole_density_derivative())
-      + static_cast<long double>(get_ionized_acceptor_density_derivative())
-      - static_cast<long double>(get_pd().ionized_traps_derivative[1]);
-
-  derivatives[0] = static_cast<double>(der0);
-  derivatives[1] = static_cast<double>(der1);
-
-  //derivatives[0] = get_electron_density_derivative()
-  //  - get_ionized_donor_density_derivative()
-  //  - _pd->ionized_electron_traps_derivative;
-  //derivatives[1] = -get_hole_density_derivative()
-  //  + get_ionized_acceptor_density_derivative()
-  //  - _pd->ionized_hole_traps_derivative;
-}
-*/
-
 
 
 

@@ -30,6 +30,9 @@ class TBDLLOCAL FieldAssistedMobility : public MobilityModelInterface
     //! \copydoc MobilityModelInterface::get_mobility_derivatives()
     virtual void get_mobility_derivatives(std::vector<double>& dm);
 
+    //! \copydoc MobilityModelInterface::get_derivative_grad_potential()
+    virtual void get_derivative_grad_potential(libMesh::RealGradient& dm);
+
     //! \copydoc MobilityModelInterface::get_derivative_grad_fermi()
     virtual void get_derivative_grad_fermi(libMesh::RealGradient& dm);
 

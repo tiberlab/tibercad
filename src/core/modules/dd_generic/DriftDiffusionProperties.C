@@ -621,7 +621,7 @@ DriftDiffusionProperties::calculate_ionized_dopants(void)
 
     _pd->ionized_acceptor_density = Na;
     _pd->ionized_acceptor_density_derivative = dNa;
-    _pd->charge_density_derivative[_acceptor_reference_carrier] -= dNa;
+    _pd->charge_density_derivative[_acceptor_reference_carrier] += dNa;
   }
 
 }
@@ -651,7 +651,6 @@ DriftDiffusionProperties::calculate_net_recombination_rates(void)
     (it->second)->get_net_rate_and_derivatives(R, dR);
 
     const vector<ID>& carriers = (it->second)->get_carrier_ids();
-    const vector<double>& weights = (it->second)->get_weights();
 
     for (ID i = 0; i < carriers.size(); ++i)
     {

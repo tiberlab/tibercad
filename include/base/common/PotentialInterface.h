@@ -47,7 +47,7 @@ public:
    * Returns true if \c name refers to a valid potential simulation
    * (examples of potential variables: ElPotential, eQFermi, hQFermi).
    */
-  bool set_simulation(const std::string& name, const std::string& variable);
+  bool set_simulation(const std::string& name, const std::string& variable = "");
 
 
   //! Get the electrostatic potential in specified points

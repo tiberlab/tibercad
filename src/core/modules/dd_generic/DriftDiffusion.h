@@ -408,7 +408,7 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
 
   
     // for nicer code
-    typedef std::map<const Boundary*, double> ContactData;
+    typedef std::map<std::string, double> ContactData;
     typedef std::set<unsigned int> DofList;
 
 
@@ -418,7 +418,7 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
       ElPotential,      /*!< electric potential */
       ElField,          /*!< electric field vector */
       Polarization,     /*!< total electric polarization */
-      TotCurrentDensity,   /*!< total electric current density */
+      TotalCurrentDensity,   /*!< total electric current density */
       IonizedDonors,    /*!< ionized donor density */
       IonizedAcceptors, /*!< ionized acceptor density */
       IonizedElectronTraps, /*!< trapped electron density */
@@ -427,7 +427,7 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
       IQE,              /*!< Internal quantum efficiency */
       ContactCurrent   = 100,  /*!< base number for contact currents */
       ContactVoltage   = 200,  /*!< base number for contact voltages */
-      LAST               /*!< this is used to know the first free number */
+      LAST             = 300,  /*!< this is used to know the first free number */
     };
 
     //! Base index for quasi Fermi energies
@@ -444,6 +444,16 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
     unsigned int _flux_base;
     //! Base index for currents
     unsigned int _curr_base;
+    //! Base index for joule heat
+    unsigned int _joule_base;
+    //! Base index for thermoelectric power
+    unsigned int _thelpower_base;
+    //! Base index for Peltier heat
+    unsigned int _peltier_base;
+    //! Base index for recombination heat
+    unsigned int _recheat_base;
+    //! Base index for power flux
+    unsigned int _powerflux_base;
     //! Base index for net recombination;
     unsigned int _net_rec_base;
     //! Base index for recombinations;
@@ -465,12 +475,12 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
 
         libMesh::NumericVector<double>* get_testfunction(int i);
 
-        libMesh::NumericVector<double>* get_testfunction(const Boundary* bd);
+        libMesh::NumericVector<double>* get_testfunction(const std::string& bd);
 
       private:
         DriftDiffusion* _dd;
 
-        std::map<const Boundary*, int> _boundaries;
+        std::map<std::string, int> _boundaries;
 
         void plot(void);
         void build_nodal_results(std::vector<double>& results,

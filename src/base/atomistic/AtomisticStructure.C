@@ -14,7 +14,7 @@
 #include "DataOutput.h"
 #include "RuntimeException.h"
 
-#include "mesh_tetgen_interface.h"
+#include "libmesh/mesh_tetgen_interface.h"
 // unfortunately tetgen defines REAL
 #undef REAL
 
@@ -26,6 +26,7 @@
 #include <fstream>
 #include <sstream>
 #include <map>
+#include <tr1/random>
 //---------------------
 
 using namespace std;
@@ -57,28 +58,38 @@ AtomisticStructure::AtomisticStructure(const std::string& name)
   N_atoms= 0;
 }
 
+AtomisticStructure::AtomisticStructure(const AtomisticStructure& other) :
+  AtomisticBasis(other),
+  _options(other._options),
+  _name(other._name),
+  _scale(other._scale),
+  _IDset(other._IDset),
+  _is_initialized(other._is_initialized),
+  _random_alloy(other._random_alloy),
+  _device(other._device),
+  _N_without_H(other._N_without_H),
+  _virtual_atom_types(other._virtual_atom_types),
+  _virtual_type_idx(other._virtual_type_idx)
+{
+}
+
 
 AtomisticStructure::~AtomisticStructure(void)
 {
-  if (_bondmap != NULL) delete _bondmap;
 }
 
 
 AtomisticStructure*
 AtomisticStructure::create()
 {
-  AtomisticStructure* st =  NULL;
-  st = new AtomisticStructure();
+  AtomisticStructure* st = new AtomisticStructure();
   return st;
 }
 
 AtomisticStructure*
 AtomisticStructure::create(const AtomisticStructure& as)
 {
-  AtomisticStructure* st =  NULL;
-  st = new AtomisticStructure();
-
-  *st = as;
+  AtomisticStructure* st = new AtomisticStructure(as);
 
   return st;
 }
@@ -190,210 +201,6 @@ AtomisticStructure::init(const std::string& name,
  
       Messages::newline();
       Messages::info("Atomistic structure build time: "+tt.elapsed_string());
-
-
-      /*
-      double cutoff = _options.get_option("control_volume_radius", 0.5);
-      string cutoff_str = _options.get_option("control_volume_radius", "0.5");
-
-      if (_options.get_option("extract_alloy_statistics", false))
-      {
-        vector<string> reg_names(1, "all");
-        _options.get_option("regions", reg_names);
-
-        for (unsigned int i = 0; i < reg_names.size(); ++i)
-        {
-
-          IDSet reg_ids;
-          _device->extract_physical_regions(reg_names[i], reg_ids);
-          IDSet::iterator id_it(reg_ids.begin());
-          while (id_it != reg_ids.end())
-          {
-            const Material* mat = _device->get_material(*id_it);
-
-            // we extract statistics only for alloys
-            IDSet::iterator to_be_deleted(id_it);
-            ++id_it;
-
-            if (!mat->is_alloy())
-              reg_ids.erase(to_be_deleted);
-          }
-
-          // if there are no ids, we have no alloy
-          if (reg_ids.empty())
-            continue;
-
-          string reg_name = reg_names[i];
-
-          ofstream of(TiberCad::get_output_dir() + "/" + get_name() +
-              "_" + reg_name + "_statistics_R" + cutoff_str + ".dat");
-
-          map<Specie, vector<unsigned int>> stats;
-          extract_statistics(stats, reg_ids, cutoff);
-
-          of << "% alloy statistics for structure " << get_name() <<
-              ", region " << reg_name << "\n";
-          of << "% (first row gives total numbers)\n";
-          of << "% ";
-
-          int NN = 0;
-          map<Specie, vector<unsigned int>>::iterator mit(stats.begin());
-          const map<Specie, vector<unsigned int>>::iterator mend(stats.end());
-          for ( ; mit != mend; ++mit)
-          {
-            of << mit->first << "  ";
-            NN = (mit->second).size();
-          }
-          of << "\n";
-
-          of << "% ";
-          for (mit = stats.begin(); mit != mend; ++mit)
-            of << (mit->second)[0] << " ";
-          of << "\n";
-
-          vector<unsigned int> sums(NN, 0);
-          unsigned int max = 0;
-          for (int i = 1; i < NN; ++i)
-          {
-            for (mit = stats.begin(); mit != mend; ++mit)
-              sums[i] += (mit->second)[i];
-
-            if (sums[i] > max)
-              max = sums[i];
-          }
-
-          for (int i = 0; i < NN; ++i)
-          {
-            if (sums[i] >= (max - 1))
-            {
-              for (mit = stats.begin(); mit != mend; ++mit)
-                of << (mit->second)[i] << " ";
-              of << "\n";
-            }
-          }
-
-        }
-      }
-
-      if (_options.get_option("plot_alloy_composition", false))
-      {
-
-        // TODO here we should put a reasonable communicator
-        libMesh::UniquePtr<libMesh::UnstructuredMesh> mesh(new libMesh::Mesh(TiberCad::get_mpi_comm(), 3));
-
-        int ref_atom = _options.get_option("reference_atom", -1);
-        IDSet refatoms;
-        if (ref_atom >= 0)
-          refatoms.insert(ref_atom);
-        create_conformal_grid(*mesh, refatoms, true);
-
-        libMesh::UniquePtr<DataOutput> writer(DataOutput::create(
-            _options.get_option("meshdata_format", "vtk")));
-
-        writer->set_mesh(*mesh);
-        writer->set_output_directory(TiberCad::get_output_dir());
-        writer->set_filename(get_name() + "_alloycomposition_R" + cutoff_str);
-        //writer->write(1);
-
-        map<ID, map<SolutionDescriptor, vector<double>>> solmap;
-        map<Specie, SolutionDescriptor> species_to_descr;
-
-        // setup a map Specie->SolutionDescriptor
-        const vector<string>& atom_types = get_atom_types();
-        unsigned int ctr = 0;
-        for (unsigned int i = 0; i < atom_types.size(); ++i)
-        {
-          Specie sp(atom_types[i]);
-          if (!species_to_descr.count(sp) && !(sp == Specie::H))
-          {
-            SolutionDescriptor desc(atom_types[i], ctr,
-              SolutionDescriptor::REAL, SolutionDescriptor::NODES);
-            cerr << "Atom : " << atom_types[i] << endl;
-
-            species_to_descr[sp] = desc;
-            ++ctr;
-          }
-        }
-
-        IDSet reg_ids;
-        IDSet::iterator id_it(_IDset.begin());
-        const IDSet::iterator id_end(_IDset.end());
-        for ( ; id_it != id_end; ++id_it)
-        {
-
-          reg_ids.insert(*id_it);
-
-          // we extract statistics only for alloys
-          const Material* mat = _device->get_material(*id_it);
-          if (!mat->is_alloy())
-            continue;
-          map<Specie, SolutionDescriptor>::iterator s_it(species_to_descr.begin());
-          const map<Specie, SolutionDescriptor>::iterator s_end(species_to_descr.end());
-          for ( ; s_it != s_end; ++s_it)
-            solmap[*id_it][s_it->second].resize(0);
-        }
-
-
-        map<Specie, vector<unsigned int>> stats;
-        extract_statistics(stats, reg_ids, cutoff);
-
-        for (id_it = _IDset.begin(); id_it != id_end; ++id_it)
-        {
-          ID domain = *id_it;
-
-          // we extract statistics only for alloys
-          const Material* mat = _device->get_material(*id_it);
-          if (!mat->is_alloy())
-            continue;
-
-          // to keep track of already used nodes
-          set<unsigned int> used_nodes;
-
-          map<SolutionDescriptor, vector<double>>::iterator solit(solmap[domain].begin());
-          const map<SolutionDescriptor, vector<double>>::iterator solend(solmap[domain].end());
-          for ( ; solit != solend; ++solit)
-          {
-            (solit->second).clear();
-            (solit->second).reserve(mesh->n_nodes());
-          }
-
-
-          MeshBase::element_iterator elit(mesh->active_local_elements_begin());
-          const MeshBase::element_iterator elend(mesh->active_local_elements_end());
-          for ( ; elit != elend; ++elit)
-          {
-            const Elem* elem = *elit;
-
-            if (elem->subdomain_id() == domain)
-            {
-              for (unsigned int n = 0; n < elem->n_nodes(); ++n)
-              {
-                if (!used_nodes.count(elem->node(n)))
-                {
-                  used_nodes.insert(elem->node(n));
-
-                  map<Specie, vector<unsigned int>>::iterator it(stats.begin());
-                  const map<Specie, vector<unsigned int>>::iterator end(stats.end());
-                  for ( ; it != end; ++it)
-                  {
-                    auto desc(species_to_descr.find(it->first));
-                    if (desc != species_to_descr.end())
-                    {
-                      SolutionDescriptor& descr = species_to_descr[it->first];
-                      // +1 because the first values are the totals !
-                      solmap[domain][descr].push_back((it->second)[elem->node(n) + 1]);
-                    }
-                  }
-                }
-              }
-            }
-          }
-          writer->set_data(solmap[domain], domain);
-        }
-
-        writer->write();
-      }
-      */
 
    }
       
@@ -592,14 +399,9 @@ AtomisticStructure::init_mesh_structure()
 
 
   // Copy the structure back from the generator here
-  // This callback scheme is not that elegant ... 
-  //_as->set_structure_atoms(_structure_basis);
-  //_as->set_ttype_lattice_vectors(_period);
-  //_as->set_N_atoms( _structure_basis.size() );
-  //_as->set_N_types( atom_types.size() );
-  //_as->set_atom_types(atom_types);
   generator->finalize();
 
+  _elem_to_atoms.clear();
   for (size_t i = 0; i < _atoms.size(); ++i)
     _elem_to_atoms[_atoms[i].get_elem()].push_back(i);
  
@@ -653,6 +455,7 @@ AtomisticStructure::associate_elements()
   std::vector<Atom>::iterator atom = _atoms.begin();
 
   unsigned int dim =  _device->get_mesh().mesh_dimension();
+  _elem_to_atoms.clear();
 
   size_t n_atoms = _atoms.size();
   Utils::Progress prog("Assign elements", n_atoms);
@@ -2298,7 +2101,7 @@ AtomisticStructure::create_conformal_grid(libMesh::UnstructuredMesh& mesh,
 
 void
 AtomisticStructure::extract_statistics(map<Specie, vector<unsigned int>>& stats,
-    const set<ID>& regions, double cutoff, double y, double z) const
+    const set<ID>& regions, double cutoff, double y, double z, const ModelOptions& opt) const
 {
 
   //cutoff = _options.get_option("control_volume_radius", cutoff);
@@ -2318,6 +2121,56 @@ AtomisticStructure::extract_statistics(map<Specie, vector<unsigned int>>& stats,
     m.info(os.str());
   }
 
+  // we can induce an artificial detection efficiency, to model e.g. APT
+  map<Specie, double> detection_efficiency;
+  vector<string> det_eff;
+  opt.get_option("detection_efficiency", det_eff);
+  if (det_eff.size() % 2 != 0)
+  {
+    Messages::error("detection_efficiency for alloy statistics is ill defined: "
+        "need pairs (species, efficiency)");
+  }
+  else
+  {
+    for (int i = 0; i < det_eff.size(); i += 2)
+    {
+      double eff = Utils::convert<double>(det_eff[i+1]);
+      if ((eff > 1.0) || (eff < 0))
+        Messages::error("Wrong detection efficiency for " + det_eff[i] + ": "
+            + det_eff[i+1]);
+      else
+        detection_efficiency[det_eff[i]] = eff;
+    }
+  }
+
+  if (!detection_efficiency.empty())
+  {
+    Messages m;
+    m.indent();
+    m.info("Using detection efficiencies:");
+    m.indent();
+    for (auto&& it : detection_efficiency)
+    {
+      std::ostringstream os;
+      os << it.first << " : " << it.second << Messages::endl;
+      Messages::info(os.str());
+    }
+  }
+
+  // A random starting seed is needed to actually have different sequences
+  // we try to use something that is different also if launching simulations
+  // at the same time
+  int seed = opt.get_option("random_generator_seed",
+      static_cast<int>(time(NULL) * std::tr1::random_device()()));
+  {
+    std::ostringstream os;
+    os << "Initializing  MT19937 random generator with seed " << seed;
+        //std::ios::hex << seed;
+    Messages::info(os.str());
+  }
+  std::tr1::mt19937 generator(seed);
+
+
   for (unsigned int i = 0; i < get_N_atoms(); i++)
   {
     const Atom& atm = get_structure_atom(i);
@@ -2333,6 +2186,9 @@ AtomisticStructure::extract_statistics(map<Specie, vector<unsigned int>>& stats,
     {
       if (!stats.count(atm.get_specie()))
       {
+        if (!detection_efficiency[atm.get_specie()])
+          detection_efficiency[atm.get_specie()] = 1;
+
         // this species is found for the first time
         size_t len = 1;
         if (stats.begin() != stats.end())
@@ -2341,7 +2197,13 @@ AtomisticStructure::extract_statistics(map<Specie, vector<unsigned int>>& stats,
         stats[atm.get_specie()].resize(len, 0);
       }
 
-      stats[atm.get_specie()][0] += 1;
+
+      double rnd = static_cast<double>(generator()) / generator.max();
+      if (rnd < detection_efficiency[atm.get_specie()])
+      {
+        stats[atm.get_specie()][0] += 1;
+      }
+
       if ((ref_atom < 0) || (atm.get_label() == ref_atom))
       {
         //cerr << "start: " << i << endl;
@@ -2363,13 +2225,17 @@ AtomisticStructure::extract_statistics(map<Specie, vector<unsigned int>>& stats,
           if (!regions.count(neigh.get_region_ID()))
             continue;
 
-          if (!stats.count(neigh.get_specie()))
+          double rnd = static_cast<double>(generator()) / generator.max();
+          if (rnd < detection_efficiency[neigh.get_specie()])
           {
-            stats[neigh.get_specie()].resize(stats[atm.get_specie()].size(), 0);
-            stats[neigh.get_specie()][0] = 1;
-          }
+            if (!stats.count(neigh.get_specie()))
+            {
+              stats[neigh.get_specie()].resize(stats[atm.get_specie()].size(), 0);
+              stats[neigh.get_specie()][0] = 1;
+            }
 
-          stats[neigh.get_specie()].back() += 1;
+            stats[neigh.get_specie()].back() += 1;
+          }
         }
       }
     }
@@ -2532,6 +2398,19 @@ AtomisticStructure::extract_alloy_statistics(const ModelOptions& opt)
     }
   }
 
+  // A random starting seed is needed to actually have different sequences
+  // we try to use something that is different also if launching simulations
+  // at the same time
+  int seed = opt.get_option("random_generator_seed",
+      static_cast<int>(time(NULL) * std::tr1::random_device()()));
+  {
+    std::ostringstream os;
+    os << "Initializing  MT19937 random generator with seed " << seed;
+        //std::ios::hex << seed;
+    Messages::info(os.str());
+  }
+  std::tr1::mt19937 generator(seed);
+
 
   if (opt.get_option("control_volume", string("sphere")) == "column")
   {
@@ -2638,13 +2517,18 @@ AtomisticStructure::extract_alloy_statistics(const ModelOptions& opt)
         //if (!regions.count(neigh.get_region_ID()))
         //  continue;
 
-        if (!stats.count(atom.get_specie()))
-        {
-          stats[atom.get_specie()].resize(atomlist.size(), 0);
-          stats[atom.get_specie()][i] = 1;
-        }
+        double rnd = static_cast<double>(generator()) / generator.max();
 
-        stats[atom.get_specie()][i] += 1;
+        if (rnd < detection_efficiency[atom.get_specie()])
+        {
+          if (!stats.count(atom.get_specie()))
+          {
+            stats[atom.get_specie()].resize(atomlist.size(), 0);
+            stats[atom.get_specie()][i] = 1;
+          }
+
+          stats[atom.get_specie()][i] += 1;
+        }
       }
     }
 
@@ -2769,7 +2653,7 @@ AtomisticStructure::extract_alloy_statistics(const ModelOptions& opt)
       }
 
       map<Specie, vector<unsigned int>> stats;
-      extract_statistics(stats, reg_ids, x, y, z);
+      extract_statistics(stats, reg_ids, x, y, z, opt);
 
       of << "% alloy statistics for structure " << get_name() <<
           ", region " << reg_name << "\n";
@@ -2914,7 +2798,7 @@ AtomisticStructure::plot_alloy_composition(const ModelOptions& opt)
   }
 
   map<Specie, vector<unsigned int>> stats;
-  extract_statistics(stats, reg_ids, x, y, z);
+  extract_statistics(stats, reg_ids, x, y, z, opt);
 
   for (id_it = _IDset.begin(); id_it != id_end; ++id_it)
   {

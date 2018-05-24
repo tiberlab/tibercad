@@ -76,6 +76,12 @@ class DriftDiffusionProperties : public PhysicalModel
         //! Constructor
         PointData(void);
 
+        //! The element we are currently working on
+        const libMesh::Elem* elem;
+
+        //! The coordinates of the point we are working on
+        libMesh::Point coord;
+
         //! The electron temperature in eV (\f$= k_B T_e / e\f$)
         double electron_vt;
 
@@ -97,6 +103,15 @@ class DriftDiffusionProperties : public PhysicalModel
         double old_fermi_e;
         double old_fermi_h;
 
+        //! The electric field
+        libMesh::RealGradient electric_field;
+        libMesh::RealGradient old_electric_field;
+
+        //! The gradient of the electron chemical-potential
+        libMesh::RealGradient grad_fermi_e;
+
+        //! The gradient of the hole chemical-potential
+        libMesh::RealGradient grad_fermi_h;
 
         //! The electron density
         /*!
@@ -233,29 +248,21 @@ class DriftDiffusionProperties : public PhysicalModel
 
 
 
-    // ! Lock the parameters
-    /* !
-     * Call this method before reinit()
+    //! Push PointData object on the stack
+    /*!
+     * This is used so that current point data is not overwritten when
+     * calling get_solution() from another module.
      *
-     * You can provide a pointer to a PointData object created outside
-     * or let it create one internally
      */
-    //void lock(PointData* pd = NULL);
+    void push_point_data(const PointData& pd = PointData());
 
 
-    // ! Unlock the parameters
-    /* !
-     * Call this after all calculations on the element hav been done
+    //! Pop PointData object from the stack
+    /*!
+     * Call this after all calculations have been done, but only if
+     * push_point_data() has been used.
      */
-    //void unlock(void);
-
-
-    // ! (Re-)Initialize for the given element
-    /* !
-     * \c reinit() calls \c prepare_element_data() which needs to be
-     * implemented in derived classes
-     */
-    //void reinit(const libMesh::Elem* elem);
+    void pop_point_data(void);
 
 
     //! Set the coupling type
@@ -279,7 +286,7 @@ class DriftDiffusionProperties : public PhysicalModel
     bool& is_dielectric(void);
 
     //! Set the coordinates
-    void set_coordinates(const libMesh::Point& p);
+    void set_coordinates(const libMesh::Elem* elem, const libMesh::Point& p);
 
     //! Set the carrier temperatures
     /*!
@@ -413,7 +420,7 @@ class DriftDiffusionProperties : public PhysicalModel
      * \return the electron density
      */
     double get_electron_density(void) const
-      { return _pd->electron_density; };
+      { return get_pd().electron_density; };
 
 
 
@@ -423,7 +430,7 @@ class DriftDiffusionProperties : public PhysicalModel
      * electric potential
      */
     double get_electron_density_derivative(void) const
-      { return _pd->electron_density_derivative; };
+      { return get_pd().electron_density_derivative; };
 
 
     //! Get the electron gamma \f$\gamma_n\f$
@@ -431,7 +438,7 @@ class DriftDiffusionProperties : public PhysicalModel
      * \f$\gamma_n = n/n_{cl}\f$
      */
     double get_electron_gamma(void) const
-    { return _pd->gamma_n; };
+    { return get_pd().gamma_n; };
 
 
     //! Get the hole density
@@ -441,7 +448,7 @@ class DriftDiffusionProperties : public PhysicalModel
      * \return the hole density
      */
     double get_hole_density(void) const
-      { return _pd->hole_density; };
+      { return get_pd().hole_density; };
 
 
     //! Get the ehole density derivative
@@ -450,7 +457,7 @@ class DriftDiffusionProperties : public PhysicalModel
      * electric potential
      */
     double get_hole_density_derivative(void) const
-      { return _pd->hole_density_derivative; };
+      { return get_pd().hole_density_derivative; };
 
 
     //! Get the hole gamma \f$\gamma_p\f$
@@ -458,7 +465,7 @@ class DriftDiffusionProperties : public PhysicalModel
      * \f$\gamma_p = p/p_{cl}\f$
      */
     double get_hole_gamma(void) const
-    { return _pd->gamma_p; };
+    { return get_pd().gamma_p; };
 
 
     //! Get the ionized donor density
@@ -466,7 +473,7 @@ class DriftDiffusionProperties : public PhysicalModel
      * \return the ionized donor density
      */
     double get_ionized_donor_density(void) const
-      { return _pd->ionized_donor_density; };
+      { return get_pd().ionized_donor_density; };
 
 
     //! Get the ionized donor density derivative
@@ -475,7 +482,7 @@ class DriftDiffusionProperties : public PhysicalModel
      * electric potential
      */
     double get_ionized_donor_density_derivative(void) const
-      { return _pd->ionized_donor_density_derivative; };
+      { return get_pd().ionized_donor_density_derivative; };
 
 
     //! Get the ionized acceptor density
@@ -483,7 +490,7 @@ class DriftDiffusionProperties : public PhysicalModel
      * \return the ionized acceptor density
      */
     double get_ionized_acceptor_density(void) const
-      { return _pd->ionized_acceptor_density; };
+      { return get_pd().ionized_acceptor_density; };
 
 
     //! Get the ionized acceptor density derivative
@@ -492,7 +499,7 @@ class DriftDiffusionProperties : public PhysicalModel
      * electric potential
      */
     double get_ionized_acceptor_density_derivative(void) const
-      { return _pd->ionized_acceptor_density_derivative; };
+      { return get_pd().ionized_acceptor_density_derivative; };
 
 
     //! Get the ionized electron trap density
@@ -500,7 +507,7 @@ class DriftDiffusionProperties : public PhysicalModel
      * \return the ionized electron trap density
      */
     double get_ionized_electron_traps(void) const
-      { return _pd->ionized_electron_traps; };
+      { return get_pd().ionized_electron_traps; };
 
 
     //! Get the ionized hole trap density
@@ -508,7 +515,7 @@ class DriftDiffusionProperties : public PhysicalModel
      * \return the ionized hole trap density
      */
     double get_ionized_hole_traps(void) const
-      { return _pd->ionized_hole_traps; };
+      { return get_pd().ionized_hole_traps; };
 
 
     //! Get the total charge density
@@ -537,7 +544,7 @@ class DriftDiffusionProperties : public PhysicalModel
      * Get \f$R_{net} = R - G\f$ as
      */
     double get_net_electron_recombination_rate(void) const
-      { return _pd->electron_recombination_rate; };
+      { return get_pd().electron_recombination_rate; };
 
 
     //! Get the net electron recombination rate derivatives
@@ -548,7 +555,7 @@ class DriftDiffusionProperties : public PhysicalModel
      */
     const std::vector<double>&
       get_net_electron_recombination_rate_derivatives(void) const
-        { return _pd->electron_recombination_rate_derivatives; };
+        { return get_pd().electron_recombination_rate_derivatives; };
 
 
     //! Get the net hole recombination rate
@@ -558,7 +565,7 @@ class DriftDiffusionProperties : public PhysicalModel
      *
      */
     double get_net_hole_recombination_rate(void) const
-      { return _pd->hole_recombination_rate; };
+      { return get_pd().hole_recombination_rate; };
 
 
     //! Get the net hole recombination rate derivatives
@@ -569,7 +576,7 @@ class DriftDiffusionProperties : public PhysicalModel
      */
     const std::vector<double>&
       get_net_hole_recombination_rate_derivatives(void) const
-        { return _pd->hole_recombination_rate_derivatives; };
+        { return get_pd().hole_recombination_rate_derivatives; };
 
 
     // ! Get the total electric polarization
@@ -591,7 +598,7 @@ class DriftDiffusionProperties : public PhysicalModel
      * \return the electron conductivity \f$\sigma_n = \mu_n n\f$
      */
     double get_electron_conductivity(void) const
-      { return _pd->electron_conductivity; };
+      { return get_pd().electron_conductivity; };
 
 
     //! Get the hole conductivity
@@ -599,7 +606,7 @@ class DriftDiffusionProperties : public PhysicalModel
      * \return the hole conductivity \f$\sigma_p = \mu_p p\f$
      */
     double get_hole_conductivity(void) const
-      { return _pd->hole_conductivity; };
+      { return get_pd().hole_conductivity; };
 
 
     //! Get the electron mobility
@@ -607,7 +614,7 @@ class DriftDiffusionProperties : public PhysicalModel
      * \return the electron mobility
      */
     double get_electron_mobility(void) const
-      { return _pd->electron_mobility; };
+      { return get_pd().electron_mobility; };
 
 
     //! Get the hole mobility
@@ -615,32 +622,32 @@ class DriftDiffusionProperties : public PhysicalModel
      * \return the hole mobility
      */
     double get_hole_mobility(void) const
-      { return _pd->hole_mobility; };
+      { return get_pd().hole_mobility; };
 
 
     //! Get the electron mobility derivative w.r.t. electric potential
     double get_electron_mobility_derivative_potential(void) const
-      { return _pd->electron_mobility_derivative_potential; };
+      { return get_pd().electron_mobility_derivative_potential; };
 
     //! Get the hole mobility derivative w.r.t. electric potential
     double get_hole_mobility_derivative_potential(void) const
-      { return _pd->hole_mobility_derivative_potential; };
+      { return get_pd().hole_mobility_derivative_potential; };
 
     //! Get the electron mobility derivative w.r.t. gradient of the electric potential
     void get_electron_mobility_derivative_grad_potential(libMesh::RealGradient& dmu) const
-      { dmu = _pd->electron_mobility_derivative_grad_potential; };
+      { dmu = get_pd().electron_mobility_derivative_grad_potential; };
 
     //! Get the hole mobility derivative w.r.t. gradient of the electric potential
     void get_hole_mobility_derivative_grad_potential(libMesh::RealGradient& dmu) const
-      { dmu = _pd->hole_mobility_derivative_grad_potential; };
+      { dmu = get_pd().hole_mobility_derivative_grad_potential; };
 
     //! Get the electron mobility derivative w.r.t. gradient of the fermi potential
     void get_electron_mobility_derivative_grad_fermi(libMesh::RealGradient& dmu) const
-      { dmu = _pd->electron_mobility_derivatives; };
+      { dmu = get_pd().electron_mobility_derivatives; };
 
     //! Get the hole mobility derivative w.r.t. gradient of the fermi potential
     void get_hole_mobility_derivative_grad_fermi(libMesh::RealGradient& dmu) const
-      { dmu = _pd->hole_mobility_derivatives; };
+      { dmu = get_pd().hole_mobility_derivatives; };
 
     //! Get the square of the intrinsic density
     double get_intrinsic_density_squared(void) const
@@ -724,16 +731,16 @@ class DriftDiffusionProperties : public PhysicalModel
     int get_number_of_recombination_models(void) const;
 
 
-    //! Returns the thermoelectric power for electrons
+    // ! Returns the thermoelectric power for electrons
     //double get_electron_thermoelectric_power() const;
 
-    //! Returns the thermoelectric power for holes
+    // ! Returns the thermoelectric power for holes
     //double get_hole_thermoelectric_power() const;
 
-    //! Computes the electron and hole thermoelectric powers
+    // ! Computes the electron and hole thermoelectric powers
     //void compute_thermoelectric_powers(void);
 
-    //! Computes the electron and hole thermoelectric power derivatives
+    // ! Computes the electron and hole thermoelectric power derivatives
     //void compute_thermoelectric_power_gradient(void);
 
 
@@ -743,21 +750,21 @@ class DriftDiffusionProperties : public PhysicalModel
 
     //! Get the electron electro-chemical potential
     double get_electron_electro_chemical_potential(void) const
-      { return _pd->fermi_e; };
+      { return get_pd().fermi_e; };
 
 
     //! Get the hole electro-chemical potential
     double get_hole_electro_chemical_potential(void) const
-      { return _pd->fermi_h; };
+      { return get_pd().fermi_h; };
 
     double get_old_phi(void) const
-      { return _pd->old_electric_potential; };
+      { return get_pd().old_electric_potential; };
 
     double get_old_fermie(void) const
-      { return _pd->old_fermi_e; };
+      { return get_pd().old_fermi_e; };
 
     double get_old_fermih(void) const
-      { return _pd->old_fermi_h; };
+      { return get_pd().old_fermi_h; };
 
 
     //! Get the point data
@@ -789,12 +796,12 @@ class DriftDiffusionProperties : public PhysicalModel
       { return *_valence_band; };
 
 
-    //! Get the electrons
-
-
 
     //! Tells if we are doing equilibrium calculation
     bool has_solution(void) const;
+
+    //! Get the temperature interface
+    TemperatureInterface& get_temperature_interface(void);
 
 
 
@@ -819,10 +826,6 @@ class DriftDiffusionProperties : public PhysicalModel
     virtual void prepare_submodels(void);
 
 
-    //! Set the element we are currently working on
-    void set_element(const Elem* elem);
-
-
     //! This method gets called from reinit()
     /*!
      * It can be used to setup data that is constant in an element, e.g.
@@ -841,10 +844,7 @@ class DriftDiffusionProperties : public PhysicalModel
     Tensor2Sym& get_strain(void);
 
 
-    //! Get the temperature interface
-    TemperatureInterface& get_temperature_interface(void);
-
-    //! Get the strain interface
+    // ! Get the strain interface
     //StrainInterface& get_strain_interface(void);
 
 
@@ -933,19 +933,11 @@ class DriftDiffusionProperties : public PhysicalModel
     double _equilibrium_p;
 
     //! The point-wise data
-    PointData* _pd;
+    std::stack<PointData> _pd;
 
 
-    //! The electric field
-    libMesh::RealGradient _electric_field;
-    libMesh::RealGradient _old_electric_field;
 
 
-    //! The gradient of the electron chemical-potential
-    libMesh::RealGradient _grad_fermi_e;
-
-    //! The gradient of the hole chemical-potential
-    libMesh::RealGradient _grad_fermi_h;
 
     //libMesh::RealVectorValue _polarization;
 
@@ -973,12 +965,6 @@ class DriftDiffusionProperties : public PhysicalModel
         const ModelOptions& options = ModelOptions());
 
 
-
-    //! The element we are currently working on
-    const libMesh::Elem* _elem;
-
-    //! The coordinates of the point we are working on
-    libMesh::Point _coord;
 
 
     //! Type of coupling (particles) we want to study
@@ -1072,17 +1058,19 @@ DriftDiffusionProperties::is_dielectric(void)
 
 inline
 void
-DriftDiffusionProperties::set_coordinates(const libMesh::Point& p)
+DriftDiffusionProperties::set_coordinates(const Elem* elem,
+    const libMesh::Point& p)
 {
-  _coord = p;
+  get_pd().elem = elem;
+  get_pd().coord = p;
 }
 
 inline
 void
 DriftDiffusionProperties::set_carrier_temperatures(double T_e, double T_h)
 {
-  _pd->electron_vt = T_e;
-  _pd->hole_vt = T_h;
+  get_pd().electron_vt = T_e;
+  get_pd().hole_vt = T_h;
 }
 
 
@@ -1091,7 +1079,7 @@ inline
 double
 DriftDiffusionProperties::get_electric_potential(void) const
 {
-  return _pd->electric_potential;
+  return get_pd().electric_potential;
 }
 
 
@@ -1101,9 +1089,9 @@ void
 DriftDiffusionProperties::set_potentials(double potential, double Ef_e,
     double Ef_h)
 {
-  _pd->electric_potential = potential;
-  _pd->fermi_e = Ef_e;
-  _pd->fermi_h = Ef_h;
+  get_pd().electric_potential = potential;
+  get_pd().fermi_e = Ef_e;
+  get_pd().fermi_h = Ef_h;
 }
 
 
@@ -1112,9 +1100,9 @@ void
 DriftDiffusionProperties::set_old_potentials(double potential, double Ef_e,
     double Ef_h)
 {
-  _pd->old_electric_potential = potential;
-  _pd->old_fermi_e = Ef_e;
-  _pd->old_fermi_h = Ef_h;
+  get_pd().old_electric_potential = potential;
+  get_pd().old_fermi_e = Ef_e;
+  get_pd().old_fermi_h = Ef_h;
 }
 
 
@@ -1122,7 +1110,7 @@ inline
 void
 DriftDiffusionProperties::set_electric_field(const libMesh::RealGradient& E)
 {
-  _electric_field = E;
+  get_pd().electric_field = E;
 }
 
 
@@ -1136,14 +1124,14 @@ inline
 void
 DriftDiffusionProperties::set_old_electric_field(const libMesh::RealGradient& E)
 {
-  _old_electric_field = E;
+  get_pd().old_electric_field = E;
 }
 
 inline
 void
 DriftDiffusionProperties::set_grad_fermi_e(const libMesh::RealGradient& grad_Fe)
 {
-  _grad_fermi_e = grad_Fe;
+  get_pd().grad_fermi_e = grad_Fe;
 }
 
 
@@ -1151,7 +1139,7 @@ inline
 void
 DriftDiffusionProperties::set_grad_fermi_h(const libMesh::RealGradient& grad_Fh)
 {
-  _grad_fermi_h = grad_Fh;
+  get_pd().grad_fermi_h = grad_Fh;
 }
 
 
@@ -1160,14 +1148,14 @@ inline
 const libMesh::RealGradient&
 DriftDiffusionProperties::get_electric_field(void) const
 {
-  return _electric_field;
+  return get_pd().electric_field;
 }
 
 inline
 const libMesh::RealGradient&
 DriftDiffusionProperties::get_old_electric_field(void) const
 {
-  return _old_electric_field;
+  return get_pd().old_electric_field;
 }
 
 
@@ -1181,7 +1169,7 @@ inline
 const libMesh::RealGradient&
 DriftDiffusionProperties::get_grad_fermi_e(void) const
 {
-  return _grad_fermi_e;
+  return get_pd().grad_fermi_e;
 }
 
 
@@ -1190,7 +1178,7 @@ inline
 const libMesh::RealGradient&
 DriftDiffusionProperties::get_grad_fermi_h(void) const
 {
-  return _grad_fermi_h;
+  return get_pd().grad_fermi_h;
 }
 
 
@@ -1200,11 +1188,11 @@ inline
 void
 DriftDiffusionProperties::set_densities(double n, double p)
 {
-  _pd->electron_density = n;
-  _pd->hole_density = p;
-  _pd->electron_density_derivative = n / _pd->electron_vt;
-  _pd->hole_density = p;
-  _pd->hole_density_derivative = -p / _pd->hole_vt;
+  get_pd().electron_density = n;
+  get_pd().hole_density = p;
+  get_pd().electron_density_derivative = n / get_pd().electron_vt;
+  get_pd().hole_density = p;
+  get_pd().hole_density_derivative = -p / get_pd().hole_vt;
 }
 
 
@@ -1233,24 +1221,17 @@ DriftDiffusionProperties::get_lattice_temperature(void) const
 }
 
 inline
-void
-DriftDiffusionProperties::set_element(const Elem* elem)
-{
-  _elem = elem;
-}
-
-inline
 const libMesh::Elem*
 DriftDiffusionProperties::get_element(void) const
 {
-  return _elem;
+  return get_pd().elem;
 }
 
 inline
 const libMesh::Point&
 DriftDiffusionProperties::get_coordinates(void) const
 {
-  return _coord;
+  return get_pd().coord;
 }
 
 
@@ -1258,17 +1239,17 @@ inline
 double
 DriftDiffusionProperties::get_charge_density(void) const
 {
-  long double dens = static_cast<long double>(_pd->hole_density) -
-      static_cast<long double>(_pd->electron_density) +
-      static_cast<long double>(_pd->ionized_donor_density) -
-      static_cast<long double>(_pd->ionized_acceptor_density) +
-      static_cast<long double>(_pd->ionized_electron_traps) +
-      static_cast<long double>(_pd->ionized_hole_traps);
+  long double dens = static_cast<long double>(get_pd().hole_density) -
+      static_cast<long double>(get_pd().electron_density) +
+      static_cast<long double>(get_pd().ionized_donor_density) -
+      static_cast<long double>(get_pd().ionized_acceptor_density) +
+      static_cast<long double>(get_pd().ionized_electron_traps) +
+      static_cast<long double>(get_pd().ionized_hole_traps);
 
   return static_cast<double>(dens);
-  //return _pd->hole_density - _pd->electron_density +
-  //  _pd->ionized_donor_density - _pd->ionized_acceptor_density
-  //  + _pd->ionized_electron_traps + _pd->ionized_hole_traps;
+  //return get_pd().hole_density - get_pd().electron_density +
+  //  get_pd().ionized_donor_density - get_pd().ionized_acceptor_density
+  //  + get_pd().ionized_electron_traps + get_pd().ionized_hole_traps;
 }
 
 
@@ -1279,21 +1260,21 @@ DriftDiffusionProperties::get_charge_density_derivatives(
 {
   long double der0 = static_cast<long double>(get_electron_density_derivative())
       - static_cast<long double>(get_ionized_donor_density_derivative())
-      + static_cast<long double>(_pd->ionized_traps_derivative[0]);
+      + static_cast<long double>(get_pd().ionized_traps_derivative[0]);
 
   long double der1 = -static_cast<long double>(get_hole_density_derivative())
       + static_cast<long double>(get_ionized_acceptor_density_derivative())
-      + static_cast<long double>(_pd->ionized_traps_derivative[1]);
+      + static_cast<long double>(get_pd().ionized_traps_derivative[1]);
 
   derivatives[0] = static_cast<double>(der0);
   derivatives[1] = static_cast<double>(der1);
 
   //derivatives[0] = get_electron_density_derivative()
   //  - get_ionized_donor_density_derivative()
-  //  - _pd->ionized_electron_traps_derivative;
+  //  - get_pd().ionized_electron_traps_derivative;
   //derivatives[1] = -get_hole_density_derivative()
   //  + get_ionized_acceptor_density_derivative()
-  //  - _pd->ionized_hole_traps_derivative;
+  //  - get_pd().ionized_hole_traps_derivative;
 }
 
 inline
@@ -1365,7 +1346,7 @@ inline
 DriftDiffusionProperties::PointData&
 DriftDiffusionProperties::get_pd(void) const
 {
-  return *_pd;
+  return(const_cast<PointData&>(_pd.top()));
 }
 
 

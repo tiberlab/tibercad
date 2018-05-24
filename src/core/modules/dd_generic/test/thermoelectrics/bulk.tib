@@ -1,0 +1,178 @@
+
+# Description of  the  device physical regions
+Device
+{
+  meshfile = bulk.msh
+  material = Si
+
+
+   Region bulk 
+   {
+     Doping { Nd = 1e18 type = donor}
+   }
+
+
+}
+
+
+Module dd_generic
+{ 
+
+  name = driftdiffusion
+  plot = (ElPotential, QFermi, Density, RefEnergy, Mobility, Conductivity, CurrentDensity, Flux, NetRecombination, ContactCurrents, ThermoelectricPower)
+
+  Physics
+  {
+    thermal_simulation = thermal
+
+    carrier electron
+    {
+      density_of_states bulk_kp
+      {
+      }
+    }
+    carrier hole
+    {
+      density_of_states bulk_kp
+      {
+      }
+    }
+
+    Ccarrier exciton
+    {
+      charge = 0
+      spin = 0
+      density_of_states bulk
+      {
+        level = 1.0
+      }
+    }
+
+    mobility constant
+    {
+      carriers = electron
+      exponent = 0
+    }
+
+    mobility constant
+    {
+      carriers = hole
+      exponent = 0
+    }
+
+    Mmobility constant
+    {
+      carriers = exciton
+      mu = 1
+    }
+
+
+    Rrecombination exciton_decay { carriers = exciton tau = 1e-9 }
+
+
+    recombination srh { carriers = (electron, hole) }
+
+  }   
+
+
+  Contact anode
+  {
+    type = ohmic
+    voltage = $Vb[0]
+    isolated_carriers = exciton
+  }
+
+  Contact cathode
+  {
+    type = ohmic
+    voltage = 0.0
+    isolated_carriers = exciton
+  }
+
+}  
+
+
+Module thermal
+{
+
+   plot = (LatticeTemp,ThermalFlux,HeatSource)
+
+   Physics   
+   {
+      heat_source joule
+      {
+        transport_simulation = dd_generic
+        heat_sources = TotalJouleHeat
+      }
+   }
+
+   Contact anode
+   {
+     type = heat_reservoir
+     temperature = $temp[300]
+   }
+
+   Contact cathode
+   {
+     type = heat_reservoir
+     temperature = 300
+   }
+  
+}
+
+
+Module selfconsistent
+{
+   solve = (dd_generic,thermal)
+   absolute_tolerance = 1e-5
+   monitor = true
+}
+
+
+
+Module sweep
+{
+  solve = selfconsistent
+  variable = $Vb
+  start = 0.0
+  stop = 1
+  steps = 10
+  plot_data = true
+}
+
+
+Module sweep
+{
+  name = sweep_t
+  solve = selfconsistent
+  variable = $temp
+  start = 300
+  stop = 400
+  steps = 10
+  plot_data = true
+}
+
+
+
+Simulation
+{
+  temperature = 300
+  searchpath = .
+  solve = sweep_t
+  resultpath = output
+  output_format = grace
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

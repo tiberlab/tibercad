@@ -4,6 +4,7 @@
 #include "tiber_version.h"
 #include "svnrevision.h"
 #include "TiberCad.h"
+#include "License.h"
 #include "Control.h"
 #include "EigenSolver.h"
 #include "Database.h"
@@ -46,6 +47,8 @@ TiberCad::_control = NULL;
 unsigned int
 TiberCad::_object_counter = 0;
 
+bool
+TiberCad::_is_initialized = false;
 
 std::string
 TiberCad::_tiberroot = "";
@@ -160,6 +163,13 @@ TiberCad::software_revision(void)
 void
 TiberCad::init(const std::string& inputfile)
 {
+  if (_is_initialized)
+    return;
+
+  License::init();
+  if (_mpi_comm.rank() == 0)
+    License::check_out("core", major_version(), 0, 1);
+
   // read TIBERCADROOT from environment
   char* root = getenv("TIBERCADROOT");
   if (root != NULL)
@@ -225,6 +235,8 @@ TiberCad::init(const std::string& inputfile)
 
   _control->set_inputfile(infile);
   _control->init();
+
+  _is_initialized = true;
 }
 
 
@@ -232,6 +244,9 @@ TiberCad::init(const std::string& inputfile)
 void
 TiberCad::run(void)
 {
+  if (!_is_initialized)
+    throw InitFailedException("TiberCAD library is not initialized!");
+
   _control->run_simulation();
 }
 
@@ -240,18 +255,25 @@ TiberCad::run(void)
 void
 TiberCad::cleanup(void)
 {
-  //
-  // NOTE: this seems to be responsible for the MPI_Comm error
-  // need to find the real cause
-  //delete _control;
+  if (!_is_initialized)
+    return;
+
+  if (_mpi_comm.rank() == 0)
+    License::check_in("core");
+
+  License::close();
 
   // close EigenSolver
   EigenSolver::slepc_done();
+
+  //delete _control;
 
   // close libMesh and return
   delete _libmeshinit;
 
   delete [] __empty_argv;
+
+  _is_initialized = false;
 }
 
 

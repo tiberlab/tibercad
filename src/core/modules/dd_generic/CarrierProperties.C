@@ -23,7 +23,6 @@ CarrierProperties::CarrierProperties(const ModelOptions& options) :
     _carrier_id(DriftDiffusionProperties::unknown_carrier_id),
     _charge(-1),
     _spin(0.5),
-    _is_exciton(false),
     _is_dopant(false),
     _dos_factor(pow(2.0 * M_PI *
         Constants::me / (Constants::h * Constants::h) *
@@ -53,25 +52,21 @@ CarrierProperties::CarrierProperties(const ModelOptions& options) :
   {
     _charge = 1;
   }
+  else if (_particle_name == string("ex") ||
+      _particle_name == string("x") ||
+      _particle_name == string("exciton"))
+  {
+    _charge = 0;
+    _spin = 0;
+  }
 
   _charge = get_option("charge", _charge);
   _spin = get_option("spin", _spin);
-  _is_exciton = get_option("exciton", _is_exciton);
 
-  _exciton_carriers.resize(0);
-  if (_is_exciton)
-  {
-    get_option("exciton_carriers", _exciton_carriers);
-    _exciton_carriers.resize(2);
-    _spin = get_option("spin", 0.0);
-  }
-
-  _particle = (_charge < 0.0) ? 'e' : 'h';
+  _particle = (_charge <= 0.0) ? 'e' : 'h';
 
   _is_dopant = get_option("dopant", _is_dopant);
 
-  if (_is_exciton && _is_dopant)
-    throw InitFailedException("Carrier '" + _particle_name + "' cannot be both an exciton and a dopant");
 }
 
 CarrierProperties::~CarrierProperties(void)
@@ -83,26 +78,12 @@ CarrierProperties::~CarrierProperties(void)
 void
 CarrierProperties::do_init(void)
 {
-  _carrier_id = this->get_driftdiffusionproperties().get_carrier_id(_particle_name);
+  _carrier_id = this->get_bulk_driftdiffusionproperties().get_carrier_id(_particle_name);
 }
 
 void
 CarrierProperties::do_reinit(void)
 {
-  if (_is_exciton)
-  {
-    double DOS = 0.0;
-
-    for (auto exc : _exciton_carriers)
-    {
-      double N = get_driftdiffusionproperties().get_carrier_properties(exc)->get_effective_DOS(); 
-      N = pow(N, 2.0/3.0);
-      DOS += N;
-    }
-
-    DOS = pow(DOS, 3.0/2.0);
-    _dos_model->set_effective_DOS(DOS);
-  }
 }
 
 void
@@ -119,15 +100,17 @@ CarrierProperties::prepare_submodels(void)
            it(get_options().submodels_begin("density_of_states"));
   ModelOptions& dosopts = it->second;
   dosopts["particle"] = _particle;
+  dosopts["charge"] = _charge;
   dosopts["spin"] = _spin;
+
   //if (!dosopts.find_option("level"))
   //  dosopts["level"] = get_option("band_edge", "0");
 
-  dosopts.set_option("spin", _spin);
 
   create_submodel(_dos_model, "density_of_states", dosopts);
 
   //for an exciton reference_energy() will store the band edges of the corresponding e and h
+  /*
   if (_is_exciton)
   {
     _dos_model->reference_energy().resize(0);
@@ -137,6 +120,7 @@ CarrierProperties::prepare_submodels(void)
       _dos_model->reference_energy().push_back(  ( get_driftdiffusionproperties().get_carrier_properties(
                                                      _exciton_carriers[i]) )->get_band_edge()  );
   }
+  */
 }
 
 
@@ -189,9 +173,6 @@ CarrierProperties::calculate(double temperature)
 double
 CarrierProperties::get_band_edge(void) const
 {
-  if (_is_exciton)
-    return(_dos_model->get_reference_energy()[0]);
-
   if (_charge <= 0)
     return(*min_element(_dos_model->get_reference_energy().begin(),
         _dos_model->get_reference_energy().end()));
@@ -203,9 +184,6 @@ CarrierProperties::get_band_edge(void) const
 double
 CarrierProperties::get_effective_mass(void) const
 {
-  if (_is_exciton)
-    return _dos_model->get_effective_mass()[0];
-
   size_t i = 0;
   if (_charge <= 0)
   {
@@ -223,6 +201,12 @@ CarrierProperties::get_effective_mass(void) const
 }
 
 
+double
+CarrierProperties::get_thermoelectric_power(void) const
+{
+  return _dos_model->get_thermoelectric_power();
+}
+
 
 std::pair<double, double>
 CarrierProperties::get_density_and_derivative(double Ef, double Epot) const
@@ -230,17 +214,18 @@ CarrierProperties::get_density_and_derivative(double Ef, double Epot) const
   const DriftDiffusionProperties& ddp = get_driftdiffusionproperties();
 
   double kT = _temperature;
-  double sign = (_particle == 'h') ? 1 : -1;
-  Epot *= sign;
+  double sign = (_charge > 0.0) ? 1 : -1;
+  Epot *= _charge;
   Ef *= sign;
+
 
   pair<double, double> dens_der;
 
   if (_dos_model->has_quantum_density() && ddp.has_solution()) // && use_predictor())
   {
     double Ef_old = ddp.get_old_q_fermi_potential(_carrier_id);
-    Ef_old *= (_particle == 'h') ? 1.0 : -1.0;
-    double Epot_old = sign * ddp.get_old_phi();
+    Ef_old *= sign;
+    double Epot_old = _charge * ddp.get_old_phi();
 
     // get the old quantum density
     pair<double, double> dens_der_old(_dos_model->get_occupied_density_and_derivative(

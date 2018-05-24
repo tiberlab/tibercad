@@ -63,9 +63,7 @@ TiberLinearSolver::create(const libMesh::Parallel::Communicator &comm_in, const 
   std::cerr << "Created linear solver type " << type << std::endl;
 #endif
 
-  // dummy read
-  solver->get_option("type", "");
-  solver->get_option("simulation", "");
+  solver->parse_options();
 
   return solver;
 }
@@ -81,6 +79,10 @@ TiberLinearSolver::parse_options(void)
   _linear_max_it = get_option("max_iterations", default_linear_max_it);
 
   do_parse_options();
+
+  // dummy read
+  get_option("type", "");
+  get_option("simulation", "");
 
   get_options().check_unused();
 }

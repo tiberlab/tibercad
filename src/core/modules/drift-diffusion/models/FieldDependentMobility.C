@@ -118,15 +118,15 @@ FieldDependentMobility::get_mobility(void)
     get_driftdiffusionproperties().get_grad_fermi_e() :
     get_driftdiffusionproperties().get_grad_fermi_h();
 
-  //E = grad_fermi.size();
+  //E = grad_fermi.norm();
 
   //if ((_force == EFIELD) && (E > 1))
     //E = grad_fermi * get_driftdiffusionproperties().get_electric_field() / E;
   if (_force == GRADFERMI)
-    E = grad_fermi.size();
+    E = grad_fermi.norm();
   else if (_force == EFIELD)
   {
-    E = grad_fermi.size();
+    E = grad_fermi.norm();
     if (E > 1e-6)
       E = std::fabs(grad_fermi * get_driftdiffusionproperties().get_electric_field()) / E;
     else
@@ -172,9 +172,9 @@ FieldDependentMobility::get_derivative_grad_potential(libMesh::RealGradient& dm)
   double T = get_driftdiffusionproperties().get_lattice_temperature();
   double E = 0.0;
   if (get_carrier_type() == 'e')
-    E = get_driftdiffusionproperties().get_grad_fermi_e().size();
+    E = get_driftdiffusionproperties().get_grad_fermi_e().norm();
   else
-    E = get_driftdiffusionproperties().get_grad_fermi_h().size();
+    E = get_driftdiffusionproperties().get_grad_fermi_h().norm();
 
   double n = (get_carrier_type() == 'e') ?
       get_driftdiffusionproperties().get_electron_density() :
@@ -241,9 +241,9 @@ FieldDependentMobility::get_derivative_grad_fermi(libMesh::RealGradient& dm)
   double T = get_driftdiffusionproperties().get_lattice_temperature();
   double E = 0.0;
   if (get_carrier_type() == 'e')
-    E = get_driftdiffusionproperties().get_grad_fermi_e().size();
+    E = get_driftdiffusionproperties().get_grad_fermi_e().norm();
   else
-    E = get_driftdiffusionproperties().get_grad_fermi_h().size();
+    E = get_driftdiffusionproperties().get_grad_fermi_h().norm();
 
   double n = (get_carrier_type() == 'e') ?
       get_driftdiffusionproperties().get_electron_density() :

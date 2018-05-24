@@ -57,8 +57,15 @@ class CarrierProperties : public DriftDiffusionModelInterface
     /*!
      * \param Ef the quasi Fermi level
      * \param Epot the electrostatic potential
+     *
+     * Derivative is given w.r.t to the quasi Fermi level
      */
     std::pair<double, double> get_density_and_derivative(double Ef, double Epot) const;
+
+
+    //! Get the thermoelectric power
+    double get_thermoelectric_power(void) const;
+
 
     //! Set the band edge
     void set_band_edge(double band_edge);
@@ -79,15 +86,16 @@ class CarrierProperties : public DriftDiffusionModelInterface
     //! Get the particle spin  in units of \c h/2pi
     double get_spin(void) const;
 
-    //! Tell if the carrier is an exciton
-    const bool is_exciton(void) const;
-
     //! Tell if the carrier is a dopant
     const bool is_dopant(void) const;
 
-    //! Return the charge carriers names associated to an exciton
-    std::vector<std::string> get_exciton_carriers(void) const;
-
+    //! Get the sign of the charge
+    /*!
+     * 0 charge is returned as negative sign, because formulation
+     * of carrier flux is such that it is consistent with the
+     * formulas for electrons.
+     */
+    int get_charge_sign(void) const;
 
     //! Do we have quantum density?
     /*!
@@ -176,14 +184,11 @@ class CarrierProperties : public DriftDiffusionModelInterface
     //! The particle spin in units of \c h/2pi
     double _spin;
 
-    //! Tell if the carrier is an exciton
-    bool _is_exciton;
-
     //! Tell if the carrier is a dopant
     bool _is_dopant;
 
-    //! Charge carrier forming the exciton
-    std::vector<std::string> _exciton_carriers;
+    // ! Charge carrier forming the exciton
+    //std::vector<std::string> _exciton_carriers;
 
     //! The temperature in eV
     double _temperature;
@@ -250,6 +255,14 @@ CarrierProperties::get_charge(void) const
 }
 
 inline
+int
+CarrierProperties::get_charge_sign(void) const
+{
+  return((_charge > 0) ? 1 : -1);
+}
+
+
+inline
 double
 CarrierProperties::get_spin(void) const
 {
@@ -263,19 +276,15 @@ CarrierProperties::get_particle_name(void) const
   return(_particle_name);
 }
 
-inline
-const bool
-CarrierProperties::is_exciton(void) const
-{
-  return(_is_exciton);
-}
 
+/*
 inline
 std::vector<std::string>
 CarrierProperties::get_exciton_carriers(void) const
 {
   return(_exciton_carriers);
 }
+*/
 
 inline
 const bool

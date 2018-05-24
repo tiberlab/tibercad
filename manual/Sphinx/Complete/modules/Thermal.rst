@@ -182,7 +182,7 @@ A surface boundary resistance can be added with the keyword ``surface_resistance
     }
     
 
-where  the surface resistance is  given by the  keyword   ``r_surf`` (in  :math:`m^{2} W/ K)`.
+where  the surface resistance is  given by the  keyword   ``r_surf`` (in  :math:`m^{2} K/ W)`.
 
 This boundary condition imposes a surface resistance  ``R``, so that the heat flux is constrained to
 

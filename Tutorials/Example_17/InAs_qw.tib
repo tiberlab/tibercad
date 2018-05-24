@@ -1,6 +1,13 @@
 Device
 {
   meshfile = InAs_qw.msh 
+
+
+  # if run in parallel, only TB part will be parallelized
+  Parallel
+  {
+    mpi_processes_per_mesh = 1
+  }
  
   mesh_units = 1e-10
   dimension = 1

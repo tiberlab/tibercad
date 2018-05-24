@@ -55,8 +55,6 @@ class TBDLLOCAL Thermal : public SimulationInterface
     virtual PhysicalModel* create_bulk_model(const ModelOptions& options,
 					   const Material* mat) const;
 
-   /*! \copydoc SimulationInterface::do_get_solution_vector() */
-    virtual libMesh::NumericVector<double>& do_get_solution_vector(void);
 
     //! We need to create boundary condition model
     virtual PhysicalModel* create_boundary_model(const ModelOptions& options,
@@ -73,8 +71,6 @@ class TBDLLOCAL Thermal : public SimulationInterface
 
   private:
 
-  //!node connection
-  std::vector<unsigned short int> node_conn;
 
   double compute_power_dissipated();
 

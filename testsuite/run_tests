@@ -120,13 +120,15 @@ read_configuration($configfile);
 
 
 my $topdir = get_option("topdir");
+my $svncmd = get_option("svn");
 
 # get some repository info
-my @svninfo = (`svn info $topdir`);
+my @svninfo = (`$svncmd info $topdir`);
 #($#svninfo <= 0) && die "Is $topdir under subversion control?";
 if ($#svninfo <= 0) {
   @svninfo = q('dummy' 'dummy');
 }
+
 my $repo = (grep(/URL/, @svninfo))[0];
 my $revision = (grep(/Revision/, @svninfo))[0];
 my $last_changed_author = (grep(/Author/, @svninfo))[0];

@@ -48,7 +48,7 @@ AugerRecombination::do_init(void)
   RecombinationModelInterface::do_init();
 
   if (get_carrier_names().size() != 2)
-    throw InitFailedException("SRH recombination model needs exactly "
+    throw InitFailedException("Auger recombination model needs exactly "
         "two recombining carriers");
 
   // look for electron and hole

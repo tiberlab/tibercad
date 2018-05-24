@@ -85,8 +85,11 @@ class TiberNonlinearSystem : public TiberEqSystem, public libMesh::NonlinearImpl
     virtual std::string system_type(void) const = 0;
 
 
-    //! Get the solution vector
-    virtual libMesh::NumericVector<double>& get_solution_vector(void) = 0;
+    //! Get the solution vector including ghost values
+    virtual libMesh::NumericVector<double>& get_solution_vector(void);
+
+    //! Get the local solution vector (without ghost values)
+    virtual libMesh::NumericVector<double>& get_local_solution_vector(void);
 
 
     //! Attach the assembly routine

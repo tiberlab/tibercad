@@ -33,7 +33,7 @@ class TBDLLOCAL ThermalModel : public PhysicalModel
   const libMesh::RealTensor& get_total_thermal_conductivity(void) const;
 
  //! Calculate for a point on the given side
-  void calculate(const Elem* elem, const Point& point);
+  void calculate(const Elem* elem, const Point& point, double temperature);
 
   protected:
 

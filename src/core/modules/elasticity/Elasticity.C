@@ -5,6 +5,15 @@
 #include "ElasticityBoundaryModel.h"
 #include "TiberLinearSystem.h"
 #include "Messages.h"
+#include "SimulationOptions.h"
+#include "SimulationEnvironment.h"
+#include "TensorOperators.h"
+#include "RotatedCrystal.h"
+#include "AtomisticStructure.h"
+#include "QuantumContact.h"
+#include "DataOutput.h"
+#include "License.h"
+
 #include "libmesh/equation_systems.h"
 #include "libmesh/dof_map.h"
 #include "libmesh/quadrature_gauss.h"
@@ -15,13 +24,6 @@
 #include "libmesh/dense_submatrix.h"
 #include "libmesh/dense_subvector.h"
 #include "libmesh/fe_interface.h"
-#include "SimulationOptions.h"
-#include "SimulationEnvironment.h"
-#include "TensorOperators.h"
-#include "RotatedCrystal.h"
-#include "AtomisticStructure.h"
-#include "QuantumContact.h"
-#include "DataOutput.h"
 
 #include "TiberModule.h"
 
@@ -43,7 +45,8 @@ Elasticity::Elasticity(const ModelOptions& options) :
 
 Elasticity::~Elasticity(void)
 {
-  // there's nothing to be done
+  if (TiberCad::get_mpi_comm().rank() == 0)
+      License::check_in("elasticity", 1);
 }
 
 
@@ -52,6 +55,10 @@ Elasticity::create(const ModelOptions& options)
 {
   // we could use the options to create different implementations
   // or something like that.
+  if (TiberCad::get_mpi_comm().rank() == 0)
+    License::check_out("elasticity",
+        TiberCad::major_version(), 0, 1);
+
   return new Elasticity(options);
 }
 
@@ -89,22 +96,6 @@ Elasticity::do_init(void)
 
   int n_elem = 0;
   
-  //Create node connection
-  const unsigned int nn  = get_mesh().n_nodes();
-  node_conn.resize(nn);
-  {
-    vector<unsigned short int> node_conn_local(node_conn.size());
-    
-    
-    MeshBase::const_element_iterator       el     = this->active_local_elements_begin();
-    const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
-    
-    for ( ; el != end_el; ++el, ++n_elem)
-      for (unsigned int n = 0; n < (*el)->n_nodes(); n++)
-	node_conn_local[(*el)->node(n)]++;
-
-    node_conn = node_conn_local;
-  }
   
   // prepare the vector for the accumulated strain
   // TODO this would not work very well with mesh refinement and needs to be improved,
@@ -194,12 +185,14 @@ Elasticity::do_solve(void)
   do {
 
     accumulate_strain();
-    apply_shape_deformation();
+    if (myopt.non_linear_strain == true)
+      apply_shape_deformation();
     //if (shape_iteration == 1)
     //  internal_strain_correction(NULL);
     system.solution->zero();
 
     system.solve();
+    system.update();
     sol->add(1.0,*(system.current_local_solution));
     
     double tot_norm = sol->l2_norm();
@@ -846,7 +839,7 @@ Elasticity::do_assemble(libMesh::EquationSystems& es, const std::string& system_
 
   system.matrix->close();
   //system.matrix->print_matlab("K.m");
-  //system.rhs->close();
+  system.rhs->close();
   //system.rhs->print_matlab("F.m");
 
 }
@@ -881,7 +874,7 @@ Elasticity::apply_shape_deformation()
   for (unsigned int ns = 0; ns < atom_structures.size(); ns++)
   {
     std::vector<Atom>& structure = atom_structures[ns]->get_structure_atoms();
-    std::vector<std::vector<unsigned int> > bond_map = atom_structures[ns]->get_bond_map();
+    const BondMap& bond_map = atom_structures[ns]->get_bond_map();
     double scale = atom_structures[ns]->get_scale();
 
     // for periodic structures, we adjust the periodicity by scaling with the ratio

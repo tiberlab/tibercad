@@ -16,7 +16,7 @@ class InitializerBase
     virtual ~InitializerBase(void) {};
 
     //! The operator to be overloaded
-    virtual void operator()(T& val) {};
+    virtual void operator()(T& val) = 0;
 
 
   protected:

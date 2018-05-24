@@ -2,13 +2,19 @@
 
 topdir := ../../../../..
 
-include $(topdir)/Make.defs
-include Make.defs
+include $(topdir)/Make.common
 
+ifeq ($(have_cuda),yes)
+  CUDACONF=--with-cuda=@CUDA_DIR@
+endif
+
+ifeq ($(have_mkl),yes)
+  MKLCONF=--with-mkl=@MKL_DIR@
+endif
 
 ARCH = $(shell uname -m)
 
-CXXFLAGS = -fPIC -I$(MPIINCL) -I . 
+CXXFLAGS = -fPIC  
 
 UPTREV=HEAD 
 #UPTREV=257
@@ -29,16 +35,17 @@ libuptight$(shared_libext) :  .$(ARCH)/UptWrapper$(obj-suffix) libuptight_$(ARCH
 
 libuptight_$(ARCH).a: checkout
 	@echo "Updating libuptight ..."
-	@cd src; svn -r $(UPTREV) up lib_uptight; svn -r $(UPTREV) up api; svn -r $(UPTREV) up make.common; \
+	@cd src; $(SVN) -r $(UPTREV) up;  $(SVN) -r $(UPTREV) up lib_uptight;  $(SVN) -r $(UPTREV) up api; \
 	echo "Compiling libuptight ..."; \
-	$(MAKE) -C api libuptight; cd ..; 
+	CC=$(CC) CXX=$(CXX) FC=$(FC) ./configure $(CUDACONF) $(MKLCONF) --with-subversion=$(SVN); \
+	$(MAKE) -C api libuptight; 
 	@mv src/api/libuptight_$(ARCH).a .	
 	@cp src/api/fortran.h .
 	@cp src/api/uptight.h . 
 	
 checkout:
 	@echo "Checkout libuptight ..."
-	@if [ ! -d src/api ]; then svn -r $(UPTREV) co $(UPTREPO) --depth empty; fi
+	@if [ ! -d src/api ]; then $(SVN) -r $(UPTREV) --depth files co $(UPTREPO); fi
 	
 
 	

@@ -32,6 +32,18 @@ TiberNonlinearSystem::TiberNonlinearSystem(libMesh::EquationSystems& es,
   set_type(NONLINEAR);
 }
 
+libMesh::NumericVector<double>&
+TiberNonlinearSystem::get_solution_vector(void)
+{
+  return *current_local_solution;
+}
+
+
+libMesh::NumericVector<double>&
+TiberNonlinearSystem::get_local_solution_vector(void)
+{
+  return *solution;
+}
 
 
 TiberNonlinearSystem*

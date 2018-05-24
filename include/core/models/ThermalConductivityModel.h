@@ -26,7 +26,7 @@ class ThermalConductivityModel : public PhysicalModelInterface
   //! Creator function
   static ThermalConductivityModel* create(const ModelOptions& options);
 
-  virtual void calculate(const Elem* elem, const Point& point) = 0;
+  virtual void calculate(const Elem* elem, const Point& point, double temperature) = 0;
 
   const libMesh::RealTensor& get_thermal_conductivity(void);
 

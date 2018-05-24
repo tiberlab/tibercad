@@ -1183,7 +1183,12 @@ Optics::plot_globaldata(void)
 
   if (file.good())
   {
-    file << "# initial_state final_state |Px|^2 |Py|^2 |Pz|^2\n";
+    vector<double> is_ene, fs_ene;
+
+    _initial_state_model->get_eigenvalues(_initial_state_particle, is_ene);
+    _final_state_model->get_eigenvalues(_final_state_particle, fs_ene);
+
+    file << "# initial_state final_state transition_energy |Px|^2 |Py|^2 |Pz|^2\n";
     unsigned int n1 =  _initial_state_numbers.size();
     unsigned int n2 =  _final_state_numbers.size();
 
@@ -1191,7 +1196,7 @@ Optics::plot_globaldata(void)
     {
       for (unsigned int j = 0; j < n2; j++)
       {
-        file << i << "  " << j;
+        file << i << "  " << j << "  " << (is_ene[i] - fs_ene[j]);
         for (unsigned int p = 0; p < 3; p++)
         {
           // norm returns the square of the absolute value

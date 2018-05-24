@@ -177,9 +177,9 @@ SimulationEnvironment::create_bc_maps(void)
               bd_it = bd_nodes.find(bd_id);
               if (bd_it != bd_end)
               {
-                const vector<ID>& nodes = bd_it->second;
-                const vector<ID>::const_iterator n_begin(nodes.begin());
-                const vector<ID>::const_iterator n_end(nodes.end());
+                const vector<unsigned int>& nodes = bd_it->second;
+                const vector<unsigned int>::const_iterator n_begin(nodes.begin());
+                const vector<unsigned int>::const_iterator n_end(nodes.end());
 
                 if (dim == 1)
                 {

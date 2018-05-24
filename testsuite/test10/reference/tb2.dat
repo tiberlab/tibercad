@@ -1,6 +1,6 @@
 # empirical_tb eigenstates (tb2)
 # Index Particle EigenEnergy     Occupation  FermiLevel Temperature
-      0      hl      -5.04692              0              0         300
-      1      hl      -5.04692              0              0         300
-      2      el     -0.617466              1              0         300
-      3      el     -0.617466              1              0         300
+      0      hl      -5.05008              0              0         300
+      1      hl      -5.05008              0              0         300
+      2      el     -0.620499              1              0         300
+      3      el     -0.620499              1              0         300

@@ -193,26 +193,9 @@ AtomisticGenerator::do_init()
   //Build up supercell structure with proper options
   Messages::info("Build a first oversized structure");
   build();
-  
-  //os<<"Initial structure with "<<_super_basis.size()<<" atoms"<<std::endl;
-  //Messages::info(os.str());
-
-  std::string preserve="none";
-  //preserve = _as->get_options().get_option("preserve", "none");
  
-  // associate the right element to each atom
-  associate_elements(_as->get_IDset());
-  
-  // cut the structure (only flags atoms)
-  cut(_as->get_IDset(), preserve);
-
-  // iterates on _super_basis and assign species
-  assign_species();
-
-  //eventually enlarge along dummy supercell directions
-  //(build bondmap if not present)
-  check_periodic();
-
+  // in some cases (especially for periodic structures) we might want
+  // to have all atoms inside the periodic box
   if (_as->get_options().get_option("fold_into_box", false))
   {
     Point origin(0);
@@ -238,6 +221,25 @@ AtomisticGenerator::do_init()
       fold_in_cell(*basis_iterator, origin, a1, a2, a3);
     }
   }
+ 
+  //os<<"Initial structure with "<<_super_basis.size()<<" atoms"<<std::endl;
+  //Messages::info(os.str());
+
+  std::string preserve="none";
+  //preserve = _as->get_options().get_option("preserve", "none");
+ 
+  // associate the right element to each atom
+  associate_elements(_as->get_IDset());
+  
+  // cut the structure (only flags atoms)
+  cut(_as->get_IDset(), preserve);
+
+  // iterates on _super_basis and assign species
+  assign_species();
+
+  //eventually enlarge along dummy supercell directions
+  //(build bondmap if not present)
+  check_periodic();
 
   //rebuild bondmap with new periodicity
   Messages::info("Rebuild bondmap");
@@ -299,7 +301,7 @@ AtomisticGenerator::finalize(void)
   //--------------------------------------------------------------------------------------------------
 
   Atom tmp_atom;
-  //TODO:not safe, better swap arrays, so then we can delete AtomisticGenerator instance
+  
   _as->set_structure_atoms(_structure_basis);
   
   _as->set_ttype_lattice_vectors(_period);
@@ -1249,7 +1251,7 @@ void AtomisticGenerator::passivate()
 
           Point position = _super_basis[i].get_position() +
                          ( ( bonded_rel_position) /
-                             bonded_rel_position.size() *
+                             bonded_rel_position.norm() *
                                          hydrogen_distance); 
 
           tmp.set_position(position);

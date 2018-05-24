@@ -13,9 +13,9 @@
 #include "DeviceException.h"
 #include "QuantumContact.h"
 
-#include "elem.h"
-#include "point.h"
-#include "parallel.h"
+#include "libmesh/elem.h"
+#include "libmesh/point.h"
+#include "libmesh/parallel.h"
 
 #include <vector>
 #include <set>
@@ -54,7 +54,7 @@ class Device
 
   public:
 
-    typedef std::map<ID, std::vector<ID> > BCNodeMap;
+    typedef std::map<ID, std::vector<unsigned int> > BCNodeMap;
 
     //! The atomistic structures iterator type
     typedef AtomStructMap::iterator atomistic_structure_iterator;

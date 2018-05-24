@@ -17,7 +17,10 @@ class Elem;
 //! Implementation of optical generation
 /*!
  * This class implements optical generation processes that can be
- * modeled by \f[G_{x}= G]
+ * modeled by a constant.
+ * Two ways are possible: promote a particle between two states (bands),
+ * requiring the specification of two carriers, or production of a single
+ * carrier (e.g. exciton).
  *
  */
 class TBDLLOCAL OpticalGeneration : public RecombinationModelInterface
@@ -34,16 +37,9 @@ class TBDLLOCAL OpticalGeneration : public RecombinationModelInterface
     //! \copydoc RecombinationModelInterface::get_net_recombination_rates()
     void get_net_recombination_rates(double& recomb_e, double& recomb_h);
 
-    /*!
-     * \copydoc
-     * RecombinationModelInterface::get_net_recombination_rate_derivatives()
-     */
-    void get_net_recombination_rate_derivatives(
-        std::vector<double>& recomb_e, std::vector<double>& recomb_h);
-
     //! File to read the external generation
-//    double read_file(char *filename, double p);
-     double read_file(void);
+    double read_file(void);
+
 
   protected:
 
@@ -53,6 +49,10 @@ class TBDLLOCAL OpticalGeneration : public RecombinationModelInterface
     //! \copydoc RecombinationModelInterface::do_init()
     virtual void do_init(void);
 
+    //! \copydoc RecombinationModelInterface::calculate_rate_and_derivatives()
+    virtual void calculate_rate_and_derivatives(std::vector<double>& R,
+        std::vector<std::vector<double>>& dPotentials) override;
+
 
   private:
 
@@ -61,6 +61,9 @@ class TBDLLOCAL OpticalGeneration : public RecombinationModelInterface
 
     //! A multiplier
     double _multiplier;
+
+    //! Use or not occupation of initial/final states
+    bool _use_occupation;
 
     //! The generation model
     std::vector<SimulationInterface*> _generation_model;
@@ -81,7 +84,8 @@ inline
 OpticalGeneration::OpticalGeneration(const ModelOptions& options)
   : RecombinationModelInterface(options),
     _generation(0.0),
-    _multiplier(1.0)
+    _multiplier(1.0),
+    _use_occupation(false)
 {
 }
 

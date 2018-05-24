@@ -27,8 +27,6 @@ ExcitonGaussDOS::ExcitonGaussDOS(const ModelOptions& options) :
 void
 ExcitonGaussDOS::read_database(void)
 {
-  // when reading from the database, we use the same data
-  // as for kp
   const Database& db = get_database();
 
   db.set_section("valenceband");
@@ -40,6 +38,10 @@ ExcitonGaussDOS::read_database(void)
   double mn = db.get("m_dos", 1.0);
 
   effective_mass()[0] = mn+mp;
+
+  db.set_section("bandgap");
+  _energy = db.get("Eg_G", 1);
+  _R = db.get("exciton_binding_energy", _R);
 }
 
 
@@ -48,6 +50,10 @@ ExcitonGaussDOS::do_init(void)
 {
 
   _R = get_option("R", _R);
+
+  if (_R < 0)
+    throw InitFailedException("Exciton binding energy R cannot be negative");
+
   _sigma = get_option("sigma", _sigma);
   _J = get_spin();
   _J = get_option("spin", _J);
@@ -56,25 +62,25 @@ ExcitonGaussDOS::do_init(void)
   if (has_option("N0"))
     fixed_dos() = true;
 
-  double level = get_option("level", 1.0);
-  double energy = get_option("exciton_energy", 1.0);
-  reference_energy()[0] = level - _R;
+  _energy = get_option("level", _energy);
+  _energy = get_option("exciton_energy", _energy);
 
-  if (reference_energy().size() == 3)
-    reference_energy()[0] = max(reference_energy()[1], reference_energy()[2]) - _R;
-  else
-  {
-    reference_energy().resize(2);
-    reference_energy()[1] = energy;  //store exciton energy if not specified from carriers
-  }
-
-  double egap = fabs(reference_energy()[1] - reference_energy()[2]);
-
-  if (_R < 0)
-    throw InitFailedException("Exciton binding energy R cannot be negative");
-
-  if (_R > egap)
+  if (_R > _energy)
     throw InitFailedException("Exciton binding energy R cannot be greater than band gap");
+
+  reference_energy()[0] = _energy - _R;
+
+  
+  /*
+  std::ofstream of("exciton_density.dat");
+  of << "# E0 = " << reference_energy()[0] << ",  sigma = " << _sigma << "\n";
+  for (double E = reference_energy()[0] - 10*_sigma; E < reference_energy()[0] - 4*_sigma; E += _sigma / 100)
+  {
+    std::pair<double, double> res = calculate_density_and_derivative(E, 0, 0.0258, 0.0258);
+    of << E << " " << res.first << " " << res.second << "\n";
+  }
+  */
+  
 
 }
 
@@ -87,8 +93,7 @@ void
 ExcitonGaussDOS::do_print_info(void)
 {
   ostringstream os;
-  double energy = (reference_energy().size() == 3) ? fabs(reference_energy()[1]-reference_energy()[2]) - _R : reference_energy()[1];
-  os << "Exciton energy = " <<  energy << " eV\n"
+  os << "Exciton energy = " <<  _energy << " eV\n"
      << "Binding energy = " << _R << " eV\n";
   Messages::info(os.str());
 }
@@ -109,6 +114,9 @@ ExcitonGaussDOS::calculate_density_and_derivative(double Ef, double Epot, double
   double N0 = (2.0*_J + 1.0) * get_effective_dos();
 
   std::vector<double> x, y, dy;
+  x.reserve(_order + 1);
+  y.reserve(_order + 1);
+  dy.reserve(_order + 1);
 
   double s = 1.0 / sqrt(2.0);
   double xM = 4.0 * s;
@@ -123,7 +131,7 @@ ExcitonGaussDOS::calculate_density_and_derivative(double Ef, double Epot, double
 
   for (auto val : x)
   {
-    double f = _f(val, Ef, kT);
+    double f = _f(val, -Ef, kT);
     double gauss = exp( - val * val);
     double g = fac * gauss * f;
 
@@ -132,7 +140,7 @@ ExcitonGaussDOS::calculate_density_and_derivative(double Ef, double Epot, double
   }
 
   dens = N0 * _trapez(x, y);
-  der  = N0 * _trapez(x, dy);
+  der  = -N0 * _trapez(x, dy);
 
 /*
   double s = 0.5 * _sigma * _sigma / kT;
@@ -148,8 +156,7 @@ ExcitonGaussDOS::calculate_density_and_derivative(double Ef, double Epot, double
 double
 ExcitonGaussDOS::_f(double x, double Ef, double kT) const
 {
-  const vector<double>& refenergy = get_reference_energy();
-  double energy = (refenergy.size() == 3) ? fabs(refenergy[1]-refenergy[2]) - _R : refenergy[1];
+  double energy = get_reference_energy()[0];
 
   double x0 = energy / _sigma / sqrt(2.0);
   double xf = Ef / _sigma / sqrt(2.0);

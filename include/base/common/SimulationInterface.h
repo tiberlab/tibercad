@@ -314,6 +314,15 @@ class SimulationInterface : public TiberModelObject
     unsigned int get_solve_sequence_number(void) const;
 
 
+    /*!
+     * \brief Analyze the numerical errors
+     *
+     * This method calls do_analyze_errors(), which should report
+     * information on the numerical errors
+     */
+    void analyze_errors(void);
+
+
     //! Write results to file
     /*!
      * This method calls do_plot() after some health checks
@@ -334,12 +343,11 @@ class SimulationInterface : public TiberModelObject
 
     //! Remember current solution (on the current mesh!)
     /*!
-     * Calls do_remember_current_solution()
-     */
-    /*!
      * If \c id is invalid or not specified, a new ID will be generated and
      * the solution stored with this new ID. Otherwise a solution stored at
      * \c id will be overwritten.
+     *
+     * Calls do_remember_current_solution()
      */
     ID remember_current_solution(ID id = 0);
 
@@ -389,8 +397,13 @@ class SimulationInterface : public TiberModelObject
     //! Get a pointer to the solution vector
     /*!
      * Calls do_get_solution_vector()
+     *
+     * In most cases (like standard FEM stuff based on libmesh)
+     * this gives the local solution vector without any ghost
+     * values.
      */
     libMesh::NumericVector<double>& get_solution_vector(void);
+
 
 
     //! Set the current solution to a given value
@@ -589,8 +602,26 @@ class SimulationInterface : public TiberModelObject
      * \see SolutionDescriptor
      */
     bool get_solution(std::map<ID, std::vector<double> >& values);
+////
+    //! Get some value not directly associated to the mesh.
+    /*!
+     *  It is used to get some value that needs a module to be calculated,
+     *  but that is not associated to the mesh (elem or node).
+     *  For example it could be a value interpolated from a look-up table.
+     *
+     *  Each value is identified by an ID (value_id)
+     *  Each value may depend on several parameters, identified by IDs
+     *  The derivative of value w.r.t. a parameter is identified 
+     *  by the ID of the corresponding parameter (dvar_id)
+     */
+    std::pair<double, double> get_value_and_derivative(ID value_id, std::map<ID, double> params, ID dvar_id = INVALID_ID);
 
+    //! Get the value id
+    ID get_value_id(std::string name);
 
+    //! Get the parameter id for a specific value
+    ID get_param_id(std::string name, ID value_id); 
+////
     /*!
      * \copydoc build_nodal_results()
      *
@@ -957,6 +988,12 @@ class SimulationInterface : public TiberModelObject
     void increment_solve_sequence_number(void);
 
 
+    /*!
+     * \brief Do the calculation of the numerical errors
+     */
+    void do_analyze_errors(const ModelOptions& options);
+
+
     //! Find excluded DoFs
     /*!
      * Can be overridden if the default implementation is not
@@ -1265,6 +1302,19 @@ class SimulationInterface : public TiberModelObject
 
 
 
+////
+    //! Add a value in the value map defining its id
+    void add_value(std::string name);
+
+    //! Add a parameter to an existent value
+    void add_parameter(std::string name, ID value_id);
+
+    //! The effective routine to be reimplemented
+    virtual std::pair<double, double> get_value_and_derivative_secure(
+              ID value_id, std::map<ID, double> params, ID dvar_id = INVALID_ID);
+////
+
+
     //! Get solutions at specified points in an element
     /*!
      * \param elem the pointer to the element
@@ -1562,6 +1612,18 @@ class SimulationInterface : public TiberModelObject
 
     //! The excluded domains
     std::map<ID, std::set<std::string>> _excluded_domains;
+
+
+////
+    //! A map associating value names to ids
+    std::map<std::string, ID> _value_map;
+    std::map<ID, std::string> _value_id_map;
+
+    //! A map associating parameters to a value
+    std::map<ID, std::map<std::string, ID> > _param_map;
+    std::map<ID, std::map<ID, std::string> > _param_id_map;
+
+////
 
 
     //! create a unique name for the equation system
@@ -2070,6 +2132,7 @@ SimulationInterface::get_solution_vector(void)
 }
 
 
+
 inline
 void
 SimulationInterface::set_solution_vector(const libMesh::NumericVector<double>& new_solution)
@@ -2183,6 +2246,30 @@ SimulationInterface::simulations_end(void)
   return SimulationIterator();
 }
 
+
+inline
+ID 
+SimulationInterface::get_value_id(std::string name)
+{
+  if (_value_map.count(name))
+    return _value_map.at(name);
+
+  return INVALID_ID;
+}
+
+
+inline
+ID 
+SimulationInterface::get_param_id(std::string name, ID value_id)
+{
+  if (_param_map.count(value_id))
+  {
+    if (_param_map.at(value_id).count(name))
+      return _param_map.at(value_id).at(name);
+  }
+
+  return INVALID_ID;
+}
 
 
 #endif // _SIMULATIONINTERFACE_H_

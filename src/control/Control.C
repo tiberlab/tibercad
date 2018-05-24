@@ -134,10 +134,11 @@ Control::~Control(void)
     SimulationInterface::destroy(sim);
   }
 
-  Device::destroy(_device);
-
   // clear all variables
   VariableValue::clear_all();
+
+  // This gives a problem with some MPI comm
+  //Device::destroy(_device);
 
 }
 
@@ -224,7 +225,12 @@ Control::init(void)
           opts.get_option("resultpath", ".")));
 
     if (!opts.find_option("output_format"))
-      opts.set_option("output_format", global_opts.get_option("output_format", "vtk"));
+    {
+      string default_format = "vtk";
+      if (_device->get_mesh().mesh_dimension() == 1)
+        default_format = "grace";
+      opts.set_option("output_format", global_opts.get_option("output_format", default_format));
+    }
 
     if (!opts.find_option("binary_output"))
       opts.set_option("binary_output", global_opts.get_option("binary_output", "true"));
@@ -265,17 +271,19 @@ Control::setup_globals(const ModelOptions& opts)
     logfile = _outputdir + "/" + Utils::basename(_inputfile) + ".log";
 
 
+
   // for the moment, if several processes try to use the same log file
   // we let everyone use a different one
   //if (TiberCad::get_mpi_comm().semiverify(&logfile))
   //{
-    logfile = logfile + "." + to_string(TiberCad::get_mpi_comm().rank());
+  //  logfile = logfile + "." + to_string(TiberCad::get_mpi_comm().rank());
   //}
+  logfile = logfile + "." + InputParser::get_defined("MPI_DEV_KEY");
 
 
   Messages::info("Writing log to " + logfile);
 
-  Messages::set_log_file(logfile);
+  Messages::set_log_file(logfile, _device->get_communicator(), 0);
 
   {
     ostringstream os;
@@ -401,19 +409,7 @@ Control::setup_module(Device* device, const ModelOptions& opts)
     env = &sim->get_environment();
 
 
-    // the physical models
-    ModelOptions physopts;
 
-    // put them all together, if someone makes more than one Physics block ...
-    {
-      ModelOptions::const_submodel_iterator it = opts.submodels_begin("Physics");
-      const ModelOptions::const_submodel_iterator end = opts.submodels_end("Physics");
-      for ( ; it != end; ++it)
-      {
-        physopts += it->second;
-        physopts.set_key((it->second).get_key());
-      }
-    }
 
     //
     // and now... the boundary conditions
@@ -440,13 +436,23 @@ Control::setup_module(Device* device, const ModelOptions& opts)
 
 
 
+
+    // the bulk physical models, all together
+    ModelOptions bulk_opts;
+
+
     //
     // Next, we create all lower dimensional submodels
+    // At the same time, we put all bulk Physics blocks together
     //
     // NOTE: only definitions with correct space dimensions will be
     //       added to the different PhysicalObject instances
 
+    ModelOptions::const_submodel_iterator ph_it = opts.submodels_begin("Physics");
+    const ModelOptions::const_submodel_iterator ph_end = opts.submodels_end("Physics");
+    for ( ; ph_it != ph_end; ++ph_it)
     {
+      ModelOptions physopts = ph_it->second;
 
       ModelOptions::submodel_iterator it = physopts.submodels_begin();
       const ModelOptions::submodel_iterator end = physopts.submodels_end();
@@ -550,10 +556,14 @@ Control::setup_module(Device* device, const ModelOptions& opts)
         if (add)
           physopts.delete_submodel(tmpit);
       }
+
+      // now add the remaining content to the common Physics options
+      bulk_opts += physopts;
+      bulk_opts.set_key((ph_it->second).get_key());
     }
     m.unindent();
 
-
+    
     //
     // now we have to create the bulk models
     //
@@ -591,7 +601,7 @@ Control::setup_module(Device* device, const ModelOptions& opts)
         //string crystal_structure(mat->get_structure());
 
         // that's not elegant, but it works
-        ModelOptions opts(physopts);
+        ModelOptions opts(bulk_opts);
         opts.delete_all_submodels();
 
         // we add the crystal structure for bulk materials as this could
@@ -604,8 +614,8 @@ Control::setup_module(Device* device, const ModelOptions& opts)
         // NOTE: different submodels could have the same identifier
         //
         {
-          ModelOptions::submodel_iterator it = physopts.submodels_begin();
-          const ModelOptions::submodel_iterator end = physopts.submodels_end();
+          ModelOptions::submodel_iterator it = bulk_opts.submodels_begin();
+          const ModelOptions::submodel_iterator end = bulk_opts.submodels_end();
           for ( ; it != end; ++it)
           {
             bool add = true;

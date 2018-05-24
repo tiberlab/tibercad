@@ -70,7 +70,7 @@ class TBDLLOCAL SRHRecombination : public RecombinationModelInterface
         const PhysicalModelInterface* comp_B, double xa) override;
 
     //! \copydoc RecombinationModelInterface::calculate_rate_and_derivatives()
-    virtual double calculate_rate_and_derivatives(std::vector<double>& dPotentials) override;
+    virtual void calculate_rate_and_derivatives(std::vector<double>& R, std::vector<std::vector<double>>& dPotentials) override;
 
 
   private:

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 ARCH=`uname -m`
 
@@ -14,7 +14,7 @@ LIBMESHDIR=${BUILDDIR}/libmesh-1.0.0-${ARCH}-linux
 
 export CXX=mpicxx-3.1.1
 export CC=mpicc-3.1.1
-export FC="mpif90-3.1.1 -fc=ifort-11.1"
+export FC=mpifort-3.1.1
 export F77=${FC}
 #export CXX=/usr/pack/tibercad_dev-2.2-ma/${ARCH}-linux/bin/mpicxx
 #export CC=/usr/pack/tibercad_dev-2.2-ma/${ARCH}-linux/bin/mpicc
@@ -33,6 +33,11 @@ BOOST="${SDKDIR}"
 #CONFIGOPTS="--with-boost-prefix=$BOOST --with-boost-libdir=${BOOST}/${sepparch}/lib"
 CONFIGOPTS="--with-boost-prefix=$BOOST --with-boost-libdir=${BOOST}/${ARCH}-linux/lib"
 
+SVN=svn-1.6.5
+if test "$(cat /etc/debian_version | awk -F . '{print $1}')" = "8"
+then
+  SVN=svn-1.9.5
+fi
 
 #  --enable-hetero \
 #  --enable-dftb \
@@ -42,12 +47,13 @@ CONFIGOPTS="--with-boost-prefix=$BOOST --with-boost-libdir=${BOOST}/${ARCH}-linu
 #  --with-tao-prefix=/usr/pack/tibercad_dev-2.2-ma/tao-1.10-p1 \
 
 ./configure \
+  --with-cuda=/usr/pack/cudatoolkit-5.5.11-ma \
   --with-petsc-prefix=${PETSC_DIR} \
   --with-petsc-arch=${ARCH}-linux \
   --with-slepc-prefix=${SLEPC_DIR} \
   --with-mpiexec=mpiexec-3.1.1 \
   --with-mkl=/usr/pack/intel_mkl-11.2-ma/mkl \
-  --with-subversion=svn-1.6.5 \
+  --with-subversion=${SVN} \
   --disable-license-check \
   --enable-uptight\
   --disable-pardiso \

@@ -5,6 +5,7 @@
 #include "Material.h"
 #include "SimulationInterface.h"
 #include "DriftDiffusionProperties.h"
+#include "TiberMath.h"
 
 #include "TiberModule.h"
 
@@ -18,13 +19,17 @@ using namespace std;
 void
 OpticalGeneration::do_init(void)
 {
-  // G is a sweepable value, so check it!
-  //get_parameter("G", G_);
+  RecombinationModelInterface::do_init();
 
   string gen_str(get_option("generation", "0"));
   istringstream is(gen_str);
 
+  if ((get_carrier_names().size() != 2) && (get_carrier_names().size() != 1))
+    throw InitFailedException("Optical generation model needs exactly "
+        "one or two carriers");
+
   get_parameter("multiplier", _multiplier);
+  get_parameter("use_occupation_factors", _use_occupation);
  
   double val;
   if ((is >> val) || (gen_str[0] == '$'))
@@ -58,23 +63,14 @@ OpticalGeneration::do_init(void)
 
       _gen_id[i] = _generation_model[i]->get_solution_id("Generation");
     }
-   }
-}
-
-
-
-void
-OpticalGeneration::get_net_recombination_rate_derivatives(
-    std::vector<double>& recomb_e, std::vector<double>& recomb_h)
-{
-  recomb_e[0] = recomb_h[0] = 0;
-  recomb_e[1] = recomb_h[1] = 0;
+  }
 }
 
 void
-OpticalGeneration::get_net_recombination_rates(double& recomb_e,
-    double& recomb_h)
+OpticalGeneration::calculate_rate_and_derivatives(std::vector<double>& R,
+    std::vector<std::vector<double>>& dPotentials)
 {
+
   if (_generation_model.size() > 0)
   {
 
@@ -91,7 +87,7 @@ OpticalGeneration::get_net_recombination_rates(double& recomb_e,
           vector<Point>(1, dd.get_coordinates())))
         _generation += tmp[0];
     }
-/*
+    /*
     if (_read_file == true)
     {
       DriftDiffusionProperties& dd = get_driftdiffusionproperties();
@@ -100,10 +96,160 @@ OpticalGeneration::get_net_recombination_rates(double& recomb_e,
       // prendere le cooridnate e passarle al file read_file
       _generation = _sun * read_file(&gen_file, 1);
     }
-*/
+     */
   }
 
-  recomb_e = recomb_h = -_multiplier * _generation;
+  double rate = _multiplier * _generation;
+
+
+  if (get_carrier_names().size() == 1)
+  {
+    ID id1 = this->get_carrier_ids()[0];
+    const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
+
+    double kT = dd.get_lattice_temperature();
+
+    double E1  = dd.get_carrier_properties(id1)->get_band_edge();
+
+    double ch1 = dd.get_carrier_properties(id1)->get_charge();
+
+    double Ef1 = -dd.get_q_fermi_potential(id1);
+
+    double f1, df1;
+    if (ch1 > 0)
+    {
+      auto ff = Distributions::fermi_dirac(-Ef1 + E1, kT);
+      f1 = ff.first;
+      df1 = -ff.second;
+    }
+    else
+    {
+      auto ff = Distributions::fermi_dirac(Ef1 - E1, kT);
+      f1 = ff.first;
+      df1 = ff.second;
+    }
+
+    double g1 = 1 - f1;
+    double dg1 = -df1;
+
+    //R[id1] = -(rate * g1);
+    R[id1] = -rate;
+    dPotentials[id1][id1] = 0;
+    dPotentials[id1][dd.n_known_carriers()] = 0;
+    //dPotentials[id1][id1] = (rate * dg1);
+    //dPotentials[id1][dd.n_known_carriers()] = ch1 * (rate * dg1);
+  }
+  else
+  {
+    // energies are referred to negatively charged particles, so
+    // taking away one negative carrier means adding one 'hole'
+
+    const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
+
+    ID id1 = this->get_carrier_ids()[0];
+    ID id2 = this->get_carrier_ids()[1];
+
+
+    double kT = dd.get_lattice_temperature();
+
+    double E1  = dd.get_carrier_properties(id1)->get_band_edge();
+    double E2  = dd.get_carrier_properties(id2)->get_band_edge();
+
+    if (E1 > E2)
+    {
+      swap(id1, id2);
+      swap(E1, E2);
+    }
+
+    double ch1 = dd.get_carrier_properties(id1)->get_charge();
+    double ch2 = dd.get_carrier_properties(id2)->get_charge();
+
+    double Ef1 = -dd.get_q_fermi_potential(id1);
+    double Ef2 = -dd.get_q_fermi_potential(id2);
+
+    double f1, df1;
+    double f2, df2;
+    if (ch1 > 0)
+    {
+      auto ff = Distributions::fermi_dirac(-Ef1 + E1, kT);
+      f1 = ff.first;
+      df1 = -ff.second;
+    }
+    else
+    {
+      auto ff = Distributions::fermi_dirac(Ef1 - E1, kT);
+      f1 = ff.first;
+      df1 = ff.second;
+    }
+
+    if (ch2 > 0)
+    {
+      auto ff = Distributions::fermi_dirac(-Ef2 + E2, kT);
+      f2 = ff.first;
+      df2 = -ff.second;
+    }
+    else
+    {
+      auto ff = Distributions::fermi_dirac(Ef2 - E2, kT);
+      f2 = ff.first;
+      df2 = ff.second;
+    }
+
+    //cerr << endl;
+    //cerr << dd.get_carrier_properties(id1)->get_particle_name() <<
+    //    " " << ch1 << " " << E1 << " " << Ef1 << " " << f1 << endl;
+    //cerr << dd.get_carrier_properties(id2)->get_particle_name() <<
+    //    " " << ch2 << " " << E2 << " " << Ef2 << " " << f2 << endl;
+
+    // R = rate * g1 * g2;
+    double g1 = 1, g2 = 1, dg1 = 0, dg2 = 0;
+    double sign1 = 1, sign2 = 1;
+
+    if (ch1 > 0)
+    {
+      // it's a hole
+      g1 = 1 - f1;
+      dg1 = -df1;
+      sign1 = -1;
+    }
+    else
+    {
+      g1 = f1;
+      dg1 = df1;
+    }
+
+    if (ch2 > 0)
+    {
+      g2 = f2;
+      dg2 = df2;
+    }
+    else
+    {
+      g2 = 1 - f2;
+      dg2 = -df2;
+      sign2 = -1;
+    }
+
+    if (!_use_occupation)
+    {
+      g1 = g2 = 1;
+      dg1 = dg2 = 0;
+    }
+
+    R[id1] = sign1 * rate * g1 * g2;
+    R[id2] = sign2 * rate * g1 * g2;
+    //cerr << "   " << R[id1] << " " << R[id2] << endl;
+
+    double dR1 = rate * dg1 * g2;
+    double dR2 = rate * g1 * dg2;
+    dPotentials[id1][id1] = -sign1 * dR1;
+    dPotentials[id1][id2] = -sign1 * dR2;
+    dPotentials[id2][id1] = -sign2 * dR1;
+    dPotentials[id2][id2] = -sign2 * dR2;
+    dPotentials[id1][dd.n_known_carriers()] = sign1 * (dR1 + dR2);
+    dPotentials[id2][dd.n_known_carriers()] = sign2 * (dR1 + dR2);
+  }
+
 }
 
 

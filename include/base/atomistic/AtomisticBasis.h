@@ -186,6 +186,9 @@ class AtomisticBasis
    * maybe this will change in the future
    */
   AtomisticBasis(void);
+
+  //! Copy constructor
+  AtomisticBasis(const AtomisticBasis& other);
     
   //! Bond Map object pointer
   BondMap* _bondmap;

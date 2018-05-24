@@ -16,7 +16,7 @@ class TBDLLOCAL KmcTUM : public KmcInterface
   static KmcTUM* create(const ModelOptions& options); 
    
   // Class Destructor
-  virtual ~KmcTUM() {};
+  virtual ~KmcTUM();
  
  protected:
  

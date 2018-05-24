@@ -51,10 +51,12 @@ class Boundary;
  * -\nabla(\epsilon_r\nabla\varphi -\mathrm{P})& = & \frac{e}{\epsilon_0}
  *     \left(-n + p + N_D^+ - N_A^-\right) \\
  * -\nabla(\mu_n n\nabla\phi_n) & = & R \\
- * -\nabla(\mu_p p\nabla\phi_p) & = & R
+ * -\nabla(\mu_p p\nabla\phi_p) & = & -R
  * \f}
  * using appropriate models for the ionization of dopants, polarization,
  * mobilities and recombinations.
+ * \f$\phi_{n,p}\f$ are the electrochemical potentials of the electrons and holes,
+ * related to the quasi Fermi levels as \f$E_{F,\alpha} = -q\phi_\alpha\f$
  *
  *
  * The get_solution() methods can provide the following variables:
@@ -70,8 +72,8 @@ class Boundary;
  * \li \c hMob hole mobility (cm^2/Vs)
  * \li \c eCond electron conductivity (S/cm)
  * \li \c hCond hole conductivity (S/cm)
- * \li \c QFermi_e electron electro-chemical potential (V)
- * \li \c QFermi_h hole electro-chemical potential (V)
+ * \li \c QFermi_e electron quasi Fermi level (eV)
+ * \li \c QFermi_h hole quasi Fermi level (eV)
  * \li \c E modulus of electric field (V/cm)
  * \li \c Ex electric field, x-component
  * \li \c Ey electric field, y-component
@@ -143,6 +145,7 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
       hPeltier,         /*!< Electron Peltier-Thomson heat source */
       RecombHeat,       /*!< Recombination heat  */
       IQE,              /*!< Internal quantum efficiency */
+      ArtificialDiffusion,
       eNetRecombination = 100,  /*!< base number for el recombination models */
       hNetRecombination = 200,  /*!< base number for hl recombination models */
       ContactCurrent   = 300,  /*!< base number for contact currents */
@@ -781,12 +784,6 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
 // inline member functions
 //
 
-inline
-DriftDiffusion*
-DriftDiffusion::create(const ModelOptions& options)
-{
-  return new DriftDiffusion(options);
-}
 
 
 inline

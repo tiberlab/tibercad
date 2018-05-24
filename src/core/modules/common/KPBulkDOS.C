@@ -105,8 +105,10 @@ KPBulkDOS::do_reinit(const Elem* elem)
       data))
   {
     effective_dos() = data.eff_dos;
+    band_edge() = data.ref_energy;
     reference_energy() = data.ref_energy;
     effective_mass() = data.dos_mass;
+    dos_mass() = data.dos_mass;
   }
   else
   {
@@ -115,7 +117,6 @@ KPBulkDOS::do_reinit(const Elem* elem)
     _bulk_model->set_strain(strain);
 
     // it wants temperature in K
-    //_bulk_model->set_temperature(SimulationOptions::T / Constants::k_B);
     _bulk_model->set_temperature(SimulationOptions::T);
 
     _solve_kp();
@@ -252,6 +253,8 @@ KPBulkDOS::calculate_density_and_derivative(double Ef, double Epot,
   const double arg_min = -50;
   const double min_dens = 1e-64;
 
+  _th_el_power = 0;
+
   for (int i = 0; i < _ref_energies.size(); ++i)
   {
     double dens, der;
@@ -297,7 +300,18 @@ KPBulkDOS::calculate_density_and_derivative(double Ef, double Epot,
 
     density += dens;
     derivative += der;
+
+
+    // calculate thermoelectric power
+    double temp = kT / Constants::k_B;
+    double Pth = dens / der * 1.5 / temp + Constants::k_Boltzmann * (1 - arg);
+
+    _th_el_power += dens * Pth;
+
   }
+
+  _th_el_power /= density;
+
 
   return make_pair(density, derivative);
 }

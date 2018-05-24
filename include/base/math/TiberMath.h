@@ -49,6 +49,11 @@ namespace Distributions
 {
 
   //! The Fermi-Dirac distribution
+  /*!
+   * \param E the argument \f$E=E_F-E_0\f$
+   * \param kT the thermal energy
+   * \return the value and the derivative with respect to \f$E_0\f$
+   */
   std::pair<double, double> fermi_dirac(double E, double kT);
 
 }

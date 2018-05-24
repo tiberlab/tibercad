@@ -107,8 +107,12 @@ class TiberEqSystem
     libMesh::System* get_libmesh_system(void);
 
 
-    //! Get the solution vector
+    //! Get the solution vector including ghost values
     virtual libMesh::NumericVector<double>& get_solution_vector(void) = 0;
+
+
+    //! Get the local solution vector without ghost values
+    virtual libMesh::NumericVector<double>& get_local_solution_vector(void) = 0;
 
 
     //! Set a weight for a given norm

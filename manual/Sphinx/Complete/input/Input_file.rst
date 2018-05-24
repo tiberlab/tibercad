@@ -87,9 +87,13 @@ Device section
 
 The ``Device`` section includes the geometrical description of the device to be simulated.
 An optional device name can be associated to the device object after the ``Device`` keyword.
-In the ``Device`` section, two types of blocks can be present: ``Region`` and 
-``Cluster`` blocks. Outside of these blocks, general options common to all the device can
+In the ``Device`` section, two types of blocks used for the description of the device geometry can be present: ``Region`` and 
+``Cluster`` blocks. 
+
+Outside of these blocks, general options common to all the device can
 be defined. The most important one is the specification of the mesh file, which is mandatory.
+
+
 
  ``meshfile`` : string
      name of the mesh file, including file name extension
@@ -110,6 +114,13 @@ The ``Region`` blocks contain the description of the device in continuous media 
 The ``Cluster`` blocks define logical groups of regions, which may have different materials or
 different physical properties. In this way it is possible to easily refer to sets of regions
 by using the cluster name.
+
+Two further blocks may be present in the ``Device`` section:
+``Atomistic`` and 
+``Parallel`` blocks. 
+
+The ``Atomistic`` block contain the description  of an atomistic structure which can be related to one or more Regions of the Device.
+The ``Parallel`` block defines the parameters which control a parallel execution of the Device simulation. 
 
 
 Region block
@@ -232,7 +243,27 @@ The definition of an atomistic structure can be done using the keyword ``Atomist
 
 The atomistic generator produces an atomistic model over all the specified regions. Currently the structure
 can only be a pseudomorphic structure. The reference region is used to define the crystal lattice for the 
-whole structure. More details about the atomistic generator can be found in the module Empirical Tight Binding (ETB).
+whole structure. More details about the atomistic generator can be found in  :ref:`Atomisticgen`.
+
+
+Parallel block
+^^^^^^^^^^^^
+
+The definition of the options for a parallel execution of the simulation can be done using the keyword ``Parallel``. 
+
+::
+   
+  Parallel
+  {
+    mpi_processes_per_device = 2 # 4 
+    # let's do FEM calculations in serial
+    mpi_processes_per_mesh   = 1
+  }
+
+More details  can be found in :ref:`Parallel`.
+
+
+
 
 
 Modules
@@ -261,15 +292,15 @@ Modules
 
     Physics
     {
-      strain_simulation = strain
-
-      polarization (piezo, pyro) {}
       
+  
       mobility
       {
         type = field_dependent
         low_field_model = doping_dependent
       }
+     recombination (srh, auger) {}
+
     }
 
     Contact cathode
@@ -549,6 +580,8 @@ performed, for example
 The mesh independent results for every sweep step are stored in this file.
 
 
+
+
 Material database
 ----------------------------------
 
@@ -556,7 +589,7 @@ Material database
 
 
 
-..  _material_list :
+
 
 ..  math::
     :nowrap:
@@ -580,6 +613,8 @@ Material database
      \texttt{AlGaP} & zb & ternary  \\
      \texttt{AlGaSb} & zb & ternary  \\
      \texttt{AlInAs} & zb & ternary  \\
+     \texttt{AlInGaAs} & zb & quaternary  \\
+     \texttt{AlInGaP} & zb & quaternary  \\
      \texttt{AlInN} & wz & ternary  \\
      \texttt{AlInP} & zb & ternary  \\
      \texttt{AlInSb} & zb & ternary  \\
@@ -591,7 +626,9 @@ Material database
      \texttt{GaAsP} & zb & ternary  \\
      \texttt{GaAsSb} & zb & ternary  \\
      \texttt{GaInP} & zb & ternary  \\
-     \texttt{GaInSb} & zb & ternary  
+     \texttt{GaInSb} & zb & ternary \\ 
+     \texttt{GaN} & wz & binary \\
+     \texttt{GaP} & zb & binary 
      \end{tabular}
      \end{minipage}
      \hspace{0.5cm}
@@ -602,8 +639,6 @@ Material database
      \textbf{Name}  & \textbf{Crystal structure} & \textbf{Type}  \\
      \hline
      \hline
-     \texttt{GaN} & wz & binary \\
-     \texttt{GaP} & zb & binary \\
      \texttt{GaPSb} & zb & ternary \\ 
      \texttt{GaSb} & zb & binary \\
      \texttt{Ge} & zb & simple \\
@@ -612,14 +647,20 @@ Material database
      \texttt{InAsSb} & zb & ternary  \\
      \texttt{InGaAs} & zb & ternary  \\
      \texttt{InGaN} & zb & ternary  \\
+     \texttt{InGaSb} & zb & ternary  \\
      \texttt{InN} & wz & binary \\
      \texttt{InP} & zb & binary \\
      \texttt{InPSb} & zb & ternary  \\
      \texttt{InSb} & zb & binary \\
      \texttt{Pentacene} & - & molecular \\
+     \texttt{Perowskite} & - & organic  \\
+     \texttt{Alq3} & - & organic \\
+     \texttt{aNPD} & - & -  \\
      \texttt{Si} & zb & simple \\
+     \texttt{SiGe} & zb & binary  \\
      \texttt{SiN} & zb & binary  \\
      \texttt{SiO2} & zb & binary \\
+     \texttt{HfO2} & zb & binary \\
      \texttt{TiO2mes} & - & mesoporous \\    
      \texttt{ZnO} & zb & binary \\
      \texttt{ZrO2} & zb & binary 
@@ -634,14 +675,13 @@ Material database
     
 
 
-|
 
 
 
 The  parameters  of  the  most  important semiconductor materials are  collected  in  the  *material database*.
-See :ref:`List of materials<material_list>` for  a  complete list of  the  materials defined in  tiberCAD. 
+See :ref:`List of materials <material_list>`      for  a  complete list of  the  materials defined in  tiberCAD. 
 *zb* stands  for  *zincblende* crystal  structure, *wz* for  *wurtzite*. 
-Materials  can be  simple elements, like Si and  Ge, binary  compounds, such  as GaAs or  GaN,  and ternary alloys, like  AlGaAs.
+Materials  can be  simple elements, like Si and  Ge, binary  compounds, such  as GaAs or  GaN,   ternary alloys, like  AlGaAs and quaternary alloys such as AlInGaAs.
 For  the  simple and binary  compounds the lattice, strain  and  band properties are included in  each material file. The ternary alloy material  file instead contains  the name of  the  two parent  materials,  from  which the  parameters  of  the  alloy  material are  calculated,  depending  on  the  components concentration, according to a  quadratic  law, e.g. for the energy gap *Eg* 
 
 .. math::
@@ -651,6 +691,21 @@ For  the  simple and binary  compounds the lattice, strain  and  band properties
 
 
 where  the  *bowing* parameter *C* accounts  for  the  deviation from a linear interpolation (virtual-crystal approximation) between the two binary compounds *A* and *B* and *x* is the concentration of the binary *A*. Values of *C* for one or  more  parameters are reported in the  alloy  material  file. 
+ 
+
+The quaternary  alloy material file contains the name of the two parent ternary alloys, e.g. for AlInGaAs ::
+
+  comp_A = GaInAs 
+  comp_B = AlGaAs 
+
+along with a default concentration of the two components ::
+
+  x_A = 0.5
+  x_B = 0.5
+
+These values can be changed editing the material file.
+Instead, when using this quaternary alloy from the input file, one can control the concentration *x* of the *comp_A*, in this case GaInAs.
+
 User-defined  materials can  be  freely  added, provided  that  the  correct syntax for  the parameters entry is  followed.
 
 

@@ -18,12 +18,16 @@ that the system of PDEs to be solved reads as follows
 
 .. math::
    :label: dd_eq_ddsystem
-   
+
    -\nabla(\varepsilon\nabla\varphi - \mathbf{P}) & =  -e(n - p - N_d^+ + N_a^-) \\
    -\nabla(\mu_n n ( \nabla\phi_n + P_n \nabla T)  ) & =  R \\
-   -\nabla(\mu_p p (\nabla\phi_p + P_p \nabla T) ) & =  -R 
+   -\nabla(\mu_p p (\nabla\phi_p + P_p \nabla T) ) & =  -R
+
+
+
+
  
-:math:`P` is the electric polarization due to e.g. piezoelectric effects.
+where :math:`P` is the electric polarization due to e.g. piezoelectric effects.
 :math:`N_d^+` and :math:`N_a^-` are the densities of ionized donors and acceptors, respectively.
 :math:`R` is the net recombination rate, i.e. recombination rate minus generation rate, and :math:`P_n` and :math:`P_p` are the electron
 and hole thermoelectric powers, respectively. The models for the mobilities and the net
@@ -122,7 +126,7 @@ of submodels. The generic options are:
      for the electric polarization field. This can be useful if the amount of total electric
      polarization has to be treated as fitting parameter.
 
-In the following we describe all submodels. As mentioned in the Introduction (REF HERE)
+In the following we describe all submodels. As mentioned in the Introduction, 
 submodels can be restricted to a subset of simulation regions.
 
 
@@ -154,16 +158,16 @@ The density of states for electrons and/or holes can be set using the ``density_
      }
    }
 
-There are several types of density of states models.
+Several types of density of states models are available.
 
 
 3D Bulk DOS (default)
 ............................................
 
 This is the default model describing the 3D DOS of a parabolic band semiconductor.
-Band edge energies and the DOS mass are taken from the database, or can be provided from the input file.
+The *Band edge energies* and the *DOS mass* are taken from the database, or can be provided from the input file.
 In the current version, if band  parameters have to be given from the input file, it is necessary to use the ``conduction_band`` and ``valence_band`` blocks instead of ``band_properties``.
-In the ``density_of_states`` subblock, one can then give the band edge and the DOS mass the keywords ``level``, and ``dos_mass``, respectively.
+Then, in the ``density_of_states`` subblock, one can  provide  the values of the *band edge energy*  and the *DOS mass* for the specified band (conduction or valence) through the keywords ``level``, and ``dos_mass``, respectively.
 A degeneracy can be specified with the ``degeneracy`` keyword.
 The material whose band parameters are given in this way is defined through the keyword 
 ``regions``, which is in general used in the input file to restrict a model to one or more regions of the device. Thus the entry ::
@@ -476,17 +480,63 @@ doping density, e.g.
     \tau_n & =  \tau_n^0 \left(\frac{T}{T_0}\right)^{\alpha_n} e^{\beta(T/T0 - 1)} \\
     \tau_n^0 & =  \tau_{min,n} + \frac{\tau_{max,n} - \tau_{min,n}}{1 + (N/N_{ref})^\gamma}
 
-where :math:`T_0` is the reference temperature (300 K). Table 2.3 shows the corresponding parameters 
-for the material data files. The parameters for holes and electrons have to be
-specified in an array, e.g. :math:`\tau_{min} = (1e-5, 3e-6)`
+where :math:`T_0` is the reference temperature (300 K).
 
+Table :ref:`SRH material data file parameters<srh_mat_file_par>`
+shows the corresponding parameters 
+for the material data files.
+The parameters for holes and electrons have to be
+specified in an array, e.g. :math:`\tau_{min} = (1e-5, 3e-6)`.
+
+..  _srh_mat_file_par :
+
+..  math::
+    :nowrap:
+    :label:
+    
+     \begin{table}[!ht]
+     \center
+     \begin{tabular}{l||l|l}
+     \multicolumn{2}{c}{\textbf{SRH Table}} \\
+     \hline
+     \textit{parameter} & \textit{keyword} \\
+     \hline\hline
+     $\tau_{min}$ & \texttt{taumin} \\
+     $\tau_{max}$ & \texttt{taumax} \\
+     $N_{ref}$ & \texttt{Nref} \\
+     $\gamma$ & \texttt{gamma} \\
+     $E^*$ & \texttt{Etrap} \\
+     $\alpha$ & \texttt{Talpha} \\
+     $\beta$ & \texttt{Tcoeff} \\
+     \end{tabular}
+     \caption{SRH material data file parameters}
+     \label{table:srh_params_db}
+     \end{table}
     
 
 The recombination times and trap level can be overridden from the input file by using
-the keywords of Table 2.4.
+the keywords of Table :ref:`SRH input file parameters<srh_par>`.
 
-
-
+..  _srh_par :
+   
+..  math::
+    :nowrap:
+    :label:
+    
+     \begin{table}[!ht]
+     \center
+     \begin{tabular}{l||l}
+     \multicolumn{2}{c}{\textbf{SRH parameters Table}} \\
+     \hline
+     \hline
+     $tau_n$ & \texttt{tau\_n} \\
+     $tau_p$ & \texttt{tau\_p} \\
+     $E^*$ & \texttt{E\_t}
+     \end{tabular}
+     \caption{SRH input file parameters}
+     \label{table:srh_params_input}
+     \end{table}
+    
 The SRH recombination model can be applied also to surfaces and interfaces. In this
 case, you can provide the recombination velocities using the keywords ``rec_velocity_n``
 and ``rec_velocity_p`` instead of ``tau_n`` and ``tau_p`` .
@@ -671,9 +721,11 @@ The doping dependent mobility model (identifier ``doping_dependent`` ) implement
 models for mobility depending on the total doping density and the temperature. The
 model that is used depends on the value of the ``mobility_formula`` parameter.
 
-**Model by Masetti et al.**
+**Model by Masetti**
 
-The model by Masetti et al.  Masetti is identified by ``mobility_formula`` = 1. It uses the following
+
+
+The model by Masetti  [Masetti]_  is identified by ``mobility_formula`` = 1. It uses the following
 formula:
 
 .. math::
@@ -683,13 +735,43 @@ formula:
 
 
 where N is the total doping density and :math:`\mu_{const}` the mobility obtained from the constant
-mobility model. The parameters are specified in the material file as given in Table 2.5.
+mobility model. The parameters are specified in the material file as given in Table :ref:`Data file parameters for the mobility model by Masetti<masetti_par>`:
+
+
+
+..  _masetti_par :
+
+.. math::
+   :nowrap:
+   :label:
+
+    \begin{table}[!ht]
+    \center
+    \begin{tabular}{l||l|l}
+    \multicolumn{2}{c}{\textbf{Mobility Model Table}} \\
+    \hline
+    \textit{parameter} & \textit{keyword}  \\
+    \hline\hline
+    $\mu_{min,1}$ &  \verb+mumin1+ \\
+    $\mu_{min,2}$ & \verb+mumin2+  \\
+    $\mu_1$ & \verb+mu1+  \\
+    $P_c$ & \verb+Pc+ \\
+    $C_r$ & \verb+Cr+ \\
+    $C_s$ & \verb+Cs+ \\
+    $\alpha$ & \verb+alpha+ \\
+    $\beta$ & \verb+beta+ \\
+    \end{tabular}
+    \caption{Data file parameters for the mobility model by Masetti et al.}
+    \label{table:mobility_masetti}
+    \end{table}
+    
+|
 
 
 
 **Model by Arora**
 
-The model by Arora Arora _ is identified by ``mobility_formula`` = 2. It reads:
+The model by Arora [Arora]_ is identified by ``mobility_formula`` = 2. It reads:
 
 .. math::
    :label: dd_eq_dopdep2
@@ -703,8 +785,37 @@ with
     \mu_{min} = A_{min}(T/T_0)^{\alpha_m}, & \quad \mu_d = A_d(T/T_0)^{\alpha_d} \nonumber \\
     N_0 = A_N(T/T_0)^{\alpha_N}, & \quad A^* = A_a(T/T_0)^{\alpha_a} \nonumber 
 
-The parameters are given in table at the end of the Chapter.
+The material file parameters are given in Table :ref:`Data file parameters for the mobility model by Arora<arora_par>`:
 
+
+    
+
+..  _arora_par :
+  
+.. math::
+   :nowrap:
+   :label:
+
+    \begin{table}[!ht]
+    \center
+    \begin{tabular}{l||l|l}
+    \multicolumn{2}{c}{\textbf{Arora Model Table}} \\
+    \hline
+    \textit{parameter} & \textit{keyword} \\
+    \hline\hline
+    $A_{min}$ &  \verb+mumin+ \\
+    $A_d$ &  \verb+mud+ \\
+    $A_N$ &  \verb+N0+ \\
+    $A_a$ &  \verb+A+ \\
+    $\alpha_m$ &  \verb+am+ \\
+    $\alpha_d$ &  \verb+ad+ \\
+    $\alpha_N$ &  \verb+aN+ \\
+    $\alpha_a$ &  \verb+aA+ \\
+    \end{tabular}
+    \caption{Data file parameters for the mobility model by Arora.}
+    \label{table:mobility_arora}
+    \end{table}
+    
 
 
 Field dependent mobility model
@@ -735,10 +846,11 @@ with
 
     \beta = \beta_0(T/T_0)^b 
 
-:math:`|E|` is the modulus of the driving field, multiplied by a damping factor :math:`n/(n+n_0)`, where :math:`n` is the electron or hole density, and :math:`n_0` is a parameter with default :math:`10^{9}`.  :math:`\mu_{lowfield}` is the low-field mobility. For the latter
-one can specify the model to be used using the parameter ``lowfield_model`` . As default
+:math:`|E|` is the modulus of the driving field, multiplied by a damping factor :math:`n/(n+n_0)`, where :math:`n` is the electron or hole density, and :math:`n_0` is a parameter with default value :math:`10^{9}`.  :math:`\mu_{lowfield}` is the low-field mobility. For the latter
+one can specify the model to be used using the parameter ``lowfield_model``. As default
 the doping dependent model is used. The damping factor is needed to improve convergence at low carrier densities.
-There are two models for vsat, identified with ``Vsat_Formula = 1`` and 2. 
+
+Two different models are available for :math:`v_{sat}`, identified with ``Vsat_Formula = 1`` and ``Vsat_Formula = 2``. 
 
 Formula 1 reads
 
@@ -755,7 +867,34 @@ Formula 2 reads
 
     v_{sat} = \max(A_{vsat} - B_{vsat} (T/T_0), v_{min})
 
-The parameters for the field dependent mobility model are summarized in Table 2.7.
+The material file parameters for the field dependent mobility model are summarized in Table :ref:`Data file parameters for the field dependent mobility model<field_par>`:
+           
+
+..  _field_par :
+     
+.. math::
+   :nowrap:
+   :label:
+
+    \begin{table}[!ht]
+    \center
+    \begin{tabular}{l||l|l}
+    \multicolumn{3}{c}{\textbf{Mobility Dependence Table}} \\
+    \hline
+    \textit{parameter} & \textit{keyword} \\
+    \hline\hline
+    $\beta_0$ &  \verb+beta0+ \\
+    $b$ &  \verb+betaexp+ \\
+    $v_{sat,0}$ &  \verb+vsat0+ \\
+    $\gamma$ &  \verb+vsatexp+ \\
+    $A_{vsat}$ &  \verb+A_vsat+ \\
+    $B_{vsat}$ &  \verb+B_vsat+ \\
+    $v_{min}$ &  \verb+vsat_min+ \\
+    \end{tabular}
+    \caption{Data file parameters for the field dependent mobility model.}
+    \label{table:mobility_field_dep}
+    \end{table}
+
 
 
 Field assisted mobility model
@@ -1106,8 +1245,8 @@ and interfaces. Contacts are boundary models that allow a nonzero normal electri
 current. The applied voltage is specified with the option ``voltage`` . 
 
 A variable can be assigned to this, using the $-syntax. On ohmic or schottky contacts one can define surface
-recombination velocities for electrons and holes using the options ``rec_velocity_e`` and 
-``rec_velocity_h`` . This will impose Robin type boundary conditions for the continuity
+recombination velocities for electrons and holes using the options ``rec_velocity_n`` and 
+``rec_velocity_p`` . This will impose Robin type boundary conditions for the continuity
 equations of the form
 
 .. math::
@@ -1355,153 +1494,8 @@ Again, ``quantum_el`` and  ``quantum_hl`` are  the  *efaschroedinger* simulation
      \label{table:dd_solutions}
      \end{table}
 
-|
 
-..  math::
-    :nowrap:
-    :label:
-    
-     \begin{table}[!ht]
-     \center
-     \begin{tabular}{l||l}
-     \multicolumn{2}{c}{\textbf{Semiconductor Table}} \\
-     \hline
-     \textit{keyword} & \textit{description} \\
-     \hline \hline
-     \texttt{Ec} & conduction band edge (eV) \\
-     \texttt{Ev} & valence band edge (eV) \\
-     \texttt{m\_dos\_e} & conduction band effective DOS mass (m$_e$) \\
-     \texttt{m\_dos\_h} & valence band effective DOS mass (m$_e$) \\
-     \texttt{Nc} & conduction band effective DOS (cm$^-3$) \\
-     \texttt{Nv} & valence band effective DOS (cm$^-3$) \\
-     \end{tabular}
-     \caption{Parameters for the simple semiconductor model}
-     \label{table:simple_sc}
-     \end{table}
-
-|
-
-..  math::
-    :nowrap:
-    :label:
-    
-     \begin{table}[!ht]
-     \center
-     \begin{tabular}{l||l|l}
-     \multicolumn{2}{c}{\textbf{SRH Table}} \\
-     \hline
-     \textit{parameter} & \textit{keyword} \\
-     \hline\hline
-     $\tau_{min}$ & \texttt{taumin} \\
-     $\tau_{max}$ & \texttt{taumax} \\
-     $N_{ref}$ & \texttt{Nref} \\
-     $\gamma$ & \texttt{gamma} \\
-     $E^*$ & \texttt{Etrap} \\
-     $\alpha$ & \texttt{Talpha} \\
-     $\beta$ & \texttt{Tcoeff} \\
-     \end{tabular}
-     \caption{SRH material data file parameters}
-     \label{table:srh_params_db}
-     \end{table}
-
-|
-
-..  math::
-    :nowrap:
-    :label:
-    
-     \begin{table}[!ht]
-     \center
-     \begin{tabular}{l||l}
-     \multicolumn{2}{c}{\textbf{SRH parameters Table}} \\
-     \hline
-     \hline
-     $tau_n$ & \texttt{tau\_n} \\
-     $tau_p$ & \texttt{tau\_p} \\
-     $E^*$ & \texttt{E\_t}
-     \end{tabular}
-     \caption{SRH input file parameters}
-     \label{table:srh_params_input}
-     \end{table}
-    
-|
-
-.. math::
-   :nowrap:
-   :label:
-
-    \begin{table}[!ht]
-    \center
-    \begin{tabular}{l||l|l}
-    \multicolumn{2}{c}{\textbf{Mobility Model Table}} \\
-    \hline
-    \textit{parameter} & \textit{keyword}  \\
-    \hline\hline
-    $\mu_{min,1}$ &  \verb+mumin1+ \\
-    $\mu_{min,2}$ & \verb+mumin2+  \\
-    $\mu_1$ & \verb+mu1+  \\
-    $P_c$ & \verb+Pc+ \\
-    $C_r$ & \verb+Cr+ \\
-    $C_s$ & \verb+Cs+ \\
-    $\alpha$ & \verb+alpha+ \\
-    $\beta$ & \verb+beta+ \\
-    \end{tabular}
-    \caption{Data file parameters for the mobility model by Masetti et al.}
-    \label{table:mobility_masetti}
-    \end{table}
-    
-|
-
-.. math::
-   :nowrap:
-   :label:
-
-    \begin{table}[!ht]
-    \center
-    \begin{tabular}{l||l|l}
-    \multicolumn{2}{c}{\textbf{Arora Model Table}} \\
-    \hline
-    \textit{parameter} & \textit{keyword} \\
-    \hline\hline
-    $A_{min}$ &  \verb+mumin+ \\
-    $A_d$ &  \verb+mud+ \\
-    $A_N$ &  \verb+N0+ \\
-    $A_a$ &  \verb+A+ \\
-    $\alpha_m$ &  \verb+am+ \\
-    $\alpha_d$ &  \verb+ad+ \\
-    $\alpha_N$ &  \verb+aN+ \\
-    $\alpha_a$ &  \verb+aA+ \\
-    \end{tabular}
-    \caption{Data file parameters for the mobility model by Arora.}
-    \label{table:mobility_arora}
-    \end{table}
-    
-|
-
-.. math::
-   :nowrap:
-   :label:
-
-    \begin{table}[!ht]
-    \center
-    \begin{tabular}{l||l|l}
-    \multicolumn{3}{c}{\textbf{Mobility Dependence Table}} \\
-    \hline
-    \textit{parameter} & \textit{keyword} \\
-    \hline\hline
-    $\beta_0$ &  \verb+beta0+ \\
-    $b$ &  \verb+betaexp+ \\
-    $v_{sat,0}$ &  \verb+vsat0+ \\
-    $\gamma$ &  \verb+vsatexp+ \\
-    $A_{vsat}$ &  \verb+A_vsat+ \\
-    $B_{vsat}$ &  \verb+B_vsat+ \\
-    $v_{min}$ &  \verb+vsat_min+ \\
-    \end{tabular}
-    \caption{Data file parameters for the mobility model by Arora.}
-    \label{table:mobility_field_dep}
-    \end{table}
-
-
+     
 
 Example 1: pn diode
 --------------

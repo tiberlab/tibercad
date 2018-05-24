@@ -15,18 +15,7 @@ MODULE_LIBS := -leigen_solver
 # MODULE_LIBS += -lmkl_core
 #endif
 
-#ifeq ($(enable_dftb), yes)
-# MODULE_LIBS += -ldftbpc
-#endif
-
-#ifeq ($(enable_uptight), yes)
-# MODULE_LIBS += -luptight
-#endif
-
-ifeq ($(enable_hetero), yes)
- MODULE_LIBS += -lhetero -lmkl_p4 -lguide
-endif
-
+MODULE_LIBS += $(topdir)/src/utils/license/.$(ARCH)/liblicense.a
 
 export MODULE_LIBS
 
@@ -45,7 +34,7 @@ core: $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext)
 .PHONY: $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext)
 $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext): src
 	@echo "Linking $(dll_prefix)$(TIBERLIBNAME)$(shared_libext) ..."
-	@$(CXX) -shared $(CXXFLAGS) $(TIBER_OBJECTS) \
+	@$(CXX) -shared $(TIBER_OBJECTS) \
 		-o $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext) \
 		$(MODULE_LIBS) $(DLLNAME) $(TENSORLIB) $(LDFLAGS)
 		

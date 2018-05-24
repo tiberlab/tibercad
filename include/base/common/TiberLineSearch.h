@@ -33,7 +33,7 @@ class TBDLLOCAL TiberLineSearch : public TiberNonlinearSystem
 
 
     //! Get the solution vector
-    virtual libMesh::NumericVector<double>& get_solution_vector(void);
+    //virtual libMesh::NumericVector<double>& get_solution_vector(void);
 
     
 
@@ -119,12 +119,13 @@ class TBDLLOCAL TiberLineSearch : public TiberNonlinearSystem
 //
 
 
-inline
-libMesh::NumericVector<double>&
-TiberLineSearch::get_solution_vector(void)
-{
-  return get_vector("sol");
-}
+//inline
+//libMesh::NumericVector<double>&
+//TiberLineSearch::get_solution_vector(void)
+//{
+  //return get_vector("sol");
+//  return *current_local_solution;
+//}
 
 
 inline
