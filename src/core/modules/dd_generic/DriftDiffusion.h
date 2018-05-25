@@ -100,16 +100,6 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
   public:
 
 
-
-
-    //! The solver methods that can be used
-    enum SolverMethod
-    {
-      NEWTON,
-      GUMMEL
-    };
-
-
     //! How to calculate currents
     enum CurrentCalculation
     {
@@ -203,12 +193,6 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
          */
         libMeshEnums::Order integration_order;
 
-        /**
-         * The solver method
-         *
-         * Can be @c NEWTON or @c GUMMEL
-         */
-        SolverMethod solver_method;
 
         /**
          * The maximum number of iteration steps for
@@ -430,6 +414,35 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
       LAST             = 300,  /*!< this is used to know the first free number */
     };
 
+    /*!
+     * \brief A helper class for handling of number conservation
+     *
+     */
+    class NumberConservation
+    {
+      public:
+
+        //NumberConservation(std::string name, unsigned int id, )
+
+        //! The name
+        std::string name;
+
+        //! The variable id
+        unsigned int id;
+
+        //! The variable ids of the involved carriers
+        std::vector<unsigned int> carrier_vars;
+
+        //! The stoichiometric weights
+        std::vector<double> stoichiometry;
+
+        //! The options from the input
+        ModelOptions options;
+
+        //! The conserved number
+        double conserved_number;
+    };
+
     //! Base index for quasi Fermi energies
     unsigned int _qFermi_base;
     //! Base index for densities
@@ -533,6 +546,9 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
      */
     std::vector<std::string> _carriers;
 
+    //! The options for number conservation for each carrier
+    std::map<unsigned int, NumberConservation> _conservation;
+
     //! The region IDs for the different carriers
     std::map<std::string, std::set<ID>> _carrier_region_ids;
 
@@ -544,12 +560,6 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
      * Recombination models without a name are summed in NetRecombinationRate
      */
     std::map<std::string, std::set<unsigned int> > _rec_models;
-
-    //! Excitons map
-    /*!
-     * A map storing, for each exciton, the ids of its associated charge carriers
-     */
-    std::map<std::string, std::set<unsigned int> > _excitons;
 
     //! The boundary currents
     /*!

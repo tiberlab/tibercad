@@ -75,7 +75,6 @@ DriftDiffusion::Options::Options(void)
     refinement_tolerance(1e-6),
     quadrature_type(QTRAP),
     integration_order(libMeshEnums::FIFTH),
-    solver_method(NEWTON),
     max_gummel_iterations(5),
     scaling_type(Scaling::UNITS),
     coupling(FULLYCOUPLED),
@@ -568,6 +567,31 @@ DriftDiffusion::do_solve(void)
   calculate_iqe();
   calculate_surface_recombination();
 
+  if (!_conservation.empty())
+  {
+    Messages m;
+    m.newline();
+    m.info("Number conservation:");
+    m.indent();
+
+    for (auto&& cons : _conservation)
+    {
+
+      ostringstream os;
+      os << "carriers: ";
+      for (auto&& var : cons.second.carrier_vars)
+        os << system.variable_name(var) << ", ";
+      m.info(os.str());
+
+      const libMesh::DofMap& dof_map = system.get_dof_map();
+      vector<dof_id_type> scalars;
+      dof_map.SCALAR_dof_indices(scalars, cons.first);
+      os.str("");
+      os << "electrochemical potential: " << (system.get_solution_vector())(scalars[0]);
+      m.info(os.str());
+    }
+    m.newline();
+  }
 
   ContactData::iterator it(_boundary_currents.begin());
   const ContactData::iterator end(_boundary_currents.end());
@@ -1379,6 +1403,7 @@ DriftDiffusion::rebuild_equation_system(void)
 
   system.attach_assembly_routine(assemble_system);
 
+  // setup the electrochemical potentials
   for (auto&& name : _carriers)
     system.add_variable(name, libMeshEnums::FIRST, &(_carrier_region_ids[name]));
 
@@ -1386,6 +1411,42 @@ DriftDiffusion::rebuild_equation_system(void)
   // as their variable index
   // the potential is assumed to be on the whole domain
   system.add_variable("potential", libMeshEnums::FIRST, &(this->get_region_ids()));
+
+  //
+  // setup conservation
+  //
+
+  auto physit(get_options().submodels_begin("Physics"));
+  ModelOptions& physopts = physit->second;
+
+  set<string> conserved_carriers;
+
+  auto itc (physopts.submodels_begin("number_conservation"));
+  auto end_itc (physopts.submodels_end("number_conservation"));
+
+  for ( ; itc != end_itc; ++itc)
+  {
+    const ModelOptions& opts = itc->second;
+    string name = opts.get_option("carrier", "");
+
+    if (conserved_carriers.count(name))
+      Messages::warning("Redefining number conservation for carrier " + name);
+
+    if (name.empty())
+      throw InitFailedException("You must specify a carrier for number conservation.");
+
+    conserved_carriers.insert(name);
+
+    unsigned int var = system.add_variable(name + "_c",
+        libMeshEnums::FIRST, libMeshEnums::SCALAR);
+
+    _conservation[var].name = name + "_c";
+    _conservation[var].id = var;
+    _conservation[var].options = itc->second;
+    _conservation[var].carrier_vars.push_back(system.variable_number(name));
+    _conservation[var].stoichiometry.push_back(1.0);
+  }
+
 
   system.add_vector("old_sol", true, GHOSTED);
   system.add_vector("weight", true, GHOSTED);
@@ -4459,14 +4520,10 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
   // scaling for recombination rates
   double R0 = C0_q / scaling.get_time_scaling();
 
-  //cout<<"l2 = "<<l2<<" x0 = "<<x0<<" phi0 = "<<phi0<<" C0 = "<<C0<<" mu0 = "<<mu0<<" do_loc_scal = "<<endl;
-
   const libMesh::DofMap& dof_map = system.get_dof_map();
 
   // numeric ids corresponding to the variables
   const unsigned int u_var = system.variable_number("potential");
-  // fermi potential variable numbers are defined within element loop
-  // since (in future) different variables can ben set in different regions
  
   libMesh::FEType fe_type = system.variable_type(u_var);
 
@@ -4589,6 +4646,15 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
           dof_indices_var[var].begin(), dof_indices_var[var].end());
     }
 
+    for (auto&& scalar : _conservation)
+    {
+      unsigned int dof = scalar.first;
+      dof_map.dof_indices(elem, dof_indices_var[dof], dof);
+      dof_indices.insert(dof_indices.end(),
+          dof_indices_var[dof].begin(), dof_indices_var[dof].end());
+    }
+
+    // dof_indices now contains all DOFs, also scalar ones
 
     // they have all the same number of DOFs
     unsigned int n_dofs     = dof_indices_var[u_var].size();
@@ -4646,6 +4712,41 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
       n_var++;
     }
 
+    unsigned int c_var = 0;
+    for (auto&& cons : _conservation)
+    {
+      unsigned int var = cons.first;
+
+      Fv.insert(make_pair(var, DenseSubVector<Real>(Fe)));
+      Xv.insert(make_pair(var, DenseSubVector<Real>(X)));
+      oldXv.insert(make_pair(var, DenseSubVector<Real>(oldX)));
+      //scalev.insert(make_pair(var, DenseSubVector<Real>(local_scaling)));
+
+      Fv.at(var).reposition(n_var*n_dofs + c_var, 1);
+      Xv.at(var).reposition(n_var*n_dofs + c_var, 1);
+      oldXv.at(var).reposition(n_var*n_dofs + c_var, 1);
+      //scalev.at(var).reposition(n_var*n_dofs, 1);
+
+      unsigned int n_varj = 0;
+      for (auto&& varj : q_var)
+      {
+        if (find(cons.second.carrier_vars.begin(),
+              cons.second.carrier_vars.end(), varj) !=
+            cons.second.carrier_vars.end())
+        {
+          Kvv[var].insert(make_pair(varj, DenseSubMatrix<Real>(Ke)));
+          Kvv[var].at(varj).reposition(n_var*n_dofs + c_var,
+                                       n_varj*n_dofs, 1, n_dofs);
+        }
+        n_varj++;
+      }
+      Kvv[var].insert(make_pair(var, DenseSubMatrix<Real>(Ke)));
+      Kvv[var].at(var).reposition(n_var*n_dofs + c_var,
+                                  n_varj*n_dofs, 1, 1);
+      c_var++;
+
+    }
+
 
     // Get the temperature given the element
     vector<double> T_nodes = sc->get_temperature_at_nodes();
@@ -4674,6 +4775,13 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
           oldu[var] += phi[i][qp] * oldXv.at(var)(i);
           grad_u[var] += dphi[i][qp] * Xv.at(var)(i);
         }
+      }
+
+      // add the constant electrochemical potential
+      for (auto&& cons : _conservation)
+      {
+        u[cons.second.carrier_vars[0]] += Xv.at(cons.first)(0);
+        oldu[cons.second.carrier_vars[0]] += oldXv.at(cons.first)(0);
       }
 
       // prepare for calculating local properties
@@ -4784,6 +4892,8 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 
 
 
+
+
       //
       // for jacobian compute the other contributions
       //
@@ -4808,6 +4918,25 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                 dR_tmp = 0.0;
 
               dR[vari][varj] = dR_tmp;
+            }
+          }
+        }
+
+        for (auto&& var : _conservation)
+        {
+          for (auto&& vari : var.second.carrier_vars)
+          {
+            double ddens = sc->get_q_density_derivative(vari);
+            // diagonal part
+            Kvv[var.first].at(var.first)(0,0) += J * ddens * phi0 / C0;
+
+            for (unsigned int j = 0; j < n_dofs; j++)
+            {
+              if (coupling & POISSON)
+                Kvv[var.first].at(u_var)(0,j) -= J * ddens * phi[j][qp] * phi0 / C0;
+
+              if (coupling & CURRENTS)
+                Kvv[var.first].at(vari)(0,j) += J * ddens * phi[j][qp] * phi0 / C0;
             }
           }
         }
@@ -5027,6 +5156,21 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
             }
 
           }
+        }
+
+        for (auto&& var : _conservation)
+        {
+          for (auto&& vari : var.second.carrier_vars)
+          {
+            double dens = sc->get_q_density(vari);
+
+            for (unsigned int j = 0; j < n_dofs; j++)
+            {
+              //Fv.at(var.first)(0) += J * dens / C0;
+            }
+          }
+
+          //Fv.at(var.first)(0) -= var.second.conserved_number / C0;
         }
 
       }  //end residual
@@ -5430,7 +5574,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
   if (jacobian != NULL)
   {
     jacobian->close();
-    //jacobian->print_matlab("J.m");
+    jacobian->print_matlab("J.m");
     //exit(0);
 
     /*
