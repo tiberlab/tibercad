@@ -1445,6 +1445,8 @@ DriftDiffusion::rebuild_equation_system(void)
     _conservation[var].options = itc->second;
     _conservation[var].carrier_vars.push_back(system.variable_number(name));
     _conservation[var].stoichiometry.push_back(1.0);
+
+    _conservation[var].conserved_number = opts.get_option("conserved_number", 0.0);
   }
 
 
@@ -4730,9 +4732,10 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
       unsigned int n_varj = 0;
       for (auto&& varj : q_var)
       {
-        if (find(cons.second.carrier_vars.begin(),
-              cons.second.carrier_vars.end(), varj) !=
-            cons.second.carrier_vars.end())
+        if ((find(cons.second.carrier_vars.begin(),
+            cons.second.carrier_vars.end(), varj) !=
+                cons.second.carrier_vars.end()) ||
+            (varj == u_var))
         {
           Kvv[var].insert(make_pair(varj, DenseSubMatrix<Real>(Ke)));
           Kvv[var].at(varj).reposition(n_var*n_dofs + c_var,
@@ -5164,13 +5167,8 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
           {
             double dens = sc->get_q_density(vari);
 
-            for (unsigned int j = 0; j < n_dofs; j++)
-            {
-              //Fv.at(var.first)(0) += J * dens / C0;
-            }
+            Fv.at(var.first)(0) -= J * dens / C0;
           }
-
-          //Fv.at(var.first)(0) -= var.second.conserved_number / C0;
         }
 
       }  //end residual
@@ -5524,6 +5522,9 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 
     if (residual != NULL)
     {
+
+
+
       for (unsigned int i = 0; i < n_dofs_tot; i++)
         for (unsigned int j = 0; j < n_dofs_tot; j++)
           Fe(i) += Ke(i,j) * x(dof_indices[j]);
@@ -5640,6 +5641,14 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
   }
   else
   {
+    for (auto&& var : _conservation)
+    {
+      vector<dof_id_type> scalars;
+      dof_map.SCALAR_dof_indices(scalars, var.first);
+      residual->add(scalars[0], var.second.conserved_number / C0);
+      cerr << x.el(scalars[0]) << " " << residual->el(scalars[0]) << "\n";
+    }
+
     residual->close();
     //residual->print_matlab("r.m");
     //exit(0);
