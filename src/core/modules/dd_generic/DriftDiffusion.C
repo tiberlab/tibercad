@@ -2163,6 +2163,8 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
   vector<unsigned int> dof_indices_u;
   vector<vector<unsigned int>> dof_indices_q(n_vars);
 
+  map<unsigned int, vector<unsigned int>> dof_indices_cons;
+
 
   // element shape functions
   const vector<vector<Real> >& phi = fe->get_phi();
@@ -2190,7 +2192,11 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
       q_var.insert(i);
   }
 
-
+  for (auto&& scalar : _conservation)
+  {
+    unsigned int dof = scalar.first;
+    dof_map.dof_indices(elem, dof_indices_cons[dof], dof);
+  }
 
   const unsigned int n_dofs = dof_indices_u.size();
 
@@ -2256,6 +2262,15 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     u *= phi0;
     oldu *= phi0;
     e_field *= -phi0;
+
+    for (auto&& cons : _conservation)
+    {
+      for (auto&& var : cons.second.carrier_vars)
+      {
+        qf[var] += solution(dof_indices_cons[cons.first][0]);
+        oldqf[var] += oldsolution(dof_indices_cons[cons.first][0]);
+      }
+    }
 
     for (auto& v : q_var)
     {
@@ -4689,6 +4704,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
     //        | ... ... ... ... |        | .. |
     //        | Ku1 Ku2 ... Kuu |        | Fu |
     //
+    // Note: conservation variables are added at the end
 
     unsigned int n_var = 0;
     for (auto&& var : q_var)
@@ -4740,6 +4756,10 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
           Kvv[var].insert(make_pair(varj, DenseSubMatrix<Real>(Ke)));
           Kvv[var].at(varj).reposition(n_var*n_dofs + c_var,
                                        n_varj*n_dofs, 1, n_dofs);
+
+          Kvv[varj].insert(make_pair(var, DenseSubMatrix<Real>(Ke)));
+          Kvv[varj].at(var).reposition(n_varj*n_dofs,
+                                       n_var*n_dofs + c_var, n_dofs, 1);
         }
         n_varj++;
       }
@@ -4783,8 +4803,11 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
       // add the constant electrochemical potential
       for (auto&& cons : _conservation)
       {
-        u[cons.second.carrier_vars[0]] += Xv.at(cons.first)(0);
-        oldu[cons.second.carrier_vars[0]] += oldXv.at(cons.first)(0);
+        for (auto&& var : cons.second.carrier_vars)
+        {
+          u[var] += Xv.at(cons.first)(0);
+          oldu[var] += oldXv.at(cons.first)(0);
+        }
       }
 
       // prepare for calculating local properties
@@ -4959,6 +4982,15 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
           }
         }
 
+        for (auto&& var : _conservation)
+        {
+          drho[var.first] = 0.0;
+          for (auto&& vari : var.second.carrier_vars)
+          {
+            drho[var.first] += sc->get_charge_density_derivative(vari) * phi0 / C0;
+          }
+        }
+
 
         // d(sigma_n)/du * element-jacobian
         // sigma_n = mu_n * n means the conductivity of electrons
@@ -5089,6 +5121,16 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                     Kvv[vari].at(varj)(i,j) += sign * dR[vari][varj] * phi_i_x_phi_j / scalev.at(vari)(i);
                 }
               }
+            }
+          }
+
+          for (auto&& var : _conservation)
+          {
+            if (coupling & POISSON)
+            {
+              Kvv[u_var].at(var.first)(i,0) -=
+                  J * drho[var.first] * phi[i][qp] / scalev.at(u_var)(i);
+
             }
           }
         }
@@ -5224,6 +5266,13 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
               u[var] += phi_face[i][qp] * Xv.at(var)(i);
               grad_u[var] += dphi_face[i][qp] * Xv.at(var)(i);
             }
+          }
+
+          // add the constant electrochemical potential
+          for (auto&& cons : _conservation)
+          {
+            u[cons.second.carrier_vars[0]] += Xv.at(cons.first)(0);
+            oldu[cons.second.carrier_vars[0]] += oldXv.at(cons.first)(0);
           }
 
           // prepare for calculating local properties
@@ -5645,8 +5694,8 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
     {
       vector<dof_id_type> scalars;
       dof_map.SCALAR_dof_indices(scalars, var.first);
-      residual->add(scalars[0], var.second.conserved_number / C0);
-      cerr << x.el(scalars[0]) << " " << residual->el(scalars[0]) << "\n";
+      residual->add(scalars[0], var.second.conserved_number / (x0 * C0));
+      //cerr << x.el(scalars[0]) << " " << residual->el(scalars[0]) << " C0 = " << C0 << "\n";
     }
 
     residual->close();
