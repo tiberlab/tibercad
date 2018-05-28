@@ -1,0 +1,139 @@
+Device
+{
+  meshfile = pin.msh
+  material = GaAs
+
+
+   Region intrinsic 
+   {
+     Doping { Nd = 1e13 type = donor}
+   }
+
+   Region ndop 
+   {
+     Doping { Nd = 1e19 type = donor }
+   }
+
+   Region pdop 
+   {
+     Doping { Nd = 1e19 type = acceptor }
+   }
+
+
+}
+
+
+Module dd_generic
+{ 
+
+  name = driftdiffusion
+  plot = (RefEnergy, QFermi, Density, Flux, NetRecombination, ContactCurrents, TotalRecombinationHeat)
+
+  Physics
+  {
+
+    number_conservation
+    {
+      carrier = ion
+      conserved_number = 1e13
+    }
+
+    carrier ion
+    {
+      charge = -1
+      density_of_states bulk
+      {
+        level = 0.6
+      }
+    }
+
+    carrier electron
+    {
+      density_of_states bulk_kp
+      {
+      }
+    }
+    carrier hole
+    {
+      density_of_states bulk_kp
+      {
+      }
+    }
+
+    mobility constant
+    {
+      carriers = electron
+    }
+
+    mobility constant
+    {
+      carriers = hole
+    }
+
+    mobility constant
+    {
+      carriers = ion
+      mu = 0.1
+    }
+
+
+    recombination direct
+    {
+      carriers = (electron, hole)
+      radiative = true
+    }
+
+  }   
+
+
+  Contact anode
+  {
+    type = ohmic
+    voltage = $Vb
+    isolated_carriers = ion
+  }
+
+  Contact cathode
+  {
+    type = ohmic
+    voltage = 0.0
+    isolated_carriers = ion
+  }
+
+}  
+
+
+
+Module sweep
+{
+  solve = driftdiffusion
+  variable = $Vb
+  start = 0.0
+  stop = 2
+  steps = 20
+  plot_data = true
+}
+
+
+
+Simulation
+{
+  temperature = 300
+  solve = sweep
+  resultpath = output
+  output_format = grace
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
