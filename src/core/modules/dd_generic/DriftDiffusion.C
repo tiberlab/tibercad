@@ -5624,7 +5624,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
   if (jacobian != NULL)
   {
     jacobian->close();
-    jacobian->print_matlab("J.m");
+    //jacobian->print_matlab("J.m");
     //exit(0);
 
     /*
@@ -5695,7 +5695,6 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
       vector<dof_id_type> scalars;
       dof_map.SCALAR_dof_indices(scalars, var.first);
       residual->add(scalars[0], var.second.conserved_number / (x0 * C0));
-      //cerr << x.el(scalars[0]) << " " << residual->el(scalars[0]) << " C0 = " << C0 << "\n";
     }
 
     residual->close();
