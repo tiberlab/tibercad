@@ -4756,11 +4756,11 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
           Kvv[var].insert(make_pair(varj, DenseSubMatrix<Real>(Ke)));
           Kvv[var].at(varj).reposition(n_var*n_dofs + c_var,
                                        n_varj*n_dofs, 1, n_dofs);
-
-          Kvv[varj].insert(make_pair(var, DenseSubMatrix<Real>(Ke)));
-          Kvv[varj].at(var).reposition(n_varj*n_dofs,
-                                       n_var*n_dofs + c_var, n_dofs, 1);
         }
+
+        Kvv[varj].insert(make_pair(var, DenseSubMatrix<Real>(Ke)));
+        Kvv[varj].at(var).reposition(n_varj*n_dofs,
+                                     n_var*n_dofs + c_var, n_dofs, 1);
         n_varj++;
       }
       Kvv[var].insert(make_pair(var, DenseSubMatrix<Real>(Ke)));
@@ -5085,9 +5085,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                       Kvv.at(var).at(u_var)(i,j) += elem_contrib;
 
                   }
-
                 }
-
               }
             }
 
@@ -5119,6 +5117,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 
                   for (auto&& varj : q_var)
                     Kvv[vari].at(varj)(i,j) += sign * dR[vari][varj] * phi_i_x_phi_j / scalev.at(vari)(i);
+
                 }
               }
             }
@@ -5131,6 +5130,23 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
               Kvv[u_var].at(var.first)(i,0) -=
                   J * drho[var.first] * phi[i][qp] / scalev.at(u_var)(i);
 
+            }
+
+            if (coupling & CURRENTS)
+            {
+              for (auto&& varj : var.second.carrier_vars)
+              {
+                for (auto&& vari : q_var)
+                {
+                  if (vari != u_var)
+                  {
+                    double sign = sc->get_carrier_properties(vari)->get_charge_sign();
+                    Kvv[vari].at(var.first)(i,0) +=
+                        J * sign * dR[vari][varj] * phi[i][qp] / scalev.at(vari)(i);
+                  }
+                }
+                //Kvv.at(varj).at(var.first)(i,0) -= dsigma_x_lap[varj];
+              }
             }
           }
         }
