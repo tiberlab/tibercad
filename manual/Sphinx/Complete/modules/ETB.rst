@@ -412,11 +412,18 @@ The main parameters are:
 
  ``dE``:
     energy step
+       
 
+ ``line_shape``: 
+     gaussian | lorentzian
 
 
  ``plot`` :
-    *optical_spectrum_k_0* to  select  optical emission spectrum in *k=0* (:math:`\Gamma` point) 
+    *optical_spectrum_k_0* to  select  optical emission spectrum in *k=0* (:math:`\Gamma` point)
+ 
+    *optical_spectrum* to  select  integrated optical emission spectrum
+    (see in the following)
+
     *matrix_elements* to  select calculation of  the optical matrix elements 
 
 The spontaneous recombination rate is calculated according to
@@ -444,7 +451,78 @@ The output  file  for optical matrix elements is  named *<simulation_name>.dat* 
 
   initial_state final_state |Px|^2 |Py|^2 |Pz|^2
 
+Example: ::
 
+  Module opticstb 
+  { 
+    name = opticstb
+    regions = atomistic 
+
+     plot = (optical_spectrum, matrix_elements)
+     output_format=grace
+
+     initial_state_model = tb
+     final_state_model = tb
+     Emin = 2
+     Emax  = 4 #4.5
+     dE = 0.001
+     
+     line_shape = gaussian
+
+  }
+
+
+
+Integrated spectrum
+^^^^^^^^^^^^^^^^^^^^^^^
+
+
+For  1D and  2D  calculations,  it  is  possible  to  perform  an  integration  of  the  optical  spectrum  in  *k-space*, by specifying *optical_spectrum* in  the  ``plot``  statement ::
+
+  plot = (optical_spectrum)
+
+
+In  this  case,  one  has  to  define a  **k-integration**  block inside  **Module** ``opticskp``, in this  way ::
+
+  k-integration
+  {
+   
+     k_max = 0.5     
+     number_of_elements = (5,5)
+     quadrature_type = gaussian 
+     quadrature_order = third 
+
+     refine_k_space = false 
+     refine_fraction = 0.5
+     relative_accuracy = 0.001 
+
+  }
+
+
+The parameters for the *k-space* integration are the following
+
+ ``k_max`` :
+    maximum  value of k (in each direction, if given as vector)
+
+ ``quadrature_type`` : 
+    type of  integration, default is  *gaussian* 
+  
+
+ ``quadrature_order`` : 
+    order of  integration, default is  *third*
+
+ ``refine_k_space`` :
+    default is *false*, if  *true*, then *adaptive* k-mesh refinement is enabled
+ 
+ ``refine_fraction`` : 
+    refinement  parameter for *adaptive* k-mesh refinement
+    
+ ``relative_accuracy``:
+    refinement  tolerance for *adaptive* k-mesh refinement
+
+If ``refine_k_space`` = **true** , that is adaptive k-mesh refinement is enabled, all the elements whose error is greater than the value (1-refine_fraction)* (maximum error) are
+going to be refined. In this case, "Error" is just the integrated quantity. The refinement
+will end when the tolerance defined by ``relative_accuracy`` is satisfied.
 
 
 
