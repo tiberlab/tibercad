@@ -20,7 +20,6 @@ CompositeProfile::CompositeProfile(const ModelOptions& options) :
   {
     if (!it->second.find_option("max"))
       it->second.set_option("max", 1.0);
-    it->second.print_all();
     _profiles.push_back(ExternalProfile::create(it->second));
   }
   
