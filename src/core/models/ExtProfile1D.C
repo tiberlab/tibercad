@@ -117,7 +117,7 @@ ExtProfile1D::get_min_max(void) const
 
 
 double
-ExtProfile1D::get_data(const Elem* elem, const Point& p) const
+ExtProfile1D::get_data(const Elem* , const Point& p) const
 {
   double data;
 

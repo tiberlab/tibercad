@@ -6,6 +6,7 @@
 #include "LinearProfile.h"
 #include "ExponentialProfile.h"
 #include "GaussianProfile.h"
+#include "CompositeProfile.h"
 
 using namespace std;
 
@@ -36,6 +37,8 @@ ExternalProfile::create(const ModelOptions& options)
     pr = new ExponentialProfile(options);
   else if (options.get_name() == "gaussian")
     pr = new GaussianProfile(options);
+  else if (options.get_name() == "composite")
+    pr = new CompositeProfile(options);
 
   return pr;
 }

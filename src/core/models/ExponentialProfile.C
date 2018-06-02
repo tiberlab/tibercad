@@ -48,7 +48,7 @@ ExponentialProfile::get_min_max(void) const
 
 
 double
-ExponentialProfile::get_data(const Elem* elem, const Point& p) const
+ExponentialProfile::get_data(const Elem* , const Point& p) const
 {
   double data = 0.0;
 
