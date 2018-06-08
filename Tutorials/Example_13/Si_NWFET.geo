@@ -1,102 +1,264 @@
-// Gmsh project created on Fri Jun 26 09:47:10 2009
-lc1 =3;
-lc2 = 3;
-lc3 = 15;
-Point(1) = {10, 10, 0, lc1};
-Point(2) = {0, 0, 0, lc1};
-Point(3) = {20, 0, 0, lc1};
-Point(4) = {10, -10, 0, lc1};
-Point(5) = {10, -11.6, 0, lc1};
-Point(6) = {10, 11.6, 0, lc2};
-Point(7) = {-1.6, 0, 0, lc2};
-Point(8) = {21.6, 0, 0, lc2};
-Point(9) = {10, 0, 0, lc3};
-Circle(1) = {5, 9, 8};
-Circle(2) = {8, 9, 6};
-Circle(3) = {6, 9, 7};
-Circle(4) = {7, 9, 5};
-Circle(5) = {4, 9, 3};
-Circle(6) = {3, 9, 1};
-Circle(7) = {1, 9, 2};
-Circle(8) = {2, 9, 4};
-Extrude {0, 0, 60} {
-  Point{3, 8, 9};
-}
-Extrude {0, 0, 60} {
-  Point{1, 6, 7, 2};
-}
-Extrude {0, 0, 60} {
-  Point{5, 4};
-}
-Extrude {0, 0, 60} {
-  Line{2, 6, 7, 3, 4, 8, 5, 1};
-}
-Line(50) = {6, 1};
-Line(51) = {4, 5};
-Extrude {0, 0, 60} {
-  Line{50, 51};
-}
-Line Loop(60) = {2, 50, -6, -5, 51, 1};
-Plane Surface(61) = {60};
-Line Loop(62) = {3, 4, -51, -8, -7, -50};
-Plane Surface(63) = {62};
-Line Loop(64) = {8, 5, 6, 7};
-Plane Surface(65) = {64};
-Extrude {0, 0, 60} {
-  Surface{65};
-}
-Extrude {0, 0, 60} {
-  Surface{61, 63};
-}
-Extrude {0, 0, -20} {
-  Point{1, 3, 4, 2};
-}
-Extrude {0, 0, -20} {
-  Line{6, 5, 8, 7};
-}
-Extrude {0, 0, -20} {
-  Surface{65};
-}
-Extrude {0, 0, -20} {
-  Point{9};
-}
-Extrude {0, 0, -30} {
-  Point{24, 21, 20, 19, 22};
-}
-Extrude {0, 0, -30} {
-  Line{156, 160, 164, 168};
-}
-Extrude {0, 0, -30} {
-  Surface{193};
-}
-Extrude {0, 0, 20} {
-  Point{16, 18, 10, 13, 12};
-}
-Extrude {0, 0, 20} {
-  Line{38, 26, 22, 42};
-}
-Extrude {0, 0, 20} {
-  Surface{87};
-}
-Extrude {0, 0, 30} {
-  Point{31, 32, 33, 34, 30};
-}
-Extrude {0, 0, 30} {
-  Line{247, 243, 255, 251};
-}
-Extrude {0, 0, 30} {
-  Surface{280};
-}
-
-//Characteristic Length {20, 21, 22, 23, 24} = lc1 / 3;
-Characteristic Length {30, 31, 32, 33, 34} = lc1 / 3;
+cl_channel = 0.6 ; 
+cl_ox = 1;
+cl_axis = 30; 
 
 
-Physical Surface("drain") = {323};
-Physical Surface("gate") = {49, 21, 33, 37};
-Physical Surface("source") = {237};
+l_source = 30; 
 
-Physical Volume("oxide") = {3, 2};
-Physical Volume("channel") = {1, 4, 6};
-Physical Volume("drain_region") = {7};
-Physical Volume("source_region") = {5};
+l_drain = 30; 
+
+l_intr_s = 20;
+l_intr_d = 20;
+
+R_channel = 10; //  NW radius
+t_ox = 1.6;
+
+
+l_channel = 60 ; 
+
+h1= l_channel; 
+
+factor = 1; 
+
+
+num_lay =   h1/factor;
+
+factor_S = 2; 
+
+factor_D = 2; 
+
+factor_iS =  1;
+factor_iD = 1;
+
+num_lay_S = l_source/factor_S; 
+num_lay_D = l_source/factor_D; 
+
+num_lay_iS = l_intr_s/factor_iS;
+num_lay_iD = l_intr_d/factor_iD;
+
+
+Point(1) = {0, 0, 0, cl_axis};
+Point(2) = {R_channel, 0, 0, cl_channel };
+Point(3) = {-R_channel, 0, 0, cl_channel };
+Point(4) = {0,R_channel , 0, cl_channel };
+Point(5) = {0,-R_channel , 0, cl_channel };
+
+
+
+Circle(1) = {2, 1, 4};
+Circle(2) = {2, 1, 4};
+
+
+Circle(3) = {4, 1, 3};
+Circle(4) = {3, 1, 5};
+Circle(5) = {5, 1, 2};
+
+
+Point(6) = {R_channel+t_ox, 0, 0, cl_ox };
+Point(7) = {-R_channel-t_ox, 0, 0, cl_ox};
+Point(8) = {0,R_channel+t_ox , 0, cl_ox };
+Point(9) = {0,-R_channel-t_ox , 0, cl_ox };
+Circle(6) = {8, 1, 6};
+Circle(7) = {8, 1, 7};
+Circle(8) = {7, 1, 9};
+Circle(9) = {9, 1, 6};
+
+
+Line(10) = {3, 1};
+Line(11) = {1, 2};
+Line Loop(12) = {1, 3, 10, 11};
+Plane Surface(13) = {12};
+Line Loop(14) = {10, 11, -5, -4};
+Plane Surface(15) = {14};
+Line Loop(16) = {6, -9, -8, -7};
+Line Loop(17) = {1, 3, 4, 5};
+Plane Surface(18) = {16, 17};
+
+
+
+
+
+// si  channel a 1
+
+t[] = Extrude   {0.0,0.0,h1/2} { Surface{13}; Layers{ {  20,12 }, { 0.5, 1 } } ; Recombine; } ;
+
+volume = t[1];
+
+Si_volumes[0] = volume;
+volume++;
+
+
+// si  channel a 2
+
+
+t[] = Extrude   {0.0,0.0,h1/2} { Surface{news - 1}; Layers{ { 12, 20 }, { 0.5, 1 } } ; Recombine; } ;
+
+volume = t[1];
+
+Si_volumes[1] = volume;
+volume++;
+
+
+//drain  intrinsic  region 1 
+t[] = Extrude   {0.0,0.0, l_intr_d  } { Surface{news - 1} ; Layers {num_lay_iD}; Recombine; };  
+
+volume = t[1];
+drain_intr_volumes[0] = volume;
+volume++;
+
+drain_intr_1 = news - 1;
+
+
+
+// drain region 1 
+t[] = Extrude   {0.0,0.0, l_drain } { Surface{news - 1} ; Layers {num_lay_D}; Recombine; };  
+volume = t[1];
+drain_volumes[0] = volume;
+volume++;
+
+drain_1 = news - 1;
+
+
+
+// si  channel b 1
+
+t[] = Extrude   {0.0,0.0,h1/2} { Surface{15}; Layers{ { 20,12 }, { 0.5, 1 }   } ; Recombine; } ;
+
+volume = t[1];
+Si_volumes[2] = volume;
+volume++;
+
+
+// si  channel b 2
+
+t[] = Extrude   {0.0,0.0,h1/2} { Surface{news - 1}; Layers{ { 12, 20 }, { 0.5, 1 }   } ; Recombine; } ;
+
+volume = t[1];
+Si_volumes[3] = volume;
+volume++;
+
+
+
+//drain  intrinsic region 2 
+
+t[] = Extrude   {0.0,0.0, l_intr_d  } { Surface{news - 1} ; Layers {num_lay_iD}; Recombine; }; 
+ 
+volume = t[1];
+drain_intr_volumes[1] = volume;
+volume++;
+
+drain_intr_2 = news - 1;
+
+
+//drain   region 2 
+
+t[] = Extrude   {0.0,0.0, l_drain } { Surface{news - 1} ; Layers {num_lay_D}; Recombine; };  
+volume = t[1];
+drain_volumes[1] = volume;
+volume++;
+
+drain_2 = news - 1;
+
+
+
+//  oxide 1 
+
+t[] = Extrude   {0.0,0.0,h1/2} { Surface{18}; Layers{ { 20,12 }, { 0.5, 1 }   } ; Recombine; } ;
+
+volume = t[1];
+Ox_volumes[0] = volume;
+volume++;
+
+oxide_surf[0] = t[2]; //
+oxide_surf[1] = t[3]; //
+oxide_surf[2] = t[4]; //
+oxide_surf[3] = t[5]; //
+
+
+
+//  oxide 2
+
+t[] = Extrude   {0.0,0.0,h1/2} { Surface{news - 1}; Layers{ { 12,20 }, { 0.5, 1 }   } ; Recombine; } ;
+
+volume = t[1];
+Ox_volumes[1] = volume;
+volume++;
+
+oxide_surf[4] = t[2]; 
+oxide_surf[5] = t[3]; 
+oxide_surf[6] = t[4]; 
+oxide_surf[7] = t[5]; 
+
+
+
+//  source intrinsic region 1
+
+t[] = Extrude   {0.0,0.0,-l_intr_s } { Surface{13}; Layers {num_lay_iS}; Recombine; };  
+
+volume = t[1];
+source_intr_volumes[0] = volume;
+volume++;
+
+source_intr_1 = news - 1;
+
+
+//  source  region 1
+
+t[] = Extrude   {0.0,0.0, -l_source  } { Surface{news - 1}; Layers {num_lay_S}; Recombine; };  
+volume = t[1];
+source_volumes[0] = volume;
+volume++;
+
+source_1 = news - 1;
+
+
+//  source intrinsic region 2
+
+t[] = Extrude   {0.0,0.0,-l_intr_s} { Surface{15}; Layers {num_lay_iS}; Recombine; };  
+
+volume = t[1];
+source_intr_volumes[1] = volume;
+volume++;
+
+source_intr_2 = news - 1;
+
+
+
+//  source region 2
+
+t[] = Extrude   {0.0,0.0,-l_source} { Surface{news - 1}; Layers {num_lay_S}; Recombine; };  
+volume = t[1];
+source_volumes[1] = volume;
+volume++;
+
+source_2 = news - 1;
+
+
+Physical Volume("channel") = {Si_volumes[], source_intr_volumes[], drain_intr_volumes[] }  ;
+
+
+Physical Volume("oxide") = Ox_volumes[]  ;
+
+
+Physical Volume("source_region") = source_volumes[]  ;
+
+Physical Volume("drain_region") = drain_volumes[]  ;
+
+
+
+Physical Surface("source") =  {source_1,source_2}; 
+
+
+Physical Surface("drain") =  {drain_1, drain_2}; 
+
+Physical Surface("gate") = oxide_surf[]; 
+
+
+
+
+
+
+
+
+
+
