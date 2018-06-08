@@ -1,11 +1,14 @@
 @define INCONT 0.25
 @define BIAS 2.6
 
+# Example of parallel calculation: 
+# Tight-binding simulation of InGaN/GaN quantum well with random alloy
+#
 # USAGE: tibercad -n <number_MPI_proc> file.tib
-# for  n<4 : parallelize on cores of local processor
+# for  n>1 : parallelize on cores of local processor
 # if mpi_processes_per_device < number_MPI_proc: more than one random device calculated 
 # (serial or parallel)
-# e.g.: tibercad -n 4 file.tib ,   mpi_processes_per_device = 2
+# e.g.: tibercad -n 4 file.tib, mpi_processes_per_device = 2
 # 2 devices calculated, each with parallelization on 2 cores
 #
 # tibercad -n 4 file.tib ,   mpi_processes_per_device = 1
@@ -142,10 +145,11 @@ Device
     
     
     # we can put here an optional seed to allow for repeatability and reload of results
+    #
     # to repeat or extend calculations with the same random alloy configuration, just 
     # set random_generator_seed to the value used in previous calculations
     # Ex.: random_generator_seed = 1
-    # the variable MPI_DEV_KEY is useful when more than one device is calculated in parallel
+    # the variable MPI_DEV_KEY is useful when more than one device is calculated in parallel;
     # each device (that is its random alloy configuration) can be identified by the value of MPI_DEV_KEY
 
     random_generator_seed = MPI_DEV_KEY  # 1
@@ -180,7 +184,8 @@ Module elasticity
   # deform mesh and atomistic structure
   # this is needed here since the structure is built with GaN
   # as reference crystal
-  non_linear_strain = true
+  
+  mesh_deformation = true
 
 
   Physics 
@@ -208,7 +213,7 @@ Module vff
  atomistic_structure = tb
 
  # fixes first layer of atoms on x-plane,
- # with a certain tolerance in x cordinate
+ # with a certain tolerance on x coordinate
  boundary_conditions = substrate
  substrate_plane = x
  substrate_tol = 0.519
@@ -473,7 +478,7 @@ Module empirical_tb
    # use dynamic_search to improve the solver first guess 
    dynamic_search = true 
 
-   # dynamic_offset = 0.1 ##  default 0.1
+   # dynamic_offset = 0.1 #  default 0.1
 
     num_conduction_eigenvalues =  8  
     num_valence_eigenvalues = 8 
@@ -497,7 +502,7 @@ Module opticstb
 
   initial_state_model = tb
   final_state_model = tb
-  skip_solve = true  # skip tb model, use TB results from previous step
+  skip_solve = true  # skip tb model, use tb results from previous step
 
   Emin = 2
   Emax  = 4 
@@ -560,31 +565,19 @@ Module sweep
 Simulation
 {  
   
-
   temperature = 300
 
   # uncomment this for doing the bias sweep
   #solve = (strain, dd, sweep1, sweep2)  
  
-  #solve = (strain, vff, dd, tb) # , opticstb) 
+  solve = (strain, vff, dd, tb, opticstb) 
 
-  solve = (strain, vff, dd, tb) # , opticstb) 
   
   # we usually make a set of simulations, for a statistical ensemble of random structures
   # this can be done e.g. in parallel
   # MPI_DEV_KEY is an identifier for a single device process group
 
-  #resultpath = "output_tb_"MPI_DEV_KEY
-
- # resultpath = "dev4_size50_output_tb_"MPI_DEV_KEY
-
-   resultpath = "TEST_TB_20x20_par_8ev_output_tb_dev4_dynsearch_inSolver_def_"MPI_DEV_KEY
-
-
-# resultpath = "TB_test_20x20_1ev_mpi4_"MPI_DEV_KEY
-
-
-#  resultpath = "TB_optic_20x20_8ev_mpi4_"MPI_DEV_KEY  # OK
+  resultpath = "output_tb_"MPI_DEV_KEY
 
   output_format = grace
 
