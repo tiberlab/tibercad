@@ -5174,10 +5174,8 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
             J_x_R.insert( make_pair(var, J*R[var]/R0) );
         }
 
-        /*
         libMesh::RealVectorValue P(sc->get_total_polarization());
         P *= J_x_P0;
-        */
 
         for (unsigned int i = 0; i < n_dofs; i++)
         {
@@ -5186,7 +5184,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
             if (var == u_var)
             {
               if (coupling & POISSON)
-                Fv.at(var)(i) -= J_x_rho * phi[i][qp] / scalev.at(var)(i);
+                Fv.at(var)(i) -= (J_x_rho * phi[i][qp] + (P * dphi[i][qp])) / scalev.at(var)(i);
               else
                 Fv.at(var)(i) -= Xv.at(var)(i);
             }
@@ -5441,30 +5439,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
             }
 
 
-            /*
-            if (0) //(true_boundary)
-            {
-              // If we are on an outer boundary, we include
-              // the polarization
 
-              if (params.default_boundary_condition == ZEROFIELD)
-              {
-
-                libMesh::RealVectorValue P(0.0);
-                P = sc->get_total_polarization();
-                double Pn = (P * face_normals[qp]) / P0;
-                double value_u = -J * Pn;
-
-                if (coupling & POISSON)
-                {
-                  for (unsigned int i = 0; i < n_dofs; i++)
-                  {
-                    Fu(i) -= value_u * phi_face[i][qp] / scaleu(i);
-                  }
-                }
-              }
-            }
-            */
 
             for (unsigned int i = 0; i < n_dofs; i++)
             {
@@ -5509,7 +5484,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
         if (params.default_boundary_condition == ZEROFIELD)
         {
           fe_face->reinit(elem, s);
-/*
+
           for (unsigned int qp = 0; qp < qface->n_points(); qp++)
           {
 
@@ -5525,12 +5500,11 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
             {
               for (unsigned int i = 0; i < n_dofs; i++)
               {
-                Fu(i) -= value_u * phi_face[i][qp] / scaleu(i);
+                Fv.at(u_var)(i) -= value_u * phi_face[i][qp] / scalev.at(u_var)(i);
               }
             }
 
           }
-*/
         }
       }  // end true boundary && residual
     } // end loop over element side
