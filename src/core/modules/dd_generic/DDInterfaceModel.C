@@ -178,7 +178,19 @@ DDInterfaceModel::do_init(void)
   //set_conduction_band(&_ddprop_A->get_conduction_band());
   //set_valence_band(&_ddprop_A->get_valence_band());
 
-  set_carrier_properties(_ddprop_A->get_carrier_properties());
+  std::map<ID, CarrierProperties*> carriers(_ddprop_A->get_carrier_properties());
+
+  // carriers of other side, if different
+  if ((_ddprop_B != nullptr) && (_ddprop_B != _ddprop_A))
+  {
+    for (auto&& it : _ddprop_B->get_carrier_properties())
+    {
+      if (carriers.find(it.first) == carriers.end())
+        carriers[it.first] = it.second;
+    }
+  }
+
+  set_carrier_properties(carriers);
 
   // to setup common submodels
   DriftDiffusionProperties::do_init();
@@ -309,7 +321,16 @@ DDInterfaceModel::reinit(const Elem* elem, int side)
       }
     }
 
+
+    // add carriers which are present in B but not in A
+    for (auto&& it : carriersB)
+    {
+      if (carriers.find(it.first) == carriers.end())
+        carriers[it.first] = it.second;
+    }
   }
+
+
   set_carrier_properties(carriers);
 
 

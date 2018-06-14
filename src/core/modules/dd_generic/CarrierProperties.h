@@ -45,6 +45,9 @@ class CarrierProperties : public DriftDiffusionModelInterface
     //! Get the effective DOS
     double get_effective_DOS(void) const;
 
+    //! Get the maximum density from the DOS model
+    double get_maximum_density(void) const;
+
 
     //! Get thermal velocity in cm/s
     /*!

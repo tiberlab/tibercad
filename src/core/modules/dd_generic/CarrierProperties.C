@@ -140,6 +140,12 @@ CarrierProperties::do_print_info(void)
 }
 
 
+double
+CarrierProperties::get_maximum_density(void) const
+{
+  return(_dos_model->get_total_state_density());
+}
+
 
 double
 CarrierProperties::get_lattice_temperature(void) const

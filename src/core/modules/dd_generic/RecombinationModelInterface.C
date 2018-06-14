@@ -29,10 +29,11 @@ RecombinationModelInterface::do_init(void)
       throw InitFailedException("Recombination '" + get_default_name() +
           "': carrier '" + (it) + "' not found in module");
 
-    const CarrierProperties* cp = get_bulk_driftdiffusionproperties().get_carrier_properties(id);
-    if ( cp == nullptr)
-      throw InitFailedException("Recombination '" + get_default_name() +
-          "': carrier '" + (it) + "' not defined in the same regions as the recombination model");
+    //const CarrierProperties* cp = get_bulk_driftdiffusionproperties().get_carrier_properties(id);
+    const CarrierProperties* cp = get_driftdiffusionproperties().get_carrier_properties(id);
+    //if ( cp == nullptr)
+    //  throw InitFailedException("Recombination '" + get_default_name() +
+    //      "': carrier '" + (it) + "' not defined in the same regions as the recombination model");
 
     if (used_ids.count(id))
       throw InitFailedException("Recombination '" + get_default_name() +
