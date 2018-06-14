@@ -1,0 +1,114 @@
+Device
+{
+  meshfile = interface.msh
+
+
+   Region left 
+   {
+     Doping { Nd = 1e18 type = donor incomplete_ionization = false}
+     material = AlAs
+   }
+
+   Region right 
+   {
+     material = AlP
+     Doping { Nd = 1e19 type = donor incomplete_ionization = false }
+   }
+
+}
+
+
+Module dd_generic
+{ 
+
+  name = driftdiffusion
+  plot = (RefEnergy, QFermi, Density, Flux, NetRecombination, ContactCurrents, TotalRecombinationHeat)
+
+  Physics
+  {
+
+    carrier electron
+    {
+      regions = left
+      density_of_states bulk_kp
+      {
+      }
+    }
+
+    carrier elr
+    {
+      regions = right
+      charge = -1
+      density_of_states bulk_kp
+      {
+      }
+    }
+
+    mobility constant
+    {
+      carriers = (electron, elr)
+      mu = 1000
+    }
+
+    recombination direct
+    {
+      carriers = (electron, elr)
+      regions = AlP/AlAs
+      C = 1e-15
+    }
+
+  }   
+
+
+  Contact anode
+  {
+    type = schottky
+    barrier = 0.05
+    band = electron
+    voltage = $Vb
+  }
+
+  Contact cathode
+  {
+    type = schottky
+    barrier = 0.05
+    band = elr
+    voltage = 0.0
+  }
+
+}  
+
+
+
+Module sweep
+{
+  solve = driftdiffusion
+  variable = $Vb
+  start = 0.0
+  stop = 2
+  steps = 40
+  plot_data = true
+}
+
+
+
+Simulation
+{
+  temperature = 300
+  solve = sweep
+  resultpath = output
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
