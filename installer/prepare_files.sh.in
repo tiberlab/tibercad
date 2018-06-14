@@ -279,7 +279,7 @@ prepare_linux_package () {
   if test -f $lmx_enduser
   then
     cp $lmx_enduser ${files}/license
-    cp ${lmx_dir}/linux_64/lmxvendor.so ${files}/license
+    cp ${lmx_dir}/linux_x64/liblmxvendor.so ${files}/license
   fi
 
 
