@@ -5,7 +5,7 @@ export SDKDIR=/scratch/maufder/TiberCAD/3.0.0/SDK
 ARCH=x86_64-linux
 
 export MKL=y
-export MKLDIR=/usr/pack/intel_mkl-11.2-ma
+export MKLDIR=/usr/pack/intel_mkl-11.2-ma/mkl
 
 export MPI=y
 export MPIDIR=${SDKDIR}

@@ -56,7 +56,7 @@ make_petsc()
 
     make
   fi
-#    rm conftest* reconfigure*
+  rm conftest* reconfigure*
 }
 
 link_library()
