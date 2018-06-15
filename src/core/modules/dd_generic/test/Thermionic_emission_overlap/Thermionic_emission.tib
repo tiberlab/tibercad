@@ -1,0 +1,248 @@
+Device
+{
+  meshfile = Thermionic_emission.msh
+  mesh_units = 1e-9
+  material = Si  # Alq3
+
+
+  Region semic { Doping { density = 1e17 type = donor incomplete_ionization = false } }   #donor_reference_carrier = electron_s } }
+  Region int { Doping { density = 1e20 type = donor  incomplete_ionization = false } }  #donor_reference_carrier = electron_m }  }
+  Region metal {  Doping { density = 1e20 type = donor incomplete_ionization = false } }  # donor_reference_carrier = electron_m } } 
+}
+
+Module dd_generic
+{
+  name = ddg
+  plot = (Ec, Ev, ElPotential, QFermi, RefEnergy, Density, Mobility, 
+            CurrentDensity, Flux, NetRecombination, ContactCurrents, ElField)
+
+
+  Solver
+  {
+    max_iterations = 60
+    step_tolerance = 1e-2 
+    
+  }
+
+  #step_tolerance = 1e-2 
+
+  Physics
+  {
+
+#-----------------------------------------
+    doping
+    {
+      regions = (semic)  
+       donor_reference_carrier = electron_s 
+ 
+      #donor_reference_carrier = electron_s      
+    }
+
+    doping
+    {
+      regions = (int)  
+      donor_reference_carrier = electron_m 
+ 
+    }
+
+    doping
+    {
+      regions = (metal)
+      donor_reference_carrier = electron_m      
+    }
+#----------------------------------------
+
+    
+   
+
+   
+    #----------------------------------------
+
+    # SEMICONDUCTOR
+
+    #----------------------------------------
+
+
+    carrier electron_s 
+    {
+      regions = (semic)
+      charge = -1
+
+      density_of_states bulk  { level = 0.0  }
+    }
+
+
+    #----------------------------------------
+
+    # INTERFACE
+
+    #----------------------------------------
+
+
+    carrier electron_s
+    {
+      regions = (int)
+      charge = -1
+
+      density_of_states bulk
+      {
+
+         level = 0.0
+
+      }
+    }
+
+    carrier electron_m
+    {
+      regions = (int)
+      charge = -1
+
+      density_of_states bulk
+      {
+
+         level = -0.86  # -0.835  #-0.8
+
+      }
+    }
+
+    #----------------------------------------
+
+    #  METAL
+
+    #----------------------------------------
+
+
+    carrier electron_m
+    {
+      regions = (metal)
+      charge = -1
+
+      density_of_states bulk
+      {
+        level = -0.86 #-0.835  # -0.8
+      }
+    }
+
+    #----------------------------------------
+
+    mobility constant
+    {
+      regions = (int)
+      carriers = (electron_s)
+     }
+
+    mobility constant
+    {
+      regions = (int)
+      carriers = ( electron_m)
+     }
+
+
+    mobility constant
+    {
+      regions = (semic)
+      carriers = (electron_s)
+     }
+
+    mobility constant
+    {
+      regions = (metal)
+      carriers = (electron_m)
+     }
+
+    tmobility constant
+    {
+      regions = (metal, semic, int)
+      carriers = (electron)
+     }
+
+
+
+    #----------------------------------------
+
+    # BAND COUPLING 
+
+    #----------------------------------------
+
+
+    recombination direct
+    {
+      regions = int
+      plot_name = electron_coupling
+      carriers = (electron_m, electron_s)
+      C = 5e-8
+    }
+
+
+ }
+
+  Contact anode
+  {
+    type = ohmic
+    band = electron_s
+    voltage = 0.0 
+  }
+
+  Contact cathode
+  {
+    type = ohmic  
+    band = electron_m
+    voltage = $Vb  
+  }
+
+  Solver linesearch
+  {
+    max_iterations = 100
+    step_tolerance = 1e-2
+    #absolute_tolerance = 1e-3
+    #relative_tolerance = 1e-10
+  }
+
+}
+
+
+Module sweep
+{
+  name = sweep_back
+  solve = ddg
+  variable = $Vb
+  start = 0.0
+  stop = -1.0
+  #values = (0.0:0.05:3.0)
+  steps = 50
+  plot_data = true
+}
+
+Module sweep
+{
+  name = sweep_fw
+  solve = ddg
+  variable = $Vb
+  start = 0.0
+  stop = 1.0
+  values = (0.0:0.02:1.0)
+  #steps = 60
+  plot_data = true
+}
+
+Module sweep
+{
+  name = sweep_tot
+  solve = ddg
+  variable = $Vb
+  start = -1.0
+  stop = 1.0
+  #values = (0.0:0.05:3.0)
+  steps = 100
+  plot_data = true
+}
+
+
+Simulation
+{
+  temperature = 300
+  solve = (ddg, sweep_back)#  sweep_1, sweep_2)
+  resultpath = output_DD_multi/backward/5e-8_0_86
+  output_format = grace # vtk # grace
+}
+
