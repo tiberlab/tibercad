@@ -1,0 +1,220 @@
+
+# Description of  the  device physical regions
+Device
+{
+  meshfile = diode.msh
+  material = GaAs
+
+
+   Region bulk 
+   {
+   }
+
+   Region ndop 
+   {
+     Doping { Nd = 2e18 type = donor reference_carrier = electron }
+   }
+
+   Region pdop 
+   {
+     Doping { Nd = 1e18 type = acceptor reference_carrier = hole }
+   }
+
+
+}
+
+
+Module dd_generic
+{ 
+
+  name = driftdiffusion
+  plot = (QFermi, Density, RefEnergy, CurrentDensity, NetRecombination, ContactCurrents)
+
+  Solver
+  {
+    max_iterations = 50
+  }
+
+  Physics
+  {
+
+    carrier electron
+    {
+      density_of_states bulk_kp
+      {
+      }
+    }
+
+    carrier hole
+    {
+      density_of_states bulk_kp
+      {
+      }
+    }
+
+    carrier ib
+    {
+      regions = bulk
+      charge = -1
+      density_of_states gauss
+      {
+        level = 0.2
+        sigma = 0.05
+        N0 = 1e17
+      }
+    }
+
+    mobility constant
+    {
+      carriers = electron
+    }
+
+    mobility constant
+    {
+      carriers = hole
+    }
+
+    mobility field_assisted
+    {
+      carriers = ib
+      mu0 = 1e-5
+      E0 = 1e5
+    }
+
+
+
+    recombination direct
+    {
+      carriers = (electron, hole)
+      plot_name = rad
+    }
+
+
+    recombination direct
+    {
+      regions = bulk
+      plot_name = ib_cb
+      carriers = (electron, ib)
+      C = 1e-12
+    }
+
+    recombination direct
+    {
+      regions = bulk
+      plot_name = vb_ib
+      carriers = (hole, ib)
+      C = 1e-12
+    }
+
+    recombination optical
+    {
+      regions = bulk
+      plot_name = gen_ic
+      carriers = (ib, electron)
+      generation = 1e23
+      multiplier = $x[0]
+      use_occupation_factors = true
+    }
+
+    recombination optical
+    {
+      regions = bulk
+      plot_name = gen_vi
+      carriers = (hole, ib)
+      generation = 0.3e23
+      multiplier = $x[0]
+      use_occupation_factors = true
+    }
+
+    recombination optical
+    {
+      regions = bulk
+      plot_name = gen_vc
+      carriers = (hole, electron)
+      generation = 0.2e23
+      multiplier = $x[0]
+    }
+
+
+
+  }   
+
+
+  Contact anode
+  {
+    type = ohmic
+    voltage = $Vb
+    rec_velocity = 1e1
+    isolated_carriers = electron
+  }
+
+  Contact cathode
+  {
+    type = ohmic
+    voltage = 0.0
+    rec_velocity = 1e1
+    isolated_carriers = hole
+  }
+
+}  
+
+
+
+Module sweep
+{
+  solve = driftdiffusion
+  variable = $Vb
+  start = 0.0
+  stop = 1.5
+  steps = 15
+  plot_data = true
+}
+
+Module sweep
+{
+  name = sweep_back
+  solve = driftdiffusion
+  variable = $Vb
+  start = 1.5
+  stop = 0
+  steps = 60
+  plot_data = true
+}
+
+
+
+Module sweep
+{
+  name = sweep_gen
+  type = log
+  solve = driftdiffusion
+  variable = $x
+  start = 1e-23
+  stop = 0.1
+  #steps = 23
+  plot_data = true
+}
+
+
+
+
+Simulation
+{
+  temperature = 300
+  solve = (sweep, sweep_gen, sweep_back)
+  resultpath = output
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
