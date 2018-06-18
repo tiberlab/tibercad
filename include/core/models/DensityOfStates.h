@@ -35,6 +35,10 @@ class TBDLEXPORT DensityOfStates : public PhysicalModelInterface
 
 
     //! Get the total state density
+    /*!
+     * This method returns the total density of states, i.e.
+     * the integral over all energies of the DOS.
+     */
     double get_total_state_density(void);
 
 
@@ -137,6 +141,12 @@ class TBDLEXPORT DensityOfStates : public PhysicalModelInterface
     //! Set the thermoelectric power
     double& thermoelectric_power(void);
 
+    //! Get or set the total state density
+    /*!
+     * DOS model \em must set the total state density!
+     */
+    double& total_state_density(void);
+
     //! The thermoelectric power
     /*!
      * The thermoelectric power is calculated in \c calculate_density_and_derivative()
@@ -237,12 +247,25 @@ DensityOfStates::get_spin(void) const
 }
 
 inline
+double&
+DensityOfStates::total_state_density(void)
+{
+  return(_total_density);
+}
+
+
+inline
 std::pair<double, double>
 DensityOfStates::get_occupied_density_and_derivative(double Ef, double Epot,
     double kT, const Elem* elem, const Point& p, double kTlattice) const
 {
   kTlattice = (kTlattice < 0) ? kT : kTlattice;
-  return calculate_density_and_derivative(Ef, Epot, kT, kTlattice, elem, p);
+  auto dens(calculate_density_and_derivative(Ef, Epot, kT, kTlattice, elem, p));
+
+  if (dens.first > _total_density)
+    dens = std::make_pair(_total_density, 0.0);
+
+  return(dens);
 }
 
 inline
@@ -251,7 +274,12 @@ DensityOfStates::get_occupied_density_and_derivative(double Ef, double Epot,
     double kT, double kTlattice) const
 {
   kTlattice = (kTlattice < 0) ? kT : kTlattice;
-  return calculate_density_and_derivative(Ef, Epot, kT, kTlattice);
+  auto dens(calculate_density_and_derivative(Ef, Epot, kT, kTlattice));
+
+  if (dens.first > _total_density)
+    dens = std::make_pair(_total_density, 0.0);
+
+  return(dens);
 }
 
 inline

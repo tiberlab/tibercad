@@ -78,6 +78,7 @@ QuantumDOS::do_init(void)
   reference_energy() = _classical->get_reference_energy();
   effective_mass() = _classical->get_effective_mass();
   effective_dos() = _classical->get_effective_dos();
+  total_state_density() = _classical->get_total_state_density();
 }
 
 

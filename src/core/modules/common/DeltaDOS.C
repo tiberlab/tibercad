@@ -20,6 +20,7 @@ DeltaDOS::do_init(void)
   _N0 = get_option("N0", _N0);
   effective_mass()[0] = 1.0;
   effective_dos() = _N0;
+  total_state_density() = _N0;
 }
 
 std::pair<double, double>

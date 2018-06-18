@@ -76,6 +76,7 @@ GaussDOS::do_init(void)
   effective_mass()[0] = 1.0;
 
   effective_dos() = _N0;
+  total_state_density() = _N0;
 }
 
 double GaussDOS::erfc(double x) const
