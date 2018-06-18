@@ -96,15 +96,15 @@ class TBDLEXPORT Dopant
      */
     double get_ionized_dopant_density_derivative(double arg, double kT);
 
+    //! Get the options
+    ModelOptions& get_options(void);
+
 
 
   protected:
 
     //! Calculate the doping density
     virtual double do_calculate_doping_density(const libMesh::Elem* elem, const libMesh::Point& p);
-
-    //! Get the options
-    ModelOptions& get_options(void);
 
 
 

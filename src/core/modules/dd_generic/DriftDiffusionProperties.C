@@ -583,45 +583,56 @@ DriftDiffusionProperties::calculate_ionized_dopants(void)
 
   Material::dopant_iterator it(get_material()->donors_begin());
   Material::dopant_iterator end(get_material()->donors_end());
-  if (it != end)
+  for ( ; it != end; ++it)
   {
+    Dopant& dop = **it;
 
-    double Ec = get_carrier_band_edge(_donor_reference_carrier);
-    double arg_e = -_pd->fermi_potential[_donor_reference_carrier] + _pd->electric_potential - Ec;
+    unsigned int ref_carrier = _donor_reference_carrier;
+
+    if (dop.get_options().find_option("reference_carrier"))
+    {
+      ref_carrier = this->get_carrier_id(dop.get_options().get_option("reference_carrier", ""));
+    }
+
+    double Ec = get_carrier_band_edge(ref_carrier);
+    double arg_e = -_pd->fermi_potential[ref_carrier] + _pd->electric_potential - Ec;
     double Nd = 0, dNd = 0;
 
-    for ( ; it != end; ++it)
-    {
-      (*it)->calculate_doping_density(_elem, _coord);
-      Nd += (*it)->get_ionized_dopant_density(arg_e, kT);
-      dNd += (*it)->get_ionized_dopant_density_derivative(arg_e, kT);
-    }
+    dop.calculate_doping_density(_elem, _coord);
+    Nd += dop.get_ionized_dopant_density(arg_e, kT);
+    dNd += dop.get_ionized_dopant_density_derivative(arg_e, kT);
 
     _pd->ionized_donor_density = Nd;
     _pd->ionized_donor_density_derivative = dNd;
-    _pd->charge_density_derivative[_donor_reference_carrier] -= dNd;
+    _pd->charge_density_derivative[ref_carrier] -= dNd;
   }
 
   it = get_material()->acceptors_begin();
   end = get_material()->acceptors_end();
 
-  if (it != end)
+  for ( ; it != end; ++it)
   {
 
-    double Ev = get_carrier_band_edge(_acceptor_reference_carrier);
-    double arg_h = _pd->fermi_potential[_acceptor_reference_carrier] - _pd->electric_potential + Ev;
+    Dopant& dop = **it;
+
+    unsigned int ref_carrier = _acceptor_reference_carrier;
+
+    if (dop.get_options().find_option("reference_carrier"))
+    {
+      ref_carrier = this->get_carrier_id(dop.get_options().get_option("reference_carrier", ""));
+    }
+
+    double Ev = get_carrier_band_edge(ref_carrier);
+    double arg_h = _pd->fermi_potential[ref_carrier] - _pd->electric_potential + Ev;
     double Na = 0, dNa = 0;
 
-    for ( ; it != end; ++it)
-    {
-      (*it)->calculate_doping_density(_elem, _coord);
-      Na += (*it)->get_ionized_dopant_density(arg_h, kT);
-      dNa -= (*it)->get_ionized_dopant_density_derivative(arg_h, kT);
-    }
+    dop.calculate_doping_density(_elem, _coord);
+    Na += dop.get_ionized_dopant_density(arg_h, kT);
+    dNa -= dop.get_ionized_dopant_density_derivative(arg_h, kT);
 
     _pd->ionized_acceptor_density = Na;
     _pd->ionized_acceptor_density_derivative = dNa;
-    _pd->charge_density_derivative[_acceptor_reference_carrier] += dNa;
+    _pd->charge_density_derivative[ref_carrier] += dNa;
   }
 
 }
