@@ -164,69 +164,39 @@ OpticalGeneration::calculate_rate_and_derivatives(std::vector<double>& R,
     double ch1 = dd.get_carrier_properties(id1)->get_charge();
     double ch2 = dd.get_carrier_properties(id2)->get_charge();
 
-    double Ef1 = -dd.get_q_fermi_potential(id1);
-    double Ef2 = -dd.get_q_fermi_potential(id2);
+    double n1  = dd.get_q_density(id1);
+    double n2  = dd.get_q_density(id2);
+    double N1  = dd.get_carrier_properties(id1)->get_maximum_density();
+    double N2  = dd.get_carrier_properties(id2)->get_maximum_density();
+    double dn1 = dd.get_q_density_derivative(id1);
+    double dn2 = dd.get_q_density_derivative(id2);
 
-    double f1, df1;
-    double f2, df2;
-    if (ch1 > 0)
-    {
-      auto ff = Distributions::fermi_dirac(-Ef1 + E1, kT);
-      f1 = ff.first;
-      df1 = -ff.second;
-    }
-    else
-    {
-      auto ff = Distributions::fermi_dirac(Ef1 - E1, kT);
-      f1 = ff.first;
-      df1 = ff.second;
-    }
 
-    if (ch2 > 0)
-    {
-      auto ff = Distributions::fermi_dirac(-Ef2 + E2, kT);
-      f2 = ff.first;
-      df2 = -ff.second;
-    }
-    else
-    {
-      auto ff = Distributions::fermi_dirac(Ef2 - E2, kT);
-      f2 = ff.first;
-      df2 = ff.second;
-    }
-
-    //cerr << endl;
-    //cerr << dd.get_carrier_properties(id1)->get_particle_name() <<
-    //    " " << ch1 << " " << E1 << " " << Ef1 << " " << f1 << endl;
-    //cerr << dd.get_carrier_properties(id2)->get_particle_name() <<
-    //    " " << ch2 << " " << E2 << " " << Ef2 << " " << f2 << endl;
-
-    // R = rate * g1 * g2;
     double g1 = 1, g2 = 1, dg1 = 0, dg2 = 0;
     double sign1 = 1, sign2 = 1;
 
     if (ch1 > 0)
     {
       // it's a hole
-      g1 = 1 - f1;
-      dg1 = -df1;
+      g1 = 1 - n1/N1;
+      dg1 = -dn1/N1;
       sign1 = -1;
     }
     else
     {
-      g1 = f1;
-      dg1 = df1;
+      g1 = n1/N1;
+      dg1 = dn1/N1;
     }
 
     if (ch2 > 0)
     {
-      g2 = f2;
-      dg2 = df2;
+      g2 = n2/N2;
+      dg2 = dn2/N2;
     }
     else
     {
-      g2 = 1 - f2;
-      dg2 = -df2;
+      g2 = 1 - n2/N2;
+      dg2 = -dn2/N2;
       sign2 = -1;
     }
 
