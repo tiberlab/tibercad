@@ -1111,6 +1111,28 @@ SimulationInterface::solve(void)
     throw SolveFailedException(s.str());
   }
 
+  string unit("kB");
+  size_t mem = _data_cache.get_memory_size() / 1024;
+  if (mem >= 1024)
+  {
+    mem /= 1024;
+    unit = "MB";
+    if (mem >= 1024)
+    {
+      mem /= 1024;
+      unit = "GB";
+    }
+    ostringstream os;
+    os << "Current result cache size: " << mem << " " << unit;
+    Messages::info(os.str());
+  }
+
+  // plot at this point
+  //plot();
+
+  // invalidate cache
+  _data_cache.flush();
+
   increment_solve_sequence_number();
 
   m.unindent();
@@ -1229,6 +1251,8 @@ SimulationInterface::plot(void)
 
   do_plot();
   project_on_tensor_grid();
+
+
 }
 
 
@@ -2123,240 +2147,6 @@ SimulationInterface::get_nodal_results(std::vector<double>& results,
   }
 }
 
-/*
-void
-SimulationInterface::get_integrated_quantities_description(
-    std::vector<std::string>& legend,
-    std::vector<std::string>& description)
-{
-  legend.resize(0);
-  description.resize(0);
-  build_integrated_quantities_description(legend, description);
-}
-*/
-
-
-
-
- /*
-bool
-SimulationInterface::get_solution(const Elem* elem, const set<ID>& ids,
-                                  vector<map<ID, double> >& values)
-{
-
-  if ((ids.size() == 0) || (elem == NULL)) return false;
-  if (!is_solved()) return false;
-
-  SimulationEnvironment& env = get_environment();
-
-  const Elem* el = elem;
-
-  bool flag = true;
-
-  if (!env.contains_element(elem))
-  {
-    // perhaps the parent is?
-    const Elem* parent = elem->parent();
-
-    while ((parent != NULL) && (!env.contains_element(parent)))
-      parent = parent->parent();
-
-    el = parent; // is NULL if no parent
-
-    if (el != NULL)
-    {
-      int nn = elem->n_nodes();
-
-      // the nodes are now inner points of the parent element
-      vector<Point> p(nn);
-      for (int i = 0; i < nn; i++)
-        p[i] = elem->point(i);
-
-      values.resize(nn);
-      get_solution_secure(elem, p, ids, values);
-    }
-    else
-    {
-      // no active parent, so look for children
-      vector<const Elem*> tree;
-      elem->family_tree(tree, false);
-
-      set<const Elem*> elem_list;
-      unsigned int len = tree.size();
-      for (unsigned int i = 0; i < len; i++)
-      {
-        const Elem* elem_i = tree[i];
-        if (env.contains_element(elem_i))
-          elem_list.insert(elem_i);
-      }
-
-      unsigned int np = elem->n_nodes();
-      for (unsigned int i = 0; i < np; i++)
-      {
-        set<const Elem*>::iterator el_it = elem_list.begin();
-        set<const Elem*>::iterator el_end = elem_list.end();
-        for ( ; el_it != el_end; ++el_it)
-        {
-          el = *el_it;
-          if (el->contains_point(elem->point(i)))
-          {
-            get_solution_secure(el, elem->point(i), ids, values[i]);
-            // we have found it, so get out of the for loop
-            break;
-          }
-        }
-        if (el_it == el_end)
-          flag = false;
-      }
-    }
-  }
-  else
-  {
-    values.resize(elem->n_nodes());
-    get_solution_secure(elem, ids, values);
-  }
-
-  return flag;
-}
-*/
-
-/*
-bool
-SimulationInterface::get_solution(const Elem* elem, const Point& p,
-                                  const set<ID>& ids, map<ID, double>& values)
-{
-  vector<Point> points(1, p);
-  vector<map<ID, double> > vals(1);
-
-  bool flag = get_solution(elem, points, ids, vals);
-
-  if (flag)
-    values = vals[0];
-
-  return flag;
-}
-
-
-
-bool
-SimulationInterface::get_solution(const Elem* elem, const Point& p,
-                                  ID id, double& value)
-{
-  vector<Point> points(1, p);
-  set<ID> ids;
-  ids.insert(id);
-  vector<map<ID, double> > vals(1);
-
-  bool flag = get_solution(elem, points, ids, vals);
-
-  if (flag)
-    value = vals[0][id];
-
-  return flag;
-}
-
-
-
-bool
-SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
-                                  const set<ID>& ids,
-                                  vector<map<ID, double> >& values)
-{
-
-  bool flag = true;
-
-  unsigned int np = p.size();
-  if ((np == 0) || (ids.size() == 0) || (elem == NULL)) return false;
-  if (!is_solved()) return false;
-
-  values.resize(np);
-
-  // this will contain the element in which p lie
-  const Elem* el = elem;
-
-  SimulationEnvironment& env = get_environment();
-
-  // check if elem is an active element of the simulation
-  if (!env.contains_element(elem))
-  {
-    // do we have a parent element in the list?
-    const Elem* parent = elem->parent();
-
-    while ((parent != NULL) && (!env.contains_element(parent)))
-      parent = parent->parent();
-
-    el = parent; // is NULL if no parent
-  }
-
-  if (el != NULL) // we found it!
-    get_solution_secure(el, p, ids, values);
-  else
-  {
-    // no parent, so check for children
-    vector<const Elem*> tree;
-    elem->family_tree(tree, false);
-
-    set<const Elem*> elem_list;
-    unsigned int len = tree.size();
-    for (unsigned int i = 0; i < len; i++)
-    {
-      const Elem* elem_i = tree[i];
-      if (env.contains_element(elem_i))
-        elem_list.insert(elem_i);
-    }
-
-    for (unsigned int i = 0; i < np; i++)
-    {
-      set<const Elem*>::iterator el_it = elem_list.begin();
-      set<const Elem*>::iterator el_end = elem_list.end();
-      for ( ; el_it != el_end; ++el_it)
-      {
-        el = *el_it;
-        if (el->contains_point(p[i]))
-        {
-          get_solution_secure(el, p[i], ids, values[i]);
-          // we have found it, so get out of the for loop
-          break;
-        }
-      }
-      if (el_it == el_end)
-        flag = false;
-    }
-  }
-
-
-  return flag;
-}
-
-
-
-bool
-SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
-                                  ID id, vector<double>& values)
-{
-  set<ID> ids;
-  ids.insert(id);
-  values.resize(p.size());
-
-  vector<map<ID, double> > vals;
-
-  bool flag = get_solution(elem, p, ids, vals);
-
-  if (flag && (vals[0].size() != 0))
-  {
-    int n = vals.size();
-    values.resize(n);
-    for (int i = 0; i < n; i++)
-    {
-      values[i] = vals[i][id];
-    }
-  }
-
-  return flag;
-}
-*/
-
-
 
 
 bool
@@ -2388,7 +2178,7 @@ SimulationInterface::get_solution(const libMesh::Elem* elem,
   for ( ; it != end; ++it)
   {
     const SolutionDescriptor& sd = get_solution_descriptor(it->first);
-    assert(sd.id() != INVALID_ID);
+    //assert(sd.id() != INVALID_ID);
     unsigned int n_comp = sd.n_components();
     switch (sd.location())
     {
@@ -2407,12 +2197,6 @@ SimulationInterface::get_solution(const libMesh::Elem* elem,
     }
   }
 
-
-  // check if we have some cached data
-//  if (_data_cache.has_elem(elem))
-//  {
-//
-//  }
 
   // perhaps is in a quantum_contact ?
   QuantumContact* qc = get_environment().get_device().get_quantum_contact(elem);
@@ -2459,37 +2243,81 @@ SimulationInterface::get_solution(const libMesh::Elem* elem,
   bool flag = true;
 
 
+  map<ID, vector<double> > new_values(values);
+  set<unsigned int> req_points_id;
+  vector<Point> req_points;
+  req_points.reserve(points.size());
 
-
-
-  if (!env.contains_element(elem))
+  for (it = values.begin(); it != end; ++it)
   {
+    vector<double> cached_data;
+    set<unsigned int> found = _data_cache.get_data(el, points, it->first, cached_data);
 
-    // perhaps the parent is?
-    const Elem* parent = elem->parent();
+    unsigned int nd = found.size();
+    nd = nd > 0 ? cached_data.size() / nd : 0;
 
-    while ((parent != NULL) && (!env.contains_element(parent)))
-      parent = parent->parent();
-
-    el = parent; // is NULL if no parent
-
-    if (el != NULL)
+    unsigned int ctr = 0;
+    for (unsigned int i = 0; i < points.size(); ++i)
     {
-      get_solution_secure(elem, values, points);
+      if (found.count(i))
+      {
+        for (unsigned int j = 0; j < nd; ++j)
+          values[it->first][nd*i+j] = cached_data[nd*ctr+j];
+
+        ++ctr;
+      }
     }
-    else
-    {
-      // no active parent, so look for children
-      // TODO This part is not tested at all !!!
-      // Alex: indeed it does crash with selfcons negf/dd
-      // commented out temporarily
 
-      // for now, we do not do mesh refinement, so we use this in the case of
-      // different meshes:
-      //const Elem* meshel =
-      //    MeshUtils::GridMapper::get_mapper(this->get_mesh()).get_element(p);
-      flag = false;
-      /*vector<const Elem*> tree;
+    // add missing points to the required points array
+    for (unsigned int i = 0; i < points.size(); ++i)
+    {
+      if (!found.count(i))
+        req_points_id.insert(i);
+    }
+  }
+
+  // prepare vector with required coordinates, ordered as the set with IDs
+  for (set<unsigned int>::iterator mit(req_points_id.begin()); mit != req_points_id.end(); ++mit)
+  {
+    req_points.push_back(points[*mit]);
+  }
+
+  // resize data contained accordingly
+  for (auto it(new_values.begin()); it != new_values.end(); ++it)
+  {
+    it->second.resize(req_points.size() * it->second.size() / nn);
+  }
+
+  if (req_points.size() > 0)
+  {
+    if (!env.contains_element(elem))
+    {
+
+      // perhaps the parent is?
+      const Elem* parent = elem->parent();
+
+      while ((parent != NULL) && (!env.contains_element(parent)))
+        parent = parent->parent();
+
+      el = parent; // is NULL if no parent
+
+      if (el != NULL)
+      {
+        get_solution_secure(elem, new_values, req_points);
+      }
+      else
+      {
+        // no active parent, so look for children
+        // TODO This part is not tested at all !!!
+        // Alex: indeed it does crash with selfcons negf/dd
+        // commented out temporarily
+
+        // for now, we do not do mesh refinement, so we use this in the case of
+        // different meshes:
+        //const Elem* meshel =
+        //    MeshUtils::GridMapper::get_mapper(this->get_mesh()).get_element(p);
+        flag = false;
+        /*vector<const Elem*> tree;
       elem->family_tree(tree, false);
 
       set<const Elem*> elem_list;
@@ -2573,10 +2401,33 @@ SimulationInterface::get_solution(const libMesh::Elem* elem,
           }
         }
       }*/
+      }
+    }
+    else
+      get_solution_secure(elem, new_values, req_points);
+
+
+    //if (_use_cache)
+    //{
+    _data_cache.put_data(elem, req_points, new_values);
+    //}
+
+    for (it = new_values.begin(); it != new_values.end(); ++it)
+    {
+      unsigned int nd = (it->second).size() / req_points.size();
+
+      unsigned int ctr = 0;
+
+      // add missing points to the required points array
+      for (auto mit(req_points_id.begin()); mit != req_points_id.end(); ++mit)
+      {
+        for (unsigned int j = 0; j < nd; ++j)
+          values[it->first][nd*(*mit)+j] = new_values[it->first][nd*ctr+j];
+
+        ++ctr;
+      }
     }
   }
-  else
-    get_solution_secure(elem, values, points);
 
 
   // cell based solutions are copied to all requested points
@@ -2954,12 +2805,7 @@ SimulationInterface::print_info(void)
 }
 
 
-// void
-// SimulationInterface::allow_extrusion(void)
-// {
 
-
-// }
 
 double
 SimulationInterface::build_map_elem_atoms(double sigma, double cutoff)

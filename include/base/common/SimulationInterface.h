@@ -18,6 +18,7 @@
 #include "FiniteElement.h"
 #include "Atom.h"
 #include "libMeshDefs.h"
+#include "DataCache.h"
 
 
 // LibMesh includes
@@ -1545,6 +1546,9 @@ class SimulationInterface : public TiberModelObject
 
     //! A map with remembered solutions
     std::map<ID, libMesh::NumericVector<double>*> _remembered_solutions;
+
+    //! Cache for solution data
+    DataCache _data_cache;
 
 
     //! A set with all physical models of this simulation
