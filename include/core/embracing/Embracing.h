@@ -5,8 +5,8 @@
 
 #include "ElementSide.h"
 
-#include "point.h"
-#include "linear_implicit_system.h"
+#include "libmesh/point.h"
+#include "libmesh/linear_implicit_system.h"
 
 #include <set>
 

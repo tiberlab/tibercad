@@ -8,14 +8,14 @@
 #include "DataOutput.h"
 #include "TiberCad.h"
 
-#include "mesh.h"
-#include "equation_systems.h"
-#include "dof_map.h"
-#include "fe_interface.h"
-#include "quadrature_gauss.h"
-#include "sparse_matrix.h"
-#include "dense_matrix.h"
-#include "dense_vector.h"
+#include "libmesh/mesh.h"
+#include "libmesh/equation_systems.h"
+#include "libmesh/dof_map.h"
+#include "libmesh/fe_interface.h"
+#include "libmesh/quadrature_gauss.h"
+#include "libmesh/sparse_matrix.h"
+#include "libmesh/dense_matrix.h"
+#include "libmesh/dense_vector.h"
 
 
 using namespace std;
