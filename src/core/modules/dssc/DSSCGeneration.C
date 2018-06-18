@@ -281,7 +281,7 @@ DSSCGeneration::_calculate_distances(void)
     {
       const Elem* sideelem = get_mesh().query_elem(bd_elems[i]);
       if (sideelem == nullptr)
-        throw RuntimeException("Cannot retrieve baoundary element");
+        throw RuntimeException("Cannot retrieve boundary element");
     
       unsigned int s = bd_sides[i];
 
