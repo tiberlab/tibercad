@@ -73,7 +73,7 @@ ExcitonISC::calculate_rate_and_derivatives(std::vector<double>& R, std::vector<s
   double kT = dd.get_lattice_temperature();
   double x1  = dd.get_q_density(id1);
   double x2  = dd.get_q_density(id2);
-  double N2  = dd.get_carrier_properties(id2)->get_effective_DOS();
+  double N2  = dd.get_carrier_properties(id2)->get_maximum_density();
   double dx1 = dd.get_q_density_derivative(id1);
   double dx2 = dd.get_q_density_derivative(id2);
   double f1 = dd.get_q_fermi_potential(id1);
