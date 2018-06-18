@@ -5,14 +5,14 @@ Device
 
    Region left 
    {
-     Doping { Nd = 1e18 type = donor incomplete_ionization = false}
+     Doping { Nd = 1e18 type = donor reference_carrier = electron }
      material = AlAs
    }
 
    Region right 
    {
      material = AlP
-     Doping { Nd = 1e19 type = donor incomplete_ionization = false }
+     Doping { Nd = 1e19 type = donor reference_carrier = elr  }
    }
 
 }
