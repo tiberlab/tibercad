@@ -23,16 +23,9 @@ class TBDLLOCAL Band2Band : public RecombinationModelInterface
     //! Create a ConstantMobility object
     static Band2Band* create(const ModelOptions& options);
 
-    //! \copydoc RecombinationModelInterface::get_net_recombination_rates()
-    void get_net_recombination_rates(double& recomb_e, double& recomb_h);
-
-    /*!
-     * \copydoc
-     * RecombinationModelInterface::get_net_recombination_rate_derivatives()
-     */
-    void get_net_recombination_rate_derivatives(
-        std::vector<double>& recomb_e, std::vector<double>& recomb_h);
-
+    //! \copydoc RecombinationModelInterface::calculate_rate_and_derivatives()
+    virtual void calculate_rate_and_derivatives(std::vector<double>& R,
+        std::vector<std::vector<double>>& dPotentials) override;
 
     
   protected:

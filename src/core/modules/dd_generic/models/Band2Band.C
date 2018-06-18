@@ -29,6 +29,24 @@ Band2Band::read_database(void)
 void
 Band2Band::do_init(void)
 {
+  RecombinationModelInterface::do_init();
+
+  if (get_carrier_names().size() != 2)
+    throw InitFailedException("Band-to-band recombination model needs exactly "
+        "two recombining carriers");
+
+  ID id1 = this->get_carrier_ids()[0];
+  ID id2 = this->get_carrier_ids()[1];
+
+  const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
+
+  if (dd.get_carrier_properties(id1)->get_charge() *
+      dd.get_carrier_properties(id2)->get_charge() == 0.0)
+  {
+    throw InitFailedException("Band-to-band recombination model implementation "
+        "does not make sense for uncharged particles.");
+  }
+
   get_parameter("B", _B_param);
   get_parameter("sigma", _sigma);
   get_parameter("E0", _E0); // V/cm
@@ -37,42 +55,108 @@ Band2Band::do_init(void)
 
 
 void
-Band2Band::get_net_recombination_rates(double& recomb_e,
-    double& recomb_h)
+Band2Band::calculate_rate_and_derivatives(std::vector<double>& R, std::vector<std::vector<double>>& dPotentials)
 {
+
+  ID id1 = this->get_carrier_ids()[0];
+  ID id2 = this->get_carrier_ids()[1];
+
   const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
 
-  double n  = dd.get_electron_density();
-  double p  = dd.get_hole_density();
-  double ni = dd.get_intrinsic_density();
-  double gn = dd.get_electron_gamma();
-  double gp = dd.get_hole_gamma();
-  double E = dd.get_electric_field().size() + 1e-3;
+  double E01 = dd.get_carrier_properties(id1)->get_band_edge();
+  double E02 = dd.get_carrier_properties(id2)->get_band_edge();
+  double F = dd.get_electric_field().norm() + 1e-12;
+  double dE = fabs(E01 - E02);
 
-  double D = (n * p - ni * ni * gn * gp) / ((p + ni) * (n + ni));
-  recomb_e = recomb_h = _B_param * D * pow(E, _sigma) * exp(-_E0 / E);
+  double factor = _B_param * exp(-_E0 / F);
+  //cerr << F << "  " << factor << endl;
+
+  double q1 = dd.get_carrier_properties(id1)->get_charge();
+  double q2 = dd.get_carrier_properties(id2)->get_charge();
+
+  double kT = dd.get_lattice_temperature();
+
+  if (q1 * q2 < 0)
+  {
+
+    if (q1 > 0)
+    {
+      swap(id1, id2);
+      swap(q1, q2);
+    }
+    // now electron is id1
+
+    double Ef1 = -dd.get_q_fermi_potential(id1);
+    double Ef2 = -dd.get_q_fermi_potential(id2);
+    double beta = 1.0/kT;
+
+    double n1  = dd.get_q_density(id1);
+    double n2  = dd.get_q_density(id2);
+    double dn1  = dd.get_q_density_derivative(id1);
+    double dn2  = dd.get_q_density_derivative(id2);
+    double q1 = dd.get_carrier_properties(id1)->get_charge();
+    double q2 = dd.get_carrier_properties(id2)->get_charge();
+
+    double exponential = exp((Ef2 - Ef1) * beta);
+    double stat_fac = 1.0 - exponential;
+    double g = factor * n1 * n2;
+
+    R[id1] = g * stat_fac;
+    R[id2] = g * stat_fac;
+    //cerr << "n1 = " << n1 << " n2 = " << n2 << " -> " << R[id1] << endl;
+
+    double dR0 = stat_fac * factor * (n2 * dn1 + n1 * dn2);
+    double dR1 = -factor * n2 * (dn1 * stat_fac + beta * n1 * exponential);
+    double dR2 = -factor * n1 * (dn2 * stat_fac - beta * n2 * exponential);
+
+    dPotentials[id1][id1] = dR1;
+    dPotentials[id1][id2] = dR2;
+    dPotentials[id2][id1] = dR1;
+    dPotentials[id2][id2] = dR2;
+    dPotentials[id1][dd.n_known_carriers()] = dR0;
+    dPotentials[id2][dd.n_known_carriers()] = dR0;
+  }
+  else
+  {
+    if (((q1 <= 0) && (E01 > E02)) ||
+        ((q1 > 0)  && (E01 < E02)))
+    {
+      swap(id1, id2);
+    }
+
+    double n1  = dd.get_q_density(id1);
+    double n2  = dd.get_q_density(id2);
+    double N1  = 100 * dd.get_carrier_properties(id1)->get_effective_DOS();
+    double N2  = 100 * dd.get_carrier_properties(id2)->get_effective_DOS();
+    double dn1 = dd.get_q_density_derivative(id1);
+    double dn2 = dd.get_q_density_derivative(id2);
+    double Ef1 = -dd.get_q_fermi_potential(id1);
+    double Ef2 = -dd.get_q_fermi_potential(id2);
+    double beta = -dd.get_carrier_properties(id1)->get_charge_sign();
+
+    double exponential1 = exp((Ef2 - Ef1) * beta);
+    double exponential2 = exp((Ef1 - Ef2) * beta);
+    double stat1 = 1.0 - exponential1;
+    double stat2 = 1.0 - exponential2;
+
+
+    // TODO N2 should be the maximum density for n2, but now its 100*Nc
+    R[id1] = factor * (stat1 * n1 * (N2 - n2) - stat2 * n2 * (N1 - n1));
+    R[id2] = -R[id1];
+
+
+    double dR0 =  factor * (stat1 * ( (N2 - n2)*dn1 - n1*dn2 )
+        - stat2 * ( (N1 - n1)*dn2 - n2 * dn1 ));
+    double dR1 = -factor * ((N2 - n2) * ( dn1 * stat1 + beta * n1 * exponential1)
+        - n2 * ( dn1 * stat2 + beta * (N1 - n1) * exponential2));
+    double dR2 = -factor * (n1 * (-dn2 * stat1 - beta * (N2 - n2) * exponential1)
+        + (N1 - n1) * (dn2 * stat2 + beta * n2 * exponential2));
+
+    dPotentials[id1][id1] =  dR1;
+    dPotentials[id1][id2] =  dR2;
+    dPotentials[id2][id1] = -dR1;
+    dPotentials[id2][id2] = -dR2;
+    dPotentials[id1][dd.n_known_carriers()] =  dR0;
+    dPotentials[id2][dd.n_known_carriers()] = -dR0;
+  }
 }
-
-
-
-void
-Band2Band::get_net_recombination_rate_derivatives(
-    std::vector<double>& recomb_e, std::vector<double>& recomb_h)
-{
-  const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
-
-  double n  = dd.get_electron_density();
-  double p  = dd.get_hole_density();
-  double ni = dd.get_intrinsic_density();
-  double gn = dd.get_electron_gamma();
-  double gp = dd.get_hole_gamma();
-  double E = dd.get_electric_field().size() + 1e-3;
-
-  double D = (n * p - ni * ni * gn * gp) / ((p + ni) * (n + ni));
-  double recomb = _B_param * pow(E, _sigma) * exp(-_E0 / E);
-
-  recomb_e[0] = recomb_h[0] = recomb * ni / ((n + ni) * (n + ni)); // dR/dn
-  recomb_e[1] = recomb_h[1] = recomb * ni / ((p + ni) * (p + ni)); // dR/dp
-}
-
-
