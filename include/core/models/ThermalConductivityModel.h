@@ -45,9 +45,10 @@ class ThermalConductivityModel : public PhysicalModelInterface
 
   void rotate(void);
 
-  libMesh::RealTensor _kappa;
 
   private:
+
+  libMesh::RealTensor _kappa;
 
 };
 

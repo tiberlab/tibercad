@@ -65,9 +65,10 @@ LinearThermalConductivity::calculate(const libMesh::Elem* , const libMesh::Point
   double kz = kz0  + mz * (z-z0);
 
 
-  _kappa(0,0) = kx;
-  _kappa(1,1) = kx;
-  _kappa(2,2) = kz;
+  this->set_thermal_conductivity(libMesh::RealGradient(kx, kx, kz));
+  //_kappa(0,0) = kx;
+  //_kappa(1,1) = kx;
+  //_kappa(2,2) = kz;
 
 
 }
