@@ -63,6 +63,9 @@ FieldDependentMobility::prepare_submodels(void)
 
   ModelOptions opts;
   std::string low_field_model = get_option("low_field_model", "doping_dependent");
+  if (get_options().has_submodel("low_field_model"))
+    opts = get_options().submodels_begin("low_field_model")->second;
+
   opts.set_option("type", low_field_model);
   opts.set_option("particle", get_option("particle", "electron"));
 
@@ -169,6 +172,7 @@ void
 FieldDependentMobility::get_derivative_grad_potential(libMesh::RealGradient& dm)
 {
   dm.zero();
+
   double T = get_driftdiffusionproperties().get_lattice_temperature();
   double E = 0.0;
   if (get_carrier_type() == 'e')
@@ -238,6 +242,7 @@ void
 FieldDependentMobility::get_derivative_grad_fermi(libMesh::RealGradient& dm)
 {
   dm.zero();
+
   double T = get_driftdiffusionproperties().get_lattice_temperature();
   double E = 0.0;
   if (get_carrier_type() == 'e')
