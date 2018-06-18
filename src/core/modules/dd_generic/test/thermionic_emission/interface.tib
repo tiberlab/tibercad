@@ -1,114 +1,157 @@
 Device
 {
   meshfile = interface.msh
+  material = Si  # Alq3
 
 
-   Region left 
-   {
-     Doping { Nd = 1e18 type = donor reference_carrier = electron }
-     material = AlAs
-   }
+  Region left {
+    Doping {
+      density = 1e17 type = donor
+      #incomplete_ionization = false
+      reference_carrier = electron
+    }
+  }
 
-   Region right 
-   {
-     material = AlP
-     Doping { Nd = 1e19 type = donor reference_carrier = elr  }
-   }
-
+  Region right {
+    Doping {
+      density = 1e20 type = donor
+      incomplete_ionization = false
+      #reference_carrier = elr
+    }
+  } 
 }
 
-
 Module dd_generic
-{ 
+{
+  name = ddg
+  plot = (Ec, Ev, ElPotential, QFermi, RefEnergy, Density, Mobility, 
+            CurrentDensity, Flux, NetRecombination, ContactCurrents, ElField)
 
-  name = driftdiffusion
-  plot = (RefEnergy, QFermi, Density, Flux, NetRecombination, ContactCurrents, TotalRecombinationHeat)
+  current_integration_method = compact_rstf
+
+  Solver
+  {
+    step_tolerance = 1e-6 
+    
+  }
+
 
   Physics
   {
 
+    #----------------------------------------
+
+    # SEMICONDUCTOR
+
+    #----------------------------------------
+
+
     carrier electron
     {
-      regions = left
-      density_of_states bulk_kp
-      {
-      }
+      regions = (left)
+      charge = -1
+
+      density_of_states bulk  { level = 0.0  }
     }
+
 
     carrier elr
     {
-      regions = right
+      regions = (right)
       charge = -1
-      density_of_states bulk_kp
+
+      density_of_states bulk
       {
+
+         level = -0.86  # -0.835  #-0.8
+
       }
     }
 
+    #----------------------------------------
+
     mobility constant
     {
-      carriers = (electron, elr)
-      mu = 1000
-    }
+      regions = (left)
+      carriers = (electron)
+     }
+
+    mobility constant
+    {
+      regions = (right)
+      carriers = ( elr)
+     }
+
+
+    # BAND COUPLING 
 
     recombination direct
     {
+      regions = (left/right)
       carriers = (electron, elr)
-      regions = AlP/AlAs
-      C = 1e-15
+      C = 2.3e-14
     }
 
-  }   
 
+ }
 
   Contact anode
   {
-    type = schottky
-    barrier = 0.05
+    type = ohmic
     band = electron
-    voltage = $Vb
+    voltage = 0.0 
   }
 
   Contact cathode
   {
-    type = schottky
-    barrier = 0.05
+    type = ohmic  
     band = elr
-    voltage = 0.0
+    voltage = $Vb  
   }
-
-}  
-
+}
 
 
 Module sweep
 {
-  solve = driftdiffusion
+  name = sweep_back
+  solve = ddg
   variable = $Vb
   start = 0.0
-  stop = 2
-  steps = 40
+  stop = -1.0
+  #values = (0.0:0.05:3.0)
+  steps = 50
   plot_data = true
 }
 
+Module sweep
+{
+  name = sweep_fw
+  solve = ddg
+  variable = $Vb
+  start = 0.0
+  stop = 1.0
+  values = (0.0:0.02:1.0)
+  #steps = 60
+  plot_data = true
+}
+
+Module sweep
+{
+  name = sweep_tot
+  solve = ddg
+  variable = $Vb
+  start = -1.0
+  stop = 1.0
+  #values = (0.0:0.05:3.0)
+  steps = 100
+  plot_data = true
+}
 
 
 Simulation
 {
   temperature = 300
-  solve = sweep
+  solve = (ddg, sweep_back)#  sweep_1, sweep_2)
   resultpath = output
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
