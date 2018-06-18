@@ -114,16 +114,17 @@ FieldDependentMobility::get_mobility(void)
   double T = get_driftdiffusionproperties().get_lattice_temperature();
   double E = 0.0;
 
-  const libMesh::RealGradient& grad_fermi = (get_carrier_type() == 'e') ?
-    get_driftdiffusionproperties().get_grad_fermi_e() :
-    get_driftdiffusionproperties().get_grad_fermi_h();
+  ID id = get_carrier();
+
+  libMesh::RealGradient grad_fermi;
+  get_driftdiffusionproperties().get_grad_fermi(id, grad_fermi);
 
   //E = grad_fermi.size();
 
   //if ((_force == EFIELD) && (E > 1))
     //E = grad_fermi * get_driftdiffusionproperties().get_electric_field() / E;
   if (_force == GRADFERMI)
-    E = grad_fermi.size();
+    E = grad_fermi.norm();
   else if (_force == EFIELD)
   {
     E = grad_fermi.size();
@@ -138,9 +139,7 @@ FieldDependentMobility::get_mobility(void)
     E = std::sqrt(E);
   }
 
-  double n = (get_carrier_type() == 'e') ?
-      get_driftdiffusionproperties().get_electron_density() :
-      get_driftdiffusionproperties().get_hole_density();
+  double n = get_driftdiffusionproperties().get_q_density(id);
 
   double damp = n / (n + _damping);
   E *= damp;
@@ -168,17 +167,17 @@ FieldDependentMobility::get_mobility(void)
 void
 FieldDependentMobility::get_derivative_grad_potential(libMesh::RealGradient& dm)
 {
+
+  ID id = get_carrier();
+
   dm.zero();
   double T = get_driftdiffusionproperties().get_lattice_temperature();
-  double E = 0.0;
-  if (get_carrier_type() == 'e')
-    E = get_driftdiffusionproperties().get_grad_fermi_e().size();
-  else
-    E = get_driftdiffusionproperties().get_grad_fermi_h().size();
 
-  double n = (get_carrier_type() == 'e') ?
-      get_driftdiffusionproperties().get_electron_density() :
-      get_driftdiffusionproperties().get_hole_density();
+  libMesh::RealGradient grad_fermi;
+  get_driftdiffusionproperties().get_grad_fermi(id, grad_fermi);
+  double E = grad_fermi.norm();
+
+  double n = get_driftdiffusionproperties().get_q_density(id);
 
   double damp = n / (n + _damping);
 
@@ -194,9 +193,8 @@ FieldDependentMobility::get_derivative_grad_potential(libMesh::RealGradient& dm)
 
   if (0) // ((_force == FIELDPARAM))
   {
-    libMesh::RealGradient grad_fermi = (get_carrier_type() == 'e') ?
-        get_driftdiffusionproperties().get_grad_fermi_e() :
-        get_driftdiffusionproperties().get_grad_fermi_h();
+    libMesh::RealGradient grad_fermi;
+    get_driftdiffusionproperties().get_grad_fermi(id, grad_fermi);
 
     double F = grad_fermi * get_driftdiffusionproperties().get_electric_field();
     double sign = (F < 0) ? -1 : 1;
@@ -213,9 +211,8 @@ FieldDependentMobility::get_derivative_grad_potential(libMesh::RealGradient& dm)
   }
   else if (0) //((_force == EFIELD) && (E > 1e-6))
   {
-    libMesh::RealGradient grad_fermi = (get_carrier_type() == 'e') ?
-        get_driftdiffusionproperties().get_grad_fermi_e() :
-        get_driftdiffusionproperties().get_grad_fermi_h();
+    libMesh::RealGradient grad_fermi;
+    get_driftdiffusionproperties().get_grad_fermi(id, grad_fermi);
 
     double F = grad_fermi * get_driftdiffusionproperties().get_electric_field();
     double sign = (F < 0) ? -1 : 1;
@@ -237,17 +234,17 @@ FieldDependentMobility::get_derivative_grad_potential(libMesh::RealGradient& dm)
 void
 FieldDependentMobility::get_derivative_grad_fermi(libMesh::RealGradient& dm)
 {
+
+  ID id = get_carrier();
+
   dm.zero();
   double T = get_driftdiffusionproperties().get_lattice_temperature();
-  double E = 0.0;
-  if (get_carrier_type() == 'e')
-    E = get_driftdiffusionproperties().get_grad_fermi_e().size();
-  else
-    E = get_driftdiffusionproperties().get_grad_fermi_h().size();
 
-  double n = (get_carrier_type() == 'e') ?
-      get_driftdiffusionproperties().get_electron_density() :
-      get_driftdiffusionproperties().get_hole_density();
+  libMesh::RealGradient grad_fermi;
+  get_driftdiffusionproperties().get_grad_fermi(id, grad_fermi);
+  double E = grad_fermi.norm();
+
+  double n = get_driftdiffusionproperties().get_q_density(id);
 
   double damp = n / (n + _damping);
 
@@ -271,17 +268,15 @@ FieldDependentMobility::get_derivative_grad_fermi(libMesh::RealGradient& dm)
     double dmu = -mu_lowfield * std::pow(tmp, -1.0 / beta - 1);
     dmu *= std::pow(mu_lowfield * E / vsat, beta) / (E * E);
 
-    if (get_carrier_type() == 'e')
-      dm = dmu * get_driftdiffusionproperties().get_grad_fermi_e() * damp * damp;
-    else
-      dm = dmu * get_driftdiffusionproperties().get_grad_fermi_h() * damp * damp;
+    libMesh::RealGradient grad_fermi;
+    get_driftdiffusionproperties().get_grad_fermi(id, grad_fermi);
+    dm = dmu * grad_fermi * damp * damp;
 
   }
   else if (0) //((_force == FIELDPARAM))
   {
-    libMesh::RealGradient grad_fermi = (get_carrier_type() == 'e') ?
-        get_driftdiffusionproperties().get_grad_fermi_e() :
-        get_driftdiffusionproperties().get_grad_fermi_h();
+    libMesh::RealGradient grad_fermi;
+    get_driftdiffusionproperties().get_grad_fermi(id, grad_fermi);
 
     double F = grad_fermi * get_driftdiffusionproperties().get_electric_field();
     double sign = (F < 0) ? -1 : 1;
@@ -299,9 +294,8 @@ FieldDependentMobility::get_derivative_grad_fermi(libMesh::RealGradient& dm)
   }
   else if (0) //((_force == EFIELD) && (E > 1e-6))
   {
-    libMesh::RealGradient grad_fermi = (get_carrier_type() == 'e') ?
-        get_driftdiffusionproperties().get_grad_fermi_e() :
-        get_driftdiffusionproperties().get_grad_fermi_h();
+    libMesh::RealGradient grad_fermi;
+    get_driftdiffusionproperties().get_grad_fermi(id, grad_fermi);
 
     double F = grad_fermi * get_driftdiffusionproperties().get_electric_field();
     double sign = (F < 0) ? -1 : 1;
