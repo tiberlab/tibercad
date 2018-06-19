@@ -2282,7 +2282,7 @@ SimulationInterface::get_solution(const libMesh::Elem* elem,
     req_points.push_back(points[*mit]);
   }
 
-  // resize data contained accordingly
+  // resize data container accordingly
   for (auto it(new_values.begin()); it != new_values.end(); ++it)
   {
     it->second.resize(req_points.size() * it->second.size() / nn);
@@ -2409,7 +2409,7 @@ SimulationInterface::get_solution(const libMesh::Elem* elem,
 
     //if (_use_cache)
     //{
-    _data_cache.put_data(elem, req_points, new_values);
+    //_data_cache.put_data(elem, req_points, new_values);
     //}
 
     for (it = new_values.begin(); it != new_values.end(); ++it)
