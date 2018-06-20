@@ -16,7 +16,8 @@ DensityOfStates::DensityOfStates(const ModelOptions& options) :
   _spin(0.5),
   _use_quantum(false),
   _is_quantum(false),
-  _th_el_power(0.0)
+  _th_el_power(0.0),
+  _total_density(1e21)
 {
   string particle = get_option("particle", "-");
   if (particle == string("el") || particle == string("e") ||

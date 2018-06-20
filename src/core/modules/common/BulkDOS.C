@@ -176,7 +176,6 @@ BulkDOS::do_init(void)
   effective_dos() = _dos_factor * _degeneracy[0] * std::pow(
       SimulationOptions::T * Constants::k_B * _dos_mass[0], 1.5);
 
-  total_state_density() = 100*effective_dos();
 
 }
 

@@ -105,7 +105,6 @@ KPBulkDOS::do_reinit(const Elem* elem)
       data))
   {
     effective_dos() = data.eff_dos;
-    total_state_density() = 100*effective_dos();
     band_edge() = data.ref_energy;
     reference_energy() = data.ref_energy;
     effective_mass() = data.dos_mass;
@@ -237,8 +236,6 @@ KPBulkDOS::_solve_kp(void)
   effective_dos() = _dos_factor * _degeneracy[0] * std::pow(kT * _dos_mass[0], 1.5);
   reference_energy() = band_edge();
   effective_mass() = dos_mass();
-
-  total_state_density() = 100*effective_dos();
 }
 
 
@@ -314,7 +311,6 @@ KPBulkDOS::calculate_density_and_derivative(double Ef, double Epot,
   }
 
   _th_el_power /= density;
-
 
   return make_pair(density, derivative);
 }

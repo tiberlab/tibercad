@@ -262,8 +262,8 @@ DensityOfStates::get_occupied_density_and_derivative(double Ef, double Epot,
   kTlattice = (kTlattice < 0) ? kT : kTlattice;
   auto dens(calculate_density_and_derivative(Ef, Epot, kT, kTlattice, elem, p));
 
-  if (dens.first > _total_density)
-    dens = std::make_pair(_total_density, 0.0);
+  //if ((dens.first > _total_density) || std::isnan(dens.first))
+  //  dens = std::make_pair(_total_density, 0.0);
 
   return(dens);
 }
@@ -276,8 +276,8 @@ DensityOfStates::get_occupied_density_and_derivative(double Ef, double Epot,
   kTlattice = (kTlattice < 0) ? kT : kTlattice;
   auto dens(calculate_density_and_derivative(Ef, Epot, kT, kTlattice));
 
-  if (dens.first > _total_density)
-    dens = std::make_pair(_total_density, 0.0);
+  //if ((dens.first > _total_density) || std::isnan(dens.first))
+  //  dens = std::make_pair(_total_density, 0.0);
 
   return(dens);
 }
