@@ -276,7 +276,7 @@ void ETB::do_reinit(void)
 
   // create default name for state files
   string statefile("states.upt");
-  if (kp.size() > 1e-6) // k = Gamma
+  if (kp.norm() > 1e-6) // k = Gamma
   {
     ostringstream os;
     os.precision(4);
