@@ -81,7 +81,7 @@ ExcitonGeneration::calculate_rate_and_derivatives(std::vector<double>& R, std::v
     double dx = dd.get_q_density_derivative(idx);
     double dn = dd.get_q_density_derivative(idn);
     double dp = dd.get_q_density_derivative(idp);
-    double Nx = dd.get_carrier_properties(idx)->get_effective_DOS();
+    double Nx = dd.get_carrier_properties(idx)->get_maximum_density();
     double Efx = -dd.get_q_fermi_potential(idx);
     double Efn = -dd.get_q_fermi_potential(idn);
     double Efp = -dd.get_q_fermi_potential(idp);
@@ -89,16 +89,18 @@ ExcitonGeneration::calculate_rate_and_derivatives(std::vector<double>& R, std::v
     double exponential = exp(beta*(Efx - Efn + Efp));
     double stat = 1.0 - exponential;
 
-    double rate = _gamma * stat * n * p * ((Nx + x) );
+    double xf = x/Nx;
+
+    double rate = _gamma * stat * n * p * ((1 + xf) );
 
     R[idx] = -rate;
     R[idn] = rate;
     R[idp] = rate;
 
-    double derf = _gamma * stat * ((Nx + x) ) * (n * dp + p * dn);
-    double derx = _gamma * n * p * (beta * exponential * ((Nx + x) ) + (dx ) * stat);
-    double dern = -_gamma * p * (dn * stat + beta * n * exponential) * ((Nx + x) );
-    double derp = -_gamma * n * (dp * stat - beta * p * exponential) * ((Nx + x) );
+    double derf = _gamma * stat * (1 + xf) * (n * dp + p * dn);
+    double derx = _gamma * n * p * (beta * exponential * (1 + xf) + dx/Nx * stat);
+    double dern = -_gamma * p * (dn * stat + beta * n * exponential) * (1 + xf);
+    double derp = -_gamma * n * (dp * stat - beta * p * exponential) * (1 + xf);
 
     dPotentials[idx][idx] = - derx;
     dPotentials[idx][idn] = - dern;

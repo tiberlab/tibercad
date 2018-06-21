@@ -15,32 +15,7 @@
 
 using namespace std;
 
-namespace {
-  pair<double, double> fermi_dirac(double E)
-  {
-    double f = 0, deriv = 0;
-    double arg = E;
-    if (arg > 50)
-    {
-      f = exp(-arg);
-      deriv = -f;
-    }
-    else if (arg < -50)
-    {
-      deriv = -exp(arg);
-      f = 1 + deriv;
-    }
-    else
-    {
-      double expfac = exp(arg);
-      double denom = 1.0 + expfac;
-      f = 1.0 / denom;
-      deriv = -expfac * f / denom;
-    }
 
-    return make_pair(f, deriv);
-  }
-}
 
 DirectRecombination::QRecMap
 DirectRecombination::_qrec_vals;
@@ -176,20 +151,22 @@ DirectRecombination::calculate_rate_and_derivatives(std::vector<double>& R, std:
     double stat1 = 1.0 - exponential1;
     double stat2 = 1.0 - exponential2;
 
+    double n1f = n1 / N1;
+    double n2f = n2 / N2;
+
     double C1 = 0.5*C_*thermal;
     double C2 = 0.5*C_;
 
-    R[id1] = C1 * stat1 * n1 * (N2 - n2) - C2 * stat2 * n2 * (N1 - n1);
+    R[id1] = C1 * stat1 * n1 * (1.0 - n2f) - C2 * stat2 * n2 * (1.0 - n1f);
     R[id2] = -R[id1];
-    //cerr << n1 << " " << n2 << " - " << R[id1] << "\n";
 
 
-    double dR0 =  C1 * stat1 * ( (N2 - n2)*dn1 - n1*dn2 )
-        - C2 * stat2 * ( (N1 - n1)*dn2 - n2 * dn1 );
-    double dR1 = -C1 * (N2 - n2) * ( dn1 * stat1 + beta * n1 * exponential1)
-        - C2 * n2 * ( dn1 * stat2 + beta * (N1 - n1) * exponential2);
-    double dR2 = -C1 * n1 * (-dn2 * stat1 - beta * (N2 - n2) * exponential1)
-        + C2 * (N1 - n1) * (dn2 * stat2 + beta * n2 * exponential2);
+    double dR0 =  C1 * stat1 * ( (1 - n2f)*dn1 - n1*dn2/N2 )
+        - C2 * stat2 * ( (1 - n1f)*dn2 - n2 * dn1/N1 );
+    double dR1 = -C1 * (1 - n2f) * ( dn1 * stat1 + beta * n1 * exponential1)
+        - C2 * n2 * ( dn1/N1 * stat2 + beta * (1 - n1f) * exponential2);
+    double dR2 = -C1 * n1 * (-dn2/N2 * stat1 - beta * (1 - n2f) * exponential1)
+        + C2 * (1 - n1f) * (dn2 * stat2 + beta * n2 * exponential2);
 
     dPotentials[id1][id1] =  dR1;
     dPotentials[id1][id2] =  dR2;

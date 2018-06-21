@@ -126,8 +126,8 @@ Band2Band::calculate_rate_and_derivatives(std::vector<double>& R, std::vector<st
 
     double n1  = dd.get_q_density(id1);
     double n2  = dd.get_q_density(id2);
-    double N1  = 100 * dd.get_carrier_properties(id1)->get_effective_DOS();
-    double N2  = 100 * dd.get_carrier_properties(id2)->get_effective_DOS();
+    double N1  = dd.get_carrier_properties(id1)->get_maximum_density();
+    double N2  = dd.get_carrier_properties(id2)->get_maximum_density();
     double dn1 = dd.get_q_density_derivative(id1);
     double dn2 = dd.get_q_density_derivative(id2);
     double Ef1 = -dd.get_q_fermi_potential(id1);
@@ -139,18 +139,20 @@ Band2Band::calculate_rate_and_derivatives(std::vector<double>& R, std::vector<st
     double stat1 = 1.0 - exponential1;
     double stat2 = 1.0 - exponential2;
 
+    double n1f = n1/N1;
+    double n2f = n2/N2;
 
     // TODO N2 should be the maximum density for n2, but now its 100*Nc
-    R[id1] = factor * (stat1 * n1 * (N2 - n2) - stat2 * n2 * (N1 - n1));
+    R[id1] = factor * (stat1 * n1 * (1 - n2f) - stat2 * n2 * (1 - n1f));
     R[id2] = -R[id1];
 
 
-    double dR0 =  factor * (stat1 * ( (N2 - n2)*dn1 - n1*dn2 )
-        - stat2 * ( (N1 - n1)*dn2 - n2 * dn1 ));
-    double dR1 = -factor * ((N2 - n2) * ( dn1 * stat1 + beta * n1 * exponential1)
-        - n2 * ( dn1 * stat2 + beta * (N1 - n1) * exponential2));
-    double dR2 = -factor * (n1 * (-dn2 * stat1 - beta * (N2 - n2) * exponential1)
-        + (N1 - n1) * (dn2 * stat2 + beta * n2 * exponential2));
+    double dR0 =  factor * (stat1 * ( (1 - n2f)*dn1 - n1*dn2/N2 )
+        - stat2 * ( (1 - n1f)*dn2 - n2 * dn1/N1 ));
+    double dR1 = -factor * ((1 - n2f) * ( dn1 * stat1 + beta * n1 * exponential1)
+        - n2 * ( dn1/N1 * stat2 + beta * (1 - n1f) * exponential2));
+    double dR2 = -factor * (n1 * (-dn2/N2 * stat1 - beta * (1 - n2f) * exponential1)
+        + (1 - n1f) * (dn2 * stat2 + beta * n2 * exponential2));
 
     dPotentials[id1][id1] =  dR1;
     dPotentials[id1][id2] =  dR2;
