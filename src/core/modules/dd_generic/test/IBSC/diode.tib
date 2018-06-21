@@ -95,7 +95,7 @@ Module dd_generic
       regions = bulk
       plot_name = ib_cb
       carriers = (electron, ib)
-      C = 1e-12
+      C = 2e8
     }
 
     recombination direct
