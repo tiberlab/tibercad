@@ -1,0 +1,21 @@
+# AlGaAs
+
+alloy = 2
+structure = wz
+
+comp_A = AlAsWz
+comp_B = GaAsWz
+
+
+
+#Atomistic structure informations
+#
+[atomistic_structure]
+n_basis_specie=2
+
+specie_1=AlGa
+specie_2=As
+
+[densityfunctional_tb]
+
+
