@@ -135,10 +135,12 @@ DataCache::get_data(const Elem* elem,
   {
     for (unsigned int p = 0; p < points.size(); ++p)
     {
-      PointMap::const_iterator p_it((_current->second).find(p));
+      // try to find the point
+      PointMap::const_iterator p_it((_current->second).find(points[p]));
 
       if (p_it != (_current->second).end())
       {
+        // try to find the requested data
         map<ID, vector<double>>::const_iterator d_it((*(p_it->second)).find(id));
         if (d_it != (*(p_it->second)).end())
         {

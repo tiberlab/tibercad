@@ -74,6 +74,7 @@ SimulationInterface::SimulationInterface(const ModelOptions& options)
     _is_task(false),
     _equilibrium_is_solved(false),
     _has_solution_vector(true),
+    _use_cache(true),
     _verbosity(1),
     _mesh(0),
     _atomistic_structure(0)
@@ -766,6 +767,8 @@ SimulationInterface::init(void)
       }
     }
 
+    _use_cache = get_option("use_data_cache", _use_cache);
+
     _verbosity = get_option("verbose", _verbosity);
     do_init();
 
@@ -1051,7 +1054,6 @@ void
 SimulationInterface::solve(void)
 {
 
-
   Messages m;
   m.newline();
   m.frameline(">>>>",'-',get_name());
@@ -1320,6 +1322,7 @@ SimulationInterface::do_plot(void)
 
   plot_meshdata();
   plot_atomisticdata();
+
   if (get_communicator().rank() == 0)
     plot_globaldata();
 }
@@ -2254,6 +2257,7 @@ SimulationInterface::get_solution(const libMesh::Elem* elem,
     set<unsigned int> found = _data_cache.get_data(el, points, it->first, cached_data);
 
     unsigned int nd = found.size();
+    // size of single dataset
     nd = nd > 0 ? cached_data.size() / nd : 0;
 
     unsigned int ctr = 0;
@@ -2266,18 +2270,13 @@ SimulationInterface::get_solution(const libMesh::Elem* elem,
 
         ++ctr;
       }
-    }
-
-    // add missing points to the required points array
-    for (unsigned int i = 0; i < points.size(); ++i)
-    {
-      if (!found.count(i))
+      else // add missing points to the required points array
         req_points_id.insert(i);
     }
   }
 
   // prepare vector with required coordinates, ordered as the set with IDs
-  for (set<unsigned int>::iterator mit(req_points_id.begin()); mit != req_points_id.end(); ++mit)
+  for (auto mit(req_points_id.begin()); mit != req_points_id.end(); ++mit)
   {
     req_points.push_back(points[*mit]);
   }
@@ -2407,10 +2406,10 @@ SimulationInterface::get_solution(const libMesh::Elem* elem,
       get_solution_secure(elem, new_values, req_points);
 
 
-    //if (_use_cache)
-    //{
-    //_data_cache.put_data(elem, req_points, new_values);
-    //}
+    if (_use_cache)
+    {
+      _data_cache.put_data(elem, req_points, new_values);
+    }
 
     for (it = new_values.begin(); it != new_values.end(); ++it)
     {
@@ -2418,11 +2417,11 @@ SimulationInterface::get_solution(const libMesh::Elem* elem,
 
       unsigned int ctr = 0;
 
-      // add missing points to the required points array
-      for (auto mit(req_points_id.begin()); mit != req_points_id.end(); ++mit)
+      // add new data
+      for (auto&& p_id : req_points_id)
       {
         for (unsigned int j = 0; j < nd; ++j)
-          values[it->first][nd*(*mit)+j] = new_values[it->first][nd*ctr+j];
+          values[it->first][nd*p_id+j] = new_values[it->first][nd*ctr+j];
 
         ++ctr;
       }

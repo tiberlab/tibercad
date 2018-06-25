@@ -1550,6 +1550,9 @@ class SimulationInterface : public TiberModelObject
     //! Cache for solution data
     DataCache _data_cache;
 
+    //! Whether to use cache
+    bool _use_cache;
+
 
     //! A set with all physical models of this simulation
     std::set<PhysicalModel*> _physical_models;
