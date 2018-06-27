@@ -27,12 +27,6 @@
 
 
 
-//#include "PhononModel.h"
-//#include "ZbFreeDynamicalMatrix.h"
-//#include "ZbStrainDynamicalMatrix.h"
-//#include "ZbRamanTensor.h"
-
-
 
 #include "Messages.h"
 
@@ -52,6 +46,16 @@ PhysicalModelInterface::_model_ids;
 PhysicalModelInterface::_unique_model_ids;*/
 
 
+PhysicalModelInterface::PhysicalModelInterface(const ModelOptions& options)
+  : TiberModelObject(options),
+    _id(INVALID_ID),
+    _simulator_id(INVALID_ID),
+    _owner(nullptr),
+    _bulk_material(nullptr),
+    _database(nullptr),
+    _module("")
+{
+}
 
 PhysicalModelInterface::~PhysicalModelInterface(void)
 {
@@ -70,7 +74,7 @@ PhysicalModelInterface::_create(const string& name,
     const string& module)
 {
 
-  PhysicalModelInterface* mod = NULL;
+  PhysicalModelInterface* mod = nullptr;
 
   if (name == "cryst_gen")
     mod = RotatedCrystal::create(options);
@@ -96,17 +100,6 @@ PhysicalModelInterface::_create(const string& name,
     mod = WzDDsemiconductor::create(options);
   else if (name == "EFAmodel")
     mod = EFAbulkModel::create(options);
-  //  mod = PhononModel::create(options);
-  //else if  (name == "free_dynamical_matrix_zb")
-  //  mod = ZbFreeDynamicalMatrix::create(options);
-  //else if  (name == "strain_dependent_zb")
-  //  mod = ZbStrainDynamicalMatrix::create(options);
-  //else if  (name == "raman_tensor_zb")
-  //  mod = ZbRamanTensor::create(options);
-  //else if  (name == "piezoelectric_model_zb")
-  //  mod = ZbPiezoelectricModel::create(options);
-  //else if  (name == "piezoelectric_model_wz")
-  //  mod = WzPiezoelectricModel::create(options);
   else if (name == "trap")
     mod = Trap::create(options);
   else if (name == "polarization")
@@ -115,7 +108,7 @@ PhysicalModelInterface::_create(const string& name,
     mod = ParticleDensity::create(options);
 
 
-  if (mod == NULL)
+  if (mod == nullptr)
   {
     // first try without module directory
     if ((mod = create_from_library<PhysicalModelInterface>(name, options, owner)) == 0)
@@ -128,7 +121,7 @@ PhysicalModelInterface::_create(const string& name,
     }
   }
 
-  if (mod != NULL)
+  if (mod != nullptr)
   {
     _register_model(mod);
 
@@ -167,7 +160,7 @@ PhysicalModelInterface::_create(create_t create_fnc, destroy_t destroy_fnc,
   PhysicalModelInterface* mod = dynamic_cast<PhysicalModelInterface*>(
       create_from_function(create_fnc, destroy_fnc, options, owner));
 
-  if (mod != NULL)
+  if (mod != nullptr)
   {
     _register_model(mod);
 
@@ -244,10 +237,10 @@ void
 PhysicalModelInterface::set_owner(const PhysicalObject* owner)
 {
   _owner = owner;
-  if ((_owner != NULL) && (_owner->get_type() == PhysicalObject::BULK))
+  if ((_owner != nullptr) && (_owner->get_type() == PhysicalObject::BULK))
     _bulk_material = static_cast<const Material*>(_owner);
   else
-    _bulk_material = NULL;
+    _bulk_material = nullptr;
 }
 
 
@@ -255,16 +248,17 @@ PhysicalModelInterface::set_owner(const PhysicalObject* owner)
 PhysicalModelInterface*
 PhysicalModelInterface::copy(void) const
 {
-  PhysicalModelInterface* new_copy = NULL;
+  PhysicalModelInterface* new_copy = nullptr;
 
   // this is safe
   new_copy = this->create_new();
 
-  if (new_copy != NULL)
+  if (new_copy != nullptr)
   {
     new_copy->_id = _id;
     new_copy->set_owner(_owner);
     new_copy->set_material(_bulk_material);
+    new_copy->_database = _database;
     new_copy->set_name(get_name());
     new_copy->_set_type(get_type());
     new_copy->_simulator_id = _simulator_id;
@@ -282,7 +276,7 @@ PhysicalModelInterface*
 PhysicalModelInterface::create_new(void) const
 {
   PhysicalModelInterface* pmi = create_from_object(this, get_owner());
-  if (pmi == NULL)
+  if (pmi == nullptr)
   {
     ostringstream os;
     //os << "Model " << get_name() << " cannot create a new instance of "
@@ -309,6 +303,9 @@ PhysicalModelInterface::get_default_name(void) const
 const Database&
 PhysicalModelInterface::get_database(void)
 {
+  if (_database != nullptr)
+    return(*_database);
+
   return _owner->get_database();
 }
 
@@ -320,7 +317,7 @@ PhysicalModelInterface::override_parameter_string(const std::string& name,
 {
   const PhysicalObject* mat = get_owner();
 
-  if (mat != NULL)
+  if (mat != nullptr)
   {
     std::string code;
 
@@ -331,7 +328,7 @@ PhysicalModelInterface::override_parameter_string(const std::string& name,
     s = mat->get_options().get_option(name, s);
 
     // first override
-    if (sim != NULL)
+    if (sim != nullptr)
     {
       code = sim->get_name() + ".";
       s = mat->get_options().get_option(code + name, s);
@@ -354,6 +351,15 @@ PhysicalModelInterface::override_parameter_string(const std::string& name,
 void
 PhysicalModelInterface::init(void)
 {
+  // first check if we want to override the material datafile
+  if (this->has_option("override_material") ||
+      this->has_option("override_database"))
+  {
+    string mat = get_option("override_material", get_material()->get_name());
+    _database = new Database(mat, get_option("override_database", ""));
+  }
+
+
   //
   // we may arrive here, although the model is associated to an alloy
   // in that case, we defer to the init_interface() routine
@@ -379,6 +385,8 @@ PhysicalModelInterface::init(void)
   {
     PhysicalModelInterface* pm = smit->second;
     //pm->_simulator_id = _simulator_id;
+    // we pass overriden database, if present
+    pm->_database = _database;
     Messages::debug("Initializing " + smit->first + " ...");
     pm->init();
   }
@@ -477,9 +485,9 @@ PhysicalModelInterface::init_alloy(const PhysicalModelInterface* comp_A,
   // disable alloy mixing
   // This const cast is very ugly, better would be to not touch the database at all
   Database::AlloyMixing mixing = get_database().get_alloy_mixing();
-  const_cast<PhysicalObject*>(_owner)->get_database().set_alloy_mixing(Database::NONE);
+  get_database().set_alloy_mixing(Database::NONE);
   read_database_alloy();
-  const_cast<PhysicalObject*>(_owner)->get_database().set_alloy_mixing(mixing);
+  get_database().set_alloy_mixing(mixing);
 
 
   // setup the submodels
@@ -525,11 +533,12 @@ PhysicalModelInterface::set_material(const Material* mat)
 void
 PhysicalModelInterface::add_submodel(const std::string& key, PhysicalModelInterface* pm)
 {
-  if (pm != NULL)
+  if (pm != nullptr)
   {
     pm->set_simulator_id(get_simulator_id());
     pm->set_owner(get_owner());
     pm->set_material(get_material());
+    pm->_database = _database;
     pm->get_options().set_key(key);
     _submodels.insert(SubmodelMap::value_type(key, pm));
   }
@@ -550,7 +559,7 @@ void
 PhysicalModelInterface::_create_submodel(PhysicalModelInterface*& model,
     const std::string& type)
 {
-  model = NULL;
+  model = nullptr;
 
   string modname(type);
 
@@ -560,7 +569,7 @@ PhysicalModelInterface::_create_submodel(PhysicalModelInterface*& model,
 
   for ( ; it != end; ++it)
   {
-    if (model != NULL)
+    if (model != nullptr)
       throw ModelErrorException("Only one instance of submodel type \'"
           + type + "\' allowed");
 
@@ -573,7 +582,7 @@ PhysicalModelInterface::_create_submodel(PhysicalModelInterface*& model,
     // we try to create it from the same module
     model = create(modname, get_owner(), it->second, get_module_name());
 
-    if (model == NULL)
+    if (model == nullptr)
     {
       // perhaps it uses 'type' or 'model' internally?
       model = create(it->first, get_owner(), it->second, get_module_name());
@@ -581,7 +590,7 @@ PhysicalModelInterface::_create_submodel(PhysicalModelInterface*& model,
 
     add_submodel(type, model);
 
-    if (model == NULL)
+    if (model == nullptr)
     {
       ostringstream os;
       os << "Unknown physical model \'" << it->first << "\' (type \'"
@@ -599,7 +608,7 @@ PhysicalModelInterface::_create_submodel(PhysicalModelInterface*& model,
 {
   create_submodel(model, type);
 
-  if (model == NULL)
+  if (model == nullptr)
   {
     string modname(type);
 
@@ -613,7 +622,7 @@ PhysicalModelInterface::_create_submodel(PhysicalModelInterface*& model,
     // we try to create it from the same module
     model = create(modname, get_owner(), opts, get_module_name());
 
-    if (model == NULL)
+    if (model == nullptr)
     {
       // perhaps it uses 'type' or 'model' internally?
       model = create(type, get_owner(), opts, get_module_name());
@@ -621,7 +630,7 @@ PhysicalModelInterface::_create_submodel(PhysicalModelInterface*& model,
 
     add_submodel(type, model);
 
-    if (model == NULL)
+    if (model == nullptr)
     {
       ostringstream os;
       os << "Unknown physical model \'" << type << "\' (type \'"
@@ -658,7 +667,7 @@ PhysicalModelInterface::_create_submodels(std::vector<PhysicalModelInterface*>& 
     PhysicalModelInterface* mod =
         create(modname, get_owner(), it->second, get_module_name());
 
-    if (mod == NULL)
+    if (mod == nullptr)
     {
       // perhaps it uses 'type' or 'model' internally?
       mod = create(it->first, get_owner(), it->second, get_module_name());
@@ -666,7 +675,7 @@ PhysicalModelInterface::_create_submodels(std::vector<PhysicalModelInterface*>& 
 
     add_submodel(type, mod);
 
-    if (mod != NULL)
+    if (mod != nullptr)
       models.push_back(mod);
     else
     {
@@ -689,7 +698,7 @@ PhysicalModelInterface::_create_submodels(std::vector<PhysicalModelInterface*>& 
 
   if (models.empty())
   {
-    PhysicalModelInterface* mod = NULL;
+    PhysicalModelInterface* mod = nullptr;
 
     string modname(type);
 
@@ -703,7 +712,7 @@ PhysicalModelInterface::_create_submodels(std::vector<PhysicalModelInterface*>& 
     // we try to create it from the same module
     mod = create(modname, get_owner(), opts, get_module_name());
 
-    if (mod == NULL)
+    if (mod == nullptr)
     {
       // perhaps it uses 'type' or 'model' internally?
       mod = create(type, get_owner(), opts, get_module_name());
@@ -711,7 +720,7 @@ PhysicalModelInterface::_create_submodels(std::vector<PhysicalModelInterface*>& 
 
     add_submodel(type, mod);
 
-    if (mod != NULL)
+    if (mod != nullptr)
       models.push_back(mod);
     else
     {

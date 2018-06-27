@@ -92,7 +92,7 @@ class Database
 
 
     //! Set the alloy mixing type
-    void set_alloy_mixing(AlloyMixing type);
+    void set_alloy_mixing(AlloyMixing type) const;
 
 
     //! Set the alloy mixing type
@@ -227,7 +227,11 @@ class Database
 
 
     //! The type of alloy mixing
-    AlloyMixing _mixing_type;
+    /*! This is declared mutable because different models might need to
+     *  calculate mixed parameters in different ways. So the type of
+     *  mixing is not considered a state of the database itself.
+     */
+    mutable AlloyMixing _mixing_type;
 
 
     //! The databases of the constituents for an alloy
@@ -325,7 +329,7 @@ Database::open(void) const
 
 inline
 void
-Database::set_alloy_mixing(AlloyMixing mixing_type)
+Database::set_alloy_mixing(AlloyMixing mixing_type) const
 {
   _mixing_type = mixing_type;
 }

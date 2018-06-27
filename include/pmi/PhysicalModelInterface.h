@@ -583,6 +583,9 @@ class PhysicalModelInterface : public TiberModelObject
     //! Lower dimensional objects can have a bulk material assigned
     const Material* _bulk_material;
 
+    //! Each model could use an individual database
+    Database* _database;
+
 
     //! The name of the module this object is part of
     std::string _module;
@@ -667,16 +670,6 @@ class PhysicalModelInterface : public TiberModelObject
 // inline methods
 //
 
-inline
-PhysicalModelInterface::PhysicalModelInterface(const ModelOptions& options)
-  : TiberModelObject(options),
-    _id(INVALID_ID),
-    _simulator_id(INVALID_ID),
-    _owner(NULL),
-    _bulk_material(NULL),
-    _module("")
-{
-}
 
 
 inline
