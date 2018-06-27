@@ -8,11 +8,12 @@ subdirs += excitons dssc common
 subdirs += thermal drift-diffusion elasticity
 subdirs += vff negf etb 
 subdirs += polarizationgrid 
-subdirs += dd_generic
+#subdirs += dd_generic
 #subdirs += interpolation
 subdirs += quantumespresso
 subdirs += imagereader
 #subdirs += maxwell maxwellabsorption 
+#subdirs += dg-drift-diffusion
 
 include $(topdir)/Make.common
 

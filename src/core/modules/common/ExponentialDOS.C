@@ -41,28 +41,35 @@ double _get_value_derivative(double e, double E, double kT) const
 */
 
 
-std::pair<double, double>
-ExponentialDOS::calculate_density_and_derivative(double E, double Epot,
+void
+ExponentialDOS::calculate_density_and_derivative(vector<double>& den_and_der, double E, double Epot,
     double kT, double kTlattice, const Elem* elem, const Point& p) const
 {
-  return calculate_density_and_derivative(E, Epot, kT, kTlattice);
+  return calculate_density_and_derivative(den_and_der, E, Epot, kT, kTlattice);
 }
 
-std::pair<double, double>
-ExponentialDOS::calculate_density_and_derivative(double E, double Epot, double kT, double kTlattice) const
+void
+ExponentialDOS::calculate_density_and_derivative(vector<double>& den_and_der, double E, double Epot, double kT, double kTlattice) const
 {
   E -= get_reference_energy()[0] + Epot;
 
-  double sum = 0;
-  double der = 0;
+  double sum = 0, der = 0, der2 = 0;
+
 
   if (_alpha < 0.5 * kT)
   {
     // it's almost a delta
     double exp_E_kT = exp(-E / kT);
     sum = 1.0 / (1.0 + exp_E_kT);
-    der = sum / (1 + exp_E_kT);
+
+    if (den_and_der.size() > 1)
+      der = sum / (1 + exp_E_kT);
+    if (den_and_der.size() > 2)
+      der2 = - sum / (1 + exp_E_kT) + 2* sum / (1 + exp_E_kT) / (1 + exp_E_kT);
+
     der *= exp_E_kT / kT;
+    der2 *= exp_E_kT / kT /kT;
+
   }
   else
   {
@@ -92,16 +99,33 @@ ExponentialDOS::calculate_density_and_derivative(double E, double Epot, double k
         sum += h * _get_value(e, E, kT);
       }
 
-      der = sum - 1.0 / (1 + exp(-E / kT));
-      der /= _alpha;
+      double expm = exp(-E / kT);
+
+      if (den_and_der.size() > 1)
+      {
+        der = sum - 1.0 / (1 + expm);
+        der /= _alpha;
+      }
+      if (den_and_der.size() > 2)
+      {
+        der2 = sum - _alpha*(expm/(1 + expm))/kT;
+        der2 /= _alpha * _alpha;
+      }
+
     }
     else
     {
       sum = 1;
       der = 0;
+      der2 = 0;
     }
   }
 
-  return make_pair(sum, der);
+  den_and_der = {sum};
+  if (den_and_der.size() > 1)
+    den_and_der = {sum, der};
+  if (den_and_der.size() > 2)
+    den_and_der = {sum, der, der2};
+
 }
 

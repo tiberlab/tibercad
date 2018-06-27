@@ -600,9 +600,11 @@ DDBulkModel::calculate_equilibrium_properties(void)
   for (unsigned int i = 0; i < 100000; ++i)
   {
     set_potentials(x);
+
     calculate_densities();
     calculate_traps();
     calculate_ionized_dopants();
+
 
     double f = get_charge_density();
     double df_fermi[2];
@@ -633,6 +635,7 @@ DDBulkModel::calculate_equilibrium_properties(void)
     }
 
     error = fabs(dx);
+
     //cout << "x = " << y << " error = " << dx << " res. dens. = "
     //  << residual_dens << " Ec = " << Ec << " Ev = " << Ev << endl;
 
@@ -669,6 +672,7 @@ DDBulkModel::calculate_equilibrium_properties(void)
 
   cb.use_quantum(quantum_el);
   vb.use_quantum(quantum_hl);
+
 }
 
 

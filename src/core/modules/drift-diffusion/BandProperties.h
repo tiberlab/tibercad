@@ -63,10 +63,10 @@ class BandProperties : public DriftDiffusionModelInterface
     /*!
      * calculate() has to be called before
      */
-    std::pair<double, double> get_density_and_derivative(void) const;
+    void get_density_and_derivative(void) const;
 
     //! Get the particle density and its derivative
-    std::pair<double, double> get_density_and_derivative(double Ef, double Epot) const;
+    void get_density_and_derivative(std::vector<double>& den_and_der, double Ef, double Epot) const;
 
     //! Get the \f$\gamma\f$ factor
     double get_gamma(void) const;

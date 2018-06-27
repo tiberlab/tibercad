@@ -426,6 +426,8 @@ DriftDiffusion::do_solve(void)
 
     solve_equilibrium();
 
+    build_local_scaling();
+
 
     // if we would repeat the equilibrium simulation, we can stop now
     if (equilibrium)
@@ -458,6 +460,9 @@ DriftDiffusion::do_solve(void)
     get_my_options().coupling = coupling;
   }
 
+  //if (get_option("use_weight", false))
+  //  calculate_weights();
+
   try
   {
     switch (_options.solver_method)
@@ -476,6 +481,11 @@ DriftDiffusion::do_solve(void)
         string(e.what()) + ")";
     throw SolveFailedException(msg);
   }
+
+  // NOTE we calculate the local scaling factors AFTER, because otherwise
+  // new results of other coupled models (thermal, quantum) may disturb
+  // the calculation
+  build_local_scaling();
 
   get_my_options().coupling = coupling;
 
@@ -568,6 +578,68 @@ DriftDiffusion::do_solve(void)
 }
 
 
+/*void
+DriftDiffusion::calculate_weights(void)
+{
+  TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
+
+  libMesh::NumericVector<Number>& solution = system.get_solution_vector();
+  libMesh::NumericVector<Number>& oldsol = system.get_vector("old_sol");
+  libMesh::NumericVector<Number>& weight = system.get_vector("weight");
+
+  const unsigned int var_u = system.variable_number("potential");
+  const unsigned int var_ef = system.variable_number("fermi_e");
+  const unsigned int var_hf = system.variable_number("fermi_h");
+
+  const double phi0 = get_scaling().get_potential_scaling();
+  const double C0 = get_scaling().get_density_scaling();
+
+  MeshBase& mesh = get_mesh();
+  MeshBase::element_iterator it = this->active_local_elements_begin();
+  const MeshBase::element_iterator end = this->active_local_elements_end();
+
+  for ( ; it != end; ++it)
+  {
+    const Elem* elem = *it;
+    DDBulkModel* sc = get_bulk_model<DDBulkModel>(elem);
+
+    assert(sc != NULL);
+    sc->reinit(elem);
+
+    for (unsigned int i = 0; i < elem->n_nodes(); i++)
+    {
+      sc->set_coordinates(elem, elem->point(i));
+
+      unsigned int dofu =
+        elem->get_node(i)->dof_number(system.number(), var_u, 0);
+      unsigned int dofen =
+        elem->get_node(i)->dof_number(system.number(), var_ef, 0);
+      unsigned int dofep =
+        elem->get_node(i)->dof_number(system.number(), var_hf, 0);
+
+      double u = solution(dofu);
+      double en = solution(dofen);
+      double ep = solution(dofep);
+      double oldu = oldsol(dofu);
+      double olden = oldsol(dofen);
+      double oldep = oldsol(dofep);
+      sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
+      sc->set_old_potentials(phi0 * oldu, phi0 * olden, phi0 * oldep);
+
+      sc->calculate_densities();
+
+      double n = min(1.0, log10(1 + sc->get_electron_density()) / 18);// < 1e7 ? 0 : 1;
+      double p = min(1.0, log10(1 + sc->get_hole_density()) / 18);// < 1e7 ? 0 : 1;
+      weight.set(dofu, 1);
+      weight.set(dofen, n);
+      weight.set(dofep, p);
+    }
+  }
+  weight.close();
+  system.set_weight(&weight, TiberEqSystem::l2_NORM);
+  system.set_weight(&weight, TiberEqSystem::MAX_NORM);
+}*/
+
 
 
 void
@@ -650,6 +722,7 @@ DriftDiffusion::do_equilibrium(void)
   // make a rough guess
   guess_equilibrium();
 
+  build_local_scaling();
 
   try
   {
@@ -940,6 +1013,8 @@ DriftDiffusion::do_set_to_remembered_solution(ID id)
 
   get_environment().prepare_for_solve();
 
+  build_local_scaling();
+
 }
 
 
@@ -968,7 +1043,8 @@ DriftDiffusion::do_print_info(void)
 
   os << endl;
 
-
+  if (_do_local_scaling)
+    os << "using local scaling";
 
   Messages::info(os.str());
 
@@ -997,6 +1073,8 @@ DriftDiffusion::parse_const_options(void)
     myopts.scaling_type = Scaling::NONE;
   else
     myopts.scaling_type = Scaling::UNITS;
+
+  _do_local_scaling = opts.get_option("local_scaling", true);
 
 
   //string qrule = get_mesh().mesh_dimension() == 1 ? "trapez" : "gauss";
@@ -1867,8 +1945,8 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
   libMesh::RealGradient jn(0);
   libMesh::RealGradient jp(0);
   libMesh::RealGradient el_field(0);
-  libMesh::RealGradient stab_term_n(0);
-  libMesh::RealGradient stab_term_p(0);
+  //libMesh::RealGradient stab_term_n(0);
+  //libMesh::RealGradient stab_term_p(0);
   libMesh::RealVectorValue polariz(0);
   double el_pot;
 
@@ -2258,23 +2336,23 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
   if (values.count(CurrentDensity))
   {
-    values[CurrentDensity][0] = (jn(0) + jp(0)) / np + (stab_term_n(0) + stab_term_p(0));
-    values[CurrentDensity][1] = (jn(1) + jp(1)) / np + (stab_term_n(1) + stab_term_p(1));
-    values[CurrentDensity][2] = (jn(2) + jp(2)) / np + (stab_term_n(2) + stab_term_p(2));
+    values[CurrentDensity][0] = (jn(0) + jp(0)) / np;// + (stab_term_n(0) + stab_term_p(0));
+    values[CurrentDensity][1] = (jn(1) + jp(1)) / np;// + (stab_term_n(1) + stab_term_p(1));
+    values[CurrentDensity][2] = (jn(2) + jp(2)) / np;// + (stab_term_n(2) + stab_term_p(2));
   }
 
   if (values.count(eCurrentDensity))
   {
-    values[eCurrentDensity][0] = jn(0) / np + stab_term_n(0);
-    values[eCurrentDensity][1] = jn(1) / np + stab_term_n(1);
-    values[eCurrentDensity][2] = jn(2) / np + stab_term_n(2);
+    values[eCurrentDensity][0] = jn(0) / np;// + stab_term_n(0);
+    values[eCurrentDensity][1] = jn(1) / np;// + stab_term_n(1);
+    values[eCurrentDensity][2] = jn(2) / np;//;// + stab_term_n(2);
   }
 
   if (values.count(eCurrentDensity))
   {
-    values[hCurrentDensity][0] = jp(0) / np + stab_term_p(0);
-    values[hCurrentDensity][1] = jp(1) / np + stab_term_p(1);
-    values[hCurrentDensity][2] = jp(2) / np + stab_term_p(2);
+    values[hCurrentDensity][0] = jp(0) / np;// + stab_term_p(0);
+    values[hCurrentDensity][1] = jp(1) / np;// + stab_term_p(1);
+    values[hCurrentDensity][2] = jp(2) / np;// + stab_term_p(2);
   }
 
   // the cell based solutions
@@ -2583,8 +2661,8 @@ DriftDiffusion::calculate_currents_rstf_global(void)
   libMeshEnums::Order integration_order = params.integration_order;
 
   libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
-  libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type));
-  libMesh::UniquePtr<libMesh::FEBase> fe_face_neig(build_finite_element(dim, fe_type));
+  //libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type));
+  //libMesh::UniquePtr<libMesh::FEBase> fe_face_neig(build_finite_element(dim, fe_type));
 
   libMesh::UniquePtr<libMesh::FEBase> fe_rstf(build_finite_element(dim, fe_type_rstf));
   libMesh::UniquePtr<libMesh::QBase> qrule(libMesh::QBase::build(
@@ -2592,9 +2670,9 @@ DriftDiffusion::calculate_currents_rstf_global(void)
   fe_rstf->attach_quadrature_rule(qrule.get());
 
 
-  libMesh::UniquePtr<libMesh::QBase> qface(libMesh::QBase::build(
+  /*libMesh::UniquePtr<libMesh::QBase> qface(libMesh::QBase::build(
        params.quadrature_type, dim-1, integration_order));
-  fe_face->attach_quadrature_rule(qface.get());
+  fe_face->attach_quadrature_rule(qface.get());*/
 
   // Jacobian * quadrature weight at each integration point.
   const vector<Real>& JxW = fe_rstf->get_JxW();
@@ -2610,20 +2688,20 @@ DriftDiffusion::calculate_currents_rstf_global(void)
   const vector<vector<libMesh::RealGradient> >& dphi_rstf = fe_rstf->get_dphi();
 
   //face shape functions
-  const vector<vector<Real> >&  phi_face = fe_face->get_phi();
-  const vector<vector<Real> >&  phi_face_neig = fe_face_neig->get_phi();
+  //const vector<vector<Real> >&  phi_face = fe_face->get_phi();
+  //const vector<vector<Real> >&  phi_face_neig = fe_face_neig->get_phi();
   //
   // face shape function gradients
-  const vector<vector<libMesh::RealGradient> >&  dphi_face = fe_face->get_dphi();
-  const vector<vector<libMesh::RealGradient> >&  dphi_face_neig = fe_face_neig->get_dphi();
+  //const vector<vector<libMesh::RealGradient> >&  dphi_face = fe_face->get_dphi();
+  //const vector<vector<libMesh::RealGradient> >&  dphi_face_neig = fe_face_neig->get_dphi();
   //
   // physical coordinates of the quadrature points
-  const vector<Point>& q_point_face = fe_face->get_xyz();
+  //const vector<Point>& q_point_face = fe_face->get_xyz();
   //
-  const vector<Point>& face_normals = fe_face->get_normals();
+  //const vector<Point>& face_normals = fe_face->get_normals();
   //
   // Jacobian * quadrature weight at each integration point on the side.
-  const vector<Real>& JxW_face = fe_face->get_JxW();
+  //const vector<Real>& JxW_face = fe_face->get_JxW();
 
   vector<unsigned int> dof_indices_u;
   vector<unsigned int> dof_indices_en;
@@ -2666,10 +2744,10 @@ DriftDiffusion::calculate_currents_rstf_global(void)
     //Get the temperature given the element
     vector<double> T_nodes =  sc->get_temperature_at_nodes();
 
-    libMesh::RealGradient stab_e(0);
-    libMesh::RealGradient stab_h(0);
+    //libMesh::RealGradient stab_e(0);
+    //libMesh::RealGradient stab_h(0);
 
-    for (unsigned int s = 0; s < n_sides; s++)
+    /*for (unsigned int s = 0; s < n_sides; s++)
     {
       const Elem* elem_neig = elem->neighbor(s);
 
@@ -2688,7 +2766,7 @@ DriftDiffusion::calculate_currents_rstf_global(void)
         UniquePtr<Elem> elem_side(elem->build_side(s));
         const double h_elem = (elem->volume() / elem_side->volume()) * mesh_units;
 
-        const double penalty = 3.0;
+        const double penalty = 5.0;
 
         std::vector<unsigned int> neig_dof_indices;
         std::vector<unsigned int> neig_dof_indices_u;
@@ -2751,7 +2829,7 @@ DriftDiffusion::calculate_currents_rstf_global(void)
           stab_h = (term_h - term_h_neig) * sigma_h_avg;
         }
       }
-    }
+    }*/
 
     for (unsigned int qp = 0; qp < qrule->n_points(); qp++)
     {
@@ -2821,8 +2899,8 @@ DriftDiffusion::calculate_currents_rstf_global(void)
         }
       }
 
-      libMesh::RealGradient je(JxW[qp] * phi0 * (sigma_e * (dEfn + Pn * dT) + stab_e));
-      libMesh::RealGradient jh(JxW[qp] * phi0 * (sigma_h * (dEfp + Pp * dT) +  stab_h));
+      libMesh::RealGradient je(JxW[qp] * phi0 * (sigma_e * (dEfn + Pn * dT)));// + stab_e));
+      libMesh::RealGradient jh(JxW[qp] * phi0 * (sigma_h * (dEfp + Pp * dT)));// +  stab_h));
 
       for (unsigned int n = 0; n < n_dofs; n++)
       {
@@ -3045,250 +3123,6 @@ DriftDiffusion::calculate_field_emission(void)
 
 
 
-void
-DriftDiffusion::calculate_currents_surfint(void)
-{
-
-  // reset currents
-  ContactData::iterator it =
-    _boundary_currents.begin();
-  for ( ; it != _boundary_currents.end(); ++it)
-    (*it).second = 0.0;
-
-  TiberNonlinearSystem* system = &get_equation_system<TiberNonlinearSystem>();
-
-  const libMesh::NumericVector<Number>& solution = get_solution_vector();
-
-  // aliases for nicer code
-  const MeshBase& mesh = system->get_mesh();
-  const Device& device = *(_device);
-  const SimulationEnvironment& env = get_environment();
-
-  const libMesh::DofMap& dof_map = system->get_dof_map();
-
-  const unsigned int dim = mesh.mesh_dimension();
-
-  const double phi0 = get_scaling().get_potential_scaling();
-
-
-  // numeric ids corresponding to the variables
-  const unsigned int u_var = system->variable_number("potential");
-  unsigned int en_var = system->variable_number("fermi_e");
-  unsigned int ep_var = system->variable_number("fermi_h");
-  if (_useparticle == 'e')
-    ep_var = en_var;
-  else if (_useparticle == 'h')
-    en_var = ep_var;
-
-  libMesh::FEType fe_type = system->variable_type(u_var);
-
-  // the finite element for boundary integration
-  libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type));
-  libMeshEnums::Order integration_order;
-  if (dim == 1)
-    integration_order = libMeshEnums::CONSTANT;
-  else
-    integration_order = get_my_options().integration_order;
-
-  libMesh::UniquePtr<libMesh::QBase> qface(libMesh::QBase::build(
-        get_my_options().quadrature_type, dim - 1, integration_order));
-  fe_face->attach_quadrature_rule(qface.get());
-
-
-  // Jacobian * quadrature weight at each integration point.
-  const vector<Real>& JxW = fe_face->get_JxW();
-
-  // physical coordinates of the quadrature points
-  const vector<Point>& q_point = fe_face->get_xyz();
-
-  // element shape functions
-  const vector<vector<Real> >& phi = fe_face->get_phi();
-
-  // element shape function gradients
-  const vector<vector<libMesh::RealGradient> >& dphi = fe_face->get_dphi();
-
-  // the face normals
-  const vector<Point>& face_normals = fe_face->get_normals();
-
-  vector<unsigned int> dof_indices_u;
-  vector<unsigned int> dof_indices_en;
-  vector<unsigned int> dof_indices_ep;
-
-
-  BoundaryElementMap::iterator el(env.boundary_elements_begin());
-  BoundaryElementMap::iterator end_el(env.boundary_elements_end());
-
-  for ( ; el != end_el ; ++el)
-  {
-    const Elem* elem = *el;
-    const Elem* top_parent = (*el)->top_parent();
-
-    // get DOF indices
-    dof_map.dof_indices(elem, dof_indices_u, u_var);
-    dof_map.dof_indices(elem, dof_indices_en, en_var);
-    dof_map.dof_indices(elem, dof_indices_ep, ep_var);
-
-    DDBulkModel* sc = get_bulk_model<DDBulkModel>(elem);
-
-    assert(sc != NULL);
-
-    for (unsigned int s = 0; s < elem->n_sides(); s++)
-    {
-      ElementSide side(top_parent, s);
-
-      if (env.is_boundary(side))
-      {
-
-        Boundary* boundary = env.get_boundary(side);
-        if (boundary == NULL)
-          continue;
-
-        sc->reinit(elem);
-
-        //Get the temperature given the element
-        vector<double> T_nodes = sc->get_temperature_at_nodes();
-
-        // only for dim > 1 we need to integrate
-        if (dim > 1)
-        {
-          fe_face->reinit(elem, s);
-
-          int phi_size = phi.size();
-
-          double current = 0.0;
-
-          for (unsigned int qp = 0; qp < qface->n_points(); qp++)
-          {
-            // get the solution value at the quadrature point
-            Real u  = 0.0;
-            Real en = 0.0;
-            Real ep = 0.0;
-            Real dEfn = 0.0;
-            Real dEfp = 0.0;
-            libMesh::RealGradient e_field(0);
-            Real dT = 0.0;
-            for (unsigned int i = 0; i < phi_size; i++)
-            {
-              u  += phi[i][qp] * solution(dof_indices_u[i]);
-              en += phi[i][qp] * solution(dof_indices_en[i]);
-              ep += phi[i][qp] * solution(dof_indices_ep[i]);
-
-              double tmp = dphi[i][qp] * face_normals[qp];
-              dEfn += tmp * solution(dof_indices_en[i]);
-              dEfp += tmp * solution(dof_indices_ep[i]);
-
-              e_field += dphi[i][qp] * solution(dof_indices_u[i]);
-
-              dT += tmp * T_nodes[i];
-            }
-
-            // prepare for calculating local properties
-            sc->set_coordinates(q_point[qp]);
-
-
-            sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
-
-            sc->set_electric_field(phi0 * e_field);
-            sc->set_grad_fermi_e(phi0 * dEfn);
-            sc->set_grad_fermi_h(phi0 * dEfp);
-
-            sc->calculate_densities();
-
-            sc->calculate_mobilities();
-
-            //Get the thermoelectric power------------
-            sc->compute_thermoelectric_powers();
-            double Pn = sc->get_electron_thermoelectric_power() / phi0;
-            double Pp = sc->get_hole_thermoelectric_power() / phi0;
-
-            Real cond_e = Constants::e * sc->get_electron_mobility() *
-              sc->get_electron_density();
-            Real cond_h = Constants::e * sc->get_hole_mobility() *
-              sc->get_hole_density();
-
-            current += -JxW[qp] * phi0 *
-              (cond_e * (dEfn + Pn * dT) + cond_h * (dEfp + Pp * dT));
-          } // end loop over quadrature points
-
-          _boundary_currents[boundary->get_name()] += current;
-        }
-        else
-        {
-          vector<Point> v(1, elem->point(s));
-          fe_face->reinit(elem, &v);
-
-          double current = 0.0;
-
-          // s is the node of the element lying on the boundary
-          Real u  = solution(dof_indices_u[s]);
-          Real en = solution(dof_indices_en[s]);
-          Real ep = solution(dof_indices_ep[s]);
-
-          Real dEfn = 0.0;
-          Real dEfp = 0.0;
-          libMesh::RealGradient e_field(0);
-          Real dT = 0.0;
-          for (unsigned int n = 0; n < elem->n_nodes(); n++)
-          {
-            dEfn += dphi[n][0](0) * solution(dof_indices_en[n]);
-            dEfp += dphi[n][0](0) * solution(dof_indices_ep[n]);
-            e_field(0) += dphi[n][0](0) * solution(dof_indices_u[n]);
-
-            dT += dphi[n][0](0) * T_nodes[n];
-          }
-
-          // what is the outer normal in this point??
-          // Idea: if x(s) > x(centroid), normal is +1
-          //       else it is -1
-          double x_c = elem->centroid()(0);
-          double x_s = elem->point(s)(0);
-          if (x_s < x_c)
-          {
-            dEfn = -dEfn;
-            dEfp = -dEfp;
-            dT = -dT;
-          }
-
-          // prepare for calculating local properties
-          sc->set_coordinates(elem->point(s));
-
-
-          sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
-
-          sc->set_electric_field(phi0 * e_field);
-          sc->set_grad_fermi_e(phi0 * libMesh::RealGradient(dEfn, 0, 0));
-          sc->set_grad_fermi_h(phi0 * libMesh::RealGradient(dEfp, 0, 0));
-
-          sc->calculate_densities();
-
-          sc->calculate_mobilities();
-
-          //Get the thermoelectric power------------
-          sc->compute_thermoelectric_powers();
-          double Pn = sc->get_electron_thermoelectric_power() / phi0;
-          double Pp = sc->get_hole_thermoelectric_power() / phi0;
-
-
-          Real cond_e = Constants::e * sc->get_electron_mobility() *
-            sc->get_electron_density();
-          Real cond_h = Constants::e * sc->get_hole_mobility() *
-            sc->get_hole_density();
-
-          if (boundary != NULL)
-          {
-            //ElectricalContact* contact = dynamic_cast<ElectricalContact*>(
-            //   boundary->get_boundary_properties(get_id()));
-            _boundary_currents[boundary->get_name()] = -phi0 *
-              (cond_e * (dEfn + Pn * dT) + cond_h * (dEfp + Pp * dT));
-          }
-        }
-      }
-    } // end loop over elem sides
-  } // end loop over elements
-
-}
-
-
 
 
 void
@@ -3456,6 +3290,388 @@ DriftDiffusion::calculate_surface_recombination(void)
 
 
 
+void
+DriftDiffusion::build_local_scaling(void)
+{
+  cerr << "build_local_scaling" << endl;
+
+  TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>(0);
+
+  const libMesh::NumericVector<Number>& solution = system.get_solution_vector();
+  libMesh::NumericVector<Number>& loc_scaling = system.get_vector("scaling");
+  loc_scaling.zero();
+  //loc_scaling.close();
+
+
+  if (!_do_local_scaling)
+  {
+    // we do not use local scaling, therefore set it to 1
+    loc_scaling.add(1.0);
+    loc_scaling.close();
+    return;
+  }
+
+  // aliases for nicer code
+  const MeshBase& mesh = get_mesh();
+
+  const unsigned int dim = mesh.mesh_dimension();
+
+  const libMesh::DofMap& dof_map = system.get_dof_map();
+
+  const Options& params = get_my_options();
+
+  // the scaling parameters to scale back the result
+  const Scaling& scaling = get_scaling();
+  const double phi0 = scaling.get_potential_scaling();
+  const double x0 = scaling.get_length_scaling();
+  const double C0 = scaling.get_density_scaling();
+  const double mu0 = scaling.get_mobility_scaling();
+  const double l2 = scaling.get_lambda_squared() * Constants::e0 * 1e-2;
+
+  // density scaling for electrons
+  double C0_e = C0;
+  // density scaling for holes
+  double C0_h = C0;
+  C0_e = C0_h = 1;
+
+  const unsigned int u_var = system.variable_number("potential");
+  unsigned int en_var = system.variable_number("fermi_e");
+  unsigned int ep_var = system.variable_number("fermi_h");
+  if (_useparticle == 'e')
+    ep_var = en_var;
+  else if (_useparticle == 'h')
+    en_var = ep_var;
+
+  // we have to detect the dirichlet DOFs
+  set<unsigned int> dirichlet_dofs;
+
+  vector<unsigned int> dof_indices;
+  vector<unsigned int> dof_indices_u;
+  vector<unsigned int> dof_indices_en;
+  vector<unsigned int> dof_indices_ep;
+
+  libMesh::FEType fe_type = system.variable_type(u_var);
+  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+  libMesh::UniquePtr<libMesh::QBase> qrule(libMesh::QBase::build(
+        params.quadrature_type, dim, params.integration_order));
+  fe->attach_quadrature_rule(qrule.get());
+
+  const vector<vector<Real> >&  phi = fe->get_phi();
+  const vector<vector<libMesh::RealGradient> >&  dphi = fe->get_dphi();
+  const vector<Point>& q_point = fe->get_xyz();
+
+
+  libMesh::DenseVector<Number> local_scaling;
+
+  libMesh::DenseSubVector<Number>
+    scaleu(local_scaling),
+    scalen(local_scaling),
+    scalep(local_scaling);
+
+  libMesh::DenseSubVector<Number>
+    scaleu_neig(local_scaling),
+    scalen_neig(local_scaling),
+    scalep_neig(local_scaling);
+
+
+  //int dof=0;
+
+  MeshBase::const_element_iterator it =
+    this->active_local_elements_begin();
+  const MeshBase::const_element_iterator end =
+    this->active_local_elements_end();
+
+  for ( ; it != end; ++it)
+  {
+    //dof++;
+    const Elem* elem = *it;
+
+    vector<unsigned int> vector_dof_tot;
+
+    dof_map.dof_indices(elem, dof_indices);
+    dof_map.dof_indices(elem, dof_indices_u, u_var);
+    dof_map.dof_indices(elem, dof_indices_en, en_var);
+    dof_map.dof_indices(elem, dof_indices_ep, ep_var);
+
+    unsigned int n_dofs = dof_indices_u.size();
+    unsigned int n_dofs_tot = dof_indices.size();
+
+    vector_dof_tot.insert(vector_dof_tot.end(), dof_indices.begin(), dof_indices.end());
+
+   //add dof_indices of neighbors in dof vector
+    for (unsigned int k = 0; k < elem->n_sides() ; k++)
+    {
+      const Elem* elem_neig = elem->neighbor(k);
+
+      if(elem_neig != NULL)
+      {
+        vector<unsigned int> neig_dof_indices;
+
+        dof_map.dof_indices(elem_neig, neig_dof_indices);
+
+        vector_dof_tot.insert(vector_dof_tot.end(), neig_dof_indices.begin(), neig_dof_indices.end());
+      }
+    }
+
+    unsigned int n_tot = vector_dof_tot.size();
+    //cerr << "step" << dof << endl;
+    //cerr << "n_tot:       " << n_tot << endl;
+
+
+    //fe->reinit(elem);
+
+    local_scaling.resize(n_tot);
+    scaleu.reposition(0, n_dofs);
+    scalen.reposition(n_dofs, n_dofs);
+    scalep.reposition(2 * n_dofs, n_dofs);
+
+    scaleu(0) = 1;
+    scalen(0) = 1;
+    scalep(0) = 1;
+
+    DDBulkModel* sc = get_bulk_model<DDBulkModel>(elem);
+    assert(sc != NULL);
+
+    sc->reinit(elem);
+    fe->reinit(elem);
+
+    assert(elem->n_nodes() == dof_indices_u.size());
+
+
+    // loop over the quadrature points
+    //for (unsigned int qp = 0; qp < qrule->n_points(); qp++)
+    {
+      // get the solution values at the quadrature point
+      Real u  = 0.0;
+      Real en = 0.0;
+      Real ep = 0.0;
+
+      for (unsigned int i = 0; i < n_dofs; i++)
+      {
+        u  += phi[i][0] * solution(dof_indices_u[i]);
+        en += phi[i][0] * solution(dof_indices_en[i]);
+        ep += phi[i][0] * solution(dof_indices_ep[i]);
+      }
+
+      // prepare for calculating local properties
+      sc->set_coordinates(q_point[0]);
+      sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
+
+      sc->calculate_densities();
+      sc->calculate_mobilities();
+
+      const libMesh::RealTensor& permittivity = sc->get_relative_permittivity();
+
+      long double n = sc->get_electron_density();
+      long double p = sc->get_hole_density();
+
+      /*cerr << "n" << endl << n << endl;
+      cerr << "p" << endl << p << endl;*/
+
+      double sigma_e = sc->get_electron_conductivity() / mu0 / C0_e;
+      double sigma_h = sc->get_hole_conductivity() / mu0 / C0_h;
+      /*if (sigma_e < 1)
+        sigma_e = 1;
+      if (sigma_h < 1)
+        sigma_h = 1;*/
+
+      /*cerr << "sigma_e" << endl << sigma_e << endl;
+      cerr << "sigma_h" << endl << sigma_h << endl;*/
+
+
+
+      for (unsigned int i = 1; i < n_dofs; i++)
+      {
+        scaleu(i) = 1;
+
+        scalen(i) = sigma_e;
+
+        scalep(i) = sigma_h;
+
+      }
+
+      //ofstream nfile;
+      //nfile.open("el_density.txt");
+      //nfile << "Writing this to a file.\n" << n << endl;
+      //nfile.close();
+
+      //ofstream pfile;
+      //pfile.open("hl_density.txt");
+      //pfile << "Writing this to a file.\n" << p << endl;
+      //pfile.close();
+
+    }// end loop over quadrature points
+
+
+
+    vector<unsigned int> vector_dof;
+
+    for (unsigned int s = 0; s < elem->n_sides(); s++)
+    {
+
+      const Elem* elem_neig = elem->neighbor(s);
+
+      DDInterfaceModel* sm = get_interface_model<DDInterfaceModel>(elem, s);
+
+      if (sm != NULL)
+      {
+        for (unsigned int i = 0; i < n_dofs; i++)
+        {
+           // what to do now?
+          if (elem->is_node_on_side(i, s))
+          {
+            if (sm->get_type(0) == DDInterfaceModel::DIRICHLET)
+              dirichlet_dofs.insert(dof_indices_u[i]);
+
+            if (sm->get_type(1) == DDInterfaceModel::DIRICHLET)
+              dirichlet_dofs.insert(dof_indices_en[i]);
+
+            if (sm->get_type(2) == DDInterfaceModel::DIRICHLET)
+              dirichlet_dofs.insert(dof_indices_ep[i]);
+          }
+        }
+      }
+      else if (elem_neig != NULL)
+      {
+        //get DOF indices
+        std::vector<unsigned int> neig_dof_indices;
+        std::vector<unsigned int> neig_dof_indices_u;
+        std::vector<unsigned int> neig_dof_indices_en;
+        std::vector<unsigned int> neig_dof_indices_ep;
+
+        dof_map.dof_indices(elem_neig, neig_dof_indices);
+        dof_map.dof_indices(elem_neig, neig_dof_indices_u, u_var);
+        dof_map.dof_indices(elem_neig,neig_dof_indices_en, en_var);
+        dof_map.dof_indices(elem_neig,neig_dof_indices_ep, ep_var);
+
+        const unsigned int n_dofs_neig = neig_dof_indices_u.size();
+        const unsigned int n_dofs_neig_tot = neig_dof_indices.size();
+
+        const unsigned int n_vec = vector_dof.size();
+        vector_dof.resize(n_vec);
+
+        libMesh::FEType fe_type = system.variable_type(u_var);
+        libMesh::UniquePtr<libMesh::FEBase> fe_neig(build_finite_element(dim, fe_type, true));
+        libMesh::UniquePtr<libMesh::QBase> qrule_neig(libMesh::QBase::build(
+            params.quadrature_type, dim, params.integration_order));
+        fe_neig->attach_quadrature_rule(qrule.get());
+
+        const vector<Point>& q_point_neig = fe_neig->get_xyz();
+        const vector<vector<Real> >& phi_neig = fe_neig->get_phi();
+        const vector<vector<libMesh::RealGradient> >& dphi_neig = fe_neig->get_dphi();
+
+
+        scaleu_neig.reposition(n_dofs_tot  + n_vec, n_dofs_neig);
+        scalen_neig.reposition(n_dofs_tot  + n_vec + n_dofs_neig, n_dofs_neig);
+        scalep_neig.reposition(n_dofs_tot  + n_vec + 2 * n_dofs_neig, n_dofs_neig);
+
+        vector_dof.insert(vector_dof.end(), neig_dof_indices.begin(), neig_dof_indices.end());
+
+        scaleu_neig(0) = 1;
+        scalen_neig(0) = 1;
+        scalep_neig(0) = 1;
+
+        DDBulkModel* sc_neig = get_bulk_model<DDBulkModel>(elem_neig);
+        assert(sc_neig != NULL);
+
+        sc_neig->reinit(elem_neig);
+        fe_neig->reinit(elem_neig);
+
+        //for (unsigned int qp = 0; qp < qrule_neig->n_points(); qp++)
+        {
+          // get the solution values at the quadrature point
+          Real u_neig  = 0.0;
+          Real en_neig = 0.0;
+          Real ep_neig = 0.0;
+
+          for (unsigned int i = 0; i < n_dofs_neig; i++)
+          {
+            u_neig  += phi_neig[i][0] * solution(neig_dof_indices_u[i]);
+            en_neig += phi_neig[i][0] * solution(neig_dof_indices_en[i]);
+            ep_neig += phi_neig[i][0] * solution(neig_dof_indices_ep[i]);
+          }
+
+          // prepare for calculating local properties
+          sc_neig->set_coordinates(q_point_neig[0]);
+          sc_neig->set_potentials(phi0 * u_neig, phi0 * en_neig, phi0 * ep_neig);
+
+          sc_neig->calculate_densities();
+          sc_neig->calculate_mobilities();
+
+          const libMesh::RealTensor& permittivity_neig = sc_neig->get_relative_permittivity();
+
+          long double n_neig = sc_neig->get_electron_density();
+          long double p_neig = sc_neig->get_hole_density();
+
+          //cerr << "n_neig" << endl << n_neig << endl;
+          //cerr << "p_neig" << endl << p_neig << endl;
+
+          double sigma_e_neig = sc_neig->get_electron_conductivity() / mu0 / C0_e;
+          double sigma_h_neig = sc_neig->get_hole_conductivity() / mu0 / C0_h;
+          if (sigma_e_neig < 1)
+            sigma_e_neig = 1;
+          if (sigma_h_neig < 1)
+            sigma_h_neig = 1;
+
+          for (unsigned int i = 1; i < n_dofs_neig; i++)
+          {
+            scaleu_neig(i) = 1;
+
+            scalen_neig(i) = sigma_e_neig;
+
+            scalep_neig(i) = sigma_h_neig;
+          }
+
+        }// end loop over quadrature points
+
+        //cerr << "n_dofs_neig:       " << n_dofs_neig << endl;
+        //cerr << "n_dofs_neig_tot:       " << n_dofs_neig_tot << endl;
+      }
+
+    } // end loop over sides
+
+    loc_scaling.add_vector(local_scaling, vector_dof_tot);
+
+    //cerr << "n_dofs:       " << n_dofs << endl;
+    //cerr << "n_dofs_tot:       " << n_dofs_tot << endl;
+    //cerr << "n_tot:       " << n_tot << endl;
+
+
+  } // end loop over elements
+
+  //cerr << "scaleu in build:    " << endl << scaleu << endl;
+  //cerr << "scalen in build:    " << endl << scalen << endl;
+  //cerr << "scalep in build:    " << endl << scalep << endl;
+
+  //ofstream scalingfile;
+  //scalingfile.open("scaling.txt");
+  //scalingfile << "Writing this to a file.\n" << local_scaling << endl;
+  //scalingfile.close();
+
+  loc_scaling.close();
+
+  set<unsigned int>::iterator dirit(dirichlet_dofs.begin());
+  const set<unsigned int>::iterator dirend(dirichlet_dofs.end());
+  for ( ; dirit != dirend; ++dirit)
+  {
+    double val = loc_scaling.el(*dirit);// * _penalty_value;
+    loc_scaling.set(*dirit, val);
+  }
+
+  loc_scaling.close();
+  loc_scaling.localize(loc_scaling, system.get_dof_map().get_send_list());
+
+  system.set_weight(&loc_scaling, TiberEqSystem::MAX_NORM);
+  //system.set_weight(&loc_scaling, TiberEqSystem::l2_NORM);
+
+  loc_scaling.print_matlab("scaling_weight.m");
+
+  cerr << "build_local_scaling done" << endl;
+}
+
+
+
+
 
 
 
@@ -3506,8 +3722,8 @@ DriftDiffusion::calculate_currents(void)
 
   if (get_my_options().current_calculation == RSTF)
     calculate_currents_rstf_global();
-  else
-   calculate_currents_surfint();
+  //else
+   //calculate_currents_surfint();
 
   // sum up contributions from all processes
   for (auto it =  _boundary_currents.begin(); it != _boundary_currents.end(); ++it)
@@ -3542,8 +3758,7 @@ DriftDiffusion::assemble_system(const libMesh::NumericVector<Number>& x,
   switch (_this->_options.coupling)
   {
     case (POISSON | ECURRENT):
-	_this-> 
-<POISSON | ECURRENT>(x, residual, jacobian);
+	_this->do_assembly<POISSON | ECURRENT>(x, residual, jacobian);
       break;
     case (POISSON | HCURRENT):
       _this->do_assembly<POISSON | HCURRENT>(x, residual, jacobian);
@@ -3587,13 +3802,18 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
   const unsigned int dim = mesh.mesh_dimension();
   double mesh_units = 100 * get_mesh_units();
 
+  //if tau=-1 NSIP elseif tau=1 SIP elseif tau=0
+  //*-TODO add the tau quantity in assembly-matrix
+  const int tau = -1;
+
   const SimulationEnvironment& environment = get_environment();
 
   const Options& params = get_my_options();
 
 
   libMesh::NumericVector<Number>& oldx = system.get_vector("old_sol");
-  //
+  libMesh::NumericVector<Number>& loc_scaling = system.get_vector("scaling");
+
   // some scaling stuff...
   //
   // NOTE: the mesh and all parameters were not explicitly scaled, so
@@ -3615,6 +3835,8 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
   // density scaling for holes
   double C0_h = C0;
 
+  if (_do_local_scaling)
+    C0_e = C0_h = 1.0;
 
   // scaling for recombination rates
   double R0_e = C0_e / scaling.get_time_scaling();
@@ -3682,7 +3904,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 
   // the system matrix (will hold also element jacobian contribution)
   libMesh::DenseMatrix<Number> Ke;
-  // the matrix to calculate the precomnditioner matrix
+  //temporany matrix for diagonal preconditioning
   libMesh::DenseMatrix<Number> Ke_temp;
   // the system rhs (will hold also element rhs contribution)
   libMesh::DenseVector<Number> Fe;
@@ -3690,15 +3912,15 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
   libMesh::DenseVector<Number> X;
   // the local old step
   libMesh::DenseVector<Number> oldX;
+  // the local scaling
+  libMesh::DenseVector<Number> local_scaling;
 
-
+  // sub-object element
   libMesh::DenseSubMatrix<Number>
     Kuu_temp(Ke_temp), Kun_temp(Ke_temp), Kup_temp(Ke_temp),
     Knu_temp(Ke_temp), Knn_temp(Ke_temp), Knp_temp(Ke_temp),
     Kpu_temp(Ke_temp), Kpn_temp(Ke_temp), Kpp_temp(Ke_temp);
 
-
-  // sub-object element
   libMesh::DenseSubMatrix<Number>
     Kuu(Ke), Kun(Ke), Kup(Ke),
     Knu(Ke), Knn(Ke), Knp(Ke),
@@ -3720,6 +3942,11 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
     oldXn(oldX),
     oldXp(oldX);
 
+  libMesh::DenseSubVector<Number>
+    scaleu(local_scaling),
+    scalen(local_scaling),
+    scalep(local_scaling);
+
   // sub-object neighbor
   libMesh::DenseSubMatrix<Number>
     Kuu_neig(Ke), Kun_neig(Ke), Kup_neig(Ke),
@@ -3736,6 +3963,11 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
     oldXn_neig(oldX),
     oldXp_neig(oldX);
 
+  libMesh::DenseSubVector<Number>
+    scaleu_neig(local_scaling),
+    scalen_neig(local_scaling),
+    scalep_neig(local_scaling);
+
   vector<unsigned int> dof_indices;
   vector<unsigned int> dof_indices_u;
   vector<unsigned int> dof_indices_en;
@@ -3748,7 +3980,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
     jacobian->zero();
 
   /*ofstream Xfile;
-  Xfile.open("solution.txt");
+  Xfile.open("X.txt");
   Xfile << "Writing this to a file.\n" << x << endl;
   Xfile.close();*/
 
@@ -3779,7 +4011,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 
     vector_dof_tot.insert(vector_dof_tot.end(), dof_indices.begin(), dof_indices.end());
 
-   //dof_indices of neighbors element
+   //add dof_indices of neighbors in dof vector
     for (unsigned int k = 0; k < elem->n_sides() ; k++)
     {
       const Elem* elem_neig = elem->neighbor(k);
@@ -3790,7 +4022,6 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 
         dof_map.dof_indices(elem_neig, neig_dof_indices);
 
-        // add element and neighbors do_indices in a single vector
         vector_dof_tot.insert(vector_dof_tot.end(), neig_dof_indices.begin(), neig_dof_indices.end());
       }
     }
@@ -3804,11 +4035,18 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
     Fe.resize(n_dofs_tot);
     X.resize(n_tot);
     oldX.resize(n_tot);
+    local_scaling.resize(n_tot);
+
+    /*cerr << "n_tot" << n_tot << endl;
+    cerr << "n_dofs_tot" << n_tot << endl;
+
+    exit(0);*/
 
     // extract local solution, accounting for constraints ----> x = global vector and
     // X = extracted local vector
     dof_map.extract_local_vector(x, vector_dof_tot, X);
     dof_map.extract_local_vector(oldx, vector_dof_tot, oldX);
+    dof_map.extract_local_vector(loc_scaling, vector_dof_tot, local_scaling);
 
     //return 0;
 
@@ -3861,7 +4099,15 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
     oldXu.reposition(0, n_dofs);
     oldXn.reposition(n_dofs, n_dofs);
     oldXp.reposition(2 * n_dofs, n_dofs);
+    //
+    scaleu.reposition(0, n_dofs);
+    scalen.reposition(n_dofs, n_dofs);
+    scalep.reposition(2 * n_dofs, n_dofs);
 
+    /*ofstream scalefile;
+    scalefile.open("scaling_assembly.txt");
+    scalefile << "Writing this to a file.\n" << local_scaling << endl;
+    scalefile.close();*/
 
     DDBulkModel* sc = get_bulk_model<DDBulkModel>(elem);
 
@@ -3941,6 +4187,8 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
       double sigma_h = sc->get_hole_conductivity() / (mu0 * C0_h);
       double sigma_e_x_Pe_x_J = J * sigma_e * eTEpower;
       double sigma_h_x_Ph_x_J = J * sigma_h * hTEpower;
+
+      //cerr << "sigma_e_assembly" << sigma_e << endl;
       //
       // The residual looks like this:
       //
@@ -3967,20 +4215,20 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 
           if (coupling & POISSON)
           {
-            Kuu(i,j) += l2 * laplace_u;
-            Kuu_temp(i,j) += l2 * laplace_u;
+            Kuu(i,j) += l2 * laplace_u;// / scaleu(i);
+            Kuu_temp(i,j) += l2 * laplace_u;// / scaleu(i);
           }
 
           if (coupling & ECURRENT)
           {
-            Knn(i,j) += sigma_e * laplace;
-            Knn_temp(i,j) += sigma_e * laplace;
+            Knn(i,j) += sigma_e * laplace;// / scalen(i);
+            Knn_temp(i,j) += sigma_e * laplace;// / scalen(i);
           }
 
           if (coupling & HCURRENT)
           {
-            Kpp(i,j) += sigma_h * laplace;
-            Kpp_temp(i,j) += sigma_h * laplace;
+            Kpp(i,j) += sigma_h * laplace;// / scalep(i);
+            Kpp_temp(i,j) += sigma_h * laplace;// / scalep(i);
           }
         }
 
@@ -4108,11 +4356,11 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
             if (coupling & ECURRENT)
             {
               if (coupling & POISSON)
-                Knu(i,j) += dsigma_e_x_phi + dmu_e_u_x_phi * lap_e;
+                Knu(i,j) += (dsigma_e_x_phi + dmu_e_u_x_phi * lap_e) / scaleu(i);
                 //Knu(i,j) += dsigma_e_x_phi + (dmu_e_u_x_phi + dmu_e_grad_u_x_dphi)* lap_e;
 
-              Knn(i,j) -= dsigma_e_x_phi + dmu_e_u_x_phi * lap_e;
-              Knn_temp(i,j) -= dsigma_e_x_phi + dmu_e_u_x_phi * lap_e;
+              Knn(i,j) -= (dsigma_e_x_phi + dmu_e_u_x_phi * lap_e) / scalen(i);
+              Knn_temp(i,j) -= (dsigma_e_x_phi + dmu_e_u_x_phi * lap_e) / scalen(i);
               //Knn(i,j) += (dmu_e_grad_v_x_dphi - dmu_e_u_x_phi) * lap_e - dsigma_e_x_phi;
               //Knn_temp(i,j) += (dmu_e_grad_v_x_dphi - dmu_e_u_x_phi) * lap_e - dsigma_e_x_phi;
             }
@@ -4120,11 +4368,11 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
             if (coupling & HCURRENT)
             {
               if (coupling & POISSON)
-                Kpu(i,j) += dsigma_h_x_phi + dmu_h_u_x_phi * lap_h;
+                Kpu(i,j) += (dsigma_h_x_phi + dmu_h_u_x_phi * lap_h) / scaleu(i);
               //Kpu(i,j) += dsigma_h_x_phi + (dmu_h_u_x_phi + dmu_h_grad_u_x_dphi) * lap_h;
 
-              Kpp(i,j) -= dsigma_h_x_phi + dmu_h_u_x_phi * lap_h;
-              Kpp_temp(i,j) -= dsigma_h_x_phi + dmu_h_u_x_phi * lap_h;
+              Kpp(i,j) -= (dsigma_h_x_phi + dmu_h_u_x_phi * lap_h) / scalep(i);
+              Kpp_temp(i,j) -= (dsigma_h_x_phi + dmu_h_u_x_phi * lap_h) / scalep(i);
               //Kpp(i,j) += (dmu_h_grad_w_x_dphi - dmu_h_u_x_phi) * lap_h - dsigma_h_x_phi;
               //Kpp_temp(i,j) += (dmu_h_grad_w_x_dphi - dmu_h_u_x_phi) * lap_h - dsigma_h_x_phi;
             }
@@ -4143,11 +4391,11 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                 double elem_contrib =
                   dsigma_e_x_phi_x_Pe * laplace * T_nodes[k];
 
-                Knn(i,j) -= elem_contrib;
-                Knn_temp(i,j) -= elem_contrib;
+                Knn(i,j) -= elem_contrib;// / scalen(i);
+                Knn_temp(i,j) -= elem_contrib;// / scalen(i);
 
                 if (coupling & POISSON)
-                  Knu(i,j) += elem_contrib;
+                  Knu(i,j) += elem_contrib;// / scaleu(i);
               }
 
               if (coupling & HCURRENT)
@@ -4155,11 +4403,11 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                 double elem_contrib =
                   dsigma_h_x_phi_x_Ph * laplace * T_nodes[k];
 
-                Kpp(i,j) -= elem_contrib;
-                Kpp_temp(i,j) -= elem_contrib;
+                Kpp(i,j) -= elem_contrib;// / scalep(i);
+                Kpp_temp(i,j) -= elem_contrib;// / scalep(i);
 
                 if (coupling & POISSON)
-                  Kpu(i,j) += elem_contrib;
+                  Kpu(i,j) += elem_contrib;// / scaleu(i);
               }
             }
 
@@ -4168,38 +4416,38 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 
             if (coupling & POISSON)
             {
-              Kuu(i,j) -= drho[0] * phi_i_x_phi_j;
-              Kuu_temp(i,j) -= drho[0] * phi_i_x_phi_j;
+              Kuu(i,j) -= drho[0] * phi_i_x_phi_j;// / scaleu(i);
+              Kuu_temp(i,j) -= drho[0] * phi_i_x_phi_j;// / scaleu(i);
 
               if (coupling & ECURRENT)
-                Kun(i,j) -= drho[1] * phi_i_x_phi_j;
+                Kun(i,j) -= drho[1] * phi_i_x_phi_j;// / scalen(i);
 
               if (coupling & HCURRENT)
-                Kup(i,j) -= drho[2] * phi_i_x_phi_j;;
+                Kup(i,j) -= drho[2] * phi_i_x_phi_j;// / scalep(i);
             }
 
             if (coupling & ECURRENT)
             {
               if ((coupling & POISSON))
-                Knu(i,j) -= dRn[0] * phi_i_x_phi_j;
+                Knu(i,j) -= dRn[0] * phi_i_x_phi_j;// / scaleu(i);
 
-              Knn(i,j) -= dRn[1] * phi_i_x_phi_j;
-              Knn_temp(i,j) -= dRn[1] * phi_i_x_phi_j;
+              Knn(i,j) -= dRn[1] * phi_i_x_phi_j;// / scalen(i);
+              Knn_temp(i,j) -= dRn[1] * phi_i_x_phi_j;// / scalen(i);
 
               if (coupling & HCURRENT)
-                Knp(i,j) -= dRn[2] * phi_i_x_phi_j;
+                Knp(i,j) -= dRn[2] * phi_i_x_phi_j;// / scalep(i);
             }
 
             if (coupling & HCURRENT)
             {
               if ((coupling & POISSON))
-                Kpu(i,j) += dRp[0] * phi_i_x_phi_j;
+                Kpu(i,j) += dRp[0] * phi_i_x_phi_j;// / scaleu(i);
 
               if (coupling & ECURRENT)
-                Kpn(i,j) += dRp[1] * phi_i_x_phi_j;
+                Kpn(i,j) += dRp[1] * phi_i_x_phi_j;// / scalen(i);
 
-              Kpp(i,j) += dRp[2] * phi_i_x_phi_j;
-              Kpp_temp(i,j) += dRp[2] * phi_i_x_phi_j;
+              Kpp(i,j) += dRp[2] * phi_i_x_phi_j;// / scalep(i);
+              Kpp_temp(i,j) += dRp[2] * phi_i_x_phi_j;// / scalep(i);
             }
           }
         }
@@ -4230,6 +4478,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
           long double net_recomb_e = J_x_Rn * phi[i][qp];
           long double net_recomb_h = J_x_Rp * phi[i][qp];
 
+          //cerr << (J_x_rho * phi[i][qp] + (P * dphi[i][qp])) / scaleu(i) << endl;
           if (coupling & POISSON)
             Fu(i) -= (J_x_rho * phi[i][qp] + (P * dphi[i][qp]));
           else
@@ -4377,9 +4626,11 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
           libMesh::VectorValue<Real> tmp = (permittivity * face_normals[qp]);
 
 
-          const double penalty_e = 4; //1e-3;
-          const double penalty_h= 4; //1e-3;
-          const double penalty = 4; //1e-3;
+          //const double penalty_e = 5.0; //1e-3;
+          //const double penalty_h= 5.0; //1e-3;
+          const double penalty = 5.0; //1e-3;
+          const double penalty_e = penalty;
+          const double penalty_h = penalty;
 
 
           sm->reinit(elem, s);
@@ -4426,8 +4677,8 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                 if (sm->get_type(0) != DDInterfaceModel::DIRICHLET)
                   scale_u = 0;
 
-                Kuu(i,j) += scale_u;
-                Kuu_temp(i,j) += scale_u;
+                Kuu(i,j) += scale_u;// / scaleu(i);
+                Kuu_temp(i,j) += scale_u;// / scaleu(i);
               }
 
 
@@ -4438,8 +4689,8 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                 if (sm->get_type(1) != DDInterfaceModel::DIRICHLET)
                   scale_n = 0;
 
-                Knn(i,j) += scale_n;
-                Knn_temp(i,j) += scale_n;
+                Knn(i,j) += scale_n;// / scalen(i);
+                Knn_temp(i,j) += scale_n;// / scalen(i);
               }
 
               if (coupling & HCURRENT)
@@ -4449,8 +4700,8 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                 if (sm->get_type(2) != DDInterfaceModel::DIRICHLET)
                   scale_p = 0;
 
-                Kpp(i,j) += scale_p;
-                Kpp_temp(i,j) += scale_p;
+                Kpp(i,j) += scale_p;// / scalep(i);
+                Kpp_temp(i,j) += scale_p;// / scalep(i);
               }
             }
           }
@@ -4595,14 +4846,14 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                   if (sm->get_type(0) == DDInterfaceModel::DIRICHLET)
                     scale_u = 0;
 
-                  Kuu(i,j) -= scale_u * deriv_u[0] * phi_i_x_phi_j;
-                  Kuu_temp(i,j) -= scale_u * deriv_u[0] * phi_i_x_phi_j;
+                  Kuu(i,j) -= scale_u * deriv_u[0] * phi_i_x_phi_j;// / scaleu(i);
+                  Kuu_temp(i,j) -= scale_u * deriv_u[0] * phi_i_x_phi_j;// / scaleu(i);
 
                   if (coupling & ECURRENT)
-                    Kun(i,j) -= scale_u * deriv_u[1] * phi_i_x_phi_j;
+                    Kun(i,j) -= scale_u * deriv_u[1] * phi_i_x_phi_j;// / scalen(i);
 
                   if (coupling & HCURRENT)
-                    Kup(i,j) -= scale_u * deriv_u[2] * phi_i_x_phi_j;
+                    Kup(i,j) -= scale_u * deriv_u[2] * phi_i_x_phi_j;// / scalep(i);
                 }
 
                 if (coupling & ECURRENT)
@@ -4643,11 +4894,11 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                       penalty_e / h_elem * (dsigma_e_x_phi  + dmu_e_u_x_phi) * en_x_phi; //stability
                     }
 
-                    Knu(i,j) += scale_nu;
+                    Knu(i,j) += scale_nu;// / scaleu(i);
                   }
 
-                  Knn(i,j) += - scale_nn;
-                  Knn_temp(i,j) += - scale_nn;
+                  Knn(i,j) += - scale_nn;// / scalen(i);
+                  Knn_temp(i,j) += - scale_nn;// / scalen(i);
 
                   if (coupling & HCURRENT)
                   {
@@ -4656,7 +4907,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                     else
                       scale_np = 0;
 
-                    Knp(i,j) -= scale_np;
+                    Knp(i,j) -= scale_np;// / scalep(i);
                   }
                 }
 
@@ -4685,7 +4936,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                   if (coupling & POISSON)
                   {
                     if (sm->get_type(2) != DDInterfaceModel::DIRICHLET)
-                      scale_pu = J * phi0 / (x0 * R0_e) * deriv_ep[0] * phi_i_x_phi_j;
+                      scale_pu = -J * phi0 / (x0 * R0_e) * deriv_ep[0] * phi_i_x_phi_j;
                     else
                     {
                       scale_pu = (dsigma_h_x_phi_ep + dmu_h_u_x_phi_ep) -
@@ -4693,11 +4944,11 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                       penalty_h / h_elem * (dsigma_h_x_phi  + dmu_h_u_x_phi) * ep_x_phi;//stability
                     }
 
-                   Kpu(i,j) += scale_pu;
+                   Kpu(i,j) += scale_pu;// / scaleu(i);
                   }
 
-                  Kpp(i,j) += - scale_pp;
-                  Kpp_temp(i,j) += - scale_pp;
+                  Kpp(i,j) += - scale_pp;// / scalep(i);
+                  Kpp_temp(i,j) += - scale_pp;// / scalep(i);
 
                   if (coupling & ECURRENT)
                   {
@@ -4706,7 +4957,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                     else
                       scale_pn = 0;
 
-                    Kpn(i,j) += scale_pn;
+                    Kpn(i,j) += scale_pn;// / scalen(i);
                   }
                 }
               }
@@ -5037,6 +5288,10 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
         oldXu_neig.reposition(n_dofs_tot  + n_vec, n_dofs_neig);
         oldXn_neig.reposition(n_dofs_tot  + n_vec + n_dofs_neig, n_dofs_neig);
         oldXp_neig.reposition(n_dofs_tot  + n_vec + 2 * n_dofs_neig, n_dofs_neig);
+        //
+        scaleu_neig.reposition(n_dofs_tot  + n_vec, n_dofs_neig);
+        scalen_neig.reposition(n_dofs_tot  + n_vec + n_dofs_neig, n_dofs_neig);
+        scalep_neig.reposition(n_dofs_tot  + n_vec + 2 * n_dofs_neig, n_dofs_neig);
 
         vector_dof.insert(vector_dof.end(), neig_dof_indices.begin(), neig_dof_indices.end());
 
@@ -5137,9 +5392,11 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
           dmu_h_u *= J * phi0 / (mu0 * C0_h) * p;
 
 
-          const double penalty_e = 4; //
-          const double penalty_h= 4; //1e-3;
-          const double penalty = 4; //1e-3;
+          //const double penalty_e = 5.0; //
+          //const double penalty_h= 5.0; //1e-3;
+          const double penalty = 5.0; //1e-3;
+          const double penalty_e = penalty;
+          const double penalty_h = penalty;
 
           fe_face_neig->reinit(elem_neig, &q_point_face_neig);
 
@@ -5256,26 +5513,26 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 
               if (coupling & POISSON)
               {
-                Kuu(i,j) += l2 * (phi_j_x_dphi_i - dphi_j_x_phi_i) //consistency
-                    + l2 * penalty / h_elem * tmp * phi_j_x_phi_i; //stability
-                Kuu_temp(i,j) += l2 * (phi_j_x_dphi_i - dphi_j_x_phi_i) //consistency
-                    + l2 * penalty / h_elem * tmp * phi_j_x_phi_i; //stability
+                Kuu(i,j) += (l2 * (phi_j_x_dphi_i - dphi_j_x_phi_i) //consistency
+                    + l2 * penalty / h_elem * tmp * phi_j_x_phi_i);// / scaleu(i); //stability
+                Kuu_temp(i,j) += (l2 * (phi_j_x_dphi_i - dphi_j_x_phi_i) //consistency
+                    + l2 * penalty / h_elem * tmp * phi_j_x_phi_i);// / scaleu(i); //stability
               }
 
               if (coupling & ECURRENT)
               {
-                Knn(i,j) += (phi_j_sigma_dphi_i - dphi_j_sigma_phi_i) * sigma_e //consistency
-                    + penalty_e / h_elem * sigma_e_avg * phi_j_x_phi_i; //stability
-                Knn_temp(i,j) += ( phi_j_sigma_dphi_i - dphi_j_sigma_phi_i) * sigma_e //consistency
-                    + penalty / h_elem * sigma_e_avg * phi_j_x_phi_i; //stability
+                Knn(i,j) += ((phi_j_sigma_dphi_i - dphi_j_sigma_phi_i) * sigma_e //consistency
+                    + penalty_e / h_elem * sigma_e_avg * phi_j_x_phi_i);// / scalen(i); //stability
+                Knn_temp(i,j) += (( phi_j_sigma_dphi_i - dphi_j_sigma_phi_i) * sigma_e //consistency
+                    + penalty / h_elem * sigma_e_avg * phi_j_x_phi_i);// / scalen(i); //stability
               }
 
               if (coupling & HCURRENT)
               {
-                Kpp(i,j) += (phi_j_sigma_dphi_i - dphi_j_sigma_phi_i) * sigma_h //consistency
-                    + penalty_h / h_elem * sigma_h_avg * phi_j_x_phi_i; //stability
-                Kpp_temp(i,j) += - (phi_j_sigma_dphi_i + dphi_j_sigma_phi_i)  * sigma_h //consistency
-                    + penalty / h_elem * sigma_h_avg * phi_j_x_phi_i; //stability
+                Kpp(i,j) += ((phi_j_sigma_dphi_i - dphi_j_sigma_phi_i) * sigma_h //consistency
+                    + penalty_h / h_elem * sigma_h_avg * phi_j_x_phi_i);// / scalep(i); //stability
+                Kpp_temp(i,j) += - ((phi_j_sigma_dphi_i + dphi_j_sigma_phi_i)  * sigma_h //consistency
+                    + penalty / h_elem * sigma_h_avg * phi_j_x_phi_i);// / scalep(i); //stability
               }
             }
 
@@ -5296,16 +5553,16 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                   phi_face[i][qp];
 
               if (coupling & POISSON)
-                Kuu_neig(i,j) -=  l2 * (phi_neig_j_x_dphi_i + dphi_neig_j_x_phi_i) //consistency
-                    + l2  * penalty / h_elem * tmp * phi_neig_j_x_phi_i; //stability
+                Kuu_neig(i,j) -=  (l2 * (phi_neig_j_x_dphi_i + dphi_neig_j_x_phi_i) //consistency
+                    + l2  * penalty / h_elem * tmp * phi_neig_j_x_phi_i);// / scaleu_neig(i); //stability
 
               if (coupling & ECURRENT)
-                Knn_neig(i,j) -= (phi_neig_j_sigma_dphi_i + dphi_neig_j_sigma_phi_i) * sigma_e_neig //consistency
-                    + penalty_e / h_elem * sigma_e_avg * phi_neig_j_x_phi_i; //stability
+                Knn_neig(i,j) -= ((phi_neig_j_sigma_dphi_i + dphi_neig_j_sigma_phi_i) * sigma_e_neig //consistency
+                    + penalty_e / h_elem * sigma_e_avg * phi_neig_j_x_phi_i);// / scalen_neig(i); //stability
 
               if (coupling & HCURRENT)
-                Kpp_neig(i,j) -= (phi_neig_j_sigma_dphi_i + dphi_neig_j_sigma_phi_i) * sigma_h_neig //consistency
-                    + penalty_h / h_elem * sigma_h_avg * phi_neig_j_x_phi_i; //stability
+                Kpp_neig(i,j) -= ((phi_neig_j_sigma_dphi_i + dphi_neig_j_sigma_phi_i) * sigma_h_neig //consistency
+                    + penalty_h / h_elem * sigma_h_avg * phi_neig_j_x_phi_i);// / scalep_neig(i); //stability
             }
           }
           //
@@ -5440,14 +5697,14 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                     penalty_e / h_elem * dmu_e_grad_v_x_dphi * en_x_phi; //stability
 
                   if (coupling & POISSON)
-                    Knu(i,j) += cons_n + stab_n;
+                    Knu(i,j) += (cons_n + stab_n);// / scaleu(i);
 
                     //Knu(i,j) += cons_n + stab_n - scale_nu;
 
-                  Knn(i,j) += - cons_n - stab_n;
+                  Knn(i,j) += (- cons_n - stab_n);// / scalen(i);
 
                   //Knn(i,j) += - cons_n - stab_n + scale_nn;
-                  Knn_temp(i,j) += - cons_n - stab_n;
+                  Knn_temp(i,j) += (- cons_n - stab_n);// / scalen(i);
                 }
 
                 if (coupling & HCURRENT)
@@ -5463,14 +5720,14 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                     penalty_h / h_elem * dmu_h_grad_w_x_dphi * ep_x_phi;//stability
 
                   if (coupling & POISSON)
-                    Kpu(i,j) += cons_p + stab_p;
+                    Kpu(i,j) += (cons_p + stab_p);// / scaleu(i);
 
                     //Kpu(i,j) += cons_p + stab_p - scale_pu;
 
-                  Kpp(i,j) += - cons_p - stab_p;
+                  Kpp(i,j) += (- cons_p - stab_p);// / scalep(i);
 
                   //Kpp(i,j) += -cons_p - stab_p + scale_pp;
-                  Kpp_temp(i,j) += - cons_p - stab_p;
+                  Kpp_temp(i,j) += (- cons_p - stab_p);// / scalep(i);
                 }
               }
               for (unsigned int j = 0; j < n_dofs_neig; j++)
@@ -5528,11 +5785,11 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                     penalty_e / h_elem * dmu_e_grad_v_x_dphi_neig * en_x_phi; //stability
 
                   if (coupling & POISSON)
-                    Knu_neig(i,j) += cons_n + stab_n;
+                    Knu_neig(i,j) += (cons_n + stab_n);// / scaleu_neig(i);
 
                     //Knu_neig(i,j) += cons_n + stab_n - scale_nu;
 
-                  Knn_neig(i,j) += - cons_n - stab_n;
+                  Knn_neig(i,j) += - (cons_n - stab_n);// / scalen_neig(i);
                   //Knn_neig(i,j) += -cons_n - stab_n + scale_nn;
                 }
 
@@ -5549,17 +5806,25 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                     penalty_e / h_elem * dmu_h_grad_w_x_dphi_neig * en_x_phi; //stability
 
                   if (coupling & POISSON)
-                    Kpu_neig(i,j) += cons_p + stab_p;
+                    Kpu_neig(i,j) += (cons_p + stab_p);// / scaleu_neig(i);
 
-                  Kpp_neig(i,j) +=  - cons_p - stab_p;
+                  Kpp_neig(i,j) +=  (- cons_p - stab_p);// / scalep_neig(i);
                 }
               }
             }
           }
         }// end loop over quadrature face points
+
+        /*cerr << "ASSEMBLYn_dofs_neig:       " << n_dofs_neig << endl;
+        cerr << "ASSEMBLYn_dofs_neig_tot:       " << n_dofs_neig_tot << endl;*/
+
       } // end statement all neighbor
   } // end loop over the element sides
 
+
+  /*cerr << "ASSEMBLYn_dofs:       " << n_dofs << endl;
+  cerr << "ASSEMBLYn_dofs_tot:       " << n_dofs_tot << endl;
+  cerr << "ASSEMBLYn_tot:       " << n_tot << endl*/
 
   if (residual != NULL)
   {
@@ -5586,6 +5851,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
     b.zero();
     b(j) = 1.0;
 
+    //Ke_temp.lu_solve(b,a);
     Ke_temp.lu_solve(b,a);
 
     for (unsigned int i = 0; i < n_dofs_tot; i++)
@@ -5633,6 +5899,11 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
   }
 
 } // end loop over all active elements
+
+/*cerr << "scaleu:    " << endl << scaleu << endl;
+cerr << "scalen:    " << endl << scalen << endl;
+cerr << "scalep:    " << endl << scalep << endl;*/
+
 
 
 if (jacobian != NULL)

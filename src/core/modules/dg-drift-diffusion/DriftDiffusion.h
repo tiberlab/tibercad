@@ -573,10 +573,10 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
 
 
     //! If true, local density scaling should be applied
-    //bool _do_matrix_scaling;
+    bool _do_local_scaling;
 
     //! Calculate the local density scaling on each node
-    //void build_local_scaling(void);
+    void build_local_scaling(void);
 
     /**
      * The number of nonlinear iterations needed

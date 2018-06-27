@@ -35,6 +35,56 @@ Distributions::fermi_dirac(double E, double kT)
   return make_pair(f, -deriv / kT);
 }
 
+// added to calculate the second derivative
+void
+Distributions::fermi_dirac(std::vector<double>& den_and_der, double E, double kT)
+{
+  double f = 0, deriv = 0, deriv2 = 0;
+  double g = 1;
+  double arg = -E / kT;
+  if (arg > 50)
+  {
+
+    //f = exp(-arg) / g;
+    den_and_der[0] = exp(-arg) / g;
+    if (den_and_der.size() > 1)
+      den_and_der[1] = -den_and_der[0];
+      //deriv = -f;
+    if (den_and_der.size() > 2)
+      den_and_der[2] = den_and_der[0];
+      //deriv2 = f;
+  }
+  else if (arg < -50)
+  {
+
+    den_and_der[0] = 1 + -g * exp(arg);
+    if (den_and_der.size() > 1)
+      den_and_der[1] =-g * exp(arg);
+    if (den_and_der.size() > 2)
+      den_and_der[2] = - den_and_der[1];
+
+  }
+  else
+  {
+
+    double expfac = g * exp(arg);
+    double denom = 1.0 + expfac;
+
+    den_and_der[0] = 1.0 / denom;
+    if (den_and_der.size() > 1)
+      den_and_der[1] = -expfac * den_and_der[0] / denom;
+    if (den_and_der.size() > 2)
+      den_and_der[2] = den_and_der[1] + 2 * expfac * den_and_der[0] / denom / denom;
+
+
+  }
+
+  den_and_der[1] *= 1 / kT;
+  den_and_der[2] *= 1 / kT / kT;
+
+}
+
+
 /*
 #include "dense_matrix.h"
 #include "dense_vector.h"

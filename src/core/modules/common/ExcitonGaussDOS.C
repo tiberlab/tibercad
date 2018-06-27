@@ -100,17 +100,17 @@ ExcitonGaussDOS::do_print_info(void)
 
 
 
-std::pair<double, double>
-ExcitonGaussDOS::calculate_density_and_derivative(double Ef, double Epot,
+void
+ExcitonGaussDOS::calculate_density_and_derivative(std::vector<double>& den_and_der, double Ef, double Epot,
     double kT, double kTlattice, const Elem* elem, const Point& p) const
 {
-  return calculate_density_and_derivative(Ef, Epot, kT, kTlattice);
+  return calculate_density_and_derivative(den_and_der, Ef, Epot, kT, kTlattice);
 }
 
-std::pair<double, double>
-ExcitonGaussDOS::calculate_density_and_derivative(double Ef, double Epot, double kT, double kTlattice) const
+void
+ExcitonGaussDOS::calculate_density_and_derivative(std::vector<double>& den_and_der, double Ef, double Epot, double kT, double kTlattice) const
 {
-  double dens, der;
+  double dens, der, der2;
   double N0 = (2.0*_J + 1.0) * get_effective_dos();
 
   std::vector<double> x, y, dy;
@@ -140,7 +140,10 @@ ExcitonGaussDOS::calculate_density_and_derivative(double Ef, double Epot, double
   }
 
   dens = N0 * _trapez(x, y);
-  der  = -N0 * _trapez(x, dy);
+  if (den_and_der.size() > 1)
+    der  = -N0 * _trapez(x, dy);
+  if (den_and_der.size() > 2)
+    der2 = 0; //TODO
 
 /*
   double s = 0.5 * _sigma * _sigma / kT;
@@ -149,7 +152,11 @@ ExcitonGaussDOS::calculate_density_and_derivative(double Ef, double Epot, double
   der =  -dens / kT;
 */
 
-  return make_pair(dens, der);
+  den_and_der = {dens};
+  if (den_and_der.size() > 1)
+    den_and_der = {dens, der};
+  if (den_and_der.size() > 2)
+    den_and_der = {dens, der, der2};
 }
 
 

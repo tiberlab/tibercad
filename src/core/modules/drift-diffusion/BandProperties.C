@@ -148,7 +148,7 @@ BandProperties::get_effective_mass(void) const
   return(_dos_model->get_effective_mass()[i]);
 }
 
-std::pair<double, double>
+void
 BandProperties::get_density_and_derivative(void) const
 {
   const DriftDiffusionProperties& ddp = get_driftdiffusionproperties();
@@ -161,7 +161,10 @@ BandProperties::get_density_and_derivative(void) const
   Ef *= sign;
   double Epot = sign * ddp.get_electric_potential();
 
-  pair<double, double> dens_der;
+  std::vector<double> den_and_der(3,0);
+  std::vector<double> den_and_der_old(3,0);
+  std::vector<double> den_and_der_old_cl(3,0);
+
 
   if (_dos_model->has_quantum_density() && ddp.has_solution()) // && use_predictor())
   {
@@ -169,45 +172,52 @@ BandProperties::get_density_and_derivative(void) const
     double Epot_old = sign * ddp.get_old_phi();
 
     // get the old quantum density
-    pair<double, double> dens_der_old(_dos_model->get_occupied_density_and_derivative(
-          Ef_old, Epot_old, kT, ddp.get_element(),
-          ddp.get_coordinates(), ddp.get_lattice_temperature()));
+    _dos_model->get_occupied_density_and_derivative(den_and_der_old, Ef_old, Epot_old, kT, ddp.get_element(),
+          ddp.get_coordinates(), ddp.get_lattice_temperature());
 
     // now get the old classical density
     _dos_model->use_quantum_density(false);
 
-    pair<double, double> dens_der_old_cl(_dos_model->get_occupied_density_and_derivative(
-          Ef_old, Epot_old, kT, ddp.get_element(),
-          ddp.get_coordinates(), ddp.get_lattice_temperature()));
+    _dos_model->get_occupied_density_and_derivative(den_and_der_old_cl,
+          Ef_old, Epot_old, kT, ddp.get_element(), ddp.get_coordinates(), ddp.get_lattice_temperature());
 
     // now get the new classical density and derivative
-    dens_der = _dos_model->get_occupied_density_and_derivative(
-          Ef, Epot, kT, ddp.get_element(),
-          ddp.get_coordinates(), ddp.get_lattice_temperature());
+    _dos_model->get_occupied_density_and_derivative(den_and_der,
+          Ef, Epot, kT, ddp.get_element(), ddp.get_coordinates(), ddp.get_lattice_temperature());
 
-    double fac = dens_der_old.first / dens_der_old_cl.first;
-    dens_der.first *= fac;
-    dens_der.second *= -sign * fac;
+    double fac = den_and_der_old[0] / den_and_der_old_cl[0];
+
+    den_and_der[0] *= fac;
+    if (den_and_der.size() > 1)
+      den_and_der[1] *= - sign * fac;
+    if (den_and_der.size() > 2)
+      den_and_der[2] *= sign * fac;
 
     _dos_model->use_quantum_density(true);
+
+
   }
   else
   {
-    dens_der = _dos_model->get_occupied_density_and_derivative(
-          Ef, Epot, kT, ddp.get_element(),
+    _dos_model->get_occupied_density_and_derivative(den_and_der, Ef, Epot, kT, ddp.get_element(),
           ddp.get_coordinates(), ddp.get_lattice_temperature());
-    dens_der.second *= -sign;
+    den_and_der[0] *= - sign;
+    if (den_and_der.size() > 1)
+      den_and_der[1] *= sign;
+    if (den_and_der.size() > 2)
+      den_and_der[2] *= - sign;
+
   }
 
-  return dens_der;
+
 }
 
 
 
-std::pair<double, double>
-BandProperties::get_density_and_derivative(double Ef, double Epot) const
+void
+BandProperties::get_density_and_derivative(std::vector<double>& den_and_der, double Ef, double Epot) const
 {
-    const DriftDiffusionProperties& ddp = get_driftdiffusionproperties();
+  const DriftDiffusionProperties& ddp = get_driftdiffusionproperties();
 
   double kT = _temperature;
   double sign = (_particle == 'h') ? 1 : -1;
@@ -219,7 +229,10 @@ BandProperties::get_density_and_derivative(double Ef, double Epot) const
   Epot *= sign;
   Ef *= sign;
 
-  pair<double, double> dens_der;
+  std::vector<double> den_and_der_old(3,0);
+  std::vector<double> den_and_der_old_cl(3,0);
+
+  double density, derivative, derivative2;
 
   if (_dos_model->has_quantum_density() && ddp.has_solution()) // && use_predictor())
   {
@@ -227,38 +240,41 @@ BandProperties::get_density_and_derivative(double Ef, double Epot) const
     double Epot_old = sign * ddp.get_old_phi();
 
     // get the old quantum density
-    pair<double, double> dens_der_old(_dos_model->get_occupied_density_and_derivative(
-          Ef_old, Epot_old, kT, ddp.get_element(),
-          ddp.get_coordinates(), ddp.get_lattice_temperature()));
+    _dos_model->get_occupied_density_and_derivative(den_and_der_old,
+          Ef_old, Epot_old, kT, ddp.get_element(), ddp.get_coordinates(), ddp.get_lattice_temperature());
 
     // now get the old classical density
     _dos_model->use_quantum_density(false);
 
-    pair<double, double> dens_der_old_cl(_dos_model->get_occupied_density_and_derivative(
-          Ef_old, Epot_old, kT, ddp.get_element(),
-          ddp.get_coordinates(), ddp.get_lattice_temperature()));
+    _dos_model->get_occupied_density_and_derivative(den_and_der_old_cl,
+          Ef_old, Epot_old, kT, ddp.get_element(), ddp.get_coordinates(), ddp.get_lattice_temperature());
 
     // now get the new classical density and derivative
-    dens_der = _dos_model->get_occupied_density_and_derivative(
-          Ef, Epot, kT, ddp.get_element(),
+    _dos_model->get_occupied_density_and_derivative(den_and_der, Ef, Epot, kT, ddp.get_element(),
           ddp.get_coordinates(), ddp.get_lattice_temperature());
 
-    double fac = dens_der_old.first / dens_der_old_cl.first;
-    dens_der.first *= fac;
-    dens_der.second *= -sign * fac;
+
+    double fac = den_and_der_old[0] / den_and_der_old_cl[0];
+
+    den_and_der[0] *= fac;
+    if (den_and_der.size() > 1)
+      den_and_der[1] *= - sign * fac;
+    if (den_and_der.size() > 2)
+      den_and_der[2] *= sign * fac;
 
     _dos_model->use_quantum_density(true);
   }
   else
   {
-    dens_der = _dos_model->get_occupied_density_and_derivative(
-          Ef, Epot, kT, ddp.get_element(),
+    _dos_model->get_occupied_density_and_derivative(den_and_der, Ef, Epot, kT, ddp.get_element(),
           ddp.get_coordinates(), ddp.get_lattice_temperature());
-    dens_der.second *= -sign;
+
+    //den_and_der[0] *= 1;
+    if (den_and_der.size() > 1)
+      den_and_der[1] *= - sign;
+    if (den_and_der.size() > 2)
+      den_and_der[2] *= sign;
   }
-
-  return dens_der;
-
 
 
   /*

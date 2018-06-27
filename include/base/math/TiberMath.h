@@ -6,6 +6,7 @@
 #include "tiber_dll.h"
 
 #include <utility>
+#include <vector>
 
 namespace {
 
@@ -21,6 +22,12 @@ namespace {
    * 
    */
   extern "C" double fdp0p5_(double&);
+
+  //! The second derivative of fermi integral of order +1/2
+  /*!
+   *
+   */
+  extern "C" double d2_fd_(double&);
 }
 
 //! Mathematical functions
@@ -39,6 +46,10 @@ namespace TiberMath
   //! The fermi integral of order -1/2
   inline double fermidirac_mhalf(double x);
 
+  //! The second derivative of fermi integral of order +1/2
+  inline double d2_fermidirac(double x);
+
+
   //! Calculate SVD of a matrix
   //void svd(DenseMatrix<double>& matrix, DenseVector<double>& sigma)
 }
@@ -55,6 +66,9 @@ namespace Distributions
    * \return the value and the derivative with respect to \f$E_0\f$
    */
   std::pair<double, double> fermi_dirac(double E, double kT);
+
+  // added to calculate the second derivative
+  void fermi_dirac(std::vector<double>& den_and_der, double E, double kT);
 
 }
 
@@ -82,6 +96,12 @@ TiberMath::fermidirac_mhalf(double x)
   return fdm0p5_(x);
 }
 
-
+// TODO
+inline
+double
+TiberMath::d2_fermidirac(double x)
+{
+  return d2_fd_(x);
+}
 
 #endif // _TIBERMATH_H_

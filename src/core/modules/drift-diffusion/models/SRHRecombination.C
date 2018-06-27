@@ -272,6 +272,8 @@ SRHRecombination::get_net_recombination_rates(double& recomb_e,
   double p  = dd.get_hole_density();
   double T = dd.get_lattice_temperature();
 
+  std::vector<double> den_and_der(3,0);
+
   double Et = get_trap_level();
 
   double dens = _density;
@@ -335,23 +337,23 @@ SRHRecombination::get_net_recombination_rates(double& recomb_e,
   // get the occupations
   if (_dos == NULL)
   {
-    std::pair<double, double> occ_e(Distributions::fermi_dirac(-arg_e, kT_e));
-    f_e = occ_e.first;
-    //deriv_e = occ_e.second;
+    Distributions::fermi_dirac(den_and_der, -arg_e, kT_e);
+    f_e = den_and_der[0];
 
-    std::pair<double, double> occ_h(Distributions::fermi_dirac(-arg_h, kT_h));
-    f_h = occ_h.first;
-    //deriv_h = occ_h.second;
+    Distributions::fermi_dirac(den_and_der, -arg_h, kT_h);
+    f_h = den_and_der[0];
+
   }
   else
   {
-    std::pair<double, double> occ_h(_dos->get_occupied_density_and_derivative(Efp, dd.get_electric_potential() - get_trap_level(), kT_h));
-    f_h = occ_h.first;
+    _dos->get_occupied_density_and_derivative(den_and_der, Efp, dd.get_electric_potential() - get_trap_level(), kT_h);
+    f_h = den_and_der[0];
+
     //f_h = _dos->get_occupied_density(-arg_h, kT_h);
     //deriv_h = _dos->get_occupied_density_derivative(-arg_h, kT_h);
 
-    std::pair<double, double> occ_e(_dos->get_occupied_density_and_derivative(Efn, dd.get_electric_potential() - get_trap_level(), kT_e));
-    f_e = occ_e.first;
+    _dos->get_occupied_density_and_derivative(den_and_der, Efn, dd.get_electric_potential() - get_trap_level(), kT_e);
+    f_e = den_and_der[0];
     //f_e = _dos->get_occupied_density(-arg_e, kT_e);
     //deriv_e = _dos->get_occupied_density_derivative(-arg_e, kT_e);
   }
@@ -397,6 +399,8 @@ SRHRecombination::get_net_recombination_rate_derivatives(
   double n  = dd.get_electron_density();
   double p  = dd.get_hole_density();
   double T = dd.get_lattice_temperature();
+
+  std::vector<double> den_and_der(3,0);
 
   double Et = get_trap_level();
   double f = std::exp((Et - dd.get_equilibrium_fermi_level()) / T);
@@ -465,26 +469,26 @@ SRHRecombination::get_net_recombination_rate_derivatives(
   // get the occupations
   if (_dos == NULL)
   {
-    std::pair<double, double> occ_e(Distributions::fermi_dirac(-arg_e, kT_e));
-    f_e = occ_e.first;
-    deriv_e = occ_e.second;
+    Distributions::fermi_dirac(den_and_der, -arg_e, kT_e);
+    f_e = den_and_der[0];
+    deriv_e = den_and_der[1];
 
-    std::pair<double, double> occ_h(Distributions::fermi_dirac(-arg_h, kT_h));
-    f_h = occ_h.first;
-    deriv_h = occ_h.second;
+    Distributions::fermi_dirac(den_and_der, -arg_h, kT_h);
+    f_h = den_and_der[0];
+    deriv_h = den_and_der[1];
   }
   else
   {
-    std::pair<double, double> occ_h(_dos->get_occupied_density_and_derivative(Efp, dd.get_electric_potential() - get_trap_level(), kT_h));
-    f_h = occ_h.first;
-    deriv_h = occ_h.second;
+    _dos->get_occupied_density_and_derivative(den_and_der, Efp, dd.get_electric_potential() - get_trap_level(), kT_h);
+    f_h = den_and_der[0];
+    deriv_h = den_and_der[1];
 
     //f_h = _dos->get_occupied_density(-arg_h, kT_h);
     //deriv_h = _dos->get_occupied_density_derivative(-arg_h, kT_h);
 
-    std::pair<double, double> occ_e(_dos->get_occupied_density_and_derivative(Efn, dd.get_electric_potential() - get_trap_level(), kT_e));
-    f_e = occ_e.first;
-    deriv_e = occ_e.second;
+    _dos->get_occupied_density_and_derivative(den_and_der, Efn, dd.get_electric_potential() - get_trap_level(), kT_e);
+    f_e = den_and_der[0];
+    deriv_e = den_and_der[1];
     //f_e = _dos->get_occupied_density(-arg_e, kT_e);
     //deriv_e = _dos->get_occupied_density_derivative(-arg_e, kT_e);
   }

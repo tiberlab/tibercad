@@ -231,16 +231,28 @@ Trap::get_ionized_density_and_derivative(const Elem* elem, const Point& p,
     double n = el.density();
     double p = hl.density();
 
+    std::vector<double> density_state_hl;
+    std::vector<double> density_state_el;
+
+
     // occupations in terms of electrons
     if (_dos == NULL)
     {
-      std::pair<double, double> occ_e(Distributions::fermi_dirac(-arg_e, kT_e));
+      /*std::pair<double, double> occ_e(Distributions::fermi_dirac(-arg_e, kT_e));
       f_e = occ_e.first;
       deriv_e = occ_e.second;
 
       std::pair<double, double> occ_h(Distributions::fermi_dirac(-arg_h, kT_h));
       f_h = occ_h.first;
-      deriv_h = occ_h.second;
+      deriv_h = occ_h.second;*/
+
+      Distributions::fermi_dirac(density_state_el, -arg_e, kT_e);
+      f_e = density_state_el[0];
+      deriv_e = density_state_el[1];
+
+      Distributions::fermi_dirac(density_state_hl, -arg_h, kT_h);
+      f_h = density_state_hl[0];
+      deriv_h = density_state_hl[1];
 
 
       double f;
@@ -348,6 +360,7 @@ Trap::get_ionized_density_and_derivative(const Elem* elem, const Point& p,
       dens = Nt * f;
     }  // end _dos == NULL
 
+
     else // _dos != NULL
     {
       double f, deriv;
@@ -364,11 +377,18 @@ Trap::get_ionized_density_and_derivative(const Elem* elem, const Point& p,
           _dos->set_reference_energy(- level - _phi);
           //cout<<"- hl.fermi_level() = " << - hl.fermi_level() << " _phi = " << _phi << endl;
           //cout<<"hl.fermi_level() = " << hl.fermi_level() << endl ;
-          std::pair<double, double> result(
+
+          /*std::pair<double, double> result(
               _dos->get_occupied_density_and_derivative(hl.fermi_level(), _phi, kT_h));
           f = result.first;
           deriv = -Nt * result.second;
-          //cout<<"f_h = " << f << " deriv_h = " << deriv << endl;
+          //cout<<"f_h = " << f << " deriv_h = " << deriv << endl;*/
+
+          _dos->get_occupied_density_and_derivative(density_state_hl, hl.fermi_level(), _phi, kT_h);
+
+          f = density_state_hl[0];
+          deriv = Nt * density_state_hl[1];
+
           break;
         }
         case 'e':
@@ -379,11 +399,17 @@ Trap::get_ionized_density_and_derivative(const Elem* elem, const Point& p,
           _dos->set_reference_energy(level + _phi);
           //cout<<"level + _phi = " << level + _phi << endl;
           
-          std::pair<double, double> result(
+          /*std::pair<double, double> result(
               _dos->get_occupied_density_and_derivative(-el.fermi_level(), - _phi, kT_e));
           f = result.first;
           deriv = Nt * result.second;
-          //cout<<"f_e = " << f << " deriv_e = " << deriv << endl;
+          //cout<<"f_e = " << f << " deriv_e = " << deriv << endl;*/
+
+          _dos->get_occupied_density_and_derivative(density_state_el, -el.fermi_level(), - _phi, kT_e);
+
+          f = density_state_el[0];
+          deriv = Nt * density_state_el[1];
+
           break;
         }
       }

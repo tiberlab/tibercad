@@ -204,17 +204,17 @@ double GaussDOS::K(double x, double h) const
   return 2.0*(1.0 - exp(0.5 * x * x * (1.0 - h * h)) * (h * sqrt(2.0/M_PI))/x);
 }
 
-std::pair<double, double>
-GaussDOS::calculate_density_and_derivative(double Ef, double Epot,
+void
+GaussDOS::calculate_density_and_derivative(std::vector<double>& den_and_der, double Ef, double Epot,
     double kT, double kTlattice, const Elem* elem, const Point& p) const
 {
-  return calculate_density_and_derivative(Ef, Epot, kT, kTlattice);
+  return calculate_density_and_derivative(den_and_der, Ef, Epot, kT, kTlattice);
 }
 
-std::pair<double, double>
-GaussDOS::calculate_density_and_derivative(double Ef, double Epot, double kT, double kTlattice) const
+void
+GaussDOS::calculate_density_and_derivative(std::vector<double>& den_and_der, double Ef, double Epot, double kT, double kTlattice) const
 {
-  double dens, der;
+  double dens, der, der2;
 
   double ref_en = get_reference_energy()[0];
   if (get_particle() == 'h') ref_en *= -1.0;
@@ -234,16 +234,31 @@ GaussDOS::calculate_density_and_derivative(double Ef, double Epot, double kT, do
     ks = K(s, hs);
     espf = exp( ks * (z + s*s));
     dens = _N0 * exp(z + 0.5 *s*s) / (espf + 1.0);	
-    der = dens * (1.0 - (ks * espf / (espf + 1.0) ) ) / kT;
+    if (den_and_der.size() > 1)
+      der = dens * (1.0 - (ks * espf / (espf + 1.0) ) ) / kT;
+    if (den_and_der.size() > 2)
+      der2 = 0; //TODO
+
     //cout<<"s="<<s<<"<z="<<z<<" dens="<<dens<<" der="<<der<<endl;	
   }
   else
   {
     dens = _N0 * 0.5 * erfc(-1.0 * hs * z / (s * sqrt(2.0)) );
-    der = _N0 * hs * exp(-0.5 * hs * hs * z * z / (s*s)) / (s * sqrt(2.0*M_PI) * kT);
+    if (den_and_der.size() > 1)
+      der = _N0 * hs * exp(-0.5 * hs * hs * z * z / (s*s)) / (s * sqrt(2.0*M_PI) * kT);
+    if (den_and_der.size() > 2)
+      der2 = 0; //TODO
+
     //cout<<"s="<<s<<" >z="<<z<<" dens="<<dens<<" der="<<der<<endl;
   }
-  return make_pair(dens, der);
+
+
+  den_and_der = {dens};
+  if (den_and_der.size() > 1)
+    den_and_der = {dens, der};
+  if (den_and_der.size() > 2)
+    den_and_der = {dens, der, der2};
+
 }
 
 void

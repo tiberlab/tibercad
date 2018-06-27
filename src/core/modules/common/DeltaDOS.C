@@ -23,22 +23,37 @@ DeltaDOS::do_init(void)
   total_state_density() = _N0;
 }
 
-std::pair<double, double>
-DeltaDOS::calculate_density_and_derivative(double Ef, double Epot,
+void
+DeltaDOS::calculate_density_and_derivative(std::vector<double>& den_and_der, double Ef, double Epot,
     double kT, double kTlattice, const Elem* elem, const Point& p) const
 {
-  return calculate_density_and_derivative(Ef, Epot, kT, kTlattice);
+  return calculate_density_and_derivative(den_and_der, Ef, Epot, kT, kTlattice);
 }
 
-std::pair<double, double>
-DeltaDOS::calculate_density_and_derivative(double Ef, double Epot, double kT, double kTlattice) const
+void
+DeltaDOS::calculate_density_and_derivative(std::vector<double>& den_and_der, double Ef, double Epot, double kT, double kTlattice) const
 {
+  double dens, der, der2;
+
   double expf = exp(-(Ef - get_reference_energy()[0] - Epot) / kT);
-  double dens = _N0 / (1.0 + expf);
-  double der = dens;
+  dens = _N0 / (1.0 + expf);
 
-  der /= kT * (1.0 + expf);
-  der *= expf;
+  if (den_and_der.size() > 1)
+  {
+    der = dens;
+    der /= kT * (1.0 + expf);
+    der *= expf;
+  }
+  if (den_and_der.size() > 1)
+  {
+    der2 = 0; //TODO
+    der2 *=0; //TODO
+    der2 /=0; //TODO
+  }
 
-  return make_pair(dens, der);
+  den_and_der.push_back(dens);
+  if (den_and_der.size() > 1)
+    den_and_der.push_back(der);
+  if (den_and_der.size() > 2)
+    den_and_der.push_back(der2);
 }

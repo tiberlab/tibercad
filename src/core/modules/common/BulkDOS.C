@@ -201,18 +201,19 @@ BulkDOS::do_print_info(void)
 
 
 
-std::pair<double, double>
-BulkDOS::calculate_density_and_derivative(double Ef, double Epot,
+void
+BulkDOS::calculate_density_and_derivative(std::vector<double>& den_and_der, double Ef, double Epot,
     double kT, double kTlattice, const Elem* elem, const Point& p) const
 {
-  return calculate_density_and_derivative(Ef, Epot, kT, kTlattice);
+  return calculate_density_and_derivative(den_and_der, Ef, Epot, kT, kTlattice);
 }
 
-std::pair<double, double>
-BulkDOS::calculate_density_and_derivative(double Ef, double Epot, double kT, double kTlattice) const
+void
+BulkDOS::calculate_density_and_derivative(std::vector<double>& den_and_der, double Ef, double Epot, double kT, double kTlattice) const
 {
   double density = 0.0;
   double derivative = 0.0;
+  double derivative2 = 0.0;
 
   const double arg_max = 150;
   const double arg_min = -50;
@@ -222,7 +223,7 @@ BulkDOS::calculate_density_and_derivative(double Ef, double Epot, double kT, dou
 
   for (int i = 0; i < _ref_energies.size(); ++i)
   {
-    double dens, der;
+    double dens, der, der2;
 
     double energy = _ref_energies[i];
    
@@ -243,29 +244,47 @@ BulkDOS::calculate_density_and_derivative(double Ef, double Epot, double kT, dou
     if (arg < arg_min)
     {
       dens = exp(arg);
-      der = dens;
+      if (den_and_der.size() > 1)
+        der = dens;
+      if (den_and_der.size() > 2)
+        der2 = dens;
     }
     else if (arg < arg_max)
     {
       dens = TiberMath::fermidirac_half(arg);
-      der = TiberMath::fermidirac_mhalf(arg);
+      if (den_and_der.size() > 1)
+        der = TiberMath::fermidirac_mhalf(arg);
+      if (den_and_der.size() > 2)
+        der2 = TiberMath::d2_fermidirac(arg);
     }
     else
     {
       dens = 2.0 * M_2_SQRTPI / 3.0 * std::pow(arg, 1.5);
-      der = M_2_SQRTPI * std::sqrt(arg);
+      if (den_and_der.size() > 1)
+        der = M_2_SQRTPI * std::sqrt(arg);
+      if (den_and_der.size() > 2)
+        der2 = 0.5 * M_2_SQRTPI * std::pow(arg,-0.5);
     }
 
     dens *= Neff;
 
     // is this needed???
     if (dens > min_dens)
+    {
       der *= Neff / kT;
+      der2 *= Neff / kT / kT;
+    }
     else
+    {
       der = 0.0;
+      der2 = 0.0;
+    }
+
 
     density += dens;
     derivative += der;
+    derivative2 += der2;
+
 
     // calculate thermoelectric power
     double temp = kT / Constants::k_B;
@@ -278,5 +297,11 @@ BulkDOS::calculate_density_and_derivative(double Ef, double Epot, double kT, dou
   _th_el_power /= density;
 
 
-  return make_pair(density, derivative);
+
+  den_and_der[0] = density;
+  if (den_and_der.size() > 1)
+    den_and_der[1] = derivative;
+  if (den_and_der.size() > 2)
+    den_and_der[2] = derivative2;
+
 }

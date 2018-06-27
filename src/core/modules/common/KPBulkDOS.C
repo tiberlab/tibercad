@@ -245,12 +245,13 @@ KPBulkDOS::_solve_kp(void)
 
 
 
-std::pair<double, double>
-KPBulkDOS::calculate_density_and_derivative(double Ef, double Epot,
+void
+KPBulkDOS::calculate_density_and_derivative(std::vector<double>& den_and_der, double Ef, double Epot,
     double kT, double kTlattice, const Elem* elem, const Point& p) const
 {
   double density = 0.0;
   double derivative = 0.0;
+  double derivative2 = 0.0;
 
   const double arg_max = 150;
   const double arg_min = -50;
@@ -260,7 +261,7 @@ KPBulkDOS::calculate_density_and_derivative(double Ef, double Epot,
 
   for (int i = 0; i < _ref_energies.size(); ++i)
   {
-    double dens, der;
+    double dens, der, der2;
 
     double energy = _ref_energies[i];
 
@@ -280,29 +281,41 @@ KPBulkDOS::calculate_density_and_derivative(double Ef, double Epot,
     if (arg < arg_min)
     {
       dens = exp(arg);
-      der = dens;
+      if (den_and_der.size() > 1)
+        der = dens;
+      if (den_and_der.size() > 2)
+        der2 = 0; //TODO
     }
     else if (arg < arg_max)
     {
       dens = TiberMath::fermidirac_half(arg);
-      der = TiberMath::fermidirac_mhalf(arg);
+      if (den_and_der.size() > 1)
+        der = TiberMath::fermidirac_mhalf(arg);
+      if (den_and_der.size() > 2)
+        der2 = 0; //TODO
     }
     else
     {
       dens = 2.0 * M_2_SQRTPI / 3.0 * std::pow(arg, 1.5);
-      der = M_2_SQRTPI * std::sqrt(arg);
+      if (den_and_der.size() > 1)
+        der = M_2_SQRTPI * std::sqrt(arg);
+      if (den_and_der.size() > 2)
+        der2 = 0; //TODO
     }
 
     dens *= Neff;
+    der *= Neff / kT;
+    der2 *= Neff / kT /kT;
 
     // is this needed???
-    if (dens > min_dens)
+    /*if (dens > min_dens)
       der *= Neff / kT;
     else
-      der = 0.0;
+      der = 0.0;*/
 
     density += dens;
     derivative += der;
+    derivative2 += der2;
 
 
     // calculate thermoelectric power
@@ -315,14 +328,28 @@ KPBulkDOS::calculate_density_and_derivative(double Ef, double Epot,
 
   _th_el_power /= density;
 
-
-  return make_pair(density, derivative);
+  den_and_der= {density};
+  if (den_and_der.size() > 1)
+    den_and_der= {density, derivative,derivative2};
+  if (den_and_der.size() > 2)
+    den_and_der= {density, derivative, derivative2};
 }
 
-std::pair<double, double>
-KPBulkDOS::calculate_density_and_derivative(double Ef, double Epot,
+void
+KPBulkDOS::calculate_density_and_derivative(std::vector<double>& den_and_der,double Ef, double Epot,
     double kT, double kTlattice) const
 {
-  return make_pair(0, 0);
+  double dens = 0;
+  den_and_der.push_back(dens);
+  if (den_and_der.size() > 1)
+  {
+    double der = 0;
+    den_and_der.push_back(der);
+  }
+  if (den_and_der.size() > 2)
+  {
+    double der2 = 0;
+    den_and_der.push_back(der2);
+  }
 }
 

@@ -47,7 +47,7 @@ C                     to machine precision. The recommended value
 C                     is    LN ( XMIN )
 C
 C      XHIGH - REAL - The value of x above which
-C                         FDM0P5(x) = 2 sqrt (x/pi) 
+C                         FDM0P5(x) = 2 SQRT (x/pi)
 C                     to machine precision. The recommended value
 C                     is    1 / sqrt( 2 * EPSNEG )
 C
@@ -472,8 +472,40 @@ C
       END
 
 
+      DOUBLE PRECISION FUNCTION D2_FD(ETA)
+
+      DATA A,B,C,D,E/ 0.75 D0, 50 D0, 33.6 D0, 0.68 D0, 0.17 D0/
+      DATA PI/ 3.14 D0/
+      DATA ONE,TWO, THREE/ 1.0 D0, 2.0 D0, 3.0 D0/
+      DATA FOUR, EIGHT/ 4.0 D0, 8.0 d0/
+      DATA ELEVEN, TWELVE, THIRTYTHREE/ 11.0 D0, 12.0 D0, 33.0 D0/
+      DATA FOURTYFOUR, NINETEEN / 64.0 D0, 19.0 D0/
+
+
+      TMP1 = (ETA+ONE)**TWO
+      TMP2 = (ETA + ONE)*ETA
+      TMP3 = (E*TMP1)
+      TMP4 = ONE-D/EXP(E*(TMP1))
+
+      D2_FD = (TWO*(-((THREE*SQRT(PI)*A*((TWO*C*D*E*TMP2/EXP(E*TMP1+C*
+     +(TMP4)+FOUR*ETA**THREE))/(EIGHT*(B+C*ETA*(TMP4)+ETA**FOUR)**
+     +(ELEVEN/EIGHT)))-EXP(-ETA))**TWO)))/((SQRT(PI)*A)/(B+C*ETA*TMP4+
+     +ETA**FOUR)**(THREE/EIGHT)+EXP(-ETA))**THREE-(-((THREE*SQRT(PI)*A*
+     +(-((FOUR*C*D*E**TWO*TMP1*ETA)/EXP(TMP3)+(TWO*C*D*E*ETA)/EXP(TMP3)+
+     +(FOUR*C*D*E*(ETA+ONE))/EXP(TMP3)+TWELVE*ETA**TWO))/(EIGHT*(B+
+     +C*ETA*TMP4)+ETA**FOUR)**(ELEVEN/EIGHT)))+(THIRTYTHREE*SQRT(PI)*A*
+     +((TWO*C*D*E*TMP2)/EXP(TMP3)+C*(ONE-D/EXP(TMP3))+FOUR*ETA**THREE)**
+     +TWO)/(FOURTYFOUR*(B+C*ETA*(ONE-D/EXP(TMP3))+ETA**FOUR)**
+     +(NINETEEN/EIGHT))+EXP(-ETA))/((SQRT(PI)*A)/(B+C*ETA*TMP4
+     ++ETA**FOUR)**(THREE/EIGHT)+EXP(-ETA))**TWO
+
+      RETURN
+      END
+
+
 
       DOUBLE PRECISION FUNCTION FDP1P5(XVALUE)
+
 C
 C   DESCRIPTION:
 C

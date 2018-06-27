@@ -500,6 +500,7 @@ DriftDiffusionProperties::clear_recombination(void)
 void
 DriftDiffusionProperties::calculate_densities(void)
 {
+
   BandProperties& cb = get_conduction_band();
   BandProperties& vb = get_valence_band();
   double kTe = get_pd().electron_vt;
@@ -507,13 +508,19 @@ DriftDiffusionProperties::calculate_densities(void)
   cb.set_temperature(kTe);
   vb.set_temperature(kTh);
 
-  pair<double, double> el(cb.get_density_and_derivative(get_pd().fermi_e, get_pd().electric_potential));
-  get_pd().electron_density = el.first;
-  get_pd().electron_density_derivative = el.second;
+  std::vector<double> den_and_der(3,0);
 
-  pair<double, double> hl(vb.get_density_and_derivative(get_pd().fermi_h, get_pd().electric_potential));
-  get_pd().hole_density = hl.first;
-  get_pd().hole_density_derivative = hl.second;
+
+  cb.get_density_and_derivative(den_and_der, get_pd().fermi_e, get_pd().electric_potential);
+  get_pd().electron_density = den_and_der[0];
+  get_pd().electron_density_derivative = den_and_der[1];
+  get_pd().electron_density_derivative2 = den_and_der[2];
+
+
+  vb.get_density_and_derivative(den_and_der, get_pd().fermi_h, get_pd().electric_potential);
+  get_pd().hole_density = den_and_der[0];
+  get_pd().hole_density_derivative = den_and_der[1];
+  get_pd().hole_density_derivative2 = den_and_der[2];
 
   get_pd().gamma_n = cb.get_gamma();
   get_pd().gamma_p = vb.get_gamma();
@@ -522,12 +529,14 @@ DriftDiffusionProperties::calculate_densities(void)
   {
     get_pd().electron_density = 0.0;
     get_pd().electron_density_derivative = 0.0;
+    get_pd().electron_density_derivative2 = 0.0;
   }
 
   if (!(_coupling & DriftDiffusionDefs::HOLES))
   {
     get_pd().hole_density = 0.0;
     get_pd().hole_density_derivative = 0.0;
+    get_pd().hole_density_derivative2 = 0.0;
   }
 
 }
@@ -536,6 +545,9 @@ DriftDiffusionProperties::calculate_densities(void)
 void
 DriftDiffusionProperties::calculate_traps(void)
 {
+  //cerr << "DriftDiffusionProperties::calculate_traps" << endl;
+
+
   double Ec = get_conduction_band_edge() - get_pd().electric_potential;
   double Ev = get_valence_band_edge() - get_pd().electric_potential;
   double phi =  get_pd().electric_potential;
@@ -593,12 +605,17 @@ DriftDiffusionProperties::calculate_traps(void)
 
     get_pd().ionized_hole_traps = nt;
   }
+
+  //cerr << "DriftDiffusionProperties::calculate_traps done" << endl;
+
 }
 
 
 void
 DriftDiffusionProperties::calculate_ionized_dopants(void)
 {
+  //cerr << "DriftDiffusionProperties::calculate_ionized_dopants" << endl;
+
   double kT = _lattice_vt;
 
   double Ec = get_conduction_band_edge();
@@ -632,6 +649,8 @@ DriftDiffusionProperties::calculate_ionized_dopants(void)
   get_pd().ionized_acceptor_density = Na;
   get_pd().ionized_acceptor_density_derivative = dNa;
 
+  //cerr << "DriftDiffusionProperties::calculate_ionized_dopants done" << endl;
+
 }
 
 
@@ -640,6 +659,8 @@ DriftDiffusionProperties::calculate_ionized_dopants(void)
 void
 DriftDiffusionProperties::calculate_net_recombination_rates(void)
 {
+  //cerr << "DriftDiffusionProperties::calculate_net_recombination_rates" << endl;
+
   get_pd().electron_recombination_rate = 0;
   get_pd().electron_recombination_rate_derivatives[0] = 0;
   get_pd().electron_recombination_rate_derivatives[1] = 0;
@@ -672,6 +693,9 @@ DriftDiffusionProperties::calculate_net_recombination_rates(void)
     get_pd().hole_recombination_rate_derivatives[2] += dRh[2];
     get_pd().hole_recombination_rate_derivatives[3] += dRh[3];
   }
+
+  //cerr << "DriftDiffusionProperties::calculate_net_recombination_rates done" << endl;
+
 }
 
 
@@ -729,6 +753,7 @@ DriftDiffusionProperties::get_hole_mobility_derivative_grad_fermi(RealGradient& 
 void
 DriftDiffusionProperties::calculate_electro_chemical_potentials(void)
 {
+  //cerr << "DriftDiffusionProperties::calculate_electro_chemical_potentials" << endl;
 
   if (_coupling & DriftDiffusionDefs::ELECTRONS)
   {
@@ -767,6 +792,9 @@ DriftDiffusionProperties::calculate_electro_chemical_potentials(void)
     if (! _coupling & DriftDiffusionDefs::ELECTRONS)
       get_pd().fermi_e = get_pd().fermi_h;
   }
+
+  //cerr << "DriftDiffusionProperties::calculate_electro_chemical_potentials done" << endl;
+
 }
 
 
@@ -777,6 +805,9 @@ int
 DriftDiffusionProperties::get_net_recombination_rate_IDs(
     vector<ID>& ids)
 {
+  //cerr << "DriftDiffusionProperties::get_net_recombination_rate_IDs" << endl;
+
+
   int n = _recombination_models.size();
 
   ids.resize(n);
@@ -788,6 +819,9 @@ DriftDiffusionProperties::get_net_recombination_rate_IDs(
     ids[ctr] = (it->first);
 
   return n;
+
+  //cerr << "DriftDiffusionProperties::get_net_recombination_rate_IDs done" << endl;
+
 }
 
 
@@ -795,6 +829,8 @@ DriftDiffusionProperties::get_net_recombination_rate_IDs(
 pair<double, double>
 DriftDiffusionProperties::get_net_recombination_rate(ID id)
 {
+  //cerr << "DriftDiffusionProperties::get_net_recombination_rate" << endl;
+
   double rece = 0.0;
   double rech = 0.0;
 
@@ -810,6 +846,9 @@ DriftDiffusionProperties::get_net_recombination_rate(ID id)
     }
 
   return(make_pair(rece, rech));
+
+  //cerr << "DriftDiffusionProperties::get_net_recombination_rate done" << endl;
+
 }
 
 
@@ -822,6 +861,8 @@ DriftDiffusionProperties::get_net_recombination_rate(ID id)
 void
 DriftDiffusionProperties::set_equilibrium_properties(double Ef)
 {
+  //cerr << "DriftDiffusionProperties::set_equilibrium_properties" << endl;
+
   // remember the coupling
   int coupling_bkp = _coupling;
   _coupling = DriftDiffusionDefs::BOTH;
@@ -836,6 +877,9 @@ DriftDiffusionProperties::set_equilibrium_properties(double Ef)
 
   // restore original coupling
   _coupling = coupling_bkp;
+
+  //cerr << "DriftDiffusionProperties::set_equilibrium_properties done" << endl;
+
 }
 
 

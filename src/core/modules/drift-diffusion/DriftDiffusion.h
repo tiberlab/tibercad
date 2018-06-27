@@ -497,9 +497,9 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
 
     //! The penalty value for Dirichlet BCs
 #ifdef HAVE_CONSTEXPR
-    constexpr static double _penalty_value = 1e56;
+    constexpr static double _penalty_value = 1; //1e56;
 #else
-    const static double _penalty_value = 1e56;
+    const static double _penalty_value = 1; //1e56;
 #endif
 
 

@@ -126,6 +126,7 @@ class DriftDiffusionProperties : public PhysicalModel
          * has the same value but opposite sign.
          */
         double electron_density_derivative;
+        double electron_density_derivative2;
 
         //! The hole density
         /*!
@@ -140,6 +141,7 @@ class DriftDiffusionProperties : public PhysicalModel
          * has the same value but opposite sign.
          */
         double hole_density_derivative;
+        double hole_density_derivative2;
 
         //! \f$\gamma_n\f$
         double gamma_n;

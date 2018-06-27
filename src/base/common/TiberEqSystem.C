@@ -12,6 +12,11 @@
 
 #include <cassert>
 
+#include <fstream>
+#include <ostream>
+#include <istream>
+
+using namespace std;
 
 
 TiberEqSystem::TiberEqSystem(void)
@@ -149,6 +154,10 @@ TiberEqSystem::exclude_dofs(libMesh::DenseVector<double>& vec,
 void
 TiberEqSystem::set_weight(const libMesh::NumericVector<double>* weight, NormType norm)
 {
+
+  extern ostream cerr;
+
+
   switch (norm)
   {
     case l2_NORM:

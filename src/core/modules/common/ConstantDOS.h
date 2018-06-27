@@ -24,11 +24,13 @@ class TBDLEXPORT ConstantDOS : public DensityOfStates
     virtual void read_database(void);
 
     //! Get occupied states and the derivative with respect to phi
-    virtual std::pair<double, double> calculate_density_and_derivative(double E, double Epot, 
+    virtual void
+    calculate_density_and_derivative(std::vector<double>& den_and_der, double E, double Epot,
                                       double kT, double kTlattice, const Elem* elem, const Point& p) const;
 
     //overloading for Trap.C
-    virtual std::pair<double, double> calculate_density_and_derivative(double E, double Epot, double kT, double kTlattice) const;
+    virtual void
+    calculate_density_and_derivative(std::vector<double>& den_and_der, double E, double Epot, double kT, double kTlattice) const;
 
     virtual void do_init(void);
 	

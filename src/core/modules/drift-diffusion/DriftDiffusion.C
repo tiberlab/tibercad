@@ -255,8 +255,11 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
       x0 = (dia(0) > dia(1)) ? dia(0) : dia(1);
       x0 = (x0 > dia(2)) ? x0 : dia(2);
 
+
       break;
   }
+
+
 
   get_scaling().set_scaling_type(type);
   get_scaling().set_potential_scaling(phi0);
@@ -3785,6 +3788,7 @@ DriftDiffusion::build_local_scaling(void)
     sc->reinit(elem);
 
     fe->reinit(elem);
+ 
 
     assert(elem->n_nodes() == dof_indices_u.size());
 
@@ -3834,6 +3838,11 @@ DriftDiffusion::build_local_scaling(void)
       double sigma_h = JxW[qp] * sc->get_hole_conductivity() / mu0 / C0_h;
       //double sigma_e = sc->get_electron_conductivity() / mu0;// / C0_e;
       //double sigma_h = sc->get_hole_conductivity() / mu0;// / C0_h;
+     
+      //cerr << "sigma_e" << endl << sigma_e << endl;
+      //cerr << "sigma_h" << endl << sigma_h << endl;
+
+
 
       double dn_dphi = sc->get_electron_density_derivative();
       double dp_dphi = sc->get_hole_density_derivative();
@@ -4043,6 +4052,11 @@ DriftDiffusion::build_local_scaling(void)
 
     loc_scaling.add_vector(local_scaling, dof_indices);
   } // end loop over elements
+
+  /*cerr << "scaleu in build:    " << endl << scaleu << endl;
+  cerr << "scalen in build:    " << endl << scalen << endl;
+  cerr << "scalep in build:    " << endl << scalep << endl;*/
+
   loc_scaling.close();
 
   set<unsigned int>::iterator dirit(dirichlet_dofs.begin());
@@ -4248,7 +4262,6 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
   //cout<<"l2 = "<<l2<<" x0 = "<<x0<<" phi0 = "<<phi0<<" C0 = "<<C0<<" mu0 = "<<mu0<<" do_loc_scal = "<<_do_local_scaling<<endl;
   if (_do_local_scaling)
     C0_e = C0_h = 1.0;
-
 
   // scaling for recombination rates
   double R0_e = C0_e / scaling.get_time_scaling();
@@ -5337,6 +5350,10 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 
   } // end loop over elements
 
+  /*cerr << "scaleu:    " << endl << scaleu << endl;
+  cerr << "scalen:    " << endl << scalen << endl;
+  cerr << "scalep:    " << endl << scalep << endl;*/
+
   if (jacobian != NULL)
   {
     jacobian->close();
@@ -5428,7 +5445,12 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
       //oldx = x;
     }
     */
+
+    //exit(0);
+
+
   }
+
 
 
   STOP_LOG(get_name() + ": Matrix assembly", "");

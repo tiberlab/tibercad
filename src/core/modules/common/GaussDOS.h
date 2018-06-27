@@ -48,11 +48,13 @@ class TBDLEXPORT GaussDOS : public DensityOfStates
     virtual void do_print_info(void);
 
     //! Get occupied states and the derivative with respect to phi
-    virtual std::pair<double, double> calculate_density_and_derivative(double E, double Epot, double kT, 
+    virtual void
+    calculate_density_and_derivative(std::vector<double>& den_and_der, double E, double Epot, double kT,
                                                                        double kTlattice, const Elem* elem, const Point& p) const;
    
     //overloading Trap.C
-    virtual std::pair<double, double> calculate_density_and_derivative(double E, double Epot, double kT, double kTlattice) const;
+    virtual void
+    calculate_density_and_derivative(std::vector<double>& den_and_der, double E, double Epot, double kT, double kTlattice) const;
 
 
     virtual void do_init(void);

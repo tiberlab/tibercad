@@ -84,6 +84,9 @@ ElectricalContact::do_init(void)
 void
 ElectricalContact::do_compute(void)
 {
+
+  std::vector<double> den_and_der;
+
   if (get_type(0) != NEUMANN)
     coeff_g(0) = _contact_fermilevel + get_inner_voltage();
 
@@ -96,8 +99,9 @@ ElectricalContact::do_compute(void)
     // we have to take the correct equilibrium density!
     BandProperties& cb = get_bulk_dd_properties()->get_conduction_band();
     cb.calculate(pd.electron_vt);
-    std::pair<double, double> eldens(cb.get_density_and_derivative(0, _contact_fermilevel));
-    double n0 = eldens.first;
+    cb.get_density_and_derivative(den_and_der, 0, _contact_fermilevel);
+    double n0 = den_and_der[0];
+
     //ParticleDensity& el = get_dd_properties()->get_electrons();
     //el.set_classical_parameters(cb.get_effective_DOS(),
     //    get_dd_properties()->get_conduction_band_edge() - _contact_fermilevel, 0,
@@ -135,8 +139,8 @@ ElectricalContact::do_compute(void)
     // we have to take the correct equilibrium density!
     BandProperties& vb = get_bulk_dd_properties()->get_valence_band();
     vb.calculate(pd.hole_vt);
-    std::pair<double, double> hldens(vb.get_density_and_derivative(0, _contact_fermilevel));
-    double p0 = hldens.first;
+    vb.get_density_and_derivative(den_and_der, 0, _contact_fermilevel);
+    double p0 = den_and_der[0];
     //ParticleDensity& hl = get_dd_properties()->get_holes();
     //vb.set_temperature(pd.hole_vt);
     //hl.set_classical_parameters(vb.get_effective_DOS(),

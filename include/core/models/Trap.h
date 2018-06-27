@@ -58,7 +58,7 @@ class TBDLEXPORT Trap : public PhysicalModelInterface
      * \return the charge density in cm^-3 including sign
      * \param el the electron population
      * \param hl the hole population
-     * \param will be filled with the partial derivatives: [d/dn d/dp d/dEfn d/dEfp]
+     * \param derivatives will be filled with the partial derivatives: [d/dn d/dp d/dEfn d/dEfp]
      */
     double get_ionized_density_and_derivative(const Elem* elem, const Point& p,
         const Particle& el, const Particle& hl,
