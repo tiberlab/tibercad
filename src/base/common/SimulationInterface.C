@@ -74,7 +74,7 @@ SimulationInterface::SimulationInterface(const ModelOptions& options)
     _is_task(false),
     _equilibrium_is_solved(false),
     _has_solution_vector(true),
-    _use_cache(true),
+    _use_cache(false),
     _verbosity(1),
     _mesh(0),
     _atomistic_structure(0)
