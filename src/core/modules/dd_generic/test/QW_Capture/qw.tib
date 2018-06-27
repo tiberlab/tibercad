@@ -1,0 +1,282 @@
+
+# Description of  the  device physical regions
+Device
+{
+  meshfile = quantum_well.msh
+  mesh_units = 1e-9
+  material = GaAs
+
+  Region well
+  {
+    material = InGaAs
+    x = 0.2
+  }
+
+  Region  nside
+  {
+    Doping
+    {
+      Nd  = 1e18
+      type = donor
+      Ed = 0.025
+      reference_carrier = electron
+    }
+  }
+
+  Region  pside
+  {
+    Doping
+    {
+      Nd  = 1e18
+      type = acceptor
+      Ed = 0.025
+      reference_carrier = hole
+    }
+  }
+   
+  
+
+  Region  buffer
+  {
+    mesh_regions = (buffer_classical, buffer_quantum)
+  }
+
+
+  Cluster quantum
+  {
+    regions = (well, buffer_quantum)
+  }
+
+
+}
+
+
+Module elasticity 
+{
+
+  name = strain
+  regions = all
+
+  plot = (Strain, StrainCell,Stress,Displacement )
+
+  Physics 
+  {
+    body_force lattice_mismatch 
+    {
+      reference_material = AlGaAs
+      x = 0.3
+   
+    }
+       
+  }
+
+  Contact  cathode  
+  {type = clamp}
+
+}
+
+
+
+
+Module dd_generic
+{ 
+
+  name = dd
+  plot = (QFermi, Density, RefEnergy, CurrentDensity,
+          NetRecombination, ContactCurrents)
+
+  Solver
+  {
+    max_iterations = 50
+  }
+
+  Physics
+  {
+
+    carrier electron
+    {
+      override_material = GaAs
+
+      density_of_states bulk_kp
+      {
+      }
+    }
+
+    carrier hole
+    {
+      density_of_states bulk_kp
+      {
+      }
+    }
+
+    carrier el_qw
+    {
+      regions = well
+      charge = -1
+
+      density_of_states quantum
+      {
+        quantum_simulation = quantum_el
+        barrier_regions = buffer
+
+        classical_DOS bulk_kp 
+        {
+          #strain = strain
+        }
+      }
+    }
+
+    mobility constant
+    {
+      carriers = electron
+      mu = 1000
+    }
+
+    mobility constant
+    {
+      carriers = hole
+      mu = 1000
+    }
+
+    mobility constant
+    {
+      carriers = el_qw
+      mu = 1
+    }
+
+
+
+    recombination direct
+    {
+      carriers = (electron, hole)
+      plot_name = rad
+    }
+
+
+    Rrecombination direct
+    {
+      regions = quantum
+      plot_name = ib_cb
+      carriers = (electron, el_qw)
+      C = 2e8
+    }
+
+    Rrecombination direct
+    {
+      regions = quantum
+      plot_name = rad_qw
+      carriers = (hole, el_qw)
+      C = 1e-10
+    }
+
+
+  }   
+
+
+  Contact anode
+  {
+    type = ohmic
+    voltage = $Vb
+  }
+
+  Contact cathode
+  {
+    type = ohmic
+    voltage = 0.0
+  }
+
+}  
+
+
+Module efaschroedinger
+{
+
+  name = quantum_el
+  regions = quantum
+
+  plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)
+
+  number_of_eigenstates = 3
+  poisson_model_name = dd
+  #strain_model_name = strain 
+  quadrature_rule = trapez
+
+
+  Physics
+  {
+    model = conduction_band    
+  }
+
+}
+
+
+Module efaschroedinger
+{
+
+  name = quantum_hl
+  regions = quantum
+
+  plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)
+
+  num_hole_states = 12
+  poisson_model_name = dd
+  #strain_model_name = strain 
+  quadrature_rule = trapez
+  
+  Physics
+  {
+    model = 6x6
+  }
+
+}
+  
+
+
+Module sweep
+{
+  solve = dd
+  variable = $Vb
+  start = 0.0
+  stop = 1.5
+  steps = 15
+  plot_data = true
+}
+
+
+Module selfconsistent
+{
+  #solve = (quantum_el, quantum_hl, dd)
+  solve = (quantum_el, dd)
+  # we do not use relaxation, but a predictor-corrector scheme
+  #relaxation_factor = 0.5
+  max_iterations = 10
+  absolute_tolerance = 1e-3
+  relative_tolerance = 1e-8
+  monitor = true
+  #xmonitor = true
+}
+
+
+
+
+Simulation
+{
+  temperature = 300
+  solve = (sweep, selfconsistent)
+
+  resultpath = output
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
