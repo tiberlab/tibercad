@@ -38,9 +38,6 @@ class HeatSourceModel : public PhysicalModelInterface
     //! Constructor
   HeatSourceModel(const ModelOptions& options);
 
-//! Calculate for a point on the given side
-  //void calculate(const Elem* elem, const Point& point);
-
   void set_heat_source(Real heat_source);
 
   private:
