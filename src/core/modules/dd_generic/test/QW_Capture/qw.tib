@@ -36,9 +36,12 @@ Device
    
   
 
-  Region  buffer
+  Region  buffer_quantum
   {
-    mesh_regions = (buffer_classical, buffer_quantum)
+  }
+
+  Region  buffer_classical
+  {
   }
 
 
@@ -63,8 +66,7 @@ Module elasticity
   {
     body_force lattice_mismatch 
     {
-      reference_material = AlGaAs
-      x = 0.3
+      reference_material = GaAs
    
     }
        
@@ -111,13 +113,12 @@ Module dd_generic
 
     carrier el_qw
     {
-      regions = well
+      regions = quantum
       charge = -1
 
       density_of_states quantum
       {
         quantum_simulation = quantum_el
-        barrier_regions = buffer
 
         classical_DOS bulk_kp 
         {
@@ -153,7 +154,7 @@ Module dd_generic
     }
 
 
-    Rrecombination direct
+    recombination direct
     {
       regions = quantum
       plot_name = ib_cb
@@ -161,7 +162,7 @@ Module dd_generic
       C = 2e8
     }
 
-    Rrecombination direct
+    recombination direct
     {
       regions = quantum
       plot_name = rad_qw
