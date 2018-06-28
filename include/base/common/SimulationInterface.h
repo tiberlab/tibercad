@@ -56,16 +56,7 @@ namespace libMesh
   class EquationSystems;
 }
 
-//LIBMESHCLASS(EquationSystems);
-//LIBMESHCLASS(DofObject);
-//USELIBMESHTYPE(UniquePtr);
-//USELIBMESHTYPE(FEBase);
-//USELIBMESHTYPE(FEType);
-//USELIBMESHTYPE(NumericVector);
-//USELIBMESHTYPE(RealGradient);
-//USELIBMESHTYPE(SparseMatrix);
-//USELIBMESHTYPE(Point);
-//USELIBMESHTYPE(Elem);
+
 
 //! The base class for any simulation
 class SimulationInterface : public TiberModelObject

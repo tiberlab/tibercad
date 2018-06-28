@@ -186,6 +186,21 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   
   std::string system_name;
 
+  //! The solution provider for the electrostatic potential
+  SolutionProvider _el_pot;
+
+  //! The solution provider for the electron electrochemical potential
+  SolutionProvider _el_elchem;
+
+  //! The solution provider for the hole electrochemical potential
+  SolutionProvider _hl_elchem;
+
+  //! The solution provider for the CB band edge
+  SolutionProvider _cb_edge;
+
+  //! The solution provider for the VB band edge
+  SolutionProvider _vb_edge;
+
   //!pointer to a drift-diffusion object that is used to get potential data 
   SimulationInterface* poisson_equation;
 

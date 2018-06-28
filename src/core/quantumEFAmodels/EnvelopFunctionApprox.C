@@ -61,11 +61,16 @@ inline void EnvelopFunctionApprox::get_electric_potential(const Elem* elem, cons
 
 inline double EnvelopFunctionApprox::get_band_edge(const Elem* elem, const std::string& particle) const
 {
+  /*
   if (poisson_equation==NULL) 
   {
     Messages::warning("trying to find band-edge without drift-diffusion: return 0");
     return 0.0;
   }
+  */
+  if (((particle == "el") && (_cb_edge.second == INVALID_ID)) ||
+      ((particle == "hl") && (_vb_edge.second == INVALID_ID)))
+    return 0.0;
 
   // 2014-09-05 this gives sometimes wrong results, try with centroid
   //vector<double> values(elem->n_nodes());
@@ -80,9 +85,9 @@ inline double EnvelopFunctionApprox::get_band_edge(const Elem* elem, const std::
   bool electron = (particle == "el") || (particle == "Ec");
 
   if (electron)
-    poisson_equation->get_solution(elem, cb_band_edge_ID, values, p);
+    _cb_edge.first->get_solution(elem, _cb_edge.second, values, p);
   else
-    poisson_equation->get_solution(elem, vb_band_edge_ID, values, p);
+    _vb_edge.first->get_solution(elem, _vb_edge.second, values, p);
 
   double bedge = values[0];
 
@@ -106,7 +111,7 @@ inline double EnvelopFunctionApprox::get_electric_potential(const Elem* elem, co
   vector<double> values;
   vector<Point> qp(1, qpoint);
 
-  poisson_equation->get_solution(elem, potential_ID, values, qp);
+  _el_pot.first->get_solution(elem, _el_pot.second, values, qp);
 
   return values[0];
 }
@@ -117,7 +122,7 @@ inline double EnvelopFunctionApprox::get_el_electro_chem_potential(const Elem* e
   vector<double> values;
   vector<Point> qp(1, elem->centroid());
 
-  poisson_equation->get_solution(elem, el_electro_chem_pot_ID, values, qp);
+  _el_elchem.first->get_solution(elem, _el_elchem.second, values, qp);
 
   return values[0];
 }
@@ -128,7 +133,7 @@ inline double EnvelopFunctionApprox::get_hl_electro_chem_potential(const Elem* e
   vector<double> values;
   vector<Point> qp(1, elem->centroid());
 
-  poisson_equation->get_solution(elem, hl_electro_chem_pot_ID, values, qp);
+  _hl_elchem.first->get_solution(elem, _hl_elchem.second, values, qp);
 
   return values[0];
 }
@@ -457,12 +462,12 @@ double EnvelopFunctionApprox::get_band_edge(const std::string& particle)
 
   if (_job == BULKEIGENSTATES)
   {
-    if ((particle == "el") || (particle == "Ec"))
-      poisson_equation->get_solution(_bulk_mat_element,
-          cb_band_edge_ID, band_edge, _bulk_point);
-    else
-      poisson_equation->get_solution(_bulk_mat_element,
-          vb_band_edge_ID, band_edge, _bulk_point);
+    if ((particle == "el") && (_cb_edge.second != INVALID_ID))
+      _cb_edge.first->get_solution(_bulk_mat_element,
+          _cb_edge.second, band_edge, _bulk_point);
+    else if (_vb_edge.second != INVALID_ID)
+      _vb_edge.first->get_solution(_bulk_mat_element,
+          _vb_edge.second, band_edge, _bulk_point);
 
     // TODO when the bulk point is not on our processor???
   }
@@ -731,6 +736,7 @@ void EnvelopFunctionApprox::parse_options()
       throw InitFailedException( "Unknown poisson model " + poisson_model_name);
 
     potential_ID = poisson_equation->get_solution_id("ElPotential");
+    _el_pot = make_pair(poisson_equation, potential_ID);
 
 
     if (potential_ID ==  INVALID_ID)
@@ -738,12 +744,74 @@ void EnvelopFunctionApprox::parse_options()
 
 
     el_electro_chem_pot_ID = poisson_equation->get_solution_id("eQFermi");
+    _el_elchem = make_pair(poisson_equation, el_electro_chem_pot_ID);
+
     cb_band_edge_ID = poisson_equation->get_solution_id("Ec");
+    _cb_edge = make_pair(poisson_equation, cb_band_edge_ID);
+
+    hl_electro_chem_pot_ID = poisson_equation->get_solution_id("hQFermi");
+    _hl_elchem = make_pair(poisson_equation, hl_electro_chem_pot_ID);
 
     vb_band_edge_ID = poisson_equation->get_solution_id("Ev");
-    hl_electro_chem_pot_ID = poisson_equation->get_solution_id("hQFermi");
+    _vb_edge = make_pair(poisson_equation, vb_band_edge_ID);
 
 
+  }
+  else
+  {
+
+  _el_pot = find_solution_provider(
+      get_option("electrostatic_potential", ""), "ElPotential");
+
+  if (_el_pot.second != INVALID_ID)
+  {
+    opt.consider_potential = true;
+    opt.consider_potential_bulk = get_option("potential_in_bulk",true);
+    opt.consider_strain_bulk = get_option("strain_in_bulk",true);
+  }
+  else if (_el_pot.first != NULL)
+  {
+    throw InitFailedException( "Could not find electrostatic potential source "
+        + get_option("electrostatic_potential", ""));
+  }
+
+  _el_elchem = find_solution_provider(
+      get_option("el_electrochemical_potential", ""), "eQFermi");
+
+  if ((_el_elchem.second == INVALID_ID) && (_el_elchem.first != NULL))
+  {
+    throw InitFailedException( "Could not find electrochemical potential source "
+        + get_option("el_electrochemical_potential", ""));
+  }
+
+
+  _hl_elchem = find_solution_provider(
+      get_option("hl_electrochemical_potential", ""), "hQFermi");
+
+  if ((_hl_elchem.second == INVALID_ID) && (_hl_elchem.first != NULL))
+  {
+    throw InitFailedException( "Could not find electrochemical potential source "
+        + get_option("hl_electrochemical_potential", ""));
+  }
+
+
+  _cb_edge = find_solution_provider(
+      get_option("cb_edge", ""), "Ec");
+
+  if ((_cb_edge.second == INVALID_ID) && (_cb_edge.first != NULL))
+  {
+    throw InitFailedException( "Could not find conduction band edge source "
+        + get_option("cb_edge", ""));
+  }
+
+  _vb_edge = find_solution_provider(
+      get_option("vb_edge", ""), "Ev");
+
+  if ((_vb_edge.second == INVALID_ID) && (_vb_edge.first != NULL))
+  {
+    throw InitFailedException( "Could not find valence band edge source "
+        + get_option("vb_edge", ""));
+  }
   }
 
   //---------------------------------------------------------------------------------//
@@ -1509,6 +1577,8 @@ void EnvelopFunctionApprox::estimate_spectrum_shift(void)
    double Ec = get_band_edge("el");
    double Ev = get_band_edge("hl");
 
+   // TODO treat electron and hole only case
+
    ostringstream os;
    os <<"Maximum of Ev (eV) :" <<Ev<<std::endl;
    os <<"Minimum of Ec (eV) :" <<Ec<<std::endl;
@@ -1932,9 +2002,8 @@ bool EnvelopFunctionApprox::read_SLEPC_solution(void)
     for (unsigned int i = 0; i < n_states; i++)
     {
       // Fermi energy calculation
-      if (poisson_equation != NULL)
-        _solution[i].electro_chem_pot = calculate_fermi_averaged(i,
-            _solution[i].particle);
+      _solution[i].electro_chem_pot = calculate_fermi_averaged(i,
+          _solution[i].particle);
 
 
       //Temperature calculation
@@ -2188,9 +2257,9 @@ double  EnvelopFunctionApprox::eigenstate_norm(unsigned int state_number)
 double EnvelopFunctionApprox::calculate_fermi_averaged(unsigned int i, const string& particle)
 {
 
-  if (poisson_equation == NULL)
+  if (((particle == "el") && (_el_elchem.second == INVALID_ID)) ||
+      ((particle == "hl") && (_hl_elchem.second == INVALID_ID)))
     return 0.0;
-
 
   Complex  result(0.0, 0.0);
 
@@ -2974,11 +3043,12 @@ void EnvelopFunctionApprox::solve_bulk(void)
   double el_chem = 0;
   double hl_chem = 0;
   double temp = _temp_interface.get_temperature(_bulk_mat_element, _bulk_mat_element->centroid());
-  if (poisson_equation != NULL)
-  {
-    get_el_electro_chem_potential(_bulk_mat_element);
-    get_hl_electro_chem_potential(_bulk_mat_element);
-  }
+
+  if (_el_elchem.second != INVALID_ID)
+    el_chem = get_el_electro_chem_potential(_bulk_mat_element);
+
+  if (_hl_elchem.second != INVALID_ID)
+    hl_chem = get_hl_electro_chem_potential(_bulk_mat_element);
 
   for (unsigned int i = 0; i < n ; i++)
   {
