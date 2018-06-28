@@ -158,14 +158,14 @@ CarrierProperties::get_lattice_temperature(void) const
 bool
 CarrierProperties::has_quantum(void) const
 {
-  return _dos_model->has_quantum_density();
+  return(const_cast<const DensityOfStates*>(_dos_model)->is_quantum_density());
 }
 
 
 void
 CarrierProperties::use_quantum(bool use_quantum)
 {
-  _dos_model->use_quantum_density(use_quantum);
+  //_dos_model->use_quantum_density(use_quantum);
 }
 
 

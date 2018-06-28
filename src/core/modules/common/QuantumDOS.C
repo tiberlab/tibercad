@@ -175,7 +175,6 @@ QuantumDOS::calculate_density_and_derivative(double Ef, double Epot,
 
   if (!_quantum_density.empty() && has_quantum_density())
   {
-
     double qdens = 0.0;
 
     for (size_t i = 0; i < _quantum_density.size(); i++)

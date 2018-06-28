@@ -294,7 +294,7 @@ inline
 bool
 DensityOfStates::is_quantum_density(void) const
 {
-  return (_use_quantum & _is_quantum);
+  return(_is_quantum);
 }
 
 inline

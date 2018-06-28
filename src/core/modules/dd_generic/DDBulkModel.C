@@ -540,7 +540,9 @@ DDBulkModel::calculate_equilibrium_properties(void)
      cp.second->use_quantum(quantum);
 
      set_bulk_equilibrium_density(cp.first, get_q_density(cp.first));
+
   }
+
 }
 
 
