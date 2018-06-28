@@ -94,7 +94,7 @@ Module sweep
   start = 0.0
   stop = 3.5
   steps = 70  
-  plot_data = true
+  # plot_data = true
 
 }
 
