@@ -36,3 +36,6 @@ find tibercad -path "tibercad/utils/Tensor/*" -prune -o -name "*.h" -execdir sh 
 find . -type d -name .svn -exec rm -rf {} \;
 find . -name .cvsignore -exec rm {} \;
 
+
+cd ..
+patchelf --set-rpath '$ORIGIN:$ORIGIN/../lib:$ORIGIN/../../../x86_64-linux/lib' x86_64-linux/bin/build_module
