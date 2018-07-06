@@ -1,4 +1,5 @@
 #include "BondMap.h"
+#include "GridCells.h"
 #include "Messages.h"
 #include "Database.h"
 #include "Messages.h"

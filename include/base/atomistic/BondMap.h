@@ -5,11 +5,8 @@
 
 //-------------------------------------------
 
-#include "BondMap.h"
 #include "Atom.h"
 #include "Specie.h"
-#include "GridCells.h"
-#include "tiber_dll.h"
 
 #include <vector>
 #include <map>
@@ -64,16 +61,16 @@ private:
   void process_atoms(const std::vector<Atom>& basis, 
                      const unsigned int i,
                      const unsigned int j, 
-                     const Tensor1& period) TBDLLOCAL;
+                     const Tensor1& period);
 
   //! Build cutoff distancies map
-  void set_cutoff() TBDLLOCAL;
+  void set_cutoff();
 
   //! Map for cutoff parameters
   std::map<Specie, double> _cutoff;
 
   //! Clean informations no more useful after bond map calculation
-  void clean() TBDLLOCAL;
+  void clean();
 
 
   //! Translation vector for periodic images

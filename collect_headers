@@ -14,6 +14,9 @@ cd SDK/include
 
 cp -L -r ${builddir}/${libmesh}/include/libmesh .
 mkdir -p libmesh/${ARCH}
+cd libmesh/$ARCH
+ln -s . libmesh
+cd ../..
 mv libmesh/libmesh_config.h libmesh/${ARCH}
 #mv libmesh/base/libmesh_contrib_config.h libmesh/${ARCH}
 rm libmesh/*.h.in libmesh/Makefile*

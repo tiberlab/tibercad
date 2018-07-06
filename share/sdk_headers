@@ -9,6 +9,7 @@ utils/Tensor/
 pmi/
 base/atomistic/Atom.h
 base/atomistic/Specie.h
+base/atomistic/AtomisticStructure.h
 base/common/
 base/database/
 base/io/DataOutput.h
