@@ -1,23 +1,25 @@
 Compiler
 {
 
+  path = @ROOT/SDK/@ARCH/bin:@ROOT/SDK/bin
+
   linker_flags = "-pthread -shared -Wl,-rpath,'$ORIGIN' -Wl,-rpath,'$ORIGIN/../lib'"
 
   C++
   {
-    executable = @CXX@
+    executable = mpicxx
     compiler_flags = "-g -O3 -std=gnu++0x -pthread -fPIC -c"
     # -fvisibility=hidden
   }
 
   C
   {
-    executable = SDK/compiler/@ARCH/bin/gcc
+    executable = mpicc
   }
 
   Fortran
   {
-    executable = SDK/compiler/@ARCH/bin/gfortran
+    executable = mpif90
   }
 }
 
@@ -54,36 +56,32 @@ Library tibercad
 
 Library boost
 {
-  includes = @LIBMESH_PETSC_LIBDIR@/../../include
+  includes = SDK/include
 }
 
 
 Library libmesh
 {
-  path = @LIBMESH_PREFIX@
-  includes = (include/base, include/error_estimation,
-              include/geom, include/numerics, include/partitioning,
-              include/solvers, include/utils, include/enums,
-              include/fe, include/mesh, include/parallel,
-              include/quadrature, include/systems)
-  libpath = @LIBMESH_PETSC_LIBDIR@
+  path = @ROOT/SDK
+  includes = (include, include/libmesh, include/libmesh/@ARCH)
+  libpath = @ROOT/SDK/@ARCH/lib
   linker_flags = -lmesh
 }
 
 
 Library petsc
 { 
-  path = @LIBMESH_PREFIX@/../petsc-3.0.0-p12
-  includes = (include, include/mpiuni, @ARCH/include)
-  libpath = @LIBMESH_PETSC_LIBDIR@
+  path = @ROOT/SDK
+  includes = (include/petsc-3.6.2, include/petsc-3.6.2/@ARCH)
+  libpath = @ROOT/SDK/@ARCH/lib
   linker_flags = -lpetsc_real
 }
 
 Library slepc
 {
-  path = @LIBMESH_PREFIX@/../slepc-3.0.0-p7
-  includes = (include, @ARCH/include)
-  libpath = @LIBMESH_PETSC_LIBDIR@
+  path = @ROOT/SDK
+  includes = (include/slepc-3.6.2, include/slepc-3.6.2/@ARCH)
+  libpath = @ROOT/SDK/@ARCH/lib
   linker_flags = -lslepc_real
 }
 
