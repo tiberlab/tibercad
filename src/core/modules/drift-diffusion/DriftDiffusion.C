@@ -4322,7 +4322,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
   //
   const vector<vector<libMesh::RealGradient> >&  dphi_face = fe_face->get_dphi();
   //
-  // physical coordinates of the quadrature points
+  // physical coordinates of the quadrature pointis
   const vector<libMesh::Point>& q_point_face = fe_face->get_xyz();
   //
   const vector<libMesh::Point>& face_normals = fe_face->get_normals();
@@ -4549,21 +4549,39 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
       double muh = sc->get_hole_mobility();
 
 
+      double kT_ev = sc->get_lattice_temperature();
+      //double kTe = sc->get_lattice_temperature();
+      //double kTh = sc->get_lattice_temperature();\
+
+      //cout << "temperature" << kT_ev << endl;
+
+      // to get the diffusion coefficients D = mu * kB * T
+      mue *= kT_ev / mu0;
+      muh *= kT_ev / mu0;
+
+      // sigma_e = De * dn
+      double dn_dphi = sc->get_electron_density_derivative();
+      double sigma_e = mue * dn_dphi / C0_e;
+      // sigma_h = - Dh * dp
+      double dp_dphi = sc->get_hole_density_derivative();
+      double sigma_h = - muh * dp_dphi / C0_h;
+
+      //cout << "sigma_e: " << sigma_e << endl;
+      //cout << "sigma_h: " << sigma_h << endl;
+
       // the jacobian x weight x scaling
       double J = JxW[qp];
 
 
-      // NOTE: sigma_e = mu_e * n is the electron conductivity
-      double sigma_e = sc->get_electron_conductivity() / (mu0 * C0_e);
-      double sigma_h = sc->get_hole_conductivity() / (mu0 * C0_h);
+      // NOTE: sigma_e = mu_e * n is the electron conductivity (OLD VERSION)
+      //double sigma_e = sc->get_electron_conductivity() / (mu0 * C0_e);
+      //double sigma_h = sc->get_hole_conductivity() / (mu0 * C0_h);
       double sigma_e_x_Pe_x_J = J * sigma_e * eTEpower;
       double sigma_h_x_Ph_x_J = J * sigma_h * hTEpower;
 
-      //cout<<"C0 dens = "<<n<<" R = "<<Rn<<" mu = "<<mue<<" sigma = "<<sigma_e<<endl;
-      //cout<<"C1 dens = "<<p<<" R = "<<Rp<<" mu = "<<muh<<" sigma = "<<sigma_h<<endl;
 
       // TEST
-      double dn_dphi = sc->get_electron_density_derivative();
+      //double dn_dphi = sc->get_electron_density_derivative();
       RealGradient chempot(grad_en);
       double art_diff = 0.5 * elem->hmax() * mue * phi0 * dn_dphi * chempot.norm() / (mu0 * C0_e);
       //cerr << sigma_e << " " << art_diff << endl;
@@ -4611,10 +4629,6 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 
         }
 
-        //cout<<"scale0("<<i<<") = "<<scalen(i)<<endl;
-        //cout<<"scale1("<<i<<") = "<<scalep(i)<<endl;
-        //cout<<"scale2("<<i<<") = "<<scaleu(i)<<endl;
-
         if (!(coupling & POISSON))
           Kuu(i,i) += 1;
 
@@ -4631,8 +4645,10 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
       //
       if (jacobian != NULL)
       {
-        double dn_dphi = sc->get_electron_density_derivative();
-        double dp_dphi = sc->get_hole_density_derivative();
+        //double dn_dphi = sc->get_electron_density_derivative();
+        //double dp_dphi = sc->get_hole_density_derivative();
+        double d2n_dphi = sc->get_electron_density_second_derivative();
+        double d2p_dphi = sc->get_hole_density_second_derivative();
         //double dNd_dphi = sc->get_ionized_donor_density_derivative();
         //double dNa_dphi = sc->get_ionized_acceptor_density_derivative();
 
@@ -4685,10 +4701,20 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 
         // d(sigma_n)/du * element-jacobian
         // sigma_n = mu_n * n means the conductivity of electrons
-        // the factor phi_0 comes from the derivative with respect to the potential
-        double dsigma_e = J * phi0 / (mu0 * C0_e) * mue * dn_dphi;
-        double dsigma_h = J * phi0 / (mu0 * C0_h) * muh * dp_dphi;
+        // the factor phi_0 comes from the derivative with respect to the potential (OLD VERSION)
+        //double dsigma_e = J * phi0 / (mu0 * C0_e) * mue * dn_dphi;
+        //double dsigma_h = J * phi0 / (mu0 * C0_h) * muh * dp_dphi;
 
+
+        // dsigma_e = De * d2n
+        double dsigma_e = J / (C0_e) * phi0 * mue * d2n_dphi;
+        // dsigma_h = - Dh * d2p
+        double dsigma_h = J / (C0_h) * phi0 * muh * d2p_dphi;
+
+        //cout << "d2n_dphi: " << d2n_dphi << endl;
+        //cout << "d2p_dphi: " << d2p_dphi << endl;
+        //cout << "dsigma_e: " << dsigma_e << endl;
+        //cout << "dsigma_h: " << dsigma_h << endl;
         // field dependent mobility
         // the factor phi_0 / x0 comes from the derivative with respect to the
         // gradient of the potential
@@ -4748,18 +4774,20 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
               if (coupling & ECURRENT)
               {
                 if (coupling & POISSON)
-                  Knu(i,j) += dsigma_e_x_phi + (dmu_e_u_x_phi + dmu_e_grad_u_x_dphi) * lap_e;
+                  Knu(i,j) += dsigma_e_x_phi;
+                  //Knu(i,j) += dsigma_e_x_phi + (dmu_e_u_x_phi + dmu_e_grad_u_x_dphi) * lap_e;
 
-                Knn(i,j) += (dmu_e_grad_v_x_dphi - dmu_e_u_x_phi) * lap_e - dsigma_e_x_phi;
+                Knn(i,j) += - dsigma_e_x_phi;
+                //Knn(i,j) += (dmu_e_grad_v_x_dphi - dmu_e_u_x_phi) * lap_e - dsigma_e_x_phi;
                 //Knn(i,j) += fabs(art_diff) * dphi[i][qp] * dphi[j][qp] / scalen(i);
               }
 
               if (coupling & HCURRENT)
               {
                 if (coupling & POISSON)
-                  Kpu(i,j) += dsigma_h_x_phi + (dmu_h_u_x_phi + dmu_h_grad_u_x_dphi) * lap_h;
+                  Kpu(i,j) += dsigma_h_x_phi;
 
-                Kpp(i,j) += (dmu_h_grad_w_x_dphi - dmu_h_u_x_phi) * lap_h - dsigma_h_x_phi;
+                Kpp(i,j) += - dsigma_h_x_phi;
               }
 
             }

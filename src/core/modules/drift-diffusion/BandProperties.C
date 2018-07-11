@@ -260,7 +260,7 @@ BandProperties::get_density_and_derivative(std::vector<double>& den_and_der, dou
     if (den_and_der.size() > 1)
       den_and_der[1] *= - sign * fac;
     if (den_and_der.size() > 2)
-      den_and_der[2] *= sign * fac;
+      den_and_der[2] *= -sign * fac;
 
     _dos_model->use_quantum_density(true);
   }
@@ -273,7 +273,7 @@ BandProperties::get_density_and_derivative(std::vector<double>& den_and_der, dou
     if (den_and_der.size() > 1)
       den_and_der[1] *= - sign;
     if (den_and_der.size() > 2)
-      den_and_der[2] *= sign;
+      den_and_der[2] *= -sign;
   }
 
 

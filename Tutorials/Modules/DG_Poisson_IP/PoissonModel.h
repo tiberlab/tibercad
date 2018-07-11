@@ -31,11 +31,11 @@ class PoissonModel : public PhysicalModel
 
 
     //! Get the relative permittivity
-    const RealTensor& get_permittivity(void) const;
+    const libMesh::RealTensor& get_permittivity(void) const;
 
 
     //! Get the total polarization
-    const RealVectorValue& get_polarization(void) const;
+    const libMesh::RealVectorValue& get_polarization(void) const;
 
 
     //! Get the total charge
@@ -43,11 +43,11 @@ class PoissonModel : public PhysicalModel
 
 
     //! Set the relative permittivity
-    RealTensor& get_permittivity(void);
+    libMesh::RealTensor& get_permittivity(void);
 
 
     //! Set the total polarization
-    RealVectorValue& get_polarization(void);
+    libMesh::RealVectorValue& get_polarization(void);
 
 
     //! Set the total charge
@@ -95,10 +95,10 @@ class PoissonModel : public PhysicalModel
     Point _point;
 
     //! The relative permittivity
-    RealTensor _permittivity;
+    libMesh::RealTensor _permittivity;
 
     //! The polarization
-    RealVectorValue _polarization;
+    libMesh::RealVectorValue _polarization;
 
     //! The charge density
     double _charge;

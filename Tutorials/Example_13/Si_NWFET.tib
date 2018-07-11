@@ -38,9 +38,11 @@ Device
 
 
 # Definition of  Simulation Models  and associated Boundary Conditions 
-Module driftdiffusion
+Module driftdiffusion_dg
 { 
               
+  name = driftdiffusion
+
   # we solve only for electrons
   coupling = electrons
 

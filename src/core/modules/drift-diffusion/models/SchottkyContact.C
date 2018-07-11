@@ -24,6 +24,7 @@ SchottkyContact::SchottkyContact(const ModelOptions& options)
 void
 SchottkyContact::do_init(void)
 {
+  cerr << "SchottkyContact::do_init" << endl;
 
   ElectricalContact::do_init();
 
@@ -92,6 +93,7 @@ SchottkyContact::do_init(void)
 
   //_tunneling = get_option("tunneling", true);
 
+  cerr << "SchottkyContact::do_init done" << endl;
 }
 
 

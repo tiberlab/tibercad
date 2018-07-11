@@ -508,19 +508,20 @@ DriftDiffusionProperties::calculate_densities(void)
   cb.set_temperature(kTe);
   vb.set_temperature(kTh);
 
-  std::vector<double> den_and_der(3,0);
+  std::vector<double> den_and_der_el(3,0);
+  std::vector<double> den_and_der_hl(3,0);
 
 
-  cb.get_density_and_derivative(den_and_der, get_pd().fermi_e, get_pd().electric_potential);
-  get_pd().electron_density = den_and_der[0];
-  get_pd().electron_density_derivative = den_and_der[1];
-  get_pd().electron_density_derivative2 = den_and_der[2];
+  cb.get_density_and_derivative(den_and_der_el, get_pd().fermi_e, get_pd().electric_potential);
+  get_pd().electron_density = den_and_der_el[0];
+  get_pd().electron_density_derivative = den_and_der_el[1];
+  get_pd().electron_density_derivative2 = den_and_der_el[2];
 
 
-  vb.get_density_and_derivative(den_and_der, get_pd().fermi_h, get_pd().electric_potential);
-  get_pd().hole_density = den_and_der[0];
-  get_pd().hole_density_derivative = den_and_der[1];
-  get_pd().hole_density_derivative2 = den_and_der[2];
+  vb.get_density_and_derivative(den_and_der_hl, get_pd().fermi_h, get_pd().electric_potential);
+  get_pd().hole_density = den_and_der_hl[0];
+  get_pd().hole_density_derivative = den_and_der_hl[1];
+  get_pd().hole_density_derivative2 = den_and_der_hl[2];
 
   get_pd().gamma_n = cb.get_gamma();
   get_pd().gamma_p = vb.get_gamma();

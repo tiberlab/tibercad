@@ -434,6 +434,8 @@ class DriftDiffusionProperties : public PhysicalModel
     double get_electron_density_derivative(void) const
       { return get_pd().electron_density_derivative; };
 
+    double get_electron_density_second_derivative(void) const
+      { return get_pd().electron_density_derivative2; };
 
     //! Get the electron gamma \f$\gamma_n\f$
     /*!
@@ -453,7 +455,7 @@ class DriftDiffusionProperties : public PhysicalModel
       { return get_pd().hole_density; };
 
 
-    //! Get the ehole density derivative
+    //! Get the hole density derivative
     /*!
      * \return the hole density derivative with respect to the
      * electric potential
@@ -461,6 +463,8 @@ class DriftDiffusionProperties : public PhysicalModel
     double get_hole_density_derivative(void) const
       { return get_pd().hole_density_derivative; };
 
+    double get_hole_density_second_derivative(void) const
+      { return get_pd().hole_density_derivative2; };
 
     //! Get the hole gamma \f$\gamma_p\f$
     /*!

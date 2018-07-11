@@ -41,6 +41,8 @@ Module driftdiffusion
   # we can solve only for electrons
   #coupling = electrons
 
+  name = driftdiffusion
+
   plot = (Ec, Ev, eQFermi, eDensity, eCurrentDensity, eMobility,
           hQFermi, hDensity, hCurrentDensity, hMobility,
           NetRecombination, ElField, ElPotential, ContactCurrents)
@@ -62,7 +64,7 @@ Module driftdiffusion
 
     recombination srh {}
 
-    mobility field_dependent
+    tmobility field_dependent
     {
       low_field_model = doping_dependent
     }

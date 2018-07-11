@@ -211,6 +211,7 @@ BulkDOS::calculate_density_and_derivative(std::vector<double>& den_and_der, doub
 void
 BulkDOS::calculate_density_and_derivative(std::vector<double>& den_and_der, double Ef, double Epot, double kT, double kTlattice) const
 {
+
   double density = 0.0;
   double derivative = 0.0;
   double derivative2 = 0.0;
@@ -218,6 +219,8 @@ BulkDOS::calculate_density_and_derivative(std::vector<double>& den_and_der, doub
   const double arg_max = 150;
   const double arg_min = -50;
   const double min_dens = 1e-64;
+
+  const double eps = 1e-7;
 
   _th_el_power = 0;
 
@@ -255,7 +258,10 @@ BulkDOS::calculate_density_and_derivative(std::vector<double>& den_and_der, doub
       if (den_and_der.size() > 1)
         der = TiberMath::fermidirac_mhalf(arg);
       if (den_and_der.size() > 2)
-        der2 = TiberMath::d2_fermidirac(arg);
+      {
+        der2 = (TiberMath::fermidirac_mhalf(arg + eps)-TiberMath::fermidirac_mhalf(arg - eps))/(2*eps);
+        //der2 = TiberMath::d2_fermidirac(arg);
+      }
     }
     else
     {
@@ -281,9 +287,9 @@ BulkDOS::calculate_density_and_derivative(std::vector<double>& den_and_der, doub
     }
 
 
-    density += dens;
-    derivative += der;
-    derivative2 += der2;
+      density += dens;
+      derivative += der;
+      derivative2 += der2;
 
 
     // calculate thermoelectric power

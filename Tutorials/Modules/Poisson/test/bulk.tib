@@ -2,12 +2,12 @@
 # Description of  the  device physical regions
 Device
 {
-   meshfile = bulk.msh
+   meshfile = bulk2D.msh
 
    Region bulk 
    {
      material = Si
-     Doping {
+     tDoping {
        density = 1e16
        type = donor
      }
@@ -16,7 +16,7 @@ Device
 }
 
 
-Module poisson_example
+Module poisson
 { 
 
   name = poisson
@@ -29,7 +29,7 @@ Module poisson_example
   
     charge_density constant
     {
-      charge_density = 0e19
+      charge_density = 0e16
     }
 
   }
@@ -61,7 +61,7 @@ Simulation
   solve = poisson
   
   resultpath = output
-  output_format = dat
+  output_format = vtk
 }
 
 

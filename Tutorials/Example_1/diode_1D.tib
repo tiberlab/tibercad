@@ -33,11 +33,25 @@ Device
 Module driftdiffusion
 { 
   name = dd
+  # coupling = holes
+  # local_scaling = false
+  # local_preconditioner = true
+  # use_weight = true
 
   plot = (Ec, Ev, Eg, ElField, ElPotential, eQFermi, hQFermi, eDensity, hDensity,
           NetRecombination, eCurrentDensity, hCurrentDensity, CurrentDensity,
-          ContactCurrent, eMobility, hMobility, IonizedDonors, IonizedAcceptors)
+          ContactCurrent, eMobility, hMobility, IonizedDonors, IonizedAcceptors, gradient_p, gradient_n)  
 
+
+  tSolver
+  {
+    #type = linesearch
+
+    relative_tolerance = 1e-15
+    step_tolerance = 1e-4
+    
+    max_iterations = 150
+  }
 
   Physics
   {
@@ -45,13 +59,38 @@ Module driftdiffusion
     # use a field dependent mobility model with the
     # gradient of the electrochem. potential as field
     # parameter
-    mobility field_dependent
+    tmobility field_dependent
     {
       low_field_model = doping_dependent 
     }
 
-    # use SRH and Auger recombination
-    recombination (srh, auger) {}
+    tparticle_density
+    {
+      statistics = fermidirac
+    }
+
+    tband_properties
+    {
+      density_of_states constant
+      {
+      }
+    }
+    
+    electron_mobility constant
+    {
+      mu_e = 1417
+    } 
+
+    hole_mobility constant
+    {
+      mu_h = 470
+    } 
+
+    # use SRH recombination
+    recombination (srh, direct, auger) 
+    {
+
+    } 
   
   }
 
@@ -59,39 +98,69 @@ Module driftdiffusion
   {
     type = ohmic
     voltage = $Vb[0.0]
+
+    #rec_velocity_n = 0
   }
 
   Contact cathode
   {
     type = ohmic
     voltage = 0.0
+
+    #rec_velocity_p = 0 
   }
 
   
 }
 
-
 Module sweep
 {
+  name = sweep_for
   variable = $Vb
   solve = dd
 
   start = 0.0
-  stop = 1.2  
+  stop = 1.2
   steps = 60
 
   plot_data = true  # to write data for each step
 }
 
 
+Module sweep
+{
+  name = sweep
+  variable = $Vb
+  solve = dd
+
+  start = -2.0
+  stop = 4.0
+  steps = 40
+
+  plot_data = true  # to write data for each step
+}
+
+Module sweep
+{
+  name = sweep_inv
+  variable = $Vb
+  solve = dd
+
+  start = 0.0
+  stop = -2.0 
+  steps = 20
+
+  plot_data = true  # to write data for each step
+}
+
 
 Simulation
 {
   verbose = 2
 
-  solve = sweep
+  solve =  sweep_for #(sweep_inv,sweep)
 
-  resultpath = diode1D_results
+  resultpath = output
   output_format = grace
 
 }

@@ -451,11 +451,6 @@ DDBulkModel::do_reinit(const Elem* elem)
 
 
 
-
-
-
-
-
 void
 DDBulkModel::calculate_mobilities(void)
 {
@@ -471,6 +466,7 @@ DDBulkModel::calculate_mobilities(void)
     pd.electron_mobility_derivative_potential = _electron_mobility->get_derivative_potential();
     _electron_mobility->get_derivative_grad_potential(pd.electron_mobility_derivative_grad_potential);
     _electron_mobility->get_derivative_grad_fermi(pd.electron_mobility_derivatives);
+
     pd.hole_mobility = _hole_mobility->get_mobility();
     pd.hole_mobility_derivative_potential = _hole_mobility->get_derivative_potential();
     _hole_mobility->get_derivative_grad_potential(pd.hole_mobility_derivative_grad_potential);
@@ -482,6 +478,37 @@ DDBulkModel::calculate_mobilities(void)
   pd.hole_conductivity =
     pd.hole_mobility * pd.hole_density + _background_conductivity_h;
 }
+
+
+
+
+/*void
+DDBulkModel::calculate_mobilities(void)
+{
+  PointData& pd = get_pd();
+  if (is_dielectric())
+  {
+    pd.electron_mobility = 0.0;
+    pd.hole_mobility = 0.0;
+  }
+  else
+  {
+    pd.electron_mobility = _electron_mobility->get_mobility();
+    pd.electron_mobility_derivative_potential = _electron_mobility->get_derivative_potential();
+    _electron_mobility->get_derivative_grad_potential(pd.electron_mobility_derivative_grad_potential);
+    _electron_mobility->get_derivative_grad_fermi(pd.electron_mobility_derivatives);
+
+    pd.hole_mobility = _hole_mobility->get_mobility();
+    pd.hole_mobility_derivative_potential = _hole_mobility->get_derivative_potential();
+    _hole_mobility->get_derivative_grad_potential(pd.hole_mobility_derivative_grad_potential);
+    _hole_mobility->get_derivative_grad_fermi(pd.hole_mobility_derivatives);
+  }
+
+  pd.electron_conductivity =
+    pd.electron_mobility * pd.electron_density + _background_conductivity_e;
+  pd.hole_conductivity =
+    pd.hole_mobility * pd.hole_density + _background_conductivity_h;
+}*/
 
 
 

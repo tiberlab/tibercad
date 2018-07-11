@@ -28,6 +28,7 @@
 
 
 using namespace std;
+using namespace libMesh;
 
 
 Poisson*
@@ -164,9 +165,9 @@ Poisson::get_solution_secure(const Elem* elem, std::map<ID, std::vector<double> 
   const unsigned int u_var = system.variable_number("u");
 
   libMesh::FEType fe_type = system.variable_type(u_var);
-  libMesh::AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
-  libMesh::AutoPtr<FEBase> fe_face(build_finite_element(dim, fe_type));
-  libMesh::AutoPtr<FEBase> fe_face_neig(build_finite_element(dim, fe_type));
+  libMesh::UniquePtr<FEBase> fe(build_finite_element(dim, fe_type));
+  libMesh::UniquePtr<FEBase> fe_face(build_finite_element(dim, fe_type));
+  libMesh::UniquePtr<FEBase> fe_face_neig(build_finite_element(dim, fe_type));
 
   libMesh::QGauss qface(dim - 1, CONSTANT);
   fe_face->attach_quadrature_rule(&qface);
@@ -264,7 +265,7 @@ Poisson::get_solution_secure(const Elem* elem, std::map<ID, std::vector<double> 
 
         std::vector<Point> qface_point_neig;
 
-        AutoPtr<Elem> elem_side(elem->build_side(s));
+        UniquePtr<Elem> elem_side(elem->build_side(s));
         const double h_elem = (elem->volume() / elem_side->volume()) * mesh_units;
 
         unsigned int penalty = 4;
@@ -342,6 +343,26 @@ Poisson::do_assemble(libMesh::EquationSystems&, const std::string&)
 
   const MeshBase& mesh = get_mesh();
   ID dim = get_mesh().mesh_dimension();
+  // NB: Tibercad by default uses length-scale in meters
+  //     This means that FEM derivatives d/dx are in 1/m
+  //     To change this behavior it is necessary to define a different 'scaling'
+  //     For instance if we want to use mesh_units in the assembly we need to:
+  //     1. set the scaling to mesh units:
+  //        get_scaling().set_length_scaling(get_mesh_units());
+  //     2. use  build_finite_element(dim, fe_type, true)
+  //                                                ^ false is the default
+  //
+  // Now 2nd derivatives will be 1/mesh_units^2
+  // We need a factor to transform rho/eps0 into V/mesh_units^2
+  // Charge density is cm^-3, and Constants::e is in Coulomb,
+  // Constant::e0 is in C/Vm
+  // The factor Lambda is such that rho*Lambda is in V/mesh_units^2
+  // BUT (BUT)
+  // This is not that clever! Since Displacement and Polarization are already in C/m^2
+  // it is easier to work with the derivatives in 1/m and rho/eps0 in V/m^2
+  // The factor 1e6 is for cm^3 -> m^3 in rho
+  get_scaling().set_length_scaling(1.0);
+  double Lambda = Constants::e * 1e6;
 
   double mesh_units = get_mesh_units();
 
@@ -351,9 +372,9 @@ Poisson::do_assemble(libMesh::EquationSystems&, const std::string&)
   const unsigned int u_var = system.variable_number("u"); // he variable number associated with the user-specified variable named var.
   libMesh::FEType fe_type = dof_map.variable_type(u_var); //The finite element type for variable var.
 
-  libMesh::AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
-  libMesh::AutoPtr<FEBase> fe_face(build_finite_element(dim, fe_type));
-  libMesh::AutoPtr<FEBase> fe_face_neig(build_finite_element(dim, fe_type));
+  libMesh::UniquePtr<FEBase> fe(build_finite_element(dim, fe_type,true));
+  libMesh::UniquePtr<FEBase> fe_face(build_finite_element(dim, fe_type,true));
+  libMesh::UniquePtr<FEBase> fe_face_neig(build_finite_element(dim, fe_type,true));
 
   //volume finite element
   libMesh::QGauss qrule(dim, FIRST);
@@ -414,16 +435,16 @@ Poisson::do_assemble(libMesh::EquationSystems&, const std::string&)
 
       mod.calculate(elem, q_point[qp]);
 
-      const RealTensor& eps_elem = mod.get_permittivity();
+      const RealTensor& eps_elem = mod.get_permittivity()*Constants::e0;
       const RealVectorValue& pol = mod.get_polarization();
-      double rho = Constants::e * mod.get_charge_density();
+      double rho = Lambda * mod.get_charge_density();
 
       for (unsigned int i = 0; i < n_dofs; i++)
       {
         for (unsigned int j = 0; j < n_dofs; j++)
           Ke(i,j) += JxW[qp] * (eps_elem * dphi[i][qp] * dphi[j][qp]);
 
-        Fe(i) += JxW[qp] * (rho * phi[i][qp] + pol * dphi[i][qp]) / Constants::e0;
+        Fe(i) += JxW[qp] * (rho * phi[i][qp] + pol * dphi[i][qp]);
       }
     }
 
@@ -466,7 +487,7 @@ Poisson::do_assemble(libMesh::EquationSystems&, const std::string&)
       {
         PoissonModel& mod_neig = *get_bulk_model<PoissonModel>(elem_neig);
 
-        AutoPtr<Elem> elem_side(elem->build_side(s));
+        UniquePtr<Elem> elem_side(elem->build_side(s));
         const double h_elem = (elem->volume()/elem_side->volume()) * mesh_units;
 
         vector<Point> qface_point_neig;
@@ -484,10 +505,10 @@ Poisson::do_assemble(libMesh::EquationSystems&, const std::string&)
         for (unsigned int qp = 0; qp < qface.n_points(); qp++)
         {
           mod.calculate(elem, qface_point[qp]);
-          const libMesh::RealTensor& eps_elem = mod.get_permittivity();
+          const libMesh::RealTensor& eps_elem = mod.get_permittivity()*Constants::e0;
 
           mod_neig.calculate(elem_neig, qface_point[qp]);
-          const libMesh::RealTensor& eps_neig = mod_neig.get_permittivity();
+          const libMesh::RealTensor& eps_neig = mod_neig.get_permittivity()*Constants::e0;
 
           const libMesh::RealTensor& eps_average = (eps_elem + eps_neig) / 2.0;
 

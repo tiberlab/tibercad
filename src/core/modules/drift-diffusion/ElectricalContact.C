@@ -85,7 +85,7 @@ void
 ElectricalContact::do_compute(void)
 {
 
-  std::vector<double> den_and_der;
+  std::vector<double> den_and_der(3,0);
 
   if (get_type(0) != NEUMANN)
     coeff_g(0) = _contact_fermilevel + get_inner_voltage();
