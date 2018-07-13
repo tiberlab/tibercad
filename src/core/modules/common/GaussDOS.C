@@ -36,7 +36,19 @@ GaussDOS::read_database(void)
     reference_energy()[0] = db.get("E_v", 0.0);
 
     db.set_section("bandgap");
-    double bandgap = db.get("Eg_G", 1e3);
+
+    vector<double> bg(3,0);
+    bg[0] = db.get("Eg_G", 1e3);
+    bg[1] = db.get("Eg_X", 1e3);
+    bg[2] = db.get("Eg_L", 1e3);
+
+    double bandgap = *min_element(begin(bg), end(bg));
+
+    /*cout << "The bandgap G is equal to:   " << bg[0] << endl;
+    cout << "The bandgap X is equal to:   " << bg[1] << endl;
+    cout << "The bandgap L is equal to:   " << bg[2] << endl;
+
+    cout << "The min bandgap is equal to:   " << bandgap << endl;*/
 
     reference_energy()[0] += bandgap;
 
@@ -237,7 +249,9 @@ GaussDOS::calculate_density_and_derivative(std::vector<double>& den_and_der, dou
     if (den_and_der.size() > 1)
       der = dens * (1.0 - (ks * espf / (espf + 1.0) ) ) / kT;
     if (den_and_der.size() > 2)
-      der2 = 0; //TODO
+      der2 = der * (1.0 - (ks * espf / (espf + 1.0) ) ) / kT + dens * (ks/kT/kT) * espf / (espf+1.0) /  (espf+1.0);
+      //der2 = der * (1.0 - (ks * espf / (espf + 1.0) ) ) / kT - dens * (ks/kT) * (ks/kT) * espf * espf / (espf+1.0) /  (espf+1.0);
+
 
     //cout<<"s="<<s<<"<z="<<z<<" dens="<<dens<<" der="<<der<<endl;	
   }
@@ -247,17 +261,15 @@ GaussDOS::calculate_density_and_derivative(std::vector<double>& den_and_der, dou
     if (den_and_der.size() > 1)
       der = _N0 * hs * exp(-0.5 * hs * hs * z * z / (s*s)) / (s * sqrt(2.0*M_PI) * kT);
     if (den_and_der.size() > 2)
-      der2 = 0; //TODO
+      der2 = der * (- hs * hs * z / (s*s))/kT;
 
-    //cout<<"s="<<s<<" >z="<<z<<" dens="<<dens<<" der="<<der<<endl;
   }
 
-
-  den_and_der = {dens};
+  den_and_der[0] = dens;
   if (den_and_der.size() > 1)
-    den_and_der = {dens, der};
+    den_and_der[1] = der;
   if (den_and_der.size() > 2)
-    den_and_der = {dens, der, der2};
+    den_and_der[2] = der2;
 
 }
 
