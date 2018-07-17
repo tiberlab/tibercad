@@ -44,9 +44,9 @@ GaussDOS::read_database(void)
 
     double bandgap = *min_element(begin(bg), end(bg));
 
-    /*cout << "The bandgap G is equal to:   " << bg[0] << endl;
-    cout << "The bandgap X is equal to:   " << bg[1] << endl;
-    cout << "The bandgap L is equal to:   " << bg[2] << endl;
+    /*cout << "The bandgap in G is equal to:   " << bg[0] << endl;
+    cout << "The bandgap in X is equal to:   " << bg[1] << endl;
+    cout << "The bandgap in L is equal to:   " << bg[2] << endl;
 
     cout << "The min bandgap is equal to:   " << bandgap << endl;*/
 

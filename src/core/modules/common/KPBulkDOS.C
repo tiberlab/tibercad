@@ -328,11 +328,11 @@ KPBulkDOS::calculate_density_and_derivative(std::vector<double>& den_and_der, do
 
   _th_el_power /= density;
 
-  den_and_der= {density};
+  den_and_der[0] = density;
   if (den_and_der.size() > 1)
-    den_and_der= {density, derivative,derivative2};
+    den_and_der[1] = derivative;
   if (den_and_der.size() > 2)
-    den_and_der= {density, derivative, derivative2};
+    den_and_der[2] = derivative2;
 }
 
 void

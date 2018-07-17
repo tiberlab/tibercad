@@ -2036,6 +2036,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
   // the scaling parameters to scale back the result
   double phi0 = get_scaling().get_potential_scaling();
   double vol0 = get_scaling().get_calc_mesh_units();
+
   switch (dim)
   {
     case 3:
@@ -2138,8 +2139,26 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
       //sc->calculate_net_recombination_rates();
 
-      double sigma_e = Constants::e * sc->get_electron_conductivity();
-      double sigma_h = Constants::e * sc->get_hole_conductivity();
+
+      //double ni = sc->get_intrinsic_density();
+      double mue = sc->get_electron_mobility();
+      double muh = sc->get_hole_mobility();
+
+      double kT_ev = sc->get_lattice_temperature();
+
+      // to get the diffusion coefficients D = mu * kB * T
+      mue *= kT_ev;
+      muh *= kT_ev;
+
+      // sigma_e = De * dn
+      double dn_dphi = sc->get_electron_density_derivative();
+      double sigma_e = Constants::e * mue * dn_dphi;
+      // sigma_h = - Dh * dp
+      double dp_dphi = sc->get_hole_density_derivative();
+      double sigma_h = - Constants::e * muh * dp_dphi;
+
+      //double sigma_e = Constants::e * sc->get_electron_conductivity();
+      //double sigma_h = Constants::e * sc->get_hole_conductivity();
 
       libMesh::RealGradient dfn = grad_en_loc + Pn * grad_T_loc;
       libMesh::RealGradient dfp = grad_ep_loc + Pp * grad_T_loc;
@@ -2673,7 +2692,6 @@ DriftDiffusion::calculate_currents_rstf_global(void)
 
   const double phi0 = get_scaling().get_potential_scaling();
 
-
   // numeric ids corresponding to the variables
   const unsigned int u_var = system->variable_number("potential");
   unsigned int en_var = system->variable_number("fermi_e");
@@ -2792,10 +2810,32 @@ DriftDiffusion::calculate_currents_rstf_global(void)
       double Pp =  sc->get_hole_thermoelectric_power() / phi0;
 
       // we put the minus here for convenience
-      double sigma_e = -Constants::e * sc->get_electron_conductivity();
-      double sigma_h = -Constants::e * sc->get_hole_conductivity();
+      //double sigma1_e = -Constants::e * sc->get_electron_conductivity();
+      //double sigma1_h = -Constants::e * sc->get_hole_conductivity();
 
+      //cout << "sigma_e_old" << sigma1_e << endl;
+      //cout << "sigma_h_old" << sigma1_h << endl;
+
+      //double ni = sc->get_intrinsic_density();
+      double mue = sc->get_electron_mobility();
+      double muh = sc->get_hole_mobility();
       
+      double kT_ev = sc->get_lattice_temperature();
+
+      // to get the diffusion coefficients D = mu * kB * T
+      mue *= kT_ev;
+      muh *= kT_ev;
+
+      // we put the minus here for convenience (change the sign)
+      // sigma_e = De * dn
+      double dn_dphi = sc->get_electron_density_derivative();
+      double sigma_e = - Constants::e * mue * dn_dphi;
+      // sigma_h = - Dh * dp
+      double dp_dphi = sc->get_hole_density_derivative();
+      double sigma_h = + Constants::e * muh * dp_dphi;
+
+      //cout << "sigma_e_new" << sigma_e << endl;
+      //cout << "sigma_h_new" << sigma_h << endl;
 
       double Rn = sc->get_net_electron_recombination_rate();
       double Rp = sc->get_net_hole_recombination_rate();
@@ -2870,7 +2910,6 @@ DriftDiffusion::calculate_currents_rstf_compact(void)
 
 
   const double phi0 = get_scaling().get_potential_scaling();
-
 
   // numeric ids corresponding to the variables
   const unsigned int u_var = system->variable_number("potential");
@@ -2994,8 +3033,25 @@ DriftDiffusion::calculate_currents_rstf_compact(void)
       double Pp =  sc->get_hole_thermoelectric_power() / phi0;
 
       // we put the minus here for convenience
-      double sigma_e = -Constants::e * sc->get_electron_conductivity();
-      double sigma_h = -Constants::e * sc->get_hole_conductivity();
+      //double sigma_e = -Constants::e * sc->get_electron_conductivity();
+      //double sigma_h = -Constants::e * sc->get_hole_conductivity();
+
+      //double ni = sc->get_intrinsic_density();
+      double mue = sc->get_electron_mobility();
+      double muh = sc->get_hole_mobility();
+
+      double kT_ev = sc->get_lattice_temperature();
+
+      // to get the diffusion coefficients D = mu * kB * T
+      mue *= kT_ev;
+      muh *= kT_ev;
+
+      // sigma_e = De * dn
+      double dn_dphi = sc->get_electron_density_derivative();
+      double sigma_e = Constants::e * mue * dn_dphi;
+      // sigma_h = - Dh * dp
+      double dp_dphi = sc->get_hole_density_derivative();
+      double sigma_h = - Constants::e * muh * dp_dphi;
 
       double Rn = sc->get_net_electron_recombination_rate();
       double Rp = sc->get_net_hole_recombination_rate();
@@ -3247,7 +3303,6 @@ DriftDiffusion::calculate_currents_surfint(void)
 
   const double phi0 = get_scaling().get_potential_scaling();
 
-
   // numeric ids corresponding to the variables
   const unsigned int u_var = system->variable_number("potential");
   unsigned int en_var = system->variable_number("fermi_e");
@@ -3378,10 +3433,27 @@ DriftDiffusion::calculate_currents_surfint(void)
 	    double Pn = sc->get_electron_thermoelectric_power() / phi0;
 	    double Pp = sc->get_hole_thermoelectric_power() / phi0;
 
-            Real cond_e = Constants::e * sc->get_electron_mobility() *
+            /*Real cond_e = Constants::e * sc->get_electron_mobility() *
               sc->get_electron_density();
             Real cond_h = Constants::e * sc->get_hole_mobility() *
-              sc->get_hole_density();
+              sc->get_hole_density();*/
+
+            //double ni = sc->get_intrinsic_density();
+            double mue = sc->get_electron_mobility();
+            double muh = sc->get_hole_mobility();
+
+            double kT_ev = sc->get_lattice_temperature();
+
+            // to get the diffusion coefficients D = mu * kB * T
+            mue *= kT_ev;
+            muh *= kT_ev;
+
+            // sigma_e = De * dn
+            double dn_dphi = sc->get_electron_density_derivative();
+            double cond_e = Constants::e * mue * dn_dphi;
+            // sigma_h = - Dh * dp
+            double dp_dphi = sc->get_hole_density_derivative();
+            double cond_h = - Constants::e * muh * dp_dphi;
 
             current += -JxW[qp] * phi0 *
               (cond_e * (dEfn + Pn * dT) + cond_h * (dEfp + Pp * dT));
@@ -3446,10 +3518,29 @@ DriftDiffusion::calculate_currents_surfint(void)
 	  double Pp = sc->get_hole_thermoelectric_power() / phi0;
 
 
-          Real cond_e = Constants::e * sc->get_electron_mobility() *
+          /*Real cond_e = Constants::e * sc->get_electron_mobility() *
             sc->get_electron_density();
           Real cond_h = Constants::e * sc->get_hole_mobility() *
-            sc->get_hole_density();
+            sc->get_hole_density();*/
+
+          //double ni = sc->get_intrinsic_density();
+          double mue = sc->get_electron_mobility();
+          double muh = sc->get_hole_mobility();
+
+          double kT_ev = sc->get_lattice_temperature();
+
+          // to get the diffusion coefficients D = mu * kB * T
+          mue *= kT_ev;
+          muh *= kT_ev;
+
+          // sigma_e = De * dn
+          double dn_dphi = sc->get_electron_density_derivative();
+          double cond_e = Constants::e * mue * dn_dphi;
+          // sigma_h = - Dh * dp
+          double dp_dphi = sc->get_hole_density_derivative();
+          double cond_h = - Constants::e * muh * dp_dphi;
+
+
 
           if (boundary != NULL)
           {

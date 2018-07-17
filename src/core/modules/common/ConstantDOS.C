@@ -104,13 +104,13 @@ ConstantDOS::calculate_density_and_derivative(std::vector<double>& den_and_der, 
   if (den_and_der.size() > 1)
     der = C * ( exp_num / (exp_num + 1) - exp_den / (exp_den + 1));
   if (den_and_der.size() > 2)
-    der2 = 0; //TODO
+    der2 = C/kT * (std::pow(exp_num/(exp_num + 1),2) - std::pow(exp_den/(exp_den + 1),2));
 
   
-  den_and_der = {dens};
+  den_and_der[0] = dens;
   if (den_and_der.size() > 1)
-    den_and_der = {dens, der};
+    den_and_der[1] = der;
   if (den_and_der.size() > 2)
-    den_and_der = {dens, der, der2};
+    den_and_der[2] = der2;
 
 }

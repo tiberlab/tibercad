@@ -121,11 +121,11 @@ ExponentialDOS::calculate_density_and_derivative(vector<double>& den_and_der, do
     }
   }
 
-  den_and_der = {sum};
+  den_and_der[0] = sum;
   if (den_and_der.size() > 1)
-    den_and_der = {sum, der};
+    den_and_der[1] = der;
   if (den_and_der.size() > 2)
-    den_and_der = {sum, der, der2};
+    den_and_der[2] = der2;
 
 }
 

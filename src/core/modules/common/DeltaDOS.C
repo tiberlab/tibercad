@@ -46,14 +46,14 @@ DeltaDOS::calculate_density_and_derivative(std::vector<double>& den_and_der, dou
   }
   if (den_and_der.size() > 1)
   {
-    der2 = 0; //TODO
-    der2 *=0; //TODO
-    der2 /=0; //TODO
+    der2 = der + dens/kT * expf / (1.0 + expf);
+    der2 *= expf;
+    der2 /= kT * (1.0 + expf);
   }
 
-  den_and_der.push_back(dens);
+  den_and_der[0] = dens;
   if (den_and_der.size() > 1)
-    den_and_der.push_back(der);
+    den_and_der[1] = der;
   if (den_and_der.size() > 2)
-    den_and_der.push_back(der2);
+    den_and_der[2] = der2;
 }

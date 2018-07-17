@@ -152,11 +152,11 @@ ExcitonGaussDOS::calculate_density_and_derivative(std::vector<double>& den_and_d
   der =  -dens / kT;
 */
 
-  den_and_der = {dens};
+  den_and_der[0] = dens;
   if (den_and_der.size() > 1)
-    den_and_der = {dens, der};
+    den_and_der[1] = der;
   if (den_and_der.size() > 2)
-    den_and_der = {dens, der, der2};
+    den_and_der[2] = der2;
 }
 
 
