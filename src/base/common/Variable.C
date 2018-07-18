@@ -50,7 +50,7 @@ VariableValue::check_name(const std::string& name)
   if ((name.size() < 2) || (name[0] != '$'))
   {
     throw RuntimeException("\'" + name + "\' is not a valid variable name. "
-        "VariableValues hav to start with \'$\'");
+        "VariableValues have to start with \'$\'");
   }
 }
 
@@ -117,10 +117,11 @@ VariableValue::get_variable_value(const string& var)
 
 
 template <typename T>
-void
+string
 VariableValue::check_and_register(const string& s, T& variable,
     const TiberModelObject* ct, InitializerBase<T>* initfunc)
 {
+  string name("");
   if (s.size() >= 1)
   {
     if (s[0] == '$')
@@ -138,9 +139,7 @@ VariableValue::check_and_register(const string& s, T& variable,
         if (n > 1)
         {
           // get the variable name and register
-          string name(matches[1].first, matches[1].second);
-
-
+          name = string(matches[1].first, matches[1].second);
 
           if (n > 3)
           {
@@ -195,6 +194,8 @@ VariableValue::check_and_register(const string& s, T& variable,
         (*initfunc)(variable);
     }
   }
+
+  return(name);
 }
 
 
@@ -213,37 +214,37 @@ VariableValue::unregister(const TiberModelObject* ct)
 //
 
 template
-void
+string
 VariableValue::check_and_register<double>(const string&, double&,
     const TiberModelObject*, InitializerBase<double>* initfunc);
 
 
 template
-void
+string
 VariableValue::check_and_register<int>(const string&, int&,
     const TiberModelObject*, InitializerBase<int>* initfunc);
 
 
 template
-void
+string
 VariableValue::check_and_register<string>(const string&, string&,
     const TiberModelObject*, InitializerBase<string>* initfunc);
 
 
 template
-void
+string
 VariableValue::check_and_register<unsigned int>(const string&, unsigned int&,
     const TiberModelObject*, InitializerBase<unsigned int>* initfunc);
 
 
 template
-void
+string
 VariableValue::check_and_register<char>(const string&, char&,
     const TiberModelObject*, InitializerBase<char>* initfunc);
 
 
 template
-void
+string
 VariableValue::check_and_register<bool>(const string&, bool&,
     const TiberModelObject*, InitializerBase<bool>* initfunc);
 

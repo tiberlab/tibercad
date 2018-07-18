@@ -111,7 +111,7 @@ class VariableValue
     //! Create a variable
     /*!
      * A variable is defined in the input file using the notation
-     * \c @name(defaultvalue)
+     * \c @name[defaultvalue]
      *
      * If the variable already exists and has the same data type, the
      * given C++ variable is additionally assigned to it.
@@ -120,12 +120,12 @@ class VariableValue
      * \param variable the C++ variable
      * \param ct the container (class) holding \c variable
      *
-     * \return a pointer to the
+     * \return the variable name
      * \c variable will contain the value read from the input file
      * if provided, else it will not change its value.
      */
     template <typename T>
-    static void check_and_register(const std::string& s,
+    static std::string check_and_register(const std::string& s,
         T& variable, const TiberModelObject* ct = NULL,
         InitializerBase<T>* initfunc = NULL);
 

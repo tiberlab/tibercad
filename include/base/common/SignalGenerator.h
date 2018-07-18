@@ -37,10 +37,10 @@ class SignalGenerator : public TiberModelObject
     SignalGenerator(const ModelOptions& options);
 
     //! Calculate new value of dependent variables
-    virtual void do_update_dependent_variables(void);
+    virtual void do_update_dependent_variables(void) = 0;
 
     //! Implementation specific initialization
-    virtual void do_init(void);
+    virtual void do_init(void) = 0;
 
     //! Get the value of the input variable
     double get_input(void) const;

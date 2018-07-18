@@ -46,6 +46,7 @@ Ramp::Ramp(const ModelOptions& options,
         _simulations[i]->init();
     }
 
+    /*
     // if user didn't provide a simulation name, we take the first available
     if (num_of_sims == 0)
     {
@@ -54,6 +55,7 @@ Ramp::Ramp(const ModelOptions& options,
       if (_simulations[0] == NULL)
         throw InitFailedException("Sweep: No simulation found.");
     }
+    */
   }
 
   //

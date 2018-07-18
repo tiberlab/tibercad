@@ -31,6 +31,7 @@ SignalGenerator::create(const ModelOptions& options)
     throw InitFailedException("Cannot create signal class \"" + name + "\"");
 
   
+  return(sg);
 }
 
 
@@ -44,12 +45,15 @@ SignalGenerator::update_dependent_variables(void)
 void
 SignalGenerator::init(void)
 {
+  // call this first, or the call to the initializer will break
+  do_init();
+
   if (has_parameter("input"))
-    get_parameter("input", _input);
+    get_parameter("input", _input, false,
+        initializer(&SignalGenerator::update_dependent_variables));
   else
     VariableValue::check_and_register("$time", _input, this,
         initializer(&SignalGenerator::update_dependent_variables));
 
-  do_init();
 }
   

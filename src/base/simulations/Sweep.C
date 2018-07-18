@@ -47,6 +47,8 @@ Sweep::do_init(void)
 
   }
 
+  /*
+  2018-07-18 want to be able to not solve anything
   // if user didn't provide a simulation name, we take the first available
   if (num_of_sims == 0)
   {
@@ -57,6 +59,7 @@ Sweep::do_init(void)
     _simulations.resize(1);
     _simulations[0] = *it;
   }
+  */
 
   //
   // at this point we have for sure one simulation
@@ -231,8 +234,6 @@ Sweep::do_solve(void)
   parse_options();
 
   int num_sim = _simulations.size();
-
-  assert(num_sim > 0);
 
   vector<map<double, vector<double> > > sweep_data(num_sim);
 

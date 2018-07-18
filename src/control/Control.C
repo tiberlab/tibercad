@@ -12,6 +12,7 @@
 #include "DLLoader.h"
 #include "Utils.h"
 #include "Variable.h"
+#include "SignalGenerator.h"
 #include "Messages.h"
 #include "SimulationOptions.h"
 #include "Device.h"
@@ -208,10 +209,20 @@ Control::init(void)
   // prepare the device
   _device->prepare();
 
+  // create signal definitions
+  it = input.submodels_begin("Signal");
+  ModelOptions::submodel_iterator end = input.submodels_end("Signal");
+  for ( ; it != end; ++it)
+  {
+    const ModelOptions& opts = it->second;
+    SignalGenerator* sg = SignalGenerator::create(opts);
+    sg->init();
+  }
+
 
   // create and prepare modules
   it = input.submodels_begin("Module");
-  ModelOptions::submodel_iterator end = input.submodels_end("Module");
+  end = input.submodels_end("Module");
   for ( ; it != end; ++it)
   {
     ModelOptions opts(it->second);
