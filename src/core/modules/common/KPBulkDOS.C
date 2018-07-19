@@ -284,7 +284,7 @@ KPBulkDOS::calculate_density_and_derivative(std::vector<double>& den_and_der, do
       if (den_and_der.size() > 1)
         der = dens;
       if (den_and_der.size() > 2)
-        der2 = 0; //TODO
+        der2 = dens;
     }
     else if (arg < arg_max)
     {
@@ -292,7 +292,7 @@ KPBulkDOS::calculate_density_and_derivative(std::vector<double>& den_and_der, do
       if (den_and_der.size() > 1)
         der = TiberMath::fermidirac_mhalf(arg);
       if (den_and_der.size() > 2)
-        der2 = 0; //TODO
+        der2 = (TiberMath::fermidirac_mhalf(arg + eps)-TiberMath::fermidirac_mhalf(arg - eps))/(2*eps);
     }
     else
     {
@@ -300,7 +300,7 @@ KPBulkDOS::calculate_density_and_derivative(std::vector<double>& den_and_der, do
       if (den_and_der.size() > 1)
         der = M_2_SQRTPI * std::sqrt(arg);
       if (den_and_der.size() > 2)
-        der2 = 0; //TODO
+        der2 = 0.5 * M_2_SQRTPI * std::pow(arg,-0.5);
     }
 
     dens *= Neff;
@@ -340,16 +340,16 @@ KPBulkDOS::calculate_density_and_derivative(std::vector<double>& den_and_der,dou
     double kT, double kTlattice) const
 {
   double dens = 0;
-  den_and_der.push_back(dens);
+  den_and_der[0] = dens;
   if (den_and_der.size() > 1)
   {
     double der = 0;
-    den_and_der.push_back(der);
+    den_and_der[1] = der;
   }
   if (den_and_der.size() > 2)
   {
     double der2 = 0;
-    den_and_der.push_back(der2);
+    den_and_der[2] = der2;
   }
 }
 

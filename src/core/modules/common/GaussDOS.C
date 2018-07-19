@@ -250,7 +250,6 @@ GaussDOS::calculate_density_and_derivative(std::vector<double>& den_and_der, dou
       der = dens * (1.0 - (ks * espf / (espf + 1.0) ) ) / kT;
     if (den_and_der.size() > 2)
       der2 = der * (1.0 - (ks * espf / (espf + 1.0) ) ) / kT + dens * (ks/kT/kT) * espf / (espf+1.0) /  (espf+1.0);
-      //der2 = der * (1.0 - (ks * espf / (espf + 1.0) ) ) / kT - dens * (ks/kT) * (ks/kT) * espf * espf / (espf+1.0) /  (espf+1.0);
 
 
     //cout<<"s="<<s<<"<z="<<z<<" dens="<<dens<<" der="<<der<<endl;	
