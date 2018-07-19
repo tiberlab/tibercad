@@ -167,6 +167,8 @@ QuantumDOS::calculate_density_and_derivative(std::vector<double>& den_and_der, d
   double derivative = 0.0;
   double derivative2 = 0.0;
 
+  const double eps = 1e-7;
+
   // true indicates that we obtained a quantum density
   bool flag = false;
 

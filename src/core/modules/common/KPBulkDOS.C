@@ -257,6 +257,9 @@ KPBulkDOS::calculate_density_and_derivative(std::vector<double>& den_and_der, do
   const double arg_min = -50;
   const double min_dens = 1e-64;
 
+  const double eps = 1e-7;
+
+
   _th_el_power = 0;
 
   for (int i = 0; i < _ref_energies.size(); ++i)
