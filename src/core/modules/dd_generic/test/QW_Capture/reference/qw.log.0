@@ -1,0 +1,1499 @@
+
+Log start: Fri Jul 20 11:12:47 2018
+
+
+tiberCAD release 3.0.0 (rev. 4634, x86_64-linux)
+
+Input file: qw.tib
+
+Initialize global simulation options
+  Simulation temperature: 300 K
+  Database search path  : /home/maufder/Work/TiberCAD/3.0/materials
+  Log file              : output/qw.log.0
+
+Setup mesh
+  Reading mesh file 'quantum_well.msh ...
+    mesh reading time: 0h 0m 0.0016s
+    mesh preparation time: 0h 0m 0.00048s
+    bd_regions preparation time: 0h 0m 1.7e-05s
+
+    mesh units          : 1e-09 m
+    mesh dimension      :       1
+    number of nodes     :     309
+    number of elements  :     308
+    number of subdomains:       5
+    number of boundaries:       2
+
+Create materials ...
+  InGaAs is an alloy with components InAs and GaAs and molar fraction of InAs 0.2.
+  Added material InGaAs for region 'well' (mesh regions 5)
+    (using datafile /home/maufder/Work/TiberCAD/3.0/materials/InGaAs.dat)
+    alloy with 0.2 InAs, 0.8 GaAs
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+  Added material GaAs for region 'nside' (mesh regions 2)
+    (using datafile /home/maufder/Work/TiberCAD/3.0/materials/GaAs.dat)
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+  Added material GaAs for region 'pside' (mesh regions 6)
+    (using datafile /home/maufder/Work/TiberCAD/3.0/materials/GaAs.dat)
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+  Added material GaAs for region 'buffer_quantum' (mesh regions 4)
+    (using datafile /home/maufder/Work/TiberCAD/3.0/materials/GaAs.dat)
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+  Added material GaAs for region 'buffer_classical' (mesh regions 3)
+    (using datafile /home/maufder/Work/TiberCAD/3.0/materials/GaAs.dat)
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+Creation of materials done.
+
+Setting up Cluster 'quantum' containing regions 4, 5
+
+Setting up simulation of type 'elasticity' ...
+  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/elasticity/elasticity.so)
+  Adding boundary 'cathode'
+  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/elasticity/ebnd_clamp.so)
+Creating bulk models... 
+  Region: nside
+  Region: buffer_classical
+  Region: buffer_quantum
+  Region: well
+  Region: pside
+
+Setting up simulation of type 'dd_generic' ...
+  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/dd_generic/dd_generic.so)
+  Adding boundary 'anode'
+  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/dd_generic/ddbnd_ohmic.so)
+  Adding boundary 'cathode'
+Creating bulk models... 
+  Region: nside
+  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/dd_generic/ddbulk_default.so)
+  Region: buffer_classical
+  Region: buffer_quantum
+  Region: well
+  Region: pside
+
+Setting up simulation of type 'efaschroedinger' ...
+Creating bulk models... 
+  Region: buffer_quantum
+  Region: well
+
+Setting up simulation of type 'efaschroedinger' ...
+Creating bulk models... 
+  Region: buffer_quantum
+  Region: well
+
+Setting up simulation of type 'sweep' ...
+
+Setting up simulation of type 'selfconsistent' ...
+
+Setting up bulk models ...
+  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/elasticity/stiffness_anisotropic.so)
+  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/elasticity/body_force_lattice_mismatch.so)
+  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/dd_generic/carrier.so)
+  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/dd_generic/recombination_direct.so)
+  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/permittivity_constant.so)
+  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/dd_generic/mobility_constant.so)
+
+*** Warning: Material GaAs has no mesh dimension associated. Cannot guess crystal directions.
+  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/density_of_states_bulk_kp.so)
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge
+
+*** Warning: found unused options in block bulk_ham (bulk_kp): charge
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge
+
+*** Warning: found unused options in block kp (bulk_kp): charge
+
+*** Warning: found unused options in block density_of_states (bulk_kp): charge
+  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/density_of_states_quantum.so)
+
+*** Warning: found unused options in block density_of_states (quantum): charge
+
+*** Warning: Material GaAs has no mesh dimension associated. Cannot guess crystal directions.
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge
+
+*** Warning: found unused options in block bulk_ham (bulk_kp): charge
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge
+
+*** Warning: found unused options in block kp (bulk_kp): charge
+
+*** Warning: found unused options in block density_of_states (bulk_kp): charge
+
+*** Warning: found unused options in block density_of_states (quantum): charge
+
+*** Warning: found unused options in block density_of_states (quantum): charge
+
+*** Warning: Material GaAs has no mesh dimension associated. Cannot guess crystal directions.
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge
+
+*** Warning: found unused options in block bulk_ham (bulk_kp): charge
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge
+
+*** Warning: found unused options in block kp (bulk_kp): charge
+
+*** Warning: found unused options in block density_of_states (bulk_kp): charge
+
+*** Warning: found unused options in block density_of_states (quantum): charge
+
+*** Warning: Material GaAs has no mesh dimension associated. Cannot guess crystal directions.
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge
+
+*** Warning: found unused options in block bulk_ham (bulk_kp): charge
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge
+
+*** Warning: found unused options in block kp (bulk_kp): charge
+
+*** Warning: found unused options in block density_of_states (bulk_kp): charge
+
+*** Warning: found unused options in block density_of_states (quantum): charge
+
+*** Warning: Material GaAs has no mesh dimension associated. Cannot guess crystal directions.
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge
+
+*** Warning: found unused options in block bulk_ham (bulk_kp): charge
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge
+
+*** Warning: found unused options in block kp (bulk_kp): charge
+
+*** Warning: found unused options in block density_of_states (bulk_kp): charge
+
+*** Warning: found unused options in block density_of_states (quantum): charge
+
+*** Warning: found unused options in block density_of_states (quantum): charge
+
+*** Warning: Material GaAs has no mesh dimension associated. Cannot guess crystal directions.
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge
+
+*** Warning: found unused options in block bulk_ham (bulk_kp): charge
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge
+
+*** Warning: found unused options in block kp (bulk_kp): charge
+
+*** Warning: found unused options in block density_of_states (bulk_kp): charge
+
+*** Warning: found unused options in block density_of_states (quantum): charge
+
+*** Warning: found unused options in block density_of_states (quantum): charge
+
+*** Warning: Material GaAs has no mesh dimension associated. Cannot guess crystal directions.
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge
+
+*** Warning: found unused options in block bulk_ham (bulk_kp): charge
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge
+
+*** Warning: found unused options in block kp (bulk_kp): charge
+
+*** Warning: found unused options in block density_of_states (bulk_kp): charge
+
+*** Warning: found unused options in block density_of_states (quantum): charge
+
+*** Warning: found unused options in block density_of_states (quantum): charge
+
+Setting up lower dimensional (boundary) models ...
+
+*** Warning: Material GaAs has no mesh dimension associated. Cannot guess crystal directions.
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge
+
+*** Warning: found unused options in block bulk_ham (bulk_kp): charge
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge
+
+*** Warning: found unused options in block kp (bulk_kp): charge
+
+*** Warning: found unused options in block density_of_states (bulk_kp): charge
+
+*** Warning: found unused options in block density_of_states (quantum): charge
+
+*** Warning: Material GaAs has no mesh dimension associated. Cannot guess crystal directions.
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge
+
+*** Warning: found unused options in block bulk_ham (bulk_kp): charge
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge
+
+*** Warning: found unused options in block kp (bulk_kp): charge
+
+*** Warning: found unused options in block density_of_states (bulk_kp): charge
+
+*** Warning: found unused options in block density_of_states (quantum): charge
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for strain (elasticity)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+
+Available solution variables:
+------------------------------------------------------------------
+Name                     Units          Type      Association Plot
+------------------------------------------------------------------
+Strain                                  tensor    nodal       y
+StrainCell                              tensor    cell        y
+StrainCrystal                           tensor    nodal       n
+Stress                   GPa            tensor    nodal       y
+RelativeStrain                          tensor    nodal       n
+StressCrystal                           tensor    nodal       n
+Displacement             m              vector    nodal       y
+ForceSource              N/m3           tensor    nodal       n
+StrainSource                            tensor    nodal       n
+StressSource             GPa            tensor    nodal       n
+HydrostaticStrain                       real      nodal       n
+EnergyDensity            J/m^3          real      nodal       n
+RegionIDs                               real      cell        n
+------------------------------------------------------------------
+
+Output directory      : output
+Output file format    : grace
+Output file basename  : strain
+
+
+# Region buffer_classical, GaAs
+  Stiffness Constants (GPa, in calculation coordinate system):
+    C11 = 122.1 C12 = 56.6 C44 = 60
+
+# Region buffer_quantum, GaAs
+  Stiffness Constants (GPa, in calculation coordinate system):
+    C11 = 122.1 C12 = 56.6 C44 = 60
+
+# Region nside, GaAs
+  Stiffness Constants (GPa, in calculation coordinate system):
+    C11 = 122.1 C12 = 56.6 C44 = 60
+
+# Region pside, GaAs
+  Stiffness Constants (GPa, in calculation coordinate system):
+    C11 = 122.1 C12 = 56.6 C44 = 60
+
+# Region well, InGaAs (x = 0.2)
+  Stiffness Constants (GPa, in calculation coordinate system):
+    C11 = 114.338 C12 = 54.332 C44 = 55.918
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for dd (dd_generic)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+
+Available solution variables:
+------------------------------------------------------------------
+Name                     Units          Type      Association Plot
+------------------------------------------------------------------
+ElPotential              V              real      nodal       n
+ElField                  V/cm           vector    cell        n
+Polarization             C/m^2          vector    cell        n
+TotalCurrentDensity      A/cm^2         vector    cell        y
+IonizedDonors            cm^-3          real      nodal       n
+IonizedAcceptors         cm^-3          real      nodal       n
+IQE                                     real      none        n
+anode.current            A/cm^2         real      none        y
+cathode.current          A/cm^2         real      none        y
+el_qwQFermi              eV             real      nodal       y
+electronQFermi           eV             real      nodal       y
+holeQFermi               eV             real      nodal       y
+el_qwRefEnergy           eV             real      nodal       y
+electronRefEnergy        eV             real      nodal       y
+holeRefEnergy            eV             real      nodal       y
+el_qwDensity             cm^-3          real      nodal       y
+electronDensity          cm^-3          real      nodal       y
+holeDensity              cm^-3          real      nodal       y
+el_qwMobility            cm^2/(V*s)     real      nodal       n
+electronMobility         cm^2/(V*s)     real      nodal       n
+holeMobility             cm^2/(V*s)     real      nodal       n
+el_qwConductivity        S/cm           real      nodal       n
+electronConductivity     S/cm           real      nodal       n
+holeConductivity         S/cm           real      nodal       n
+el_qwFlux                1/(s*cm^2)     vector    cell        n
+electronFlux             1/(s*cm^2)     vector    cell        n
+holeFlux                 1/(s*cm^2)     vector    cell        n
+el_qwCurrentDensity      A/cm^2         vector    cell        y
+electronCurrentDensity   A/cm^2         vector    cell        y
+holeCurrentDensity       A/cm^2         vector    cell        y
+el_qwJoule               W/cm^3         real      nodal       n
+electronJoule            W/cm^3         real      nodal       n
+holeJoule                W/cm^3         real      nodal       n
+TotalJouleHeat           W/cm^3         real      nodal       n
+el_qwThElPower           eV/K           real      nodal       n
+electronThElPower        eV/K           real      nodal       n
+holeThElPower            eV/K           real      nodal       n
+TotalRecombinationHeat   W/cm^3         real      nodal       n
+el_qwNetRecombination    1/(s*cm^3)     real      nodal       y
+electronNetRecombination 1/(s*cm^3)     real      nodal       y
+holeNetRecombination     1/(s*cm^3)     real      nodal       y
+el_qwRecombination_ib_cb 1/(s*cm^3)     real      nodal       y
+electronRecombination_ib_cb1/(s*cm^3)   real      nodal       y
+electronRecombination_rad1/(s*cm^3)     real      nodal       y
+holeRecombination_rad    1/(s*cm^3)     real      nodal       y
+el_qwRecombination_rad_qw1/(s*cm^3)     real      nodal       y
+holeRecombination_rad_qw 1/(s*cm^3)     real      nodal       y
+RegionIDs                               real      cell        n
+------------------------------------------------------------------
+
+Output directory      : output
+Output file format    : grace
+Output file basename  : dd
+
+
+solving for : poisson electrons holes 
+using local scaling
+
+# Region buffer_classical, GaAs
+  Carrier:
+    name = electron, charge = -1, spin = 0.5
+    DOS: bulk_kp
+      band edge :  0.622482  0.906964  0.906964  0.906964  0.906964  1.09886  1.09886  1.09886
+      eff. mass :  0.067  0.221054  0.221054  0.221054  0.221054  0.4097  0.4097  0.4097
+      degeneracy:  2  4  4  4  4  4  4  4
+    Band edge = 0.622482, N0 = 4.35196e+17 cm^-3
+    m_dos = 0.067, v_th = 4.51213e+07 cm/s
+  Carrier:
+    name = hole, charge = 1, spin = 0.5
+    DOS: quantum
+      classical DOS: bulk_kp
+      band edge :  -1.141  -0.8  -0.8
+      eff. mass :  0.143266  0.0913621  0.727811
+      degeneracy:  2  2  2
+    Band edge = -0.8, N0 = 1.36078e+18 cm^-3
+    m_dos = 0.727811, v_th = 1.36902e+07 cm/s
+
+# Region buffer_quantum, GaAs
+  Carrier:
+    name = el_qw, charge = -1, spin = 0.5
+    DOS: quantum
+      classical DOS: bulk_kp
+      band edge :  0.622482  0.906964  0.906964  0.906964  0.906964  1.09886  1.09886  1.09886
+      eff. mass :  0.067  0.221054  0.221054  0.221054  0.221054  0.4097  0.4097  0.4097
+      degeneracy:  2  4  4  4  4  4  4  4
+    Band edge = 0.622482, N0 = 4.35196e+17 cm^-3
+    m_dos = 0.067, v_th = 4.51213e+07 cm/s
+  Carrier:
+    name = electron, charge = -1, spin = 0.5
+    DOS: bulk_kp
+      band edge :  0.622482  0.906964  0.906964  0.906964  0.906964  1.09886  1.09886  1.09886
+      eff. mass :  0.067  0.221054  0.221054  0.221054  0.221054  0.4097  0.4097  0.4097
+      degeneracy:  2  4  4  4  4  4  4  4
+    Band edge = 0.622482, N0 = 4.35196e+17 cm^-3
+    m_dos = 0.067, v_th = 4.51213e+07 cm/s
+  Carrier:
+    name = hole, charge = 1, spin = 0.5
+    DOS: quantum
+      classical DOS: bulk_kp
+      band edge :  -1.141  -0.8  -0.8
+      eff. mass :  0.143266  0.0913621  0.727811
+      degeneracy:  2  2  2
+    Band edge = -0.8, N0 = 1.36078e+18 cm^-3
+    m_dos = 0.727811, v_th = 1.36902e+07 cm/s
+
+# Region nside, GaAs
+  Carrier:
+    name = electron, charge = -1, spin = 0.5
+    DOS: bulk_kp
+      band edge :  0.622482  0.906964  0.906964  0.906964  0.906964  1.09886  1.09886  1.09886
+      eff. mass :  0.067  0.221054  0.221054  0.221054  0.221054  0.4097  0.4097  0.4097
+      degeneracy:  2  4  4  4  4  4  4  4
+    Band edge = 0.622482, N0 = 4.35196e+17 cm^-3
+    m_dos = 0.067, v_th = 4.51213e+07 cm/s
+  Carrier:
+    name = hole, charge = 1, spin = 0.5
+    DOS: quantum
+      classical DOS: bulk_kp
+      band edge :  -1.141  -0.8  -0.8
+      eff. mass :  0.143266  0.0913621  0.727811
+      degeneracy:  2  2  2
+    Band edge = -0.8, N0 = 1.36078e+18 cm^-3
+    m_dos = 0.727811, v_th = 1.36902e+07 cm/s
+
+# Region pside, GaAs
+  Carrier:
+    name = electron, charge = -1, spin = 0.5
+    DOS: bulk_kp
+      band edge :  0.622482  0.906964  0.906964  0.906964  0.906964  1.09886  1.09886  1.09886
+      eff. mass :  0.067  0.221054  0.221054  0.221054  0.221054  0.4097  0.4097  0.4097
+      degeneracy:  2  4  4  4  4  4  4  4
+    Band edge = 0.622482, N0 = 4.35196e+17 cm^-3
+    m_dos = 0.067, v_th = 4.51213e+07 cm/s
+  Carrier:
+    name = hole, charge = 1, spin = 0.5
+    DOS: quantum
+      classical DOS: bulk_kp
+      band edge :  -1.141  -0.8  -0.8
+      eff. mass :  0.143266  0.0913621  0.727811
+      degeneracy:  2  2  2
+    Band edge = -0.8, N0 = 1.36078e+18 cm^-3
+    m_dos = 0.727811, v_th = 1.36902e+07 cm/s
+
+# Region well, InGaAs (x = 0.2)
+  Carrier:
+    name = el_qw, charge = -1, spin = 0.5
+    DOS: quantum
+      classical DOS: bulk_kp
+      band edge :  0.435324  0.838744  0.838744  0.838744  0.838744  0.860344  0.860344  0.860344
+      eff. mass :  0.057344  0.201236  0.201236  0.201236  0.201236  0.389446  0.389446  0.389446
+      degeneracy:  2  4  4  4  4  4  4  4
+    Band edge = 0.435324, N0 = 3.44592e+17 cm^-3
+    m_dos = 0.057344, v_th = 4.87725e+07 cm/s
+  Carrier:
+    name = electron, charge = -1, spin = 0.5
+    DOS: bulk_kp
+      band edge :  0.622482  0.906964  0.906964  0.906964  0.906964  1.09886  1.09886  1.09886
+      eff. mass :  0.067  0.221054  0.221054  0.221054  0.221054  0.4097  0.4097  0.4097
+      degeneracy:  2  4  4  4  4  4  4  4
+    Band edge = 0.622482, N0 = 4.35196e+17 cm^-3
+    m_dos = 0.067, v_th = 4.51213e+07 cm/s
+  Carrier:
+    name = hole, charge = 1, spin = 0.5
+    DOS: quantum
+      classical DOS: bulk_kp
+      band edge :  -1.024  -0.6972  -0.6972
+      eff. mass :  0.10434  0.0617931  0.567328
+      degeneracy:  2  2  2
+    Band edge = -0.6972, N0 = 8.45766e+17 cm^-3
+    m_dos = 0.567328, v_th = 1.55061e+07 cm/s
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for quantum_el (efaschroedinger)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+k-space initialized
+
+Available solution variables:
+------------------------------------------------------------------
+Name                     Units          Type      Association Plot
+------------------------------------------------------------------
+ProbabilityDensity       1/cm           n-tuple   nodal       y
+EigenEnergy              eV             n-tuple   none        y
+Occupation                              n-tuple   none        n
+EigenEnergyOnMesh        eV             n-tuple   nodal       y
+eDensity                 1/cm^3         real      nodal       y
+hDensity                 1/cm^3         real      nodal       y
+EnvelopeFunctions                       n-tuple   nodal       n
+RegionIDs                               real      cell        n
+------------------------------------------------------------------
+
+Output directory      : output
+Output file format    : grace
+Output file basename  : quantum_el
+
+Number of bands: 1
+Degeneracy: 2
+
+
+# Region buffer_quantum, GaAs
+  single-band  Mass = 0.067
+
+# Region well, InGaAs (x = 0.2)
+  single-band  Mass = 0.057344
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for quantum_hl (efaschroedinger)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+k-space initialized
+
+Available solution variables:
+------------------------------------------------------------------
+Name                     Units          Type      Association Plot
+------------------------------------------------------------------
+ProbabilityDensity       1/cm           n-tuple   nodal       y
+EigenEnergy              eV             n-tuple   none        y
+Occupation                              n-tuple   none        n
+EigenEnergyOnMesh        eV             n-tuple   nodal       y
+eDensity                 1/cm^3         real      nodal       y
+hDensity                 1/cm^3         real      nodal       y
+EnvelopeFunctions                       n-tuple   nodal       n
+RegionIDs                               real      cell        n
+------------------------------------------------------------------
+
+Output directory      : output
+Output file format    : grace
+Output file basename  : quantum_hl
+
+Number of bands: 6
+Degeneracy: 1
+
+
+# Region buffer_quantum, GaAs
+  KxP 6x6
+    L = -8.11 M = -1.93 N = -8.79  m_c = inf
+
+# Region well, InGaAs (x = 0.2)
+  KxP 6x6
+    L = -11.988 M = -1.944 N = -12.552  m_c = inf
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for sweep (sweep)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+
+Output directory      : output
+Output file format    : grace
+Output file basename  : sweep
+
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for selfconsistent (selfconsistent)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+
+Output directory      : output
+Output file format    : grace
+Output file basename  : selfconsistent
+
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+We solve: sweep selfconsistent 
+
+>>>>--------------------------------- (sweep) ----------------------------------
+  Ramping to sweep value $Vb = 0
+
+*** Warning: dd has never been solved before ramping.
+  Trying $Vb = 0
+
+  >>>>---------------------------------- (dd) ----------------------------------
+    Setting max_iterations for nonlinear solver to 150
+    Solving equilibrium
+    it 1, |du| = 20.5334, |r| = 0.121371  alpha = 1
+    it 2, |du| = 2.62436, |r| = 0.0228599  alpha = 1
+    it 3, |du| = 0.757198, |r| = 0.00273794  alpha = 1
+    it 4, |du| = 0.0712781, |r| = 4.24942e-05  alpha = 1
+
+    iterations: 5, |du| = 0.000850039, |r| = 8.89221e-09
+    Equilibrium done
+
+  Solve time: 0h 0m 0.21s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.1
+  Trying $Vb = 0.1
+
+  >>>>---------------------------------- (dd) ----------------------------------
+    it 1, |du| = 3.86817, |r| = 0.223233  alpha = 1
+    it 2, |du| = 3.80438, |r| = 0.184019  alpha = 0.220848
+    it 3, |du| = 1.07288, |r| = 0.104879  alpha = 0.5
+    it 4, |du| = 0.211645, |r| = 0.0120461  alpha = 1
+    it 5, |du| = 0.0197125, |r| = 0.000144897  alpha = 1
+
+    iterations: 6, |du| = 0.000202492, |r| = 2.11003e-08
+    Surface recombination current = 0
+
+    contact name:       voltage:            current:
+    anode               0.1                -8.36117e-09
+    cathode             0                   8.36117e-09
+
+  Solve time: 0h 0m 0.37s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.2
+  Trying $Vb = 0.2
+
+  >>>>---------------------------------- (dd) ----------------------------------
+    it 1, |du| = 3.86817, |r| = 3.37648  alpha = 0.5
+    it 2, |du| = 2.27932, |r| = 1.83186  alpha = 0.5
+    it 3, |du| = 0.967042, |r| = 0.849731  alpha = 0.5
+    it 4, |du| = 0.483521, |r| = 0.150441  alpha = 1
+    it 5, |du| = 0.00780903, |r| = 0.000935811  alpha = 1
+
+    iterations: 6, |du| = 3.64868e-05, |r| = 2.32066e-08
+    Surface recombination current = 0
+
+    contact name:       voltage:            current:
+    anode               0.2                 3.75389e-09
+    cathode             0                  -3.75389e-09
+
+  Solve time: 0h 0m 0.36s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.3
+  Trying $Vb = 0.3
+
+  >>>>---------------------------------- (dd) ----------------------------------
+    it 1, |du| = 3.86817, |r| = 3.35984  alpha = 0.5
+    it 2, |du| = 1.93408, |r| = 1.68279  alpha = 0.5
+    it 3, |du| = 0.967042, |r| = 0.692507  alpha = 1
+    it 4, |du| = 0.0186136, |r| = 0.0104145  alpha = 1
+
+    iterations: 5, |du| = 0.000191937, |r| = 1.34532e-06
+    Surface recombination current = 0
+
+    contact name:       voltage:            current:
+    anode               0.3                 2.42618e-09
+    cathode             0                  -2.42618e-09
+
+  Solve time: 0h 0m 0.29s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.4
+  Trying $Vb = 0.4
+
+  >>>>---------------------------------- (dd) ----------------------------------
+    it 1, |du| = 3.86817, |r| = 3.35771  alpha = 0.5
+    it 2, |du| = 1.93408, |r| = 1.68247  alpha = 0.5
+    it 3, |du| = 0.967042, |r| = 0.646924  alpha = 1
+    it 4, |du| = 0.00957584, |r| = 0.00425773  alpha = 1
+
+    iterations: 5, |du| = 4.93296e-05, |r| = 1.2159e-07
+    Surface recombination current = 0
+
+    contact name:       voltage:            current:
+    anode               0.4                 4.0562e-08
+    cathode             0                  -4.0562e-08
+
+  Solve time: 0h 0m 0.29s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.5
+  Trying $Vb = 0.5
+
+  >>>>---------------------------------- (dd) ----------------------------------
+    it 1, |du| = 3.86817, |r| = 3.35364  alpha = 0.5
+    it 2, |du| = 1.93408, |r| = 1.23118  alpha = 1
+    it 3, |du| = 0.0135474, |r| = 0.0105335  alpha = 1
+
+    iterations: 4, |du| = 9.90215e-05, |r| = 5.77861e-07
+    Surface recombination current = 0
+
+    contact name:       voltage:            current:
+    anode               0.5                -6.83798e-09
+    cathode             0                   6.83798e-09
+
+  Solve time: 0h 0m 0.23s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.6
+  Trying $Vb = 0.6
+
+  >>>>---------------------------------- (dd) ----------------------------------
+    it 1, |du| = 3.86817, |r| = 2.80769  alpha = 1
+    it 2, |du| = 0.0271196, |r| = 0.046138  alpha = 1
+
+    iterations: 3, |du| = 0.000367071, |r| = 8.77429e-06
+    Surface recombination current = 0
+
+    contact name:       voltage:            current:
+    anode               0.6                -2.15096e-07
+    cathode             0                   2.15096e-07
+
+  Solve time: 0h 0m 0.18s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.7
+  Trying $Vb = 0.7
+
+  >>>>---------------------------------- (dd) ----------------------------------
+    it 1, |du| = 3.86817, |r| = 2.11311  alpha = 1
+    it 2, |du| = 0.0259495, |r| = 0.0223121  alpha = 1
+
+    iterations: 3, |du| = 0.000156407, |r| = 1.6599e-06
+    Surface recombination current = 0
+
+    contact name:       voltage:            current:
+    anode               0.7                -9.90789e-06
+    cathode             0                   9.90789e-06
+
+  Solve time: 0h 0m 0.18s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.8
+  Trying $Vb = 0.8
+
+  >>>>---------------------------------- (dd) ----------------------------------
+    it 1, |du| = 3.86817, |r| = 1.64505  alpha = 1
+    it 2, |du| = 0.0303661, |r| = 0.0119214  alpha = 1
+
+    iterations: 3, |du| = 0.000230402, |r| = 3.24942e-07
+    Surface recombination current = 0
+
+    contact name:       voltage:            current:
+    anode               0.8                -0.000461057
+    cathode             0                   0.000461057
+
+  Solve time: 0h 0m 0.18s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.9
+  Trying $Vb = 0.9
+
+  >>>>---------------------------------- (dd) ----------------------------------
+    it 1, |du| = 3.86817, |r| = 1.31685  alpha = 1
+    it 2, |du| = 0.0998046, |r| = 0.00680942  alpha = 1
+    it 3, |du| = 0.0103596, |r| = 1.19164e-07  alpha = 1
+
+    iterations: 4, |du| = 5.53246e-05, |r| = 8.12514e-12
+    Surface recombination current = 0
+
+    contact name:       voltage:            current:
+    anode               0.9                -0.0207398
+    cathode             0                   0.0207398
+
+  Solve time: 0h 0m 0.23s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1
+  Trying $Vb = 1
+
+  >>>>---------------------------------- (dd) ----------------------------------
+    it 1, |du| = 3.86817, |r| = 1.0782  alpha = 1
+    it 2, |du| = 0.509983, |r| = 0.00385761  alpha = 1
+    it 3, |du| = 0.120937, |r| = 2.51796e-05  alpha = 1
+    it 4, |du| = 0.00575913, |r| = 1.54233e-07  alpha = 1
+
+    iterations: 5, |du| = 1.31695e-05, |r| = 2.38701e-12
+    Surface recombination current = 0
+
+    contact name:       voltage:            current:
+    anode               1                  -0.787672
+    cathode             0                   0.787672
+
+  Solve time: 0h 0m 0.29s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.1
+  Trying $Vb = 1.1
+
+  >>>>---------------------------------- (dd) ----------------------------------
+    it 1, |du| = 3.86817, |r| = 0.897849  alpha = 1
+    it 2, |du| = 0.217007, |r| = 0.00271724  alpha = 1
+    it 3, |du| = 0.0123807, |r| = 1.28683e-06  alpha = 1
+
+    iterations: 4, |du| = 3.15086e-05, |r| = 3.12284e-11
+    Surface recombination current = 0
+
+    contact name:       voltage:            current:
+    anode               1.1                -32.9677
+    cathode             0                   32.9677
+
+  Solve time: 0h 0m 0.28s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.2
+  Trying $Vb = 1.2
+
+  >>>>---------------------------------- (dd) ----------------------------------
+    it 1, |du| = 3.86817, |r| = 0.752842  alpha = 1
+    it 2, |du| = 0.364323, |r| = 0.0171228  alpha = 1
+    it 3, |du| = 0.0404031, |r| = 0.000213765  alpha = 1
+
+    iterations: 4, |du| = 0.000833761, |r| = 1.46598e-07
+    Surface recombination current = 0
+
+    contact name:       voltage:            current:
+    anode               1.2                -1473.4
+    cathode             0                   1473.4
+
+  Solve time: 0h 0m 0.23s
+  <<<<--------------------------------------------------------------------------
+
+Solve time: 0h 0m 3.6s
+<<<<----------------------------------------------------------------------------
+
+>>>>----------------------------- (selfconsistent) -----------------------------
+
+  >>>>------------------------------ (quantum_el) ------------------------------
+    Maximum of Ev (eV) :-1.26135
+    Minimum of Ec (eV) :-0.142189
+    (EFA) Estimated guess (eV): -0.254105
+    (EFA) Calculating quantum density
+      Solving for k1 = ( 0.00000 0.00000 0.188000 )
+      converged eigenenergies (10):
+        -0.0819231 0.00990914 0.101316 0.137912 0.186752 0.26761 0.334859 0.439449 
+        0.547653 0.654567 
+
+      Solving for k2 = ( 0.00000 0.188000 0.00000 )
+      converged eigenenergies (10):
+        -0.0819231 0.00990914 0.101316 0.137912 0.186752 0.26761 0.334859 0.439449 
+        0.547653 0.654567 
+
+      Solving for k3 = ( 0.00000 0.188000 0.188000 )
+      converged eigenenergies (10):
+        -0.0586206 0.032532 0.122012 0.158516 0.207888 0.288353 0.35581 0.460582 
+        0.568509 0.675706 
+
+      Solving for k0 = ( 0.00000 0.00000 0.00000 )
+      converged eigenenergies (10):
+        -0.105229 -0.0127321 0.080604 0.117308 0.165623 0.246867 0.313917 0.418311 
+        0.5268 0.633432 
+
+      effective masses:
+        0.0577792 0.0594756 0.0650166 0.0653555 
+
+
+  Solve time: 0h 0m 0.19s
+  <<<<--------------------------------------------------------------------------
+
+  >>>>------------------------------ (quantum_hl) ------------------------------
+    Maximum of Ev (eV) :-1.26135
+    Minimum of Ec (eV) :-0.142189
+    (EFA) Estimated guess (eV): -1.14944
+    (EFA) Calculating quantum density
+      Solving for k1 = ( 0.00000 0.00000 0.188000 )
+      converged eigenenergies (16):
+        -1.28371 -1.28425 -1.29169 -1.29272 -1.31256 -1.31396 -1.33026 -1.33046 
+        -1.35751 -1.36114 -1.36389 -1.3698 -1.37149 -1.37355 -1.38232 -1.38377 
+
+      Solving for k2 = ( 0.00000 0.188000 0.00000 )
+      converged eigenenergies (16):
+        -1.28371 -1.28425 -1.29169 -1.29272 -1.31256 -1.31396 -1.33026 -1.33046 
+        -1.35751 -1.36114 -1.36389 -1.3698 -1.37149 -1.37355 -1.38232 -1.38377 
+
+      Solving for k3 = ( 0.00000 0.188000 0.188000 )
+      converged eigenenergies (18):
+        -1.28293 -1.28354 -1.29555 -1.29713 -1.32065 -1.32235 -1.33361 -1.33458 
+        -1.36036 -1.36389 -1.36902 -1.37051 -1.37889 -1.38201 -1.38426 -1.38744 
+        -1.40023 -1.40286 
+
+      Solving for k0 = ( 0.00000 0.00000 0.00000 )
+      converged eigenenergies (20):
+        -1.27769 -1.27769 -1.29304 -1.29304 -1.29912 -1.29912 -1.33297 -1.33297 
+        -1.35157 -1.35157 -1.35522 -1.35522 -1.37278 -1.37278 -1.38656 -1.38656 
+        -1.38884 -1.38884 -1.39601 -1.39601 
+
+      effective masses:
+        0.27109 0.246589 0.605681 0.574353 0.102252 0.0929636 0.991117 0.620918 
+        0.234793 0.150531 0.158602 0.105011 0.324756 
+
+
+  Solve time: 0h 0m 0.64s
+  <<<<--------------------------------------------------------------------------
+
+  >>>>---------------------------------- (dd) ----------------------------------
+    it 1, |du| = 3.16531, |r| = 0.113561  alpha = 0.220269
+    it 2, |du| = 2.3727, |r| = 0.0535445  alpha = 0.25
+    it 3, |du| = 1.67708, |r| = 0.0144754  alpha = 0.5
+    it 4, |du| = 0.675943, |r| = 0.00562417  alpha = 0.5
+    it 5, |du| = 0.297074, |r| = 0.000889962  alpha = 1
+    it 6, |du| = 0.0117754, |r| = 7.12034e-06  alpha = 1
+
+    iterations: 7, |du| = 2.97027e-05, |r| = 1.56916e-10
+    Surface recombination current = 0
+
+    contact name:       voltage:            current:
+    anode               1.2                -1482.1
+    cathode             0                   1482.1
+
+  Solve time: 0h 0m 0.67s
+  <<<<--------------------------------------------------------------------------
+  selfconsistent (Relaxation): iteration 0
+    correction (max norm):  2.74949
+    relative error (l2)  :  0.0388356
+
+  >>>>------------------------------ (quantum_el) ------------------------------
+    Maximum of Ev (eV) :-1.24054
+    Minimum of Ec (eV) :-0.120829
+    (EFA) Estimated guess (eV): -0.2328
+    (EFA) Calculating quantum density
+      Solving for k1 = ( 0.00000 0.00000 0.188000 )
+      converged eigenenergies (10):
+        -0.0587681 0.0316299 0.118539 0.153547 0.20346 0.284012 0.350958 0.456571 
+        0.564012 0.671211 
+
+      Solving for k2 = ( 0.00000 0.188000 0.00000 )
+      converged eigenenergies (10):
+        -0.0587681 0.0316299 0.118539 0.153547 0.20346 0.284012 0.350958 0.456571 
+        0.564012 0.671211 
+
+      Solving for k3 = ( 0.00000 0.188000 0.188000 )
+      converged eigenenergies (10):
+        -0.0354718 0.0542215 0.139178 0.174133 0.224639 0.304751 0.371929 0.477703 
+        0.584871 0.692361 
+
+      Solving for k0 = ( 0.00000 0.00000 0.00000 )
+      converged eigenenergies (10):
+        -0.0820681 0.00901851 0.097887 0.132962 0.182286 0.263275 0.329995 0.435436 
+        0.543156 0.650064 
+
+      effective masses:
+        0.057794 0.0595542 0.0652054 0.0654146 
+
+
+  Solve time: 0h 0m 0.24s
+  <<<<--------------------------------------------------------------------------
+
+  >>>>------------------------------ (quantum_hl) ------------------------------
+    Maximum of Ev (eV) :-1.24054
+    Minimum of Ec (eV) :-0.120829
+    (EFA) Estimated guess (eV): -1.12857
+    (EFA) Calculating quantum density
+      Solving for k1 = ( 0.00000 0.00000 0.188000 )
+      converged eigenenergies (16):
+        -1.26048 -1.26097 -1.26869 -1.2696 -1.29014 -1.29135 -1.30805 -1.30822 
+        -1.33996 -1.34191 -1.34767 -1.35017 -1.35539 -1.35613 -1.36574 -1.36723 
+
+      Solving for k2 = ( 0.00000 0.188000 0.00000 )
+      converged eigenenergies (16):
+        -1.26048 -1.26097 -1.26869 -1.2696 -1.29014 -1.29135 -1.30805 -1.30822 
+        -1.33996 -1.34191 -1.34767 -1.35017 -1.35539 -1.35613 -1.36574 -1.36723 
+
+      Solving for k3 = ( 0.00000 0.188000 0.188000 )
+      converged eigenenergies (17):
+        -1.25971 -1.26026 -1.27265 -1.27406 -1.29847 -1.29987 -1.31143 -1.31228 
+        -1.34469 -1.34585 -1.35038 -1.35217 -1.36027 -1.36355 -1.36857 -1.3715 
+        -1.38346 
+
+      Solving for k0 = ( 0.00000 0.00000 0.00000 )
+      converged eigenenergies (20):
+        -1.25434 -1.25434 -1.27013 -1.27013 -1.27641 -1.27641 -1.31074 -1.31074 
+        -1.33083 -1.33083 -1.34156 -1.34156 -1.35324 -1.35324 -1.37132 -1.37132 
+        -1.37287 -1.37287 -1.38035 -1.38035 
+
+      effective masses:
+        0.265485 0.244011 0.589852 0.552588 0.100079 0.0922833 0.956278 0.635327 
+        0.152078 0.128378 0.229669 0.169417 0.815335 
+
+
+  Solve time: 0h 0m 0.7s
+  <<<<--------------------------------------------------------------------------
+
+  >>>>---------------------------------- (dd) ----------------------------------
+    it 1, |du| = 0.614991, |r| = 0.000910447  alpha = 0.5
+    it 2, |du| = 0.364161, |r| = 0.000526992  alpha = 1
+    it 3, |du| = 0.027844, |r| = 1.42377e-05  alpha = 1
+
+    iterations: 4, |du| = 0.000164972, |r| = 1.34096e-09
+    Surface recombination current = 0
+
+    contact name:       voltage:            current:
+    anode               1.2                -1480.55
+    cathode             0                   1480.55
+
+  Solve time: 0h 0m 0.33s
+  <<<<--------------------------------------------------------------------------
+  selfconsistent (Relaxation): iteration 1
+    correction (max norm):  0.699665
+    relative error (l2)  :  0.00977677
+
+  >>>>------------------------------ (quantum_el) ------------------------------
+    Maximum of Ev (eV) :-1.24366
+    Minimum of Ec (eV) :-0.124214
+    (EFA) Estimated guess (eV): -0.236159
+    (EFA) Calculating quantum density
+      Solving for k1 = ( 0.00000 0.00000 0.188000 )
+      converged eigenenergies (10):
+        -0.0616315 0.0285994 0.115691 0.150993 0.200864 0.281365 0.348405 0.453928 
+        0.561409 0.668619 
+
+      Solving for k2 = ( 0.00000 0.188000 0.00000 )
+      converged eigenenergies (10):
+        -0.0616315 0.0285994 0.115691 0.150993 0.200864 0.281365 0.348405 0.453928 
+        0.561409 0.668619 
+
+      Solving for k3 = ( 0.00000 0.188000 0.188000 )
+      converged eigenenergies (10):
+        -0.0383361 0.0511901 0.136335 0.171583 0.222039 0.302105 0.369375 0.475059 
+        0.582268 0.689769 
+
+      Solving for k0 = ( 0.00000 0.00000 0.00000 )
+      converged eigenenergies (10):
+        -0.0849307 0.00598897 0.0950344 0.130403 0.179695 0.260626 0.327443 0.432793 
+        0.540553 0.647473 
+
+      effective masses:
+        0.0577959 0.0595566 0.0651899 0.065401 
+
+
+  Solve time: 0h 0m 0.24s
+  <<<<--------------------------------------------------------------------------
+
+  >>>>------------------------------ (quantum_hl) ------------------------------
+    Maximum of Ev (eV) :-1.24366
+    Minimum of Ec (eV) :-0.124214
+    (EFA) Estimated guess (eV): -1.13172
+    (EFA) Calculating quantum density
+      Solving for k1 = ( 0.00000 0.00000 0.188000 )
+      converged eigenenergies (16):
+        -1.26331 -1.26379 -1.27157 -1.27247 -1.29307 -1.29429 -1.31106 -1.31123 
+        -1.34271 -1.34481 -1.35036 -1.35312 -1.35776 -1.35863 -1.36825 -1.3698 
+
+      Solving for k2 = ( 0.00000 0.188000 0.00000 )
+      converged eigenenergies (16):
+        -1.26331 -1.26379 -1.27157 -1.27247 -1.29307 -1.29429 -1.31106 -1.31123 
+        -1.34271 -1.34481 -1.35036 -1.35312 -1.35776 -1.35863 -1.36825 -1.3698 
+
+      Solving for k3 = ( 0.00000 0.188000 0.188000 )
+      converged eigenenergies (17):
+        -1.26254 -1.26309 -1.27553 -1.27694 -1.3014 -1.30282 -1.31442 -1.31528 
+        -1.34723 -1.34867 -1.35327 -1.35484 -1.36297 -1.36618 -1.37092 -1.37406 
+        -1.38634 
+
+      Solving for k0 = ( 0.00000 0.00000 0.00000 )
+      converged eigenenergies (20):
+        -1.25716 -1.25716 -1.273 -1.273 -1.27936 -1.27936 -1.31372 -1.31372 
+        -1.33383 -1.33383 -1.34393 -1.34393 -1.35604 -1.35604 -1.37379 -1.37379 
+        -1.37557 -1.37557 -1.38294 -1.38294 
+
+      effective masses:
+        0.264799 0.24362 0.588896 0.550483 0.100164 0.0923333 0.95452 0.634651 
+        0.156336 0.129579 0.217652 0.160348 4.13211 
+
+
+  Solve time: 0h 0m 0.71s
+  <<<<--------------------------------------------------------------------------
+
+  >>>>---------------------------------- (dd) ----------------------------------
+    it 1, |du| = 0.24438, |r| = 0.000344352  alpha = 0.5
+    it 2, |du| = 0.113747, |r| = 0.000139005  alpha = 0.5
+    it 3, |du| = 0.0550194, |r| = 3.00872e-05  alpha = 1
+
+    iterations: 4, |du| = 0.000577307, |r| = 1.69662e-08
+    Surface recombination current = 0
+
+    contact name:       voltage:            current:
+    anode               1.2                -1482.12
+    cathode             0                   1482.12
+
+  Solve time: 0h 0m 0.35s
+  <<<<--------------------------------------------------------------------------
+  selfconsistent (Relaxation): iteration 2
+    correction (max norm):  0.233506
+    relative error (l2)  :  0.00327551
+
+  >>>>------------------------------ (quantum_el) ------------------------------
+    Maximum of Ev (eV) :-1.24253
+    Minimum of Ec (eV) :-0.122975
+    (EFA) Estimated guess (eV): -0.234931
+    (EFA) Calculating quantum density
+      Solving for k1 = ( 0.00000 0.00000 0.188000 )
+      converged eigenenergies (10):
+        -0.0603993 0.0297845 0.116717 0.151901 0.201825 0.282326 0.349336 0.454911 
+        0.56236 0.669577 
+
+      Solving for k2 = ( 0.00000 0.188000 0.00000 )
+      converged eigenenergies (10):
+        -0.0603993 0.0297845 0.116717 0.151901 0.201825 0.282326 0.349336 0.454911 
+        0.56236 0.669577 
+
+      Solving for k3 = ( 0.00000 0.188000 0.188000 )
+      converged eigenenergies (10):
+        -0.037104 0.0523742 0.137358 0.17249 0.223002 0.303065 0.370307 0.476042 
+        0.583219 0.690727 
+
+      Solving for k0 = ( 0.00000 0.00000 0.00000 )
+      converged eigenenergies (10):
+        -0.0836983 0.00717493 0.0960625 0.131313 0.180654 0.261588 0.328374 0.433776 
+        0.541504 0.64843 
+
+      effective masses:
+        0.0577963 0.059559 0.0651978 0.0654062 
+
+
+  Solve time: 0h 0m 0.25s
+  <<<<--------------------------------------------------------------------------
+
+  >>>>------------------------------ (quantum_hl) ------------------------------
+    Maximum of Ev (eV) :-1.24253
+    Minimum of Ec (eV) :-0.122975
+    (EFA) Estimated guess (eV): -1.13058
+    (EFA) Calculating quantum density
+      Solving for k1 = ( 0.00000 0.00000 0.188000 )
+      converged eigenenergies (16):
+        -1.26208 -1.26256 -1.27035 -1.27124 -1.29187 -1.29308 -1.30986 -1.31002 
+        -1.34167 -1.3437 -1.34938 -1.352 -1.3569 -1.3577 -1.36734 -1.36887 
+
+      Solving for k2 = ( 0.00000 0.188000 0.00000 )
+      converged eigenenergies (16):
+        -1.26208 -1.26256 -1.27035 -1.27124 -1.29187 -1.29308 -1.30986 -1.31002 
+        -1.34167 -1.3437 -1.34938 -1.352 -1.3569 -1.3577 -1.36734 -1.36887 
+
+      Solving for k3 = ( 0.00000 0.188000 0.188000 )
+      converged eigenenergies (17):
+        -1.26131 -1.26186 -1.27432 -1.27571 -1.30021 -1.30161 -1.31323 -1.31408 
+        -1.34629 -1.34761 -1.35216 -1.35385 -1.36195 -1.36518 -1.37007 -1.37316 
+        -1.38531 
+
+      Solving for k0 = ( 0.00000 0.00000 0.00000 )
+      converged eigenenergies (20):
+        -1.25593 -1.25593 -1.27178 -1.27178 -1.27815 -1.27815 -1.31252 -1.31252 
+        -1.33268 -1.33268 -1.34311 -1.34311 -1.35496 -1.35496 -1.37291 -1.37291 
+        -1.37461 -1.37461 -1.38201 -1.38201 
+
+      effective masses:
+        0.264566 0.243635 0.588129 0.549979 0.10008 0.0923463 0.948988 0.634592 
+        0.154318 0.129067 0.223467 0.164952 1.18048 
+
+
+  Solve time: 0h 0m 0.7s
+  <<<<--------------------------------------------------------------------------
+
+  >>>>---------------------------------- (dd) ----------------------------------
+    it 1, |du| = 0.0746334, |r| = 4.36893e-05  alpha = 1
+    it 2, |du| = 0.00110146, |r| = 4.66909e-08  alpha = 1
+
+    iterations: 3, |du| = 2.5865e-07, |r| = 8.95402e-14
+    Surface recombination current = 0
+
+    contact name:       voltage:            current:
+    anode               1.2                -1481.75
+    cathode             0                   1481.75
+
+  Solve time: 0h 0m 0.25s
+  <<<<--------------------------------------------------------------------------
+  selfconsistent (Relaxation): iteration 3
+    correction (max norm):  0.0757351
+    relative error (l2)  :  0.00106053
+
+  >>>>------------------------------ (quantum_el) ------------------------------
+    Maximum of Ev (eV) :-1.24289
+    Minimum of Ec (eV) :-0.123362
+    (EFA) Estimated guess (eV): -0.235314
+    (EFA) Calculating quantum density
+      Solving for k1 = ( 0.00000 0.00000 0.188000 )
+      converged eigenenergies (10):
+        -0.0607642 0.029423 0.116395 0.151616 0.201528 0.282026 0.349046 0.454606 
+        0.562064 0.66928 
+
+      Solving for k2 = ( 0.00000 0.188000 0.00000 )
+      converged eigenenergies (10):
+        -0.0607642 0.029423 0.116395 0.151616 0.201528 0.282026 0.349046 0.454606 
+        0.562064 0.66928 
+
+      Solving for k3 = ( 0.00000 0.188000 0.188000 )
+      converged eigenenergies (10):
+        -0.0374689 0.0520129 0.137038 0.172205 0.222703 0.302766 0.370017 0.475738 
+        0.582923 0.69043 
+
+      Solving for k0 = ( 0.00000 0.00000 0.00000 )
+      converged eigenenergies (10):
+        -0.0840633 0.00681332 0.0957402 0.131028 0.180357 0.261287 0.328084 0.433471 
+        0.541207 0.648133 
+
+      effective masses:
+        0.0577963 0.0595586 0.0651956 0.0654045 
+
+
+  Solve time: 0h 0m 0.24s
+  <<<<--------------------------------------------------------------------------
+
+  >>>>------------------------------ (quantum_hl) ------------------------------
+    Maximum of Ev (eV) :-1.24289
+    Minimum of Ec (eV) :-0.123362
+    (EFA) Estimated guess (eV): -1.13093
+    (EFA) Calculating quantum density
+      Solving for k1 = ( 0.00000 0.00000 0.188000 )
+      converged eigenenergies (16):
+        -1.26245 -1.26292 -1.27071 -1.2716 -1.29223 -1.29344 -1.31022 -1.31039 
+        -1.34199 -1.34404 -1.34969 -1.35234 -1.35717 -1.35799 -1.36762 -1.36916 
+
+      Solving for k2 = ( 0.00000 0.188000 0.00000 )
+      converged eigenenergies (16):
+        -1.26245 -1.26292 -1.27071 -1.2716 -1.29223 -1.29344 -1.31022 -1.31039 
+        -1.34199 -1.34404 -1.34969 -1.35234 -1.35717 -1.35799 -1.36762 -1.36916 
+
+      Solving for k3 = ( 0.00000 0.188000 0.188000 )
+      converged eigenenergies (17):
+        -1.26168 -1.26222 -1.27468 -1.27607 -1.30057 -1.30197 -1.31359 -1.31444 
+        -1.34659 -1.34793 -1.3525 -1.35416 -1.36227 -1.36549 -1.37034 -1.37344 
+        -1.38563 
+
+      Solving for k0 = ( 0.00000 0.00000 0.00000 )
+      converged eigenenergies (20):
+        -1.25629 -1.25629 -1.27215 -1.27215 -1.27851 -1.27851 -1.31288 -1.31288 
+        -1.33303 -1.33303 -1.34337 -1.34337 -1.35529 -1.35529 -1.37319 -1.37319 
+        -1.37491 -1.37491 -1.3823 -1.3823 
+
+      effective masses:
+        0.264593 0.243612 0.588264 0.550014 0.100104 0.0923457 0.949861 0.634477 
+        0.154902 0.129223 0.221759 0.163617 1.42382 
+
+
+  Solve time: 0h 0m 0.71s
+  <<<<--------------------------------------------------------------------------
+
+  >>>>---------------------------------- (dd) ----------------------------------
+    it 1, |du| = 0.0250122, |r| = 5.75864e-06  alpha = 1
+
+    iterations: 2, |du| = 0.000120682, |r| = 6.61527e-10
+    Surface recombination current = 0
+
+    contact name:       voltage:            current:
+    anode               1.2                -1481.89
+    cathode             0                   1481.89
+
+  Solve time: 0h 0m 0.16s
+  <<<<--------------------------------------------------------------------------
+  selfconsistent (Relaxation): iteration 4
+    correction (max norm):  0.0248916
+    relative error (l2)  :  0.000348782
+
+  >>>>------------------------------ (quantum_el) ------------------------------
+    Maximum of Ev (eV) :-1.24277
+    Minimum of Ec (eV) :-0.123233
+    (EFA) Estimated guess (eV): -0.235186
+    (EFA) Calculating quantum density
+      Solving for k1 = ( 0.00000 0.00000 0.188000 )
+      converged eigenenergies (10):
+        -0.0606402 0.0295445 0.116502 0.151711 0.201627 0.282126 0.349142 0.454708 
+        0.562162 0.669379 
+
+      Solving for k2 = ( 0.00000 0.188000 0.00000 )
+      converged eigenenergies (10):
+        -0.0606402 0.0295445 0.116502 0.151711 0.201627 0.282126 0.349142 0.454708 
+        0.562162 0.669379 
+
+      Solving for k3 = ( 0.00000 0.188000 0.188000 )
+      converged eigenenergies (10):
+        -0.0373449 0.0521344 0.137144 0.1723 0.222803 0.302865 0.370114 0.475839 
+        0.583022 0.690529 
+
+      Solving for k0 = ( 0.00000 0.00000 0.00000 )
+      converged eigenenergies (10):
+        -0.0839392 0.00693488 0.0958474 0.131123 0.180456 0.261387 0.32818 0.433573 
+        0.541306 0.648232 
+
+      effective masses:
+        0.0577963 0.0595587 0.0651964 0.0654051 
+
+
+  Solve time: 0h 0m 0.24s
+  <<<<--------------------------------------------------------------------------
+
+  >>>>------------------------------ (quantum_hl) ------------------------------
+    Maximum of Ev (eV) :-1.24277
+    Minimum of Ec (eV) :-0.123233
+    (EFA) Estimated guess (eV): -1.13081
+    (EFA) Calculating quantum density
+      Solving for k1 = ( 0.00000 0.00000 0.188000 )
+      converged eigenenergies (16):
+        -1.26232 -1.2628 -1.27059 -1.27148 -1.29211 -1.29332 -1.3101 -1.31027 
+        -1.34188 -1.34393 -1.34958 -1.35222 -1.35708 -1.35789 -1.36753 -1.36907 
+
+      Solving for k2 = ( 0.00000 0.188000 0.00000 )
+      converged eigenenergies (16):
+        -1.26232 -1.2628 -1.27059 -1.27148 -1.29211 -1.29332 -1.3101 -1.31027 
+        -1.34188 -1.34393 -1.34958 -1.35222 -1.35708 -1.35789 -1.36753 -1.36907 
+
+      Solving for k3 = ( 0.00000 0.188000 0.188000 )
+      converged eigenenergies (17):
+        -1.26155 -1.2621 -1.27455 -1.27595 -1.30045 -1.30185 -1.31347 -1.31432 
+        -1.34649 -1.34782 -1.35238 -1.35406 -1.36216 -1.36539 -1.37025 -1.37335 
+        -1.38552 
+
+      Solving for k0 = ( 0.00000 0.00000 0.00000 )
+      converged eigenenergies (21):
+        -1.25617 -1.25617 -1.27202 -1.27202 -1.27839 -1.27839 -1.31276 -1.31276 
+        -1.33291 -1.33291 -1.34328 -1.34328 -1.35518 -1.35518 -1.37309 -1.37309 
+        -1.37481 -1.37481 -1.3822 -1.3822 -1.40149 
+
+      effective masses:
+        0.264578 0.243617 0.588206 0.549987 0.100096 0.0923464 0.949453 0.634494 
+        0.154703 0.129171 0.222343 0.164076 1.3242 
+
+
+  Solve time: 0h 0m 0.71s
+  <<<<--------------------------------------------------------------------------
+
+  >>>>---------------------------------- (dd) ----------------------------------
+    it 1, |du| = 0.00813113, |r| = 5.77615e-07  alpha = 1
+
+    iterations: 2, |du| = 1.28624e-05, |r| = 7.11901e-12
+    Surface recombination current = 0
+
+    contact name:       voltage:            current:
+    anode               1.2                -1481.84
+    cathode             0                   1481.84
+
+  Solve time: 0h 0m 0.16s
+  <<<<--------------------------------------------------------------------------
+  selfconsistent (Relaxation): iteration 5
+    correction (max norm):  0.00814399
+    relative error (l2)  :  0.000114086
+
+  >>>>------------------------------ (quantum_el) ------------------------------
+    Maximum of Ev (eV) :-1.24281
+    Minimum of Ec (eV) :-0.123275
+    (EFA) Estimated guess (eV): -0.235228
+    (EFA) Calculating quantum density
+      Solving for k1 = ( 0.00000 0.00000 0.188000 )
+      converged eigenenergies (10):
+        -0.0606803 0.0295051 0.116467 0.15168 0.201595 0.282093 0.349111 0.454675 
+        0.56213 0.669347 
+
+      Solving for k2 = ( 0.00000 0.188000 0.00000 )
+      converged eigenenergies (10):
+        -0.0606803 0.0295051 0.116467 0.15168 0.201595 0.282093 0.349111 0.454675 
+        0.56213 0.669347 
+
+      Solving for k3 = ( 0.00000 0.188000 0.188000 )
+      converged eigenenergies (10):
+        -0.037385 0.052095 0.13711 0.172269 0.222771 0.302833 0.370082 0.475806 
+        0.58299 0.690497 
+
+      Solving for k0 = ( 0.00000 0.00000 0.00000 )
+      converged eigenenergies (10):
+        -0.0839793 0.00689544 0.0958125 0.131092 0.180424 0.261355 0.328149 0.43354 
+        0.541274 0.6482 
+
+      effective masses:
+        0.0577963 0.0595587 0.0651961 0.0654049 
+
+
+  Solve time: 0h 0m 0.24s
+  <<<<--------------------------------------------------------------------------
+
+  >>>>------------------------------ (quantum_hl) ------------------------------
+    Maximum of Ev (eV) :-1.24281
+    Minimum of Ec (eV) :-0.123275
+    (EFA) Estimated guess (eV): -1.13085
+    (EFA) Calculating quantum density
+      Solving for k1 = ( 0.00000 0.00000 0.188000 )
+      converged eigenenergies (16):
+        -1.26236 -1.26284 -1.27063 -1.27152 -1.29215 -1.29336 -1.31014 -1.3103 
+        -1.34192 -1.34396 -1.34962 -1.35226 -1.35711 -1.35793 -1.36756 -1.3691 
+
+      Solving for k2 = ( 0.00000 0.188000 0.00000 )
+      converged eigenenergies (16):
+        -1.26236 -1.26284 -1.27063 -1.27152 -1.29215 -1.29336 -1.31014 -1.3103 
+        -1.34192 -1.34396 -1.34962 -1.35226 -1.35711 -1.35793 -1.36756 -1.3691 
+
+      Solving for k3 = ( 0.00000 0.188000 0.188000 )
+      converged eigenenergies (17):
+        -1.26159 -1.26214 -1.27459 -1.27599 -1.30049 -1.30189 -1.31351 -1.31436 
+        -1.34652 -1.34786 -1.35242 -1.35409 -1.3622 -1.36542 -1.37028 -1.37338 
+        -1.38556 
+
+      Solving for k0 = ( 0.00000 0.00000 0.00000 )
+      converged eigenenergies (21):
+        -1.25621 -1.25621 -1.27206 -1.27206 -1.27843 -1.27843 -1.3128 -1.3128 
+        -1.33295 -1.33295 -1.34331 -1.34331 -1.35522 -1.35522 -1.37312 -1.37312 
+        -1.37484 -1.37484 -1.38223 -1.38223 -1.40152 
+
+      effective masses:
+        0.264582 0.243615 0.588224 0.549994 0.100099 0.0923462 0.949572 0.634486 
+        0.154767 0.129187 0.222155 0.163928 1.35399 
+
+
+  Solve time: 0h 0m 0.71s
+  <<<<--------------------------------------------------------------------------
+
+  >>>>---------------------------------- (dd) ----------------------------------
+    it 1, |du| = 0.00267046, |r| = 6.33607e-08  alpha = 1
+
+    iterations: 2, |du| = 1.38361e-06, |r| = 1.25729e-13
+    Surface recombination current = 0
+
+    contact name:       voltage:            current:
+    anode               1.2                -1481.86
+    cathode             0                   1481.86
+
+  Solve time: 0h 0m 0.16s
+  <<<<--------------------------------------------------------------------------
+  selfconsistent (Relaxation): iteration 6
+    correction (max norm):  0.00266907
+    relative error (l2)  :  3.73933e-05
+
+  >>>>------------------------------ (quantum_el) ------------------------------
+    Maximum of Ev (eV) :-1.24279
+    Minimum of Ec (eV) :-0.123261
+    (EFA) Estimated guess (eV): -0.235214
+    (EFA) Calculating quantum density
+      Solving for k1 = ( 0.00000 0.00000 0.188000 )
+      converged eigenenergies (10):
+        -0.0606671 0.029518 0.116479 0.151691 0.201605 0.282104 0.349121 0.454686 
+        0.562141 0.669357 
+
+      Solving for k2 = ( 0.00000 0.188000 0.00000 )
+      converged eigenenergies (10):
+        -0.0606671 0.029518 0.116479 0.151691 0.201605 0.282104 0.349121 0.454686 
+        0.562141 0.669357 
+
+      Solving for k3 = ( 0.00000 0.188000 0.188000 )
+      converged eigenenergies (10):
+        -0.0373718 0.0521079 0.137121 0.172279 0.222781 0.302844 0.370093 0.475817 
+        0.583 0.690508 
+
+      Solving for k0 = ( 0.00000 0.00000 0.00000 )
+      converged eigenenergies (10):
+        -0.0839661 0.0069084 0.095824 0.131102 0.180435 0.261366 0.328159 0.433551 
+        0.541285 0.648211 
+
+      effective masses:
+        0.0577963 0.0595587 0.0651962 0.065405 
+
+
+  Solve time: 0h 0m 0.24s
+  <<<<--------------------------------------------------------------------------
+
+  >>>>------------------------------ (quantum_hl) ------------------------------
+    Maximum of Ev (eV) :-1.24279
+    Minimum of Ec (eV) :-0.123261
+    (EFA) Estimated guess (eV): -1.13084
+    (EFA) Calculating quantum density
+      Solving for k1 = ( 0.00000 0.00000 0.188000 )
+      converged eigenenergies (16):
+        -1.26235 -1.26283 -1.27061 -1.2715 -1.29214 -1.29335 -1.31012 -1.31029 
+        -1.34191 -1.34395 -1.34961 -1.35225 -1.3571 -1.35791 -1.36755 -1.36909 
+
+      Solving for k2 = ( 0.00000 0.188000 0.00000 )
+      converged eigenenergies (16):
+        -1.26235 -1.26283 -1.27061 -1.2715 -1.29214 -1.29335 -1.31012 -1.31029 
+        -1.34191 -1.34395 -1.34961 -1.35225 -1.3571 -1.35791 -1.36755 -1.36909 
+
+      Solving for k3 = ( 0.00000 0.188000 0.188000 )
+      converged eigenenergies (17):
+        -1.26158 -1.26213 -1.27458 -1.27597 -1.30048 -1.30187 -1.3135 -1.31435 
+        -1.34651 -1.34785 -1.35241 -1.35408 -1.36219 -1.36541 -1.37027 -1.37337 
+        -1.38555 
+
+      Solving for k0 = ( 0.00000 0.00000 0.00000 )
+      converged eigenenergies (20):
+        -1.25619 -1.25619 -1.27205 -1.27205 -1.27842 -1.27842 -1.31279 -1.31279 
+        -1.33294 -1.33294 -1.3433 -1.3433 -1.35521 -1.35521 -1.37311 -1.37311 
+        -1.37483 -1.37483 -1.38222 -1.38222 
+
+      effective masses:
+        0.264581 0.243616 0.588218 0.549992 0.100098 0.0923463 0.949532 0.634488 
+        0.154746 0.129182 0.222217 0.163977 1.34396 
+
+
+  Solve time: 0h 0m 0.71s
+  <<<<--------------------------------------------------------------------------
+
+  >>>>---------------------------------- (dd) ----------------------------------
+
+    iterations: 1, |du| = 0.000874093, |r| = 6.75121e-09
+    Surface recombination current = 0
+
+    contact name:       voltage:            current:
+    anode               1.2                -1481.85
+    cathode             0                   1481.85
+
+  Solve time: 0h 0m 0.097s
+  <<<<--------------------------------------------------------------------------
+  selfconsistent (Relaxation): iteration 7
+    correction (max norm):  0.000874093
+    relative error (l2)  :  1.22456e-05
+
+Solve time: 0h 0m 9.7s
+<<<<----------------------------------------------------------------------------
+
+Total solve time: 0h 0m 13s
+Simulation finished.
+
+68 warnings during run
+0 errors detected
+
+
+Log end: Fri Jul 20 11:13:01 2018
+
+

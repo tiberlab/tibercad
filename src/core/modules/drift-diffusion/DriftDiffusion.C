@@ -4532,8 +4532,23 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 
 
       //double ni = sc->get_intrinsic_density();
-      double mue = sc->get_electron_mobility();
-      double muh = sc->get_hole_mobility();
+      RealTensor mue;
+      mue(0,0) = mue(1,1) = mue(2,2) = sc->get_electron_mobility();
+      RealTensor muh;
+      muh(0,0) = muh(1,1) = muh(2,2) = sc->get_hole_mobility();
+
+      RealVectorValue mob_sc(1.0, 1.0, 1.0);
+      if (sc->get_options().has_submodel("mobility"))
+      {
+        sc->get_options().submodels_begin("mobility")->second.get_option("scale_mobility", mob_sc);
+      }
+
+      mue(0,0) *= mob_sc(0);
+      mue(1,1) *= mob_sc(1);
+      mue(2,2) *= mob_sc(2);
+      muh(0,0) *= mob_sc(0);
+      muh(1,1) *= mob_sc(1);
+      muh(2,2) *= mob_sc(2);
 
 
       // the jacobian x weight x scaling
@@ -4541,18 +4556,25 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 
 
       // NOTE: sigma_e = mu_e * n is the electron conductivity
-      double sigma_e = sc->get_electron_conductivity() / (mu0 * C0_e);
-      double sigma_h = sc->get_hole_conductivity() / (mu0 * C0_h);
-      double sigma_e_x_Pe_x_J = J * sigma_e * eTEpower;
-      double sigma_h_x_Ph_x_J = J * sigma_h * hTEpower;
+      RealTensor sigma_e;
+      sigma_e(0,0) = sigma_e(1,1) = sigma_e(2,2) = sc->get_electron_conductivity() / (mu0 * C0_e);
+      RealTensor sigma_h;
+      sigma_h(0,0) = sigma_h(1,1) = sigma_h(2,2) =sc->get_hole_conductivity() / (mu0 * C0_h);
 
-      //cout<<"C0 dens = "<<n<<" R = "<<Rn<<" mu = "<<mue<<" sigma = "<<sigma_e<<endl;
-      //cout<<"C1 dens = "<<p<<" R = "<<Rp<<" mu = "<<muh<<" sigma = "<<sigma_h<<endl;
+      sigma_e(0,0) *= mob_sc(0);
+      sigma_e(1,1) *= mob_sc(1);
+      sigma_e(2,2) *= mob_sc(2);
+      sigma_h(0,0) *= mob_sc(0);
+      sigma_h(1,1) *= mob_sc(1);
+      sigma_h(2,2) *= mob_sc(2);
+
+      RealTensor sigma_e_x_Pe_x_J = J * sigma_e * eTEpower;
+      RealTensor sigma_h_x_Ph_x_J = J * sigma_h * hTEpower;
 
       // TEST
-      double dn_dphi = sc->get_electron_density_derivative();
-      RealGradient chempot(grad_en);
-      double art_diff = 0.5 * elem->hmax() * mue * phi0 * dn_dphi * chempot.norm() / (mu0 * C0_e);
+      //double dn_dphi = sc->get_electron_density_derivative();
+      //RealGradient chempot(grad_en);
+      //double art_diff = 0.5 * elem->hmax() * mue * phi0 * dn_dphi * chempot.norm() / (mu0 * C0_e);
       //cerr << sigma_e << " " << art_diff << endl;
 
 
@@ -4575,9 +4597,6 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
       {
         for (unsigned int j = 0; j < n_dofs; j++)
         {
-          double laplace =
-	    J * (dphi[i][qp] * dphi[j][qp]);
-
 	  double laplace_u =
             J * (dphi[i][qp] * (permittivity * dphi[j][qp]));
 
@@ -4586,15 +4605,14 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 
           if (coupling & ECURRENT)
           {
-            Knn(i,j) += sigma_e * laplace / scalen(i);
-
+            Knn(i,j) += J * dphi[i][qp] * (sigma_e * dphi[j][qp]) / scalen(i);
 
                 //Knn(i,j) += fabs(art_diff) * dphi[i][qp] * dphi[j][qp] / scalen(i);
                 //Knn(i,j) += art_diff * dphi[i][qp] * dphi[j][qp] / scalen(i);
           }
 
           if (coupling & HCURRENT)
-            Kpp(i,j) += sigma_h * laplace / scalep(i);
+            Kpp(i,j) += J * dphi[i][qp] * (sigma_h * dphi[j][qp]) / scalep(i);
 
         }
 
@@ -4673,8 +4691,8 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
         // d(sigma_n)/du * element-jacobian
         // sigma_n = mu_n * n means the conductivity of electrons
         // the factor phi_0 comes from the derivative with respect to the potential
-        double dsigma_e = J * phi0 / (mu0 * C0_e) * mue * dn_dphi;
-        double dsigma_h = J * phi0 / (mu0 * C0_h) * muh * dp_dphi;
+        RealTensor dsigma_e = J * phi0 / (mu0 * C0_e) * mue * dn_dphi;
+        RealTensor dsigma_h = J * phi0 / (mu0 * C0_h) * muh * dp_dphi;
 
         // field dependent mobility
         // the factor phi_0 / x0 comes from the derivative with respect to the
@@ -4707,8 +4725,8 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
         {
           double lap_e = (dphi[i][qp] * grad_en) / scalen(i);
           double lap_h = (dphi[i][qp] * grad_ep) / scalep(i);
-          double dsigma_e_x_lap = dsigma_e * lap_e;
-          double dsigma_h_x_lap = dsigma_h * lap_h;
+          double dsigma_e_x_lap = dphi[i][qp] * (dsigma_e * grad_en) / scalen(i);
+          double dsigma_h_x_lap = dphi[i][qp] * (dsigma_h * grad_ep) / scalep(i);
 
           for (unsigned int j = 0; j < n_dofs; j++)
           {
@@ -4754,17 +4772,16 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 
 
             // contribution of the Seebeck effect ->residual_derivative
-            double dsigma_e_x_phi_x_Pe = dsigma_e * phi[j][qp] * eTEpower;
-            double dsigma_h_x_phi_x_Ph = dsigma_h * phi[j][qp] * hTEpower;
+            RealTensor dsigma_e_x_phi_x_Pe = dsigma_e * phi[j][qp] * eTEpower;
+            RealTensor dsigma_h_x_phi_x_Ph = dsigma_h * phi[j][qp] * hTEpower;
 
             for (unsigned int k = 0; k < n_dofs; k++)
             {
-              double laplace = dphi[i][qp] * dphi[k][qp];
 
               if (coupling & ECURRENT)
               {
                 double elem_contrib =
-                  dsigma_e_x_phi_x_Pe * laplace * T_nodes[k] / scalen(i);
+                    dphi[i][qp] *  (dsigma_e_x_phi_x_Pe * dphi[k][qp]) * T_nodes[k] / scalen(i);
 
 		Knn(i,j) -= elem_contrib;
 
@@ -4776,7 +4793,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
               if (coupling & HCURRENT)
               {
                 double elem_contrib =
-                  dsigma_h_x_phi_x_Ph * laplace * T_nodes[k] / scalep(i);
+                    dphi[i][qp] * (dsigma_h_x_phi_x_Ph * dphi[k][qp]) * T_nodes[k] / scalep(i);
 
 		Kpp(i,j) -= elem_contrib;
 
@@ -4887,13 +4904,11 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 	{
 	  for (unsigned int k = 0; k < n_dofs; k++)
 	  {
-	    Real laplace = dphi[i][qp] * dphi[k][qp];
-
 	    if (coupling & ECURRENT)
-	      Fn(i) += sigma_e_x_Pe_x_J * laplace * T_nodes[k] / scalen(i);
+	      Fn(i) += dphi[i][qp] * (sigma_e_x_Pe_x_J * dphi[k][qp]) * T_nodes[k] / scalen(i);
 
 	    if (coupling & HCURRENT)
-	      Fp(i) += sigma_h_x_Ph_x_J * laplace * T_nodes[k] / scalep(i);
+	      Fp(i) += dphi[i][qp] * (sigma_h_x_Ph_x_J * dphi[k][qp]) * T_nodes[k] / scalep(i);
 	  }
 	}
 
@@ -5406,6 +5421,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
   else
   {
     residual->close();
+    write_nodal_vector("residual", *residual);
 
     //sysmat.close();
     //sysmat.print_matlab("sysmat.m");

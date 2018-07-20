@@ -356,7 +356,11 @@ PhysicalModelInterface::init(void)
       this->has_option("override_database"))
   {
     string mat = get_option("override_material", get_material()->get_name());
-    _database = new Database(mat, get_option("override_database", ""));
+    Material* newmat = Material::create(mat, ModelOptions());
+    newmat->init();
+    _bulk_material = newmat;
+    _database = new Database(_bulk_material->get_database());
+    //_database = new Database(mat, get_option("override_database", ""));
   }
 
 
@@ -478,6 +482,18 @@ PhysicalModelInterface::init_alloy(const PhysicalModelInterface* comp_A,
   //   The current approach relies on the strong assumption that all models
   //   in all alloy components are ordered exactly the same way. This had
   //   better be changed in the future!
+
+  // first check if we want to override the material datafile
+  if (this->has_option("override_material") ||
+      this->has_option("override_database"))
+  {
+    string mat = get_option("override_material", get_material()->get_name());
+    Material* newmat = Material::create(mat, ModelOptions());
+    newmat->init();
+    _bulk_material = newmat;
+    _database = new Database(_bulk_material->get_database());
+    //_database = new Database(mat, get_option("override_database", ""));
+  }
 
   read_database();
 

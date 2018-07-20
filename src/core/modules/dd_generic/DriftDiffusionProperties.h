@@ -811,7 +811,7 @@ class DriftDiffusionProperties : public PhysicalModel
     std::map<ID, CarrierProperties*> _carrier_properties;
 
 
-    //! This vector contains of all the known carriers in a consistent ordering
+    //! This vector contains all the known carriers in a consistent ordering
     /*!
      * The order is set from \c DriftDiffusion, and used also to define the
      * system and solution variables

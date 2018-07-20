@@ -107,8 +107,15 @@ Module dd_generic
 
     carrier hole
     {
-      density_of_states bulk_kp
+     density_of_states quantum
       {
+        quantum_simulation = quantum_hl
+        barrier_regions = buffer_quantum
+
+        classical_DOS bulk_kp 
+        {
+          #strain = strain
+        }
       }
     }
 
@@ -119,7 +126,6 @@ Module dd_generic
 
       density_of_states quantum
       {
-        #particle = e
         quantum_simulation = quantum_el
 
         classical_DOS bulk_kp 
@@ -227,7 +233,12 @@ Module efaschroedinger
   plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)
 
   num_hole_states = 12
-  poisson_model_name = dd
+
+  electrostatic_potential = dd.ElPotential
+  cb_edge = dd.el_qwRefEnergy
+  vb_edge = dd.holeRefEnergy
+  hl_electrochemical_potential = dd.holeQFermi
+
   #strain_model_name = strain 
   quadrature_rule = trapez
   
@@ -245,23 +256,21 @@ Module sweep
   solve = dd
   variable = $Vb
   start = 0.0
-  stop = 1.5
-  steps = 15
+  stop = 1.2
+  steps = 12
   plot_data = true
 }
 
 
 Module selfconsistent
 {
-  #solve = (quantum_el, quantum_hl, dd)
-  solve = (quantum_el, dd)
+  solve = (quantum_el, quantum_hl, dd)
   # we do not use relaxation, but a predictor-corrector scheme
   #relaxation_factor = 0.5
   max_iterations = 10
   absolute_tolerance = 1e-3
   relative_tolerance = 1e-8
   monitor = true
-  #xmonitor = true
 }
 
 
