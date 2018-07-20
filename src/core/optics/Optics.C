@@ -474,9 +474,6 @@ void Optics::calculate_for_k_point(const Point& k_point,
 {
 
   short k_dim = _k_integration->get_k_space_dimension();
-  if (plot_solution("EigenStates_k_0"))
-    TiberCad::prepend_to_filename_suffix("k_0");
-  else
   {
     ostringstream os;
     if (k_dim > 0)
