@@ -30,7 +30,6 @@ void
 AtomisticGenerator1D::build()
 {
 
-  // <<<<<<< .mine
   //1D and 2D structures are intended to be periodical
   //set_periodicity(false,true,true);
 

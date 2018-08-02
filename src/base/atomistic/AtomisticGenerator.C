@@ -255,14 +255,7 @@ AtomisticGenerator::do_init()
 
   // assign random-alloy species
   if (_as->is_random_alloy())
-  {
-    if (_as->get_options().get_option("old_random_routine",false))
-    {
-      build_random_old();
-    }
-    else
-      build_random_alloy();
-  }
+    build_random_alloy();
 
   // delete generator bondmap
   delete _bondmap;
@@ -588,6 +581,7 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3)
   
   Messages::debug("Running make_supercell...");
 
+
   //Check values. l1,l2,l3 cannot be unwisely large (no more than (1um)^3)
   assert((l1*l2*l3) < 1e+12);
 
@@ -700,6 +694,8 @@ void AtomisticGenerator::make_conv_cell()
   //
   _conv_prim = inv(rotated_prim_vec);
   scale_to_int(_conv_prim);
+  //cerr << " conv prim = " << _conv_prim << endl;
+  //cerr << " rot  prim = " << rotated_prim_vec << endl;
  
   // now the matrix nij = _conv_prim
   // so the orthogonal cell vectors are 
@@ -772,8 +768,40 @@ void AtomisticGenerator::minimal_conv_cell()
   int i,j, k,l, ilow,jlow,klow,llow, lower_2, lower_3, upper_2, upper_3;
   Tensor2Gen rotated_prim_vec = _bulk->get_rotated_prim_vec();
 
+  // the calculations seem to assume a certain ordering of the vectors
+  // therefore we reorder according to this, and then adjust the results
+  // according to the original ordering
+  unsigned int id1 = 1;
+  unsigned int id2 = 2;
+  unsigned int id3 = 3;
+
+  double proj = 0;
+  for (i = 1; i <= 3; ++i)
+  {
+    if ((fabs(rotated_prim_vec(2, i)) < 1e-12) && 
+        (fabs(rotated_prim_vec(3, i)) < 1e-12))
+    {
+      id1 = i;
+      id2 = (i % 3) + 1;
+      id3 = ((i + 1) % 3) + 1;
+    }
+  }
+  //cerr << id1 << " " << id2 << " " << id3 << endl;
+  //cerr << "rot : " << rotated_prim_vec << endl;
+
+  Tensor2Gen tmp = rotated_prim_vec;
+  for (i = 1; i <= 3; ++i)
+  {
+    rotated_prim_vec(i, 1) = tmp(i, id1);
+    rotated_prim_vec(i, 2) = tmp(i, id2);
+    rotated_prim_vec(i, 3) = tmp(i, id3);
+  }
+
   for (i = 1; i<=3; i++)
     c[i] = rotated_prim_vec(1,i);
+
+  //cerr << "rot : " << rotated_prim_vec << endl;
+  //cerr << "conv : " << _conv_vect << endl;
 
   //Define a box including conventional cell (this should be the maximal area cell)
   Point p(_conv_vect(1,1), _conv_vect(2,2), _conv_vect(3,3));
@@ -851,8 +879,16 @@ void AtomisticGenerator::minimal_conv_cell()
   _conv_vect(1,2) = v1(1); _conv_vect(2,2) = v1(2); _conv_vect(3,2) = v1(3); 
   _conv_vect(1,3) = v2(1); _conv_vect(2,3) = v2(2); _conv_vect(3,3) = v2(3); 
 
-  cout<<"conv_vect"<<endl;
-  cout<<_conv_vect<<endl;
+  tmp = _conv_vect;
+  for (i = 1; i <= 3; ++i)
+  {
+    _conv_vect(i, id1) = tmp(i, 1);
+    _conv_vect(i, id2) = tmp(i, 2);
+    _conv_vect(i, id3) = tmp(i, 3);
+  }
+
+  //cerr<<"conv_vect"<<endl;
+  //cerr<<_conv_vect<<endl;
 }
 
 void AtomisticGenerator::make_conv_lattice()
@@ -861,6 +897,7 @@ void AtomisticGenerator::make_conv_lattice()
   int lower[4],upper[4],i;
   Tensor1 prim_position, tmp_position;
   Tensor2Gen rotated_prim_vec = _bulk->get_rotated_prim_vec();
+  //cerr << "rotated prim vec : " << rotated_prim_vec << endl;
 
   /* IMPORTANT NOTE:
    * The lattice points covering the conventional cells are obtained by looking at the indeces
@@ -1884,260 +1921,4 @@ AtomisticGenerator::build_random_alloy()
 }
 
 
-void
-AtomisticGenerator::build_random_old()
-{
-  Messages::newline();
-  Messages::info("Building random alloy ...");
-
-  if (_bondmap == NULL) bond_map_gen(_structure_basis);
-
-  Messages m;
-  m.indent();
-
-  std::map<ID, std::map<unsigned char, Specie> > assignA;
-  std::map<ID, std::map<unsigned char, Specie> > assignB;
-  std::map<ID, double> a_to_b_prob;
-
-  if (_as->is_random_alloy() == false)
-    Messages::error("build_random_alloy is called but AtomisticStructure is not "
-        "a random alloy");
-
-  bool clustering = _as->get_options().get_option("clustering", false);
-  double rand_percentage;
-  if (clustering)
-    rand_percentage = _as->get_options().get_option("cluster_seeds", 0.02);
-  bool fix_mean_alloy_concentration =
-      _as->get_options().get_option("fix_mean_alloy_concentration", true);
-
-  // By default in VCA the specie assigned is the one of parent A
-  // so we first swap all atoms and then change back to species A
-  // I do this because then the rest of the code becomes
-  // more intuitive.
-
-  for (std::set<ID>::iterator reg = _as->get_IDset().begin(); reg != _as->get_IDset().end(); ++reg)
-  {
-    const Material* mat = _as->get_device()->get_material( (*reg) );
-
-    if (mat->is_alloy())
-    {
-      const Alloy* alloy = dynamic_cast<const Alloy*>(mat);
-      const Material* matA = alloy->get_component_A();
-      const Material* matB = alloy->get_component_B();
-
-      Database dbA = matA->get_database();
-      Database dbB = matB->get_database();
-
-      dbA.set_section("atomistic_structure");
-      dbB.set_section("atomistic_structure");
-
-      // Build up conversion map from file
-      for (unsigned int i = 1; i <= dbA.get("n_basis_specie", 0); i++)
-      {
-        std::string record;
-        std::string s;
-        std::stringstream out;
-
-        out << i;
-        s = out.str();
-
-        record = "specie_" + s;
-        std::string db_record = dbA.get(record.c_str(),"none");
-        assignA[*reg][static_cast<unsigned char>(i)] = Specie(db_record);
-        // Note: probability to switch specie is 1-x
-        a_to_b_prob[*reg] = mat->get_options().get_option("x", 1.0);
-      }
-
-      for (int i = 1; i <= dbB.get("n_basis_specie", 0); i++)
-      {
-        std::string record;
-        std::string s;
-        std::stringstream out;
-
-        out << i;
-        s = out.str();
-
-        record = "specie_" + s;
-        std::string db_record = dbB.get(record.c_str(),"none");
-        assignB[*reg][static_cast<unsigned char>(i)] = Specie(db_record);
-      }
-
-    }
-  }
-
-  // A random starting seed is needed to actually have different sequences
-  // we try to use something that is different also if launching simulations
-  // at the same time
-  int seed = _as->get_options().get_option("random_generator_seed",
-      static_cast<int>(time(NULL) * std::tr1::random_device()()));
-  {
-    std::ostringstream os;
-    os << "Initializing  MT19937 random generator with seed " << seed;
-        //std::ios::hex << seed;
-    Messages::info(os.str());
-  }
-  std::tr1::mt19937 generator(seed);
-
-
-  //
-  // First we count for each region the number of atoms that have to be substituted
-  //
-
-  // these vectors have space for all regions, so we can access them in a fast way
-  std::vector<int> num_to_substitute(
-      *(std::max_element(_as->get_IDset().begin(), _as->get_IDset().end())) + 1, 0);
-  std::vector<int> num_substituted(num_to_substitute.size(), 0);
-
-
-  for (unsigned int i = 0; i < _structure_basis.size(); i++)
-  {
-    Atom& atm = _structure_basis[i];
-
-    // we skip passivation atoms
-    if (atm.get_specie() == Specie::H)
-      continue;
-
-    // if it is flagged as first atom in the basis it may be substituted
-    if (atm.get_label() == 1)
-    {
-      ID regid = atm.get_region_ID();
-      const Material* mat = _as->get_material(atm);
-      if (mat->is_alloy())
-      {
-        num_to_substitute[regid] += 1;
-        // swap species
-        atm.set_specie(assignB[regid][atm.get_label()]);
-      }
-    }
-  }
-
-  // this set is used to check if we have to do something in a region
-  std::set<ID> not_finished;
-
-  for (int i = 0; i < num_to_substitute.size(); ++i)
-  {
-    if (num_to_substitute[i] > 0)
-    {
-      // if we want to fix the number of atmos to be substituted,
-      // we calculate this number now
-      if (fix_mean_alloy_concentration)
-      {
-        double x = a_to_b_prob[i];
-        // NOTE: we use floor() here to not have any fluctuation due to numerical
-        // roundoff errors
-        int n_tot = num_to_substitute[i];
-        num_to_substitute[i] = std::floor(x * num_to_substitute[i]);
-        std::ostringstream os;
-        os << "Region " << i << ": x = " << x << " -> " << num_to_substitute[i] <<
-            " atoms out of " << n_tot << " to be substituted (x_eff = " <<
-            std::setprecision(3) <<
-            static_cast<float>(num_to_substitute[i]) / n_tot << ")" << std::endl;
-        Messages::info(os.str());
-      }
-
-      not_finished.insert(i);
-    }
-  }
-
-
-
-  //
-  // Now we extract random numbers between 0 and _structure_basis.size() - 1
-  // to randomly pick an atom. If it is flagged as 1, and is in a region where
-  // atoms need to be substituted, and is not already substituted it will be changed.
-  // This is repeated until in all regions we have substituted the required number
-  // of atoms.
-  //
-  std::tr1::uniform_int<size_t> random(0, _structure_basis.size() - 1);
-
-
-  size_t ctr = 0;
-  size_t id = 0;
-  for (; !not_finished.empty(); ++ctr)
-  {
-    if (fix_mean_alloy_concentration)
-      id = random(generator);
-    else
-    {
-      // in this case we visit every atom
-      id = ctr;
-      if (id >= _structure_basis.size())
-        break;
-    }
-
-    Atom& atm = _structure_basis[id];
-
-    if ((atm.get_label() == 1) &&
-        (atm.get_specie() != Specie::H))
-    {
-      ID regid = atm.get_region_ID();
-
-      if (num_substituted[regid] < num_to_substitute[regid])
-      {
-        // NOTE: random numbers may repeat, so we have to check if this atom
-        // has already been substituted!!
-        Specie sp(assignA[regid][atm.get_label()]);
-
-        if (atm.get_specie() != sp)
-        {
-          double prob = 1.0;
-          double rnd = 0.0;
-          // the first X% will be distributed randomly
-          if (clustering && (num_substituted[regid] > rand_percentage * num_to_substitute[regid]))
-          {
-            prob = substitution_probability(id, sp);
-            rnd = static_cast<double>(generator()) / generator.max();
-          }
-          if (!fix_mean_alloy_concentration)
-          {
-            prob = a_to_b_prob[regid];
-            rnd = static_cast<double>(generator()) / generator.max();
-          }
-
-          if (rnd <= prob)
-          {
-            atm.set_specie(sp);
-            ++num_substituted[regid];
-          }
-        }
-      }
-      else
-      {  
-        not_finished.erase(regid);
-      }  
-
-    }
-
-  }
-
-  if (fix_mean_alloy_concentration)
-  {
-    size_t subst = 0;
-    for (int i = 0; i < num_substituted.size(); ++i)
-      subst += num_substituted[i];
-
-    std::ostringstream os;
-    os << "Needed " << ctr << " random number extractions to substitute " << subst << " atoms";
-    Messages::info(os.str());
-    Messages::newline();
-  }
-  else
-  {
-    for (int i = 0; i < num_substituted.size(); ++i)
-    {
-      if (num_to_substitute[i] > 0)
-      {
-        std::ostringstream os;
-        os << _as->get_device()->get_region_name(i) << " : substituted "
-            << num_substituted[i] << " out of " << num_to_substitute[i]
-            << " ( " << static_cast<double>(100 * num_substituted[i])
-                             / num_to_substitute[i]
-            << "%, nominally " << 100 * a_to_b_prob[i] << "%)";
-        Messages::info(os.str());
-      }
-    }
-    Messages::newline();
-  }
-
-}
 
