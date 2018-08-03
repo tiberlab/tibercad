@@ -280,12 +280,12 @@ QEInterface::do_solve(void)
   {
     qe_both << "CELL_PARAMETERS angstrom" << endl;
             //<< a.print_unformatted() << endl
-    qe_both << "  ";
-    a.write_unformatted(qe_both);
-    qe_both << "  ";
-    b.write_unformatted(qe_both);
-    qe_both << "  ";
-    c.write_unformatted(qe_both);
+    qe_both << "  "
+      << a(0) << " " << a(1) << " " << a(2) << endl;
+    qe_both << "  "
+      << b(0) << " " << b(1) << " " << b(2) << endl;
+    qe_both << "  "
+      << c(0) << " " << c(1) << " " << c(2) << endl;
   }
 
 
