@@ -264,6 +264,18 @@ QEInterface::do_solve(void)
     qe_nscf << "   nbnd = " << _qe_nbnd << "," << endl;
   qe_both << "/" << endl;
 
+  qe_both << "&electrons" << endl
+          << "   conv_thr = " << _qe_conv_thr << "," << endl;
+  if (_qe_mixing_beta > 0)
+    qe_both << "   mixing_beta = " << _qe_mixing_beta << "," << endl;
+  qe_both << "/" << endl;
+
+  if (get_option("relax", false))
+  {
+    qe_scf << "&ions" << endl
+      << "/" << endl;
+  }
+
   if (ibrav == 0)
   {
     qe_both << "CELL_PARAMETERS angstrom" << endl;
@@ -277,17 +289,7 @@ QEInterface::do_solve(void)
     qe_both << "/" << endl;
   }
 
-  qe_both << "&electrons" << endl
-          << "   conv_thr = " << _qe_conv_thr << "," << endl;
-  if (_qe_mixing_beta > 0)
-    qe_both << "   mixing_beta = " << _qe_mixing_beta << "," << endl;
-  qe_both << "/" << endl;
 
-  if (get_option("relax", false))
-  {
-    qe_scf << "&ions" << endl
-      << "/" << endl;
-  }
 
   const vector<string>& atom_types = this->get_atomistic_structure()->get_atom_types();
 
