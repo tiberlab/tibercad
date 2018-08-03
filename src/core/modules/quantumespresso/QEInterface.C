@@ -87,11 +87,11 @@ QEInterface::do_init(void)
 
   vector<string> pseudos;
   get_option("pseudopotentials", pseudos);
-  //for (unsigned int i = 0; i < pseudos.size(); i = i + 2)
-  //{
-  //  _qe_pseudos[pseudos[i]] = pseudos[i+1];
-  //  cerr << pseudos[i] << "  " << pseudos[i+1] << endl;
-  //}
+  for (unsigned int i = 0; i < pseudos.size(); i = i + 2)
+  {
+    _qe_pseudos[pseudos[i]] = pseudos[i+1];
+    //cerr << pseudos[i] << "  " << pseudos[i+1] << endl;
+  }
 
   _qe_outdir = get_option("outdir", _qe_outdir);
 }
