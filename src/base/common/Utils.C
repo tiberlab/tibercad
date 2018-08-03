@@ -289,7 +289,8 @@ Utils::get_until_matching_symbol(std::istream& istr, char open, char close)
     last_letter = tmp;
     tmp = istr.get();
     if (tmp == EOF) return str;
-    else if (tmp == open && last_letter != '\\') opened++;
+    else if ((open != close) &&
+             (tmp == open && last_letter != '\\')) opened++;
     else if (tmp == close && last_letter != '\\')
     {
       opened--;
@@ -392,6 +393,9 @@ Utils::extract_vector(const string& input, vector<T>& vec)
 
   tmp = istr.get();
 
+  // for components with the same start and end symbol, e.g. "
+  bool str_start = false;
+
   string comp;
   while (tmp != EOF)
   {
@@ -410,7 +414,25 @@ Utils::extract_vector(const string& input, vector<T>& vec)
         break;
 
       case '"':
-        comp += get_until_matching_symbol(istr, '"', '"');
+        if (str_start)
+        {
+          // we found a complete vector component
+          boost::algorithm::trim(comp);
+          if (!comp.empty())
+            vec.push_back(convert<T>(comp));
+          comp.clear();
+          str_start = false;
+        }
+        else
+        {
+          str_start = true;
+
+          comp += get_until_matching_symbol(istr, '"', '"');
+          //cerr << comp;
+          comp.erase(comp.size() - 1, 1);
+          istr.unget();
+        }
+        //cerr << comp << endl;
         break;
 
       case ',':

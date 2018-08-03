@@ -769,8 +769,8 @@ void AtomisticGenerator::minimal_conv_cell()
   Tensor2Gen rotated_prim_vec = _bulk->get_rotated_prim_vec();
 
   // the calculations seem to assume a certain ordering of the vectors
-  // therefore we reorder according to this, and then adjust the results
-  // according to the original ordering
+  // therefore we reorder according to this
+  // we do not reorder back afterwards the results, which seems to not work
   unsigned int id1 = 1;
   unsigned int id2 = 2;
   unsigned int id3 = 3;
@@ -879,13 +879,13 @@ void AtomisticGenerator::minimal_conv_cell()
   _conv_vect(1,2) = v1(1); _conv_vect(2,2) = v1(2); _conv_vect(3,2) = v1(3); 
   _conv_vect(1,3) = v2(1); _conv_vect(2,3) = v2(2); _conv_vect(3,3) = v2(3); 
 
-  tmp = _conv_vect;
-  for (i = 1; i <= 3; ++i)
-  {
-    _conv_vect(i, id1) = tmp(i, 1);
-    _conv_vect(i, id2) = tmp(i, 2);
-    _conv_vect(i, id3) = tmp(i, 3);
-  }
+  //tmp = _conv_vect;
+  //for (i = 1; i <= 3; ++i)
+  //{
+  //  _conv_vect(i, id1) = tmp(i, 1);
+  //  _conv_vect(i, id2) = tmp(i, 2);
+  //  _conv_vect(i, id3) = tmp(i, 3);
+  //}
 
   //cerr<<"conv_vect"<<endl;
   //cerr<<_conv_vect<<endl;

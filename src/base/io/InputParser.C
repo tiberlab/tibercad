@@ -423,9 +423,10 @@ string InputParser::get_until_closing_brace(istream& in_stream)
   string str = "";
   int temp = 0;
 
+  skip_whitespaces(in_stream);
+
   while (true)
   {
-    skip_whitespaces(in_stream);
     temp = in_stream.get();
     if (temp == EOF)
       return str;
