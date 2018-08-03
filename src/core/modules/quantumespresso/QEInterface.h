@@ -65,8 +65,11 @@ class QEInterface : public SimulationInterface
     //! Number of bands for nscf
     int _qe_nbnd;
 
-    //! The k_points as strings
-    std::vector<std::string> _qe_k_points;
+    //! The k_points as strings, for the scf file
+    std::vector<std::string> _qe_k_points_scf;
+
+    //! The k_points as strings, for the nscf file
+    std::vector<std::string> _qe_k_points_nscf;
 
     //! Pseudopotentials to be used
     std::map<std::string, std::string> _qe_pseudos;

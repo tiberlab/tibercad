@@ -18,7 +18,8 @@ QEInterface::QEInterface(const ModelOptions& options) :
   _qe_conv_thr(1e-6),
   _qe_mixing_beta(0),
   _qe_nbnd(0),
-  _qe_k_points({"automatic", "1 1 1 0 0 0"}),
+  _qe_k_points_scf({"Gamma"}), //{"automatic", "1 1 1 0 0 0"}),
+  _qe_k_points_nscf({"Gamma"}), //{"automatic", "1 1 1 0 0 0"}),
   _qe_outdir("out"),
   _qe_degauss(0.001), //
   _qe_DeltaE(0.01), //
@@ -78,17 +79,19 @@ QEInterface::do_init(void)
   _qe_pp_outputformat = get_option ("pp_outputformat", _qe_pp_outputformat); //
   _qe_weight = get_option ("weight(1)", _qe_weight); //
 
-  get_option("k_points", _qe_k_points);
-  if (_qe_k_points.size() < 2)
-    throw InitFailedException("You need to provide the definitions for the kpoints.");
+  get_option("k_points_scf", _qe_k_points_scf);
+  get_option("k_points_nscf", _qe_k_points_nscf);
+  
+  //if (_qe_k_points.size() < 2)
+  //  throw InitFailedException("You need to provide the definitions for the kpoints.");
 
   vector<string> pseudos;
   get_option("pseudopotentials", pseudos);
-  for (unsigned int i = 0; i < pseudos.size(); i = i + 2)
-  {
-    _qe_pseudos[pseudos[i]] = pseudos[i+1];
-    cerr << pseudos[i] << "  " << pseudos[i+1] << endl;
-  }
+  //for (unsigned int i = 0; i < pseudos.size(); i = i + 2)
+  //{
+  //  _qe_pseudos[pseudos[i]] = pseudos[i+1];
+  //  cerr << pseudos[i] << "  " << pseudos[i+1] << endl;
+  //}
 
   _qe_outdir = get_option("outdir", _qe_outdir);
 }
@@ -330,9 +333,13 @@ QEInterface::do_solve(void)
   }
   
   qe_both << "K_POINTS ";
-  for (unsigned int i = 0; i < _qe_k_points.size(); ++i)
+  for (unsigned int i = 0; i < _qe_k_points_scf.size(); ++i)
   {
-    qe_scf << _qe_k_points[i] << endl;
+    qe_scf << _qe_k_points_scf[i] << endl;
   }
-  qe_nscf << "crystal_b\n1\n0 0 0 1\n";
+  //qe_nscf << "crystal_b\n1\n0 0 0 1\n";
+  for (unsigned int i = 0; i < _qe_k_points_nscf.size(); ++i)
+  {
+    qe_nscf << _qe_k_points_nscf[i] << endl;
+  }
 }
