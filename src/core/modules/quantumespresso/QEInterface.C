@@ -286,7 +286,6 @@ QEInterface::do_solve(void)
     b.write_unformatted(qe_both);
     qe_both << "  ";
     c.write_unformatted(qe_both);
-    qe_both << "/" << endl;
   }
 
 
