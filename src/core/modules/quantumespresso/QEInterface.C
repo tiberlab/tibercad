@@ -213,9 +213,10 @@ QEInterface::do_solve(void)
     ibrav = 0;
   }
 
+  qe_both << "   ibrav = " << ibrav << "," << endl;
+
   if (ibrav == 8)
   {
-    qe_both << "   ibrav = " << ibrav << "," << endl;
     qe_both << "   a = " << a.norm() << "," << endl
             << "   b = " << b.norm() << "," << endl
             << "   c = " << c.norm() << "," << endl;
@@ -246,7 +247,6 @@ QEInterface::do_solve(void)
 
     alat /= Constants::bohr_radius / 1e-10;
 
-    qe_both << "   ibrav = " << ibrav << "," << endl;
     qe_both << "   celldm(1) = " << alat << "," << endl
             << "   celldm(3) = " << c_o_a << "," << endl;
 
