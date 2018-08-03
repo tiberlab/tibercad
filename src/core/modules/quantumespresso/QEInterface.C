@@ -16,6 +16,7 @@ QEInterface::QEInterface(const ModelOptions& options) :
   _qe_pseudo_dir("."),
   _qe_ecutwfc(20.0),
   _qe_conv_thr(1e-6),
+  _qe_mixing_beta(0),
   _qe_nbnd(0),
   _qe_k_points({"automatic", "1 1 1 0 0 0"}),
   _qe_outdir("out"),
@@ -59,6 +60,7 @@ QEInterface::do_init(void)
   _qe_pseudo_dir = get_option("pseudo_dir", _qe_pseudo_dir);
   _qe_ecutwfc = get_option("ecutwfc", _qe_ecutwfc);
   _qe_conv_thr = get_option("conv_thr", _qe_conv_thr);
+  _qe_mixing_beta = get_option("mixing_beta", _qe_mixing_beta);
   _qe_nbnd = get_option("nbnd", _qe_nbnd);
   _qe_degauss = get_option ("degauss", _qe_degauss); //
   _qe_DeltaE = get_option ("DeltaE", _qe_DeltaE); //
@@ -132,13 +134,22 @@ QEInterface::do_solve(void)
   qe_both << "&control" << endl;
   qe_pdos << "&projwfc" << endl; //
   qe_ppel << "&INPUTPP" << endl; //
-  qe_scf  << "   calculation = 'scf'," << endl
-          << "   restart_mode='from_scratch'," << endl;
+  if (get_option("relax", false))
+    qe_scf  << "   calculation = 'relax'," << endl;
+  else
+    qe_scf  << "   calculation = 'scf'," << endl;
+
+  qe_scf  << "   restart_mode='from_scratch'," << endl;
   qe_nscf << "   calculation = 'nscf'," << endl;
   qe_both << "   prefix = '" << prefix << "'," << endl
           << "   pseudo_dir = '" << _qe_pseudo_dir << "'," << endl
           << "   outdir = '" << _qe_outdir << "'," << endl
-          << "/" << endl;
+          << "   verbosity = 'high'," << endl
+          << "   tstress = .true.," << endl
+          << "   tprnfor = .true.," << endl;
+  if (get_option("wf_collect", false))
+    qe_both << "   wf_collect = .true.," << endl;
+  qe_both << "/" << endl;
   qe_pdos << "   prefix = '" << prefix << "'," << endl //
           << "   outdir = '" << _qe_outdir << "'," << endl //
           << "   degauss = " << _qe_degauss << "," << endl //
@@ -164,26 +175,116 @@ QEInterface::do_solve(void)
           << "   fileout = '" << _qe_fileout << "'," << endl //
           << "/" << endl; //
 
-  // for now this is fixed to tetragonal cells
+  // for now this is fixed to tetragonal cells or hexagonal
   int ibrav = 8;
+
   libMesh::RealVectorValue a, b, c;
   this->get_atomistic_structure()->get_lattice_vectors(a, b, c);
+  Messages m;
+  m.info("Periodicity vectors:");
+  m.indent();
+  ostringstream os;
+  os << a << endl
+    << b << endl
+    << c << endl;
+  m.info(os.str());
+  
+  double ab = a*b;
+  double ac = a*c;
+  double bc = b*c;
+  //cerr << ab << " " << ac << " " << bc << endl;
+
   int nat = this->get_atomistic_structure()->get_N_atoms();
   int ntyp = this->get_atomistic_structure()->get_N_types(); 
-  qe_both << "&system" << endl
-          << "   ibrav = " << ibrav << "," << endl
-          << "   a = " << a(0) << "," << endl
-          << "   b = " << b(1) << "," << endl
-          << "   c = " << c(2) << "," << endl
-          << "   nat = " << nat << ", ntyp = " << ntyp << "," << endl
+  qe_both << "&system" << endl;
+
+  if ((fabs(ab) < 1e-12) && (fabs(ac) < 1e-12) && (fabs(bc) < 1e-12))
+  {
+    m.info("Using orthorhombic Bravais lattice (ibrav = 8)");
+  }
+  else
+  {
+    //m.info("Using hexagonal Bravais lattice (ibrav = 4)");
+    //ibrav = 4;
+    m.info("Using generic lattice definition (ibrav = 0)");
+    ibrav = 0;
+  }
+
+  if (ibrav == 8)
+  {
+    qe_both << "   ibrav = " << ibrav << "," << endl;
+    qe_both << "   a = " << a.norm() << "," << endl
+            << "   b = " << b.norm() << "," << endl
+            << "   c = " << c.norm() << "," << endl;
+  }
+  else if (ibrav == 4)
+  { 
+    double alat = 0, c_o_a = 0;
+    // detect the c axis
+    if (fabs(ab) < 1e-12)
+    {
+      // a or b
+      if (fabs(ac) < 1e-12)
+      {
+        alat = b.norm();
+        c_o_a = a.norm() / alat;
+      }
+      else
+      {
+        alat = a.norm();
+        c_o_a = b.norm() / alat;
+      }
+    }
+    else
+    {
+      alat = a.norm();
+      c_o_a = c.norm() / alat;
+    }
+
+    alat /= Constants::bohr_radius / 1e-10;
+
+    qe_both << "   ibrav = " << ibrav << "," << endl;
+    qe_both << "   celldm(1) = " << alat << "," << endl
+            << "   celldm(3) = " << c_o_a << "," << endl;
+
+    /*
+    qe_both << "   a = " << a.norm() << "," << endl
+            << "   b = " << b.norm() << "," << endl
+            << "   c = " << c.norm() << "," << endl
+    */
+
+  }
+
+  qe_both << "   nat = " << nat << ", ntyp = " << ntyp << "," << endl
           << "   ecutwfc = " << _qe_ecutwfc << "," << endl;
   if (_qe_nbnd > 0)
     qe_nscf << "   nbnd = " << _qe_nbnd << "," << endl;
   qe_both << "/" << endl;
 
+  if (ibrav == 0)
+  {
+    qe_both << "CELL_PARAMETERS angstrom" << endl;
+            //<< a.print_unformatted() << endl
+    qe_both << "  ";
+    a.write_unformatted(qe_both);
+    qe_both << "  ";
+    b.write_unformatted(qe_both);
+    qe_both << "  ";
+    c.write_unformatted(qe_both);
+    qe_both << "/" << endl;
+  }
+
   qe_both << "&electrons" << endl
-          << "   conv_thr = " << _qe_conv_thr << "," << endl
-          << "/" << endl;
+          << "   conv_thr = " << _qe_conv_thr << "," << endl;
+  if (_qe_mixing_beta > 0)
+    qe_both << "   mixing_beta = " << _qe_mixing_beta << "," << endl;
+  qe_both << "/" << endl;
+
+  if (get_option("relax", false))
+  {
+    qe_scf << "&ions" << endl
+      << "/" << endl;
+  }
 
   const vector<string>& atom_types = this->get_atomistic_structure()->get_atom_types();
 

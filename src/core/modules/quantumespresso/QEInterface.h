@@ -59,6 +59,9 @@ class QEInterface : public SimulationInterface
     //! Convergence threshold for QE
     double _qe_conv_thr;
 
+    //! Mixing parameters for electrons
+    double _qe_mixing_beta;
+
     //! Number of bands for nscf
     int _qe_nbnd;
 
