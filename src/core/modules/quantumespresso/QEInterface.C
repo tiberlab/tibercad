@@ -143,7 +143,9 @@ QEInterface::do_solve(void)
     qe_scf  << "   calculation = 'scf'," << endl;
 
   qe_scf  << "   restart_mode='from_scratch'," << endl;
-  qe_nscf << "   calculation = 'nscf'," << endl;
+  qe_nscf << "   calculation = '"
+          << get_option("nscf_calculation", "nscf")
+          << "'," << endl;
   qe_both << "   prefix = '" << prefix << "'," << endl
           << "   pseudo_dir = '" << _qe_pseudo_dir << "'," << endl
           << "   outdir = '" << _qe_outdir << "'," << endl
