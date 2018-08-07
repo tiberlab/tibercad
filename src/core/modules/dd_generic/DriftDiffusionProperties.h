@@ -991,17 +991,13 @@ DriftDiffusionProperties::get_charge_density(void) const
     else
       dens += cp.second->get_charge() * _pd->q_density[cp.first];
   }
-      //static_cast<long double>(_pd->hole_density) -
-      //static_cast<long double>(_pd->electron_density) +
+
   dens += static_cast<long double>(_pd->ionized_donor_density) -
           static_cast<long double>(_pd->ionized_acceptor_density) +
           static_cast<long double>(_pd->ionized_electron_traps) +
           static_cast<long double>(_pd->ionized_hole_traps);
 
   return static_cast<double>(dens);
-  //return _pd->hole_density - _pd->electron_density +
-  //  _pd->ionized_donor_density - _pd->ionized_acceptor_density
-  //  + _pd->ionized_electron_traps + _pd->ionized_hole_traps;
 }
 
 

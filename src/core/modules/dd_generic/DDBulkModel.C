@@ -225,7 +225,7 @@ DDBulkModel::do_init(void)
   // calculate the equilibrium
   set_lattice_temperature(SimulationOptions::T);
 
-  calculate_equilibrium_properties();
+  //calculate_equilibrium_properties();
 
 
   // permittivity
@@ -470,7 +470,7 @@ DDBulkModel::calculate_equilibrium_properties(void)
   {
     set_potentials(x);
     calculate_densities();
-    calculate_traps();
+    //calculate_traps();
     calculate_ionized_dopants();
     double f = get_charge_density();
     double df = 0;
@@ -648,7 +648,7 @@ DDBulkModel::do_print_info(void)
 
 
   set_lattice_temperature(SimulationOptions::T);
-  calculate_equilibrium_properties();
+  //calculate_equilibrium_properties();
 
   ostringstream os;
 

@@ -29,8 +29,8 @@ Trap::Trap(const ModelOptions& options) :
   _h_vth(1e7),
   _gen_TC(0.0),
   _gen_VT(0.0),
-  _dos(NULL),
-  _ext_dens_sim(NULL)
+  _dos(nullptr),
+  _ext_dens_sim(nullptr)
 {
   string type = get_option("type", "");
   if (type == "eNeutral")
@@ -56,6 +56,10 @@ Trap::Trap(const ModelOptions& options) :
   else if (type == "fixed_charge")
   {
     set_type(FIXED);
+  }
+  else
+  {
+    throw InitFailedException("Unknown trap type '" + type + "'");
   }
 }
 
@@ -141,12 +145,11 @@ Trap::do_init(void)
   {
     string sim = get_option("ext_dens_simulation", "");
 
-    _ext_dens_sim = NULL;
     if ( sim != "" )
       _ext_dens_sim = SimulationInterface::find_simulation(sim);
 
     
-    if ( ( _ext_dens_sim == NULL ) && ( sim != "" ) )
+    if ( ( _ext_dens_sim == nullptr ) && ( sim != "" ) )
     {
       std::string msg("External density simulation " + std::string(sim) + " not found");
       throw InitFailedException(msg);
@@ -199,7 +202,7 @@ Trap::get_ionized_density_and_derivative(const Elem* elem, const Point& p,
   double Nt = dens;
 
   derivatives.resize(5);
-  derivatives[0] = derivatives[1] = derivatives[2] = derivatives[3] = derivatives [4] = 0.0;
+  derivatives[0] = derivatives[1] = derivatives[2] = derivatives[3] = derivatives[4] = 0.0;
 
   if ((_type != FIXED) && (dens > 0.0))
   {
@@ -232,7 +235,7 @@ Trap::get_ionized_density_and_derivative(const Elem* elem, const Point& p,
     double p = hl.density();
 
     // occupations in terms of electrons
-    if (_dos == NULL)
+    if (_dos == nullptr)
     {
       std::pair<double, double> occ_e(Distributions::fermi_dirac(-arg_e, kT_e));
       f_e = occ_e.first;
@@ -346,9 +349,9 @@ Trap::get_ionized_density_and_derivative(const Elem* elem, const Point& p,
 
       //cout << "f = " << f << endl;
       dens = Nt * f;
-    }  // end _dos == NULL
+    }  // end _dos == nullptr
 
-    else // _dos != NULL
+    else // _dos != nullptr
     {
       double f, deriv;
       double level = _trap_level();
@@ -390,14 +393,14 @@ Trap::get_ionized_density_and_derivative(const Elem* elem, const Point& p,
 
       derivatives[4] = deriv;
       dens = Nt * f;
-    } // end _dos != NULL
+    } // end _dos != nullptr
 
     if (_type == CHARGED)
       dens -= Nt;
   }
 
   
-  if ( ( _type == FIXED ) && ( _ext_dens_sim != NULL ) )
+  if ( ( _type == FIXED ) && ( _ext_dens_sim != nullptr ) )
   {
     
     if ( _ext_dens_sim->is_solved() && _coupled )

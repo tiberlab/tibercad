@@ -23,6 +23,9 @@ class CarrierProperties : public DriftDiffusionModelInterface
     //! Creator method
     static CarrierProperties* create(const ModelOptions& options);
 
+    //! Get the carrier ID
+    ID get_carrier_id(void) const;
+
     //! Set the temperature interface
     void set_temperature_interface(const TemperatureInterface& temp);
 
@@ -217,6 +220,14 @@ CarrierProperties*
 CarrierProperties::create(const ModelOptions& options)
 {
   return new CarrierProperties(options);
+}
+
+
+inline
+ID
+CarrierProperties::get_carrier_id(void) const
+{
+  return(_carrier_id);
 }
 
 

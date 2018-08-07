@@ -513,61 +513,108 @@ DriftDiffusionProperties::calculate_traps(void)
   _pd->ionized_hole_traps = 0.0;
 
   vector<double>& dntdEf = _pd->ionized_traps_derivative;
-  dntdEf.resize(2);
-  dntdEf[0] = dntdEf[1] = 0.0;
-  /*
-  double Ec = get_conduction_band_edge() - _pd->electric_potential;
-  double Ev = get_valence_band_edge() - _pd->electric_potential;
-  double phi =  _pd->electric_potential;
+  dntdEf.resize(0);
+  dntdEf.resize(this->n_known_carriers(), 0.0);
 
   if (_etraps.size() > 0)
   {
     double nt = 0;
     std::vector<double> derivatives;
-    set<Trap*>::iterator it(_etraps.begin());
-    const set<Trap*>::iterator end(_etraps.end());
-    for ( ; it != end; ++it)
+    for (auto&& trap : _etraps)
     {
-      (*it)->set_energies(Ec, Ev, phi);
-      Particle el(-1, _pd->electron_density, _pd->fermi_e, _pd->electron_vt);
-      Particle hl(1, _pd->hole_density, _pd->fermi_h, _pd->hole_vt);
-      nt += (*it)->get_ionized_density_and_derivative(_elem, _coord, el, hl, derivatives);
+      // get coupled carriers
+      vector<string> carriers({"electrons", "holes"});
+      trap->get_options().get_option("carriers", carriers);
+      if (carriers.size() != 2)
+        throw InitFailedException("trap declaration needs two carriers");
+
+      CarrierProperties* c1 = this->get_carrier_properties(carriers[0]);
+      CarrierProperties* c2 = this->get_carrier_properties(carriers[1]);
+
+      double edge1 = c1->get_band_edge();
+      double edge2 = c2->get_band_edge();
+
+      if (edge1 < edge2)
+      {
+        swap(c1, c2);
+        swap(edge1, edge2);
+      }
+
+      ID id1 = c1->get_carrier_id();
+      ID id2 = c2->get_carrier_id();
+
+      double Ec = edge1 - c1->get_charge() * c1->get_charge_sign() * _pd->electric_potential;
+      double Ev = edge2 - c2->get_charge() * c2->get_charge_sign() * _pd->electric_potential;
+      double phi =  _pd->electric_potential;
+
+      trap->set_energies(Ec, Ev, phi);
+      Particle el(-1, _pd->q_density[id1], _pd->fermi_potential[id1], _pd->carrier_vt[id1]);
+      Particle hl(1, _pd->q_density[id2], _pd->fermi_potential[id2], _pd->carrier_vt[id2]);
+      nt += trap->get_ionized_density_and_derivative(_elem, _coord, el, hl, derivatives);
+
       // the negative sign is because the derivative is given with respect
       // to the quasi fermi level, not the electrochemical potential.
-      dntdEf[0] -=
-          derivatives[0] * _pd->electron_density_derivative +
+      dntdEf[id1] -=
+          derivatives[0] * _pd->q_density_derivative[id1] +
           derivatives[2] + derivatives[4];
-      dntdEf[1] -=
-          derivatives[1] * _pd->hole_density_derivative +
+      dntdEf[id2] -=
+          derivatives[1] * _pd->q_density_derivative[id2] +
           derivatives[3];
+
     }
 
     _pd->ionized_electron_traps = nt;
+
   }
 
   if (_htraps.size() > 0)
   {
     double nt = 0;
     std::vector<double> derivatives;
-    set<Trap*>::iterator it(_htraps.begin());
-    const set<Trap*>::iterator end(_htraps.end());
-    for ( ; it != end; ++it)
+    for (auto&& trap : _htraps)
     {
-      (*it)->set_energies(Ec, Ev, phi);
-      Particle el(-1, _pd->electron_density, _pd->fermi_e, _pd->electron_vt);
-      Particle hl(1, _pd->hole_density, _pd->fermi_h, _pd->hole_vt);
-      nt += (*it)->get_ionized_density_and_derivative(_elem, _coord, el, hl, derivatives);
-      dntdEf[0] -=
+      // get coupled carriers
+      vector<string> carriers({"electrons", "holes"});
+      trap->get_options().get_option("carriers", carriers);
+      if (carriers.size() != 2)
+        throw InitFailedException("trap declaration needs two carriers");
+
+      CarrierProperties* c1 = this->get_carrier_properties(carriers[0]);
+      CarrierProperties* c2 = this->get_carrier_properties(carriers[1]);
+
+      double edge1 = c1->get_band_edge();
+      double edge2 = c2->get_band_edge();
+
+      if (edge1 < edge2)
+      {
+        swap(c1, c2);
+        swap(edge1, edge2);
+      }
+
+      ID id1 = c1->get_carrier_id();
+      ID id2 = c2->get_carrier_id();
+
+      double Ec = edge1 - c1->get_charge() * c1->get_charge_sign() * _pd->electric_potential;
+      double Ev = edge2 - c2->get_charge() * c2->get_charge_sign() * _pd->electric_potential;
+      double phi =  _pd->electric_potential;
+      trap->set_energies(Ec, Ev, phi);
+      Particle el(-1, _pd->q_density[id1], _pd->fermi_potential[id1], _pd->carrier_vt[id1]);
+      Particle hl(1, _pd->q_density[id2], _pd->fermi_potential[id2], _pd->carrier_vt[id2]);
+      nt += trap->get_ionized_density_and_derivative(_elem, _coord, el, hl, derivatives);
+      dntdEf[id1] -=
           derivatives[0] * _pd->electron_density_derivative +
           derivatives[2];
-      dntdEf[1] -=
+      dntdEf[id2] -=
           derivatives[1] * _pd->hole_density_derivative +
           derivatives[3] + derivatives[4];
     }
 
     _pd->ionized_hole_traps = nt;
   }
-  */
+
+  for ( unsigned int i = 0; i < dntdEf.size(); ++i)
+    _pd->charge_density_derivative[i] += dntdEf[i];
+
 }
 
 
