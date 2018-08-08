@@ -429,7 +429,23 @@ string InputParser::get_until_closing_brace(istream& in_stream)
   {
     temp = in_stream.get();
     if (temp == EOF)
-      return str;
+      return(str);
+    else if (temp == '#')
+    {
+      // comment => skip until end of line
+
+      while ((temp != '\n') && (temp != '\r') )
+      {
+	if (!in_stream)
+	{
+	  in_stream.unget();
+	  return(str);
+	}
+	temp = in_stream.get();
+      }
+
+      continue;
+    }
 
     str += temp;
     if (temp == ')')
@@ -439,6 +455,7 @@ string InputParser::get_until_closing_brace(istream& in_stream)
       line_counter++;
   }
 
+  return(str);
 }
 
 
