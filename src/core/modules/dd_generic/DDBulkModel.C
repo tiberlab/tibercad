@@ -225,7 +225,7 @@ DDBulkModel::do_init(void)
   // calculate the equilibrium
   set_lattice_temperature(SimulationOptions::T);
 
-  //calculate_equilibrium_properties();
+  calculate_equilibrium_properties();
 
 
   // permittivity
@@ -648,7 +648,7 @@ DDBulkModel::do_print_info(void)
 
 
   set_lattice_temperature(SimulationOptions::T);
-  //calculate_equilibrium_properties();
+  calculate_equilibrium_properties();
 
   ostringstream os;
 

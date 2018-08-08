@@ -1,21 +1,21 @@
 
-Log start: Thu Jun 21 09:08:08 2018
+Log start: Wed Aug  8 18:59:46 2018
 
 
-tiberCAD release 3.0.0 (rev. 4602, x86_64-linux)
+tiberCAD release 3.0.0 (rev. 4652, x86_64-linux)
 
 Input file: oled.tib
 
 Initialize global simulation options
   Simulation temperature: 300 K
-  Database search path  : /scratch/maufder/TiberCAD_testsuite/trunk/materials
+  Database search path  : /home/maufder/Work/TiberCAD/3.0/materials
   Log file              : output/oled.log.0
 
 Setup mesh
   Reading mesh file 'oled.msh ...
-    mesh reading time: 0h 0m 0.0049s
-    mesh preparation time: 0h 0m 0.00079s
-    bd_regions preparation time: 0h 0m 2.2e-05s
+    mesh reading time: 0h 0m 0.00083s
+    mesh preparation time: 0h 0m 0.00042s
+    bd_regions preparation time: 0h 0m 2.7e-05s
 
     mesh units          : 1e-09 m
     mesh dimension      :       1
@@ -26,30 +26,30 @@ Setup mesh
 
 Create materials ...
   Added material Alq3 for region 'htl' (mesh regions 1)
-    (using datafile /scratch/maufder/TiberCAD_testsuite/trunk/materials/Alq3.dat)
+    (using datafile /home/maufder/Work/TiberCAD/3.0/materials/Alq3.dat)
     x growth direction : (1,0,0)
     y growth direction : (0,1,0)
     z growth direction : (0,0,1)
   Added material Alq3 for region 'eml' (mesh regions 2)
-    (using datafile /scratch/maufder/TiberCAD_testsuite/trunk/materials/Alq3.dat)
+    (using datafile /home/maufder/Work/TiberCAD/3.0/materials/Alq3.dat)
     x growth direction : (1,0,0)
     y growth direction : (0,1,0)
     z growth direction : (0,0,1)
   Added material Alq3 for region 'etl' (mesh regions 3)
-    (using datafile /scratch/maufder/TiberCAD_testsuite/trunk/materials/Alq3.dat)
+    (using datafile /home/maufder/Work/TiberCAD/3.0/materials/Alq3.dat)
     x growth direction : (1,0,0)
     y growth direction : (0,1,0)
     z growth direction : (0,0,1)
 Creation of materials done.
 
 Setting up simulation of type 'dd_generic' ...
-  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/dd_generic/dd_generic.so)
+  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/dd_generic/dd_generic.so)
   Adding boundary 'anode'
-  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/dd_generic/ddbnd_schottky.so)
+  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/dd_generic/ddbnd_schottky.so)
   Adding boundary 'cathode'
 Creating bulk models... 
   Region: htl
-  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/dd_generic/ddbulk_default.so)
+  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/dd_generic/ddbulk_default.so)
   Region: eml
   Region: etl
 
@@ -58,20 +58,20 @@ Setting up simulation of type 'sweep' ...
 Setting up simulation of type 'sweep' ...
 
 Setting up bulk models ...
-  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/dd_generic/carrier.so)
-  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/dd_generic/recombination_direct.so)
-  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/permittivity_constant.so)
-  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/dd_generic/mobility_constant.so)
-  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/density_of_states_gauss.so)
+  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/dd_generic/carrier.so)
+  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/dd_generic/recombination_direct.so)
+  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/permittivity_constant.so)
+  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/dd_generic/mobility_constant.so)
+  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/density_of_states_gauss.so)
 
 *** Warning: found unused options in block density_of_states (gauss): charge
 
 *** Warning: found unused options in block density_of_states (gauss): charge
-  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/dd_generic/recombination_exciton_generation.so)
-  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/dd_generic/recombination_exciton_decay.so)
-  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/dd_generic/recombination_exciton_isc.so)
-  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/dd_generic/recombination_exciton_tta.so)
-  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/dd_generic/recombination_exciton_polaron_quenching.so)
+  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/dd_generic/recombination_exciton_generation.so)
+  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/dd_generic/recombination_exciton_decay.so)
+  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/dd_generic/recombination_exciton_isc.so)
+  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/dd_generic/recombination_exciton_tta.so)
+  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/dd_generic/recombination_exciton_polaron_quenching.so)
 
 *** Warning: found unused options in block density_of_states (gauss): charge
 
@@ -95,13 +95,13 @@ Setting up lower dimensional (boundary) models ...
 
 *** Warning: found unused options in block density_of_states (gauss): charge
 
-*** Warning: found unused options in block Contact (anode): band
-
-*** Warning: found unused options in block density_of_states (gauss): charge
-
-*** Warning: found unused options in block density_of_states (gauss): charge
-
 *** Warning: found unused options in block Contact (cathode): band
+
+*** Warning: found unused options in block density_of_states (gauss): charge
+
+*** Warning: found unused options in block density_of_states (gauss): charge
+
+*** Warning: found unused options in block Contact (anode): band
 
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 Simulation options for ddg (dd_generic)
@@ -328,7 +328,7 @@ We solve: ddg sweep1 sweep2
   iterations: 4, |du| = 0.00920039, |r| = 5.61713e-07
   Equilibrium done
 
-Solve time: 0h 0m 0.33s
+Solve time: 0h 0m 0.21s
 <<<<----------------------------------------------------------------------------
 
 >>>>--------------------------------- (sweep1) ---------------------------------
@@ -344,210 +344,211 @@ Solve time: 0h 0m 0.33s
     anode               0                   0
     cathode             0                   0
 
-  Solve time: 0h 0m 0.1s
+  Solve time: 0h 0m 0.075s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.1
   Trying $Vb = 0.1
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 3.86817, |r| = 3.8615  alpha = 0.00390625
-    it 2, |du| = 3.87029, |r| = 3.83422  alpha = 0.015625
-    it 3, |du| = 4.10908, |r| = 2.8805  alpha = 0.25
-    it 4, |du| = 2.85839, |r| = 2.10955  alpha = 0.5
-    it 5, |du| = 1.56762, |r| = 0.977666  alpha = 0.5
-    it 6, |du| = 0.713909, |r| = 0.41871  alpha = 0.5
-    it 7, |du| = 0.356907, |r| = 0.0768801  alpha = 1
+    it 1, |du| = 3.86817, |r| = 3.88615  alpha = 0.000976562
+    it 2, |du| = 3.86867, |r| = 3.20709  alpha = 0.229024
+    it 3, |du| = 8.65771, |r| = 2.66366  alpha = 0.125
+    it 4, |du| = 3.36649, |r| = 1.98444  alpha = 0.25
+    it 5, |du| = 1.97118, |r| = 1.13229  alpha = 0.5
+    it 6, |du| = 0.978539, |r| = 0.54289  alpha = 1
+    it 7, |du| = 0.091238, |r| = 0.0158797  alpha = 1
 
-    iterations: 8, |du| = 0.00954515, |r| = 0.000163828
+    iterations: 8, |du| = 0.00344049, |r| = 2.43318e-05
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               0.1                -9.86072e-16
-    cathode             0                   9.86072e-16
+    anode               0.1                 7.76187e-15
+    cathode             0                  -7.76187e-15
 
-  Solve time: 0h 0m 1s
+  Solve time: 0h 0m 0.72s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.2
   Trying $Vb = 0.2
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 3.87378, |r| = 2.52263  alpha = 0.5
-    it 2, |du| = 2.96049, |r| = 1.6529  alpha = 0.25
-    it 3, |du| = 1.51675, |r| = 0.878357  alpha = 0.5
-    it 4, |du| = 0.725282, |r| = 0.312505  alpha = 1
-    it 5, |du| = 0.0437613, |r| = 0.00330397  alpha = 1
+    it 1, |du| = 3.88217, |r| = 2.55374  alpha = 0.5
+    it 2, |du| = 2.957, |r| = 1.71836  alpha = 0.23474
+    it 3, |du| = 1.58779, |r| = 0.923866  alpha = 0.5
+    it 4, |du| = 0.740039, |r| = 0.422951  alpha = 1
+    it 5, |du| = 0.0456431, |r| = 0.00472343  alpha = 1
 
-    iterations: 6, |du| = 0.000928543, |r| = 1.01935e-06
+    iterations: 6, |du| = 0.00100875, |r| = 1.67628e-06
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               0.2                 1.5343e-14
-    cathode             0                  -1.5343e-14
+    anode               0.2                 2.95021e-15
+    cathode             0                  -2.95021e-15
 
-  Solve time: 0h 0m 0.6s
+  Solve time: 0h 0m 0.43s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.3
   Trying $Vb = 0.3
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 3.87511, |r| = 2.82448  alpha = 0.5
-    it 2, |du| = 2.73751, |r| = 1.7444  alpha = 0.25
-    it 3, |du| = 1.51513, |r| = 0.945912  alpha = 0.5
-    it 4, |du| = 0.725282, |r| = 0.417828  alpha = 1
-    it 5, |du| = 0.0454434, |r| = 0.00523974  alpha = 1
+    it 1, |du| = 3.88484, |r| = 2.84333  alpha = 0.5
+    it 2, |du| = 2.84716, |r| = 1.81434  alpha = 0.237097
+    it 3, |du| = 1.56254, |r| = 0.988559  alpha = 0.5
+    it 4, |du| = 0.73776, |r| = 0.484515  alpha = 0.5
+    it 5, |du| = 0.36888, |r| = 0.0688506  alpha = 1
+    it 6, |du| = 0.0105085, |r| = 0.000268966  alpha = 1
 
-    iterations: 6, |du| = 0.000933062, |r| = 2.1668e-06
+    iterations: 7, |du| = 5.47657e-05, |r| = 6.19916e-09
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               0.3                 1.44129e-15
-    cathode             0                  -1.44129e-15
+    anode               0.3                 4.93415e-16
+    cathode             0                  -4.93415e-16
 
-  Solve time: 0h 0m 0.6s
+  Solve time: 0h 0m 0.49s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.4
   Trying $Vb = 0.4
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 3.87578, |r| = 2.92158  alpha = 0.25
-    it 2, |du| = 2.90113, |r| = 2.19704  alpha = 0.5
-    it 3, |du| = 1.53754, |r| = 0.924081  alpha = 0.5
-    it 4, |du| = 0.725282, |r| = 0.467171  alpha = 0.5
-    it 5, |du| = 0.362641, |r| = 0.0797766  alpha = 1
+    it 1, |du| = 3.88647, |r| = 2.922  alpha = 0.25
+    it 2, |du| = 2.90113, |r| = 2.1851  alpha = 0.5
+    it 3, |du| = 1.50881, |r| = 0.878586  alpha = 0.5
+    it 4, |du| = 0.725282, |r| = 0.461844  alpha = 0.5
+    it 5, |du| = 0.362641, |r| = 0.0761347  alpha = 1
 
-    iterations: 6, |du| = 0.00984528, |r| = 0.000208478
+    iterations: 6, |du| = 0.00987023, |r| = 0.000182478
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               0.4                -1.45967e-14
-    cathode             0                   1.45967e-14
+    anode               0.4                 5.93116e-15
+    cathode             0                  -5.93116e-15
 
-  Solve time: 0h 0m 0.59s
+  Solve time: 0h 0m 0.43s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.5
   Trying $Vb = 0.5
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 3.87647, |r| = 2.92361  alpha = 0.25
-    it 2, |du| = 2.90113, |r| = 2.22663  alpha = 0.5
-    it 3, |du| = 1.53335, |r| = 0.868647  alpha = 0.5
-    it 4, |du| = 0.725282, |r| = 0.464163  alpha = 0.5
-    it 5, |du| = 0.362641, |r| = 0.0792722  alpha = 1
-    it 6, |du| = 0.0100042, |r| = 0.000182693  alpha = 1
+    it 1, |du| = 3.88819, |r| = 2.9235  alpha = 0.25
+    it 2, |du| = 2.90113, |r| = 2.22858  alpha = 0.25
+    it 3, |du| = 2.17584, |r| = 1.54759  alpha = 0.5
+    it 4, |du| = 1.08792, |r| = 0.711841  alpha = 0.5
+    it 5, |du| = 0.543961, |r| = 0.13339  alpha = 1
+    it 6, |du| = 0.0248418, |r| = 0.000968198  alpha = 1
 
-    iterations: 7, |du| = 4.60966e-05, |r| = 2.67862e-09
+    iterations: 7, |du| = 0.000284608, |r| = 8.80119e-08
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               0.5                -3.97299e-16
-    cathode             0                   3.97299e-16
+    anode               0.5                -1.50035e-15
+    cathode             0                   1.50035e-15
 
-  Solve time: 0h 0m 0.67s
+  Solve time: 0h 0m 0.48s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.6
   Trying $Vb = 0.6
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 3.87719, |r| = 2.92425  alpha = 0.25
-    it 2, |du| = 2.90113, |r| = 2.23213  alpha = 0.25
-    it 3, |du| = 2.17584, |r| = 1.55379  alpha = 0.5
-    it 4, |du| = 1.08792, |r| = 0.720791  alpha = 0.5
-    it 5, |du| = 0.543961, |r| = 0.134414  alpha = 1
-    it 6, |du| = 0.0254754, |r| = 0.000996809  alpha = 1
+    it 1, |du| = 3.89002, |r| = 2.92402  alpha = 0.25
+    it 2, |du| = 2.90113, |r| = 2.23419  alpha = 0.25
+    it 3, |du| = 2.17584, |r| = 1.53446  alpha = 0.5
+    it 4, |du| = 1.08792, |r| = 0.725927  alpha = 0.5
+    it 5, |du| = 0.543961, |r| = 0.132729  alpha = 1
+    it 6, |du| = 0.0255046, |r| = 0.00113408  alpha = 1
 
-    iterations: 7, |du| = 0.000227859, |r| = 8.72736e-08
+    iterations: 7, |du| = 0.000237284, |r| = 1.28265e-07
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               0.6                -1.47551e-15
-    cathode             0                   1.47551e-15
+    anode               0.6                -1.30166e-16
+    cathode             0                   1.30166e-16
 
-  Solve time: 0h 0m 0.67s
+  Solve time: 0h 0m 0.48s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.7
   Trying $Vb = 0.7
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 3.87793, |r| = 2.92557  alpha = 0.25
-    it 2, |du| = 2.90113, |r| = 2.23903  alpha = 0.25
-    it 3, |du| = 2.17584, |r| = 1.53382  alpha = 0.5
-    it 4, |du| = 1.08792, |r| = 0.735618  alpha = 0.5
-    it 5, |du| = 0.543961, |r| = 0.139169  alpha = 1
-    it 6, |du| = 0.0335942, |r| = 0.00133552  alpha = 1
+    it 1, |du| = 3.89195, |r| = 2.9257  alpha = 0.25
+    it 2, |du| = 2.90113, |r| = 2.23988  alpha = 0.25
+    it 3, |du| = 2.17584, |r| = 1.52271  alpha = 0.5
+    it 4, |du| = 1.08792, |r| = 0.736634  alpha = 0.5
+    it 5, |du| = 0.543961, |r| = 0.1423  alpha = 1
+    it 6, |du| = 0.0336386, |r| = 0.00151402  alpha = 1
 
-    iterations: 7, |du| = 0.000327586, |r| = 1.58062e-07
+    iterations: 7, |du| = 0.000328354, |r| = 1.93542e-07
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               0.7                -2.14687e-14
-    cathode             0                   2.14687e-14
+    anode               0.7                -3.92892e-15
+    cathode             0                   3.92892e-15
 
-  Solve time: 0h 0m 0.67s
+  Solve time: 0h 0m 0.48s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.8
   Trying $Vb = 0.8
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 3.87867, |r| = 2.92802  alpha = 0.25
-    it 2, |du| = 2.90113, |r| = 2.24495  alpha = 0.25
-    it 3, |du| = 2.17584, |r| = 1.53163  alpha = 0.5
-    it 4, |du| = 1.08792, |r| = 0.743817  alpha = 0.5
-    it 5, |du| = 0.543961, |r| = 0.140441  alpha = 1
-    it 6, |du| = 0.0246473, |r| = 0.00149846  alpha = 1
+    it 1, |du| = 3.89397, |r| = 2.92853  alpha = 0.25
+    it 2, |du| = 2.90113, |r| = 2.24382  alpha = 0.25
+    it 3, |du| = 2.17584, |r| = 1.54283  alpha = 0.5
+    it 4, |du| = 1.08792, |r| = 0.739804  alpha = 0.5
+    it 5, |du| = 0.543961, |r| = 0.145301  alpha = 1
+    it 6, |du| = 0.0245142, |r| = 0.00158121  alpha = 1
 
-    iterations: 7, |du| = 0.000281441, |r| = 2.00608e-07
+    iterations: 7, |du| = 0.000274454, |r| = 2.03932e-07
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               0.8                -4.51308e-15
-    cathode             0                   4.51308e-15
+    anode               0.8                 2.82482e-15
+    cathode             0                  -2.82482e-15
 
-  Solve time: 0h 0m 0.67s
+  Solve time: 0h 0m 0.56s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.9
   Trying $Vb = 0.9
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 3.87938, |r| = 2.92811  alpha = 0.25
-    it 2, |du| = 2.90113, |r| = 2.24607  alpha = 0.25
-    it 3, |du| = 2.17584, |r| = 1.73117  alpha = 0.25
-    it 4, |du| = 1.63188, |r| = 1.35131  alpha = 0.25
-    it 5, |du| = 1.22391, |r| = 1.06598  alpha = 0.25
-    it 6, |du| = 0.917934, |r| = 0.797815  alpha = 0.5
-    it 7, |du| = 0.458967, |r| = 0.369362  alpha = 1
-    it 8, |du| = 0.0199181, |r| = 0.00278468  alpha = 1
+    it 1, |du| = 3.89605, |r| = 2.92856  alpha = 0.25
+    it 2, |du| = 2.90113, |r| = 2.24416  alpha = 0.25
+    it 3, |du| = 2.17584, |r| = 1.7312  alpha = 0.25
+    it 4, |du| = 1.63188, |r| = 1.35186  alpha = 0.25
+    it 5, |du| = 1.22391, |r| = 1.06623  alpha = 0.25
+    it 6, |du| = 0.917934, |r| = 0.797053  alpha = 0.5
+    it 7, |du| = 0.458967, |r| = 0.37018  alpha = 1
+    it 8, |du| = 0.0193717, |r| = 0.00282556  alpha = 1
 
-    iterations: 9, |du| = 0.000183343, |r| = 2.11945e-07
+    iterations: 9, |du| = 0.000170643, |r| = 2.13074e-07
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               0.9                 2.27238e-15
-    cathode             0                  -2.27238e-15
+    anode               0.9                -1.20707e-14
+    cathode             0                   1.20707e-14
 
-  Solve time: 0h 0m 0.9s
+  Solve time: 0h 0m 0.65s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1
   Trying $Vb = 1
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 3.88002, |r| = 3.05422  alpha = 0.25
-    it 2, |du| = 2.90113, |r| = 2.36263  alpha = 0.25
-    it 3, |du| = 2.17584, |r| = 1.7686  alpha = 0.5
-    it 4, |du| = 1.08792, |r| = 0.78117  alpha = 0.5
-    it 5, |du| = 0.543961, |r| = 0.1662  alpha = 1
-    it 6, |du| = 0.0213468, |r| = 0.00138423  alpha = 1
+    it 1, |du| = 3.89815, |r| = 3.07312  alpha = 0.232295
+    it 2, |du| = 2.96961, |r| = 2.40204  alpha = 0.25
+    it 3, |du| = 2.22721, |r| = 1.85638  alpha = 0.5
+    it 4, |du| = 1.1136, |r| = 0.789321  alpha = 0.5
+    it 5, |du| = 0.556802, |r| = 0.179914  alpha = 1
+    it 6, |du| = 0.0194674, |r| = 0.00127946  alpha = 1
 
-    iterations: 7, |du| = 0.000203757, |r| = 1.2903e-07
+    iterations: 7, |du| = 0.000169117, |r| = 9.54783e-08
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               1                  -3.63015e-13
-    cathode             0                   3.63015e-13
+    anode               1                  -3.19472e-13
+    cathode             0                   3.19472e-13
 
-  Solve time: 0h 0m 0.69s
+  Solve time: 0h 0m 0.5s
   <<<<--------------------------------------------------------------------------
 
-Solve time: 0h 0m 7.9s
+Solve time: 0h 0m 5.8s
 <<<<----------------------------------------------------------------------------
 
 >>>>--------------------------------- (sweep2) ---------------------------------
@@ -556,1108 +557,1117 @@ Solve time: 0h 0m 7.9s
 
   >>>>--------------------------------- (ddg) ----------------------------------
 
-    iterations: 1, |du| = 1.81617e-08, |r| = 6.23555e-11
+    iterations: 1, |du| = 1.2453e-08, |r| = 3.66119e-10
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               1                  -2.19672e-13
-    cathode             0                   2.19672e-13
+    anode               1                  -3.4013e-13
+    cathode             0                   3.4013e-13
 
-  Solve time: 0h 0m 0.094s
+  Solve time: 0h 0m 0.07s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.05
   Trying $Vb = 1.05
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.94026, |r| = 1.04037  alpha = 0.5
-    it 2, |du| = 0.969144, |r| = 0.532515  alpha = 0.5
-    it 3, |du| = 0.483521, |r| = 0.0900133  alpha = 1
-    it 4, |du| = 0.0161821, |r| = 0.000673131  alpha = 1
+    it 1, |du| = 1.95009, |r| = 1.03908  alpha = 0.5
+    it 2, |du| = 0.967295, |r| = 0.534397  alpha = 0.5
+    it 3, |du| = 0.483521, |r| = 0.0855052  alpha = 1
+    it 4, |du| = 0.0144304, |r| = 0.000569419  alpha = 1
 
-    iterations: 5, |du| = 0.00011431, |r| = 3.30884e-08
+    iterations: 5, |du| = 9.98434e-05, |r| = 2.30838e-08
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               1.05               -2.02162e-12
-    cathode             0                   2.02162e-12
+    anode               1.05               -1.9678e-12
+    cathode             0                   1.9678e-12
 
-  Solve time: 0h 0m 0.46s
+  Solve time: 0h 0m 0.33s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.1
   Trying $Vb = 1.1
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.94034, |r| = 1.03889  alpha = 0.5
-    it 2, |du| = 0.968456, |r| = 0.533996  alpha = 0.5
-    it 3, |du| = 0.483521, |r| = 0.0866834  alpha = 1
-    it 4, |du| = 0.0143803, |r| = 0.000588341  alpha = 1
+    it 1, |du| = 1.95056, |r| = 1.0375  alpha = 0.5
+    it 2, |du| = 0.967042, |r| = 0.536029  alpha = 0.5
+    it 3, |du| = 0.483521, |r| = 0.0823261  alpha = 1
+    it 4, |du| = 0.0158974, |r| = 0.000552384  alpha = 1
 
-    iterations: 5, |du| = 9.38542e-05, |r| = 2.37137e-08
+    iterations: 5, |du| = 0.000122054, |r| = 2.93915e-08
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               1.1                -1.22965e-11
-    cathode             0                   1.22965e-11
+    anode               1.1                -1.23616e-11
+    cathode             0                   1.23616e-11
 
-  Solve time: 0h 0m 0.46s
+  Solve time: 0h 0m 0.33s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.15
   Trying $Vb = 1.15
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.94037, |r| = 1.03801  alpha = 0.5
-    it 2, |du| = 0.967663, |r| = 0.535721  alpha = 0.5
-    it 3, |du| = 0.483521, |r| = 0.083252  alpha = 1
-    it 4, |du| = 0.0154932, |r| = 0.000550825  alpha = 1
+    it 1, |du| = 1.95099, |r| = 1.03696  alpha = 0.5
+    it 2, |du| = 0.967042, |r| = 0.537366  alpha = 0.5
+    it 3, |du| = 0.483521, |r| = 0.0804638  alpha = 1
+    it 4, |du| = 0.0173166, |r| = 0.000601798  alpha = 1
 
-    iterations: 5, |du| = 0.000115795, |r| = 2.66706e-08
+    iterations: 5, |du| = 0.000144598, |r| = 4.24351e-08
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               1.15               -7.24024e-11
-    cathode             0                   7.24024e-11
+    anode               1.15               -7.24392e-11
+    cathode             0                   7.24392e-11
 
-  Solve time: 0h 0m 0.46s
+  Solve time: 0h 0m 0.33s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.2
   Trying $Vb = 1.2
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.94032, |r| = 1.03729  alpha = 0.5
-    it 2, |du| = 0.967042, |r| = 0.537157  alpha = 0.5
-    it 3, |du| = 0.483521, |r| = 0.0808052  alpha = 1
-    it 4, |du| = 0.0169258, |r| = 0.000581629  alpha = 1
+    it 1, |du| = 1.95134, |r| = 1.03697  alpha = 0.5
+    it 2, |du| = 0.96832, |r| = 0.537968  alpha = 0.5
+    it 3, |du| = 0.483521, |r| = 0.0806728  alpha = 1
+    it 4, |du| = 0.0185928, |r| = 0.000694359  alpha = 1
 
-    iterations: 5, |du| = 0.000138299, |r| = 3.84529e-08
+    iterations: 5, |du| = 0.000165357, |r| = 5.73667e-08
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               1.2                -4.1172e-10
-    cathode             0                   4.1172e-10
+    anode               1.2                -4.13396e-10
+    cathode             0                   4.13396e-10
 
-  Solve time: 0h 0m 0.46s
+  Solve time: 0h 0m 0.33s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.25
   Trying $Vb = 1.25
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.94015, |r| = 1.03697  alpha = 0.5
-    it 2, |du| = 0.967042, |r| = 0.537853  alpha = 0.5
-    it 3, |du| = 0.483521, |r| = 0.08024  alpha = 1
-    it 4, |du| = 0.0182101, |r| = 0.000662518  alpha = 1
+    it 1, |du| = 1.95157, |r| = 1.03761  alpha = 0.5
+    it 2, |du| = 0.973719, |r| = 0.537613  alpha = 0.5
+    it 3, |du| = 0.483521, |r| = 0.0829592  alpha = 1
+    it 4, |du| = 0.0195924, |r| = 0.000794184  alpha = 1
 
-    iterations: 5, |du| = 0.000159033, |r| = 5.3013e-08
+    iterations: 5, |du| = 0.000181357, |r| = 7.15476e-08
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               1.25               -2.28413e-09
-    cathode             0                   2.28413e-09
+    anode               1.25               -2.29442e-09
+    cathode             0                   2.29442e-09
 
-  Solve time: 0h 0m 0.46s
+  Solve time: 0h 0m 0.33s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.3
   Trying $Vb = 1.3
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.93975, |r| = 1.03711  alpha = 0.5
-    it 2, |du| = 0.970321, |r| = 0.537524  alpha = 0.5
-    it 3, |du| = 0.483521, |r| = 0.0816786  alpha = 1
-    it 4, |du| = 0.0192118, |r| = 0.000755814  alpha = 1
+    it 1, |du| = 1.95156, |r| = 1.03865  alpha = 0.5
+    it 2, |du| = 0.976017, |r| = 0.536334  alpha = 0.5
+    it 3, |du| = 0.483521, |r| = 0.0863829  alpha = 1
+    it 4, |du| = 0.0201657, |r| = 0.000870399  alpha = 1
 
-    iterations: 5, |du| = 0.000175006, |r| = 6.87569e-08
+    iterations: 5, |du| = 0.000189344, |r| = 8.38973e-08
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               1.3                -1.22188e-08
-    cathode             0                   1.22188e-08
+    anode               1.3                -1.22832e-08
+    cathode             0                   1.22832e-08
 
-  Solve time: 0h 0m 0.47s
+  Solve time: 0h 0m 0.33s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.35
   Trying $Vb = 1.35
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.93888, |r| = 1.03758  alpha = 0.5
-    it 2, |du| = 0.971554, |r| = 0.536235  alpha = 0.5
-    it 3, |du| = 0.483521, |r| = 0.0844722  alpha = 1
-    it 4, |du| = 0.0198196, |r| = 0.00083068  alpha = 1
+    it 1, |du| = 1.95108, |r| = 1.03968  alpha = 0.5
+    it 2, |du| = 0.97531, |r| = 0.534492  alpha = 0.5
+    it 3, |du| = 0.483521, |r| = 0.0896678  alpha = 1
+    it 4, |du| = 0.020206, |r| = 0.00090219  alpha = 1
 
-    iterations: 5, |du| = 0.000183667, |r| = 8.28435e-08
+    iterations: 5, |du| = 0.000187183, |r| = 1.08943e-07
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               1.35               -6.25052e-08
-    cathode             0                   6.25052e-08
+    anode               1.35               -6.28783e-08
+    cathode             0                   6.28783e-08
 
-  Solve time: 0h 0m 0.47s
+  Solve time: 0h 0m 0.33s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.4
   Trying $Vb = 1.4
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.93687, |r| = 1.0382  alpha = 0.5
-    it 2, |du| = 0.970692, |r| = 0.53443  alpha = 0.5
-    it 3, |du| = 0.483521, |r| = 0.0874857  alpha = 1
-    it 4, |du| = 0.0199953, |r| = 0.000871361  alpha = 1
+    it 1, |du| = 1.94945, |r| = 1.0403  alpha = 0.5
+    it 2, |du| = 0.972611, |r| = 0.531703  alpha = 1
+    it 3, |du| = 0.0904352, |r| = 0.0185406  alpha = 1
 
-    iterations: 5, |du| = 0.000184173, |r| = 2.25464e-07
+    iterations: 4, |du| = 0.00334216, |r| = 2.64751e-05
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               1.4                -3.03651e-07
-    cathode             0                   3.03651e-07
+    anode               1.4                -3.05662e-07
+    cathode             0                   3.05662e-07
 
-  Solve time: 0h 0m 0.47s
+  Solve time: 0h 0m 0.26s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.45
   Trying $Vb = 1.45
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.93408, |r| = 1.03832  alpha = 0.5
-    it 2, |du| = 0.967042, |r| = 0.519522  alpha = 1
-    it 3, |du| = 0.0864924, |r| = 0.0172588  alpha = 1
+    it 1, |du| = 1.94472, |r| = 1.03994  alpha = 0.5
+    it 2, |du| = 0.967042, |r| = 0.531063  alpha = 0.5
+    it 3, |du| = 0.483521, |r| = 0.0909448  alpha = 1
+    it 4, |du| = 0.0183492, |r| = 0.000780214  alpha = 1
 
-    iterations: 4, |du| = 0.00308716, |r| = 2.20807e-05
+    iterations: 5, |du| = 0.000148422, |r| = 1.45398e-07
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               1.45               -1.38944e-06
-    cathode             0                   1.38944e-06
+    anode               1.45               -1.39943e-06
+    cathode             0                   1.39943e-06
 
-  Solve time: 0h 0m 0.38s
+  Solve time: 0h 0m 0.33s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.5
   Trying $Vb = 1.5
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.93408, |r| = 1.03539  alpha = 0.5
-    it 2, |du| = 0.967042, |r| = 0.483075  alpha = 1
-    it 3, |du| = 0.081662, |r| = 0.0148392  alpha = 1
+    it 1, |du| = 1.93408, |r| = 1.03679  alpha = 0.5
+    it 2, |du| = 0.967042, |r| = 0.528347  alpha = 0.5
+    it 3, |du| = 0.483521, |r| = 0.0843223  alpha = 1
+    it 4, |du| = 0.0157301, |r| = 0.000563296  alpha = 1
 
-    iterations: 4, |du| = 0.00260709, |r| = 1.61664e-05
+    iterations: 5, |du| = 0.000103338, |r| = 3.60328e-08
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               1.5                -5.87891e-06
-    cathode             0                   5.87891e-06
+    anode               1.5                -5.92706e-06
+    cathode             0                   5.92706e-06
 
-  Solve time: 0h 0m 0.38s
+  Solve time: 0h 0m 0.33s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.55
   Trying $Vb = 1.55
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.93408, |r| = 1.02509  alpha = 0.5
-    it 2, |du| = 0.967042, |r| = 0.400367  alpha = 1
-    it 3, |du| = 0.0672113, |r| = 0.0094731  alpha = 1
+    it 1, |du| = 1.93408, |r| = 1.02626  alpha = 0.5
+    it 2, |du| = 0.967042, |r| = 0.449834  alpha = 1
+    it 3, |du| = 0.0677238, |r| = 0.00766013  alpha = 1
 
-    iterations: 4, |du| = 0.00159999, |r| = 6.15923e-06
+    iterations: 4, |du| = 0.00145958, |r| = 5.43896e-06
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               1.55               -2.2191e-05
-    cathode             0                   2.2191e-05
+    anode               1.55               -2.24487e-05
+    cathode             0                   2.24487e-05
 
-  Solve time: 0h 0m 0.38s
+  Solve time: 0h 0m 0.26s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.6
   Trying $Vb = 1.6
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.93408, |r| = 1.00667  alpha = 0.5
-    it 2, |du| = 0.967042, |r| = 0.26447  alpha = 1
-    it 3, |du| = 0.0465306, |r| = 0.00519868  alpha = 1
+    it 1, |du| = 1.93408, |r| = 1.00782  alpha = 0.5
+    it 2, |du| = 0.967042, |r| = 0.296765  alpha = 1
+    it 3, |du| = 0.0485049, |r| = 0.00364884  alpha = 1
 
-    iterations: 4, |du| = 0.000605251, |r| = 1.27953e-06
+    iterations: 4, |du| = 0.000591692, |r| = 1.04817e-06
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               1.6                -7.11715e-05
-    cathode             0                   7.11715e-05
+    anode               1.6                -7.26545e-05
+    cathode             0                   7.26545e-05
 
-  Solve time: 0h 0m 0.36s
+  Solve time: 0h 0m 0.25s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.65
   Trying $Vb = 1.65
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.93408, |r| = 0.987099  alpha = 0.5
-    it 2, |du| = 0.967042, |r| = 0.145671  alpha = 1
-    it 3, |du| = 0.0408115, |r| = 0.00343687  alpha = 1
+    it 1, |du| = 1.93408, |r| = 0.9887  alpha = 0.5
+    it 2, |du| = 0.967042, |r| = 0.156247  alpha = 1
+    it 3, |du| = 0.0436286, |r| = 0.00272238  alpha = 1
 
-    iterations: 4, |du| = 0.000354957, |r| = 3.6756e-07
+    iterations: 4, |du| = 0.00052722, |r| = 5.1298e-07
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               1.65               -0.000186748
-    cathode             0                   0.000186748
+    anode               1.65               -0.000193853
+    cathode             0                   0.000193853
 
-  Solve time: 0h 0m 0.36s
+  Solve time: 0h 0m 0.25s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.7
   Trying $Vb = 1.7
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.93408, |r| = 0.643939  alpha = 1
-    it 2, |du| = 0.182208, |r| = 0.0474245  alpha = 1
-    it 3, |du| = 0.0116535, |r| = 0.00010526  alpha = 1
+    it 1, |du| = 1.93408, |r| = 0.716634  alpha = 1
+    it 2, |du| = 0.197251, |r| = 0.0436487  alpha = 1
+    it 3, |du| = 0.0154977, |r| = 7.8338e-05  alpha = 1
 
-    iterations: 4, |du| = 4.59328e-05, |r| = 6.16637e-08
+    iterations: 4, |du| = 8.03636e-05, |r| = 4.92778e-08
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               1.7                -0.000398984
-    cathode             0                   0.000398984
+    anode               1.7                -0.000424555
+    cathode             0                   0.000424555
 
-  Solve time: 0h 0m 0.36s
+  Solve time: 0h 0m 0.24s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.75
   Trying $Vb = 1.75
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.93408, |r| = 0.340059  alpha = 1
-    it 2, |du| = 0.169987, |r| = 0.0270849  alpha = 1
+    it 1, |du| = 1.93408, |r| = 0.403489  alpha = 1
+    it 2, |du| = 0.197092, |r| = 0.0299626  alpha = 1
+    it 3, |du| = 0.0158022, |r| = 6.92777e-05  alpha = 1
 
-    iterations: 3, |du| = 0.00981755, |r| = 6.96127e-05
+    iterations: 4, |du| = 8.28036e-05, |r| = 5.25307e-08
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               1.75               -0.000713914
-    cathode             0                   0.000713914
+    anode               1.75               -0.000783431
+    cathode             0                   0.000783431
 
-  Solve time: 0h 0m 0.27s
+  Solve time: 0h 0m 0.24s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.8
   Trying $Vb = 1.8
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.93408, |r| = 0.176856  alpha = 1
-    it 2, |du| = 0.152859, |r| = 0.0146175  alpha = 1
+    it 1, |du| = 1.93408, |r| = 0.241898  alpha = 1
+    it 2, |du| = 0.194106, |r| = 0.0188776  alpha = 1
+    it 3, |du| = 0.0155497, |r| = 5.28474e-05  alpha = 1
 
-    iterations: 3, |du| = 0.00749124, |r| = 2.48617e-05
+    iterations: 4, |du| = 0.000131448, |r| = 1.68942e-08
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               1.8                -0.00111585
-    cathode             0                   0.00111585
+    anode               1.8                -0.0012655
+    cathode             0                   0.0012655
 
-  Solve time: 0h 0m 0.27s
+  Solve time: 0h 0m 0.24s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.85
   Trying $Vb = 1.85
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.93408, |r| = 0.105496  alpha = 1
-    it 2, |du| = 0.139177, |r| = 0.00915859  alpha = 1
+    it 1, |du| = 1.93408, |r| = 0.154308  alpha = 1
+    it 2, |du| = 0.194754, |r| = 0.0151561  alpha = 1
+    it 3, |du| = 0.0159896, |r| = 3.34529e-05  alpha = 1
 
-    iterations: 3, |du| = 0.00591198, |r| = 1.27998e-05
+    iterations: 4, |du| = 0.000193439, |r| = 1.44902e-07
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               1.85               -0.00158258
-    cathode             0                   0.00158258
+    anode               1.85               -0.00185288
+    cathode             0                   0.00185288
 
-  Solve time: 0h 0m 0.27s
+  Solve time: 0h 0m 0.22s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.9
   Trying $Vb = 1.9
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.93408, |r| = 0.0676825  alpha = 1
-    it 2, |du| = 0.129556, |r| = 0.00653034  alpha = 1
+    it 1, |du| = 1.93408, |r| = 0.106563  alpha = 1
+    it 2, |du| = 0.198439, |r| = 0.0122123  alpha = 1
+    it 3, |du| = 0.0170544, |r| = 3.23586e-05  alpha = 1
 
-    iterations: 3, |du| = 0.00507412, |r| = 5.21114e-06
+    iterations: 4, |du| = 0.00027497, |r| = 4.19099e-07
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               1.9                -0.00209481
-    cathode             0                   0.00209481
+    anode               1.9                -0.00252458
+    cathode             0                   0.00252458
 
-  Solve time: 0h 0m 0.27s
+  Solve time: 0h 0m 0.24s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.95
   Trying $Vb = 1.95
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.93408, |r| = 0.0485273  alpha = 1
-    it 2, |du| = 0.122892, |r| = 0.00493737  alpha = 1
+    it 1, |du| = 1.93408, |r| = 0.0825159  alpha = 1
+    it 2, |du| = 0.203322, |r| = 0.0110281  alpha = 1
+    it 3, |du| = 0.0184663, |r| = 3.49002e-05  alpha = 1
 
-    iterations: 3, |du| = 0.00475526, |r| = 3.38165e-06
+    iterations: 4, |du| = 0.000377739, |r| = 9.34257e-07
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               1.95               -0.00263878
-    cathode             0                   0.00263878
+    anode               1.95               -0.00326084
+    cathode             0                   0.00326084
 
-  Solve time: 0h 0m 0.27s
+  Solve time: 0h 0m 0.24s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 2
   Trying $Vb = 2
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.93408, |r| = 0.0392331  alpha = 1
-    it 2, |du| = 0.118326, |r| = 0.00407654  alpha = 1
+    it 1, |du| = 1.93408, |r| = 0.0676992  alpha = 1
+    it 2, |du| = 0.208141, |r| = 0.0107037  alpha = 1
+    it 3, |du| = 0.0199948, |r| = 4.27919e-05  alpha = 1
 
-    iterations: 3, |du| = 0.00476892, |r| = 5.13823e-06
+    iterations: 4, |du| = 0.000506673, |r| = 1.87387e-06
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               2                  -0.00320584
-    cathode             0                   0.00320584
+    anode               2                  -0.00404401
+    cathode             0                   0.00404401
 
-  Solve time: 0h 0m 0.27s
+  Solve time: 0h 0m 0.23s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 2.05
   Trying $Vb = 2.05
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.93408, |r| = 0.0342074  alpha = 1
-    it 2, |du| = 0.115384, |r| = 0.00365212  alpha = 1
+    it 1, |du| = 1.93408, |r| = 0.0574776  alpha = 1
+    it 2, |du| = 0.212344, |r| = 0.0104203  alpha = 1
+    it 3, |du| = 0.0214936, |r| = 6.11514e-05  alpha = 1
 
-    iterations: 3, |du| = 0.00498574, |r| = 8.51156e-06
+    iterations: 4, |du| = 0.000681854, |r| = 3.5562e-06
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               2.05               -0.0037912
-    cathode             0                   0.0037912
+    anode               2.05               -0.00485817
+    cathode             0                   0.00485817
 
-  Solve time: 0h 0m 0.27s
+  Solve time: 0h 0m 0.24s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 2.1
   Trying $Vb = 2.1
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.93408, |r| = 0.0309053  alpha = 1
-    it 2, |du| = 0.119875, |r| = 0.00346173  alpha = 1
+    it 1, |du| = 1.93408, |r| = 0.0511119  alpha = 1
+    it 2, |du| = 0.215879, |r| = 0.0101279  alpha = 1
+    it 3, |du| = 0.0228885, |r| = 8.83781e-05  alpha = 1
 
-    iterations: 3, |du| = 0.00543262, |r| = 1.33805e-05
+    iterations: 4, |du| = 0.000889307, |r| = 6.48358e-06
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               2.1                -0.00439261
-    cathode             0                   0.00439261
+    anode               2.1                -0.00568825
+    cathode             0                   0.00568825
 
-  Solve time: 0h 0m 0.27s
+  Solve time: 0h 0m 0.24s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 2.15
   Trying $Vb = 2.15
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.93408, |r| = 0.0286342  alpha = 1
-    it 2, |du| = 0.129473, |r| = 0.00340648  alpha = 1
+    it 1, |du| = 1.93408, |r| = 0.0486408  alpha = 1
+    it 2, |du| = 0.218933, |r| = 0.00998468  alpha = 1
+    it 3, |du| = 0.0241333, |r| = 0.000121335  alpha = 1
 
-    iterations: 3, |du| = 0.00611311, |r| = 1.97525e-05
+    iterations: 4, |du| = 0.00112102, |r| = 1.12653e-05
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               2.15               -0.00500912
-    cathode             0                   0.00500912
+    anode               2.15               -0.00651913
+    cathode             0                   0.00651913
 
-  Solve time: 0h 0m 0.27s
+  Solve time: 0h 0m 0.24s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 2.2
   Trying $Vb = 2.2
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.93408, |r| = 0.0274286  alpha = 1
-    it 2, |du| = 0.138907, |r| = 0.0034497  alpha = 1
+    it 1, |du| = 1.93408, |r| = 0.0502357  alpha = 1
+    it 2, |du| = 0.242288, |r| = 0.0101231  alpha = 1
+    it 3, |du| = 0.0251711, |r| = 0.000151233  alpha = 1
 
-    iterations: 3, |du| = 0.00678986, |r| = 2.70918e-05
+    iterations: 4, |du| = 0.00133632, |r| = 1.79314e-05
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               2.2                -0.00563982
-    cathode             0                   0.00563982
+    anode               2.2                -0.0073349
+    cathode             0                   0.0073349
 
-  Solve time: 0h 0m 0.27s
+  Solve time: 0h 0m 0.24s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 2.25
   Trying $Vb = 2.25
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.93408, |r| = 0.027612  alpha = 1
-    it 2, |du| = 0.147464, |r| = 0.00359048  alpha = 1
+    it 1, |du| = 1.93408, |r| = 0.0560028  alpha = 1
+    it 2, |du| = 0.278553, |r| = 0.0106865  alpha = 1
+    it 3, |du| = 0.025864, |r| = 0.000153591  alpha = 1
 
-    iterations: 3, |du| = 0.00738528, |r| = 3.3616e-05
+    iterations: 4, |du| = 0.00138074, |r| = 2.29304e-05
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               2.25               -0.00628266
-    cathode             0                   0.00628266
+    anode               2.25               -0.00811877
+    cathode             0                   0.00811877
 
-  Solve time: 0h 0m 0.27s
+  Solve time: 0h 0m 0.23s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 2.3
   Trying $Vb = 2.3
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.93408, |r| = 0.0297101  alpha = 1
-    it 2, |du| = 0.154518, |r| = 0.00386281  alpha = 1
+    it 1, |du| = 1.93408, |r| = 0.0656101  alpha = 1
+    it 2, |du| = 0.330399, |r| = 0.0119953  alpha = 1
+    it 3, |du| = 0.0258936, |r| = 0.000170813  alpha = 1
 
-    iterations: 3, |du| = 0.00783735, |r| = 3.58927e-05
+    iterations: 4, |du| = 0.000796748, |r| = 1.08184e-05
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               2.3                -0.00693334
-    cathode             0                   0.00693334
+    anode               2.3                -0.00885462
+    cathode             0                   0.00885462
 
-  Solve time: 0h 0m 0.27s
+  Solve time: 0h 0m 0.23s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 2.35
   Trying $Vb = 2.35
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.93408, |r| = 0.0342173  alpha = 1
-    it 2, |du| = 0.171721, |r| = 0.00435968  alpha = 1
+    it 1, |du| = 1.93408, |r| = 0.0777928  alpha = 1
+    it 2, |du| = 0.40567, |r| = 0.014682  alpha = 1
+    it 3, |du| = 0.0247571, |r| = 0.000586013  alpha = 1
 
-    iterations: 3, |du| = 0.00811886, |r| = 4.38005e-05
+    iterations: 4, |du| = 0.00134771, |r| = 6.28818e-05
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               2.35               -0.0075847
-    cathode             0                   0.0075847
+    anode               2.35               -0.00953116
+    cathode             0                   0.00953116
 
-  Solve time: 0h 0m 0.27s
+  Solve time: 0h 0m 0.24s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 2.4
   Trying $Vb = 2.4
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.93408, |r| = 0.0413629  alpha = 1
-    it 2, |du| = 0.204464, |r| = 0.00528272  alpha = 1
+    it 1, |du| = 1.93408, |r| = 0.0902031  alpha = 1
+    it 2, |du| = 0.50528, |r| = 0.019303  alpha = 1
+    it 3, |du| = 0.0305988, |r| = 0.00144952  alpha = 1
 
-    iterations: 3, |du| = 0.00825899, |r| = 0.000133232
+    iterations: 4, |du| = 0.00587019, |r| = 0.000239855
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               2.4                -0.00822677
-    cathode             0                   0.00822677
+    anode               2.4                -0.0101469
+    cathode             0                   0.0101469
 
-  Solve time: 0h 0m 0.27s
+  Solve time: 0h 0m 0.24s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 2.45
   Trying $Vb = 2.45
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.93408, |r| = 0.0509984  alpha = 1
-    it 2, |du| = 0.251989, |r| = 0.00699616  alpha = 1
+    it 1, |du| = 1.93408, |r| = 0.100238  alpha = 1
+    it 2, |du| = 0.614665, |r| = 0.0251825  alpha = 1
+    it 3, |du| = 0.0525975, |r| = 0.00249535  alpha = 1
+    it 4, |du| = 0.0121286, |r| = 0.000501383  alpha = 1
 
-    iterations: 3, |du| = 0.0095862, |r| = 0.000398893
+    iterations: 5, |du| = 0.00272938, |r| = 0.000108633
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               2.45               -0.00884803
-    cathode             0                   0.00884803
+    anode               2.45               -0.0107107
+    cathode             0                   0.0107107
 
-  Solve time: 0h 0m 0.27s
+  Solve time: 0h 0m 0.3s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 2.5
   Trying $Vb = 2.5
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.93408, |r| = 0.0623822  alpha = 1
-    it 2, |du| = 0.32009, |r| = 0.00998029  alpha = 1
-    it 3, |du| = 0.0220136, |r| = 0.000972211  alpha = 1
+    it 1, |du| = 1.93824, |r| = 0.106237  alpha = 1
+    it 2, |du| = 0.712645, |r| = 0.0305571  alpha = 1
+    it 3, |du| = 0.0730421, |r| = 0.00337736  alpha = 1
+    it 4, |du| = 0.0183496, |r| = 0.000762579  alpha = 1
 
-    iterations: 4, |du| = 0.00390212, |r| = 0.000147167
+    iterations: 5, |du| = 0.00435831, |r| = 0.000177272
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               2.5                -0.00943805
-    cathode             0                   0.00943805
+    anode               2.5                -0.0112355
+    cathode             0                   0.0112355
 
-  Solve time: 0h 0m 0.36s
+  Solve time: 0h 0m 0.31s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 2.55
   Trying $Vb = 2.55
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.93408, |r| = 0.074266  alpha = 1
-    it 2, |du| = 0.410094, |r| = 0.0145163  alpha = 1
-    it 3, |du| = 0.0419628, |r| = 0.00192642  alpha = 1
+    it 1, |du| = 2.02748, |r| = 0.108928  alpha = 1
+    it 2, |du| = 0.790451, |r| = 0.0344255  alpha = 1
+    it 3, |du| = 0.0891554, |r| = 0.00398619  alpha = 1
+    it 4, |du| = 0.0235634, |r| = 0.000971417  alpha = 1
 
-    iterations: 4, |du| = 0.00874108, |r| = 0.000351551
+    iterations: 5, |du| = 0.00583406, |r| = 0.000237259
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               2.55               -0.00999195
-    cathode             0                   0.00999195
+    anode               2.55               -0.0117325
+    cathode             0                   0.0117325
 
-  Solve time: 0h 0m 0.36s
+  Solve time: 0h 0m 0.31s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 2.6
   Trying $Vb = 2.6
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.93408, |r| = 0.084565  alpha = 1
-    it 2, |du| = 0.512367, |r| = 0.0200743  alpha = 1
-    it 3, |du| = 0.0673425, |r| = 0.00311007  alpha = 1
-    it 4, |du| = 0.0155327, |r| = 0.000650829  alpha = 1
+    it 1, |du| = 2.09844, |r| = 0.109589  alpha = 1
+    it 2, |du| = 0.851091, |r| = 0.0369079  alpha = 1
+    it 3, |du| = 0.101581, |r| = 0.00440336  alpha = 1
+    it 4, |du| = 0.0279354, |r| = 0.00113328  alpha = 1
 
-    iterations: 5, |du| = 0.00338675, |r| = 0.000140321
+    iterations: 5, |du| = 0.00715322, |r| = 0.000287547
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               2.6                -0.0105118
-    cathode             0                   0.0105118
+    anode               2.6                -0.0122088
+    cathode             0                   0.0122088
 
-  Solve time: 0h 0m 0.45s
+  Solve time: 0h 0m 0.32s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 2.65
   Trying $Vb = 2.65
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.93408, |r| = 0.0917508  alpha = 1
-    it 2, |du| = 0.60981, |r| = 0.0254051  alpha = 1
-    it 3, |du| = 0.09265, |r| = 0.004214  alpha = 1
-    it 4, |du| = 0.0228167, |r| = 0.000972074  alpha = 1
+    it 1, |du| = 2.15926, |r| = 0.109304  alpha = 1
+    it 2, |du| = 0.900885, |r| = 0.0385163  alpha = 1
+    it 3, |du| = 0.112084, |r| = 0.00472216  alpha = 1
+    it 4, |du| = 0.0319046, |r| = 0.00126909  alpha = 1
 
-    iterations: 5, |du| = 0.00533147, |r| = 0.000225565
+    iterations: 5, |du| = 0.00841199, |r| = 0.000332498
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               2.65               -0.0110037
-    cathode             0                   0.0110037
+    anode               2.65               -0.0126684
+    cathode             0                   0.0126684
 
-  Solve time: 0h 0m 0.45s
+  Solve time: 0h 0m 0.31s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 2.7
   Trying $Vb = 2.7
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.93408, |r| = 0.0960609  alpha = 1
-    it 2, |du| = 0.692285, |r| = 0.029609  alpha = 1
-    it 3, |du| = 0.114113, |r| = 0.00506931  alpha = 1
-    it 4, |du| = 0.0294351, |r| = 0.00125231  alpha = 1
+    it 1, |du| = 2.21102, |r| = 0.108642  alpha = 1
+    it 2, |du| = 0.944409, |r| = 0.0396403  alpha = 1
+    it 3, |du| = 0.121768, |r| = 0.00499603  alpha = 1
+    it 4, |du| = 0.0357761, |r| = 0.00139371  alpha = 1
 
-    iterations: 5, |du| = 0.00722675, |r| = 0.000305993
+    iterations: 5, |du| = 0.00968707, |r| = 0.000375727
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               2.7                -0.0114747
-    cathode             0                   0.0114747
+    anode               2.7                -0.0131134
+    cathode             0                   0.0131134
 
-  Solve time: 0h 0m 0.45s
+  Solve time: 0h 0m 0.31s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 2.75
   Trying $Vb = 2.75
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.93408, |r| = 0.0982412  alpha = 1
-    it 2, |du| = 0.759392, |r| = 0.0325872  alpha = 1
-    it 3, |du| = 0.13168, |r| = 0.00570152  alpha = 1
-    it 4, |du| = 0.0352328, |r| = 0.00148111  alpha = 1
+    it 1, |du| = 2.25674, |r| = 0.107805  alpha = 1
+    it 2, |du| = 0.984069, |r| = 0.0392283  alpha = 0.5
+    it 3, |du| = 0.46634, |r| = 0.0146155  alpha = 0.5
+    it 4, |du| = 0.196223, |r| = 0.0067204  alpha = 0.5
+    it 5, |du| = 0.0766027, |r| = 0.00289194  alpha = 1
+    it 6, |du| = 0.0200557, |r| = 0.000757337  alpha = 1
 
-    iterations: 5, |du| = 0.00898377, |r| = 0.000376353
+    iterations: 7, |du| = 0.00549383, |r| = 0.000209044
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               2.75               -0.0119298
-    cathode             0                   0.0119298
+    anode               2.75               -0.0135447
+    cathode             0                   0.0135447
 
-  Solve time: 0h 0m 0.45s
+  Solve time: 0h 0m 0.44s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 2.8
   Trying $Vb = 2.8
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.9636, |r| = 0.0992156  alpha = 1
-    it 2, |du| = 0.815659, |r| = 0.0346892  alpha = 1
-    it 3, |du| = 0.146832, |r| = 0.00619578  alpha = 1
-    it 4, |du| = 0.0405434, |r| = 0.0016751  alpha = 1
-    it 5, |du| = 0.0106692, |r| = 0.000439675  alpha = 1
+    it 1, |du| = 2.30239, |r| = 0.107127  alpha = 1
+    it 2, |du| = 1.02198, |r| = 0.0385245  alpha = 0.5
+    it 3, |du| = 0.483083, |r| = 0.0142094  alpha = 0.5
+    it 4, |du| = 0.202059, |r| = 0.00661249  alpha = 0.5
+    it 5, |du| = 0.0782666, |r| = 0.00291534  alpha = 1
+    it 6, |du| = 0.0210001, |r| = 0.000778102  alpha = 1
 
-    iterations: 6, |du| = 0.00283957, |r| = 0.000116909
+    iterations: 7, |du| = 0.00589387, |r| = 0.000219958
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               2.8                -0.0123719
-    cathode             0                   0.0123719
+    anode               2.8                -0.0139637
+    cathode             0                   0.0139637
 
-  Solve time: 0h 0m 0.54s
+  Solve time: 0h 0m 0.44s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 2.85
   Trying $Vb = 2.85
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 2.02453, |r| = 0.0997968  alpha = 1
-    it 2, |du| = 0.866153, |r| = 0.0356199  alpha = 0.5
-    it 3, |du| = 0.375902, |r| = 0.0129563  alpha = 0.5
-    it 4, |du| = 0.150025, |r| = 0.00557254  alpha = 0.5
-    it 5, |du| = 0.0570978, |r| = 0.00225046  alpha = 1
-    it 6, |du| = 0.0150536, |r| = 0.000604632  alpha = 1
+    it 1, |du| = 2.33962, |r| = 0.106125  alpha = 1
+    it 2, |du| = 1.05652, |r| = 0.037717  alpha = 0.5
+    it 3, |du| = 0.497908, |r| = 0.0137688  alpha = 0.5
+    it 4, |du| = 0.207026, |r| = 0.00648608  alpha = 0.5
+    it 5, |du| = 0.0795971, |r| = 0.00292419  alpha = 1
+    it 6, |du| = 0.021831, |r| = 0.000793921  alpha = 1
 
-    iterations: 7, |du| = 0.00406533, |r| = 0.000164377
+    iterations: 7, |du| = 0.00626627, |r| = 0.00022946
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               2.85               -0.0128028
-    cathode             0                   0.0128028
+    anode               2.85               -0.0143709
+    cathode             0                   0.0143709
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.44s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 2.9
   Trying $Vb = 2.9
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 2.07739, |r| = 0.0998977  alpha = 1
-    it 2, |du| = 0.91213, |r| = 0.0351456  alpha = 0.5
-    it 3, |du| = 0.394447, |r| = 0.0126274  alpha = 0.5
-    it 4, |du| = 0.156163, |r| = 0.00549741  alpha = 0.5
-    it 5, |du| = 0.0588176, |r| = 0.00229124  alpha = 1
-    it 6, |du| = 0.0160202, |r| = 0.000631074  alpha = 1
+    it 1, |du| = 2.37244, |r| = 0.105042  alpha = 1
+    it 2, |du| = 1.0886, |r| = 0.0369193  alpha = 0.5
+    it 3, |du| = 0.511282, |r| = 0.0133502  alpha = 0.5
+    it 4, |du| = 0.211346, |r| = 0.00636563  alpha = 0.5
+    it 5, |du| = 0.0806961, |r| = 0.00292409  alpha = 1
+    it 6, |du| = 0.0225623, |r| = 0.000805657  alpha = 1
 
-    iterations: 7, |du| = 0.00444493, |r| = 0.000176204
+    iterations: 7, |du| = 0.00661289, |r| = 0.000237714
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               2.9                -0.0132232
-    cathode             0                   0.0132232
+    anode               2.9                -0.0147666
+    cathode             0                   0.0147666
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.45s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 2.95
   Trying $Vb = 2.95
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 2.1258, |r| = 0.0997875  alpha = 1
-    it 2, |du| = 0.95537, |r| = 0.0346495  alpha = 0.5
-    it 3, |du| = 0.411661, |r| = 0.0123165  alpha = 0.5
-    it 4, |du| = 0.16173, |r| = 0.00543253  alpha = 0.5
-    it 5, |du| = 0.0603206, |r| = 0.0023183  alpha = 1
-    it 6, |du| = 0.0169136, |r| = 0.000653305  alpha = 1
+    it 1, |du| = 2.40053, |r| = 0.103871  alpha = 1
+    it 2, |du| = 1.11807, |r| = 0.0361287  alpha = 0.5
+    it 3, |du| = 0.523028, |r| = 0.0129483  alpha = 0.5
+    it 4, |du| = 0.214964, |r| = 0.00624695  alpha = 0.5
+    it 5, |du| = 0.081553, |r| = 0.0029159  alpha = 1
+    it 6, |du| = 0.0231803, |r| = 0.000813124  alpha = 1
 
-    iterations: 7, |du| = 0.00481173, |r| = 0.000186983
+    iterations: 7, |du| = 0.00692735, |r| = 0.000244585
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               2.95               -0.0136335
-    cathode             0                   0.0136335
+    anode               2.95               -0.0151514
+    cathode             0                   0.0151514
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.44s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 3
   Trying $Vb = 3
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 2.17041, |r| = 0.0995244  alpha = 1
-    it 2, |du| = 0.996407, |r| = 0.0341416  alpha = 0.5
-    it 3, |du| = 0.427752, |r| = 0.0120233  alpha = 0.5
-    it 4, |du| = 0.166807, |r| = 0.0053773  alpha = 0.5
-    it 5, |du| = 0.0616388, |r| = 0.00233567  alpha = 1
-    it 6, |du| = 0.0177417, |r| = 0.000672095  alpha = 1
+    it 1, |du| = 2.42327, |r| = 0.102607  alpha = 1
+    it 2, |du| = 1.14462, |r| = 0.0353428  alpha = 0.5
+    it 3, |du| = 0.532891, |r| = 0.0125619  alpha = 0.5
+    it 4, |du| = 0.217764, |r| = 0.00612511  alpha = 0.5
+    it 5, |du| = 0.0821378, |r| = 0.00289956  alpha = 1
+    it 6, |du| = 0.0236615, |r| = 0.000815784  alpha = 1
 
-    iterations: 7, |du| = 0.00516694, |r| = 0.000196872
+    iterations: 7, |du| = 0.00719956, |r| = 0.000249819
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               3                  -0.0140342
-    cathode             0                   0.0140342
+    anode               3                  -0.0155253
+    cathode             0                   0.0155253
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.44s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 3.05
   Trying $Vb = 3.05
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 2.21128, |r| = 0.0991255  alpha = 1
-    it 2, |du| = 1.03531, |r| = 0.0336175  alpha = 0.5
-    it 3, |du| = 0.442731, |r| = 0.0117408  alpha = 0.5
-    it 4, |du| = 0.171406, |r| = 0.00532667  alpha = 0.5
-    it 5, |du| = 0.0627819, |r| = 0.00234526  alpha = 1
-    it 6, |du| = 0.0185027, |r| = 0.000687683  alpha = 1
+    it 1, |du| = 2.43974, |r| = 0.101237  alpha = 1
+    it 2, |du| = 1.16773, |r| = 0.0345627  alpha = 0.5
+    it 3, |du| = 0.540488, |r| = 0.0121909  alpha = 0.5
+    it 4, |du| = 0.219604, |r| = 0.00599664  alpha = 0.5
+    it 5, |du| = 0.0824153, |r| = 0.00287513  alpha = 1
+    it 6, |du| = 0.0239765, |r| = 0.00081292  alpha = 1
 
-    iterations: 7, |du| = 0.00550843, |r| = 0.000205877
+    iterations: 7, |du| = 0.00741678, |r| = 0.000253082
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               3.05               -0.0144254
-    cathode             0                   0.0144254
+    anode               3.05               -0.0158886
+    cathode             0                   0.0158886
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.44s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 3.1
   Trying $Vb = 3.1
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 2.24817, |r| = 0.098602  alpha = 1
-    it 2, |du| = 1.07196, |r| = 0.0330805  alpha = 0.5
-    it 3, |du| = 0.456508, |r| = 0.0114693  alpha = 0.5
-    it 4, |du| = 0.1755, |r| = 0.00527921  alpha = 0.5
-    it 5, |du| = 0.0637489, |r| = 0.00234805  alpha = 1
-    it 6, |du| = 0.0191885, |r| = 0.000700034  alpha = 1
+    it 1, |du| = 2.44852, |r| = 0.0997443  alpha = 1
+    it 2, |du| = 1.18662, |r| = 0.0337912  alpha = 0.5
+    it 3, |du| = 0.545268, |r| = 0.0118358  alpha = 0.5
+    it 4, |du| = 0.220276, |r| = 0.00585576  alpha = 0.5
+    it 5, |du| = 0.0823333, |r| = 0.00284232  alpha = 1
+    it 6, |du| = 0.0240839, |r| = 0.000803454  alpha = 1
 
-    iterations: 7, |du| = 0.00583192, |r| = 0.000213912
+    iterations: 7, |du| = 0.00756102, |r| = 0.000253886
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               3.1                -0.0148072
-    cathode             0                   0.0148072
+    anode               3.1                -0.0162412
+    cathode             0                   0.0162412
 
-  Solve time: 0h 0m 0.63s
+  Solve time: 0h 0m 0.45s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 3.15
   Trying $Vb = 3.15
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 2.28063, |r| = 0.0979526  alpha = 1
-    it 2, |du| = 1.10606, |r| = 0.0325309  alpha = 0.5
-    it 3, |du| = 0.468897, |r| = 0.0112059  alpha = 0.5
-    it 4, |du| = 0.179035, |r| = 0.00523017  alpha = 0.5
-    it 5, |du| = 0.0645313, |r| = 0.00234453  alpha = 1
-    it 6, |du| = 0.019786, |r| = 0.0007089  alpha = 1
+    it 1, |du| = 2.44753, |r| = 0.0981172  alpha = 1
+    it 2, |du| = 1.20005, |r| = 0.0330433  alpha = 0.5
+    it 3, |du| = 0.546439, |r| = 0.0115044  alpha = 0.5
+    it 4, |du| = 0.219497, |r| = 0.005698  alpha = 0.5
+    it 5, |du| = 0.0818229, |r| = 0.00280082  alpha = 1
+    it 6, |du| = 0.0239276, |r| = 0.000785874  alpha = 1
 
-    iterations: 7, |du| = 0.00613097, |r| = 0.000220817
+    iterations: 7, |du| = 0.00760723, |r| = 0.000251538
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               3.15               -0.0151799
-    cathode             0                   0.0151799
+    anode               3.15               -0.0165828
+    cathode             0                   0.0165828
 
-  Solve time: 0h 0m 0.63s
+  Solve time: 0h 0m 0.44s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 3.2
   Trying $Vb = 3.2
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 2.308, |r| = 0.0971758  alpha = 1
-    it 2, |du| = 1.13719, |r| = 0.0319712  alpha = 0.5
-    it 3, |du| = 0.479659, |r| = 0.0109515  alpha = 0.5
-    it 4, |du| = 0.181933, |r| = 0.00517748  alpha = 0.5
-    it 5, |du| = 0.065115, |r| = 0.00233502  alpha = 1
-    it 6, |du| = 0.0202785, |r| = 0.000713926  alpha = 1
+    it 1, |du| = 2.43374, |r| = 0.0963481  alpha = 1
+    it 2, |du| = 1.20603, |r| = 0.0323495  alpha = 0.5
+    it 3, |du| = 0.542879, |r| = 0.0112112  alpha = 0.5
+    it 4, |du| = 0.216874, |r| = 0.00551782  alpha = 0.5
+    it 5, |du| = 0.0807972, |r| = 0.0027508  alpha = 1
+    it 6, |du| = 0.023429, |r| = 0.000758055  alpha = 1
 
-    iterations: 7, |du| = 0.00639751, |r| = 0.000226385
+    iterations: 7, |du| = 0.00751915, |r| = 0.00024502
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               3.2                -0.0155433
-    cathode             0                   0.0155433
+    anode               3.2                -0.0169129
+    cathode             0                   0.0169129
 
-  Solve time: 0h 0m 0.63s
+  Solve time: 0h 0m 0.45s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 3.25
   Trying $Vb = 3.25
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 2.32927, |r| = 0.0962638  alpha = 1
-    it 2, |du| = 1.16468, |r| = 0.0314054  alpha = 0.5
-    it 3, |du| = 0.488432, |r| = 0.0107067  alpha = 0.5
-    it 4, |du| = 0.184083, |r| = 0.00511738  alpha = 0.5
-    it 5, |du| = 0.0654801, |r| = 0.00231973  alpha = 1
-    it 6, |du| = 0.0206421, |r| = 0.000714518  alpha = 1
+    it 1, |du| = 2.40275, |r| = 0.094464  alpha = 1
+    it 2, |du| = 1.2012, |r| = 0.0317756  alpha = 0.5
+    it 3, |du| = 0.533047, |r| = 0.0109876  alpha = 0.5
+    it 4, |du| = 0.21202, |r| = 0.00531332  alpha = 0.5
+    it 5, |du| = 0.0791888, |r| = 0.00269416  alpha = 1
+    it 6, |du| = 0.0225071, |r| = 0.000717953  alpha = 1
 
-    iterations: 7, |du| = 0.00662004, |r| = 0.000230299
+    iterations: 7, |du| = 0.0072541, |r| = 0.000233159
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               3.25               -0.0158975
-    cathode             0                   0.0158975
+    anode               3.25               -0.0172305
+    cathode             0                   0.0172305
 
-  Solve time: 0h 0m 0.63s
+  Solve time: 0h 0m 0.44s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 3.3
   Trying $Vb = 3.3
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 2.34304, |r| = 0.0952052  alpha = 1
-    it 2, |du| = 1.18756, |r| = 0.030841  alpha = 0.5
-    it 3, |du| = 0.494706, |r| = 0.0104743  alpha = 0.5
-    it 4, |du| = 0.185331, |r| = 0.00504583  alpha = 0.5
-    it 5, |du| = 0.0655979, |r| = 0.00229877  alpha = 1
-    it 6, |du| = 0.0208445, |r| = 0.000709843  alpha = 1
+    it 1, |du| = 2.34881, |r| = 0.0925863  alpha = 1
+    it 2, |du| = 1.17969, |r| = 0.0314413  alpha = 0.5
+    it 3, |du| = 0.515138, |r| = 0.0108783  alpha = 0.5
+    it 4, |du| = 0.20454, |r| = 0.00508374  alpha = 0.5
+    it 5, |du| = 0.0769923, |r| = 0.00263735  alpha = 1
+    it 6, |du| = 0.0210645, |r| = 0.000663312  alpha = 1
 
-    iterations: 7, |du| = 0.00678287, |r| = 0.000232123
+    iterations: 7, |du| = 0.00675294, |r| = 0.0002143
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               3.3                -0.0162421
-    cathode             0                   0.0162421
+    anode               3.3                -0.0175344
+    cathode             0                   0.0175344
 
-  Solve time: 0h 0m 0.63s
+  Solve time: 0h 0m 0.44s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 3.35
   Trying $Vb = 3.35
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 2.34719, |r| = 0.0939909  alpha = 1
-    it 2, |du| = 1.20433, |r| = 0.0302972  alpha = 0.5
-    it 3, |du| = 0.497759, |r| = 0.0102635  alpha = 0.5
-    it 4, |du| = 0.185467, |r| = 0.00495988  alpha = 0.5
-    it 5, |du| = 0.0654327, |r| = 0.00227244  alpha = 1
-    it 6, |du| = 0.0208423, |r| = 0.000698762  alpha = 1
+    it 1, |du| = 2.26608, |r| = 0.091009  alpha = 1
+    it 2, |du| = 1.13231, |r| = 0.0315359  alpha = 0.5
+    it 3, |du| = 0.487561, |r| = 0.010941  alpha = 0.5
+    it 4, |du| = 0.194574, |r| = 0.00483796  alpha = 0.5
+    it 5, |du| = 0.074446, |r| = 0.00259709  alpha = 1
+    it 6, |du| = 0.0190714, |r| = 0.00059472  alpha = 1
 
-    iterations: 7, |du| = 0.00686422, |r| = 0.000231242
+    iterations: 7, |du| = 0.00596923, |r| = 0.000187217
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               3.35               -0.0165769
-    cathode             0                   0.0165769
+    anode               3.35               -0.0178234
+    cathode             0                   0.0178234
 
-  Solve time: 0h 0m 0.63s
+  Solve time: 0h 0m 0.44s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 3.4
   Trying $Vb = 3.4
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 2.33866, |r| = 0.0926194  alpha = 1
-    it 2, |du| = 1.21266, |r| = 0.0298088  alpha = 0.5
-    it 3, |du| = 0.496574, |r| = 0.0100902  alpha = 0.5
-    it 4, |du| = 0.184217, |r| = 0.00485621  alpha = 0.5
-    it 5, |du| = 0.0649431, |r| = 0.00224155  alpha = 1
-    it 6, |du| = 0.0205773, |r| = 0.000679747  alpha = 1
+    it 1, |du| = 2.15396, |r| = 0.0902515  alpha = 1
+    it 2, |du| = 1.04829, |r| = 0.0321511  alpha = 0.5
+    it 3, |du| = 0.451369, |r| = 0.0111549  alpha = 0.5
+    it 4, |du| = 0.18348, |r| = 0.00458117  alpha = 0.5
+    it 5, |du| = 0.0722045, |r| = 0.00254518  alpha = 0.5
+    it 6, |du| = 0.0281238, |r| = 0.00108001  alpha = 1
 
-    iterations: 7, |du| = 0.0068335, |r| = 0.000226784
+    iterations: 7, |du| = 0.00632985, |r| = 0.000201372
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               3.4                -0.0169009
-    cathode             0                   0.0169009
+    anode               3.4                -0.0180971
+    cathode             0                   0.0180971
 
-  Solve time: 0h 0m 0.63s
+  Solve time: 0h 0m 0.44s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 3.45
   Trying $Vb = 3.45
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 2.31319, |r| = 0.0911259  alpha = 1
-    it 2, |du| = 1.20872, |r| = 0.0294469  alpha = 0.5
-    it 3, |du| = 0.489769, |r| = 0.0099847  alpha = 0.5
-    it 4, |du| = 0.181272, |r| = 0.00473371  alpha = 0.5
-    it 5, |du| = 0.0641077, |r| = 0.00220879  alpha = 1
-    it 6, |du| = 0.0199767, |r| = 0.000651012  alpha = 1
+    it 1, |du| = 2.02427, |r| = 0.0905678  alpha = 1
+    it 2, |du| = 0.92939, |r| = 0.0302307  alpha = 1
+    it 3, |du| = 0.164073, |r| = 0.00542358  alpha = 1
+    it 4, |du| = 0.0716966, |r| = 0.00164416  alpha = 0.5
+    it 5, |du| = 0.0219383, |r| = 0.000510401  alpha = 0.5
 
-    iterations: 7, |du| = 0.00664868, |r| = 0.000217553
+    iterations: 6, |du| = 0.00659242, |r| = 0.000207491
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               3.45               -0.0172134
-    cathode             0                   0.0172134
+    anode               3.45               -0.0183558
+    cathode             0                   0.0183558
 
-  Solve time: 0h 0m 0.63s
+  Solve time: 0h 0m 0.38s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 3.5
   Trying $Vb = 3.5
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 2.26506, |r| = 0.0896439  alpha = 1
-    it 2, |du| = 1.18634, |r| = 0.0293336  alpha = 0.5
-    it 3, |du| = 0.475783, |r| = 0.00999196  alpha = 0.5
-    it 4, |du| = 0.176415, |r| = 0.00459499  alpha = 0.5
-    it 5, |du| = 0.0629747, |r| = 0.00218084  alpha = 1
-    it 6, |du| = 0.0189722, |r| = 0.000611312  alpha = 1
+    it 1, |du| = 1.93408, |r| = 0.091531  alpha = 1
+    it 2, |du| = 0.814206, |r| = 0.0275265  alpha = 1
+    it 3, |du| = 0.105338, |r| = 0.00348112  alpha = 1
+    it 4, |du| = 0.0456077, |r| = 0.00105463  alpha = 0.5
+    it 5, |du| = 0.0135745, |r| = 0.000325405  alpha = 0.5
 
-    iterations: 7, |du| = 0.00626065, |r| = 0.000202176
+    iterations: 6, |du| = 0.00393769, |r| = 0.000126859
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               3.5                -0.017513
-    cathode             0                   0.017513
+    anode               3.5                -0.0186044
+    cathode             0                   0.0186044
 
-  Solve time: 0h 0m 0.63s
+  Solve time: 0h 0m 0.38s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 3.55
   Trying $Vb = 3.55
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 2.18894, |r| = 0.0884732  alpha = 1
-    it 2, |du| = 1.13636, |r| = 0.0296497  alpha = 0.5
-    it 3, |du| = 0.453226, |r| = 0.0101604  alpha = 0.5
-    it 4, |du| = 0.169804, |r| = 0.00444494  alpha = 0.5
-    it 5, |du| = 0.0617858, |r| = 0.0021743  alpha = 1
-    it 6, |du| = 0.0175254, |r| = 0.000561224  alpha = 1
+    it 1, |du| = 1.93408, |r| = 0.091428  alpha = 1
+    it 2, |du| = 0.74004, |r| = 0.0263889  alpha = 1
+    it 3, |du| = 0.0662632, |r| = 0.00220609  alpha = 1
+    it 4, |du| = 0.0280997, |r| = 0.000674768  alpha = 0.5
 
-    iterations: 7, |du| = 0.00562076, |r| = 0.000179351
+    iterations: 5, |du| = 0.00807919, |r| = 0.000259182
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               3.55               -0.0177983
-    cathode             0                   0.0177983
+    anode               3.55               -0.0188461
+    cathode             0                   0.0188461
 
-  Solve time: 0h 0m 0.63s
+  Solve time: 0h 0m 0.3s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 3.6
   Trying $Vb = 3.6
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 2.08524, |r| = 0.0881085  alpha = 1
-    it 2, |du| = 1.04986, |r| = 0.0304607  alpha = 0.5
-    it 3, |du| = 0.423087, |r| = 0.010457  alpha = 0.5
-    it 4, |du| = 0.162514, |r| = 0.0042784  alpha = 0.5
-    it 5, |du| = 0.0610652, |r| = 0.00221695  alpha = 1
-    it 6, |du| = 0.01573, |r| = 0.000506834  alpha = 1
+    it 1, |du| = 1.93408, |r| = 0.0905125  alpha = 1
+    it 2, |du| = 0.715271, |r| = 0.0261727  alpha = 1
+    it 3, |du| = 0.0520715, |r| = 0.00176224  alpha = 1
+    it 4, |du| = 0.022173, |r| = 0.000542794  alpha = 0.5
 
-    iterations: 7, |du| = 0.00473397, |r| = 0.00014953
+    iterations: 5, |du| = 0.00618996, |r| = 0.000203295
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               3.6                -0.0180688
-    cathode             0                   0.0180688
+    anode               3.6                -0.0190839
+    cathode             0                   0.0190839
 
-  Solve time: 0h 0m 0.63s
+  Solve time: 0h 0m 0.3s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 3.65
   Trying $Vb = 3.65
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.97, |r| = 0.0888115  alpha = 1
-    it 2, |du| = 0.933565, |r| = 0.0308356  alpha = 1
-    it 3, |du| = 0.198869, |r| = 0.0062186  alpha = 1
-    it 4, |du| = 0.0766474, |r| = 0.00191684  alpha = 0.5
-    it 5, |du| = 0.0237467, |r| = 0.000589409  alpha = 0.5
+    it 1, |du| = 1.93408, |r| = 0.0895485  alpha = 1
+    it 2, |du| = 0.718197, |r| = 0.0261994  alpha = 1
+    it 3, |du| = 0.0519622, |r| = 0.00176291  alpha = 1
+    it 4, |du| = 0.0226488, |r| = 0.000541989  alpha = 0.5
 
-    iterations: 6, |du| = 0.00732461, |r| = 0.00022925
+    iterations: 5, |du| = 0.00627145, |r| = 0.000204474
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               3.65               -0.018326
-    cathode             0                   0.018326
+    anode               3.65               -0.0193187
+    cathode             0                   0.0193187
 
-  Solve time: 0h 0m 0.54s
+  Solve time: 0h 0m 0.3s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 3.7
   Trying $Vb = 3.7
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.93408, |r| = 0.0897802  alpha = 1
-    it 2, |du| = 0.824048, |r| = 0.028453  alpha = 1
-    it 3, |du| = 0.138259, |r| = 0.00427861  alpha = 1
-    it 4, |du| = 0.0497585, |r| = 0.00137284  alpha = 0.5
-    it 5, |du| = 0.0152458, |r| = 0.000452269  alpha = 0.5
+    it 1, |du| = 1.93408, |r| = 0.0888304  alpha = 1
+    it 2, |du| = 0.731598, |r| = 0.0262842  alpha = 1
+    it 3, |du| = 0.05683, |r| = 0.0019055  alpha = 1
+    it 4, |du| = 0.0253035, |r| = 0.000581852  alpha = 0.5
 
-    iterations: 6, |du| = 0.00465995, |r| = 0.000145451
+    iterations: 5, |du| = 0.0070174, |r| = 0.000223805
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               3.7                -0.0185737
-    cathode             0                   0.0185737
+    anode               3.7                -0.0195508
+    cathode             0                   0.0195508
 
-  Solve time: 0h 0m 0.54s
+  Solve time: 0h 0m 0.3s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 3.75
   Trying $Vb = 3.75
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.93408, |r| = 0.0897309  alpha = 1
-    it 2, |du| = 0.757439, |r| = 0.0275256  alpha = 1
-    it 3, |du| = 0.100199, |r| = 0.00309815  alpha = 1
-    it 4, |du| = 0.033042, |r| = 0.00101672  alpha = 1
-    it 5, |du| = 0.0130295, |r| = 0.000310021  alpha = 0.5
+    it 1, |du| = 1.93408, |r| = 0.0880363  alpha = 1
+    it 2, |du| = 0.745968, |r| = 0.0263578  alpha = 1
+    it 3, |du| = 0.0620284, |r| = 0.00204586  alpha = 1
+    it 4, |du| = 0.0280053, |r| = 0.000619925  alpha = 0.5
 
-    iterations: 6, |du| = 0.00393961, |r| = 0.000120226
+    iterations: 5, |du| = 0.00777659, |r| = 0.000242945
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               3.75               -0.0188153
-    cathode             0                   0.0188153
+    anode               3.75               -0.0197804
+    cathode             0                   0.0197804
 
-  Solve time: 0h 0m 0.54s
+  Solve time: 0h 0m 0.3s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 3.8
   Trying $Vb = 3.8
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.93408, |r| = 0.0888238  alpha = 1
-    it 2, |du| = 0.735985, |r| = 0.0273528  alpha = 1
-    it 3, |du| = 0.0871505, |r| = 0.00267839  alpha = 1
-    it 4, |du| = 0.0276383, |r| = 0.00084464  alpha = 1
-    it 5, |du| = 0.0110775, |r| = 0.000255419  alpha = 0.5
+    it 1, |du| = 1.93408, |r| = 0.0869798  alpha = 1
+    it 2, |du| = 0.758045, |r| = 0.0263959  alpha = 1
+    it 3, |du| = 0.066021, |r| = 0.00214294  alpha = 1
+    it 4, |du| = 0.0300955, |r| = 0.000644721  alpha = 0.5
 
-    iterations: 6, |du| = 0.00332393, |r| = 0.000100476
+    iterations: 5, |du| = 0.00834851, |r| = 0.000256508
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               3.8                -0.0190529
-    cathode             0                   0.0190529
+    anode               3.8                -0.0200072
+    cathode             0                   0.0200072
 
-  Solve time: 0h 0m 0.54s
+  Solve time: 0h 0m 0.3s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 3.85
   Trying $Vb = 3.85
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.93408, |r| = 0.0880244  alpha = 1
-    it 2, |du| = 0.742315, |r| = 0.0274502  alpha = 1
-    it 3, |du| = 0.0884884, |r| = 0.00268263  alpha = 1
-    it 4, |du| = 0.0287133, |r| = 0.00086805  alpha = 1
-    it 5, |du| = 0.0116502, |r| = 0.000260445  alpha = 0.5
+    it 1, |du| = 1.93408, |r| = 0.08584  alpha = 1
+    it 2, |du| = 0.767428, |r| = 0.026394  alpha = 1
+    it 3, |du| = 0.0686665, |r| = 0.00219632  alpha = 1
+    it 4, |du| = 0.0315296, |r| = 0.000656564  alpha = 0.5
 
-    iterations: 6, |du| = 0.00347759, |r| = 0.000103976
+    iterations: 5, |du| = 0.00872045, |r| = 0.000264337
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               3.85               -0.0192878
-    cathode             0                   0.0192878
+    anode               3.85               -0.0202314
+    cathode             0                   0.0202314
 
-  Solve time: 0h 0m 0.54s
+  Solve time: 0h 0m 0.3s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 3.9
   Trying $Vb = 3.9
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.93408, |r| = 0.0874243  alpha = 1
-    it 2, |du| = 0.757906, |r| = 0.027593  alpha = 1
-    it 3, |du| = 0.0944944, |r| = 0.002824  alpha = 1
-    it 4, |du| = 0.0317754, |r| = 0.000947975  alpha = 0.5
+    it 1, |du| = 1.93408, |r| = 0.0849364  alpha = 1
+    it 2, |du| = 0.774656, |r| = 0.02636  alpha = 1
+    it 3, |du| = 0.0702588, |r| = 0.00221726  alpha = 1
+    it 4, |du| = 0.0324565, |r| = 0.000659034  alpha = 0.5
 
-    iterations: 5, |du| = 0.00940081, |r| = 0.000283274
+    iterations: 5, |du| = 0.00893868, |r| = 0.000267868
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               3.9                -0.0195198
-    cathode             0                   0.0195198
+    anode               3.9                -0.0204528
+    cathode             0                   0.0204528
 
-  Solve time: 0h 0m 0.45s
+  Solve time: 0h 0m 0.3s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 3.95
   Trying $Vb = 3.95
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.93408, |r| = 0.0868521  alpha = 1
-    it 2, |du| = 0.776135, |r| = 0.0277715  alpha = 1
-    it 3, |du| = 0.101272, |r| = 0.00298743  alpha = 1
-    it 4, |du| = 0.0351107, |r| = 0.000984072  alpha = 0.5
-    it 5, |du| = 0.0103403, |r| = 0.000307645  alpha = 1
+    it 1, |du| = 1.93408, |r| = 0.0843766  alpha = 1
+    it 2, |du| = 0.780466, |r| = 0.0263079  alpha = 1
+    it 3, |du| = 0.0711796, |r| = 0.00221854  alpha = 1
+    it 4, |du| = 0.0330625, |r| = 0.000655956  alpha = 0.5
 
-    iterations: 6, |du| = 0.00429803, |r| = 0.000125663
+    iterations: 5, |du| = 0.00906005, |r| = 0.000268755
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               3.95               -0.0197502
-    cathode             0                   0.0197502
+    anode               3.95               -0.0206715
+    cathode             0                   0.0206715
 
-  Solve time: 0h 0m 0.54s
+  Solve time: 0h 0m 0.3s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 4
   Trying $Vb = 4
 
   >>>>--------------------------------- (ddg) ----------------------------------
-    it 1, |du| = 1.93408, |r| = 0.0857802  alpha = 1
-    it 2, |du| = 0.788051, |r| = 0.0278095  alpha = 1
-    it 3, |du| = 0.105457, |r| = 0.00307477  alpha = 1
-    it 4, |du| = 0.0371451, |r| = 0.00100293  alpha = 0.5
-    it 5, |du| = 0.0108912, |r| = 0.000320325  alpha = 1
+    it 1, |du| = 1.93408, |r| = 0.083961  alpha = 1
+    it 2, |du| = 0.785495, |r| = 0.0262509  alpha = 1
+    it 3, |du| = 0.0717553, |r| = 0.00221037  alpha = 1
+    it 4, |du| = 0.0335054, |r| = 0.000650326  alpha = 0.5
 
-    iterations: 6, |du| = 0.00455697, |r| = 0.000131866
+    iterations: 5, |du| = 0.00913246, |r| = 0.000268354
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               4                  -0.0199777
-    cathode             0                   0.0199777
+    anode               4                  -0.0208876
+    cathode             0                   0.0208876
 
-  Solve time: 0h 0m 0.54s
+  Solve time: 0h 0m 0.3s
   <<<<--------------------------------------------------------------------------
 
-Solve time: 0h 0m 32s
+Solve time: 0h 0m 22s
 <<<<----------------------------------------------------------------------------
 
-Total solve time: 0h 0m 40s
+Total solve time: 0h 0m 28s
 Simulation finished.
 
 16 warnings during run
 0 errors detected
 
 
-Log end: Thu Jun 21 09:08:48 2018
+Log end: Wed Aug  8 19:00:14 2018
 
 

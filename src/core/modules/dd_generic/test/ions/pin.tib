@@ -29,6 +29,7 @@ Module dd_generic
   name = driftdiffusion
   plot = (RefEnergy, QFermi, Density, Flux, NetRecombination, ContactCurrents, TotalRecombinationHeat)
 
+
   Physics
   {
 
