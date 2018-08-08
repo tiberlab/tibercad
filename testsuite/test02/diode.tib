@@ -87,6 +87,7 @@ Module driftdiffusion
 
 Module sweep
 {
+    solve = driftdiffusion
     variable = $Vb
     start = 0.0
     stop = 2.0
