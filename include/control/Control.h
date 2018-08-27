@@ -160,6 +160,10 @@ class TBDLLOCAL Control
     //! Create a boundary object
     void create_boundary(SimulationInterface* sim, const ModelOptions& opts);
 
+    //! Recursively eliminate models not defined on a region
+    void eliminate_unneeded_submodels(ModelOptions& opts,
+        const Device* device, ID reg_id) const;
+
 
 };
 
