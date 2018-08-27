@@ -69,7 +69,7 @@ TiberNonlinLS::do_solve(void)
   double eps_res = get_nonlinear_atol();
 
 
-  int max_ls_step = 5;
+  int max_ls_step = 10;
 
   // the (final) residual norm
   double norm_res, norm_rhs = 0;
@@ -139,6 +139,8 @@ TiberNonlinLS::do_solve(void)
 
     // the relaxation factor
     double alpha = 1.0;
+    double min_alpha = 1.0;
+    //max_ls_step = 2;
 
     /*
      * Note about the LS algorithm
@@ -201,15 +203,39 @@ TiberNonlinLS::do_solve(void)
           break;
         }
 
+        if ((ls_step == 1) && (old_norm < 100 * norm_rhs))
+        {
+          double b = 2*(norm_rhs + old_norm) - 4*norm_res;
+          double a = old_norm - norm_rhs - b;
+
+          min_alpha = -a / (2 * b);
+          //cerr << "         min: alpha = " << min_alpha << endl;
+          if ((min_alpha <= 1.0) && (min_alpha > 0))
+            alpha = min_alpha;
+        }
+        else
+          alpha *= 0.5;
+
         // don't accept step
         u_tmp = u_old;
-        alpha *= 0.5;
 
         // if the norm decreases sufficiently, we don't increase the counter
-        if (norm_res < 0.5 * old_norm)
-          ls_step--;
+        //if (norm_res < 0.5 * old_norm)
+        //  ls_step--;
       }
     }
+
+    /*
+    if (norm_res > old_norm)
+    {
+      alpha = 1;
+      norm_res = old_norm;
+
+      u_tmp = u_old;
+      u_tmp.add(-alpha, du);
+      u_tmp.localize(u, get_dof_map().get_send_list());
+    }
+    */
 
     // check for convergence
     if ((norm_du < eps) || (norm_res < eps_res))
@@ -230,10 +256,14 @@ TiberNonlinLS::do_solve(void)
       throw (SNESDivergedError(-4, i, norm_rhs));
     }
 
+
+    //if ((min_alpha <= 1.0) && (min_alpha > 0))
+    if (10 * norm_res > norm_rhs)
     {
       // check for one more smaller step
       u_tmp = u_old;
       u_tmp.add(-0.5 * alpha, du);
+      //u_tmp.add(-min_alpha, du);
       u_tmp.localize(u, get_dof_map().get_send_list());
 
       // evaluate the residual
@@ -254,10 +284,12 @@ TiberNonlinLS::do_solve(void)
       }
       else
         alpha *= 0.5;
+        //alpha = min_alpha;
 
       //du.scale(alpha);
       //norm_du *= alpha;
     }
+
 
 
     //if (norm_du > _max_step_size)
