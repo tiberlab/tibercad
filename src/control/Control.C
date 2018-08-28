@@ -611,21 +611,15 @@ Control::setup_module(Device* device, const ModelOptions& opts)
         // the crystal structure
         //string crystal_structure(mat->get_structure());
 
-        // that's not elegant, but we cannot delete from the original options
+        // we make a copy so we can safely delete submodels
         ModelOptions opts(bulk_opts);
 
         // we add the crystal structure for bulk materials as this could
         // lead to different model implementations
         //opts["crystal_structure"] = crystal_structure;
 
-        //
-        // we parse the submodels for each region as they could be associated
-        // one-by-one
-        // NOTE: different submodels could have the same identifier
-        //
+        // recursively eliminate all models not defined on the current region
         eliminate_unneeded_submodels(opts, device, reg_id);
-
-
 
 
         // here we actually create the model
@@ -647,41 +641,41 @@ Control::setup_module(Device* device, const ModelOptions& opts)
 void
 Control::eliminate_unneeded_submodels(ModelOptions& opts, const Device* device, ID reg_id) const
 {
-          auto it = opts.submodels_begin();
-          const auto end = opts.submodels_end();
-          for ( ; it != end; )
-          {
-            auto current = it++;
-            // shall we delete the block?
-            bool del = false;
+  auto it = opts.submodels_begin();
+  const auto end = opts.submodels_end();
+  for ( ; it != end; )
+  {
+    auto current = it++;
+    // shall we delete the block?
+    bool del = false;
 
-            const ModelOptions& modopts = current->second;
+    const ModelOptions& modopts = current->second;
 
-            // we have to check if it should be built for the current region
-            // TODO to not allow for errors
+    // we have to check if it should be built for the current region
+    // TODO to not allow for errors
 
-            IDSet regs;
-            string physreg = modopts.get_option("regions", "all");
-            device->extract_physical_regions(physreg, regs);
+    IDSet regs;
+    string physreg = modopts.get_option("regions", "all");
+    device->extract_physical_regions(physreg, regs);
 
-            if (regs.count(reg_id) == 0) del = true;
+    if (regs.count(reg_id) == 0) del = true;
 
 
-            if (del)
-            {
-              // we add the crystal structure for bulk materials as this could
-              // lead to different model implementations
-              //modopts.set_option("crystal_structure", crystal_structure);
+    if (del)
+    {
+      // we add the crystal structure for bulk materials as this could
+      // lead to different model implementations
+      //modopts.set_option("crystal_structure", crystal_structure);
 
-              // we set the name to the model type if not explicitly
-              // given by user
-              //if (!(mapit->second).find_option("name"))
-              //  (mapit->second)["name"] = mapit->first;
-              opts.delete_submodel(current);
-            }
-            else
-              eliminate_unneeded_submodels(current->second, device, reg_id);
-          }
+      // we set the name to the model type if not explicitly
+      // given by user
+      //if (!(mapit->second).find_option("name"))
+      //  (mapit->second)["name"] = mapit->first;
+      opts.delete_submodel(current);
+    }
+    else
+      eliminate_unneeded_submodels(current->second, device, reg_id);
+  }
 }
 
 
