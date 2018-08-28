@@ -1190,6 +1190,7 @@ SimulationInterface::do_set_solution_vector(
     const libMesh::NumericVector<double>& new_solution)
 {
   get_solution_vector() = new_solution;
+  get_solution_vector().close();
   if (_systems.size() > 0)
     get_equation_system<libMesh::System>(0).update();
 
@@ -1931,6 +1932,7 @@ SimulationInterface::do_set_to_remembered_solution(ID id)
   if (it != end)
   {
     get_solution_vector() = *(it->second);
+    get_solution_vector().close();
 
     if (_systems.size() > 0)
       get_equation_system<libMesh::System>(0).update();

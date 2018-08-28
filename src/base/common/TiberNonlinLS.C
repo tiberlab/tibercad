@@ -189,8 +189,8 @@ TiberNonlinLS::do_solve(void)
       //if (norm_du > get_divergence_tol() * norm_du_old)
       //  throw (SolveFailedException("Line search diverged"));
 
-      //cerr << "       ||r(x)|| = " << norm_rhs << ", ||r(x + " <<
-      //  alpha << "*dx)|| = " << norm_res << endl;
+      cerr << "       ||r(x)|| = " << norm_rhs << ", ||r(x + " <<
+        alpha << "*dx)|| = " << norm_res << endl;
 
 
       if ((norm_res < norm_rhs) || (norm_du < eps) || (norm_res < eps_res))
@@ -209,7 +209,7 @@ TiberNonlinLS::do_solve(void)
           double a = old_norm - norm_rhs - b;
 
           min_alpha = -a / (2 * b);
-          //cerr << "         min: alpha = " << min_alpha << endl;
+          cerr << "         min: alpha = " << min_alpha << endl;
           if ((min_alpha <= 1.0) && (min_alpha > 0))
             alpha = min_alpha;
         }
@@ -246,8 +246,8 @@ TiberNonlinLS::do_solve(void)
 
 
     // check for divergence
-    //if ((norm_res > norm_rhs) || isnan(norm_res))
-    if (std::isnan(norm_res))
+    if ((norm_res > norm_rhs) || std::isnan(norm_res))
+    //if (std::isnan(norm_res))
     {
       // reset the old linear tolerance
       get_linear_solver()->set_linear_rtol(tol_orig);
@@ -272,8 +272,8 @@ TiberNonlinLS::do_solve(void)
       double norm_res_old = norm_res;
       //norm_res = rhs->l2_norm();
       norm_res = TiberEqSystem::calculate_norm(rhs, l2_NORM);
-      //cerr << "        ||r(x + " << alpha << "*dx)|| = " << norm_res_old <<
-      //  ", ||r(x + " << 0.5 * alpha << "*dx)|| = "  << norm_res << endl;
+      cerr << "        ||r(x + " << alpha << "*dx)|| = " << norm_res_old <<
+        ", ||r(x + " << 0.5 * alpha << "*dx)|| = "  << norm_res << endl;
       if (norm_res > norm_res_old)
       {
         // keep the former step
