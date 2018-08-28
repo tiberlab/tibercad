@@ -3,6 +3,7 @@
 #include "CarrierProperties.h"
 #include "ParticleDensity.h"
 #include "DensityOfStates.h"
+#include "MobilityModelInterface.h"
 #include "DriftDiffusionProperties.h"
 #include "ModelOptions.h"
 #include "Messages.h"
@@ -72,6 +73,7 @@ CarrierProperties::CarrierProperties(const ModelOptions& options) :
 CarrierProperties::~CarrierProperties(void)
 {
   destroy(_dos_model);
+  destroy(_mobility_model);
 }
 
 
@@ -109,18 +111,18 @@ CarrierProperties::prepare_submodels(void)
 
   create_submodel(_dos_model, "density_of_states", dosopts);
 
-  //for an exciton reference_energy() will store the band edges of the corresponding e and h
-  /*
-  if (_is_exciton)
+  if (!get_options().has_submodel("mobility"))
   {
-    _dos_model->reference_energy().resize(0);
-    _dos_model->reference_energy().push_back(0.0);  // reserve an empty place for the dos model to set the ref energy as Eg - R (R being the binding energy of the exciton)
-
-    for (size_t i = 0; i<_exciton_carriers.size(); i++)
-      _dos_model->reference_energy().push_back(  ( get_driftdiffusionproperties().get_carrier_properties(
-                                                     _exciton_carriers[i]) )->get_band_edge()  );
+    ModelOptions opts;
+    opts.set_name("constant");
+    get_options().add_submodel("mobility", opts);
   }
-  */
+  it = get_options().submodels_begin("mobility");
+
+  create_submodel(_mobility_model, "mobility", it->second);
+  _mobility_model->set_carrier_type(_particle);
+  _mobility_model->set_carrier(_carrier_id);
+
 }
 
 
@@ -137,6 +139,7 @@ CarrierProperties::do_print_info(void)
   m.info(os.str());
   m.indent();
   _dos_model->print_info();
+  _mobility_model->print_info();
 }
 
 

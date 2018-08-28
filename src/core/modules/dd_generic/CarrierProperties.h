@@ -9,6 +9,7 @@
 #include "Constants.h"
 
 class ModelOptions;
+class MobilityModelInterface;
 
 
 //! Base class for band parameter models
@@ -207,6 +208,9 @@ class CarrierProperties : public DriftDiffusionModelInterface
 
     //! The DOS model
     DensityOfStates* _dos_model;
+
+    //! The mobility model
+    MobilityModelInterface* _mobility_model;
 
 };
 

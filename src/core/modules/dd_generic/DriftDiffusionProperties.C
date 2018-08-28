@@ -1,9 +1,7 @@
 // $Id: DriftDiffusionProperties.C 4238 2016-04-22 19:39:02Z maufder $
 
 #include "DriftDiffusionProperties.h"
-#include "ParticleDensity.h"
 #include "RecombinationModelInterface.h"
-#include "MobilityModelInterface.h"
 #include "SimulationInterface.h"
 #include "Material.h"
 #include "Database.h"
