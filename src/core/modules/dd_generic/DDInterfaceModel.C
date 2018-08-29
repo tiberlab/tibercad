@@ -382,31 +382,29 @@ DDInterfaceModel::compute()
   get_pd().ionized_acceptor_density_derivative = 0;
   */
 
-  /*
   // surface states
-  if (!get_bulk_dd_properties()->is_dielectric())
-  {
-  if (get_type(0) == NEUMANN)
+  if (get_type(n_known_carriers()) == NEUMANN)
   {
     // NOTE we invert the signs because g = \epsilon \nabla\varphi \hat{n}
     // i.e. refers to the negative charge density
     // 2014-8-19 the above note seems misleading, the signs below are the right ones!
     //calculate_traps();
     double q = (pd.ionized_electron_traps + pd.ionized_hole_traps);
-    double dq_dEfn = -pd.ionized_traps_derivative[0];
-    double dq_dEfp = -pd.ionized_traps_derivative[1];
     if (is_internal_boundary())
-    {
       q /= 2;
-      dq_dEfn /= 2;
-      dq_dEfp /= 2;
+
+    _coeff_g[n_known_carriers()] += q;
+
+    for (unsigned int i = 0; i < n_known_carriers(); i++)
+    {
+      double dq_dEf = -pd.ionized_traps_derivative[i];
+      if (is_internal_boundary())
+        dq_dEf /= 2;
+
+      _jacobian[n_known_carriers()][n_known_carriers()] += dq_dEf;
+      _jacobian[n_known_carriers()][i] -= dq_dEf;
     }
-    _coeff_g[0] += q;
-    _jacobian[0][0] += dq_dEfn + dq_dEfp;
-    _jacobian[0][1] -= dq_dEfn;
-    _jacobian[0][2] -= dq_dEfp;
   }
-  */
 
   if (get_number_of_recombination_models() > 0)
   {
