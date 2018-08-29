@@ -155,7 +155,8 @@ DDBulkModel::prepare_submodels(void)
 
         // check if mobility for this carrier has already been defined
         if (carriers_all.count(carrier))
-          throw InitFailedException("Multiple definition of mobility for carrier '" + (ca) + "'");
+          throw InitFailedException("Multiple definition of mobility for carrier '"
+              + (ca) + "'");
 
         carriers_all.insert(carrier);
 

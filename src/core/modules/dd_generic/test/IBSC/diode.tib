@@ -43,11 +43,19 @@ Module dd_generic
       density_of_states bulk_kp
       {
       }
+
+      mobility constant
+      {
+      }
     }
 
     carrier hole
     {
       density_of_states bulk_kp
+      {
+      }
+
+      mobility constant
       {
       }
     }
@@ -61,6 +69,12 @@ Module dd_generic
         level = 0.2
         sigma = 0.05
         N0 = 1e17
+      }
+
+      mobility field_assisted
+      {
+        mu0 = 1e-5
+        E0 = 1e5
       }
     }
 

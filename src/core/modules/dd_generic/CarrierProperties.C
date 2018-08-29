@@ -25,6 +25,7 @@ CarrierProperties::CarrierProperties(const ModelOptions& options) :
     _charge(-1),
     _spin(0.5),
     _is_dopant(false),
+    _background_conductivity(0.0),
     _dos_factor(pow(2.0 * M_PI *
         Constants::me / (Constants::h * Constants::h) *
         Constants::e, 1.5) / 1e6)
@@ -266,6 +267,9 @@ CarrierProperties::get_density_and_derivative(double Ef, double Epot) const
           ddp.get_coordinates(), ddp.get_lattice_temperature());
     dens_der.second *= -sign;
   }
+
+  double mobility = _mobility_model->get_mobility();
+  _conductivity = mobility * dens_der.first + _background_conductivity;
 
   return dens_der;
 }

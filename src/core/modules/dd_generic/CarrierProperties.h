@@ -69,6 +69,11 @@ class CarrierProperties : public DriftDiffusionModelInterface
      */
     std::pair<double, double> get_density_and_derivative(double Ef, double Epot) const;
 
+    /*!
+     * \brief Get the conductivity and its derivatives
+     */
+    double get_conductivity_and_derivatives() ;
+
 
     //! Get the thermoelectric power
     double get_thermoelectric_power(void) const;
@@ -200,6 +205,17 @@ class CarrierProperties : public DriftDiffusionModelInterface
     //! The temperature in eV
     double _temperature;
 
+    //! Background conductivity
+    /*!
+     * Sometimes, the conductivity becomes so small that
+     * no solution can be found. In these cases, a small background
+     * conductivity can recover convergence.
+     */
+    double _background_conductivity;
+
+    //! The calculated conductivity
+    mutable double _conductivity;
+
     //! The lattice temperature interface
     TemperatureInterface _lattice_temp;
 
@@ -251,6 +267,13 @@ CarrierProperties::get_effective_DOS(void) const
   return _dos_model->get_effective_dos();
 }
 
+
+inline
+double
+CarrierProperties::get_conductivity_and_derivatives()
+{
+  return _conductivity;
+}
 
 
 inline
