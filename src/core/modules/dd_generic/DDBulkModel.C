@@ -3,7 +3,6 @@
 #include "DDBulkModel.h"
 #include "ParticleDensity.h"
 #include "RecombinationModelInterface.h"
-#include "MobilityModelInterface.h"
 #include "ThermoelectricPower.h"
 #include "SimulationInterface.h"
 #include "Material.h"
@@ -128,52 +127,6 @@ DDBulkModel::prepare_submodels(void)
   {
 
     //
-    // mobilities
-    //
-    ModelOptions::submodel_iterator it(get_options().submodels_begin("mobility"));
-    ModelOptions::submodel_iterator end(get_options().submodels_end("mobility"));
-
-    // to check for duplicates
-    set<ID> carriers_all;
-
-    for ( ; it != end; ++it)
-    {
-      vector<string> carriers;
-      (it->second).get_option("carriers", carriers);
-
-      // check if at least one carrier has been provided
-      if (carriers.size() < 1)
-       throw InitFailedException("Mobility model requires at least one carrier");
-
-      for ( auto ca : carriers)
-      {
-        ID carrier = this->get_carrier_id(ca);
-
-        // check if carriers have been defined
-        if (carrier == unknown_carrier_id)
-          throw InitFailedException("Mobility: carrier '" + (ca) + "' is unknown");
-
-        // check if mobility for this carrier has already been defined
-        if (carriers_all.count(carrier))
-          throw InitFailedException("Multiple definition of mobility for carrier '"
-              + (ca) + "'");
-
-        carriers_all.insert(carrier);
-
-        _q_mobility[carrier] = create_mobility_model(it->second);
-        _q_mobility[carrier]->set_carrier(carrier);
-      }
-    }
-
-    // check if a mobility model has been defined for all carriers
-    for (auto&& cp : get_carrier_properties())
-    {
-      if (!carriers_all.count(cp.first))
-          throw InitFailedException("A mobility model for carrier '" +
-              cp.second->get_particle_name() + "' has not been defined");
-    }
-
-    //
     // Recombinations
     //
     create_recombination_models();
@@ -181,9 +134,10 @@ DDBulkModel::prepare_submodels(void)
     //
     // Thermoelectric power
     //
+    // TODO bring into CarrierProperties
 
-    it = get_options().submodels_begin("thermoelectric_power");
-    end = get_options().submodels_end("thermoelectric_power");
+    auto it = get_options().submodels_begin("thermoelectric_power");
+    auto end = get_options().submodels_end("thermoelectric_power");
     if (it != end)
     {
       _thermoelectric_power =
@@ -254,33 +208,6 @@ DDBulkModel::has_solution(void) const
 
 
 
-MobilityModelInterface*
-DDBulkModel::create_mobility_model(const ModelOptions& options)
-{
-  string model_name = options.get_name();
-  model_name = options.get_option("type", model_name);
-  if (model_name.empty())
-    model_name = "constant";
-
-  MobilityModelInterface* mobility_model =
-    MobilityModelInterface::create(model_name, get_material(), options);
-
-  if (mobility_model == NULL)
-    throw InitFailedException("No such mobility model: " + model_name);
-
-  add_submodel(options.get_option("name",""), mobility_model);
-
-  return mobility_model;
-}
-
-
-
-
-
-
-
-
-
 void
 DDBulkModel::do_reinit(const Elem* elem)
 {
@@ -330,18 +257,15 @@ DDBulkModel::calculate_mobilities(void)
   PointData& pd = get_pd();
   pd.q_mobility.resize(this->n_known_carriers());
   pd.q_conductivity.resize(this->n_known_carriers());
-  pd.q_mobility_derivative_potential.resize(this->n_known_carriers());
-  pd.q_mobility_derivative_grad_potential.resize(this->n_known_carriers());
-  pd.q_mobility_derivative_grad_fermi.resize(this->n_known_carriers());
+
+  //pd.q_conductivity_derivative_qFermi.resize(this->n_known_carriers());
 
   for (auto&& cp : get_carrier_properties())
   {
-    pd.q_mobility[cp.first] = _q_mobility[cp.first]->get_mobility();
-    pd.q_mobility_derivative_potential[cp.first] = _q_mobility[cp.first]->get_derivative_potential();
-    _q_mobility[cp.first]->get_derivative_grad_potential(pd.q_mobility_derivative_grad_potential[cp.first]);
-    _q_mobility[cp.first]->get_derivative_grad_fermi(pd.q_mobility_derivative_grad_fermi[cp.first]);
-
-    pd.q_conductivity[cp.first] = pd.q_mobility[cp.first]*pd.q_density[cp.first] + _background_conductivity;
+    //double deriv_qFermi;
+    pd.q_conductivity[cp.first] = cp.second->get_conductivity();
+    pd.q_mobility[cp.first] = cp.second->get_mobility();
+    //pd.q_conductivity_derivative_qFermi[cp.first] = deriv_qFermi;
   }
 
 }
@@ -431,7 +355,7 @@ DDBulkModel::calculate_equilibrium_properties(void)
   double x = guess;
   // 1e-4 V error seems to be good enough...
   double eps = 1e-4, dens_max = 1e10;
-  double error, residual_dens, y;
+  double y;
 
   //set_carrier_temperatures(kT, kT);
 
@@ -483,7 +407,7 @@ DDBulkModel::calculate_equilibrium_properties(void)
     if (f > 0) xmin = x;
     else if (f < 0) xmax = x;
 
-    residual_dens = fabs(f);
+    double residual_dens = fabs(f);
 
     double dx = 0.0;
     if (residual_dens > ParticleDensity::MINDENSITY)
@@ -504,7 +428,7 @@ DDBulkModel::calculate_equilibrium_properties(void)
 
     y = x + dx;
 
-    error = fabs(dx);
+    double error = fabs(dx);
     //cout << "x = " << y << " error = " << dx << " res. dens. = "
     //  << residual_dens << " Ec = " << Ec << " Ev = " << Ev << endl;
 

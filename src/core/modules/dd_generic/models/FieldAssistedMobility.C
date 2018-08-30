@@ -91,7 +91,7 @@ FieldAssistedMobility::get_derivative_grad_potential(libMesh::RealGradient& dm)
   const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
 
   const libMesh::RealGradient& E = dd.get_electric_field();
-  double mu  = dd.get_q_mobility(get_carrier());
+  double mu  = get_mobility();
 
   double dmu = (E.norm() > 0) ? mu / (2.0 * E.norm() * sqrt(E.norm() * _E0)) : 0.0;
   dm = -E * dmu;

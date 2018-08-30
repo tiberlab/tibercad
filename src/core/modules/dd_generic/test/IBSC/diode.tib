@@ -78,23 +78,6 @@ Module dd_generic
       }
     }
 
-    mobility constant
-    {
-      carriers = electron
-    }
-
-    mobility constant
-    {
-      carriers = hole
-    }
-
-    mobility field_assisted
-    {
-      carriers = ib
-      mu0 = 1e-5
-      E0 = 1e5
-    }
-
 
 
     recombination direct

@@ -59,6 +59,11 @@ Module dd_generic
         sigma = 0.05
         N0 = 1e18
       }
+
+      mobility constant
+      {
+        mu = 10
+      }
     }
 
 
@@ -72,6 +77,11 @@ Module dd_generic
       #  sigma = 0.13
       #  N0 = 1e19
       #}
+
+      mobility constant
+      {
+        mu = 1000
+      }
     }
 
 
@@ -85,18 +95,11 @@ Module dd_generic
       #  sigma = 0.11
       #  N0 = 1e19
       #}
-    }
 
-    mobility constant
-    {
-      carriers = (electron, hole)
-      mu = 1000
-    }
-
-    mobility constant
-    {
-      carriers = (exciton)
-      mu = 10
+      mobility constant
+      {
+        mu = 1000
+      }
     }
 
 
@@ -116,7 +119,7 @@ Module dd_generic
     {
       regions = bulk
       carriers = (electron, hole, exciton)
-      gamma = 1e-24
+      gamma = 1e-6
       plot_name = "gen"
     }
 

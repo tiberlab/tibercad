@@ -8,6 +8,8 @@
 #include "DensityOfStates.h"
 #include "Constants.h"
 
+#include "libmesh/vector_value.h"
+
 class ModelOptions;
 class MobilityModelInterface;
 
@@ -67,12 +69,21 @@ class CarrierProperties : public DriftDiffusionModelInterface
      *
      * Derivative is given w.r.t to the quasi Fermi level
      */
-    std::pair<double, double> get_density_and_derivative(double Ef, double Epot) const;
+    std::pair<double, double> get_density_and_derivative(double Ef, double Epot);
+
+
+    //! Get the conductivity
+    double get_conductivity(void) const;
+
+    //! Get the mobility
+    double get_mobility(void) const;
 
     /*!
      * \brief Get the conductivity and its derivatives
      */
-    double get_conductivity_and_derivatives() ;
+    double get_conductivity_and_derivatives(double& _deriv_qFermi,
+        libMesh::RealGradient& deriv_grad_qFermi,
+        libMesh::RealGradient& deriv_grad_potential) const;
 
 
     //! Get the thermoelectric power
@@ -214,7 +225,16 @@ class CarrierProperties : public DriftDiffusionModelInterface
     double _background_conductivity;
 
     //! The calculated conductivity
-    mutable double _conductivity;
+    double _conductivity;
+
+    //! The conductivity derivative w.r.t the quasi Fermi level
+    double _conductivity_derivative_qFermi;
+
+    //! The conductivity derivative w.r.t the quasi Fermi level gradient
+    libMesh::RealGradient _conductivity_derivative_gradqFermi;
+
+    //! The conductivity derivative w.r.t the electrostatic potential gradient
+    libMesh::RealGradient _conductivity_derivative_gradPotential;
 
     //! The lattice temperature interface
     TemperatureInterface _lattice_temp;
@@ -270,9 +290,22 @@ CarrierProperties::get_effective_DOS(void) const
 
 inline
 double
-CarrierProperties::get_conductivity_and_derivatives()
+CarrierProperties::get_conductivity(void) const
 {
-  return _conductivity;
+  return(_conductivity);
+}
+
+
+inline
+double
+CarrierProperties::get_conductivity_and_derivatives(double& deriv_qFermi,
+    libMesh::RealGradient& deriv_grad_qFermi,
+    libMesh::RealGradient& deriv_grad_potential) const
+{
+  deriv_qFermi = _conductivity_derivative_qFermi;
+  deriv_grad_qFermi = _conductivity_derivative_gradqFermi;
+  deriv_grad_potential = _conductivity_derivative_gradPotential;
+  return(_conductivity);
 }
 
 

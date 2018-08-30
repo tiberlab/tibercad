@@ -143,6 +143,9 @@ class DriftDiffusionProperties : public PhysicalModel
         //! A map storing carrier conductivities
         std::vector<double> q_conductivity;
 
+        //! A map storing carrier conductivities
+        std::vector<double> q_conductivity_derivative_qFermi;
+
         //! A map storing carrier mobilities
         std::vector<double> q_mobility;
 

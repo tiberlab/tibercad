@@ -28,7 +28,9 @@ CarrierProperties::CarrierProperties(const ModelOptions& options) :
     _background_conductivity(0.0),
     _dos_factor(pow(2.0 * M_PI *
         Constants::me / (Constants::h * Constants::h) *
-        Constants::e, 1.5) / 1e6)
+        Constants::e, 1.5) / 1e6),
+    _dos_model(nullptr),
+    _mobility_model(nullptr)
 {
   _particle_name = get_options().get_name();
   _particle_name = get_option("name", _particle_name);
@@ -217,9 +219,21 @@ CarrierProperties::get_thermoelectric_power(void) const
   return _dos_model->get_thermoelectric_power();
 }
 
+double
+CarrierProperties::get_mobility(void) const
+{
+  double mobility = 1.0;
+  if (_mobility_model != nullptr)
+  {
+    mobility = _mobility_model->get_mobility();
+  }
+
+  return(mobility);
+}
+
 
 std::pair<double, double>
-CarrierProperties::get_density_and_derivative(double Ef, double Epot) const
+CarrierProperties::get_density_and_derivative(double Ef, double Epot)
 {
   const DriftDiffusionProperties& ddp = get_driftdiffusionproperties();
 
@@ -270,6 +284,13 @@ CarrierProperties::get_density_and_derivative(double Ef, double Epot) const
 
   double mobility = _mobility_model->get_mobility();
   _conductivity = mobility * dens_der.first + _background_conductivity;
+  _conductivity_derivative_qFermi = mobility * dens_der.second;
+
+  _mobility_model->get_derivative_grad_fermi(_conductivity_derivative_gradqFermi);
+  _conductivity_derivative_gradqFermi *= dens_der.first;
+
+  _mobility_model->get_derivative_grad_potential(_conductivity_derivative_gradPotential);
+  _conductivity_derivative_gradPotential *= dens_der.first;
 
   return dens_der;
 }

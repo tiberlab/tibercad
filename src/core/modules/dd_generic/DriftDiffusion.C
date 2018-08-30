@@ -277,9 +277,9 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
 
     // TODO get max of polarisation
 
-    for (unsigned int i = 0; i < _carriers.size(); ++i)
+    for (auto&& cp : sc->get_carrier_properties())
     {
-      double mu = sc->get_q_mobility(i);
+      double mu = sc->get_q_mobility(cp.first);
       mu0 = (mu0 > mu) ? mu0 : mu;
     }
 
@@ -4844,12 +4844,12 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
       {
         if (var != u_var)
         {
+          CarrierProperties* cp = sc->get_carrier_properties(var);
           dens.insert( make_pair(var, sc->get_q_density(var)) );
           R.insert( make_pair(var, sc->get_net_q_recombination_rate(var)) );
-          mu.insert( make_pair(var, sc->get_q_mobility(var)) );
-          sigma.insert( make_pair(var, sc->get_q_conductivity(var) / (mu0 * C0_q)) );
-          tep.insert( make_pair(var,
-              sc->get_carrier_properties(var)->get_thermoelectric_power() / phi0) );
+          //mu.insert( make_pair(var, sc->get_q_mobility(var)) );
+          sigma.insert( make_pair(var, cp->get_conductivity() / (mu0 * C0_q)) );
+          tep.insert( make_pair(var, cp->get_thermoelectric_power() / phi0) );
         }
       }
       //double Nd = sc->get_ionized_donor_density();
@@ -4940,8 +4940,8 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
               long double dR_dEf_tmp = sc->get_net_q_recombination_rate_derivatives(vari)[varj];
               long double dR_tmp = dR_dEf_tmp * phi0 / R0;
 
-              if (R[vari] == 0.0)
-                dR_tmp = 0.0;
+              //if (R[vari] == 0.0)
+              //  dR_tmp = 0.0;
 
               dR[vari][varj] = dR_tmp;
             }
@@ -4993,34 +4993,32 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 
 
         // d(sigma_n)/du * element-jacobian
-        // sigma_n = mu_n * n means the conductivity of electrons
-        // the factor phi_0 comes from the derivative with respect to the potentia
-        map<unsigned int, double> dsigma, dmu_u;
-        map<unsigned int, libMesh::RealGradient> dmu_grad_u;
-        map<unsigned int, libMesh::RealGradient> dmu_grad_f;
+        // sigma_n is the conductivity of electrons
+        // the factor phi_0 comes from the derivative with respect to the potential
+        map<unsigned int, double> dsigma;
+        map<unsigned int, libMesh::RealGradient> dsigma_grad_u;
+        map<unsigned int, libMesh::RealGradient> dsigma_grad_f;
 
         for (auto&& var : q_var)
         {
           if (var != u_var)
           {
-            double dsigma_tmp = J * phi0 / (mu0 * C0_q) * mu[var] * ddens_dphi[var];
+            double der_qFermi;
+            libMesh::RealGradient der_grad_u(0);
+            libMesh::RealGradient der_grad_f(0);
+            sc->get_carrier_properties(var)->
+                get_conductivity_and_derivatives(der_qFermi, der_grad_f, der_grad_u);
+
+            double dsigma_tmp = J * phi0 / (mu0 * C0_q) * der_qFermi;
             dsigma.insert( make_pair(var, dsigma_tmp) );
 
-            double dmu_u_tmp = sc->get_q_mobility_derivative_potential(var);
-            dmu_u_tmp *= J * phi0 / (mu0 * C0_q) * dens[var];
-            dmu_u.insert( make_pair(var, dmu_u_tmp) );
-
-            libMesh::RealGradient dmu_grad_u_tmp(0);
-            sc->get_q_mobility_derivative_grad_potential(var, dmu_grad_u_tmp);
-            dmu_grad_u_tmp *= J * phi0 / (mu0 * C0_q) * dens[var] / x0;
-            dmu_grad_u.insert( make_pair(var, dmu_grad_u_tmp) );
+            der_grad_u *= J * phi0 / (mu0 * C0_q) / x0;
+            dsigma_grad_u.insert( make_pair(var, der_grad_u) );
 
             if (dim > 1)
             {
-              libMesh::RealGradient dmu_grad_f_tmp(0);
-              sc->get_q_mobility_derivative_grad_fermi(var, dmu_grad_f_tmp);
-              dmu_grad_f_tmp *= J * phi0 / (mu0 * C0_q) * dens[var] / x0;
-              dmu_grad_f.insert( make_pair(var, dmu_grad_f_tmp) );
+              der_grad_f *= J * phi0 / (mu0 * C0_q) / x0;
+              dsigma_grad_f.insert( make_pair(var, der_grad_f) );
             }
           }
         }
@@ -5053,18 +5051,17 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                 if ((var != u_var) && (coupling & CURRENTS))
                 {
                   double dsigma_x_phi = dsigma_x_lap[var] * phi[j][qp];
-                  double dmu_u_x_phi = dmu_u[var] * phi[j][qp];
-                  double dmu_grad_u_x_dphi = dmu_grad_u[var] * dphi[j][qp];
-                  double dmu_grad_f_x_dphi = dmu_grad_f[var] * dphi[j][qp];
+                  double dsigma_grad_u_x_dphi = dsigma_grad_u[var] * dphi[j][qp];
+                  double dsigma_grad_f_x_dphi = dsigma_grad_f[var] * dphi[j][qp];
 
                   //if the carrier has zero charge, there is no dependence on the electric potential, hence dsigma_du is zero
                   double q = sc->get_carrier_properties(var)->get_charge();
                   double pot_fac = ( q == 0 ) ? 0.0 : 1.0;
 
                   if (coupling & POISSON)
-                    Kvv.at(var).at(u_var)(i,j) += pot_fac * dsigma_x_phi + (dmu_u_x_phi + dmu_grad_u_x_dphi) * lap[var];
+                    Kvv.at(var).at(u_var)(i,j) += pot_fac * dsigma_x_phi + dsigma_grad_u_x_dphi * lap[var];
 
-                  Kvv.at(var).at(var)(i,j) += (dmu_grad_f_x_dphi - dmu_u_x_phi) * lap[var] - dsigma_x_phi;
+                  Kvv.at(var).at(var)(i,j) += dsigma_grad_f_x_dphi * lap[var] - dsigma_x_phi;
 
 
 
@@ -5240,7 +5237,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
     //
     // NOTE 1:
     // we dont apply BC for nabla(Ef) but for the particle
-    // flux mu * n * nabla(Ef)
+    // flux sigma * nabla(Ef)
     //
     for (unsigned int s = 0; s < elem->n_sides(); s++)
     {

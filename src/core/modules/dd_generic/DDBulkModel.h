@@ -33,7 +33,6 @@ class Dopant;
 class Trap;
 class SimulationInterface;
 class DriftDiffusion;
-class MobilityModelInterface;
 class ThermoelectricPower;
 class PolarizationModel;
 
@@ -295,16 +294,6 @@ class DDBulkModel : public DriftDiffusionProperties
 
 
 
-    //! Create a mobility model
-    /*!
-     * Creates a mobility model from the given model name
-     * and options.
-     */
-    MobilityModelInterface* create_mobility_model(
-        const ModelOptions& options = ModelOptions());
-
-
-
     //! The element we are currently working on
     //const Elem* _elem;
 
@@ -335,9 +324,6 @@ class DDBulkModel : public DriftDiffusionProperties
     //! The relaxation factor for the polarization
     double _relax_polariz;
 
-
-    //! Carrier mobilities
-    std::map<ID, MobilityModelInterface*> _q_mobility;
 
 };
 
