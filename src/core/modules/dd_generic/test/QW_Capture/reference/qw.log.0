@@ -1,21 +1,21 @@
 
-Log start: Fri Jul 20 11:12:47 2018
+Log start: Thu Aug 30 17:03:40 2018
 
 
-tiberCAD release 3.0.0 (rev. 4634, x86_64-linux)
+tiberCAD release 3.0.0 (rev. 4665, x86_64-linux)
 
 Input file: qw.tib
 
 Initialize global simulation options
   Simulation temperature: 300 K
-  Database search path  : /home/maufder/Work/TiberCAD/3.0/materials
+  Database search path  : /home/maufder/Projects/TIBERCAD/trunk/materials
   Log file              : output/qw.log.0
 
 Setup mesh
   Reading mesh file 'quantum_well.msh ...
-    mesh reading time: 0h 0m 0.0016s
-    mesh preparation time: 0h 0m 0.00048s
-    bd_regions preparation time: 0h 0m 1.7e-05s
+    mesh reading time: 0h 0m 0.016s
+    mesh preparation time: 0h 0m 0.0012s
+    bd_regions preparation time: 0h 0m 3.1e-05s
 
     mesh units          : 1e-09 m
     mesh dimension      :       1
@@ -27,28 +27,28 @@ Setup mesh
 Create materials ...
   InGaAs is an alloy with components InAs and GaAs and molar fraction of InAs 0.2.
   Added material InGaAs for region 'well' (mesh regions 5)
-    (using datafile /home/maufder/Work/TiberCAD/3.0/materials/InGaAs.dat)
+    (using datafile /home/maufder/Projects/TIBERCAD/trunk/materials/InGaAs.dat)
     alloy with 0.2 InAs, 0.8 GaAs
     x growth direction : (1,0,0)
     y growth direction : (0,1,0)
     z growth direction : (0,0,1)
   Added material GaAs for region 'nside' (mesh regions 2)
-    (using datafile /home/maufder/Work/TiberCAD/3.0/materials/GaAs.dat)
+    (using datafile /home/maufder/Projects/TIBERCAD/trunk/materials/GaAs.dat)
     x growth direction : (1,0,0)
     y growth direction : (0,1,0)
     z growth direction : (0,0,1)
   Added material GaAs for region 'pside' (mesh regions 6)
-    (using datafile /home/maufder/Work/TiberCAD/3.0/materials/GaAs.dat)
+    (using datafile /home/maufder/Projects/TIBERCAD/trunk/materials/GaAs.dat)
     x growth direction : (1,0,0)
     y growth direction : (0,1,0)
     z growth direction : (0,0,1)
   Added material GaAs for region 'buffer_quantum' (mesh regions 4)
-    (using datafile /home/maufder/Work/TiberCAD/3.0/materials/GaAs.dat)
+    (using datafile /home/maufder/Projects/TIBERCAD/trunk/materials/GaAs.dat)
     x growth direction : (1,0,0)
     y growth direction : (0,1,0)
     z growth direction : (0,0,1)
   Added material GaAs for region 'buffer_classical' (mesh regions 3)
-    (using datafile /home/maufder/Work/TiberCAD/3.0/materials/GaAs.dat)
+    (using datafile /home/maufder/Projects/TIBERCAD/trunk/materials/GaAs.dat)
     x growth direction : (1,0,0)
     y growth direction : (0,1,0)
     z growth direction : (0,0,1)
@@ -57,9 +57,9 @@ Creation of materials done.
 Setting up Cluster 'quantum' containing regions 4, 5
 
 Setting up simulation of type 'elasticity' ...
-  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/elasticity/elasticity.so)
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/elasticity/elasticity.so)
   Adding boundary 'cathode'
-  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/elasticity/ebnd_clamp.so)
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/elasticity/ebnd_clamp.so)
 Creating bulk models... 
   Region: nside
   Region: buffer_classical
@@ -68,13 +68,13 @@ Creating bulk models...
   Region: pside
 
 Setting up simulation of type 'dd_generic' ...
-  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/dd_generic/dd_generic.so)
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/dd_generic/dd_generic.so)
   Adding boundary 'anode'
-  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/dd_generic/ddbnd_ohmic.so)
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/dd_generic/ddbnd_ohmic.so)
   Adding boundary 'cathode'
 Creating bulk models... 
   Region: nside
-  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/dd_generic/ddbulk_default.so)
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/dd_generic/ddbulk_default.so)
   Region: buffer_classical
   Region: buffer_quantum
   Region: well
@@ -95,15 +95,15 @@ Setting up simulation of type 'sweep' ...
 Setting up simulation of type 'selfconsistent' ...
 
 Setting up bulk models ...
-  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/elasticity/stiffness_anisotropic.so)
-  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/elasticity/body_force_lattice_mismatch.so)
-  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/dd_generic/carrier.so)
-  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/dd_generic/recombination_direct.so)
-  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/permittivity_constant.so)
-  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/dd_generic/mobility_constant.so)
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/elasticity/stiffness_anisotropic.so)
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/elasticity/body_force_lattice_mismatch.so)
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/dd_generic/carrier.so)
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/dd_generic/recombination_direct.so)
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/permittivity_constant.so)
 
 *** Warning: Material GaAs has no mesh dimension associated. Cannot guess crystal directions.
-  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/density_of_states_bulk_kp.so)
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/density_of_states_bulk_kp.so)
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/dd_generic/mobility_constant.so)
 
 *** Warning: found unused options in block semiconductor (bulk_kp): charge
 
@@ -114,37 +114,7 @@ Setting up bulk models ...
 *** Warning: found unused options in block kp (bulk_kp): charge
 
 *** Warning: found unused options in block density_of_states (bulk_kp): charge
-  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/density_of_states_quantum.so)
-
-*** Warning: found unused options in block density_of_states (quantum): charge
-
-*** Warning: Material GaAs has no mesh dimension associated. Cannot guess crystal directions.
-
-*** Warning: found unused options in block semiconductor (bulk_kp): charge
-
-*** Warning: found unused options in block bulk_ham (bulk_kp): charge
-
-*** Warning: found unused options in block semiconductor (bulk_kp): charge
-
-*** Warning: found unused options in block kp (bulk_kp): charge
-
-*** Warning: found unused options in block density_of_states (bulk_kp): charge
-
-*** Warning: found unused options in block density_of_states (quantum): charge
-
-*** Warning: found unused options in block density_of_states (quantum): charge
-
-*** Warning: Material GaAs has no mesh dimension associated. Cannot guess crystal directions.
-
-*** Warning: found unused options in block semiconductor (bulk_kp): charge
-
-*** Warning: found unused options in block bulk_ham (bulk_kp): charge
-
-*** Warning: found unused options in block semiconductor (bulk_kp): charge
-
-*** Warning: found unused options in block kp (bulk_kp): charge
-
-*** Warning: found unused options in block density_of_states (bulk_kp): charge
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/density_of_states_quantum.so)
 
 *** Warning: found unused options in block density_of_states (quantum): charge
 
@@ -207,6 +177,36 @@ Setting up bulk models ...
 *** Warning: found unused options in block density_of_states (bulk_kp): charge
 
 *** Warning: found unused options in block density_of_states (quantum): charge
+
+*** Warning: found unused options in block density_of_states (quantum): charge
+
+*** Warning: Material GaAs has no mesh dimension associated. Cannot guess crystal directions.
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge
+
+*** Warning: found unused options in block bulk_ham (bulk_kp): charge
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge
+
+*** Warning: found unused options in block kp (bulk_kp): charge
+
+*** Warning: found unused options in block density_of_states (bulk_kp): charge
+
+*** Warning: found unused options in block density_of_states (quantum): charge
+
+*** Warning: found unused options in block density_of_states (quantum): charge
+
+*** Warning: Material GaAs has no mesh dimension associated. Cannot guess crystal directions.
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge
+
+*** Warning: found unused options in block bulk_ham (bulk_kp): charge
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge
+
+*** Warning: found unused options in block kp (bulk_kp): charge
+
+*** Warning: found unused options in block density_of_states (bulk_kp): charge
 
 *** Warning: found unused options in block density_of_states (quantum): charge
 
@@ -595,130 +595,131 @@ We solve: sweep selfconsistent
     iterations: 5, |du| = 0.000850039, |r| = 8.89221e-09
     Equilibrium done
 
-  Solve time: 0h 0m 0.21s
+  Solve time: 0h 0m 0.25s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.1
   Trying $Vb = 0.1
 
   >>>>---------------------------------- (dd) ----------------------------------
-    it 1, |du| = 3.86817, |r| = 0.223233  alpha = 1
-    it 2, |du| = 3.80438, |r| = 0.184019  alpha = 0.220848
-    it 3, |du| = 1.07288, |r| = 0.104879  alpha = 0.5
-    it 4, |du| = 0.211645, |r| = 0.0120461  alpha = 1
-    it 5, |du| = 0.0197125, |r| = 0.000144897  alpha = 1
+    it 1, |du| = 3.86817, |r| = 0.223277  alpha = 1
+    it 2, |du| = 3.80557, |r| = 0.18406  alpha = 0.220855
+    it 3, |du| = 1.07283, |r| = 0.104896  alpha = 0.5
+    it 4, |du| = 0.211645, |r| = 0.0120477  alpha = 1
+    it 5, |du| = 0.0197125, |r| = 0.000144914  alpha = 1
 
-    iterations: 6, |du| = 0.000202492, |r| = 2.11003e-08
+    iterations: 6, |du| = 0.000202492, |r| = 2.11011e-08
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               0.1                -8.36117e-09
-    cathode             0                   8.36117e-09
+    anode               0.1                 8.94359e-09
+    cathode             0                  -8.94359e-09
 
-  Solve time: 0h 0m 0.37s
+  Solve time: 0h 0m 0.46s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.2
   Trying $Vb = 0.2
 
   >>>>---------------------------------- (dd) ----------------------------------
-    it 1, |du| = 3.86817, |r| = 3.37648  alpha = 0.5
-    it 2, |du| = 2.27932, |r| = 1.83186  alpha = 0.5
-    it 3, |du| = 0.967042, |r| = 0.849731  alpha = 0.5
+    it 1, |du| = 3.86817, |r| = 2.76766  alpha = 0.5
+    it 2, |du| = 2.27932, |r| = 1.55581  alpha = 0.5
+    it 3, |du| = 0.967042, |r| = 0.698749  alpha = 0.5
     it 4, |du| = 0.483521, |r| = 0.150441  alpha = 1
     it 5, |du| = 0.00780903, |r| = 0.000935811  alpha = 1
 
-    iterations: 6, |du| = 3.64868e-05, |r| = 2.32066e-08
+    iterations: 6, |du| = 3.64868e-05, |r| = 2.32065e-08
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               0.2                 3.75389e-09
-    cathode             0                  -3.75389e-09
+    anode               0.2                -2.1107e-08
+    cathode             0                   2.1107e-08
 
-  Solve time: 0h 0m 0.36s
+  Solve time: 0h 0m 0.45s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.3
   Trying $Vb = 0.3
 
   >>>>---------------------------------- (dd) ----------------------------------
-    it 1, |du| = 3.86817, |r| = 3.35984  alpha = 0.5
-    it 2, |du| = 1.93408, |r| = 1.68279  alpha = 0.5
-    it 3, |du| = 0.967042, |r| = 0.692507  alpha = 1
-    it 4, |du| = 0.0186136, |r| = 0.0104145  alpha = 1
+    it 1, |du| = 3.86817, |r| = 2.74734  alpha = 0.5
+    it 2, |du| = 1.93408, |r| = 1.37718  alpha = 0.5
+    it 3, |du| = 0.967042, |r| = 0.685081  alpha = 0.5
+    it 4, |du| = 0.483521, |r| = 0.051242  alpha = 1
 
-    iterations: 5, |du| = 0.000191937, |r| = 1.34532e-06
+    iterations: 5, |du| = 0.000980476, |r| = 3.4748e-05
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               0.3                 2.42618e-09
-    cathode             0                  -2.42618e-09
+    anode               0.3                -9.5841e-11
+    cathode             0                   9.5841e-11
 
-  Solve time: 0h 0m 0.29s
+  Solve time: 0h 0m 0.41s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.4
   Trying $Vb = 0.4
 
   >>>>---------------------------------- (dd) ----------------------------------
-    it 1, |du| = 3.86817, |r| = 3.35771  alpha = 0.5
-    it 2, |du| = 1.93408, |r| = 1.68247  alpha = 0.5
-    it 3, |du| = 0.967042, |r| = 0.646924  alpha = 1
-    it 4, |du| = 0.00957584, |r| = 0.00425773  alpha = 1
+    it 1, |du| = 3.86817, |r| = 2.74473  alpha = 0.5
+    it 2, |du| = 1.93408, |r| = 1.37679  alpha = 0.5
+    it 3, |du| = 0.967042, |r| = 0.646951  alpha = 1
+    it 4, |du| = 0.00957618, |r| = 0.00425804  alpha = 1
 
-    iterations: 5, |du| = 4.93296e-05, |r| = 1.2159e-07
+    iterations: 5, |du| = 4.93331e-05, |r| = 1.21607e-07
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               0.4                 4.0562e-08
-    cathode             0                  -4.0562e-08
+    anode               0.4                 9.38457e-09
+    cathode             0                  -9.38457e-09
 
-  Solve time: 0h 0m 0.29s
+  Solve time: 0h 0m 0.4s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.5
   Trying $Vb = 0.5
 
   >>>>---------------------------------- (dd) ----------------------------------
-    it 1, |du| = 3.86817, |r| = 3.35364  alpha = 0.5
+    it 1, |du| = 3.86817, |r| = 2.73975  alpha = 0.5
     it 2, |du| = 1.93408, |r| = 1.23118  alpha = 1
     it 3, |du| = 0.0135474, |r| = 0.0105335  alpha = 1
 
-    iterations: 4, |du| = 9.90215e-05, |r| = 5.77861e-07
+    iterations: 4, |du| = 9.90215e-05, |r| = 5.7786e-07
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               0.5                -6.83798e-09
-    cathode             0                   6.83798e-09
+    anode               0.5                 1.13411e-08
+    cathode             0                  -1.13411e-08
 
-  Solve time: 0h 0m 0.23s
+  Solve time: 0h 0m 0.32s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.6
   Trying $Vb = 0.6
 
   >>>>---------------------------------- (dd) ----------------------------------
-    it 1, |du| = 3.86817, |r| = 2.80769  alpha = 1
-    it 2, |du| = 0.0271196, |r| = 0.046138  alpha = 1
+    it 1, |du| = 3.86817, |r| = 2.73747  alpha = 0.5
+    it 2, |du| = 1.93408, |r| = 0.844502  alpha = 1
+    it 3, |du| = 0.00782809, |r| = 0.00394108  alpha = 1
 
-    iterations: 3, |du| = 0.000367071, |r| = 8.77429e-06
+    iterations: 4, |du| = 3.26917e-05, |r| = 6.98933e-08
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               0.6                -2.15096e-07
-    cathode             0                   2.15096e-07
+    anode               0.6                -1.31114e-07
+    cathode             0                   1.31114e-07
 
-  Solve time: 0h 0m 0.18s
+  Solve time: 0h 0m 0.33s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.7
   Trying $Vb = 0.7
 
   >>>>---------------------------------- (dd) ----------------------------------
-    it 1, |du| = 3.86817, |r| = 2.11311  alpha = 1
-    it 2, |du| = 0.0259495, |r| = 0.0223121  alpha = 1
+    it 1, |du| = 3.86817, |r| = 2.11307  alpha = 1
+    it 2, |du| = 0.0259495, |r| = 0.0223114  alpha = 1
 
-    iterations: 3, |du| = 0.000156407, |r| = 1.6599e-06
+    iterations: 3, |du| = 0.000156402, |r| = 1.65979e-06
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               0.7                -9.90789e-06
-    cathode             0                   9.90789e-06
+    anode               0.7                -9.78478e-06
+    cathode             0                   9.78478e-06
 
-  Solve time: 0h 0m 0.18s
+  Solve time: 0h 0m 0.24s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.8
   Trying $Vb = 0.8
@@ -731,10 +732,10 @@ We solve: sweep selfconsistent
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               0.8                -0.000461057
-    cathode             0                   0.000461057
+    anode               0.8                -0.000460819
+    cathode             0                   0.000460819
 
-  Solve time: 0h 0m 0.18s
+  Solve time: 0h 0m 0.25s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.9
   Trying $Vb = 0.9
@@ -744,32 +745,32 @@ We solve: sweep selfconsistent
     it 2, |du| = 0.0998046, |r| = 0.00680942  alpha = 1
     it 3, |du| = 0.0103596, |r| = 1.19164e-07  alpha = 1
 
-    iterations: 4, |du| = 5.53246e-05, |r| = 8.12514e-12
+    iterations: 4, |du| = 5.53248e-05, |r| = 8.12721e-12
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               0.9                -0.0207398
-    cathode             0                   0.0207398
+    anode               0.9                -0.0207396
+    cathode             0                   0.0207396
 
-  Solve time: 0h 0m 0.23s
+  Solve time: 0h 0m 0.32s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1
   Trying $Vb = 1
 
   >>>>---------------------------------- (dd) ----------------------------------
     it 1, |du| = 3.86817, |r| = 1.0782  alpha = 1
-    it 2, |du| = 0.509983, |r| = 0.00385761  alpha = 1
+    it 2, |du| = 0.509983, |r| = 0.00385762  alpha = 1
     it 3, |du| = 0.120937, |r| = 2.51796e-05  alpha = 1
     it 4, |du| = 0.00575913, |r| = 1.54233e-07  alpha = 1
 
-    iterations: 5, |du| = 1.31695e-05, |r| = 2.38701e-12
+    iterations: 5, |du| = 1.31702e-05, |r| = 2.49409e-12
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               1                  -0.787672
-    cathode             0                   0.787672
+    anode               1                  -0.787671
+    cathode             0                   0.787671
 
-  Solve time: 0h 0m 0.29s
+  Solve time: 0h 0m 0.38s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.1
   Trying $Vb = 1.1
@@ -779,34 +780,34 @@ We solve: sweep selfconsistent
     it 2, |du| = 0.217007, |r| = 0.00271724  alpha = 1
     it 3, |du| = 0.0123807, |r| = 1.28683e-06  alpha = 1
 
-    iterations: 4, |du| = 3.15086e-05, |r| = 3.12284e-11
+    iterations: 4, |du| = 3.15081e-05, |r| = 3.11888e-11
     Surface recombination current = 0
 
     contact name:       voltage:            current:
     anode               1.1                -32.9677
     cathode             0                   32.9677
 
-  Solve time: 0h 0m 0.28s
+  Solve time: 0h 0m 0.32s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.2
   Trying $Vb = 1.2
 
   >>>>---------------------------------- (dd) ----------------------------------
-    it 1, |du| = 3.86817, |r| = 0.752842  alpha = 1
-    it 2, |du| = 0.364323, |r| = 0.0171228  alpha = 1
-    it 3, |du| = 0.0404031, |r| = 0.000213765  alpha = 1
+    it 1, |du| = 3.86817, |r| = 0.752856  alpha = 1
+    it 2, |du| = 0.364323, |r| = 0.0171211  alpha = 1
+    it 3, |du| = 0.0404031, |r| = 0.000213764  alpha = 1
 
-    iterations: 4, |du| = 0.000833761, |r| = 1.46598e-07
+    iterations: 4, |du| = 0.000833759, |r| = 1.46597e-07
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               1.2                -1473.4
-    cathode             0                   1473.4
+    anode               1.2                -1473.39
+    cathode             0                   1473.39
 
-  Solve time: 0h 0m 0.23s
+  Solve time: 0h 0m 0.32s
   <<<<--------------------------------------------------------------------------
 
-Solve time: 0h 0m 3.6s
+Solve time: 0h 0m 5.2s
 <<<<----------------------------------------------------------------------------
 
 >>>>----------------------------- (selfconsistent) -----------------------------
@@ -818,12 +819,12 @@ Solve time: 0h 0m 3.6s
     (EFA) Calculating quantum density
       Solving for k1 = ( 0.00000 0.00000 0.188000 )
       converged eigenenergies (10):
-        -0.0819231 0.00990914 0.101316 0.137912 0.186752 0.26761 0.334859 0.439449 
+        -0.0819231 0.00990913 0.101316 0.137912 0.186752 0.26761 0.334859 0.439449 
         0.547653 0.654567 
 
       Solving for k2 = ( 0.00000 0.188000 0.00000 )
       converged eigenenergies (10):
-        -0.0819231 0.00990914 0.101316 0.137912 0.186752 0.26761 0.334859 0.439449 
+        -0.0819231 0.00990913 0.101316 0.137912 0.186752 0.26761 0.334859 0.439449 
         0.547653 0.654567 
 
       Solving for k3 = ( 0.00000 0.188000 0.188000 )
@@ -840,7 +841,7 @@ Solve time: 0h 0m 3.6s
         0.0577792 0.0594756 0.0650166 0.0653555 
 
 
-  Solve time: 0h 0m 0.19s
+  Solve time: 0h 0m 0.37s
   <<<<--------------------------------------------------------------------------
 
   >>>>------------------------------ (quantum_hl) ------------------------------
@@ -875,7 +876,7 @@ Solve time: 0h 0m 3.6s
         0.234793 0.150531 0.158602 0.105011 0.324756 
 
 
-  Solve time: 0h 0m 0.64s
+  Solve time: 0h 0m 0.75s
   <<<<--------------------------------------------------------------------------
 
   >>>>---------------------------------- (dd) ----------------------------------
@@ -886,14 +887,14 @@ Solve time: 0h 0m 3.6s
     it 5, |du| = 0.297074, |r| = 0.000889962  alpha = 1
     it 6, |du| = 0.0117754, |r| = 7.12034e-06  alpha = 1
 
-    iterations: 7, |du| = 2.97027e-05, |r| = 1.56916e-10
+    iterations: 7, |du| = 2.97026e-05, |r| = 1.56984e-10
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               1.2                -1482.1
-    cathode             0                   1482.1
+    anode               1.2                -1482.09
+    cathode             0                   1482.09
 
-  Solve time: 0h 0m 0.67s
+  Solve time: 0h 0m 0.84s
   <<<<--------------------------------------------------------------------------
   selfconsistent (Relaxation): iteration 0
     correction (max norm):  2.74949
@@ -928,7 +929,7 @@ Solve time: 0h 0m 3.6s
         0.057794 0.0595542 0.0652054 0.0654146 
 
 
-  Solve time: 0h 0m 0.24s
+  Solve time: 0h 0m 0.31s
   <<<<--------------------------------------------------------------------------
 
   >>>>------------------------------ (quantum_hl) ------------------------------
@@ -960,14 +961,14 @@ Solve time: 0h 0m 3.6s
 
       effective masses:
         0.265485 0.244011 0.589852 0.552588 0.100079 0.0922833 0.956278 0.635327 
-        0.152078 0.128378 0.229669 0.169417 0.815335 
+        0.152078 0.128378 0.229669 0.169417 0.815334 
 
 
-  Solve time: 0h 0m 0.7s
+  Solve time: 0h 0m 0.83s
   <<<<--------------------------------------------------------------------------
 
   >>>>---------------------------------- (dd) ----------------------------------
-    it 1, |du| = 0.614991, |r| = 0.000910447  alpha = 0.5
+    it 1, |du| = 0.614992, |r| = 0.000910447  alpha = 0.5
     it 2, |du| = 0.364161, |r| = 0.000526992  alpha = 1
     it 3, |du| = 0.027844, |r| = 1.42377e-05  alpha = 1
 
@@ -975,10 +976,10 @@ Solve time: 0h 0m 3.6s
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               1.2                -1480.55
-    cathode             0                   1480.55
+    anode               1.2                -1480.54
+    cathode             0                   1480.54
 
-  Solve time: 0h 0m 0.33s
+  Solve time: 0h 0m 0.42s
   <<<<--------------------------------------------------------------------------
   selfconsistent (Relaxation): iteration 1
     correction (max norm):  0.699665
@@ -1006,14 +1007,14 @@ Solve time: 0h 0m 3.6s
 
       Solving for k0 = ( 0.00000 0.00000 0.00000 )
       converged eigenenergies (10):
-        -0.0849307 0.00598897 0.0950344 0.130403 0.179695 0.260626 0.327443 0.432793 
+        -0.0849307 0.00598896 0.0950344 0.130403 0.179695 0.260626 0.327443 0.432793 
         0.540553 0.647473 
 
       effective masses:
         0.0577959 0.0595566 0.0651899 0.065401 
 
 
-  Solve time: 0h 0m 0.24s
+  Solve time: 0h 0m 0.31s
   <<<<--------------------------------------------------------------------------
 
   >>>>------------------------------ (quantum_hl) ------------------------------
@@ -1045,10 +1046,10 @@ Solve time: 0h 0m 3.6s
 
       effective masses:
         0.264799 0.24362 0.588896 0.550483 0.100164 0.0923333 0.95452 0.634651 
-        0.156336 0.129579 0.217652 0.160348 4.13211 
+        0.156336 0.129579 0.217652 0.160348 4.13215 
 
 
-  Solve time: 0h 0m 0.71s
+  Solve time: 0h 0m 0.82s
   <<<<--------------------------------------------------------------------------
 
   >>>>---------------------------------- (dd) ----------------------------------
@@ -1060,10 +1061,10 @@ Solve time: 0h 0m 3.6s
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               1.2                -1482.12
-    cathode             0                   1482.12
+    anode               1.2                -1482.11
+    cathode             0                   1482.11
 
-  Solve time: 0h 0m 0.35s
+  Solve time: 0h 0m 0.45s
   <<<<--------------------------------------------------------------------------
   selfconsistent (Relaxation): iteration 2
     correction (max norm):  0.233506
@@ -1098,7 +1099,7 @@ Solve time: 0h 0m 3.6s
         0.0577963 0.059559 0.0651978 0.0654062 
 
 
-  Solve time: 0h 0m 0.25s
+  Solve time: 0h 0m 0.31s
   <<<<--------------------------------------------------------------------------
 
   >>>>------------------------------ (quantum_hl) ------------------------------
@@ -1133,21 +1134,21 @@ Solve time: 0h 0m 3.6s
         0.154318 0.129067 0.223467 0.164952 1.18048 
 
 
-  Solve time: 0h 0m 0.7s
+  Solve time: 0h 0m 0.82s
   <<<<--------------------------------------------------------------------------
 
   >>>>---------------------------------- (dd) ----------------------------------
     it 1, |du| = 0.0746334, |r| = 4.36893e-05  alpha = 1
     it 2, |du| = 0.00110146, |r| = 4.66909e-08  alpha = 1
 
-    iterations: 3, |du| = 2.5865e-07, |r| = 8.95402e-14
+    iterations: 3, |du| = 2.58648e-07, |r| = 9.30236e-14
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               1.2                -1481.75
-    cathode             0                   1481.75
+    anode               1.2                -1481.74
+    cathode             0                   1481.74
 
-  Solve time: 0h 0m 0.25s
+  Solve time: 0h 0m 0.31s
   <<<<--------------------------------------------------------------------------
   selfconsistent (Relaxation): iteration 3
     correction (max norm):  0.0757351
@@ -1182,7 +1183,7 @@ Solve time: 0h 0m 3.6s
         0.0577963 0.0595586 0.0651956 0.0654045 
 
 
-  Solve time: 0h 0m 0.24s
+  Solve time: 0h 0m 0.31s
   <<<<--------------------------------------------------------------------------
 
   >>>>------------------------------ (quantum_hl) ------------------------------
@@ -1217,24 +1218,24 @@ Solve time: 0h 0m 3.6s
         0.154902 0.129223 0.221759 0.163617 1.42382 
 
 
-  Solve time: 0h 0m 0.71s
+  Solve time: 0h 0m 0.82s
   <<<<--------------------------------------------------------------------------
 
   >>>>---------------------------------- (dd) ----------------------------------
-    it 1, |du| = 0.0250122, |r| = 5.75864e-06  alpha = 1
+    it 1, |du| = 0.0250122, |r| = 5.75865e-06  alpha = 1
 
-    iterations: 2, |du| = 0.000120682, |r| = 6.61527e-10
+    iterations: 2, |du| = 0.000120682, |r| = 6.61526e-10
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               1.2                -1481.89
-    cathode             0                   1481.89
+    anode               1.2                -1481.88
+    cathode             0                   1481.88
 
-  Solve time: 0h 0m 0.16s
+  Solve time: 0h 0m 0.21s
   <<<<--------------------------------------------------------------------------
   selfconsistent (Relaxation): iteration 4
     correction (max norm):  0.0248916
-    relative error (l2)  :  0.000348782
+    relative error (l2)  :  0.000348783
 
   >>>>------------------------------ (quantum_el) ------------------------------
     Maximum of Ev (eV) :-1.24277
@@ -1265,7 +1266,7 @@ Solve time: 0h 0m 3.6s
         0.0577963 0.0595587 0.0651964 0.0654051 
 
 
-  Solve time: 0h 0m 0.24s
+  Solve time: 0h 0m 0.31s
   <<<<--------------------------------------------------------------------------
 
   >>>>------------------------------ (quantum_hl) ------------------------------
@@ -1290,30 +1291,30 @@ Solve time: 0h 0m 3.6s
         -1.38552 
 
       Solving for k0 = ( 0.00000 0.00000 0.00000 )
-      converged eigenenergies (21):
+      converged eigenenergies (20):
         -1.25617 -1.25617 -1.27202 -1.27202 -1.27839 -1.27839 -1.31276 -1.31276 
         -1.33291 -1.33291 -1.34328 -1.34328 -1.35518 -1.35518 -1.37309 -1.37309 
-        -1.37481 -1.37481 -1.3822 -1.3822 -1.40149 
+        -1.37481 -1.37481 -1.3822 -1.3822 
 
       effective masses:
         0.264578 0.243617 0.588206 0.549987 0.100096 0.0923464 0.949453 0.634494 
         0.154703 0.129171 0.222343 0.164076 1.3242 
 
 
-  Solve time: 0h 0m 0.71s
+  Solve time: 0h 0m 0.82s
   <<<<--------------------------------------------------------------------------
 
   >>>>---------------------------------- (dd) ----------------------------------
-    it 1, |du| = 0.00813113, |r| = 5.77615e-07  alpha = 1
+    it 1, |du| = 0.00813113, |r| = 5.77616e-07  alpha = 1
 
-    iterations: 2, |du| = 1.28624e-05, |r| = 7.11901e-12
+    iterations: 2, |du| = 1.28625e-05, |r| = 7.11906e-12
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               1.2                -1481.84
-    cathode             0                   1481.84
+    anode               1.2                -1481.83
+    cathode             0                   1481.83
 
-  Solve time: 0h 0m 0.16s
+  Solve time: 0h 0m 0.2s
   <<<<--------------------------------------------------------------------------
   selfconsistent (Relaxation): iteration 5
     correction (max norm):  0.00814399
@@ -1348,7 +1349,7 @@ Solve time: 0h 0m 3.6s
         0.0577963 0.0595587 0.0651961 0.0654049 
 
 
-  Solve time: 0h 0m 0.24s
+  Solve time: 0h 0m 0.31s
   <<<<--------------------------------------------------------------------------
 
   >>>>------------------------------ (quantum_hl) ------------------------------
@@ -1373,30 +1374,30 @@ Solve time: 0h 0m 3.6s
         -1.38556 
 
       Solving for k0 = ( 0.00000 0.00000 0.00000 )
-      converged eigenenergies (21):
+      converged eigenenergies (20):
         -1.25621 -1.25621 -1.27206 -1.27206 -1.27843 -1.27843 -1.3128 -1.3128 
         -1.33295 -1.33295 -1.34331 -1.34331 -1.35522 -1.35522 -1.37312 -1.37312 
-        -1.37484 -1.37484 -1.38223 -1.38223 -1.40152 
+        -1.37484 -1.37484 -1.38223 -1.38223 
 
       effective masses:
         0.264582 0.243615 0.588224 0.549994 0.100099 0.0923462 0.949572 0.634486 
         0.154767 0.129187 0.222155 0.163928 1.35399 
 
 
-  Solve time: 0h 0m 0.71s
+  Solve time: 0h 0m 0.82s
   <<<<--------------------------------------------------------------------------
 
   >>>>---------------------------------- (dd) ----------------------------------
     it 1, |du| = 0.00267046, |r| = 6.33607e-08  alpha = 1
 
-    iterations: 2, |du| = 1.38361e-06, |r| = 1.25729e-13
+    iterations: 2, |du| = 1.38352e-06, |r| = 1.26754e-13
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               1.2                -1481.86
-    cathode             0                   1481.86
+    anode               1.2                -1481.85
+    cathode             0                   1481.85
 
-  Solve time: 0h 0m 0.16s
+  Solve time: 0h 0m 0.2s
   <<<<--------------------------------------------------------------------------
   selfconsistent (Relaxation): iteration 6
     correction (max norm):  0.00266907
@@ -1431,7 +1432,7 @@ Solve time: 0h 0m 3.6s
         0.0577963 0.0595587 0.0651962 0.065405 
 
 
-  Solve time: 0h 0m 0.24s
+  Solve time: 0h 0m 0.31s
   <<<<--------------------------------------------------------------------------
 
   >>>>------------------------------ (quantum_hl) ------------------------------
@@ -1466,7 +1467,7 @@ Solve time: 0h 0m 3.6s
         0.154746 0.129182 0.222217 0.163977 1.34396 
 
 
-  Solve time: 0h 0m 0.71s
+  Solve time: 0h 0m 0.82s
   <<<<--------------------------------------------------------------------------
 
   >>>>---------------------------------- (dd) ----------------------------------
@@ -1475,25 +1476,25 @@ Solve time: 0h 0m 3.6s
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               1.2                -1481.85
-    cathode             0                   1481.85
+    anode               1.2                -1481.84
+    cathode             0                   1481.84
 
-  Solve time: 0h 0m 0.097s
+  Solve time: 0h 0m 0.12s
   <<<<--------------------------------------------------------------------------
   selfconsistent (Relaxation): iteration 7
     correction (max norm):  0.000874093
     relative error (l2)  :  1.22456e-05
 
-Solve time: 0h 0m 9.7s
+Solve time: 0h 0m 12s
 <<<<----------------------------------------------------------------------------
 
-Total solve time: 0h 0m 13s
+Total solve time: 0h 0m 17s
 Simulation finished.
 
 68 warnings during run
 0 errors detected
 
 
-Log end: Fri Jul 20 11:13:01 2018
+Log end: Thu Aug 30 17:03:58 2018
 
 

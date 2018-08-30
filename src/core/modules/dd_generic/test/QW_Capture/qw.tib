@@ -103,6 +103,11 @@ Module dd_generic
       {
       }
 
+      mobility constant
+      {
+        mu = 1000
+      }
+
     }
 
     carrier hole
@@ -116,6 +121,11 @@ Module dd_generic
         {
           #strain = strain
         }
+      }
+
+      mobility constant
+      {
+        mu = 1000
       }
     }
 
@@ -133,24 +143,11 @@ Module dd_generic
           #strain = strain
         }
       }
-    }
 
-    mobility constant
-    {
-      carriers = electron
-      mu = 1000
-    }
-
-    mobility constant
-    {
-      carriers = hole
-      mu = 1000
-    }
-
-    mobility constant
-    {
-      carriers = el_qw
-      mu = 1
+      mobility constant
+      {
+        mu = 1
+      }
     }
 
 
