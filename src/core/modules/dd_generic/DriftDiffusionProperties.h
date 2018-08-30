@@ -76,53 +76,38 @@ class DriftDiffusionProperties : public PhysicalModel
         //! Constructor
         PointData(void);
 
-        //! The electric poential
-        double electric_potential;
+        //! The electric potential
+        double electric_potential = 0;
 
 
-        double old_electric_potential;
-
-
-        //! The electron density derivative with respect to the electric potential
-        /*!
-         * The derivative with respect to the electro-chemical potential
-         * has the same value but opposite sign.
-         */
-        double electron_density_derivative;
-
-
-        //! The hole density derivative
-        /*!
-         * The derivative with respect to the electro-chemical potential
-         * has the same value but opposite sign.
-         */
-        double hole_density_derivative;
+        //! The electric potential of the step before
+        double old_electric_potential = 0;
 
 
         //! The ionized donor density
-        double ionized_donor_density;
+        double ionized_donor_density = 0;
 
         //! The ionized donor density derivative
-        double ionized_donor_density_derivative;
+        double ionized_donor_density_derivative = 0;
 
         //! The ionized acceptor density
-        double ionized_acceptor_density;
+        double ionized_acceptor_density = 0;
 
         //! The ionized acceptor density derivative
-        double ionized_acceptor_density_derivative;
+        double ionized_acceptor_density_derivative = 0;
 
 
         //! The trapped electron density
-        double ionized_electron_traps;
+        double ionized_electron_traps = 0;
 
         //! The trapped hole density
-        double ionized_hole_traps;
+        double ionized_hole_traps = 0;
 
         //! The trapped density derivatives d/dfermi_e, d/dfermi_h
         std::vector<double> ionized_traps_derivative;
 
         //! The total charge density
-        double charge_density;
+        double charge_density = 0;
 
 
         //! A map storing the fermi potential for each carrier identified by id
@@ -148,15 +133,6 @@ class DriftDiffusionProperties : public PhysicalModel
 
         //! A map storing carrier mobilities
         std::vector<double> q_mobility;
-
-        //! A map storing carrier mobilities derivatives w.r.t. electric potential
-        std::vector<double> q_mobility_derivative_potential;
-
-        //! A map storing carrier mobilities derivatives w.r.t. gradient of the electric potential
-        std::vector<libMesh::RealGradient> q_mobility_derivative_grad_potential;
-
-        //! A map storing carrier mobilities derivatives w.r.t. gradient of the electrochemical potential
-        std::vector<libMesh::RealGradient> q_mobility_derivative_grad_fermi;
 
         //! A map storing net recombination rates
         std::vector<double> q_recombination_rate;
@@ -310,9 +286,6 @@ class DriftDiffusionProperties : public PhysicalModel
     double get_lattice_temperature(void) const;
 
 
-    //! Calculate the electro-chemical potentials for given densities
-    void calculate_electro_chemical_potentials(void);
-
 
     //! Calculate electron and hole densities and derivatives
     /*!
@@ -343,24 +316,6 @@ class DriftDiffusionProperties : public PhysicalModel
      * the densities.
      */
     void calculate_net_recombination_rates(void);
-
-
-    //! Get the electron density derivative
-    /*!
-     * \return the electron density derivative with respect to the
-     * electric potential
-     */
-    double get_electron_density_derivative(void) const
-      { return _pd->electron_density_derivative; };
-
-
-    //! Get the ehole density derivative
-    /*!
-     * \return the hole density derivative with respect to the
-     * electric potential
-     */
-    double get_hole_density_derivative(void) const
-      { return _pd->hole_density_derivative; };
 
 
 
@@ -556,20 +511,6 @@ class DriftDiffusionProperties : public PhysicalModel
       { return _pd->q_mobility; };
     double get_q_mobility(ID id) const;
 
-    //! Get carrier mobilities derivatives w.r.t. electric potential
-    const std::vector<double>& get_q_mobility_derivative_potential(void) const
-      { return _pd->q_mobility_derivative_potential; };
-    double get_q_mobility_derivative_potential(ID id) const;
-
-    //! Get carrier mobilities derivatives w.r.t. gradient of the electric potential
-    const std::vector<libMesh::RealGradient>& get_q_mobility_derivative_grad_potential(void) const
-      { return _pd->q_mobility_derivative_grad_potential; };
-    void get_q_mobility_derivative_grad_potential(ID id, libMesh::RealGradient& dmu) const;
-
-    //! Get carrier mobilities derivatives w.r.t. gradient of the electrochemical potential
-    const std::vector<libMesh::RealGradient>& get_q_mobility_derivative_grad_fermi(void) const
-      { return _pd->q_mobility_derivative_grad_fermi; };
-    void get_q_mobility_derivative_grad_fermi(ID id, libMesh::RealGradient& dmu) const;
 
     //! Get the net recombination rates
     /*!
@@ -1292,27 +1233,6 @@ double
 DriftDiffusionProperties::get_q_mobility(ID id) const
 {
   return _pd->q_mobility[id];
-}
-
-inline
-double 
-DriftDiffusionProperties::get_q_mobility_derivative_potential(ID id) const
-{
-  return _pd->q_mobility_derivative_potential[id];
-}
-
-inline
-void 
-DriftDiffusionProperties::get_q_mobility_derivative_grad_potential(ID id, libMesh::RealGradient& dmu) const
-{
-  dmu = _pd->q_mobility_derivative_grad_potential[id];
-}
-
-inline
-void 
-DriftDiffusionProperties::get_q_mobility_derivative_grad_fermi(ID id, libMesh::RealGradient& dmu) const
-{
-  dmu = _pd->q_mobility_derivative_grad_fermi[id];
 }
 
 inline

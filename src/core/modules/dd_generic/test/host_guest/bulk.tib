@@ -57,6 +57,11 @@ Module dd_generic
         sigma = 0.15
         N0 = 1e18
       }
+
+      mobility constant
+      {
+        mu = 1
+      }
     }
 
     carrier hguest
@@ -70,6 +75,12 @@ Module dd_generic
         sigma = 0.1
         N0 = 1e18
       }
+
+
+      mobility constant
+      {
+        mu = 1
+      }
     }
 
     carrier electron
@@ -81,17 +92,7 @@ Module dd_generic
     {
     }
 
-    mobility constant
-    {
-      carriers = (electron, hole)
-      #mu = 1000
-    }
 
-    mobility constant
-    {
-      carriers = (eguest, hguest)
-      mu = 1
-    }
 
     recombination direct 
     {
@@ -104,7 +105,7 @@ Module dd_generic
       regions = bulk
       plot_name = "e-capture"
       carriers = (electron, eguest)
-      C = 1e-10
+      C = 1e9
     }
    
     recombination direct 
@@ -112,7 +113,7 @@ Module dd_generic
       regions = bulk
       plot_name = "h-capture"
       carriers = (hole, hguest)
-      C = 1e-11
+      C = 1e8
     }
 
     recombination direct 

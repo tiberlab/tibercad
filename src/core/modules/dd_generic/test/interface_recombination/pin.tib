@@ -49,16 +49,6 @@ Module dd_generic
       }
     }
 
-    mobility constant
-    {
-      carriers = electron
-    }
-
-    mobility constant
-    {
-      carriers = hole
-    }
-
 
 
     recombination direct

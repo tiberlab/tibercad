@@ -600,10 +600,10 @@ DriftDiffusionProperties::calculate_traps(void)
       Particle hl(1, _pd->q_density[id2], _pd->fermi_potential[id2], _pd->carrier_vt[id2]);
       nt += trap->get_ionized_density_and_derivative(_elem, _coord, el, hl, derivatives);
       dntdEf[id1] -=
-          derivatives[0] * _pd->electron_density_derivative +
+          derivatives[0] * _pd->q_density_derivative[id1] +
           derivatives[2];
       dntdEf[id2] -=
-          derivatives[1] * _pd->hole_density_derivative +
+          derivatives[1] * _pd->q_density_derivative[id2] +
           derivatives[3] + derivatives[4];
     }
 
