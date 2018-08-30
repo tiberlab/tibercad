@@ -26,9 +26,9 @@ class TBDLEXPORT DDsemiconductor : public PhysicalModelInterface
   //! data structure for band extremum
   struct band_extremum
    {
-     short degeneracy;/*!< degeneracy (including spin).*/
-     double energy;   /*!< edge energy [eV].*/
-     double mass_DOS; /*!< mass for density of states \f$ m = \left( \mathop {\rm det} \left(\frac{1}{m} \right)_{ij} \right)^{-1} \f$ */
+     short degeneracy = 1;/*!< degeneracy (including spin).*/
+     double energy = 0;   /*!< edge energy [eV].*/
+     double mass_DOS = 1; /*!< mass for density of states \f$ m = \left( \mathop {\rm det} \left(\frac{1}{m} \right)_{ij} \right)^{-1} \f$ */
   };
 
 

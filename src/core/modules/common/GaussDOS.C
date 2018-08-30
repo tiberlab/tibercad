@@ -128,32 +128,31 @@ double GaussDOS::erfc(double x) const
 
 double GaussDOS::inverfc(double x) const
 {
-  if ((x >= 2.0) || (x <= 0.0)) { return 0.0; }
-	
-  if (x>=0.003 && x<=1.997)
+  double S = 0.0;
+  if ((x >= 2.0) || (x <= 0.0))
+  { }
+  else if (x>=0.003 && x<=1.997)
   {
     const double ec = 1e-3;
     double e;
 	
-    double Sn;
-    double S = 0.0;
-
-    long n = 0;
-    long m;
-
     double p;
     p = 0.5 * sqrt(M_PI) * (x - 1.0);
 
     double f;
     f = p;
 
+    unsigned int n = 0;
+    unsigned int max_n = 100;
+
     long double cn;
     vector<long double> c;
+    c.reserve(max_n);
     c.push_back(1.0);
 
     do
     {
-      Sn = c[n] * f / (2.0*n + 1.0);
+      double Sn = c[n] * f / (2.0*n + 1.0);
       S += Sn;
       e = 100.0 * Sn / S;
 
@@ -161,13 +160,14 @@ double GaussDOS::inverfc(double x) const
       f *= p*p;
 
       cn = 0.0;
-      for (m = 0; m<=n-1; m++) 
+      for (unsigned int m = 0; m <= n-1; m++) 
       {
         cn += (c[m]/(2.0*m+1.0))*(c[n-1-m]/(m+1.0));
       }
       c.push_back(cn);
       //cout<<"c["<<n<<"] = "<<cn<<endl;	
-    } while (e>ec);
+    } while ((e > ec) && (n < max_n));
+
     if (x < 1.0) 
     {
       return -1 * S;
@@ -177,7 +177,6 @@ double GaussDOS::inverfc(double x) const
       return S;
     }
   }
-
   else //use the asymptotic expansion
   {
     if (x < 1)

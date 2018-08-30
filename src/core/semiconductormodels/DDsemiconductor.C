@@ -150,7 +150,7 @@ namespace {
 extern "C"
 {
   void zheev_(char& jobs, char& UPLO, int& N, Complex* ham6x6matrix, int& LDA, double* eigvals,  Complex* WORK, int& LWORK, double* RWORK, int& info);
-};
+}
 
 
 
@@ -581,6 +581,7 @@ void DDsemiconductor::do_calculate_valence_band_extremum(void)
 
 
   vector<Tensor1> k_vector;
+  k_vector.reserve(7);
   Tensor1 k;
   // Gamma
   k(1) = 0.0; k(2) = 0.0; k(3) = 0.0;
@@ -641,7 +642,8 @@ void DDsemiconductor::do_calculate_valence_band_extremum(void)
   */
 
 
-  vector<DDsemiconductor::band_extremum>   result;
+  vector<DDsemiconductor::band_extremum> result;
+  result.reserve(3);
 
   DDsemiconductor::band_extremum extremum;
 
