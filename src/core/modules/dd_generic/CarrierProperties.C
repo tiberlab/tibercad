@@ -126,6 +126,10 @@ CarrierProperties::prepare_submodels(void)
   _mobility_model->set_carrier_type(_particle);
   _mobility_model->set_carrier(_carrier_id);
 
+  if (++it != get_options().submodels_end("mobility"))
+    throw InitFailedException("Carrier " + this->get_particle_name() +
+        " : cannot have more than one mobility model per region");
+
 }
 
 

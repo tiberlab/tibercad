@@ -56,6 +56,11 @@ Module dd_generic
         sigma = 0.13
         N0 = 1e20
       }
+
+      mobility constant
+      {
+        mu = 1e-5
+      }
     }
 
     carrier eguest
@@ -69,6 +74,11 @@ Module dd_generic
         sigma = 0.1
         N0 = 1e19
       }
+
+      mobility constant
+      {
+        mu = 1e-5
+      }
     }
 
     carrier hole
@@ -81,6 +91,19 @@ Module dd_generic
         sigma = 0.14
         N0 = 1e19
       }
+
+      mobility constant
+      {
+        regions = (etl, eml)
+        mu = 8e-8
+      }
+
+      mobility constant
+      {
+        regions = (htl)
+        mu = 8e-4
+      }
+
     }
 
     carrier hguest
@@ -93,6 +116,11 @@ Module dd_generic
         level = -5.3
         sigma = 0.1
         N0 = 1e18
+      }
+
+      mobility constant
+      {
+        mu = 1e-5
       }
     }
 
@@ -121,6 +149,11 @@ Module dd_generic
         sigma = 0.05
         N0 = 1e19
       }
+
+      mobility constant
+      {
+        mu = 3.85e-3
+      }
     }
 
     carrier triplet
@@ -136,47 +169,13 @@ Module dd_generic
         sigma = 0.05
         N0 = 3e19
       }
+
+      mobility constant
+      {
+        mu = 1.92e-4
+      }
     }
 
-
-    mobility constant
-    {
-      carriers = (electron)
-      mu = 1e-5
-    }
-
-    mobility constant
-    {
-      regions = eml
-      carriers = (eguest, hguest)
-      mu = 1e-5
-    }
-
-    mobility constant
-    {
-      regions = (etl, eml)
-      carriers = (hole)
-      mu = 8e-8
-    }
-
-    mobility constant
-    {
-      regions = (htl)
-      carriers = (hole)
-      mu = 8e-4
-    }
-
-    mobility constant
-    {
-      carriers = (singlet)
-      mu = 3.85e-3
-    }
-
-    mobility constant
-    {
-      carriers = (triplet)
-      mu = 1.92e-4
-    }
 
     recombination direct
     {
