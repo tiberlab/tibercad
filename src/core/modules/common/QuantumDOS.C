@@ -84,7 +84,7 @@ QuantumDOS::do_init(void)
 
 
 void
-QuantumDOS::do_reinit(const Elem* elem)
+QuantumDOS::do_reinit(const Elem* )
 {
   reference_energy() = _classical->get_reference_energy();
   effective_mass() = _classical->get_effective_mass();
@@ -159,12 +159,15 @@ QuantumDOS::add_quantum_density(const std::string& name)
 
 
 
-std::pair<double, double>
-QuantumDOS::calculate_density_and_derivative(double Ef, double Epot,
+void
+QuantumDOS::calculate_density_and_derivative(std::vector<double>& result, double Ef, double Epot,
     double kT, double kTlattice, const Elem* elem, const Point& p) const
 {
   double density = 0.0;
-  double der = 0.0;
+  double derivative = 0.0;
+  double derivative2 = 0.0;
+
+  const double eps = 1e-7;
 
   // true indicates that we obtained a quantum density
   bool flag = false;
@@ -208,10 +211,14 @@ QuantumDOS::calculate_density_and_derivative(double Ef, double Epot,
 
     if ((_barrier_ids.size() > 0) && _barrier_ids.count(subdomid))
     {
-      pair<double, double> cl(_classical->get_occupied_density_and_derivative(
-            Ef, Epot, kT, elem, p, kTlattice));
-      density += cl.first;
-      der += cl.second;
+
+      _classical->get_occupied_density_and_derivative(result, Ef, Epot, kT, elem, p, kTlattice);
+      density += result[0];
+      if (result.size() > 1)
+        derivative += result[1];
+      if (result.size() > 2)
+        derivative2 += result[2];
+
     }
     else if (continuum > -999.0)
     {
@@ -229,10 +236,14 @@ QuantumDOS::calculate_density_and_derivative(double Ef, double Epot,
 
 
       double cl_ref = _classical->get_reference_energy()[0];
-      pair<double, double> cl(_classical->get_occupied_density_and_derivative(
-            Ef, continuum - cl_ref, kT, elem, p, kTlattice));
-      density += cl.first;
-      der += cl.second;
+
+      _classical->get_occupied_density_and_derivative(result, Ef, Epot, kT, elem, p, kTlattice);
+
+      density += result[0];
+      if (result.size() > 1)
+        derivative += result[1];
+      if (result.size() > 2)
+        derivative2 += result[2];
     }
   }
   else
@@ -241,21 +252,37 @@ QuantumDOS::calculate_density_and_derivative(double Ef, double Epot,
     // here we get if there was no quantum density
     //
 
-    pair<double, double> cl(_classical->get_occupied_density_and_derivative(
-          Ef, Epot, kT, elem, p, kTlattice));
-    density += cl.first;
-    der += cl.second;
-    
+    density += result[0];
+    if (result.size() > 1)
+      derivative += result[1];
+    if (result.size() > 2)
+      derivative2 += result[2];
   }
 
-  return make_pair(density, der);
+  result[0] = density;
+  if (result.size() > 1)
+    result[1] = derivative;
+  if (result.size() > 2)
+    result[2] = derivative2;
+
 }
 
-std::pair<double, double>
-QuantumDOS::calculate_density_and_derivative(double Ef, double Epot,
-    double kT, double kTlattice) const
+void
+QuantumDOS::calculate_density_and_derivative(std::vector<double>& result, double Ef, double Epot,
+    double kT, double ) const
 {
-  return make_pair(0, 0);
+  double dens = Ef = Epot = kT = 0;
+  result.push_back(dens);
+  if (result.size() > 1)
+  {
+    double der = 0;
+    result.push_back(der);
+  }
+  if (result.size() > 2)
+  {
+    double der2 = 0;
+    result.push_back(der2);
+  }
 }
 
 void

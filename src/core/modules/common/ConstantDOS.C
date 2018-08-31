@@ -57,17 +57,18 @@ ConstantDOS::do_init(void)
   total_state_density() = _N0;
 }
 
-std::pair<double, double>
-ConstantDOS::calculate_density_and_derivative(double Ef, double Epot,
-    double kT, double kTlattice, const Elem* elem, const Point& p) const
+void
+ConstantDOS::calculate_density_and_derivative(std::vector<double>& result, double Ef, double Epot,
+    double kT, double kTlattice, const Elem* , const Point& ) const
 {
-  return calculate_density_and_derivative(Ef, Epot, kT, kTlattice);
+  return calculate_density_and_derivative(result, Ef, Epot, kT, kTlattice);
 }
 
-std::pair<double, double>
-ConstantDOS::calculate_density_and_derivative(double Ef, double Epot, double kT, double kTlattice) const
+void
+ConstantDOS::calculate_density_and_derivative(std::vector<double>& result,
+    double Ef, double Epot, double kT, double ) const
 {
-  double dens, der, Emin, Emax, exp_num, exp_den, ref_en;
+  double dens, der, der2, Emin, Emax, exp_num, exp_den, ref_en;
   //cout<<"ref_energy "<<reference_energy()<<endl;
 
   ref_en = get_reference_energy()[0];
@@ -99,9 +100,18 @@ ConstantDOS::calculate_density_and_derivative(double Ef, double Epot, double kT,
   }
 
   double C = _N0 / _Ewidth;
+
   dens = kT * C * log((exp_num + 1)/(exp_den +1));
-  der = C * ( exp_num / (exp_num + 1) - exp_den / (exp_den + 1));
-  //if (get_particle() == 'h') der *= -1.0;
+  if (result.size() > 1)
+    der = C * ( exp_num / (exp_num + 1) - exp_den / (exp_den + 1));
+  if (result.size() > 2)
+    der2 = C/kT * (std::pow(exp_num/(exp_num + 1),2) - std::pow(exp_den/(exp_den + 1),2));
+
   
-  return make_pair(dens, der);
+  result[0] = dens;
+  if (result.size() > 1)
+    result[1] = der;
+  if (result.size() > 2)
+    result[2] = der2;
+
 }

@@ -45,13 +45,13 @@ class TBDLEXPORT KPBulkDOS : public DensityOfStates
     virtual void do_print_info(void);
 
     //! Get occupied states and derivative w.r.t. Ef
-    virtual std::pair<double, double>
-    calculate_density_and_derivative(double Ef, double Epot,
+    virtual void
+    calculate_density_and_derivative(std::vector<double>& result, double Ef, double Epot,
         double kT, double kTlattice, const Elem* elem, const Point& p) const;
 
     //overloading for Trap.C
-    virtual std::pair<double, double>
-    calculate_density_and_derivative(double Ef, double Epot, double kT, double kTlattice) const;
+    virtual void
+    calculate_density_and_derivative(std::vector<double>& result, double Ef, double Epot, double kT, double kTlattice) const;
 
   private:
 

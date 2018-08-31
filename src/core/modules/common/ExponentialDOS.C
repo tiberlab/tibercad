@@ -41,28 +41,36 @@ double _get_value_derivative(double e, double E, double kT) const
 */
 
 
-std::pair<double, double>
-ExponentialDOS::calculate_density_and_derivative(double E, double Epot,
-    double kT, double kTlattice, const Elem* elem, const Point& p) const
+void
+ExponentialDOS::calculate_density_and_derivative(vector<double>& result, double E, double Epot,
+    double kT, double kTlattice, const Elem* , const Point& ) const
 {
-  return calculate_density_and_derivative(E, Epot, kT, kTlattice);
+  return calculate_density_and_derivative(result, E, Epot, kT, kTlattice);
 }
 
-std::pair<double, double>
-ExponentialDOS::calculate_density_and_derivative(double E, double Epot, double kT, double kTlattice) const
+void
+ExponentialDOS::calculate_density_and_derivative(vector<double>& result,
+    double E, double Epot, double kT, double ) const
 {
   E -= get_reference_energy()[0] + Epot;
 
-  double sum = 0;
-  double der = 0;
+  double sum = 0, der = 0, der2 = 0;
+
 
   if (_alpha < 0.5 * kT)
   {
     // it's almost a delta
     double exp_E_kT = exp(-E / kT);
     sum = 1.0 / (1.0 + exp_E_kT);
-    der = sum / (1 + exp_E_kT);
+
+    if (result.size() > 1)
+      der = sum / (1 + exp_E_kT);
+    if (result.size() > 2)
+      der2 = - sum / (1 + exp_E_kT) + 2* sum / (1 + exp_E_kT) / (1 + exp_E_kT);
+
     der *= exp_E_kT / kT;
+    der2 *= exp_E_kT / kT /kT;
+
   }
   else
   {
@@ -92,16 +100,33 @@ ExponentialDOS::calculate_density_and_derivative(double E, double Epot, double k
         sum += h * _get_value(e, E, kT);
       }
 
-      der = sum - 1.0 / (1 + exp(-E / kT));
-      der /= _alpha;
+      double expm = exp(-E / kT);
+
+      if (result.size() > 1)
+      {
+        der = sum - 1.0 / (1 + expm);
+        der /= _alpha;
+      }
+      if (result.size() > 2)
+      {
+        der2 = sum - _alpha*(expm/(1 + expm))/kT;
+        der2 /= _alpha * _alpha;
+      }
+
     }
     else
     {
       sum = 1;
       der = 0;
+      der2 = 0;
     }
   }
 
-  return make_pair(sum, der);
+  result[0] = sum;
+  if (result.size() > 1)
+    result[1] = der;
+  if (result.size() > 2)
+    result[2] = der2;
+
 }
 

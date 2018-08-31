@@ -53,8 +53,20 @@ class TBDLEXPORT DensityOfStates : public PhysicalModelInterface
      * \param kT temperature in eV
      */
     std::pair<double, double>
-    get_occupied_density_and_derivative(double Ef, double Epot,
-        double kT, const Elem* elem, const Point& p, double kTlattice = -1) const;
+    get_occupied_density_and_derivative(double Ef, double Epot, double kT,
+        const Elem* elem, const Point& p, double kTlattice = -1) const;
+
+    //! Get the occupied states
+    /*!
+     * In this version, the result is passed back in a vector. The size of the vector
+     * will decide, what data is returned. The first element contains the density,
+     * the second the first derivative, and the third the second derivative.
+     * All derivatives are w.r.t the quasi Fermi-level
+     */
+    void get_occupied_density_and_derivative(std::vector<double>& result,
+        double Ef, double Epot, double kT,
+        const Elem* elem, const Point& p, double kTlattice = -1) const;
+
 
     //overloading for Trap.C
     std::pair<double, double>
@@ -127,13 +139,15 @@ class TBDLEXPORT DensityOfStates : public PhysicalModelInterface
     bool& fixed_dos(void) { return _fixed_DOS; }
 
     //! Calculate density and derivative
-    virtual std::pair<double, double>
-    calculate_density_and_derivative(double Ef, double Epot, 
-              double kT, double kTlattice, const Elem* elem, const Point& p) const = 0;
+    virtual void
+    calculate_density_and_derivative(std::vector<double>& result,
+        double Ef, double Epot, double kT, double kTlattice,
+        const Elem* elem, const Point& p) const = 0;
 
     //! overloading for Trap.C
-    virtual std::pair<double, double>
-    calculate_density_and_derivative(double Ef, double Epot, double kT, double kTlattice) const = 0;
+    virtual void
+    calculate_density_and_derivative(std::vector<double>& result,
+        double Ef, double Epot, double kT, double kTlattice) const = 0;
 
     //! Do we have a quantum density?
     bool& is_quantum_density(void);
@@ -260,13 +274,22 @@ DensityOfStates::get_occupied_density_and_derivative(double Ef, double Epot,
     double kT, const Elem* elem, const Point& p, double kTlattice) const
 {
   kTlattice = (kTlattice < 0) ? kT : kTlattice;
-  auto dens(calculate_density_and_derivative(Ef, Epot, kT, kTlattice, elem, p));
+  std::vector<double> result(2, 0.0);
+  get_occupied_density_and_derivative(result, Ef, Epot, kT, elem, p, kTlattice);
 
-  //if ((dens.first > _total_density) || std::isnan(dens.first))
-  //  dens = std::make_pair(_total_density, 0.0);
-
-  return(dens);
+  return(std::make_pair(result[0], result[1]));
 }
+
+inline
+void
+DensityOfStates::get_occupied_density_and_derivative(std::vector<double>& result,
+    double Ef, double Epot, double kT,
+    const Elem* elem, const Point& p, double kTlattice) const
+{
+  kTlattice = (kTlattice < 0) ? kT : kTlattice;
+  calculate_density_and_derivative(result, Ef, Epot, kT, kTlattice, elem, p);
+}
+
 
 inline
 std::pair<double, double>
@@ -274,13 +297,13 @@ DensityOfStates::get_occupied_density_and_derivative(double Ef, double Epot,
     double kT, double kTlattice) const
 {
   kTlattice = (kTlattice < 0) ? kT : kTlattice;
-  auto dens(calculate_density_and_derivative(Ef, Epot, kT, kTlattice));
 
-  //if ((dens.first > _total_density) || std::isnan(dens.first))
-  //  dens = std::make_pair(_total_density, 0.0);
+  std::vector<double> result(2, 0.0);
+  calculate_density_and_derivative(result, Ef, Epot, kT, kTlattice);
 
-  return(dens);
+  return(std::make_pair(result[0], result[1]));
 }
+
 
 inline
 void
