@@ -125,7 +125,7 @@ RecombinationModelInterface::get_net_rate_and_derivatives(
 
 void
 RecombinationModelInterface::calculate_rate_and_derivatives(
-    std::vector<double>& R, std::vector<std::vector<double>>& dPotentials)
+    std::vector<double>& , std::vector<std::vector<double>>& )
 {
 
 }

@@ -177,6 +177,14 @@ class CarrierProperties : public DriftDiffusionModelInterface
 
   private:
 
+    //! The different conductivity models available
+    enum ConductivityModel
+    {
+      CONST = 0,        //< Constant conductivity, e.g. for metals
+      STD = 1,          //< The standard model, \f[\sigma = \mu n \f]
+      GEN = 2           //< The generalized model, \f[\sigma = D \partial n / \partial E_F \f]
+    };
+
     //! The particle this band is describing
     /*! \obsolete
      *
@@ -223,6 +231,9 @@ class CarrierProperties : public DriftDiffusionModelInterface
      * conductivity can recover convergence.
      */
     double _background_conductivity;
+
+    //! Which conductivity model we use
+    ConductivityModel _conductivity_model;
 
     //! The calculated conductivity
     double _conductivity;

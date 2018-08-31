@@ -71,6 +71,7 @@ Module dd_generic
         N0 = 1e17
       }
 
+      #conductivity_model = generalized
       mobility field_assisted
       {
         mu0 = 1e-5

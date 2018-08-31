@@ -730,10 +730,6 @@ class DriftDiffusionProperties : public PhysicalModel
     std::multimap<ID, RecombinationModelInterface*> _recombination_models;
 
 
-    // ! The thermoelectric power
-    //ThermoelectricPower* _thermoelectric_power;
-
-
     // ! The polarization models
     //std::vector<PolarizationModel*> _pm;
 

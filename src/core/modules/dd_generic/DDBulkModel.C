@@ -258,14 +258,10 @@ DDBulkModel::calculate_mobilities(void)
   pd.q_mobility.resize(this->n_known_carriers());
   pd.q_conductivity.resize(this->n_known_carriers());
 
-  //pd.q_conductivity_derivative_qFermi.resize(this->n_known_carriers());
-
   for (auto&& cp : get_carrier_properties())
   {
-    //double deriv_qFermi;
     pd.q_conductivity[cp.first] = cp.second->get_conductivity();
     pd.q_mobility[cp.first] = cp.second->get_mobility();
-    //pd.q_conductivity_derivative_qFermi[cp.first] = deriv_qFermi;
   }
 
 }
