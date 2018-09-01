@@ -1,0 +1,124 @@
+#
+# This example calculates the IV of a silicon pn junction in 1D
+#
+
+
+Device
+{
+  meshfile = diode.msh 
+  material = GaAs
+
+  Region n_side 
+  {
+    Doping
+    {
+     Nd = 1e18
+     type = donor
+    }
+  }
+
+  Region p_side 
+  {
+    Doping
+    {
+     Nd = 1e18
+     type = acceptor
+    }
+  }
+}
+
+
+Module dd_generic
+{ 
+
+  name = dd
+
+  plot = (QFermi, Density, RefEnergy, CurrentDensity,
+          Conductivity, Mobility, NetRecombination, ContactCurrents)
+
+  Solver
+  {
+    max_iterations = 30
+  }
+
+  Physics
+  {
+
+    carrier electron
+    {
+      density_of_states bulk_kp
+      {
+      }
+
+      #conductivity_model = generalized
+      mobility constant
+      {
+      }
+    }
+
+    carrier hole
+    {
+      density_of_states bulk_kp
+      {
+      }
+
+      #conductivity_model = generalized
+      mobility constant
+      {
+      }
+    }
+
+
+
+    recombination direct
+    {
+      carriers = (electron, hole)
+      plot_name = rad
+    }
+  }
+
+
+  Contact anode
+  {
+    type = ohmic
+    voltage = $Vb[0.0]
+  }
+
+  Contact cathode
+  {
+    type = ohmic
+    voltage = 0.0
+  }
+
+  
+}
+
+
+Module sweep
+{
+  variable = $Vb
+  solve = dd
+
+  start = 0.0
+  stop = 2.2  
+  steps = 44
+
+  plot_data = each  # to write data for each step
+}
+
+
+
+Simulation
+{
+  verbose = 2
+
+  solve = sweep
+
+  resultpath = output_ref
+
+}
+
+
+
+
+
