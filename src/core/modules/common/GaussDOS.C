@@ -141,6 +141,7 @@ double GaussDOS::erfc(double x) const
 double GaussDOS::inverfc(double x) const
 {
   double S = 0.0;
+
   if ((x >= 2.0) || (x <= 0.0))
   { }
   else if (x>=0.003 && x<=1.997)
@@ -182,25 +183,23 @@ double GaussDOS::inverfc(double x) const
 
     if (x < 1.0) 
     {
-      return -1 * S;
-    }
-    else
-    {
-      return S;
+      S *= -1;
     }
   }
   else //use the asymptotic expansion
   {
     if (x < 1)
     {
-      return sqrt( - log(x) - 0.5 * log(- M_PI * log(x) - 0.5 * log(- M_PI * log(x))));
+      S = sqrt( - log(x) - 0.5 * log(- M_PI * log(x) - 0.5 * log(- M_PI * log(x))));
     }
     else
     {
       x = 2 - x;
-      return  - sqrt( - log(x) - 0.5 * log(- M_PI * log(x) - 0.5 * log(- M_PI * log(x))));
+      S = - sqrt( - log(x) - 0.5 * log(- M_PI * log(x) - 0.5 * log(- M_PI * log(x))));
     }
   }
+
+  return(S);
 }
 
 inline

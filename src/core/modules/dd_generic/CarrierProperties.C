@@ -25,7 +25,7 @@ CarrierProperties::CarrierProperties(const ModelOptions& options) :
     _charge(-1),
     _spin(0.5),
     _is_dopant(false),
-    _background_conductivity(0.0),
+    _background_conductivity(1e-12),
     _conductivity_model(STD),
     _conductivity(0.0),
     _conductivity_derivative_qFermi(0.0),
@@ -89,6 +89,8 @@ void
 CarrierProperties::do_init(void)
 {
   _carrier_id = this->get_driftdiffusionproperties().get_carrier_id(_particle_name);
+
+  _background_conductivity = get_option("background_conductivity", _background_conductivity);
 
   string conductivity_model("standard");
   conductivity_model = get_option("conductivity_model", conductivity_model);
@@ -348,7 +350,7 @@ CarrierProperties::get_density_and_derivative(double Ef, double Epot)
       break;
   }
 
-  _conductivity += _background_conductivity;
+  _conductivity += _background_conductivity / Constants::e;
 
   return(make_pair(dens_der[0], dens_der[1]));
 }
