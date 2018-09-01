@@ -1,3 +1,6 @@
+@define ND   1e17
+@define MU0  1e-3
+@define COND standard
 
 # Description of  the  device physical regions
 Device
@@ -28,11 +31,12 @@ Module dd_generic
 { 
 
   name = driftdiffusion
-  plot = (QFermi, Density, RefEnergy, CurrentDensity, NetRecombination, ContactCurrents)
+  plot = (QFermi, Density, RefEnergy, CurrentDensity,
+          Conductivity, Mobility, NetRecombination, ContactCurrents)
 
   Solver
   {
-    max_iterations = 50
+    max_iterations = 10
   }
 
   Physics
@@ -68,14 +72,14 @@ Module dd_generic
       {
         level = 0.2
         sigma = 0.05
-        N0 = 1e17
+        N0 = ND
       }
 
-      #conductivity_model = generalized
-      mobility field_assisted
+      background_conductivity = 1e-9
+      conductivity_model = COND
+      mobility constant
       {
-        mu0 = 1e-5
-        E0 = 1e5
+        mu = MU0
       }
     }
 
@@ -129,7 +133,7 @@ Module dd_generic
       regions = bulk
       plot_name = gen_vc
       carriers = (hole, electron)
-      generation = 0.2e23
+      generation = 0.4e23
       multiplier = $x[0]
     }
 
@@ -200,7 +204,7 @@ Simulation
 {
   temperature = 300
   solve = (sweep, sweep_gen, sweep_back)
-  resultpath = output
+  resultpath = "output_"ND"_"MU0"_"COND
 }
 
 
