@@ -1,5 +1,5 @@
 @define ND   1e17
-@define MU0  1e-3
+@define MU0  1e-4
 @define COND standard
 
 # Description of  the  device physical regions
