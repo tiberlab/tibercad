@@ -103,6 +103,8 @@ CarrierProperties::do_init(void)
     _background_conductivity = 1.0;
     get_parameter("conductivity", _background_conductivity);
   }
+  else
+    throw InitFailedException("No such conductivity model: " + conductivity_model);
 }
 
 void
@@ -299,7 +301,7 @@ CarrierProperties::get_density_and_derivative(double Ef, double Epot)
     dens_der[0] *= fac;
     dens_der[1] *= -sign * fac;
     if (_conductivity_model == GEN)
-      dens_der[2] *= -sign * fac;
+      dens_der[2] *= sign * sign * fac;
 
 
     _dos_model->use_quantum_density(true);
@@ -311,8 +313,9 @@ CarrierProperties::get_density_and_derivative(double Ef, double Epot)
           ddp.get_coordinates(), ddp.get_lattice_temperature());
     dens_der[1] *= -sign;
     if (_conductivity_model == GEN)
-      dens_der[2] *= -sign;
+      dens_der[2] *= sign * sign;
   }
+
 
   double mobility = _mobility_model->get_mobility();
   switch (_conductivity_model)
@@ -329,15 +332,16 @@ CarrierProperties::get_density_and_derivative(double Ef, double Epot)
       break;
 
     case GEN:
-      mobility /= kT;
-      _conductivity = mobility * dens_der[1];
-      _conductivity_derivative_qFermi = mobility * dens_der[2];
+
+      mobility *= kT;
+      _conductivity = -sign * mobility * dens_der[1];
+      _conductivity_derivative_qFermi = -sign * mobility * dens_der[2];
 
       _mobility_model->get_derivative_grad_fermi(_conductivity_derivative_gradqFermi);
-      _conductivity_derivative_gradqFermi *= dens_der[1];
+      _conductivity_derivative_gradqFermi *= -sign * dens_der[1];
 
       _mobility_model->get_derivative_grad_potential(_conductivity_derivative_gradPotential);
-      _conductivity_derivative_gradPotential *= dens_der[1];
+      _conductivity_derivative_gradPotential *= -sign * dens_der[1];
       break;
 
     default:
