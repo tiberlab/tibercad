@@ -234,25 +234,6 @@ DriftDiffusionProperties::prepare_submodels(void)
     //
     create_recombination_models();
 
-    //
-    // Thermoelectric power
-    //
-    /*
-    ModelOptions::submodel_iterator
-      it(get_options().submodels_begin("thermoelectric_power"));
-    ModelOptions::submodel_iterator
-      end(get_options().submodels_end("thermoelectric_power"));
-    if (it != end)
-    {
-      _thermoelectric_power =
-          ThermoelectricPower::create_model("default", get_material(), it->second);
-
-      if (_thermoelectric_power == NULL)
-        throw InitFailedException("Could not create thermoelectric power model");
-
-      add_submodel("thermoelectricpower", _thermoelectric_power);
-    }
-    */
   }
 
 
@@ -314,7 +295,10 @@ DriftDiffusionProperties::create_recombination_models(void)
     create_submodels(pd, "recombination");
 
     for (int i = 0; i < pd.size(); ++i)
-      _recombination_models.insert(make_pair(pd[i]->get_id(), pd[i]));
+    {
+
+        _recombination_models.insert(make_pair(pd[i]->get_id(), pd[i]));
+    }
 
   }
 }
@@ -337,6 +321,36 @@ DriftDiffusionProperties::do_init(void)
       _etraps.insert(t);
     else if (t->get_particle() == 'h')
       _htraps.insert(t);
+  }
+
+  auto rec = _recombination_models.begin();
+  for ( ; rec != _recombination_models.end(); )
+  {
+    auto cur = rec;
+    ++rec;
+
+    const vector<ID>& ids = cur->second->get_carrier_ids();
+
+      bool valid = true;
+      for ( auto&& id : ids)
+      {
+        valid &= (get_carrier_properties(id) != nullptr);
+        cerr << id << " ";
+      }
+      cerr << " # " << valid << endl;
+      if (!valid)
+      {
+        _recombination_models.erase(cur);
+        auto it = this->submodels_begin();
+        for ( ; it != this->submodels_end(); ++it)
+        {
+          if (it->second == cur->second)
+          {
+            this->delete_submodel(it);
+          }
+        }
+        destroy(cur->second);
+      }
   }
 
   _donor_reference_carrier = unknown_carrier_id;

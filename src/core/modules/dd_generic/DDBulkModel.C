@@ -108,8 +108,8 @@ DDBulkModel::prepare_submodels(void)
 
   DriftDiffusionProperties::prepare_submodels();
 
-  if (get_carrier_properties().size() == 0)
-    throw InitFailedException("At least one carrier MUST be provided");
+  //if (get_carrier_properties().size() == 0)
+  //  throw InitFailedException("At least one carrier MUST be provided");
 
   // permittivity Default
   {

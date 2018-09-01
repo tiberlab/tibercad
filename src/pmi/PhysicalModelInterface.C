@@ -569,6 +569,11 @@ PhysicalModelInterface::delete_submodel(const std::string& key)
 }
 
 
+void
+PhysicalModelInterface::delete_submodel(SubmodelIterator it)
+{
+  _submodels.erase(it);
+}
 
 //template <>
 void

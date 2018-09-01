@@ -268,8 +268,8 @@ QuantumDOS::calculate_density_and_derivative(std::vector<double>& result, double
 }
 
 void
-QuantumDOS::calculate_density_and_derivative(std::vector<double>& result, double Ef, double Epot,
-    double kT, double ) const
+QuantumDOS::calculate_density_and_derivative(std::vector<double>& result, 
+    double Ef, double Epot, double kT, double ) const
 {
   double dens = Ef = Epot = kT = 0;
   result.push_back(dens);

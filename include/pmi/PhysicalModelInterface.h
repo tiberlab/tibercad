@@ -449,6 +449,10 @@ class PhysicalModelInterface : public TiberModelObject
     void delete_submodel(const std::string& key);
 
 
+    //! Delete a submodel using the iterator
+    void delete_submodel(SubmodelIterator it);
+
+
     //! Get the iterator to the first submodel
     SubmodelIterator submodels_begin(void);
 
