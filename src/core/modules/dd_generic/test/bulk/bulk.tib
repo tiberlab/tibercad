@@ -1,0 +1,101 @@
+@define SIGMA 0.05
+@define COND  generalized
+@define ND    1e18
+
+Device
+{
+  meshfile = bulk.msh 
+  material = GaAs
+
+  Region bulk 
+  {
+    Doping
+    {
+     Nd = ND
+     type = donor
+     incomplete_ionization = false
+    }
+  }
+}
+
+
+Module dd_generic
+{ 
+
+  name = dd
+
+  plot = (QFermi, Density, RefEnergy, CurrentDensity,
+          Conductivity, Mobility, NetRecombination, ContactCurrents)
+
+  Solver
+  {
+    max_iterations = 30
+  }
+
+  Physics
+  {
+
+    carrier electron
+    {
+      density_of_states gauss
+      {
+        level = 1.57
+        sigma = SIGMA
+        N0 = 1e19
+        Ewidth = 0.1
+      }
+
+      #background_conductivity = 1e-6
+      conductivity_model = COND
+      mobility constant
+      {
+      }
+    }
+
+  }
+
+
+  Contact anode
+  {
+    type = ohmic
+    voltage = $Vb[0.0]
+  }
+
+  Contact cathode
+  {
+    type = ohmic
+    voltage = 0.0
+  }
+
+  
+}
+
+
+Module sweep
+{
+  variable = $Vb
+  solve = dd
+
+  start = 0.0
+  stop = 1.0  
+  steps = 10
+
+  plot_data = each  # to write data for each step
+}
+
+
+
+Simulation
+{
+  verbose = 2
+
+  solve = sweep
+
+  resultpath = "output_"ND"_"SIGMA"_"COND
+
+}
+
+
+
+
+
