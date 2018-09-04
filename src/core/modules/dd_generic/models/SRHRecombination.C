@@ -290,6 +290,8 @@ SRHRecombination::calculate_rate_and_derivatives(std::vector<double>& R, std::ve
 
   double Et = get_trap_level();
 
+  double dens = _density;
+
   //double E01 = dd.get_carrier_properties(id1)->get_band_edge();
   //double E02 = dd.get_carrier_properties(id2)->get_band_edge();
 
@@ -298,6 +300,17 @@ SRHRecombination::calculate_rate_and_derivatives(std::vector<double>& R, std::ve
 
   double tau_n = _tau_n;
   double tau_p = _tau_p;
+  if (_trap)
+  {
+    dens = max(dens, 1e-32);
+    tau_n = 1.0 / (dens * _sigma_n * dd.get_carrier_properties(id1)->get_thermal_velocity(kT));
+    tau_p = 1.0 / (dens * _sigma_p * dd.get_carrier_properties(id1)->get_thermal_velocity(kT));
+  }
+  else
+  {
+    tau_n *= std::pow(kT / T0, _Talpha_e) * std::exp(_Tcoeff_e * (kT / T0 - 1));
+    tau_p *= std::pow(kT / T0, _Talpha_h) * std::exp(_Tcoeff_h * (kT / T0 - 1));
+  }
 
   double kT_e = kT;
   double kT_h = kT;
