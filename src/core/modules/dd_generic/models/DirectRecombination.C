@@ -97,21 +97,33 @@ DirectRecombination::calculate_rate_and_derivatives(std::vector<double>& R, std:
     //double E01 = dd.get_carrier_properties(id1)->get_band_edge();
     //double E02 = dd.get_carrier_properties(id2)->get_band_edge();
 
-    double exponential = exp((Ef2 - Ef1) * beta);
-    double stat_fac = 1.0 - exponential;
-    double g = C_ * n1 * n2;
+    long double arg = (Ef2 - Ef1) * beta;
+    long double exponential = 0;
+    long double stat_fac = 1.0;
+    if (fabs(arg) < 1e-3)
+    {
+      exponential = 1 + arg;
+      stat_fac = -arg;
+    }
+    else
+    {
+      exponential = exp(arg);
+      stat_fac = 1.0 - exponential;
+    }
+
+    long double g = C_ * n1 * n2;
 
     R[id1] = g * stat_fac;
     R[id2] = g * stat_fac;
     //cerr << "n1 = " << n1 << " n2 = " << n2 << " -> " << R[id1] << endl;
 
-    double dR0 = stat_fac * C_ * (n2 * dn1 + n1 * dn2);
-    double dR1 = -C_ * n2 * (dn1 * stat_fac + beta * n1 * exponential);
-    double dR2 = -C_ * n1 * (dn2 * stat_fac - beta * n2 * exponential);
+    long double dR0 = stat_fac * C_ * (n2 * dn1 + n1 * dn2);
+    long double dR1 = -C_ * n2 * (dn1 * stat_fac + beta * n1 * exponential);
+    long double dR2 = -C_ * n1 * (dn2 * stat_fac - beta * n2 * exponential);
 
     dPotentials[id1][id1] = dR1;
-    dPotentials[id1][id2] = dR2;
-    dPotentials[id2][id1] = dR1;
+    //dPotentials[id1][id2] = dR2;
+    //dPotentials[id2][id1] = dR1;
     dPotentials[id2][id2] = dR2;
     dPotentials[id1][dd.n_known_carriers()] = dR0;
     dPotentials[id2][dd.n_known_carriers()] = dR0;
@@ -146,11 +158,34 @@ DirectRecombination::calculate_rate_and_derivatives(std::vector<double>& R, std:
     double beta = (ct1 == 'e') ? 1.0/kT : -1.0/kT;
 
     double thermal = exp(-fabs(E2 - E1) / kT);
-    double exponential1 = exp((Ef2 - Ef1) * beta);
-    double exponential2 = exp((Ef1 - Ef2) * beta);
-    double stat1 = 1.0 - exponential1;
-    double stat2 = 1.0 - exponential2;
+    double arg1 = (Ef2 - Ef1) * beta;
+    double arg2 = -arg1;
 
+    double exponential1 = 0;
+    double stat1 = 1.0;
+    if (fabs(arg1) > 1e-3)
+    {
+      exponential1 = exp(arg1);
+      stat1 = 1.0 - exponential1;
+    }
+    else
+    {
+      exponential1 = 1 + arg1;
+      stat1 = -arg1;
+    }
+
+    double exponential2 = 0;
+    double stat2 = 1.0;
+    if (fabs(arg2) > 1e-3)
+    {
+      exponential2 = exp(arg2);
+      stat2 = 1.0 - exponential2;
+    }
+    else
+    {
+      exponential2 = 1 + arg2;
+      stat2 = -arg2;
+    }
     double n1f = n1 / N1;
     double n2f = n2 / N2;
 
@@ -167,6 +202,7 @@ DirectRecombination::calculate_rate_and_derivatives(std::vector<double>& R, std:
         - C2 * n2 * ( dn1/N1 * stat2 + beta * (1 - n1f) * exponential2);
     double dR2 = -C1 * n1 * (-dn2/N2 * stat1 - beta * (1 - n2f) * exponential1)
         + C2 * (1 - n1f) * (dn2 * stat2 + beta * n2 * exponential2);
+    //cerr << R[id1] << " : " << dR0 <<  " " << dR1 << " " << dR2 << endl;
 
     dPotentials[id1][id1] =  dR1;
     dPotentials[id1][id2] =  dR2;
