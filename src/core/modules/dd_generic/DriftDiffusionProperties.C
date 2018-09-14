@@ -335,9 +335,8 @@ DriftDiffusionProperties::do_init(void)
       for ( auto&& id : ids)
       {
         valid &= (get_carrier_properties(id) != nullptr);
-        cerr << id << " ";
       }
-      cerr << " # " << valid << endl;
+
       if (!valid)
       {
         _recombination_models.erase(cur);
