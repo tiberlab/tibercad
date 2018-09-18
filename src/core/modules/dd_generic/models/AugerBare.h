@@ -10,7 +10,8 @@
 //! Implementation of bare Auger process
 /*!
  * This class implements the bare Auger recombination processes
- * involving three particles
+ * involving three particles, e.g.
+ * \[2n + p \rightleftarrow n^*\]
  */
 class TBDLLOCAL AugerBare : public RecombinationModelInterface
 {

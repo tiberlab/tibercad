@@ -55,6 +55,7 @@ AugerBare::do_init(void)
         "three recombining carriers");
 
   get_parameter("rate_constant", _rate_constant);
+  std::cerr << _rate_constant << std::endl;
 }
 
 
@@ -78,44 +79,56 @@ AugerBare::calculate_rate_and_derivatives(std::vector<double>& R,
   double p  = dd.get_q_density(id2);
   double dn  = dd.get_q_density_derivative(id1);
   double dp  = dd.get_q_density_derivative(id2);
-  double qn = dd.get_carrier_properties(id1)->get_charge();
-  double qp = dd.get_carrier_properties(id2)->get_charge();
+  //double qn = dd.get_carrier_properties(id1)->get_charge();
+  //double qp = dd.get_carrier_properties(id2)->get_charge();
+  double qf = dd.get_carrier_properties(id3)->get_charge();
 
-  double Ecf = dd.get_carrier_properties(id3)->get_band_edge();
-  auto   ff = Distributions::fermi_dirac(Efnf - Ecf, kT);
+  double sign = 1;
 
-  double exponential = exp((Efp - 2*Efn + Efnf) / kT);
+  double Ecf = dd.get_carrier_properties(id3)->get_band_edge() -
+      fabs(qf)*dd.get_electric_potential();
+  double arg = Efnf - Ecf;
+  if (qf > 0)
+  {
+    arg = -arg;
+    sign = -1;
+  }
+
+  auto   ff = Distributions::fermi_dirac(arg, kT);
+  ff.second *= sign;
+
+  double exponential = exp(sign*(Efp - 2*Efn + Efnf) / kT);
   double stat_fac = 1.0 - exponential;
 
   double g = _rate_constant * n * n * p * (1 - ff.first);
 
   double rec = g * stat_fac;
 
-  R[id1] =  rec;
+  R[id1] =  2*rec;
   R[id2] =  rec;
   R[id3] = -rec;
 
   // w.r.t. quasi Fermi levels
   double dR1 = _rate_constant * 2 * n * dn * p * (1 - ff.first) * stat_fac
-      + 2 / kT * g * exponential;
+      + 2 / kT * g * exponential*sign;
   double dR2 = _rate_constant * n * n * dp * (1 - ff.first) * stat_fac
-      - g / kT * exponential;
+      - g / kT * exponential*sign;
   double dR3 = _rate_constant * n * n * p * ff.second * stat_fac
-      - g / kT * exponential;
+      - g / kT * exponential*sign;
 
   double dR0 = _rate_constant * stat_fac * (n * (2 * dn * p + n * dp) * (1 - ff.first)
       - n * n * p * ff.second);
 
-  dPotentials[id1][id1] = -dR1;
-  dPotentials[id1][id2] = -dR2;
-  dPotentials[id1][id3] = -dR3;
+  dPotentials[id1][id1] = -2*dR1;
+  dPotentials[id1][id2] = -2*dR2;
+  dPotentials[id1][id3] = -2*dR3;
   dPotentials[id2][id1] = -dR1;
   dPotentials[id2][id2] = -dR2;
   dPotentials[id2][id3] = -dR3;
   dPotentials[id3][id1] = dR1;
   dPotentials[id3][id2] = dR2;
   dPotentials[id3][id3] = dR3;
-  dPotentials[id1][dd.n_known_carriers()] = dR0;
+  dPotentials[id1][dd.n_known_carriers()] = 2*dR0;
   dPotentials[id2][dd.n_known_carriers()] = dR0;
   dPotentials[id3][dd.n_known_carriers()] = -dR0;
 }
