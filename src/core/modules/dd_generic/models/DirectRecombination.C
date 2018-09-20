@@ -122,8 +122,8 @@ DirectRecombination::calculate_rate_and_derivatives(std::vector<double>& R, std:
     long double dR2 = -C_ * n1 * (dn2 * stat_fac - beta * n2 * exponential);
 
     dPotentials[id1][id1] = dR1;
-    //dPotentials[id1][id2] = dR2;
-    //dPotentials[id2][id1] = dR1;
+    dPotentials[id1][id2] = dR2;
+    dPotentials[id2][id1] = dR1;
     dPotentials[id2][id2] = dR2;
     dPotentials[id1][dd.n_known_carriers()] = dR0;
     dPotentials[id2][dd.n_known_carriers()] = dR0;
