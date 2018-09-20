@@ -137,8 +137,11 @@ DriftDiffusion::DriftDiffusion(const ModelOptions& options)
 
 
   // detect all recombination models in order to define specific plot variables
-  auto itr (physopts.submodels_begin("recombination"));
-  auto end_itr (physopts.submodels_end("recombination"));
+  for (auto&& block : set<string>({"recombination", "trap", "generation"}))
+  {
+
+  auto itr (physopts.submodels_begin(block));
+  auto end_itr (physopts.submodels_end(block));
 
   for ( ; itr != end_itr; ++itr)
   {
@@ -163,6 +166,7 @@ DriftDiffusion::DriftDiffusion(const ModelOptions& options)
       }
     }
   } //end rec models
+  }
 
 }
 
@@ -587,7 +591,9 @@ DriftDiffusion::do_solve(void)
       vector<dof_id_type> scalars;
       dof_map.SCALAR_dof_indices(scalars, cons.first);
       os.str("");
-      os << "electrochemical potential: " << (system.get_solution_vector())(scalars[0]);
+      const double phi0 = get_scaling().get_potential_scaling();
+      os << "mean electrochemical potential: " <<
+          phi0 * (system.get_solution_vector())(scalars[0]);
       m.info(os.str());
     }
     m.newline();
@@ -2267,9 +2273,13 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     {
       for (auto&& var : cons.second.carrier_vars)
       {
-        qf[var] += solution(dof_indices_cons[cons.first][0]);
-        oldqf[var] += oldsolution(dof_indices_cons[cons.first][0]);
-      }
+        // only if the carrier is present in the element
+        if (q_var.count(var))
+        {
+          qf[var] += solution(dof_indices_cons[cons.first][0]);
+          oldqf[var] += oldsolution(dof_indices_cons[cons.first][0]);
+
+
     }
 
     for (auto& v : q_var)
@@ -4805,8 +4815,12 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
       {
         for (auto&& var : cons.second.carrier_vars)
         {
-          u[var] += Xv.at(cons.first)(0);
-          oldu[var] += oldXv.at(cons.first)(0);
+          // we need this only if the carrier exists in this element
+          if (q_var.count(var))
+          {
+            u[var] += Xv.at(cons.first)(0);
+            oldu[var] += oldXv.at(cons.first)(0);
+          }
         }
       }
 
@@ -4952,17 +4966,21 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
         {
           for (auto&& vari : var.second.carrier_vars)
           {
-            double ddens = sc->get_q_density_derivative(vari);
-            // diagonal part
-            Kvv[var.first].at(var.first)(0,0) += J * ddens * phi0 / C0;
-
-            for (unsigned int j = 0; j < n_dofs; j++)
+            // we need this only if the carrier exists in this element!
+            if (q_var.count(vari))
             {
-              if (coupling & POISSON)
-                Kvv[var.first].at(u_var)(0,j) -= J * ddens * phi[j][qp] * phi0 / C0;
+              double ddens = sc->get_q_density_derivative(vari);
+              // diagonal part
+              Kvv[var.first].at(var.first)(0,0) += J * ddens * phi0 / C0;
 
-              if (coupling & CURRENTS)
-                Kvv[var.first].at(vari)(0,j) += J * ddens * phi[j][qp] * phi0 / C0;
+              for (unsigned int j = 0; j < n_dofs; j++)
+              {
+                if (coupling & POISSON)
+                  Kvv[var.first].at(u_var)(0,j) -= J * ddens * phi[j][qp] * phi0 / C0;
+
+                if (coupling & CURRENTS)
+                  Kvv[var.first].at(vari)(0,j) += J * ddens * phi[j][qp] * phi0 / C0;
+              }
             }
           }
         }
@@ -4987,7 +5005,9 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
           drho[var.first] = 0.0;
           for (auto&& vari : var.second.carrier_vars)
           {
-            drho[var.first] += sc->get_charge_density_derivative(vari) * phi0 / C0;
+            // we need this only if the carrier exists in this element!
+            if (q_var.count(vari))
+              drho[var.first] += sc->get_charge_density_derivative(vari) * phi0 / C0;
           }
         }
 
@@ -5133,16 +5153,20 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
             {
               for (auto&& varj : var.second.carrier_vars)
               {
-                for (auto&& vari : q_var)
+                // we need this only if the carrier exists in this element!
+                if (q_var.count(varj))
                 {
-                  if (vari != u_var)
+                  for (auto&& vari : q_var)
                   {
-                    double sign = sc->get_carrier_properties(vari)->get_charge_sign();
-                    Kvv[vari].at(var.first)(i,0) +=
-                        J * sign * dR[vari][varj] * phi[i][qp] / scalev.at(vari)(i);
+                    if (vari != u_var)
+                    {
+                      double sign = sc->get_carrier_properties(vari)->get_charge_sign();
+                      Kvv[vari].at(var.first)(i,0) +=
+                          J * sign * dR[vari][varj] * phi[i][qp] / scalev.at(vari)(i);
+                    }
                   }
+                  //Kvv.at(varj).at(var.first)(i,0) -= dsigma_x_lap[varj];
                 }
-                //Kvv.at(varj).at(var.first)(i,0) -= dsigma_x_lap[varj];
               }
             }
           }
@@ -5218,9 +5242,13 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
         {
           for (auto&& vari : var.second.carrier_vars)
           {
-            double dens = sc->get_q_density(vari);
+            // we need this only if the carrier exists in this element!
+            if (q_var.count(vari))
+            {
+              double dens = sc->get_q_density(vari);
 
-            Fv.at(var.first)(0) -= J * dens / C0;
+              Fv.at(var.first)(0) -= J * dens / C0;
+            }
           }
         }
 

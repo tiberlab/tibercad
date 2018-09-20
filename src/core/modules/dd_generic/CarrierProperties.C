@@ -25,7 +25,7 @@ CarrierProperties::CarrierProperties(const ModelOptions& options) :
     _charge(-1),
     _spin(0.5),
     _is_dopant(false),
-    _background_conductivity(1e-12),
+    _background_conductivity(0.0),
     _conductivity_model(STD),
     _conductivity(0.0),
     _conductivity_derivative_qFermi(0.0),
