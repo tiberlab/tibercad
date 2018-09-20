@@ -1182,6 +1182,16 @@ DriftDiffusion::guess_equilibrium(void)
     this->get_communicator().sum(node_conn);
   }
 
+  // for conserved particles, we put a chemical potential based on the
+  // prescribed density and the volume
+//  for (auto&& scalar : _conservation)
+//  {
+//    unsigned int dof = scalar.first;
+//    dof_map.dof_indices(elem, dof_indices_var[dof], dof);
+//    dof_indices.insert(dof_indices.end(),
+//        dof_indices_var[dof].begin(), dof_indices_var[dof].end());
+//  }
+
   for ( ; el != end_el ; ++el)
   {
     const Elem* elem = *el;
@@ -2278,8 +2288,8 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
         {
           qf[var] += solution(dof_indices_cons[cons.first][0]);
           oldqf[var] += oldsolution(dof_indices_cons[cons.first][0]);
-
-
+        }
+      }
     }
 
     for (auto& v : q_var)
@@ -4202,11 +4212,7 @@ DriftDiffusion::build_local_scaling(void)
 
             if (sm->get_type(u_var) == DDInterfaceModel::DIRICHLET)
               dirichlet_dofs.insert(dof_indices_u[i]);
-              //scaleu(i) *= _penalty_value;
 
-            //if (sm->get_type(1) == DDInterfaceModel::DIRICHLET)
-              //dirichlet_dofs.insert(dof_indices_en[i]);
-                //scalen(i) *= _penalty_value;
           }
         }
 
@@ -5088,7 +5094,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                   double sign = sc->get_carrier_properties(var)->get_charge_sign();
                   // contribution of the Seebeck effect ->residual_derivative
                   double dsigma_e_x_phi_x_P = sign * dsigma[var] * phi[j][qp] * tep[var];
-
+        /*
                   for (unsigned int k = 0; k < n_dofs; k++)
                   {
                     double laplace = dphi[i][qp] * dphi[k][qp];
@@ -5102,6 +5108,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                       Kvv.at(var).at(u_var)(i,j) += elem_contrib;
 
                   }
+         */
                 }
               }
             }
@@ -5219,6 +5226,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
               {
                 Fv.at(var)(i) += sign * net_recomb;
 
+                /*
                 double sigma_x_P_x_J = J * sign * sigma[var] * tep[var] / scalev.at(var)(i);
                 if (sigma_x_P_x_J != 0)
                 {
@@ -5230,6 +5238,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                     Fv.at(var)(i) += sigma_x_P_x_J * laplace * T_nodes[k];
                   }
                 }
+                */
               }
               else
                 Fv.at(var)(i) -= Xv.at(var)(i);
@@ -5774,11 +5783,11 @@ DriftDiffusion::write_nodal_vector(const string& filename, const libMesh::Numeri
 
   const unsigned int nn  = mesh.n_nodes();
 
-  vector<double> results(3 * nn);
+  vector<double> results(3 * nn, 0.0);
 
   const unsigned int u_var = system->variable_number("potential");
-  unsigned int en_var = system->variable_number("fermi_e");
-  unsigned int ep_var = system->variable_number("fermi_h");
+  unsigned int en_var = system->variable_number("el_qw");
+  unsigned int ep_var = system->variable_number("hl_qw");
 
   vector<unsigned int> dof_indices_u;
   vector<unsigned int> dof_indices_en;
@@ -5804,8 +5813,10 @@ DriftDiffusion::write_nodal_vector(const string& filename, const libMesh::Numeri
     {
       unsigned int id = 3 * elem->node(n);
       results[id] = vec(dof_indices_u[n]);
-      results[id + 1] = vec(dof_indices_en[n]);
-      results[id + 2] = vec(dof_indices_ep[n]);
+      if (dof_indices_en.size() > 0)
+        results[id + 1] = vec(dof_indices_en[n]);
+      if (dof_indices_ep.size() > 0)
+        results[id + 2] = vec(dof_indices_ep[n]);
     }
 
   }
