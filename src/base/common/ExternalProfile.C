@@ -78,7 +78,7 @@ ExternalProfile::get_data(const Elem* elem, const Point& p) const
   vector<double> tmp(1);
   _data_source.first->get_solution(elem, _data_source.second, tmp, vector<Point>(1, p));
 
-  return(tmp[1]);
+  return(tmp[0]);
 }
 
 std::pair<double, double>
