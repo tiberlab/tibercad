@@ -770,6 +770,7 @@ SimulationInterface::init(void)
     _use_cache = get_option("use_data_cache", _use_cache);
 
     _verbosity = get_option("verbose", _verbosity);
+    _verbosity = get_option("verbosity", _verbosity);
     do_init();
 
   }

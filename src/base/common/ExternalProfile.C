@@ -14,6 +14,7 @@ using namespace std;
 ExternalProfile::ExternalProfile(const ModelOptions& options) :
   TiberModelObject(options)
 {
+
 }
 
 
@@ -21,6 +22,14 @@ ExternalProfile::~ExternalProfile(void)
 {
 }
 
+void
+ExternalProfile::setup(void)
+{
+  string src = get_option("data_source", "");
+  _data_source = SimulationInterface::find_solution_provider(src);
+  if (_data_source.second == INVALID_ID)
+    throw InitFailedException("'" + src + "' is invalid data source for external profile");
+}
 
 ExternalProfile*
 ExternalProfile::create(const ModelOptions& options)
@@ -39,6 +48,11 @@ ExternalProfile::create(const ModelOptions& options)
     pr = new GaussianProfile(options);
   else if (options.get_name() == "composite")
     pr = new CompositeProfile(options);
+  else
+  {
+    pr = new ExternalProfile(options);
+    pr->setup();
+  }
 
   return pr;
 }
@@ -55,4 +69,20 @@ ExternalProfile::get_data(const Elem* elem) const
 
 
   return(conc / n_nodes);
+}
+
+double
+ExternalProfile::get_data(const Elem* elem, const Point& p) const
+{
+  // here we arrive only if data source is valid
+  vector<double> tmp(1);
+  _data_source.first->get_solution(elem, _data_source.second, tmp, vector<Point>(1, p));
+
+  return(tmp[1]);
+}
+
+std::pair<double, double>
+ExternalProfile::get_min_max(void) const
+{
+  return(make_pair(numeric_limits<double>::min(), numeric_limits<double>::max()));
 }

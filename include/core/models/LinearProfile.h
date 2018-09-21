@@ -22,9 +22,9 @@ class LinearProfile : public ExternalProfile
     //! Destructor
     virtual ~LinearProfile(void);
 
-    virtual double get_data(const libMesh::Elem* elem, const libMesh::Point& p) const;
+    virtual double get_data(const libMesh::Elem* elem, const libMesh::Point& p) const override;
 
-    virtual std::pair<double, double> get_min_max(void) const;
+    virtual std::pair<double, double> get_min_max(void) const override;
 
   private:
 

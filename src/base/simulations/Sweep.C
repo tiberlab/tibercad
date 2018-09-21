@@ -291,7 +291,8 @@ Sweep::write_global_data(SimulationInterface& simulation, ofstream*& plotfile)
         print_header = true;
 
         ifstream inp;
-        if (mode == "no-overwrite")
+        if ((mode == "no-overwrite") ||
+            (mode == "no_overwrite"))
         {
           int ctr = 1;
           inp.open(plotfilename.c_str(), ios::in);

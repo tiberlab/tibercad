@@ -1488,7 +1488,11 @@ DriftDiffusion::RSTFSys::create(DriftDiffusion* dd)
 
   libMesh::EquationSystems& es = dd->get_equation_systems();
   DriftDiffusion::RSTFSys* sys = NULL;
-  sys = &(es.add_system<RSTFSys>("__DD_rstf"));
+
+  ostringstream name;
+  name << "__DD_rstf" << dd->get_id();
+
+  sys = &(es.add_system<RSTFSys>(name.str()));
   if (sys == NULL)
     throw InitFailedException("Fatal error in DriftDiffusion. "
         "Cannot create RSTF system");
@@ -1681,7 +1685,7 @@ DriftDiffusion::RSTFSys::plot(void)
   vector<string> solname;
 
   build_nodal_results(sol, solname);
-  data_output.write_nodal_data("__DD_rstf", sol, solname);
+  data_output.write_nodal_data(this->name(), sol, solname);
 
 }
 

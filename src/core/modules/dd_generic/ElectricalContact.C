@@ -21,14 +21,15 @@ void
 ElectricalContact::do_init(void)
 {
   DDInterfaceModel::do_init();
-  double vrec = -1.0;
   _vrec.resize(n_known_carriers(), 0);
   _fixed_vrec.resize(n_known_carriers(), 0);
 
   if (get_option("zero_field", false))
     set_type(n_known_carriers(), NEUMANN);
 
+  double vrec = -1.0;
   get_parameter("rec_velocity", vrec);
+  get_parameter("recombination_velocity", vrec);
 
   for (unsigned int i=0; i < n_known_carriers(); i++)
   {

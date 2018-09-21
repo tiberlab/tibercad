@@ -20,11 +20,11 @@ class UniformRandomAlloy : public ExternalProfile
     //! Destructor
     virtual ~UniformRandomAlloy(void);
 
-    virtual double get_data(const Elem* elem) const;
+    virtual double get_data(const Elem* elem) const override;
 
-    virtual double get_data(const Elem* elem, const Point& p) const;
+    virtual double get_data(const Elem* elem, const Point& p) const override;
 
-    virtual std::pair<double, double> get_min_max(void) const;
+    virtual std::pair<double, double> get_min_max(void) const override;
 
   private:
 

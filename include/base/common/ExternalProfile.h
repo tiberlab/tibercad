@@ -3,6 +3,8 @@
 #ifndef _EXTERNALPROFILE_H_
 #define _EXTERNALPROFILE_H_
 
+#include "SimulationInterface.h"
+
 #include "TiberModelObject.h"
 #include "libMeshDefs.h"
 
@@ -25,16 +27,25 @@ class ExternalProfile : protected TiberModelObject
     virtual double get_data(const Elem* elem) const;
 
     //! Get the data at a coordinate
-    virtual double get_data(const Elem* elem, const Point& p) const = 0;
+    virtual double get_data(const Elem* elem, const Point& p) const;
 
     //! Get extremal values
-    virtual std::pair<double, double> get_min_max(void) const = 0;
+    virtual std::pair<double, double> get_min_max(void) const;
 
 
   protected:
 
     //! Constructor
     ExternalProfile(const ModelOptions& options);
+
+
+  private:
+
+    //! Setup, called only if now derived class is instantiated
+    void setup(void);
+
+    //! The data provider
+    SimulationInterface::SolutionProvider _data_source;
 
 };
 

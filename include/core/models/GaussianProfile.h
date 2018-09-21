@@ -22,9 +22,9 @@ class GaussianProfile : public ExternalProfile
     //! Destructor
     virtual ~GaussianProfile(void);
 
-    virtual double get_data(const Elem* elem, const Point& p) const;
+    virtual double get_data(const Elem* elem, const Point& p) const override;
 
-    virtual std::pair<double, double> get_min_max(void) const;
+    virtual std::pair<double, double> get_min_max(void) const override;
 
   private:
 
