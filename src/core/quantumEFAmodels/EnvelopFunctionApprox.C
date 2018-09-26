@@ -1746,8 +1746,8 @@ bool EnvelopFunctionApprox::read_SLEPC_solution(void)
     if (ev[i].particle == "hl")
       index = i;
 
-    if (((ev[i].particle == "hl") && (index >= first_el_index)) ||
-        ((ev[i].particle == "el") && (index < first_el_index)) ||
+    if (((ev[i].particle == "hl") && (index >= opt.num_hl_states)) ||
+        ((ev[i].particle == "el") && (index < opt.num_hl_states)) ||
         ((index < 0) || (index >= n_states)))
         continue;
 
@@ -1880,7 +1880,7 @@ bool EnvelopFunctionApprox::read_SLEPC_solution(void)
 
       while ((ind >= 0) && (ind < n_states))
       {
-        //if (_solution[ind].eigen_vector.size() == 0) break;
+        if (_solution[ind].eigen_vector.size() == 0) break;
         if ((_solution[index].eigen_energy < (_solution[ind].eigen_energy - delta)) ||
             (_solution[index].eigen_energy > (_solution[ind].eigen_energy + delta)))
           break;
