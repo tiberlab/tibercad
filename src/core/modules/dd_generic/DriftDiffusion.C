@@ -2330,7 +2330,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
       double q = sc->get_carrier_properties(v)->get_charge();
       double sign = sc->get_carrier_properties(v)->get_charge_sign();
       double sigma = sc->get_q_conductivity(v);
-      thel_pow[v] = sc->get_carrier_properties(v)->get_thermoelectric_power();
+      thel_pow[v] = 0.0; //sc->get_carrier_properties(v)->get_thermoelectric_power();
       RealGradient flux_loc = -sigma * (sign * grad_qf_loc[v] + thel_pow[v] * grad_T_loc);
       flux[v] += flux_loc;
       curr[v] += Constants::e * q  * flux_loc;
@@ -4873,7 +4873,8 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
           R.insert( make_pair(var, sc->get_net_q_recombination_rate(var)) );
           //mu.insert( make_pair(var, sc->get_q_mobility(var)) );
           sigma.insert( make_pair(var, cp->get_conductivity() / (mu0 * C0_q)) );
-          tep.insert( make_pair(var, cp->get_thermoelectric_power() / phi0) );
+          //tep.insert( make_pair(var, cp->get_thermoelectric_power() / phi0) );
+          tep.insert( make_pair(var, 0.0) );
         }
       }
       //double Nd = sc->get_ionized_donor_density();
@@ -4949,15 +4950,15 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
       //
       if (jacobian != NULL)
       {
-        map<unsigned int, long double> ddens_dphi;
+        //map<unsigned int, long double> ddens_dphi;
         map<unsigned int, map<unsigned int, long double>> dR;
 
         for (auto&& vari : q_var)
         {
           if (vari != u_var)
           {
-            long double ddens_dphi_tmp = sc->get_q_density_derivative(vari);
-            ddens_dphi[vari] = ddens_dphi_tmp;
+            //long double ddens_dphi_tmp = sc->get_q_density_derivative(vari);
+            //ddens_dphi[vari] = ddens_dphi_tmp;
 
             for (auto&& varj : q_var)
             {
@@ -5722,7 +5723,19 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
     {
       vector<dof_id_type> scalars;
       dof_map.SCALAR_dof_indices(scalars, var.first);
-      residual->add(scalars[0], var.second.conserved_number / (x0 * C0));
+      double scale = x0 * C0;
+      switch (dim)
+      {
+        case 3:
+          scale *= x0;
+
+        case 2:
+          scale *= x0;
+
+        default:
+          break;
+      }
+      residual->add(scalars[0], var.second.conserved_number / scale);
     }
 
     residual->close();
