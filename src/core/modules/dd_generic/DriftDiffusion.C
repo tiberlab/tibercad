@@ -5719,23 +5719,28 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
   }
   else
   {
-    for (auto&& var : _conservation)
+    // the following is done only on node 0, otherwise we would
+    // add up the constant term many times
+    if (this->get_communicator().rank() == 0)
     {
-      vector<dof_id_type> scalars;
-      dof_map.SCALAR_dof_indices(scalars, var.first);
-      double scale = x0 * C0;
-      switch (dim)
+      for (auto&& var : _conservation)
       {
-        case 3:
-          scale *= x0;
+        vector<dof_id_type> scalars;
+        dof_map.SCALAR_dof_indices(scalars, var.first);
+        double scale = x0 * C0;
+        switch (dim)
+        {
+          case 3:
+            scale *= x0;
 
-        case 2:
-          scale *= x0;
+          case 2:
+            scale *= x0;
 
-        default:
-          break;
+          default:
+            break;
+        }
+        residual->add(scalars[0], var.second.conserved_number / scale);
       }
-      residual->add(scalars[0], var.second.conserved_number / scale);
     }
 
     residual->close();
