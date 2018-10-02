@@ -55,7 +55,6 @@ AugerBare::do_init(void)
         "three recombining carriers");
 
   get_parameter("rate_constant", _rate_constant);
-  std::cerr << _rate_constant << std::endl;
 }
 
 
