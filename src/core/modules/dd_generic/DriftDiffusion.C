@@ -4783,9 +4783,10 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                                      n_var*n_dofs + c_var, n_dofs, 1);
         n_varj++;
       }
+
       Kvv[var].insert(make_pair(var, DenseSubMatrix<Real>(Ke)));
       Kvv[var].at(var).reposition(n_var*n_dofs + c_var,
-                                  n_varj*n_dofs, 1, 1);
+                                  n_var*n_dofs + c_var, 1, 1);
       c_var++;
 
     }
