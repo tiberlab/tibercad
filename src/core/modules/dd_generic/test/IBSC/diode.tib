@@ -75,7 +75,6 @@ Module dd_generic
         N0 = ND
       }
 
-      background_conductivity = 1e-9
       conductivity_model = COND
       mobility constant
       {
@@ -133,7 +132,7 @@ Module dd_generic
       regions = bulk
       plot_name = gen_vc
       carriers = (hole, electron)
-      generation = 0.4e23
+      generation = 0.2e23
       multiplier = $x[0]
     }
 
