@@ -42,15 +42,19 @@ Band2Band::get_net_recombination_rates(double& recomb_e,
 {
   const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
 
+  double Efn  = -dd.get_electron_electro_chemical_potential();
+  double Efp  = -dd.get_hole_electro_chemical_potential();
   double n  = dd.get_electron_density();
   double p  = dd.get_hole_density();
   double ni = dd.get_intrinsic_density();
-  double gn = dd.get_electron_gamma();
-  double gp = dd.get_hole_gamma();
   double E = dd.get_electric_field().norm() + 1e-3;
+  double T = dd.get_lattice_temperature();
 
-  double D = (n * p - ni * ni * gn * gp) / ((p + ni) * (n + ni));
-  recomb_e = recomb_h = _B_param * D * pow(E, _sigma) * exp(-_E0 / E);
+  double expf = exp((Efp - Efn) / T);
+  double c = 1.0 - expf;
+
+  double D = n * p / ((p + ni) * (n + ni));
+  recomb_e = recomb_h = _B_param * c * D * pow(E, _sigma) * exp(-_E0 / E);
 }
 
 
@@ -61,18 +65,27 @@ Band2Band::get_net_recombination_rate_derivatives(
 {
   const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
 
+  double Efn  = -dd.get_electron_electro_chemical_potential();
+  double Efp  = -dd.get_hole_electro_chemical_potential();
   double n  = dd.get_electron_density();
   double p  = dd.get_hole_density();
   double ni = dd.get_intrinsic_density();
-  double gn = dd.get_electron_gamma();
-  double gp = dd.get_hole_gamma();
   double E = dd.get_electric_field().norm() + 1e-3;
+  double T = dd.get_lattice_temperature();
 
-  double D = (n * p - ni * ni * gn * gp) / ((p + ni) * (n + ni));
-  double recomb = _B_param * pow(E, _sigma) * exp(-_E0 / E);
+  double expf = exp((Efp - Efn) / T);
+  double c = 1.0 - expf;
 
-  recomb_e[0] = recomb_h[0] = recomb * ni / ((n + ni) * (n + ni)); // dR/dn
-  recomb_e[1] = recomb_h[1] = recomb * ni / ((p + ni) * (p + ni)); // dR/dp
+  double D = n * p / ((p + ni) * (n + ni));
+  double factor = _B_param * pow(E, _sigma) * exp(-_E0 / E);
+  double recomb = c * D * factor;
+
+  double tmp = p / ((p + ni) * (n + ni)) - D / (n + ni);
+  recomb_e[0] = recomb_h[0] = tmp * c * factor; // dR/dn
+  tmp = n / ((p + ni) * (n + ni)) - D / (p + ni);
+  recomb_e[1] = recomb_h[1] = tmp * c * factor; // dR/dp
+  recomb_e[2] = recomb_h[2] = -D * factor / T * expf;
+  recomb_e[3] = recomb_h[3] = D * factor / T * expf;
 }
 
 
