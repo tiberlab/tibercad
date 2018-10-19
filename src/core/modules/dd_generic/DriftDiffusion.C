@@ -466,6 +466,83 @@ DriftDiffusion::cleanup_solver(void)
 
 
 
+void
+DriftDiffusion::calculate_conserved_carriers(void)
+{
+  if (!_conservation.empty())
+  {
+    for (auto&& cons : _conservation)
+    {
+      if (cons.second.initial_density > 0)
+        cons.second.conserved_number = 0.0;
+    }
+
+
+
+    MeshBase::const_element_iterator el =
+        this->active_local_elements_begin();
+    const MeshBase::const_element_iterator end_el =
+        this->active_local_elements_end();
+
+    for ( ; el != end_el; ++el)
+    {
+      DDBulkModel* sc = get_bulk_model<DDBulkModel>(*el);
+
+      // Get variables for fermi potentials
+      set<ID> q_var;
+
+      // we will loop only over carriers that are present in this element
+      for (auto&& cp : sc->get_carrier_properties())
+        q_var.insert(cp.first);
+
+
+      for (auto&& cons : _conservation)
+      {
+        bool is_present = false;
+        for (auto&& var : q_var)
+        {
+          if (find(cons.second.carrier_vars.begin(),
+              cons.second.carrier_vars.end(), var) !=
+                  cons.second.carrier_vars.end())
+          {
+            is_present = true;
+            break;
+          }
+        }
+
+        if (is_present)
+        {
+          if (cons.second.initial_density > 0)
+          {
+            cons.second.conserved_number += (*el)->volume();
+          }
+        }
+      }
+    }
+
+    double scale = 100 * this->get_mesh_units();
+    switch (this->get_mesh().mesh_dimension())
+    {
+      case 2:
+        scale *= 100 * this->get_mesh_units();
+
+      case 3:
+        scale *= 100 * this->get_mesh_units();
+
+      default:
+        break;
+    }
+
+    for (auto&& cons : _conservation)
+    {
+      if (cons.second.initial_density > 0)
+        cons.second.conserved_number *= scale * cons.second.initial_density;
+    }
+
+  }
+
+}
+
 
 void
 DriftDiffusion::do_solve(void)
@@ -503,6 +580,9 @@ DriftDiffusion::do_solve(void)
       }
     }
   }
+
+
+  calculate_conserved_carriers();
 
 
 
@@ -594,6 +674,11 @@ DriftDiffusion::do_solve(void)
       const double phi0 = get_scaling().get_potential_scaling();
       os << "mean electrochemical potential: " <<
           phi0 * (system.get_solution_vector())(scalars[0]);
+      m.info(os.str());
+
+      os.str("");
+      os << "total number of carriers      : " <<
+          cons.second.conserved_number;
       m.info(os.str());
     }
     m.newline();
@@ -1463,6 +1548,7 @@ DriftDiffusion::rebuild_equation_system(void)
     _conservation[var].stoichiometry.push_back(1.0);
 
     _conservation[var].conserved_number = opts.get_option("conserved_number", 0.0);
+    _conservation[var].initial_density = opts.get_option("initial_density", 0.0);
   }
 
 

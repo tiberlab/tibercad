@@ -441,6 +441,9 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
 
         //! The conserved number
         double conserved_number;
+
+        //! The initial density to calculate conserved number from
+        double initial_density;
     };
 
     //! Base index for quasi Fermi energies
@@ -642,6 +645,9 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
 
     //! Rebuild the equation system if needed
     void rebuild_equation_system(void);
+
+    //! Calculate the conserved number for conserved carriers
+    void calculate_conserved_carriers(void);
 
 
     /*!
