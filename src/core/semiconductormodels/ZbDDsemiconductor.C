@@ -24,6 +24,15 @@ using namespace Constants;
     vector<string> valleys = {"Gamma", "X", "L"};
     get_option("valley", valleys);
 
+    // check them
+    for (auto&& val : valleys)
+    {
+      if ((val != "Gamma") && (val != "X") &&
+          (val != "L"))
+        throw InitFailedException("'" + val +
+            "' is invalid name for zincblende valley.");
+    }
+
     //
     // there are 3 types of extrema: Gamma, X and L
     //
