@@ -204,6 +204,8 @@ SRHRecombination::do_init(void)
   }
 
 
+  get_parameter("tau", _tau_n);
+  get_parameter("tau", _tau_p);
   get_parameter("tau_n", _tau_n);
   get_parameter("tau_p", _tau_p);
 
