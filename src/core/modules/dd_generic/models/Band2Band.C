@@ -142,7 +142,6 @@ Band2Band::calculate_rate_and_derivatives(std::vector<double>& R, std::vector<st
     double n1f = n1/N1;
     double n2f = n2/N2;
 
-    // TODO N2 should be the maximum density for n2, but now its 100*Nc
     R[id1] = factor * (stat1 * n1 * (1 - n2f) - stat2 * n2 * (1 - n1f));
     R[id2] = -R[id1];
 
