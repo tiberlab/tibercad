@@ -388,21 +388,6 @@ DDInterfaceModel::get_face_normal(void) const
 
 
 
-inline
-void
-DDInterfaceModel::set_type(unsigned int var, BCType type)
-{
-  assert(var < _coeff_b.size());
-  _coeff_b[var] = type;
-  if (type == DIRICHLET)
-  {
-    _coeff_a[var] = 1.0;
-    _jacobian[var][var] = -1;
-  }
-  else if (type == NEUMANN)
-    _coeff_a[var] = 0.0;
-}
-
 
 inline
 DDInterfaceModel::BCType

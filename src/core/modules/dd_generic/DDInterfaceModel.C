@@ -89,6 +89,34 @@ DDInterfaceModel::create(const MaterialBoundary* boundary, const ModelOptions& o
 
 
 void
+DDInterfaceModel::set_type(unsigned int var, BCType type)
+{
+  // prepare, if not already done
+  if (_coeff_a.size() == 0)
+  {
+    unsigned int n_carriers = this->n_known_carriers();
+
+    _coeff_a.resize(n_carriers + 1, 0);
+    _coeff_b.resize(n_carriers + 1, NEUMANN);
+    _coeff_g.resize(n_carriers + 1, 0);
+
+    _jacobian.resize(n_carriers + 1);
+    for (unsigned int i = 0; i < n_carriers + 1; i++)
+      _jacobian[i].resize(n_carriers + 1, 0);
+  }
+
+  _coeff_b[var] = type;
+  if (type == DIRICHLET)
+  {
+    _coeff_a[var] = 1.0;
+    _jacobian[var][var] = -1;
+  }
+  else if (type == NEUMANN)
+    _coeff_a[var] = 0.0;
+}
+
+
+void
 DDInterfaceModel::do_init(void)
 {
   unsigned int n_carriers = this->n_known_carriers();
