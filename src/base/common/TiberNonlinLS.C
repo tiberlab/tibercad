@@ -220,7 +220,7 @@ TiberNonlinLS::do_solve(void)
         u_tmp = u_old;
 
         // if the norm decreases sufficiently, we don't increase the counter
-        if (norm_res < 0.5 * old_norm)
+        if (norm_res < 0.9 * old_norm)
           ls_step--;
       }
     }
