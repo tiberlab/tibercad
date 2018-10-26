@@ -444,6 +444,9 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
 
         //! The initial density to calculate conserved number from
         double initial_density;
+
+        //! The volume of the associated region
+        double volume;
     };
 
     //! Base index for quasi Fermi energies

@@ -473,6 +473,7 @@ DriftDiffusion::calculate_conserved_carriers(void)
   {
     for (auto&& cons : _conservation)
     {
+      cons.second.volume = 0.0;
       if (cons.second.initial_density > 0)
         cons.second.conserved_number = 0.0;
     }
@@ -512,10 +513,7 @@ DriftDiffusion::calculate_conserved_carriers(void)
 
         if (is_present)
         {
-          if (cons.second.initial_density > 0)
-          {
-            cons.second.conserved_number += (*el)->volume();
-          }
+          cons.second.volume += (*el)->volume();
         }
       }
     }
@@ -523,20 +521,40 @@ DriftDiffusion::calculate_conserved_carriers(void)
     double scale = 100 * this->get_mesh_units();
     switch (this->get_mesh().mesh_dimension())
     {
-      case 2:
+      case 3:
         scale *= 100 * this->get_mesh_units();
 
-      case 3:
+      case 2:
         scale *= 100 * this->get_mesh_units();
 
       default:
         break;
     }
 
+    vector<double> vols;
+    vols.reserve(_conservation.size());
+
     for (auto&& cons : _conservation)
     {
+      vols.push_back(cons.second.volume);
+    }
+
+    // in parallel run need to sum up all values
+    this->get_communicator().sum(vols);
+
+    int idx = 0;
+    for (auto&& cons : _conservation)
+    {
+      cons.second.volume = vols[idx];
       if (cons.second.initial_density > 0)
-        cons.second.conserved_number *= scale * cons.second.initial_density;
+      {
+        cons.second.conserved_number = vols[idx] * scale * cons.second.initial_density;
+      }
+      else
+      {
+        cons.second.initial_density = cons.second.conserved_number / (vols[idx] * scale);
+      }
+      idx++;
     }
 
   }
@@ -1267,15 +1285,7 @@ DriftDiffusion::guess_equilibrium(void)
     this->get_communicator().sum(node_conn);
   }
 
-  // for conserved particles, we put a chemical potential based on the
-  // prescribed density and the volume
-//  for (auto&& scalar : _conservation)
-//  {
-//    unsigned int dof = scalar.first;
-//    dof_map.dof_indices(elem, dof_indices_var[dof], dof);
-//    dof_indices.insert(dof_indices.end(),
-//        dof_indices_var[dof].begin(), dof_indices_var[dof].end());
-//  }
+
 
   for ( ; el != end_el ; ++el)
   {
@@ -1291,6 +1301,36 @@ DriftDiffusion::guess_equilibrium(void)
           / (phi0 * static_cast<Real>(node_conn[elem->node(i)])));
     }
   }
+
+  // for conserved particles, we put a chemical potential based on the
+  // prescribed density and the volume
+//  for (auto&& scalar : _conservation)
+//  {
+//    unsigned int dof = scalar.first;
+//    vector<dof_id_type> dof_ids;
+//    dof_map.local_variable_indices(dof_ids, mesh, scalar.first);
+//
+//  }
+
+  // for conserved particles, we put a chemical potential based on the
+  // prescribed density and the volume
+//  for (auto&& scalar : _conservation)
+//  {
+//    unsigned int dof = scalar.first;
+//    vector<dof_id_type> dof_ids;
+//    dof_map.local_variable_indices(dof_ids, mesh, scalar.first);
+//
+//  }
+
+  // for conserved particles, we put a chemical potential based on the
+  // prescribed density and the volume
+//  for (auto&& scalar : _conservation)
+//  {
+//    unsigned int dof = scalar.first;
+//    vector<dof_id_type> dof_ids;
+//    dof_map.local_variable_indices(dof_ids, mesh, scalar.first);
+//
+//  }
 
   // guess is checked: ok
   solution_u.close();
@@ -1549,6 +1589,11 @@ DriftDiffusion::rebuild_equation_system(void)
 
     _conservation[var].conserved_number = opts.get_option("conserved_number", 0.0);
     _conservation[var].initial_density = opts.get_option("initial_density", 0.0);
+
+    if ((_conservation[var].conserved_number == 0.0) &&
+        (_conservation[var].initial_density == 0.0))
+      throw InitFailedException(string("You must specify one of 'conserved_number' or ") +
+          "'initial_density' for number conservation of carrier '" + name + "'");
   }
 
 
@@ -5808,12 +5853,14 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
   {
     // the following is done only on node 0, otherwise we would
     // add up the constant term many times
-    if (this->get_communicator().rank() == 0)
-    {
+    //if (this->get_communicator().rank() == 0)
+    //{
       for (auto&& var : _conservation)
       {
         vector<dof_id_type> scalars;
-        dof_map.SCALAR_dof_indices(scalars, var.first);
+        //dof_map.SCALAR_dof_indices(scalars, var.first);
+        dof_map.local_variable_indices(scalars, mesh, var.first);
+
         double scale = x0 * C0;
         switch (dim)
         {
@@ -5826,9 +5873,10 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
           default:
             break;
         }
-        residual->add(scalars[0], var.second.conserved_number / scale);
+        if (!scalars.empty())
+          residual->add(scalars[0], var.second.conserved_number / scale);
       }
-    }
+    //}
 
     residual->close();
     //residual->print_matlab("r.m");
