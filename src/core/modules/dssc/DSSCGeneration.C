@@ -230,7 +230,7 @@ DSSCGeneration::_calculate_distances(void)
   unsigned short sysnr = system.number();
   unsigned short var = system.variable_number("d");
 
-  libMesh::NumericVector<double>& solution = system.get_solution_vector();
+  libMesh::NumericVector<double>& solution = system.get_local_solution_vector();
 
   const unsigned int dim = get_mesh().mesh_dimension();
 
