@@ -95,6 +95,7 @@ Module dd_generic
       sigma_e = 1e-12
       sigma_h = 1e-12
       recombination_center = true
+      plot_name = "srh"
     }
 
     recombination optical
