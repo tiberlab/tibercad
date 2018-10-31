@@ -1804,6 +1804,8 @@ bool EnvelopFunctionApprox::read_SLEPC_solution(void)
         }
       }
     }
+    // TODO this test seems not to work for very dense states
+    check_linear_dependency = false;
     //check_orthogonality = true;
 
     // we found a (potentially) valid slot and fill it
@@ -1875,7 +1877,7 @@ bool EnvelopFunctionApprox::read_SLEPC_solution(void)
     {
       vector<Complex> tempvec(_solution[index].eigen_vector);
 
-      //cerr << "orthogonality (" << index << ") :";
+      cerr << "linear dependency (" << index << ") :";
       int ind = index - 1;
 
       while ((ind >= 0) && (ind < n_states))
