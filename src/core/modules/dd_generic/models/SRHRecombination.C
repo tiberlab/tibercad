@@ -233,6 +233,8 @@ void
 SRHRecombination::do_init_interface(const Material* comp_A,
     const Material* comp_B)
 {
+  get_parameter("rec_velocity", _tau_n, true, new Invert());
+  get_parameter("rec_velocity", _tau_p, true, new Invert());
   get_parameter("rec_velocity_n", _tau_n, true, new Invert());
   get_parameter("rec_velocity_p", _tau_p, true, new Invert());
 
