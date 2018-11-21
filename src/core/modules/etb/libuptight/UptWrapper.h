@@ -63,38 +63,42 @@ public:
                    double dg_scale, double dg_onsite, bool hybrid_passivation);
 
   //! Set parameters for eigenstates output format 
-  //! out_format == 1 => JVXL
-  //! out_format == 2 => CUBE
+  /*! out_format == 1 => JVXL
+   *  out_format == 2 => CUBE
+   */
   void set_output(int out_format, double scale);
 
   void set_paths(const char* defaultPath, const char* databasePath, 
                  const char* workPath, const char* outPath); 
 
+  //! set workpath
   void set_workpath(const char* workPath);
   
+  //! set outpath
   void set_outpath(const char* outPath);
 
+  //! set the file to write states to
   void set_statefile(const char* filename);
 
   //! Set verbosity level for the library screen output
   void set_verbose(int verbose_lev);
 
-  //!Initialize the Upt instance 
-  //!Read geometry and build n.n. table (call after setting globals and fill_param) 
   //! Get library version
   void get_version(void);
 
-  //!Initialize the Upt instance
+  //! Initialize the Upt instance
   int inituptight();
 
-  //!Clean the Upt instance variable space
+  //! Clean the Upt instance variable space
   void cleanuptight();
 
-  //!Get UPTIGHT instance handler
+  //! Get UPTIGHT instance handler
   inline const int* get_handler(void){ return _handler; };
 
   //! Add an atom-projected potential to H
-  //! Must be called after inituptight and before compute_H
+  /*!
+   * Must be called after inituptight and before compute_H
+   */
   void add_potential(std::vector<double>& potential);
 
 
@@ -108,13 +112,13 @@ public:
   void set_kpoint(double *k_vec);
 
   
-  //!Computes Hamiltonian (must be called after inituptight)
+  //! Computes Hamiltonian (must be called after inituptight)
   void compute_H(char* sprs_fmt);
 
-  //!Computes Hamiltonian (must be called after inituptight)
+  //! print ETB Hamiltonian
   void print_H(void);
 
-  //!Computes P-matrix for optics (must be called after inituptight)
+  //! Computes P-matrix for optics (must be called after inituptight)
   void compute_P_matrix(int poldir, char* sprs_fmt);
 
 
@@ -141,18 +145,33 @@ public:
   void jacobidavidson(int st_cb, int st_vb, int n_vb, int n_cb, double guess_vb, double guess_cb,
       double long_tol);
 
+  //! Call FEAST solver
+  void feast(double emin, double emax, int m0) ;
+
+
+  //! Call LAPACK solver
+  /*!
+   * int n_vb          : number of valence energy levels
+   * int n_cb          : number of conduction energy levels
+   */
+  void lapack(int n_vb, int n_cb, double guess_vb, double guess_cb);
+
 
   // Solver flag. currently 0: CPU solver; 1: GPU; 2: GPU-split version 
   void set_solver_flag(int flag);
 
   void set_num_states(int n_vb, int n_cb);
 
+  //! get ETB Hamiltonian size (number of rows)
   int get_H_dim(void);
 
+  //! get ETB Hamiltonian number of non-zero elements
   int get_H_nnz(void);
 
+  //! get a row size
   int get_H_row_size(int row);
 
+  //! get a row
   void get_H_row(int row, int* colind, Complex* vals);
   
   void get_H_csr(int nrow, char fmt, std::vector<Complex >& A, std::vector<int>& JA,
@@ -161,10 +180,13 @@ public:
   void set_H_csr(int nrow, char fmt, std::vector<Complex >& A, std::vector<int>& JA,
                                                      std::vector<int>& IA );
 
+  //! write eigenstates on file
   void write_states(void);
 
+  //! read eigenstates from file
   void read_old_states(char* path, int& nev, int& nec);
 
+  //! get computed states
   void get_states(int num_ev, int hdim, double* eigenvals,
                   Complex* states, int* particles); 
 
@@ -176,8 +198,6 @@ public:
   void complex_test(double& re, double& im, Complex& zz);
 
   double real_test();
-
-  void feast(double emin, double emax, int m0) ;
 
 private:
   int _handler[UPT_HSIZE];

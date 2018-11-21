@@ -369,6 +369,22 @@ inline void f77_upt_feastsolver (f77_int const* handler, f77_double const&
 }
 
 
+extern "C" void upt_lapacksolver_ (f77_int const*, f77_int const&, f77_int 
+    const&, f77_double const&, f77_double const&);
+
+// Corresponding F77 arguments for f77_upt_lapacksolver:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// integer, intent(in) :: n_vb
+// integer, intent(in) :: n_cb
+// real(dp), intent(in) :: guess_vb
+// real(dp), intent(in) :: guess_cb
+inline void f77_upt_lapacksolver (f77_int const* handler, f77_int const& n_vb, 
+    f77_int const& n_cb, f77_double const& guess_vb, f77_double const& guess_cb)
+{
+  upt_lapacksolver_ (handler, n_vb, n_cb, guess_vb, guess_cb);
+}
+
+
 extern "C" void upt_alloc_states_ (f77_int const*);
 
 // Corresponding F77 arguments for f77_upt_alloc_states:

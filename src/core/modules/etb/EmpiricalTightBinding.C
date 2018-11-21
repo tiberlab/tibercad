@@ -659,6 +659,12 @@ ETB::call_uptight(void)
                      _upt_solver_options.long_tol);
 
   }
+  else if (_upt_solver_options.solver.compare("lapack") == 0)
+  {
+    Messages::info("\n("+get_name()+") solving using LAPACK");
+    inst->lapack(_upt_solver_options.n_vb, _upt_solver_options.n_cb,
+                     _upt_solver_options.guess_vb, _upt_solver_options.guess_cb);
+  }
   else if (_upt_solver_options.solver.compare("slepc") == 0) 
   {
       Messages::info("Solving Tight Binding with SLEPc eigensolver");

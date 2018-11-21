@@ -33,7 +33,6 @@ void UptWrapper::set_paths(const char* defaultPath, const char* databasePath,
    f77_upt_set_paths(_handler, defaultPath, databasePath, workPath, outPath);
 }
 
-//!Assign simulation parameters to UPT instance
 void UptWrapper::fill_param(int verbose_lev,  
 			    char *gen_filename, char *gen_outname, char *sparse_fmt, 
 			    int max_n_n, bool harrison, bool relat, bool potential,
@@ -69,13 +68,11 @@ void UptWrapper::set_solver_flag(int flag)
   f77_upt_solver_flag(_handler, flag);
 }
 
-//! set output wavefunction parameters
 void UptWrapper::set_output(int format, double step)
 {
   f77_upt_setoutput(_handler, format, step);
 }
 
-//!Initialize UPT instance (allocations)
 int UptWrapper::inituptight() 
 {
     int hsize;
@@ -109,7 +106,6 @@ int UptWrapper::set_mpi_comm(MPI_Comm comm)
     }
 }
 
-//! Get Uptight version
 void UptWrapper::get_version()
 {
     f77_upt_getversion(_handler);
@@ -138,7 +134,6 @@ void UptWrapper::clear_potential(void)
 
 
 
-//! add the k-points as a vector
 void UptWrapper::set_kpoint(double *k_vec)
 {
   f77_upt_setkpoint(_handler, k_vec);
@@ -146,18 +141,15 @@ void UptWrapper::set_kpoint(double *k_vec)
 
 
 
-//! build ETB Hamiltonian with Uptight
 void UptWrapper::compute_H(char* sprs_fmt){	
   f77_upt_createhamiltonian(_handler, sprs_fmt);
 }
 
-//! print ETB Hamiltonian
 void UptWrapper::print_H(void){	
   f77_upt_printhamiltonian(_handler);
 }
 
 
-//! build ETB Hamiltonian with Uptight
 void UptWrapper::compute_P_matrix(int poldir, char* sprs_fmt)
 {
   f77_upt_setpmatrix(_handler, 1, poldir);
@@ -166,7 +158,6 @@ void UptWrapper::compute_P_matrix(int poldir, char* sprs_fmt)
 }
 
 
-//! Lanczos diagonalization
 void UptWrapper::lanczos_diag(int st_vb, int st_cb, int n_vb, int n_cb, double guess_vb, double guess_cb,
                                 int min_iter, int long_iter, int max_iter,
 				                        double fast_tol, double long_tol, double ort_tol,
@@ -186,10 +177,15 @@ void UptWrapper::jacobidavidson(int st_cb, int st_vb, int n_vb, int n_cb, double
 }
 
 
-//! Call FEAST solver
 void UptWrapper::feast(double emin, double emax, int m0) {
 
   f77_upt_feastsolver(_handler, emin, emax, m0);
+
+}
+
+void UptWrapper::lapack(int n_vb, int n_cb, double guess_vb, double guess_cb) {
+
+  f77_upt_lapacksolver(_handler, n_vb, n_cb, guess_vb, guess_cb);
 
 }
 
@@ -199,61 +195,51 @@ void UptWrapper::set_num_states(int n_vb, int n_cb)
 }
 
 
-//! get ETB Hamiltonian size (number of rows)
 int UptWrapper::get_H_dim(void) {
   int hdim;	
   f77_upt_get_hamildim(_handler,hdim);
   return hdim;
 }
 
-//! get ETB Hamiltonian number of non-zero elements
 int UptWrapper::get_H_nnz(void) {
   int hdim;	
   f77_upt_get_hamilnnz(_handler,hdim);
   return hdim;
 }
 
-//! get a row size 
 int UptWrapper::get_H_row_size(int row) {
    int size;
    f77_upt_get_hamil_rowsize(_handler,row,size);
    return size;
 }
 
-//! get a row 
 void UptWrapper::get_H_row(int row, int* colind, Complex* vals) {
    f77_upt_get_hamil_row(_handler,row,colind,vals);
 }
 
-//! set the file to write states to
 void UptWrapper::set_statefile(const char* filename)
 {
   f77_upt_setstatefile(_handler, filename);
 }
 
-//! write eigenstates on file
 void UptWrapper::write_states() {
   f77_upt_write_states(_handler);
 }
 
-//! set outpath
 void UptWrapper::set_outpath(const char* outpath) {
   f77_upt_setoutpath(_handler, outpath); 
 }
 
-//! set workpath
 void UptWrapper::set_workpath(const char* workpath) {
   f77_upt_setworkpath(_handler, workpath); 
 }
 
-//! read eigenstates from file
 void UptWrapper::read_old_states(char* load_path, int& nev, int& nec) {	
   //f77_upt_setloadpath(_handler, load_path);
   f77_upt_read_states(_handler, load_path, nev, nec);
 }
 
 
-//! get computed states 
 void UptWrapper::get_states(int num_ev, int hdim, double* eigenvals, 
                             Complex* eigenvec, int* particles) {
 
