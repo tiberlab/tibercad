@@ -854,10 +854,10 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
 void Optics::do_plot()
 {
 
-  if (plot_solution("matrix_elements"))
-  {
-    plot_globaldata();
-  }
+  //if (plot_solution("matrix_elements"))
+  //{
+  //  plot_globaldata();
+  //}
 
 
   int n_sets = (norm(_opt.polariz) == 0.0) ? 9 : 3;
