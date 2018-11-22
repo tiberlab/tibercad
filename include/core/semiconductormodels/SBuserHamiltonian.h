@@ -6,7 +6,7 @@
 #include <vector>
 #include "tensor.h"
 #include "SBbulkHamiltonian.h"
-#include "PhysicalModelInterface.h"
+#include "PhysicalModel.h"
 //class DDsemiconductor;
 
 
@@ -30,14 +30,14 @@ class SBuserHamiltonian : public SBbulkHamiltonian
 
 
 
-  virtual PhysicalModelInterface* create_new(void) const;
+  virtual PhysicalModel* create_new(void) const;
 
  
 
   virtual void do_init(void);
 
  
-  virtual void do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa) {};
+  virtual void do_init_alloy (const PhysicalModel *comp_A, const PhysicalModel *comp_B, double xa) {};
 
   
 
@@ -50,7 +50,7 @@ class SBuserHamiltonian : public SBbulkHamiltonian
  
 };
 
-inline PhysicalModelInterface* SBuserHamiltonian::create_new() const
+inline PhysicalModel* SBuserHamiltonian::create_new() const
 {
   return new SBuserHamiltonian(get_options());
 }

@@ -10,7 +10,7 @@
 using namespace std;
 
 Semiconductor::Semiconductor(const ModelOptions& options)
- : PhysicalModelInterface(options)
+ : PhysicalModel(options)
 {
   modelA = NULL;
 
@@ -27,7 +27,7 @@ Semiconductor::Semiconductor(const ModelOptions& options)
 Semiconductor* Semiconductor::create(const Material* mat,  const ModelOptions& options)
 {
   std::string structure = mat->get_structure();
-  return PhysicalModelInterface::create<Semiconductor>("semicond_" + structure, mat, options);
+  return PhysicalModel::create<Semiconductor>("semicond_" + structure, mat, options);
 }
 
 
@@ -79,7 +79,7 @@ void Semiconductor::do_init ()
 
 //---------------------------------------------------------------------------------------------//
 inline
-void Semiconductor::do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
+void Semiconductor::do_init_alloy (const PhysicalModel *comp_A, const PhysicalModel *comp_B, double xa)
 {
 
   modelA = dynamic_cast<const Semiconductor* >(comp_A);

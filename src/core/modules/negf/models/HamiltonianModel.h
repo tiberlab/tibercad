@@ -1,10 +1,10 @@
 // $Id$
 
-#include "PhysicalModelInterface.h"
+#include "PhysicalModel.h"
 #include "tensor_value.h"
 #include "vector_value.h"
 
-class HamiltonianModel : public PhysicalModelInterface
+class HamiltonianModel : public PhysicalModel
 {
 
   public:
@@ -87,7 +87,7 @@ HamiltonianModel::get_n_bands(void) const
 
 inline
 HamiltonianModel::HamiltonianModel(const ModelOptions& options)
-  : PhysicalModelInterface(options)
+  : PhysicalModel(options)
 {
 }
 

@@ -10,7 +10,7 @@ Device
   # parallel solvers.
   Parallel
   {
-    mpi_processes_per_device = 2
+    mpi_processes_per_device = 1
     # let's do FEM calculations in serial
     mpi_processes_per_mesh   = 1
   }

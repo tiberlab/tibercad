@@ -43,6 +43,7 @@ void EFAbulkModel::do_init()
 
     _bulkHamiltonian = EFAbulkHamiltonian::create(get_material(), opt);
     _bulkHamiltonian->set_owner(get_owner());
+    _bulkHamiltonian->set_material(get_material());
     _bulkHamiltonian->init();
   }
 
@@ -50,7 +51,7 @@ void EFAbulkModel::do_init()
 
 //====================================//
 
-void EFAbulkModel::do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
+void EFAbulkModel::do_init_alloy (const PhysicalModel *comp_A, const PhysicalModel *comp_B, double xa)
 {
   const EFAbulkModel* matA = dynamic_cast<const EFAbulkModel* > (comp_A);
 

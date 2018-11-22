@@ -1,0 +1,151 @@
+#
+# This example calculates the IV of a silicon pn junction in 1D
+#
+
+@define SIGMA 0.1
+@define COND  standard
+
+Device
+{
+  meshfile = diode.msh 
+  mesh_units = 1e-9
+  material = GaAs
+
+  Region n_side 
+  {
+    Doping
+    {
+     Nd = 1e18
+     type = donor
+     incomplete_ionization = false
+     reference_carrier = electron
+    }
+  }
+
+  Region p_side 
+  {
+    Doping
+    {
+     Nd = 1e18
+     type = acceptor
+     incomplete_ionization = false
+     reference_carrier = hole
+    }
+  }
+}
+
+
+Module dd_generic
+{ 
+
+  name = dd
+
+  plot = (QFermi, Density, RefEnergy, CurrentDensity,
+          Conductivity, Mobility, NetRecombination, ContactCurrents)
+
+  Solver
+  {
+    max_iterations = 30
+  }
+
+  Physics
+  {
+
+    carrier electron
+    {
+      regions = n_side
+      density_of_states gauss
+      {
+        level = 0.0
+        sigma = SIGMA
+        N0 = 1e19
+      }
+
+      #background_conductivity = 1e-6
+      conductivity_model = COND
+      mobility constant
+      {
+        #mu0 = 1e-3
+      }
+    }
+
+    carrier hole
+    {
+      regions = p_side
+      density_of_states gauss
+      {
+        level = 0.2
+        sigma = SIGMA
+        N0 = 1e19
+      }
+
+      #background_conductivity = 1e-6
+      conductivity_model = COND
+      mobility constant
+      {
+        #mu0 = 1e-3
+      }
+    }
+
+
+
+    recombination direct
+    {
+      regions = p_side/n_side
+      carriers = (electron, hole)
+      #plot_name = tun
+      C = 1e-16
+    }
+  }
+
+
+  Contact cathode
+  {
+    type = ohmic
+    #type = schottky
+    #band = electron
+    #barrier = 0.05
+    voltage = $Vb[0.0]
+  }
+
+  Contact anode
+  {
+    type = ohmic
+    #type = schottky
+    #band = hole
+    #barrier = 0.05
+    voltage = 0.0
+  }
+
+  
+}
+
+
+Module sweep
+{
+  variable = $Vb
+  solve = dd
+
+  start = 0.0
+  stop = 0.5  
+  steps = 50
+
+  plot_data = each  # to write data for each step
+}
+
+
+
+Simulation
+{
+  verbose = 2
+
+  solve = sweep
+
+  resultpath = output
+
+}
+
+
+
+
+

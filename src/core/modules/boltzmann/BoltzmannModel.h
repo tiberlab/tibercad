@@ -53,11 +53,11 @@ class TBDLLOCAL BoltzmannModel : public PhysicalModel
     //! Constructor
     BoltzmannModel(const ModelOptions& options); 
     //! Create a new instance of this type
-    virtual PhysicalModelInterface* create_new(void) const;
+    virtual PhysicalModel* create_new(void) const;
 
 
-  void do_init_alloy(const PhysicalModelInterface *comp_A,
-			    const PhysicalModelInterface *comp_B, double xa);
+  void do_init_alloy(const PhysicalModel *comp_A,
+			    const PhysicalModel *comp_B, double xa);
     //! Initialize
     virtual void do_init(void);
 
@@ -172,7 +172,7 @@ BoltzmannModel::get_heat_transport_model(void) const
 
 
 inline
-PhysicalModelInterface*
+PhysicalModel*
 BoltzmannModel::create_new(void) const
 {
   return new BoltzmannModel(get_options());

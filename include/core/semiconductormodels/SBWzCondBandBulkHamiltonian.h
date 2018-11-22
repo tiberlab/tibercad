@@ -35,7 +35,7 @@ class SBWzCondBandBulkHamiltonian : public SBCondBandBulkHamiltonian
   SBWzCondBandBulkHamiltonian(const ModelOptions& options)
     : SBCondBandBulkHamiltonian(options) {};
 
-  virtual PhysicalModelInterface* create_new(void) const ;
+  virtual PhysicalModel* create_new(void) const ;
 
  
   virtual void calculate_for_init(void);
@@ -43,7 +43,7 @@ class SBWzCondBandBulkHamiltonian : public SBCondBandBulkHamiltonian
 
 };
 
-inline PhysicalModelInterface* SBWzCondBandBulkHamiltonian::create_new() const
+inline PhysicalModel* SBWzCondBandBulkHamiltonian::create_new() const
 {
   return new SBWzCondBandBulkHamiltonian(get_options());
 }

@@ -23,10 +23,10 @@ class EFAbulkModel: public PhysicalModel
   //!Constructor
   EFAbulkModel(const ModelOptions& options);
 
-  virtual PhysicalModelInterface* create_new (void) const;
+  virtual PhysicalModel* create_new (void) const;
 
 
-  virtual void do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa);
+  virtual void do_init_alloy (const PhysicalModel *comp_A, const PhysicalModel *comp_B, double xa);
 
   virtual void do_init();
   
@@ -48,7 +48,7 @@ inline EFAbulkModel*  EFAbulkModel::create(const ModelOptions& options)
   return new EFAbulkModel(options);
 }
 
-inline  PhysicalModelInterface* EFAbulkModel::create_new (void) const
+inline  PhysicalModel* EFAbulkModel::create_new (void) const
 {
   return new EFAbulkModel(get_options());
 }

@@ -665,8 +665,8 @@ SRHRecombination::get_net_recombination_rate_derivatives(
 */
 
 void
-SRHRecombination::do_init_alloy(const PhysicalModelInterface* comp_A,
-    const PhysicalModelInterface* comp_B, double xa)
+SRHRecombination::do_init_alloy(const PhysicalModel* comp_A,
+    const PhysicalModel* comp_B, double xa)
 {
   const SRHRecombination* scA =
     dynamic_cast<const SRHRecombination*>(comp_A);

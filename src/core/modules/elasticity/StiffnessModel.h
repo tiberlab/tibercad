@@ -3,7 +3,7 @@
 #ifndef _STIFFNESSMODEL_H_
 #define _STIFFNESSMODEL_H_
 
-#include "PhysicalModelInterface.h"
+#include "PhysicalModel.h"
 
 #include "tensor_value.h"
 #include "tensor.h"
@@ -19,7 +19,7 @@
 using namespace std;
 
 //! The base class for Poisson boundary conditions
-class StiffnessModel : public PhysicalModelInterface
+class StiffnessModel : public PhysicalModel
 {
 
   public:
@@ -73,7 +73,7 @@ StiffnessModel::set_stiffness_constant(const Tensor4DSym& C)
 
 inline
 StiffnessModel::StiffnessModel(const ModelOptions& options) :
-PhysicalModelInterface(options)
+PhysicalModel(options)
 {
 }
 

@@ -37,8 +37,8 @@ class TBDLLOCAL HeatReservoir : public BoltzmannBoundaryModel
     virtual void do_init(void);
 
     /* In some cases it might be useful to reimplement this: */
-    // virtual void do_init_interface(const PhysicalModelInterface* comp_A,
-    //         const PhysicalModelInterface* comp_B);
+    // virtual void do_init_interface(const PhysicalModel* comp_A,
+    //         const PhysicalModel* comp_B);
 
     /* This is not used here: */
     // virtual void read_database(void);
@@ -49,7 +49,7 @@ class TBDLLOCAL HeatReservoir : public BoltzmannBoundaryModel
 
 
     //! Create a new object of the same type
-    virtual PhysicalModelInterface* create_new(void) const;
+    virtual PhysicalModel* create_new(void) const;
 
 
   private:
@@ -81,7 +81,7 @@ HeatReservoir::create(const ModelOptions& options)
 
 
 inline
-PhysicalModelInterface*
+PhysicalModel*
 HeatReservoir::create_new(void) const
 {
   return new HeatReservoir(get_options());

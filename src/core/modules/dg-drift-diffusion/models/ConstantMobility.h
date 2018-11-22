@@ -52,7 +52,7 @@ class TBDLLOCAL ConstantMobility : public MobilityModelInterface
     virtual void do_init(void);
 
     //! \copydoc MobilityModelInterface::create_new()
-    virtual PhysicalModelInterface* create_new(void) const;
+    virtual PhysicalModel* create_new(void) const;
 
 
   private:
@@ -87,7 +87,7 @@ ConstantMobility::create(const ModelOptions& options)
 
 
 inline
-PhysicalModelInterface*
+PhysicalModel*
 ConstantMobility::create_new(void) const
 {
   return new ConstantMobility(get_options());

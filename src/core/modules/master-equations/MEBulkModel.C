@@ -48,7 +48,7 @@ MEBulkModel*
 MEBulkModel::create(const std::string& name, const Material* mat,
     const ModelOptions& options)
 {
-  return PhysicalModelInterface::create<MEBulkModel>("me_bulk_" + name, mat, options);
+  return PhysicalModel::create<MEBulkModel>("me_bulk_" + name, mat, options);
 }
 
 

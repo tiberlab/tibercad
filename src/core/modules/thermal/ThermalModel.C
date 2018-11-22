@@ -26,7 +26,7 @@ ThermalModel::ThermalModel(const ModelOptions& options)
 ThermalModel*
 ThermalModel::create(const Material* mat, const ModelOptions& options)
 {
-  return PhysicalModelInterface::create<ThermalModel>(_create,_destroy, mat, options);
+  return PhysicalModel::create<ThermalModel>(_create,_destroy, mat, options);
 }
 
 void

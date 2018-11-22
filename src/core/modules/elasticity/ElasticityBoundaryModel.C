@@ -13,7 +13,7 @@ ElasticityBoundaryModel::create(const MaterialBoundary* boundary, const ModelOpt
 
   std::string type = options.get_option("type", "clamp");
 
-  ElasticityBoundaryModel* mod = PhysicalModelInterface::create<ElasticityBoundaryModel>("ebnd_" + type,
+  ElasticityBoundaryModel* mod = PhysicalModel::create<ElasticityBoundaryModel>("ebnd_" + type,
       boundary, options);
 
   if (mod == NULL)

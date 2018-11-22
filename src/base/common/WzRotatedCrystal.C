@@ -214,7 +214,7 @@ void WzRotatedCrystal::read_database ( )
 
 //===================================================//
 
-PhysicalModelInterface* WzRotatedCrystal::create_new(void) const
+PhysicalModel* WzRotatedCrystal::create_new(void) const
 {
   return new WzRotatedCrystal(get_options());
 
@@ -222,7 +222,7 @@ PhysicalModelInterface* WzRotatedCrystal::create_new(void) const
 
 //===================================================//
 
-void WzRotatedCrystal::copy_from (const PhysicalModelInterface *rhs) 
+void WzRotatedCrystal::copy_from (const PhysicalModel *rhs) 
 {
 
   const WzRotatedCrystal* temp = dynamic_cast<const WzRotatedCrystal*> (rhs);
@@ -280,7 +280,7 @@ void WzRotatedCrystal::do_init(void)
 
 //===================================================//
 
-void WzRotatedCrystal::do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
+void WzRotatedCrystal::do_init_alloy (const PhysicalModel *comp_A, const PhysicalModel *comp_B, double xa)
 {
 
  

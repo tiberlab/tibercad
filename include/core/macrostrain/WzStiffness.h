@@ -2,7 +2,7 @@
 #define _WZSTIFFNESS_H_
 
 #include "Stiffness.h"
-#include "PhysicalModelInterface.h"
+#include "PhysicalModel.h"
 class WzStiffness : public Stiffness
 {
 
@@ -29,14 +29,14 @@ class WzStiffness : public Stiffness
   virtual void read_database( );
 
 
-  virtual PhysicalModelInterface* create_new(void) const;
+  virtual PhysicalModel* create_new(void) const;
 
   virtual void do_init(void);
 
 };
 
 
-inline PhysicalModelInterface* WzStiffness::create_new(void) const
+inline PhysicalModel* WzStiffness::create_new(void) const
 {
   return ( new WzStiffness(get_options()) );
 }

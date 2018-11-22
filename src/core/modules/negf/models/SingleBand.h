@@ -1,6 +1,6 @@
 // $Id$
 
-#include "PhysicalModelInterface.h"
+#include "PhysicalModel.h"
 #include "HamiltonianModel.h"
 #include "tensor_value.h"
 #include "vector_value.h"

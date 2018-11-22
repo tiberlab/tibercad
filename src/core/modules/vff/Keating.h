@@ -1,12 +1,12 @@
 #ifndef _KEATING_H_
 #define _KEATING_H_
 
-#include "PhysicalModelInterface.h"
+#include "PhysicalModel.h"
 #include "Material.h"
 #include "Messages.h"
 
 //! The base class for Keating model parameters
-class Keating : public PhysicalModelInterface
+class Keating : public PhysicalModel
 {
   public:
 
@@ -172,7 +172,7 @@ _d_1(0.0),
 _costeta_0(0.0),
 _costeta_1(0.0),
 _u(0.375),
-PhysicalModelInterface(options)
+PhysicalModel(options)
 {
 }
 

@@ -63,7 +63,7 @@ DDBulkModel*
 DDBulkModel::create(const std::string& name, const Material* mat,
     const ModelOptions& options)
 {
-  return PhysicalModelInterface::create<DDBulkModel>("ddbulk_" + name, mat, options);
+  return PhysicalModel::create<DDBulkModel>("ddbulk_" + name, mat, options);
 }
 
 
@@ -226,7 +226,7 @@ DDBulkModel::prepare_submodels(void)
       get_options().add_submodel("particle_density", opts);
     }
 
-    vector<PhysicalModelInterface*> pd;
+    vector<PhysicalModel*> pd;
     create_submodels(pd, "particle_density");
   }
 */

@@ -46,7 +46,7 @@ ThermoelectricPower::create_model(const std::string&,
     const Material* mat, const ModelOptions& options)
 {
   return static_cast<ThermoelectricPower*>(
-      PhysicalModelInterface::create(thpow_create, thpow_destroy, mat, options));
+      PhysicalModel::create(thpow_create, thpow_destroy, mat, options));
 }
 
 

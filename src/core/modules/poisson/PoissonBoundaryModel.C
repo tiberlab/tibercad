@@ -10,7 +10,7 @@ PoissonBoundaryModel::create(const MaterialBoundary* boundary, const ModelOption
 {
   std::string type = options.get_option("type", "dirichlet");
   PoissonBoundaryModel* mod = 
-      PhysicalModelInterface::create<PoissonBoundaryModel>("contact_" + type, boundary, options);
+      PhysicalModel::create<PoissonBoundaryModel>("contact_" + type, boundary, options);
 
   if (mod == NULL)
   {

@@ -5,7 +5,7 @@
 
 
 #include "TypeDefs.h"
-#include "PhysicalModelInterface.h"
+#include "PhysicalModel.h"
 
 #include <cassert>
 
@@ -17,7 +17,7 @@ class MasterEquationsProperties;
  * recombination models etc. which will be used in conjunction with
  * a semiconductor model derived from DriftDiffusionProperties
  */
-class TBDLEXPORT MasterEquationsModelInterface : public PhysicalModelInterface
+class TBDLEXPORT MasterEquationsModelInterface : public PhysicalModel
 {
 
   public:
@@ -56,7 +56,7 @@ class TBDLEXPORT MasterEquationsModelInterface : public PhysicalModelInterface
 
 inline
 MasterEquationsModelInterface::MasterEquationsModelInterface(const ModelOptions& options)
-  : PhysicalModelInterface(options)
+  : PhysicalModel(options)
 {
 }
 

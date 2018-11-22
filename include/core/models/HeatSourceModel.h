@@ -3,7 +3,7 @@
 #ifndef _HEATSOURCEMODEL_H_
 #define _HEATSOURCEMODEL_H_
 
-#include "PhysicalModelInterface.h"
+#include "PhysicalModel.h"
 
 #include "tensor_value.h"
 
@@ -18,7 +18,7 @@
 using namespace std;
 
 //! The base class for Poisson boundary conditions
-class HeatSourceModel : public PhysicalModelInterface
+class HeatSourceModel : public PhysicalModel
 {
 
   public:
@@ -66,7 +66,7 @@ HeatSourceModel::set_heat_source(Real heat_source)
 
 inline
 HeatSourceModel::HeatSourceModel(const ModelOptions& options) :
-PhysicalModelInterface(options)
+PhysicalModel(options)
 {
 }
 

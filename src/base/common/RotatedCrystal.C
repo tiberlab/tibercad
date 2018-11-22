@@ -6,7 +6,7 @@
 
 
 RotatedCrystal::RotatedCrystal(const ModelOptions& options)
- : PhysicalModelInterface(options)
+ : PhysicalModel(options)
 {
   x_miller.resize(3, 0);
   x_miller[0] = 1;
@@ -32,7 +32,7 @@ RotatedCrystal::create(const Material* owner,
   if ((structure == "am") || (structure == "amorphous"))
     structure = "gen";
   
-  rc = PhysicalModelInterface::create<RotatedCrystal>(
+  rc = PhysicalModel::create<RotatedCrystal>(
       "cryst_" + structure, owner, options);
 
   if (rc == NULL)

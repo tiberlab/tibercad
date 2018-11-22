@@ -94,7 +94,7 @@ class TBDLLOCAL ThermoelectricPower : public DriftDiffusionModelInterface
 
     virtual void read_database(void);
 
-    virtual PhysicalModelInterface* create_new(void) const;
+    virtual PhysicalModel* create_new(void) const;
 
 
   private:
@@ -222,7 +222,7 @@ ThermoelectricPower::set_temperature(double Tloc)
 
 
 inline
-PhysicalModelInterface*
+PhysicalModel*
 ThermoelectricPower::create_new(void) const
 {
   return (new ThermoelectricPower(get_options()));

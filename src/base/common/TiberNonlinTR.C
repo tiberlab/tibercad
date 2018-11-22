@@ -44,11 +44,18 @@ TiberNonlinTR::do_solve(void)
 
   assert(_assemble != NULL);
 
-  NumericVector<Number>& u = get_local_solution_vector();
+  // the ghosted solution vector
+  NumericVector<Number>& u = get_solution_vector();
   if (!u.closed()) u.close();
-  NumericVector<Number>& du = *current_local_solution;
-  libMesh::UniquePtr<NumericVector<Number> > u_old_ptr = u.clone();
+
+  // the linear system solution
+  libMesh::UniquePtr<NumericVector<Number> > du_ptr = solution->clone();
+  NumericVector<Number>& du = *du_ptr;
+
+  libMesh::UniquePtr<NumericVector<Number> > u_old_ptr = solution->clone();
   NumericVector<Number>& u_old = *u_old_ptr;
+
+  NumericVector<Number>& u_tmp = *solution;
 
   // the l_infty tolerance for the step size
   double eps = get_nonlinear_stol();
@@ -132,9 +139,9 @@ TiberNonlinTR::do_solve(void)
       //
       // calculate unconstrained minimizer (Newton step)
       //
-      get_linear_solver()->solve(*matrix, *solution, *rhs);
-      solution->localize(du, get_dof_map().get_send_list()); 
+      get_linear_solver()->solve(*matrix, du, *rhs);
       du.scale(-1.0);
+      du.close();
 
       double t = 1.0;
       norm_du = du.linfty_norm();
@@ -191,8 +198,10 @@ TiberNonlinTR::do_solve(void)
     // calculate rho_k = actual reduction / predicted reduction
     //
 
+    u_tmp = u;
     u_old = u;
-    u.add(du);
+    u_tmp.add(du);
+    u_tmp.localize(u, get_dof_map().get_send_list());
 
 
     //if ((norm_du < eps) || (norm_rhs < eps_res))

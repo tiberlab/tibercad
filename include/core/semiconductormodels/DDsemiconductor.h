@@ -8,7 +8,7 @@
      degeneracy 
 */
 
-#include "PhysicalModelInterface.h"
+#include "PhysicalModel.h"
 #include "libMeshDefs.h"
 #include "KPbulkHamiltonian.h"
 
@@ -17,7 +17,7 @@
 
 #include <vector>
 
-class TBDLEXPORT DDsemiconductor : public PhysicalModelInterface
+class TBDLEXPORT DDsemiconductor : public PhysicalModel
 {
   public:
 
@@ -150,7 +150,7 @@ class TBDLEXPORT DDsemiconductor : public PhysicalModelInterface
   std::vector<band_extremum>  valence_band;
 
 
-  virtual PhysicalModelInterface* create_new(void) const = 0;
+  virtual PhysicalModel* create_new(void) const = 0;
 
   virtual void do_init (void);
 

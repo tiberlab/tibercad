@@ -92,7 +92,7 @@ class PhononModel: public PhysicalModel
   //!Constructor
   PhononModel(const ModelOptions& options);
 
-  virtual PhysicalModelInterface* create_new (void) const;
+  virtual PhysicalModel* create_new (void) const;
 
   virtual void do_init();
 
@@ -107,7 +107,7 @@ PhononModel* PhononModel::create(const ModelOptions& options)
 
 
 inline
-PhysicalModelInterface*
+PhysicalModel*
 PhononModel::create_new(void) const
 {
   return new  PhononModel(get_options());
