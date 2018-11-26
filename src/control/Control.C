@@ -206,12 +206,6 @@ Control::init(void)
   // setup global options
   setup_globals(global_opts);
 
-  // now there is the output directory, and we can backup the input file
-  if (global_opts.get_option("copy_inputfile", true))
-  {
-
-  }
-
   // prepare the device
   _device->prepare();
 

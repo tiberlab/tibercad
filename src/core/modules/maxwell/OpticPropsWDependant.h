@@ -10,7 +10,7 @@
 #define OPTIC_PROPS_W_DEP_H_
 
 #include "TypeDefs.h"
-#include "PhysicalModel.h"
+#include "PhysicalModelInterface.h"
 #include "PhysicalModel.h"
 #include "Database.h"
 #include "RotatedCrystal.h"
@@ -27,7 +27,7 @@ class OpticPropsWDependant: public OpticPropsInterface
 
      static OpticPropsWDependant* create(const ModelOptions& options);
 
-     PhysicalModel* create_new() const;
+     PhysicalModelInterface* create_new() const;
 
      virtual Complex get_dielectric_constant() const;
 
@@ -71,7 +71,7 @@ OpticPropsWDependant::OpticPropsWDependant(const ModelOptions& options) : OpticP
 }
 
 inline
-PhysicalModel*
+PhysicalModelInterface*
 OpticPropsWDependant::create_new(void) const
 {
   return new OpticPropsWDependant(get_options());

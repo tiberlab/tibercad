@@ -5,7 +5,7 @@
 
 
 #include "TypeDefs.h"
-#include "PhysicalModel.h"
+#include "PhysicalModelInterface.h"
 
 #include <cassert>
 
@@ -17,7 +17,7 @@ class DriftDiffusionProperties;
  * recombination models etc. which will be used in conjunction with
  * a semiconductor model derived from DriftDiffusionProperties
  */
-class TBDLEXPORT DriftDiffusionModelInterface : public PhysicalModel
+class TBDLEXPORT DriftDiffusionModelInterface : public PhysicalModelInterface
 {
 
   public:
@@ -56,7 +56,7 @@ class TBDLEXPORT DriftDiffusionModelInterface : public PhysicalModel
 
 inline
 DriftDiffusionModelInterface::DriftDiffusionModelInterface(const ModelOptions& options)
-  : PhysicalModel(options)
+  : PhysicalModelInterface(options)
 {
 }
 

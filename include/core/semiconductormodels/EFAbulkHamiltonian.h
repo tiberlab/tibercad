@@ -7,8 +7,8 @@
 #include <map>
 #include "tensor.h"
 
-#include "PhysicalModel.h"
-class EFAbulkHamiltonian: public PhysicalModel
+#include "PhysicalModelInterface.h"
+class EFAbulkHamiltonian: public PhysicalModelInterface
 {
 
  public:
@@ -85,11 +85,11 @@ class EFAbulkHamiltonian: public PhysicalModel
   EFAbulkHamiltonian(const ModelOptions& options);
   
 
-  virtual PhysicalModel* create_new(void) const = 0;
+  virtual PhysicalModelInterface* create_new(void) const = 0;
 
   virtual void do_init (void);
 
-  //virtual void do_init_alloy (const PhysicalModel *comp_A, const PhysicalModel *comp_B, double xa) = 0;
+  //virtual void do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa) = 0;
   
 
   //! result Hamiltonian in k representation

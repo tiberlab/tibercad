@@ -136,12 +136,9 @@ Alloy::do_init(void)
   {
     PhysicalModel* modA = static_cast<PhysicalModel*>((it->second)->copy());
     _mat_A->add_model(modA, it->first);
-    modA->set_owner((it->second)->get_owner());
-    //modA->set_database(new Database(_mat_A->get_database()));
 
     PhysicalModel* modB = static_cast<PhysicalModel*>((it->second)->copy());
     _mat_B->add_model(modB, it->first);
-    modB->set_owner((it->second)->get_owner());
   }
 
   _mat_A->init();

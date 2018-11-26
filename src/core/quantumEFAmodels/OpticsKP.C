@@ -44,7 +44,7 @@ PhysicalModel* OpticsKP::create_bulk_model(const ModelOptions& options,
 
   kp8x8options["model"] = "8x8";
 
-  EFAbulkModel* model = PhysicalModel::create<EFAbulkModel>("EFAmodel", mat, kp8x8options);
+  EFAbulkModel* model = PhysicalModelInterface::create<EFAbulkModel>("EFAmodel", mat, kp8x8options);
 
   if (model == NULL)
     throw ModelErrorException("OpticsKP: cannot create EFAbulkModel");

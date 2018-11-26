@@ -214,7 +214,7 @@ DSSCModel::reinit(const Elem* elem)
 
 
 void
-DSSCModel::copy_from(const PhysicalModel* rhs)
+DSSCModel::copy_from(const PhysicalModelInterface* rhs)
 {
 }
 

@@ -22,9 +22,9 @@ class MaxwellPhysicalModel: public PhysicalModel
 
   MaxwellPhysicalModel(const ModelOptions& options);
 
-  virtual PhysicalModel* create_new (void) const;
+  virtual PhysicalModelInterface* create_new (void) const;
  
-  virtual void do_init_alloy (const PhysicalModel *comp_A, const PhysicalModel *comp_B, double xa);
+  virtual void do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa);
   
   virtual void do_init();
 

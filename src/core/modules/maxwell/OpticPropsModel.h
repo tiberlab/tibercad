@@ -8,7 +8,7 @@
 */
 
 #include "TypeDefs.h"
-#include "PhysicalModel.h"
+#include "PhysicalModelInterface.h"
 #include "PhysicalModel.h"
 #include "Database.h"
 #include "RotatedCrystal.h"
@@ -24,7 +24,7 @@ class OpticPropsModel: public OpticPropsInterface
 
      static OpticPropsModel* create(const ModelOptions& options);
 
-     PhysicalModel* create_new() const;
+     PhysicalModelInterface* create_new() const;
 
      virtual libMesh::Complex get_dielectric_constant() const {
        return epsilon(0, 0);
@@ -49,8 +49,8 @@ class OpticPropsModel: public OpticPropsInterface
 
      virtual void do_init(void);
 
-     void do_init_alloy (const PhysicalModel *comp_A,
-                                                const PhysicalModel *comp_B, double xa);
+     void do_init_alloy (const PhysicalModelInterface *comp_A,
+                                                const PhysicalModelInterface *comp_B, double xa);
 
      TensorValue<Complex> epsilon;
      double mu;
@@ -83,7 +83,7 @@ OpticPropsModel::OpticPropsModel(const ModelOptions& options) : OpticPropsInterf
 }
 
 inline
-PhysicalModel*
+PhysicalModelInterface*
 OpticPropsModel::create_new(void) const
 {
   return new OpticPropsModel(get_options());

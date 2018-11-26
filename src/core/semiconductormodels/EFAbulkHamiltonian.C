@@ -31,7 +31,7 @@ void EFAbulkHamiltonian::do_init()
 
 //-------------------------------------------------------------//
 EFAbulkHamiltonian::EFAbulkHamiltonian(const ModelOptions& options)
- : PhysicalModel(options)
+ : PhysicalModelInterface(options)
 {
  
 
@@ -65,7 +65,7 @@ EFAbulkHamiltonian* EFAbulkHamiltonian::create (const Material* mat,  const Mode
   else
     model = "quantum_kp";
 
-  return PhysicalModel::create<EFAbulkHamiltonian>(model, mat, options);
+  return PhysicalModelInterface::create<EFAbulkHamiltonian>(model, mat, options);
 
 }
  

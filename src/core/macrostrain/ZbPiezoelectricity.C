@@ -42,7 +42,7 @@ void ZbPiezoelectricity::do_init(void)
 }
 
 //---------------------------------------------------------------//
-PhysicalModel* ZbPiezoelectricity::create_new(void) const
+PhysicalModelInterface* ZbPiezoelectricity::create_new(void) const
 {
   return (new ZbPiezoelectricity(get_options()));
 }

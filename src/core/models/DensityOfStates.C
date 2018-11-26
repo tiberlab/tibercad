@@ -8,7 +8,7 @@
 using namespace std;
 
 DensityOfStates::DensityOfStates(const ModelOptions& options) :
-  PhysicalModel(options),
+  PhysicalModelInterface(options),
   _fixed_DOS(false),
   _reference_energy({0.0}),
   _effective_mass({1.0}),
@@ -42,7 +42,7 @@ DensityOfStates::create(const ModelOptions& options)
     name = "delta";
 
   dos_ptr = dynamic_cast<DensityOfStates*>(
-      PhysicalModel::create("density_of_states_" + name, NULL, options));
+      PhysicalModelInterface::create("density_of_states_" + name, NULL, options));
   if (dos_ptr == NULL)
     throw ModelErrorException("Unknown density of states type: " + name);
 

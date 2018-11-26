@@ -54,7 +54,7 @@ class PhysicalObject : public TiberModelObject
 
     //! Add new physical model
     /*!
-     * Add a new \c PhysicalModel object
+     * Add a new \c PhysicalModelInterface object
      *
      * \param model the model to add
      * \param simulator_id the id of the simulator this model is used for
@@ -135,7 +135,7 @@ class PhysicalObject : public TiberModelObject
     bool _is_initialized;
 
 
-    //! The map containing all \c PhysicalModel objects
+    //! The map containing all \c PhysicalModelInterface objects
     /*!
      * This map containes the physical model of any simulation type
      * requested.

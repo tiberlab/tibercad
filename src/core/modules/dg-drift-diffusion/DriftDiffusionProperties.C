@@ -76,7 +76,7 @@ DriftDiffusionProperties*
 DriftDiffusionProperties::create(const std::string& name, const Material* mat,
     const ModelOptions& options)
 {
-  return PhysicalModel::create<DriftDiffusionProperties>("ddbulk_" + name, mat, options);
+  return PhysicalModelInterface::create<DriftDiffusionProperties>("ddbulk_" + name, mat, options);
 }
 
 
@@ -154,7 +154,7 @@ DriftDiffusionProperties::prepare_submodels(void)
   }
 
   vector<BandProperties*> bp;
-  PhysicalModel::create_submodels(bp, "band_properties");
+  PhysicalModelInterface::create_submodels(bp, "band_properties");
 
   if (bp.size() > 2)
     throw InitFailedException("Multiple definition of band properties for material "
@@ -268,7 +268,7 @@ DriftDiffusionProperties::prepare_submodels(void)
       get_options().add_submodel("particle_density", opts);
     }
 
-    vector<PhysicalModel*> pd;
+    vector<PhysicalModelInterface*> pd;
     create_submodels(pd, "particle_density");
   }
 
@@ -278,7 +278,7 @@ DriftDiffusionProperties::prepare_submodels(void)
 
 
   // traps
-  vector<PhysicalModel*> pd;
+  vector<PhysicalModelInterface*> pd;
   create_submodels(pd, "trap");
 
 
@@ -319,7 +319,7 @@ DriftDiffusionProperties::prepare_submodels(void)
     recomb_iterator it = _recombination_models.begin();
     recomb_iterator end = _recombination_models.end();
     for ( ; it != end; ++it)
-      PhysicalModel::destroy(it->second);
+      PhysicalModelInterface::destroy(it->second);
     _recombination_models.clear();
   }
 }

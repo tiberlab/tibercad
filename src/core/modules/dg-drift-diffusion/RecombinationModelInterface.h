@@ -118,7 +118,7 @@ RecombinationModelInterface::create(const std::string& name,
     const PhysicalObject* owner, const ModelOptions& options)
 {
   return dynamic_cast<RecombinationModelInterface*>(
-      PhysicalModel::create("recombination_" + name, owner, options));
+      PhysicalModelInterface::create("recombination_" + name, owner, options));
 }
 
 

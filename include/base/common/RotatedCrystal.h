@@ -3,7 +3,7 @@
 #ifndef _ROTATED_CRYSTAL_H_
 #define _ROTATED_CRYSTAL_H_
 
-#include "PhysicalModel.h"
+#include "PhysicalModelInterface.h"
 #include "tiber_dll.h"
 #include "AtomisticStructure.h"
 #include "BulkCrystal.h"
@@ -18,7 +18,7 @@
  * The main use of this class is to describe the rotation from
  * crystallographic orientation into the simulation system.
  */
-class RotatedCrystal : public PhysicalModel
+class RotatedCrystal : public PhysicalModelInterface
 {
 
  public:

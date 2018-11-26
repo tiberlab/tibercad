@@ -5,10 +5,10 @@
 
 #include "tensor.h"
 #include "xtensor.h"
-#include "PhysicalModel.h"
+#include "PhysicalModelInterface.h"
 
 
-class Piezoelectricity : public PhysicalModel
+class Piezoelectricity : public PhysicalModelInterface
 {
  public:
 
@@ -44,7 +44,7 @@ class Piezoelectricity : public PhysicalModel
   virtual void do_init(void) = 0;
 
 
-  virtual PhysicalModel* create_new(void) const = 0;
+  virtual PhysicalModelInterface* create_new(void) const = 0;
 
 
 

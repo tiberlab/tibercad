@@ -7,7 +7,7 @@
 
 
 DynamicalMatrix::DynamicalMatrix(const ModelOptions& options)
- : PhysicalModel(options),
+ : PhysicalModelInterface(options),
    _dynamical_matrix(0)
 {  
   
@@ -18,8 +18,8 @@ DynamicalMatrix::DynamicalMatrix(const ModelOptions& options)
 //-------------------------------------------------------------------------//
 
 
-void DynamicalMatrix::do_init_alloy (const PhysicalModel *comp_A, 
-                                                const PhysicalModel *comp_B, double xa) 
+void DynamicalMatrix::do_init_alloy (const PhysicalModelInterface *comp_A, 
+                                                const PhysicalModelInterface *comp_B, double xa) 
 { 
   const DynamicalMatrix* modA = dynamic_cast<const DynamicalMatrix*>(comp_A);
 

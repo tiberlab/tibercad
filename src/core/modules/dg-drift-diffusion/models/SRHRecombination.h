@@ -76,8 +76,8 @@ class TBDLLOCAL SRHRecombination : public RecombinationModelInterface
             const Material* comp_B);
 
     //! We do the VCA on the recombination times and not on the parameters
-    virtual void do_init_alloy(const PhysicalModel* comp_A,
-        const PhysicalModel* comp_B, double xa);
+    virtual void do_init_alloy(const PhysicalModelInterface* comp_A,
+        const PhysicalModelInterface* comp_B, double xa);
 
 
   private:

@@ -8,7 +8,7 @@
  *      Author: paveryan
  */
 #include "TypeDefs.h"
-#include "PhysicalModel.h"
+#include "PhysicalModelInterface.h"
 #include "PhysicalModel.h"
 #include "Database.h"
 #include "RotatedCrystal.h"
@@ -67,6 +67,6 @@ OpticPropsInterface::create(const std::string& name,
     const PhysicalObject* owner, const ModelOptions& options)
 {
   return dynamic_cast<OpticPropsInterface*>(
-      PhysicalModel::create("opticmodel_" + name, owner, options));
+      PhysicalModelInterface::create("opticmodel_" + name, owner, options));
 }
 #endif

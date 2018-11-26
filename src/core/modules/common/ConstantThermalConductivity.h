@@ -5,7 +5,7 @@
 
 #include "tensor_value.h"
 #include "vector_value.h"
-#include "PhysicalModel.h"
+#include "PhysicalModelInterface.h"
 #include "tiber_dll.h"
 #include "ThermalConductivityModel.h"
 
@@ -33,11 +33,11 @@ protected:
   virtual void do_init(void);
   
   /* In some cases it might be useful to reimplement this: */
-  // virtual void do_init_interface(const PhysicalModel* comp_A,
-  //         const PhysicalModel* comp_B);
+  // virtual void do_init_interface(const PhysicalModelInterface* comp_A,
+  //         const PhysicalModelInterface* comp_B);
   
-  virtual void do_init_alloy (const PhysicalModel *comp_A,
-			      const PhysicalModel *comp_B, double xa){};
+  virtual void do_init_alloy (const PhysicalModelInterface *comp_A,
+			      const PhysicalModelInterface *comp_B, double xa){};
   
   virtual void  read_database_alloy(void){};
   /* This is not used here: */
@@ -49,7 +49,7 @@ protected:
   
   
   //! Create a new object of the same type
-  virtual PhysicalModel* create_new(void) const;
+  virtual PhysicalModelInterface* create_new(void) const;
   
   
 private:
@@ -70,7 +70,7 @@ private:
 
 
 inline
-PhysicalModel*
+PhysicalModelInterface*
 ConstantThermalConductivity::create_new(void) const
 {
   return new   ConstantThermalConductivity(get_options());

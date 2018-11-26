@@ -3,7 +3,7 @@
 #ifndef _BODYFORCEMODEL_H_
 #define _BODYFORCEMODEL_H_
 
-#include "PhysicalModel.h"
+#include "PhysicalModelInterface.h"
 //#include "libMeshDefs.h"
 
 #include "tensor_value.h"
@@ -16,7 +16,7 @@
 using namespace std;
 
 //! The base class for body force models
-class BodyForceModel : public PhysicalModel
+class BodyForceModel : public PhysicalModelInterface
 {
 
   public:
@@ -110,7 +110,7 @@ BodyForceModel::set_stress_source(const libMesh::RealTensor& stress_source)
 
 inline
 BodyForceModel::BodyForceModel(const ModelOptions& options) :
-  PhysicalModel(options),
+  PhysicalModelInterface(options),
   _force_source(0),
   _strain_source(0),
   _stress_source(0)

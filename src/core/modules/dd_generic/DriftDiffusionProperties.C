@@ -57,14 +57,14 @@ DriftDiffusionProperties*
 DriftDiffusionProperties::create(const std::string& name, const Material* mat,
     const ModelOptions& options)
 {
-  return PhysicalModel::create<DriftDiffusionProperties>("ddbulk_" + name, mat, options);
+  return PhysicalModelInterface::create<DriftDiffusionProperties>("ddbulk_" + name, mat, options);
 }
 
 
 
 
 void
-DriftDiffusionProperties::copy_from(const PhysicalModel* rhs)
+DriftDiffusionProperties::copy_from(const PhysicalModelInterface* rhs)
 {
   const DriftDiffusionProperties* other =
       dynamic_cast<const DriftDiffusionProperties*>(rhs);
@@ -79,13 +79,120 @@ void
 DriftDiffusionProperties::prepare_submodels(void)
 {
 
+  /*
+  if (get_options().has_submodel("carrier"))
+  {
+    ModelOptions::const_submodel_iterator it(get_options().submodels_begin("carrier"));
+
+    const ModelOptions& opts = it->second;
+    if (!opts.find_option("particle"))
+    {
+      ModelOptions elopts(opts);
+      elopts["particle"] = "el";
+      ModelOptions hlopts(elopts);
+      hlopts["particle"] = "hl";
+      if (elopts.find_option("Ec"))
+      {
+        elopts["band_edge"] = elopts["Ec"];
+        elopts.delete_option("Ec");
+        hlopts.delete_option("Ec");
+      }
+      if (elopts.find_option("Nc"))
+      {
+        elopts["effective_DOS"] = elopts["Nc"];
+        elopts.delete_option("Nc");
+        hlopts.delete_option("Nc");
+      }
+      if (elopts.find_option("m_dos_e"))
+      {
+        elopts["DOS_mass"] = elopts["m_dos_e"];
+        elopts.delete_option("m_dos_e");
+        hlopts.delete_option("m_dos_e");
+      }
+      if (elopts.find_option("band_gap"))
+        if (elopts.find_option("Ev"))
+          elopts["reference_energy"] = elopts["Ev"];
+
+      if (hlopts.find_option("Ev"))
+      {
+        hlopts["band_edge"] = hlopts["Ev"];
+        elopts.delete_option("Ev");
+        hlopts.delete_option("Ev");
+      }
+      if (hlopts.find_option("Nv"))
+      {
+        hlopts["effective_DOS"] = hlopts["Nv"];
+        elopts.delete_option("Nv");
+        hlopts.delete_option("Nv");
+      }
+      if (hlopts.find_option("m_dos_h"))
+      {
+        hlopts["DOS_mass"] = hlopts["m_dos_h"];
+        elopts.delete_option("m_dos_h");
+        hlopts.delete_option("m_dos_h");
+      }
+
+      if (++it != get_options().submodels_end("carrier"))
+        throw InitFailedException("Multiple definition of band properties for material "
+            + get_material()->get_name());
+
+      get_options().delete_submodels("carrier");
+      get_options().add_submodel("carrier", elopts);
+      get_options().add_submodel("carrier", hlopts);
+    }
+  }
+
+  vector<CarrierProperties*> bp;
+  PhysicalModelInterface::create_submodels(bp, "carrier");
+
+  if (bp.size() > 2)
+    throw InitFailedException("Multiple definition of band properties for material "
+        + get_material()->get_name());
+
+  for (size_t i = 0; i < bp.size(); i++)
+  {
+    if (string("el") == bp[i]->get_options().get_option("particle", ""))
+      _conduction_band = bp[i];
+    else if (string("hl") == bp[i]->get_options().get_option("particle", ""))
+      _valence_band = bp[i];
+    else
+      throw InitFailedException("Unknown particle for Drift-Diffusion model");
+  }
+
+  if (get_options().has_submodel("conduction_band"))
+  {
+    if (_conduction_band != NULL)
+    throw InitFailedException("Multiple definition of conduction band properties for material "
+        + get_material()->get_name());
+
+    ModelOptions opts(get_options().submodels_begin("conduction_band")->second);
+    opts.set_option("particle", "el");
+    create_submodel(_conduction_band, "carrier", opts);
+  }
+
+
+
+
+  if (get_options().has_submodel("valence_band"))
+  {
+    if (_valence_band != NULL)
+    throw InitFailedException("Multiple definition of valence band properties for material "
+        + get_material()->get_name());
+
+    ModelOptions opts(get_options().submodels_begin("valence_band")->second);
+    opts.set_option("particle", "hl");
+    create_submodel(_valence_band, "carrier", opts);
+  }
+
+  */
+
   if (get_options().has_submodel("carrier"))
   { 
     // this should be empty here, actually
     _carrier_properties.clear();
 
     vector<CarrierProperties*> carriers;
-    PhysicalModel::create_submodels(carriers, "carrier");
+    PhysicalModelInterface::create_submodels(carriers, "carrier");
 
     // the check for duplicates
     set<string> used_names;
@@ -115,7 +222,7 @@ DriftDiffusionProperties::prepare_submodels(void)
 
 
   // traps
-  vector<PhysicalModel*> pd;
+  vector<PhysicalModelInterface*> pd;
   create_submodels(pd, "trap");
 
 

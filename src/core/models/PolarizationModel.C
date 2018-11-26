@@ -9,7 +9,7 @@ using namespace std;
 
 
 PolarizationModel::PolarizationModel(const ModelOptions& options) :
-  PhysicalModel(options),
+  PhysicalModelInterface(options),
   _polarization(0),
   _polarization_source(NULL, INVALID_ID),
   _fixed_or_external(false)

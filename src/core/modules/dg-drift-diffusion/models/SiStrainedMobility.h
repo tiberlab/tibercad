@@ -47,7 +47,7 @@ class TBDLLOCAL SiStrainedMobility : public MobilityModelInterface
     virtual void do_init(void);
 
     //! \copydoc MobilityModelInterface::create_new()
-    virtual PhysicalModel* create_new(void) const;
+    virtual PhysicalModelInterface* create_new(void) const;
 
 
   private:
@@ -97,7 +97,7 @@ SiStrainedMobility::create(const ModelOptions& options)
 
 
 inline
-PhysicalModel*
+PhysicalModelInterface*
 SiStrainedMobility::create_new(void) const
 {
   return new SiStrainedMobility(get_options());

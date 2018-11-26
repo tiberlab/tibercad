@@ -3,7 +3,7 @@
 #ifndef _OPTDIELECTRICCONSTANT_H_
 #define _OPTDIELECTRICCONSTANT_H_
 
-#include "PhysicalModel.h"
+#include "PhysicalModelInterface.h"
 #include "SimulationOptions.h"
 
 
@@ -13,7 +13,7 @@
   Used for Maxwell equations
 */
 
-class  OptDielectricConstant: public PhysicalModel
+class  OptDielectricConstant: public PhysicalModelInterface
 
 {
 
@@ -25,7 +25,7 @@ class  OptDielectricConstant: public PhysicalModel
 
   */
   OptDielectricConstant(const ModelOptions& options) :
-    PhysicalModel(options)
+    PhysicalModelInterface(options)
   {  
     _dielectric_constant_real=Tensor2Sym(0);
     _dielectric_constant_imag=Tensor2Sym(0);
@@ -61,10 +61,10 @@ class  OptDielectricConstant: public PhysicalModel
   virtual void read_database_alloy(void){};
 
   //! calculates dielectric  constant for  an  alloy, given the component materials  and their molar fraction.
-  virtual void do_init_alloy (const PhysicalModel *comp_A, const PhysicalModel *comp_B, double xa); 
+  virtual void do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa); 
 
   //!Create a new model of the same type.
-  virtual PhysicalModel* create_new (void) const =0;
+  virtual PhysicalModelInterface* create_new (void) const =0;
 
   //! real dielectric  tensor in simulation system. 
   Tensor2Sym _dielectric_constant_real;

@@ -5,7 +5,7 @@
  
  
 #include "DDsemiconductor.h"
-#include "PhysicalModel.h"
+#include "PhysicalModelInterface.h"
 #include<vector>
 #include<complex>
 
@@ -31,7 +31,7 @@ class ZbDDsemiconductor  : public DDsemiconductor
  
   ZbDDsemiconductor(const ModelOptions& options) : DDsemiconductor(options) {};
 
-  virtual PhysicalModel* create_new(void) const;
+  virtual PhysicalModelInterface* create_new(void) const;
    
   
   virtual void  do_calculate_conduction_band_extremum(void);
@@ -41,7 +41,7 @@ class ZbDDsemiconductor  : public DDsemiconductor
  
  
  
-inline PhysicalModel* ZbDDsemiconductor::create_new( ) const
+inline PhysicalModelInterface* ZbDDsemiconductor::create_new( ) const
 {
   return ( new ZbDDsemiconductor(get_options()) );
 }

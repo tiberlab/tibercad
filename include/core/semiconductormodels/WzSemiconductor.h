@@ -117,7 +117,7 @@ class  WzSemiconductor : public Semiconductor
   //Constructor
   WzSemiconductor(const ModelOptions& options);
 
-  virtual PhysicalModel* create_new(void) const;
+  virtual PhysicalModelInterface* create_new(void) const;
 
   virtual void do_init(void);
 
@@ -180,7 +180,7 @@ class  WzSemiconductor : public Semiconductor
  
 };
 
-inline PhysicalModel* WzSemiconductor::create_new( ) const
+inline PhysicalModelInterface* WzSemiconductor::create_new( ) const
 {
   return ( new WzSemiconductor(get_options()) );
 }

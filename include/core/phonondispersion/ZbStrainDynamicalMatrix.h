@@ -48,7 +48,7 @@ class ZbStrainDynamicalMatrix: public DynamicalMatrix
 
   virtual void do_init(void);
 
-  virtual PhysicalModel*  create_new (void) const;
+  virtual PhysicalModelInterface*  create_new (void) const;
 
  private:
 
@@ -79,7 +79,7 @@ ZbStrainDynamicalMatrix* ZbStrainDynamicalMatrix::create(const ModelOptions& opt
 }
 
 inline
-PhysicalModel*  ZbStrainDynamicalMatrix::create_new (void) const
+PhysicalModelInterface*  ZbStrainDynamicalMatrix::create_new (void) const
 {
   return (new  ZbStrainDynamicalMatrix(get_options()) );
 }

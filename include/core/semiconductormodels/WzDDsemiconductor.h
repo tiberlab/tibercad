@@ -3,7 +3,7 @@
 
 
 #include "DDsemiconductor.h"
-#include "PhysicalModel.h"
+#include "PhysicalModelInterface.h"
 
 #include<vector>
 
@@ -38,7 +38,7 @@ class  WzDDsemiconductor : public DDsemiconductor
   //Constructor
   WzDDsemiconductor(const ModelOptions& options);
 
-  PhysicalModel* create_new(void) const;
+  PhysicalModelInterface* create_new(void) const;
   
   //! calculates information about conduction bands
   /*!
@@ -54,7 +54,7 @@ WzDDsemiconductor::WzDDsemiconductor(const ModelOptions& options)
 {
 }
 
-inline PhysicalModel* WzDDsemiconductor::create_new( ) const
+inline PhysicalModelInterface* WzDDsemiconductor::create_new( ) const
 {
   return ( new WzDDsemiconductor(get_options()) );
 }

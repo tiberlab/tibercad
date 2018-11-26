@@ -12,7 +12,7 @@ ThermalBoundaryModel::create(const MaterialBoundary* boundary, const ModelOption
 
   std::string type = options.get_option("type", "heat_reservoir");
   ThermalBoundaryModel* mod =
-      PhysicalModel::create<ThermalBoundaryModel>("thermal_bnd_" + type,
+      PhysicalModelInterface::create<ThermalBoundaryModel>("thermal_bnd_" + type,
           boundary, options);
 
   if (mod == NULL)

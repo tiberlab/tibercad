@@ -24,7 +24,7 @@ MacrostrainModel::~MacrostrainModel()
 
 //==========================================================================//
 
-PhysicalModel* MacrostrainModel::create_new (void) const
+PhysicalModelInterface* MacrostrainModel::create_new (void) const
 {
   return new MacrostrainModel(get_options());
 }

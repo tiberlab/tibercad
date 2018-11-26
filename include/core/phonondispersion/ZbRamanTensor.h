@@ -36,7 +36,7 @@ class ZbRamanTensor: public RamanTensor
 
   virtual void do_init(void);
 
-  inline  virtual PhysicalModel*  create_new (void) const;
+  inline  virtual PhysicalModelInterface*  create_new (void) const;
 
 
 };
@@ -48,7 +48,7 @@ ZbRamanTensor* ZbRamanTensor::create(const ModelOptions& options)
 }
 
 inline
-PhysicalModel*  ZbRamanTensor::create_new (void) const
+PhysicalModelInterface*  ZbRamanTensor::create_new (void) const
 {
   return (new  ZbRamanTensor(get_options()) );
 }

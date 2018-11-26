@@ -55,7 +55,7 @@ class TBDLLOCAL HoleConcentrationDependentMobility : public MobilityModelInterfa
     virtual void do_init(void);
 
     //! \copydoc MobilityModelInterface::create_new()
-    virtual PhysicalModel* create_new(void) const;
+    virtual PhysicalModelInterface* create_new(void) const;
 
 
   private:
@@ -95,7 +95,7 @@ HoleConcentrationDependentMobility::create(const ModelOptions& options)
 
 
 inline
-PhysicalModel*
+PhysicalModelInterface*
 HoleConcentrationDependentMobility::create_new(void) const
 {
   return new HoleConcentrationDependentMobility(get_options());

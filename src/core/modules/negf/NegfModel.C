@@ -16,7 +16,7 @@ NegfModel::NegfModel(const ModelOptions& options)
 NegfModel*
 NegfModel::create(const Material* mat, const ModelOptions& options)
 {
-  return PhysicalModel::create<NegfModel>(_create,_destroy, mat, options);
+  return PhysicalModelInterface::create<NegfModel>(_create,_destroy, mat, options);
 }
 
 void

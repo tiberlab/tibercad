@@ -5,7 +5,7 @@
 #include "LinearThermalConductivity.h"
 #include "RotatedCrystal.h"
 #include "libMeshDefs.h"
-#include "PhysicalModel.h"
+#include "PhysicalModelInterface.h"
 #include "ModelOptions.h"
 
 #include "TiberModule.h"

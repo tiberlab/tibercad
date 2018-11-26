@@ -17,24 +17,24 @@ MDModel::create(const Material* mat, const ModelOptions& options)
 {
 
 
-    return PhysicalModel::create<MDModel>(_create,_destroy, mat, options);
+    return PhysicalModelInterface::create<MDModel>(_create,_destroy, mat, options);
 
 
 
   //string type("default");
   //options.get_option("type", type);
 
-  //PhysicalModel* pm = NULL;
-  //pm = PhysicalModel::create(_create, _destroy, options);
+  //PhysicalModelInterface* pm = NULL;
+  //pm = PhysicalModelInterface::create(_create, _destroy, options);
 
 
   //if (type == "default")
     // we create the default model from explicit creation method
-  //  pm = PhysicalModel::create(_create, _destroy, options);
+  //  pm = PhysicalModelInterface::create(_create, _destroy, options);
   //else
   //{
   //  type = "bulk_" + type;
-  //  pm = PhysicalModel::create(type, options);
+  //  pm = PhysicalModelInterface::create(type, options);
  // }
 
   //return dynamic_cast<MDModel*>(pm);
@@ -50,7 +50,7 @@ MDModel::do_init(void)
   //  _charge_density = dynamic_cast<MyChargeDensityModel*>(it->second);
   
   //it = submodels_begin("polarization");
-  //const PhysicalModel::SubmodelIterator  it_end(submodels_end("polarization"));
+  //const PhysicalModelInterface::SubmodelIterator  it_end(submodels_end("polarization"));
   //for ( ; it != it_end ; ++it)
   //  _pm.push_back(dynamic_cast<PolarizationModel*> ((*it).second));
 

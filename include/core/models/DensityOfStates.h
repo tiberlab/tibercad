@@ -4,13 +4,13 @@
 #define _DENSITYOFSTATES_H_
 
 
-#include "PhysicalModel.h"
+#include "PhysicalModelInterface.h"
 
 
 /*!
  * \brief Base class for density of states
  */
-class TBDLEXPORT DensityOfStates : public PhysicalModel
+class TBDLEXPORT DensityOfStates : public PhysicalModelInterface
 {
 
   public:

@@ -35,7 +35,7 @@ class ExcitonModel : public ExcitonProperties
     virtual void prepare_element_data(void);
 
     /*! \copydoc PhysicalModel::create_new() */
-    virtual PhysicalModel* create_new(void) const;
+    virtual PhysicalModelInterface* create_new(void) const;
 
     /*! \copydoc ExcitonProperties::read_database() */
     virtual void read_database(void);
@@ -118,7 +118,7 @@ ExcitonModel::~ExcitonModel(void)
 
 
 inline
-PhysicalModel*
+PhysicalModelInterface*
 ExcitonModel::create_new(void) const
 {
   return new ExcitonModel(get_options());

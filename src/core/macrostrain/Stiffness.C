@@ -10,7 +10,7 @@
 
 //--------------------------------------------------------------------//
 
-Stiffness::Stiffness(const ModelOptions& options) : PhysicalModel(options)
+Stiffness::Stiffness(const ModelOptions& options) : PhysicalModelInterface(options)
 {
   C_cr = 0;
 

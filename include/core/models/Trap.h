@@ -4,7 +4,7 @@
 #define _TRAP_H_
 
 
-#include "PhysicalModel.h"
+#include "PhysicalModelInterface.h"
 #include "SimulationInterface.h"
 #include "ExternalProfile.h"
 
@@ -22,7 +22,7 @@ class Particle;
  *
  * The trap level is referred to midgap as default.
  */
-class TBDLEXPORT Trap : public PhysicalModel
+class TBDLEXPORT Trap : public PhysicalModelInterface
 {
 
   public:

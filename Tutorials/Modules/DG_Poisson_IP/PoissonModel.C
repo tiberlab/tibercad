@@ -32,12 +32,12 @@ PoissonModel::create(const Material* mat, const ModelOptions& options)
 
   if (type == "default")
     // we create the default model from explicit creation method
-    pm = PhysicalModel::create<PoissonModel>(_create, _destroy, mat, options);
+    pm = PhysicalModelInterface::create<PoissonModel>(_create, _destroy, mat, options);
   else
   {
     // there is no such model, at the moment
     type = "bulk_" + type;
-    pm = PhysicalModel::create<PoissonModel>(type, mat, options);
+    pm = PhysicalModelInterface::create<PoissonModel>(type, mat, options);
   }
 
   return(pm);
@@ -82,7 +82,7 @@ PoissonModel::prepare_submodels(void)
   
   // alternative way to create internal submodels:
   //
-  // PermittivityModel* mod = PhysicalModel::create("permittivity", opts);
+  // PermittivityModel* mod = PhysicalModelInterface::create("permittivity", opts);
   // add_submodel("permittivity", mod)
 
   create_submodel(_charge_density, "charge_density");

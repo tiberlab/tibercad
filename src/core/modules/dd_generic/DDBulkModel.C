@@ -59,7 +59,7 @@ DDBulkModel*
 DDBulkModel::create(const std::string& name, const Material* mat,
     const ModelOptions& options)
 {
-  return PhysicalModel::create<DDBulkModel>("ddbulk_" + name, mat, options);
+  return PhysicalModelInterface::create<DDBulkModel>("ddbulk_" + name, mat, options);
 }
 
 

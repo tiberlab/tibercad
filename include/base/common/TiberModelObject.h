@@ -32,7 +32,7 @@ template <typename T> class InitializerBase;
 //! The base class for all TiberCAD model classes
 /*!
  * TiberCAD model classes are classes derived from:
- * \li PhysicalModel
+ * \li PhysicalModelInterface
  * \li BoundaryProperties
  * \li SimulationInterface
  */

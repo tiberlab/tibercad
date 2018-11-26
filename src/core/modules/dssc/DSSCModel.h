@@ -417,11 +417,11 @@ class DSSCModel : public PhysicalModel
 
 
     //! \copydoc PhysicalModel::create_new()
-    virtual PhysicalModel* create_new(void) const;
+    virtual PhysicalModelInterface* create_new(void) const;
 
 
     //! \copydoc PhysicalModel::copy_from()
-    virtual void copy_from(const PhysicalModel* rhs);
+    virtual void copy_from(const PhysicalModelInterface* rhs);
 
 
     //! \copydoc PhysicalModel::do_print_info(void)
@@ -578,7 +578,7 @@ DSSCModel::create(const std::string& name,
     const ModelOptions& options)
 {
   //return dynamic_cast<DSSCModel*>(
-  //    PhysicalModel::create("dscbulk_" + name, options));
+  //    PhysicalModelInterface::create("dscbulk_" + name, options));
   return new DSSCModel(options);
 }
 
@@ -801,7 +801,7 @@ DSSCModel::get_ionized_electron_traps_derivative(void) const
 
 
 inline
-PhysicalModel*
+PhysicalModelInterface*
 DSSCModel::create_new(void) const
 {
   return new DSSCModel(get_options());

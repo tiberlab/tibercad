@@ -74,7 +74,7 @@ PhononDispersion::create_physical_model(const ModelOptions &options,
 {
   
     
-    PhononModel* model = dynamic_cast<PhononModel*> ( PhysicalModel::create("phonon",options) );
+    PhononModel* model = dynamic_cast<PhononModel*> ( PhysicalModelInterface::create("phonon",options) );
     
    if (model == NULL) 
      throw ModelErrorException("PhononModel: PhononDispersion physical model is not created" );

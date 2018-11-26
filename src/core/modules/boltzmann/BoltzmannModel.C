@@ -29,7 +29,7 @@ BoltzmannModel::BoltzmannModel(const ModelOptions& options)
 BoltzmannModel*
 BoltzmannModel::create(const Material* mat, const ModelOptions& options)
 {
-  return PhysicalModel::create<BoltzmannModel>(_create, _destroy, mat, options);
+  return PhysicalModelInterface::create<BoltzmannModel>(_create, _destroy, mat, options);
 }
 
 
@@ -89,8 +89,8 @@ BoltzmannModel::do_init(void)
 
 
 void
-BoltzmannModel::do_init_alloy(const PhysicalModel *comp_A,
-                                                const PhysicalModel *comp_B, double xa)
+BoltzmannModel::do_init_alloy(const PhysicalModelInterface *comp_A,
+                                                const PhysicalModelInterface *comp_B, double xa)
 {
 
    const BoltzmannModel* modA = dynamic_cast<const BoltzmannModel*>(comp_A);

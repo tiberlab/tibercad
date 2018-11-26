@@ -59,7 +59,7 @@ class SBbulkHamiltonian : public EFAbulkHamiltonian
   //DDsemiconductor* semiconductor;
 
 
-  virtual PhysicalModel* create_new(void) const = 0;
+  virtual PhysicalModelInterface* create_new(void) const = 0;
 
   virtual void do_init(void) = 0;
 

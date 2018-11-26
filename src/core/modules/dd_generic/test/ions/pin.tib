@@ -79,22 +79,16 @@ Module dd_generic
 
   Contact anode
   {
-    type = schottky
-    band = hole
-    barrier = 0.1
+    type = ohmic
     voltage = $Vb
     isolated_carriers = ion
-    recombination_velocity = 1e6
   }
 
   Contact cathode
   {
-    type = schottky
-    band = electron
-    barrier = 0.1
+    type = ohmic
     voltage = 0.0
     isolated_carriers = ion
-    recombination_velocity = 1e6
   }
 
 }  

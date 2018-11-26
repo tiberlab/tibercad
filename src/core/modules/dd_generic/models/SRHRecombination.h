@@ -66,8 +66,8 @@ class TBDLLOCAL SRHRecombination : public RecombinationModelInterface
             const Material* comp_B) override;
 
     //! We do the VCA on the recombination times and not on the parameters
-    virtual void do_init_alloy(const PhysicalModel* comp_A,
-        const PhysicalModel* comp_B, double xa) override;
+    virtual void do_init_alloy(const PhysicalModelInterface* comp_A,
+        const PhysicalModelInterface* comp_B, double xa) override;
 
     //! \copydoc RecombinationModelInterface::calculate_rate_and_derivatives()
     virtual void calculate_rate_and_derivatives(std::vector<double>& R, std::vector<std::vector<double>>& dPotentials) override;

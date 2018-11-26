@@ -74,8 +74,8 @@ void OpticPropsModel::do_init(void) {
   //rotate_to_calculation_system(cr.RotMatrix); TODO
 }
 
-void OpticPropsModel::do_init_alloy (const PhysicalModel *comp_A,
-                                           const PhysicalModel *comp_B, double xa) {
+void OpticPropsModel::do_init_alloy (const PhysicalModelInterface *comp_A,
+                                           const PhysicalModelInterface *comp_B, double xa) {
 /*
   const OpticPropsModel* modA = dynamic_cast<const OpticPropsModel*>(comp_A);
 

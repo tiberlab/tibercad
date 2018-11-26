@@ -3,7 +3,7 @@
 #ifndef _POLARIZATIONMODEL_H_
 #define _POLARIZATIONMODEL_H_
 
-#include "PhysicalModel.h"
+#include "PhysicalModelInterface.h"
 #include "SimulationInterface.h"
 #include "RotatedCrystal.h"
 #include "Material.h"
@@ -18,7 +18,7 @@ USELIBMESHTYPE(RealVectorValue);
 
 
 // Base class for charge density models
-class PolarizationModel : public PhysicalModel
+class PolarizationModel : public PhysicalModelInterface
 {
 
   public:

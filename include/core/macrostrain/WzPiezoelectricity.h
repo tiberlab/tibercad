@@ -47,7 +47,7 @@ class WzPiezoelectricity : public Piezoelectricity
   virtual void do_init(void);
 
 
-  virtual PhysicalModel* create_new(void) const;
+  virtual PhysicalModelInterface* create_new(void) const;
  
 
 };

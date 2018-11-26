@@ -29,13 +29,13 @@ class TBDLLOCAL ZbRotatedCrystal : public RotatedCrystal
   virtual void do_init(void) ;
 
 
-  virtual void copy_from (const PhysicalModel *rhs) ;
+  virtual void copy_from (const PhysicalModelInterface *rhs) ;
 
 
-  virtual void do_init_alloy (const PhysicalModel *comp_A, const PhysicalModel *comp_B, double xa) ;
+  virtual void do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa) ;
 
 
-  virtual PhysicalModel* create_new(void) const ;
+  virtual PhysicalModelInterface* create_new(void) const ;
 
 
   

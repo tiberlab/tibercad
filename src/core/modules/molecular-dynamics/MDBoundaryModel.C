@@ -10,7 +10,7 @@ MDBoundaryModel::create(const MaterialBoundary* boundary,const ModelOptions& opt
 
   std::string type = options.get_option("type", "heat_reservoir");
   MDBoundaryModel* mod =
-      PhysicalModel::create<MDBoundaryModel>("md_bnd_" + type,
+      PhysicalModelInterface::create<MDBoundaryModel>("md_bnd_" + type,
           boundary, options);
 
   if (mod == NULL)

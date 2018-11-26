@@ -5,7 +5,7 @@
 #include <vector>
 #include "tensor.h"
 #include "EFAbulkHamiltonian.h"
-#include "PhysicalModel.h"
+#include "PhysicalModelInterface.h"
 #include "Semiconductor.h"
 #include "KPparameters.h"
 
@@ -109,7 +109,7 @@ class KPbulkHamiltonian : public EFAbulkHamiltonian
   //! default constructor.
   KPbulkHamiltonian(const ModelOptions& options);
 
-  virtual PhysicalModel* create_new(void) const;
+  virtual PhysicalModelInterface* create_new(void) const;
 
   virtual void do_init(void);
 
@@ -125,7 +125,7 @@ inline   KPbulkHamiltonian* KPbulkHamiltonian::create(const ModelOptions& option
   return new KPbulkHamiltonian(options);
 }
 
-inline PhysicalModel* KPbulkHamiltonian::create_new() const
+inline PhysicalModelInterface* KPbulkHamiltonian::create_new() const
 {
   return new KPbulkHamiltonian(get_options());
 }

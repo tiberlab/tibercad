@@ -2,7 +2,7 @@
 #define _SEMICONDUCTOR_H_
 
 
-#include "PhysicalModel.h"
+#include "PhysicalModelInterface.h"
 #include "libMeshDefs.h"
 #include "TemperatureInterface.h"
 #include "KPparameters.h"
@@ -15,7 +15,7 @@
 /*!
  *  The class can read parameters database and convert them into kp parameters
  */
-class TBDLEXPORT Semiconductor : public PhysicalModel
+class TBDLEXPORT Semiconductor : public PhysicalModelInterface
 {
  public:
  
@@ -51,13 +51,13 @@ class TBDLEXPORT Semiconductor : public PhysicalModel
   //!Constructor
    Semiconductor(const ModelOptions& options);
 
-  virtual PhysicalModel* create_new(void) const = 0;
+  virtual PhysicalModelInterface* create_new(void) const = 0;
 
   virtual void do_init (void);
 
   virtual void read_database(void) = 0;
 
-  virtual void do_init_alloy (const PhysicalModel *comp_A, const PhysicalModel *comp_B, double xa);
+  virtual void do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa);
 
   //! if true band gap is temperature 
   bool _consider_temperature;

@@ -3,7 +3,7 @@
 #ifndef _DYNAMICALMATRIX_H_
 #define _DYNAMICALMATRIX_H_
 
-#include "PhysicalModel.h"
+#include "PhysicalModelInterface.h"
 #include "PhononModel.h"
 
 class PhononModel;
@@ -14,7 +14,7 @@ class PhononModel;
 The lattice thermal conductivity must be in W/(cm K)
 
 */
-class DynamicalMatrix : public PhysicalModel
+class DynamicalMatrix : public PhysicalModelInterface
 
 {
 
@@ -43,10 +43,10 @@ protected:
 
   virtual void read_database(void)=0;
 
-  virtual void do_init_alloy (const PhysicalModel *comp_A,
-      const PhysicalModel *comp_B, double xa); 
+  virtual void do_init_alloy (const PhysicalModelInterface *comp_A,
+      const PhysicalModelInterface *comp_B, double xa); 
 
-  virtual PhysicalModel* create_new (void) const =0;
+  virtual PhysicalModelInterface* create_new (void) const =0;
 
   //!rotates dynamical matrix into the simulation system
    void rotate_to_calculation_system(const Tensor2Gen& RotMatrix);
