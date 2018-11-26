@@ -12,7 +12,7 @@ subdirs += dd_generic
 #subdirs += interpolation
 subdirs += quantumespresso
 subdirs += imagereader
-subdirs += negf 
+#subdirs += negf 
 #subdirs += maxwell maxwellabsorption 
 
 include $(topdir)/Make.common
