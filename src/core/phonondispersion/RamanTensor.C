@@ -7,7 +7,7 @@
 
 
 RamanTensor::RamanTensor(const ModelOptions& options)
- : PhysicalModelInterface(options)
+ : PhysicalModel(options)
 {  
 }
 
@@ -15,8 +15,8 @@ RamanTensor::RamanTensor(const ModelOptions& options)
 //-------------------------------------------------------------------------//
 
 
-void RamanTensor::do_init_alloy (const PhysicalModelInterface *comp_A, 
-                                                const PhysicalModelInterface *comp_B, double xa) 
+void RamanTensor::do_init_alloy (const PhysicalModel *comp_A, 
+                                                const PhysicalModel *comp_B, double xa) 
 { 
   const RamanTensor* modA = dynamic_cast<const RamanTensor*>(comp_A);
 

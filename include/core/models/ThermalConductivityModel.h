@@ -15,7 +15,7 @@
 
 
 //! The base class for Poisson boundary conditions
-class ThermalConductivityModel : public PhysicalModelInterface
+class ThermalConductivityModel : public PhysicalModel
 {
 
   public:
@@ -61,7 +61,7 @@ ThermalConductivityModel::get_thermal_conductivity(void)
 
 inline
 ThermalConductivityModel::ThermalConductivityModel(const ModelOptions& options)
- : PhysicalModelInterface(options)
+ : PhysicalModel(options)
 {
 }
 

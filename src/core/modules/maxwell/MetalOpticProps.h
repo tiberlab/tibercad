@@ -10,7 +10,7 @@
 #define METAL_OPTIC_PROPS_H_
 
 #include "TypeDefs.h"
-#include "PhysicalModelInterface.h"
+#include "PhysicalModel.h"
 #include "PhysicalModel.h"
 #include "Database.h"
 #include "RotatedCrystal.h"
@@ -29,7 +29,7 @@ class MetalOpticProps: public OpticPropsModel, public ICubic
 
      static MetalOpticProps* create(const ModelOptions& options);
 
-     PhysicalModelInterface* create_new() const;
+     PhysicalModel* create_new() const;
 
      virtual bool addCData(CubicEigenSystem& system);
   protected:
@@ -50,7 +50,7 @@ MetalOpticProps::MetalOpticProps(const ModelOptions& options) : OpticPropsModel(
 }
 
 inline
-PhysicalModelInterface*
+PhysicalModel*
 MetalOpticProps::create_new(void) const
 {
   return new MetalOpticProps(get_options());

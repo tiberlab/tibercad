@@ -11,7 +11,7 @@ ElasticityModel*
 ElasticityModel::create(const Material* mat, const ModelOptions& options)
 {
 
-  return PhysicalModelInterface::create<ElasticityModel>(_create, _destroy, mat, options);
+  return PhysicalModel::create<ElasticityModel>(_create, _destroy, mat, options);
 
 }
 
@@ -19,7 +19,7 @@ ElasticityModel::create(const Material* mat, const ModelOptions& options)
 void
 ElasticityModel::do_init(void)
 {
-  PhysicalModelInterface::SubmodelIterator  it;
+  PhysicalModel::SubmodelIterator  it;
   it = submodels_begin("stiffness");
   StiffnessModel* _sm = dynamic_cast<StiffnessModel*> ((*it).second);
   _stiffness =  _sm->get_stiffness();
@@ -31,7 +31,7 @@ ElasticityModel::do_init(void)
 void
 ElasticityModel::do_print_info(void)
 {
-  PhysicalModelInterface::SubmodelIterator it(submodels_begin("stiffness"));
+  PhysicalModel::SubmodelIterator it(submodels_begin("stiffness"));
   StiffnessModel* sm = dynamic_cast<StiffnessModel*> ((*it).second);
   sm->print_info();
 
@@ -61,7 +61,7 @@ ElasticityModel::prepare_submodels(void)
 {
   ModelOptions opts;
   opts.set_option("type", "anisotropic");
-  PhysicalModelInterface* pm;
+  PhysicalModel* pm;
   create_submodel(pm, "stiffness", opts);
 
   create_submodels(_bfm, "body_force");

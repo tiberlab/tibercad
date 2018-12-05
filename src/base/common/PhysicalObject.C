@@ -47,6 +47,9 @@ PhysicalObject::add_model(PhysicalModel* model, ID simulator_id)
       _models[simulator_id] = model;
 
     model->set_owner(this);
+    model->set_database(_database);
+    if (this->get_type() == PhysicalObject::BULK)
+      model->set_material(static_cast<const Material*>(this));
     model->set_simulator_id(simulator_id);
   }
 }

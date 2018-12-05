@@ -3,7 +3,7 @@
 #ifndef _PARTICLEDENSITY_H_
 #define _PARTICLEDENSITY_H_
 
-#include "PhysicalModelInterface.h"
+#include "PhysicalModel.h"
 #include "TiberCad.h"
 #include "TypeDefs.h"
 #include "Constants.h"
@@ -40,7 +40,7 @@ class Elem;
  * The length units are cm.
  *
  */
-class ParticleDensity : public PhysicalModelInterface
+class ParticleDensity : public PhysicalModel
 {
 
   public:

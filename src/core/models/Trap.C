@@ -14,7 +14,7 @@ bool Trap::_coupled;
 
 
 Trap::Trap(const ModelOptions& options) :
-  PhysicalModelInterface(options),
+  PhysicalModel(options),
   _density(0.0),
   _profile(nullptr),
   _type(NEUTRAL),

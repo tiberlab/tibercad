@@ -98,7 +98,7 @@ MasterEquations::create_bulk_model(const ModelOptions& options,
 //MasterEquations::create(const std::string& name, const Material* mat,
 //    const ModelOptions& options)
 //{
-//  return PhysicalModelInterface:: create<MasterEquationsProperties>("me_bulk_" + name, mat, options);
+//  return PhysicalModel:: create<MasterEquationsProperties>("me_bulk_" + name, mat, options);
 //}
 
 

@@ -97,7 +97,7 @@ Module dd_generic
 
     carrier electron
     {
-      override_material = GaAs
+      override_material GaAs { }
 
       density_of_states bulk_kp
       {

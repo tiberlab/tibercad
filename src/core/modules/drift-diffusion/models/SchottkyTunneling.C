@@ -96,8 +96,8 @@ SchottkyTunneling::do_init(void)
 
     if (bdit == bdfirst)
     {
-      const PhysicalModelInterface* mod =
-          sim->get_interface_model<PhysicalModelInterface>(elem, side);
+      const PhysicalModel* mod =
+          sim->get_interface_model<PhysicalModel>(elem, side);
 
       if (!has_option("voltage"))
         get_options().set_option("voltage",

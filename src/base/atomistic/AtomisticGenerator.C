@@ -1547,18 +1547,26 @@ AtomisticGenerator::build_random_alloy()
 
   vector<double> cluster_seeds(cluster.size(), 0.01);
   if (clustering)
+  {
     _as->get_options().get_option("cluster_seeds", cluster_seeds);
+    Messages::info("using clustering:");
+  }
 
   bool fix_mean_alloy_concentration =
       _as->get_options().get_option("fix_mean_alloy_concentration", true);
 
   // build a map associating species to seeds
   map<Specie, double> rand_percentage; 
+  m.indent();
   for (int i=0; i < cluster_seeds.size(); i++)
   {
     Specie tmp(cluster[i]);
     rand_percentage[tmp] = cluster_seeds[i];
+    std::ostringstream os;
+    os << tmp << ", with seed = " << cluster_seeds[i];
+    Messages::info(os.str());
   }
+  m.unindent();
 
   // A random starting seed is needed to actually have different sequences
   // we try to use something that is different also if launching simulations

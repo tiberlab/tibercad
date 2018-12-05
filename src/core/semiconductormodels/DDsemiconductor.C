@@ -163,7 +163,7 @@ DDsemiconductor::~DDsemiconductor (void)
 }
 //---------------------------------------------------------------------------------------------//
 DDsemiconductor::DDsemiconductor(const ModelOptions& options)
-  : PhysicalModelInterface(options),
+  : PhysicalModel(options),
     semiconductor(NULL),
     bulk_ham(NULL),
     energy_cutoff(10.0),
@@ -177,7 +177,7 @@ DDsemiconductor* DDsemiconductor::create(const Material* mat,
     const ModelOptions& options)
 {
   std::string structure = mat->get_structure();
-  return PhysicalModelInterface::create<DDsemiconductor>("DDsemicond_" + structure, mat, options);
+  return PhysicalModel::create<DDsemiconductor>("DDsemicond_" + structure, mat, options);
 }
 
 void DDsemiconductor::prepare_submodels(void)

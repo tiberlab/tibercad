@@ -130,7 +130,7 @@ ElasticityBoundaryModel::ElasticityBoundaryModel(const ModelOptions& options) :
 //ElasticityBoundaryModel::create(const ModelOptions& options)
 //{
  
-//  return dynamic_cast<ElasticityBoundaryModel*>(PhysicalModelInterface::create(_create,_destroy,options));
+//  return dynamic_cast<ElasticityBoundaryModel*>(PhysicalModel::create(_create,_destroy,options));
   
 //}
 

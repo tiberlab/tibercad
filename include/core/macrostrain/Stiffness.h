@@ -4,14 +4,14 @@
 #include "tensor.h"
 #include "xtensor.h"
 #include <cmath>
-#include "PhysicalModelInterface.h"
+#include "PhysicalModel.h"
 #include "PhysicalModel.h"
 #include "SimulationInterface.h"
 
 
 //! A class that containes Young modules for the elasticity problem
 
-class Stiffness : public PhysicalModelInterface
+class Stiffness : public PhysicalModel
 {
  public:
 
@@ -52,7 +52,7 @@ class Stiffness : public PhysicalModelInterface
   virtual void do_init(void)=0;
 
 
-  virtual PhysicalModelInterface* create_new(void) const = 0;
+  virtual PhysicalModel* create_new(void) const = 0;
 
 
 

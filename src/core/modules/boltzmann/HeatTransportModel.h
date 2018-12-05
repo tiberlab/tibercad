@@ -3,7 +3,7 @@
 #ifndef _HEATTRANSPORTMODEL_H_
 #define _HEATTRANSPORTMODEL_H_
 
-#include "PhysicalModelInterface.h"
+#include "PhysicalModel.h"
 
 
 
@@ -11,7 +11,7 @@ using namespace std;
 
 //! The base class for Poisson boundary conditions
 //class TBDLEXPORT HeatTransportModel : public PhysicalModel
-class HeatTransportModel : public PhysicalModelInterface
+class HeatTransportModel : public PhysicalModel
 {
 
   public:
@@ -63,7 +63,7 @@ HeatTransportModel::set_type(Type type_in)
 
 inline
 HeatTransportModel::HeatTransportModel(const ModelOptions& options) :
-  PhysicalModelInterface(options)
+  PhysicalModel(options)
  {
  }
 
@@ -78,7 +78,7 @@ HeatTransportModel::HeatTransportModel(const ModelOptions& options) :
 //    std::string name = options.get_option("type", "fourier");
 
 //    HeatTransportModel* mod = dynamic_cast<HeatTransportModel*>(
-//        PhysicalModelInterface::create("heat_transport_" + name, options));
+//        PhysicalModel::create("heat_transport_" + name, options));
 
 //    if (mod == NULL)
 //    {

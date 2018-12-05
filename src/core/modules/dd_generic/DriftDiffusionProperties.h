@@ -581,7 +581,7 @@ class DriftDiffusionProperties : public PhysicalModel
     virtual void do_init(void) override;
 
     //! Copy some stuff from the original model
-    virtual void copy_from(const PhysicalModelInterface* rhs) override;
+    virtual void copy_from(const PhysicalModel* rhs) override;
 
 
     //! Create some of the submodels

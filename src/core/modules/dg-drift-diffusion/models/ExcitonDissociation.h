@@ -44,7 +44,7 @@ class TBDLLOCAL ExcitonDissociation : public RecombinationModelInterface
     virtual void do_init(void);
 
     //! \copydoc RecombinationModelInterface::create_new()
-    virtual PhysicalModelInterface* create_new(void) const;
+    virtual PhysicalModel* create_new(void) const;
 
 
   private:
@@ -84,7 +84,7 @@ ExcitonDissociation::create(const ModelOptions& options)
 
 
 inline
-PhysicalModelInterface*
+PhysicalModel*
 ExcitonDissociation::create_new(void) const
 {
   return new ExcitonDissociation(get_options());

@@ -41,9 +41,6 @@ class Material : public PhysicalObject
 
     typedef std::set<Specie>::iterator crystal_species_iterator;
   
-    //! A const iterator to iterate over all dopants
-    //typedef std::set<Dopant*>::const_iterator const_dopant_iterator;
-
 
     //! Destructor
     /*!

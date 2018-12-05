@@ -1,21 +1,21 @@
 
-Log start: Thu Aug 30 17:20:53 2018
+Log start: Wed Nov 28 08:57:33 2018
 
 
-tiberCAD release 3.0.0 (rev. 4665, x86_64-linux)
+tiberCAD release 3.0.0 (rev. 4726, x86_64-linux)
 
 Input file: pin.tib
 
 Initialize global simulation options
   Simulation temperature: 300 K
-  Database search path  : /home/maufder/Projects/TIBERCAD/trunk/materials
+  Database search path  : /scratch/maufder/TiberCAD_testsuite/trunk/materials
   Log file              : output/pin.log.0
 
 Setup mesh
   Reading mesh file 'pin.msh ...
-    mesh reading time: 0h 0m 0.023s
+    mesh reading time: 0h 0m 0.015s
     mesh preparation time: 0h 0m 0.002s
-    bd_regions preparation time: 0h 0m 2.2e-05s
+    bd_regions preparation time: 0h 0m 1.9e-05s
 
     mesh units          : 1e-06 m
     mesh dimension      :       1
@@ -26,44 +26,44 @@ Setup mesh
 
 Create materials ...
   Added material GaAs for region 'intrinsic' (mesh regions 1)
-    (using datafile /home/maufder/Projects/TIBERCAD/trunk/materials/GaAs.dat)
+    (using datafile /scratch/maufder/TiberCAD_testsuite/trunk/materials/GaAs.dat)
     x growth direction : (1,0,0)
     y growth direction : (0,1,0)
     z growth direction : (0,0,1)
   Added material GaAs for region 'ndop' (mesh regions 2)
-    (using datafile /home/maufder/Projects/TIBERCAD/trunk/materials/GaAs.dat)
+    (using datafile /scratch/maufder/TiberCAD_testsuite/trunk/materials/GaAs.dat)
     x growth direction : (1,0,0)
     y growth direction : (0,1,0)
     z growth direction : (0,0,1)
   Added material GaAs for region 'pdop' (mesh regions 3)
-    (using datafile /home/maufder/Projects/TIBERCAD/trunk/materials/GaAs.dat)
+    (using datafile /scratch/maufder/TiberCAD_testsuite/trunk/materials/GaAs.dat)
     x growth direction : (1,0,0)
     y growth direction : (0,1,0)
     z growth direction : (0,0,1)
 Creation of materials done.
 
 Setting up simulation of type 'dd_generic' ...
-  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/dd_generic/dd_generic.so)
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/dd_generic/dd_generic.so)
   Adding boundary 'anode'
-  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/dd_generic/ddbnd_ohmic.so)
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/dd_generic/ddbnd_schottky.so)
   Adding boundary 'cathode'
 Creating bulk models... 
   Region: intrinsic
-  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/dd_generic/ddbulk_default.so)
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/dd_generic/ddbulk_default.so)
   Region: ndop
   Region: pdop
 
 Setting up simulation of type 'sweep' ...
 
 Setting up bulk models ...
-  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/dd_generic/carrier.so)
-  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/dd_generic/recombination_direct.so)
-  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/permittivity_constant.so)
-  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/density_of_states_bulk.so)
-  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/dd_generic/mobility_constant.so)
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/dd_generic/carrier.so)
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/dd_generic/recombination_direct.so)
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/permittivity_constant.so)
+    (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/density_of_states_bulk.so)
+    (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/dd_generic/mobility_constant.so)
 
 *** Warning: found unused options in block density_of_states (bulk): charge
-  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/density_of_states_bulk_kp.so)
+    (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/density_of_states_bulk_kp.so)
 
 *** Warning: found unused options in block semiconductor (bulk_kp): charge
 
@@ -337,178 +337,185 @@ We solve: sweep
   >>>>---------------------------- (driftdiffusion) ----------------------------
     Setting max_iterations for nonlinear solver to 150
     Solving equilibrium
-    it 1, |du| = 68.3823, |r| = 13.161  alpha = 0.25
-    it 2, |du| = 51.6429, |r| = 11.2549  alpha = 0.124747
-    it 3, |du| = 31.9549, |r| = 8.50418  alpha = 0.12398
-    it 4, |du| = 17.4655, |r| = 3.96846  alpha = 0.5
-    it 5, |du| = 5.02927, |r| = 1.88626  alpha = 0.5
-    it 6, |du| = 1.55606, |r| = 0.339653  alpha = 1
-    it 7, |du| = 0.484923, |r| = 0.0213904  alpha = 1
-    it 8, |du| = 0.107146, |r| = 0.000106181  alpha = 1
-    it 9, |du| = 0.00362082, |r| = 6.73025e-09  alpha = 1
+    it 1, |du| = 68.3853, |r| = 13.6723  alpha = 0.25
+    it 2, |du| = 51.6425, |r| = 11.7105  alpha = 0.124827
+    it 3, |du| = 31.921, |r| = 8.95378  alpha = 0.124295
+    it 4, |du| = 17.4265, |r| = 4.19031  alpha = 0.5
+    it 5, |du| = 5.0306, |r| = 2.0031  alpha = 0.5
+    it 6, |du| = 1.53617, |r| = 0.340318  alpha = 1
+    it 7, |du| = 0.485809, |r| = 0.0214207  alpha = 1
+    it 8, |du| = 0.110753, |r| = 0.000106467  alpha = 1
+    it 9, |du| = 0.00392957, |r| = 7.90099e-09  alpha = 1
 
-    iterations: 10, |du| = 3.48457e-06, |r| = 3.98e-14
+    iterations: 10, |du| = 4.14148e-06, |r| = 4.46652e-14
     Equilibrium done
 
-  Solve time: 0h 0m 2.7s
+  Solve time: 0h 0m 2.9s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.1
   Trying $Vb = 0.1
 
   >>>>---------------------------- (driftdiffusion) ----------------------------
-    it 1, |du| = 3.86817, |r| = 1.05808  alpha = 1
-    it 2, |du| = 3.75909, |r| = 0.808978  alpha = 0.228032
-    it 3, |du| = 1.00046, |r| = 0.356904  alpha = 0.5
-    it 4, |du| = 0.208877, |r| = 0.0440884  alpha = 1
-    it 5, |du| = 0.0192521, |r| = 0.000531481  alpha = 1
+    it 1, |du| = 3.86817, |r| = 1.0095  alpha = 1
+    it 2, |du| = 3.80053, |r| = 0.758575  alpha = 0.231299
+    it 3, |du| = 1.00652, |r| = 0.33762  alpha = 0.5
+    it 4, |du| = 0.213562, |r| = 0.04206  alpha = 1
+    it 5, |du| = 0.0197602, |r| = 0.000510872  alpha = 1
 
-    iterations: 6, |du| = 0.000191064, |r| = 6.64017e-08
+    iterations: 6, |du| = 0.00019761, |r| = 6.39481e-08
     Surface recombination current = 0
 
     Number conservation:
       carriers: ion, 
-      electrochemical potential: 2.28158
+      mean electrochemical potential: 0.0572927
+      total number of carriers      : 1e+13
 
 
     contact name:       voltage:            current:
-    anode               0.1                -1.88078e-10
-    cathode             0                   1.88078e-10
+    anode               0.1                 4.48792e-11
+    cathode             0                  -4.48792e-11
 
-  Solve time: 0h 0m 1.6s
+  Solve time: 0h 0m 1.7s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.2
   Trying $Vb = 0.2
 
   >>>>---------------------------- (driftdiffusion) ----------------------------
-    it 1, |du| = 3.86817, |r| = 2.75471  alpha = 0.5
-    it 2, |du| = 1.99183, |r| = 1.40751  alpha = 0.5
-    it 3, |du| = 0.967042, |r| = 0.683808  alpha = 0.5
-    it 4, |du| = 0.483521, |r| = 0.0708182  alpha = 1
-    it 5, |du| = 0.00219017, |r| = 0.000116388  alpha = 1
+    it 1, |du| = 3.86817, |r| = 1.95866  alpha = 0.5
+    it 2, |du| = 2.27979, |r| = 1.07015  alpha = 0.5
+    it 3, |du| = 0.967042, |r| = 0.501918  alpha = 0.5
+    it 4, |du| = 0.483521, |r| = 0.0261478  alpha = 1
+    it 5, |du| = 0.00425117, |r| = 4.31892e-05  alpha = 1
 
-    iterations: 6, |du| = 2.77808e-06, |r| = 2.06829e-10
+    iterations: 6, |du| = 8.99332e-06, |r| = 3.14827e-10
     Surface recombination current = 0
 
     Number conservation:
       carriers: ion, 
-      electrochemical potential: 2.2816
+      mean electrochemical potential: 0.0572933
+      total number of carriers      : 1e+13
 
 
     contact name:       voltage:            current:
-    anode               0.2                -3.73742e-10
-    cathode             0                   3.73742e-10
+    anode               0.2                -2.8075e-10
+    cathode             0                   2.8075e-10
 
-  Solve time: 0h 0m 1.5s
+  Solve time: 0h 0m 1.6s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.3
   Trying $Vb = 0.3
 
   >>>>---------------------------- (driftdiffusion) ----------------------------
-    it 1, |du| = 3.86817, |r| = 2.7477  alpha = 0.5
-    it 2, |du| = 1.93408, |r| = 1.379  alpha = 0.5
-    it 3, |du| = 0.967042, |r| = 0.68502  alpha = 0.5
-    it 4, |du| = 0.483521, |r| = 0.0471521  alpha = 1
+    it 1, |du| = 3.86817, |r| = 2.0297  alpha = 0.5
+    it 2, |du| = 2.39548, |r| = 1.46746  alpha = 0.25
+    it 3, |du| = 1.52053, |r| = 0.727734  alpha = 0.5
+    it 4, |du| = 0.725282, |r| = 0.136759  alpha = 1
+    it 5, |du| = 0.00569356, |r| = 0.000693197  alpha = 1
 
-    iterations: 5, |du| = 0.000983815, |r| = 2.30819e-05
+    iterations: 6, |du| = 1.61788e-05, |r| = 1.17452e-08
     Surface recombination current = 0
 
     Number conservation:
       carriers: ion, 
-      electrochemical potential: 2.28162
+      mean electrochemical potential: 0.057294
+      total number of carriers      : 1e+13
 
 
     contact name:       voltage:            current:
-    anode               0.3                 3.39433e-10
-    cathode             0                  -3.39433e-10
+    anode               0.3                -4.07598e-11
+    cathode             0                   4.07598e-11
 
-  Solve time: 0h 0m 1.3s
+  Solve time: 0h 0m 1.7s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.4
   Trying $Vb = 0.4
 
   >>>>---------------------------- (driftdiffusion) ----------------------------
-    it 1, |du| = 3.86817, |r| = 2.74268  alpha = 0.5
-    it 2, |du| = 1.93408, |r| = 1.37497  alpha = 0.5
-    it 3, |du| = 0.967042, |r| = 0.587642  alpha = 1
-    it 4, |du| = 0.00766001, |r| = 0.0029661  alpha = 1
+    it 1, |du| = 3.86817, |r| = 0.477305  alpha = 1
+    it 2, |du| = 0.0811561, |r| = 0.00584383  alpha = 1
+    it 3, |du| = 0.00115847, |r| = 4.04852e-07  alpha = 1
 
-    iterations: 5, |du| = 3.1146e-05, |r| = 5.18339e-08
+    iterations: 4, |du| = 2.64551e-07, |r| = 1.02024e-12
     Surface recombination current = 0
 
     Number conservation:
       carriers: ion, 
-      electrochemical potential: 2.28165
+      mean electrochemical potential: 0.0572947
+      total number of carriers      : 1e+13
 
 
     contact name:       voltage:            current:
-    anode               0.4                 4.29714e-10
-    cathode             0                  -4.29714e-10
+    anode               0.4                 2.39751e-10
+    cathode             0                  -2.39751e-10
 
-  Solve time: 0h 0m 1.2s
+  Solve time: 0h 0m 0.97s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.5
   Trying $Vb = 0.5
 
   >>>>---------------------------- (driftdiffusion) ----------------------------
-    it 1, |du| = 3.86817, |r| = 2.73875  alpha = 0.5
-    it 2, |du| = 1.93408, |r| = 1.08781  alpha = 1
-    it 3, |du| = 0.0280773, |r| = 0.00760156  alpha = 1
+    it 1, |du| = 3.86817, |r| = 0.010214  alpha = 1
+    it 2, |du| = 0.1113, |r| = 2.73224e-06  alpha = 1
+    it 3, |du| = 0.00244323, |r| = 5.50795e-10  alpha = 1
 
-    iterations: 4, |du| = 0.000130574, |r| = 2.77506e-07
+    iterations: 4, |du| = 1.26768e-06, |r| = 1.55724e-12
     Surface recombination current = 0
 
     Number conservation:
       carriers: ion, 
-      electrochemical potential: 2.28168
+      mean electrochemical potential: 0.0572954
+      total number of carriers      : 1e+13
 
 
     contact name:       voltage:            current:
-    anode               0.5                -5.51249e-10
-    cathode             0                   5.51249e-10
+    anode               0.5                -2.06984e-10
+    cathode             0                   2.06984e-10
 
-  Solve time: 0h 0m 0.98s
+  Solve time: 0h 0m 0.91s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.6
   Trying $Vb = 0.6
 
   >>>>---------------------------- (driftdiffusion) ----------------------------
-    it 1, |du| = 3.86817, |r| = 2.54524  alpha = 1
-    it 2, |du| = 0.14933, |r| = 0.0352781  alpha = 1
-    it 3, |du| = 0.00489637, |r| = 5.12326e-06  alpha = 1
+    it 1, |du| = 3.86817, |r| = 0.000223279  alpha = 1
+    it 2, |du| = 0.149461, |r| = 2.07155e-06  alpha = 1
+    it 3, |du| = 0.00490625, |r| = 2.46235e-09  alpha = 1
 
-    iterations: 4, |du| = 5.42422e-06, |r| = 2.2923e-12
+    iterations: 4, |du| = 5.44682e-06, |r| = 1.96786e-12
     Surface recombination current = 0
 
     Number conservation:
       carriers: ion, 
-      electrochemical potential: 2.28171
+      mean electrochemical potential: 0.0572964
+      total number of carriers      : 1e+13
 
 
     contact name:       voltage:            current:
-    anode               0.6                -2.59727e-08
-    cathode             0                   2.59727e-08
+    anode               0.6                -2.04089e-08
+    cathode             0                   2.04089e-08
 
-  Solve time: 0h 0m 0.91s
+  Solve time: 0h 0m 0.92s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.7
   Trying $Vb = 0.7
 
   >>>>---------------------------- (driftdiffusion) ----------------------------
-    it 1, |du| = 3.86817, |r| = 1.93725  alpha = 1
-    it 2, |du| = 0.162323, |r| = 0.017918  alpha = 1
-    it 3, |du| = 0.00494688, |r| = 1.1829e-06  alpha = 1
+    it 1, |du| = 3.86817, |r| = 0.000100477  alpha = 1
+    it 2, |du| = 0.162185, |r| = 2.89578e-06  alpha = 1
+    it 3, |du| = 0.00492544, |r| = 2.80535e-09  alpha = 1
 
-    iterations: 4, |du| = 4.71254e-06, |r| = 2.62442e-12
+    iterations: 4, |du| = 4.66068e-06, |r| = 2.27862e-12
     Surface recombination current = 0
 
     Number conservation:
       carriers: ion, 
-      electrochemical potential: 2.28177
+      mean electrochemical potential: 0.0572979
+      total number of carriers      : 1e+13
 
 
     contact name:       voltage:            current:
-    anode               0.7                -1.28847e-06
-    cathode             0                   1.28847e-06
+    anode               0.7                -1.02751e-06
+    cathode             0                   1.02751e-06
 
   Solve time: 0h 0m 0.92s
   <<<<--------------------------------------------------------------------------
@@ -516,21 +523,22 @@ We solve: sweep
   Trying $Vb = 0.8
 
   >>>>---------------------------- (driftdiffusion) ----------------------------
-    it 1, |du| = 3.86817, |r| = 1.52296  alpha = 1
-    it 2, |du| = 0.417114, |r| = 0.00984439  alpha = 1
-    it 3, |du| = 0.00856108, |r| = 3.15196e-07  alpha = 1
+    it 1, |du| = 3.86817, |r| = 0.000900773  alpha = 1
+    it 2, |du| = 0.41931, |r| = 1.79789e-05  alpha = 1
+    it 3, |du| = 0.00852278, |r| = 2.41355e-08  alpha = 1
 
-    iterations: 4, |du| = 1.19768e-05, |r| = 2.26365e-12
+    iterations: 4, |du| = 1.18443e-05, |r| = 2.0093e-12
     Surface recombination current = 0
 
     Number conservation:
       carriers: ion, 
-      electrochemical potential: 2.28207
+      mean electrochemical potential: 0.0573063
+      total number of carriers      : 1e+13
 
 
     contact name:       voltage:            current:
-    anode               0.8                -6.19078e-05
-    cathode             0                   6.19078e-05
+    anode               0.8                -4.90876e-05
+    cathode             0                   4.90876e-05
 
   Solve time: 0h 0m 0.93s
   <<<<--------------------------------------------------------------------------
@@ -538,134 +546,141 @@ We solve: sweep
   Trying $Vb = 0.9
 
   >>>>---------------------------- (driftdiffusion) ----------------------------
-    it 1, |du| = 3.86817, |r| = 1.22869  alpha = 1
-    it 2, |du| = 0.562956, |r| = 0.00467755  alpha = 1
-    it 3, |du| = 0.0517854, |r| = 5.4517e-07  alpha = 1
+    it 1, |du| = 3.86817, |r| = 0.00804459  alpha = 1
+    it 2, |du| = 0.562693, |r| = 0.000473744  alpha = 1
+    it 3, |du| = 0.0517149, |r| = 2.67465e-07  alpha = 1
 
-    iterations: 4, |du| = 3.82163e-05, |r| = 3.87707e-12
+    iterations: 4, |du| = 3.78837e-05, |r| = 2.50764e-12
     Surface recombination current = 0
 
     Number conservation:
       carriers: ion, 
-      electrochemical potential: 2.28454
+      mean electrochemical potential: 0.0573749
+      total number of carriers      : 1e+13
 
 
     contact name:       voltage:            current:
-    anode               0.9                -0.00296672
-    cathode             0                   0.00296672
+    anode               0.9                -0.00234667
+    cathode             0                   0.00234667
 
-  Solve time: 0h 0m 0.95s
+  Solve time: 0h 0m 0.93s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1
   Trying $Vb = 1
 
   >>>>---------------------------- (driftdiffusion) ----------------------------
-    it 1, |du| = 3.86817, |r| = 1.00904  alpha = 1
-    it 2, |du| = 0.514488, |r| = 0.00763614  alpha = 1
-    it 3, |du| = 0.0424397, |r| = 1.959e-06  alpha = 1
+    it 1, |du| = 3.86817, |r| = 0.0304247  alpha = 1
+    it 2, |du| = 0.514515, |r| = 0.00181235  alpha = 1
+    it 3, |du| = 0.0425029, |r| = 8.69999e-07  alpha = 1
 
-    iterations: 4, |du| = 3.1028e-05, |r| = 2.00341e-11
+    iterations: 4, |du| = 3.08537e-05, |r| = 7.55631e-12
     Surface recombination current = 0
 
     Number conservation:
       carriers: ion, 
-      electrochemical potential: 2.30234
+      mean electrochemical potential: 0.0578689
+      total number of carriers      : 1e+13
 
 
     contact name:       voltage:            current:
-    anode               1                  -0.141185
-    cathode             0                   0.141185
+    anode               1                  -0.111403
+    cathode             0                   0.111403
 
-  Solve time: 0h 0m 0.97s
+  Solve time: 0h 0m 0.93s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.1
   Trying $Vb = 1.1
 
   >>>>---------------------------- (driftdiffusion) ----------------------------
-    it 1, |du| = 3.86817, |r| = 0.82793  alpha = 1
-    it 2, |du| = 0.493102, |r| = 0.0450236  alpha = 1
-    it 3, |du| = 0.0550432, |r| = 4.88391e-05  alpha = 1
+    it 1, |du| = 3.86817, |r| = 0.122102  alpha = 1
+    it 2, |du| = 0.493377, |r| = 0.00938645  alpha = 1
+    it 3, |du| = 0.0557996, |r| = 9.01655e-06  alpha = 1
 
-    iterations: 4, |du| = 7.38611e-05, |r| = 3.72313e-09
+    iterations: 4, |du| = 7.41293e-05, |r| = 2.88997e-10
     Surface recombination current = 0
 
     Number conservation:
       carriers: ion, 
-      electrochemical potential: 2.41478
+      mean electrochemical potential: 0.0610275
+      total number of carriers      : 1e+13
 
 
     contact name:       voltage:            current:
-    anode               1.1                -6.43742
-    cathode             0                   6.43742
+    anode               1.1                -5.05099
+    cathode             0                   5.05099
 
-  Solve time: 0h 0m 0.97s
+  Solve time: 0h 0m 0.93s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.2
   Trying $Vb = 1.2
 
   >>>>---------------------------- (driftdiffusion) ----------------------------
-    it 1, |du| = 3.86817, |r| = 0.703122  alpha = 1
-    it 2, |du| = 0.408896, |r| = 0.10033  alpha = 1
-    it 3, |du| = 0.0672323, |r| = 0.00306539  alpha = 1
-    it 4, |du| = 0.00131272, |r| = 2.36247e-06  alpha = 1
+    it 1, |du| = 3.86817, |r| = 0.399428  alpha = 1
+    it 2, |du| = 0.37114, |r| = 0.0544055  alpha = 1
+    it 3, |du| = 0.076426, |r| = 0.00113446  alpha = 1
+    it 4, |du| = 0.0018998, |r| = 8.22794e-07  alpha = 1
 
-    iterations: 5, |du| = 4.65573e-07, |r| = 1.22904e-12
+    iterations: 5, |du| = 1.07919e-06, |r| = 1.00457e-12
     Surface recombination current = 0
 
     Number conservation:
       carriers: ion, 
-      electrochemical potential: 2.9045
+      mean electrochemical potential: 0.0762916
+      total number of carriers      : 1e+13
 
 
     contact name:       voltage:            current:
-    anode               1.2                -236.669
-    cathode             0                   236.669
+    anode               1.2                -171.295
+    cathode             0                   171.295
 
-  Solve time: 0h 0m 1.2s
+  Solve time: 0h 0m 1.3s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.3
   Trying $Vb = 1.3
 
   >>>>---------------------------- (driftdiffusion) ----------------------------
-    it 1, |du| = 3.86817, |r| = 0.708592  alpha = 1
-    it 2, |du| = 0.391332, |r| = 0.116595  alpha = 1
-    it 3, |du| = 0.116801, |r| = 0.00783582  alpha = 1
-    it 4, |du| = 0.00910637, |r| = 5.3618e-05  alpha = 1
+    it 1, |du| = 3.86817, |r| = 0.513145  alpha = 1
+    it 2, |du| = 0.689769, |r| = 0.143331  alpha = 1
+    it 3, |du| = 0.374421, |r| = 0.0323146  alpha = 1
+    it 4, |du| = 0.088426, |r| = 0.00237039  alpha = 1
+    it 5, |du| = 0.00405616, |r| = 9.11202e-06  alpha = 1
 
-    iterations: 5, |du| = 4.96864e-05, |r| = 2.13315e-09
+    iterations: 6, |du| = 9.09755e-06, |r| = 7.32759e-11
     Surface recombination current = 0
 
     Number conservation:
       carriers: ion, 
-      electrochemical potential: 4.15456
+      mean electrochemical potential: 0.130698
+      total number of carriers      : 1e+13
 
 
     contact name:       voltage:            current:
-    anode               1.3                -4146.7
-    cathode             0                   4146.7
+    anode               1.3                -1250.84
+    cathode             0                   1250.84
 
-  Solve time: 0h 0m 1.2s
+  Solve time: 0h 0m 1.5s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.4
   Trying $Vb = 1.4
 
   >>>>---------------------------- (driftdiffusion) ----------------------------
-    it 1, |du| = 3.86817, |r| = 0.414563  alpha = 1
-    it 2, |du| = 0.417763, |r| = 0.0723573  alpha = 1
-    it 3, |du| = 0.130801, |r| = 0.00482708  alpha = 1
-    it 4, |du| = 0.0107167, |r| = 2.63324e-05  alpha = 1
+    it 1, |du| = 3.86817, |r| = 0.164739  alpha = 1
+    it 2, |du| = 0.562952, |r| = 0.0393367  alpha = 1
+    it 3, |du| = 0.125453, |r| = 0.00286419  alpha = 1
+    it 4, |du| = 0.00705257, |r| = 1.25203e-05  alpha = 1
 
-    iterations: 5, |du| = 6.53257e-05, |r| = 9.23103e-10
+    iterations: 5, |du| = 2.44564e-05, |r| = 1.78979e-10
     Surface recombination current = 0
 
     Number conservation:
       carriers: ion, 
-      electrochemical potential: 6.38561
+      mean electrochemical potential: 0.22541
+      total number of carriers      : 1e+13
 
 
     contact name:       voltage:            current:
-    anode               1.4                -23407.9
-    cathode             0                   23407.9
+    anode               1.4                -1570.04
+    cathode             0                   1570.04
 
   Solve time: 0h 0m 1.2s
   <<<<--------------------------------------------------------------------------
@@ -673,132 +688,134 @@ We solve: sweep
   Trying $Vb = 1.5
 
   >>>>---------------------------- (driftdiffusion) ----------------------------
-    it 1, |du| = 3.86817, |r| = 0.129764  alpha = 1
-    it 2, |du| = 0.241571, |r| = 0.0162749  alpha = 1
-    it 3, |du| = 0.0407422, |r| = 0.000381851  alpha = 1
-    it 4, |du| = 0.00100811, |r| = 2.34742e-07  alpha = 1
+    it 1, |du| = 3.86817, |r| = 0.103618  alpha = 1
+    it 2, |du| = 0.0877313, |r| = 0.00376485  alpha = 1
+    it 3, |du| = 0.00223706, |r| = 5.03362e-06  alpha = 1
 
-    iterations: 5, |du| = 5.85925e-07, |r| = 3.14022e-13
+    iterations: 4, |du| = 3.04808e-06, |r| = 8.30406e-12
     Surface recombination current = 0
 
     Number conservation:
       carriers: ion, 
-      electrochemical potential: 9.31047
+      mean electrochemical potential: 0.325216
+      total number of carriers      : 1e+13
 
 
     contact name:       voltage:            current:
-    anode               1.5                -63890.9
-    cathode             0                   63890.9
+    anode               1.5                -1580.22
+    cathode             0                   1580.22
 
-  Solve time: 0h 0m 1.2s
+  Solve time: 0h 0m 0.93s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.6
   Trying $Vb = 1.6
 
   >>>>---------------------------- (driftdiffusion) ----------------------------
-    it 1, |du| = 3.86817, |r| = 0.0626488  alpha = 1
-    it 2, |du| = 0.125595, |r| = 0.00423076  alpha = 1
-    it 3, |du| = 0.0105054, |r| = 2.61117e-05  alpha = 1
+    it 1, |du| = 3.86817, |r| = 0.0681774  alpha = 1
+    it 2, |du| = 0.044515, |r| = 0.00181031  alpha = 1
 
-    iterations: 4, |du| = 6.66686e-05, |r| = 1.17611e-09
+    iterations: 3, |du| = 0.00099398, |r| = 9.75899e-07
     Surface recombination current = 0
 
     Number conservation:
       carriers: ion, 
-      electrochemical potential: 12.5683
+      mean electrochemical potential: 0.42517
+      total number of carriers      : 1e+13
 
 
     contact name:       voltage:            current:
-    anode               1.6                -122681
-    cathode             0                   122681
+    anode               1.6                -1581.07
+    cathode             0                   1581.07
 
-  Solve time: 0h 0m 0.92s
+  Solve time: 0h 0m 0.71s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.7
   Trying $Vb = 1.7
 
   >>>>---------------------------- (driftdiffusion) ----------------------------
-    it 1, |du| = 3.86817, |r| = 0.037631  alpha = 1
-    it 2, |du| = 0.0710987, |r| = 0.00144732  alpha = 1
-    it 3, |du| = 0.00325391, |r| = 2.81893e-06  alpha = 1
+    it 1, |du| = 3.86817, |r| = 0.0474528  alpha = 1
+    it 2, |du| = 0.0270932, |r| = 0.000754347  alpha = 1
 
-    iterations: 4, |du| = 6.43739e-06, |r| = 1.3229e-11
+    iterations: 3, |du| = 0.000375323, |r| = 1.50681e-07
     Surface recombination current = 0
 
     Number conservation:
       carriers: ion, 
-      electrochemical potential: 15.9961
+      mean electrochemical potential: 0.525133
+      total number of carriers      : 1e+13
 
 
     contact name:       voltage:            current:
-    anode               1.7                -196058
-    cathode             0                   196058
+    anode               1.7                -1581.53
+    cathode             0                   1581.53
 
-  Solve time: 0h 0m 0.92s
+  Solve time: 0h 0m 0.71s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.8
   Trying $Vb = 1.8
 
   >>>>---------------------------- (driftdiffusion) ----------------------------
-    it 1, |du| = 3.86817, |r| = 0.0248243  alpha = 1
-    it 2, |du| = 0.0441105, |r| = 0.000609545  alpha = 1
-    it 3, |du| = 0.0012329, |r| = 4.59796e-07  alpha = 1
+    it 1, |du| = 3.86817, |r| = 0.0348898  alpha = 1
+    it 2, |du| = 0.0181439, |r| = 0.000363931  alpha = 1
 
-    iterations: 4, |du| = 9.18758e-07, |r| = 4.16777e-13
+    iterations: 3, |du| = 0.000168105, |r| = 3.21548e-08
     Surface recombination current = 0
 
     Number conservation:
       carriers: ion, 
-      electrochemical potential: 19.5233
+      mean electrochemical potential: 0.625102
+      total number of carriers      : 1e+13
 
 
     contact name:       voltage:            current:
-    anode               1.8                -281268
-    cathode             0                   281268
+    anode               1.8                -1581.87
+    cathode             0                   1581.87
 
-  Solve time: 0h 0m 0.92s
+  Solve time: 0h 0m 0.71s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.9
   Trying $Vb = 1.9
 
   >>>>---------------------------- (driftdiffusion) ----------------------------
-    it 1, |du| = 3.86817, |r| = 0.0174157  alpha = 1
-    it 2, |du| = 0.0297, |r| = 0.000297211  alpha = 1
+    it 1, |du| = 3.86817, |r| = 0.0267624  alpha = 1
+    it 2, |du| = 0.0129618, |r| = 0.000196494  alpha = 1
 
-    iterations: 3, |du| = 0.000544969, |r| = 1.01663e-07
+    iterations: 3, |du| = 8.55917e-05, |r| = 8.76403e-09
     Surface recombination current = 0
 
     Number conservation:
       carriers: ion, 
-      electrochemical potential: 23.1146
+      mean electrochemical potential: 0.725074
+      total number of carriers      : 1e+13
 
 
     contact name:       voltage:            current:
-    anode               1.9                -376366
-    cathode             0                   376366
+    anode               1.9                -1582.15
+    cathode             0                   1582.15
 
-  Solve time: 0h 0m 0.7s
+  Solve time: 0h 0m 0.71s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 2
   Trying $Vb = 2
 
   >>>>---------------------------- (driftdiffusion) ----------------------------
-    it 1, |du| = 3.86817, |r| = 0.0127582  alpha = 1
-    it 2, |du| = 0.0216405, |r| = 0.00016075  alpha = 1
+    it 1, |du| = 3.86817, |r| = 0.0212093  alpha = 1
+    it 2, |du| = 0.00970459, |r| = 0.000115317  alpha = 1
 
-    iterations: 3, |du| = 0.000274491, |r| = 2.8079e-08
+    iterations: 3, |du| = 4.78719e-05, |r| = 2.85891e-09
     Surface recombination current = 0
 
     Number conservation:
       carriers: ion, 
-      electrochemical potential: 26.7505
+      mean electrochemical potential: 0.825048
+      total number of carriers      : 1e+13
 
 
     contact name:       voltage:            current:
-    anode               2                  -479955
-    cathode             0                   479955
+    anode               2                  -1582.37
+    cathode             0                   1582.37
 
-  Solve time: 0h 0m 0.71s
+  Solve time: 0h 0m 0.72s
   <<<<--------------------------------------------------------------------------
 
 Solve time: 0h 0m 26s
@@ -811,6 +828,6 @@ Simulation finished.
 0 errors detected
 
 
-Log end: Thu Aug 30 17:21:20 2018
+Log end: Wed Nov 28 08:57:59 2018
 
 

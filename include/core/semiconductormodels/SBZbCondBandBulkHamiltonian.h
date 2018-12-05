@@ -4,7 +4,7 @@
 
 #include "ZbSemiconductor.h"
 #include "SBCondBandBulkHamiltonian.h"
-#include "PhysicalModelInterface.h"
+#include "PhysicalModel.h"
 
 //! A class to calculate single band Hamiltonian of zinc-blende material
 class SBZbCondBandBulkHamiltonian : public SBCondBandBulkHamiltonian
@@ -41,7 +41,7 @@ class SBZbCondBandBulkHamiltonian : public SBCondBandBulkHamiltonian
   SBZbCondBandBulkHamiltonian(const ModelOptions& options)
     : SBCondBandBulkHamiltonian(options) {};
 
-  virtual PhysicalModelInterface* create_new(void) const;
+  virtual PhysicalModel* create_new(void) const;
 
 
   virtual void calculate_for_init(void);
@@ -51,7 +51,7 @@ class SBZbCondBandBulkHamiltonian : public SBCondBandBulkHamiltonian
 
 };
 
-inline PhysicalModelInterface* SBZbCondBandBulkHamiltonian::create_new() const
+inline PhysicalModel* SBZbCondBandBulkHamiltonian::create_new() const
 {
   return new SBZbCondBandBulkHamiltonian(get_options());
 }

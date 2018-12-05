@@ -86,7 +86,7 @@ void PhononModel::do_init(void)
 
   std::string model_name =  "raman_tensor_" +get_material()->get_structure();
 
-  raman_tensor_model = dynamic_cast<RamanTensor*>(PhysicalModelInterface::create(model_name));
+  raman_tensor_model = dynamic_cast<RamanTensor*>(PhysicalModel::create(model_name));
 
   if (raman_tensor_model == NULL)
     throw InitFailedException("No such raman tensor model" + model_name);
@@ -144,7 +144,7 @@ PhononModel::add_dynamical_matrix_model(const std::string& model_name,
 {
 
   DynamicalMatrix* model = dynamic_cast<DynamicalMatrix*>(
-							  PhysicalModelInterface::create(model_name,options));
+							  PhysicalModel::create(model_name,options));
 
   if (model == NULL)
     throw InitFailedException("No such dynamical matrix model" + model_name);
@@ -230,7 +230,7 @@ PhononModel::get_light_polarization(std::vector<Tensor1>& light_polarization)
 
 //==========================================================================//
 
-// PhysicalModelInterface* PhononModel::create_new (void) const
+// PhysicalModel* PhononModel::create_new (void) const
 // {
 //   return new PhononModel();
 // }
@@ -259,7 +259,7 @@ PhononModel::get_light_polarization(std::vector<Tensor1>& light_polarization)
 
 
 //     //kappa =dynamic_cast<LatticeThermalConductivity*>(
-//     //	      PhysicalModelInterface::create("lat_therm_cond_" +
+//     //	      PhysicalModel::create("lat_therm_cond_" +
 //     //	      get_material()->get_structure(), it->second));
 
 
@@ -271,7 +271,7 @@ PhononModel::get_light_polarization(std::vector<Tensor1>& light_polarization)
 //     else
 //     {
 //     //kappa = dynamic_cast<LatticeThermalConductivity*>(
-//     //  PhysicalModelInterface::create("lat_therm_cond_" +
+//     //  PhysicalModel::create("lat_therm_cond_" +
 //     //	get_material()->get_structure()));
 
 //      }
@@ -290,7 +290,7 @@ PhononModel::get_light_polarization(std::vector<Tensor1>& light_polarization)
 
 
 // //==========================================================================//
-// void PhononModel::do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
+// void PhononModel::do_init_alloy (const PhysicalModel *comp_A, const PhysicalModel *comp_B, double xa)
 // {
 
 //   const PhononModel* matA = dynamic_cast< const PhononModel*> (comp_A);

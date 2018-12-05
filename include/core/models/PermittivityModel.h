@@ -3,7 +3,7 @@
 #ifndef _PERMITTIVITYMODEL_H_
 #define _PERMITTIVITYMODEL_H_
 
-#include "PhysicalModelInterface.h"
+#include "PhysicalModel.h"
 #include "RotatedCrystal.h"
 #include "Material.h"
 #include "tensor.h"
@@ -17,7 +17,7 @@ USELIBMESHTYPE(RealTensor);
 
 
 // Base class for charge density models
-class TBDLEXPORT PermittivityModel : public PhysicalModelInterface
+class TBDLEXPORT PermittivityModel : public PhysicalModel
 {
 
   public:
@@ -48,7 +48,7 @@ protected:
 
 inline
 PermittivityModel::PermittivityModel(const ModelOptions& options) :
-  PhysicalModelInterface(options)
+  PhysicalModel(options)
 {
   _permittivity = 0;
   _permittivity(0,0) = 1.0;

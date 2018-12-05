@@ -5,7 +5,7 @@
  
  
 Piezoelectricity::Piezoelectricity(const ModelOptions& options)
- : PhysicalModelInterface(options)
+ : PhysicalModel(options)
 {
 
 
@@ -16,7 +16,7 @@ Piezoelectricity* Piezoelectricity::create(const Material* mat, const ModelOptio
 {
 
   std::string structure = mat->get_structure();
-  return dynamic_cast<Piezoelectricity*>(PhysicalModelInterface::create("piezo_" + structure,
+  return dynamic_cast<Piezoelectricity*>(PhysicalModel::create("piezo_" + structure,
       mat, options));
 
 }

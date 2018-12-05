@@ -2,7 +2,7 @@
 #define _MACROSTRAINMODEL_H_
 
 #include "PhysicalModel.h"
-#include "PhysicalModelInterface.h"
+#include "PhysicalModel.h"
 #include "Stiffness.h"
 #include "Piezoelectricity.h"
 #include "RotatedCrystal.h"
@@ -61,7 +61,7 @@ class MacrostrainModel: public MacrostrainModelInterface
   //!Constructor
   MacrostrainModel(const ModelOptions& options);
 
-  virtual PhysicalModelInterface* create_new (void) const;
+  virtual PhysicalModel* create_new (void) const;
 
 
   virtual void do_init();

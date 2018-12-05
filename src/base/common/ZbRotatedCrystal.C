@@ -244,7 +244,7 @@ void ZbRotatedCrystal::do_init(void)
 
 //-----------------------------------------------------//
 
-void  ZbRotatedCrystal::copy_from (const PhysicalModelInterface *rhs)
+void  ZbRotatedCrystal::copy_from (const PhysicalModel *rhs)
 {
 
   const ZbRotatedCrystal* temp = dynamic_cast<const ZbRotatedCrystal*> (rhs);
@@ -263,8 +263,8 @@ void  ZbRotatedCrystal::copy_from (const PhysicalModelInterface *rhs)
 
 //-----------------------------------------------------//
 
-void  ZbRotatedCrystal::do_init_alloy (const PhysicalModelInterface *comp_A, 
-                                       const PhysicalModelInterface *comp_B, double xa) 
+void  ZbRotatedCrystal::do_init_alloy (const PhysicalModel *comp_A, 
+                                       const PhysicalModel *comp_B, double xa) 
 {
   
   const ZbRotatedCrystal* mod_A = dynamic_cast<const ZbRotatedCrystal*> (comp_A);
@@ -284,7 +284,7 @@ void  ZbRotatedCrystal::do_init_alloy (const PhysicalModelInterface *comp_A,
 }
 
 //==================================================================//
-PhysicalModelInterface* ZbRotatedCrystal::create_new(void) const
+PhysicalModel* ZbRotatedCrystal::create_new(void) const
 {
   return new  ZbRotatedCrystal(get_options());
 

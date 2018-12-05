@@ -14,7 +14,7 @@ VffModel*
 VffModel::create(const Material* mat, const ModelOptions& options)
 {
 
-  return PhysicalModelInterface::create<VffModel>(_create, _destroy, mat, options);
+  return PhysicalModel::create<VffModel>(_create, _destroy, mat, options);
 
 }
 //

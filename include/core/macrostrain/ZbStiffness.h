@@ -25,7 +25,7 @@ class ZbStiffness : public Stiffness
   //reads database
   void read_database ( );
 
-  virtual PhysicalModelInterface* create_new(void) const;
+  virtual PhysicalModel* create_new(void) const;
 
   virtual void do_init (void);
 
@@ -33,7 +33,7 @@ class ZbStiffness : public Stiffness
 };
 
 
-inline  PhysicalModelInterface* ZbStiffness::create_new(void) const
+inline  PhysicalModel* ZbStiffness::create_new(void) const
 {
   return ( new ZbStiffness(get_options()) ) ;
 }

@@ -3,14 +3,14 @@
 #ifndef _RAMANTENSOR_H_
 #define _RAMANTENSOR_H_
 
-#include "PhysicalModelInterface.h"
+#include "PhysicalModel.h"
 #include "PhononModel.h"
 
 class PhononModel;
 
 
 //! Class to return the dynamical matrix of a lattice in k = Gamma
-class RamanTensor : public PhysicalModelInterface
+class RamanTensor : public PhysicalModel
 {
 
 public:
@@ -37,10 +37,10 @@ protected:
 
   virtual void read_database(void)=0;
 
-  virtual void do_init_alloy (const PhysicalModelInterface *comp_A,
-      const PhysicalModelInterface *comp_B, double xa); 
+  virtual void do_init_alloy (const PhysicalModel *comp_A,
+      const PhysicalModel *comp_B, double xa); 
 
-  virtual PhysicalModelInterface* create_new (void) const =0;
+  virtual PhysicalModel* create_new (void) const =0;
 
   //!rotates dynamical matrix into the simulation system
    void rotate_to_calculation_system(const Tensor2Gen& RotMatrix);

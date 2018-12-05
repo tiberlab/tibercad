@@ -32,8 +32,8 @@ class TBDLLOCAL GrayModel : public HeatTransportModel
     virtual void do_init(void);
 
     /* In some cases it might be useful to reimplement this: */
-    // virtual void do_init_interface(const PhysicalModelInterface* comp_A,
-    //         const PhysicalModelInterface* comp_B);
+    // virtual void do_init_interface(const PhysicalModel* comp_A,
+    //         const PhysicalModel* comp_B);
 
 
     /* This is not used here: */
@@ -45,7 +45,7 @@ class TBDLLOCAL GrayModel : public HeatTransportModel
 
 
     //! Create a new object of the same type
-    virtual PhysicalModelInterface* create_new(void) const;
+    virtual PhysicalModel* create_new(void) const;
 
 
   private:
@@ -77,7 +77,7 @@ class TBDLLOCAL GrayModel : public HeatTransportModel
 
 
 inline
-PhysicalModelInterface*
+PhysicalModel*
 GrayModel::create_new(void) const
 {
   return new  GrayModel(get_options());

@@ -7,8 +7,8 @@
 
 
 
-void OptDielectricConstant::do_init_alloy (const PhysicalModelInterface *comp_A,
-                                           const PhysicalModelInterface *comp_B, double xa)
+void OptDielectricConstant::do_init_alloy (const PhysicalModel *comp_A,
+                                           const PhysicalModel *comp_B, double xa)
 
 { 
   const OptDielectricConstant* modA = dynamic_cast<const OptDielectricConstant*>(comp_A);
@@ -34,5 +34,5 @@ void OptDielectricConstant::do_init_alloy (const PhysicalModelInterface *comp_A,
 OptDielectricConstant* OptDielectricConstant::create(const Material* mat, const ModelOptions& options )
 {
   std::string structure = mat->get_structure();
-  return dynamic_cast<OptDielectricConstant*>(PhysicalModelInterface::create("opt_dielectric_constant_" + structure, mat, options));
+  return dynamic_cast<OptDielectricConstant*>(PhysicalModel::create("opt_dielectric_constant_" + structure, mat, options));
 }

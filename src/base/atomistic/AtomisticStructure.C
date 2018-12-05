@@ -2121,41 +2121,6 @@ AtomisticStructure::extract_statistics(map<Specie, vector<unsigned int>>& stats,
     m.info(os.str());
   }
 
-  // we can induce an artificial detection efficiency, to model e.g. APT
-  map<Specie, double> detection_efficiency;
-  vector<string> det_eff;
-  opt.get_option("detection_efficiency", det_eff);
-  if (det_eff.size() % 2 != 0)
-  {
-    Messages::error("detection_efficiency for alloy statistics is ill defined: "
-        "need pairs (species, efficiency)");
-  }
-  else
-  {
-    for (int i = 0; i < det_eff.size(); i += 2)
-    {
-      double eff = Utils::convert<double>(det_eff[i+1]);
-      if ((eff > 1.0) || (eff < 0))
-        Messages::error("Wrong detection efficiency for " + det_eff[i] + ": "
-            + det_eff[i+1]);
-      else
-        detection_efficiency[det_eff[i]] = eff;
-    }
-  }
-
-  if (!detection_efficiency.empty())
-  {
-    Messages m;
-    m.indent();
-    m.info("Using detection efficiencies:");
-    m.indent();
-    for (auto&& it : detection_efficiency)
-    {
-      std::ostringstream os;
-      os << it.first << " : " << it.second << Messages::endl;
-      Messages::info(os.str());
-    }
-  }
 
   // A random starting seed is needed to actually have different sequences
   // we try to use something that is different also if launching simulations
@@ -2169,6 +2134,72 @@ AtomisticStructure::extract_statistics(map<Specie, vector<unsigned int>>& stats,
     Messages::info(os.str());
   }
   std::tr1::mt19937 generator(seed);
+
+
+  // we can induce an artificial detection efficiency, to model e.g. APT
+  map<Specie, double> detection_efficiency;
+  {
+    vector<string> det_eff;
+    opt.get_option("detection_efficiency", det_eff);
+    if (det_eff.size() % 2 != 0)
+    {
+      Messages::error("detection_efficiency for alloy statistics is ill defined: "
+          "need pairs (species, efficiency)");
+    }
+    else
+    {
+      for (int i = 0; i < det_eff.size(); i += 2)
+      {
+        double eff = Utils::convert<double>(det_eff[i+1]);
+        if ((eff > 1.0) || (eff < 0))
+          Messages::error("Wrong detection efficiency for " + det_eff[i] + ": "
+              + det_eff[i+1]);
+        else
+          detection_efficiency[det_eff[i]] = eff;
+      }
+    }
+  }
+
+  std::vector<unsigned char> detect;
+  if (!detection_efficiency.empty())
+  {
+    Messages m;
+    m.indent();
+    m.info("Using detection efficiencies:");
+    m.indent();
+    for (auto&& it : detection_efficiency)
+    {
+      std::ostringstream os;
+      os << it.first << " : " << it.second << Messages::endl;
+      Messages::info(os.str());
+    }
+
+    detect.resize(get_N_atoms(), 0);
+
+    for (unsigned int i = 0; i < get_N_atoms(); i++)
+    {
+      const Atom& atm = get_structure_atom(i);
+
+      if (atm.get_label() == 0)
+        continue;
+
+      ID subdomain = atm.get_region_ID();
+
+      if (regions.count(subdomain))
+      {
+        if (!stats.count(atm.get_specie()))
+        {
+          if (!detection_efficiency[atm.get_specie()])
+            detection_efficiency[atm.get_specie()] = 1;
+
+          double rnd = static_cast<double>(generator()) / generator.max();
+          if (rnd < detection_efficiency[atm.get_specie()])
+            detect[i] = 1;
+
+        }
+      }
+    }
+  }
 
 
   for (unsigned int i = 0; i < get_N_atoms(); i++)
@@ -2186,8 +2217,6 @@ AtomisticStructure::extract_statistics(map<Specie, vector<unsigned int>>& stats,
     {
       if (!stats.count(atm.get_specie()))
       {
-        if (!detection_efficiency[atm.get_specie()])
-          detection_efficiency[atm.get_specie()] = 1;
 
         // this species is found for the first time
         size_t len = 1;
@@ -2198,8 +2227,7 @@ AtomisticStructure::extract_statistics(map<Specie, vector<unsigned int>>& stats,
       }
 
 
-      double rnd = static_cast<double>(generator()) / generator.max();
-      if (rnd < detection_efficiency[atm.get_specie()])
+      if (detect.empty() || detect[i])
       {
         stats[atm.get_specie()][0] += 1;
       }
@@ -2225,8 +2253,7 @@ AtomisticStructure::extract_statistics(map<Specie, vector<unsigned int>>& stats,
           if (!regions.count(neigh.get_region_ID()))
             continue;
 
-          double rnd = static_cast<double>(generator()) / generator.max();
-          if (rnd < detection_efficiency[neigh.get_specie()])
+          if (detect.empty() || detect[it.atom_index()])
           {
             if (!stats.count(neigh.get_specie()))
             {

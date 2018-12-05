@@ -30,7 +30,7 @@ class SBCondBandBulkHamiltonian: public SBbulkHamiltonian
 
   SBCondBandBulkHamiltonian(const ModelOptions& options);
 
- virtual PhysicalModelInterface* create_new(void) const = 0 ;
+ virtual PhysicalModel* create_new(void) const = 0 ;
 
 
  virtual void do_init(void);

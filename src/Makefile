@@ -4,7 +4,7 @@
 topdir := ../
 
 # we have to compile each module
-subdirs := base pmi utils control core
+subdirs := base utils control core
 
 include $(topdir)/Make.common
 

@@ -1,7 +1,7 @@
 // $Id$
 
 #include "tiber_config.h"
-#include "PhysicalModelInterface.h"
+#include "PhysicalModel.h"
 #include "SimulationInterface.h"
 #include "MaterialBoundary.h"
 #include "Material.h"
@@ -38,15 +38,15 @@ using namespace std;
 
 
 map<const string, ID>
-PhysicalModelInterface::_model_ids;
+PhysicalModel::_model_ids;
 
 /*map< std::pair<const std::string,
                const std::string>,
      ID >
-PhysicalModelInterface::_unique_model_ids;*/
+PhysicalModel::_unique_model_ids;*/
 
 
-PhysicalModelInterface::PhysicalModelInterface(const ModelOptions& options)
+PhysicalModel::PhysicalModel(const ModelOptions& options)
   : TiberModelObject(options),
     _id(INVALID_ID),
     _simulator_id(INVALID_ID),
@@ -57,7 +57,7 @@ PhysicalModelInterface::PhysicalModelInterface(const ModelOptions& options)
 {
 }
 
-PhysicalModelInterface::~PhysicalModelInterface(void)
+PhysicalModel::~PhysicalModel(void)
 {
   SubmodelIterator it(submodels_begin());
   const SubmodelIterator end(submodels_end());
@@ -67,14 +67,14 @@ PhysicalModelInterface::~PhysicalModelInterface(void)
 
 
 
-PhysicalModelInterface*
-PhysicalModelInterface::_create(const string& name,
+PhysicalModel*
+PhysicalModel::_create(const string& name,
     const PhysicalObject* owner,
     const ModelOptions& options,
     const string& module)
 {
 
-  PhysicalModelInterface* mod = nullptr;
+  PhysicalModel* mod = nullptr;
 
   if (name == "cryst_gen")
     mod = RotatedCrystal::create(options);
@@ -111,11 +111,11 @@ PhysicalModelInterface::_create(const string& name,
   if (mod == nullptr)
   {
     // first try without module directory
-    if ((mod = create_from_library<PhysicalModelInterface>(name, options, owner)) == 0)
+    if ((mod = create_from_library<PhysicalModel>(name, options, owner)) == 0)
     {
       if (module.size() >  0)
       {
-        mod = create_from_library<PhysicalModelInterface>(
+        mod = create_from_library<PhysicalModel>(
             module + "/" + name, options, owner);
       }
     }
@@ -151,13 +151,13 @@ PhysicalModelInterface::_create(const string& name,
 
 
 
-PhysicalModelInterface*
-PhysicalModelInterface::_create(create_t create_fnc, destroy_t destroy_fnc,
+PhysicalModel*
+PhysicalModel::_create(create_t create_fnc, destroy_t destroy_fnc,
     const PhysicalObject* owner,
     const ModelOptions& options,
     const string& module)
 {
-  PhysicalModelInterface* mod = dynamic_cast<PhysicalModelInterface*>(
+  PhysicalModel* mod = dynamic_cast<PhysicalModel*>(
       create_from_function(create_fnc, destroy_fnc, options, owner));
 
   if (mod != nullptr)
@@ -193,8 +193,8 @@ PhysicalModelInterface::_create(create_t create_fnc, destroy_t destroy_fnc,
 
 
 void
-PhysicalModelInterface::_register_model(
-    PhysicalModelInterface* model)
+PhysicalModel::_register_model(
+    PhysicalModel* model)
 {
   const string name = typeid(*model).name();
   model_id_iterator it = _model_ids.find(name);
@@ -234,21 +234,21 @@ PhysicalModelInterface::_register_model(
 
 
 void
-PhysicalModelInterface::set_owner(const PhysicalObject* owner)
+PhysicalModel::set_owner(const PhysicalObject* owner)
 {
   _owner = owner;
-  if ((_owner != nullptr) && (_owner->get_type() == PhysicalObject::BULK))
-    _bulk_material = static_cast<const Material*>(_owner);
-  else
-    _bulk_material = nullptr;
+  //if ((_owner != nullptr) && (_owner->get_type() == PhysicalObject::BULK))
+  //  _bulk_material = static_cast<const Material*>(_owner);
+  //else
+  //  _bulk_material = nullptr;
 }
 
 
 
-PhysicalModelInterface*
-PhysicalModelInterface::copy(void) const
+PhysicalModel*
+PhysicalModel::copy(void) const
 {
-  PhysicalModelInterface* new_copy = nullptr;
+  PhysicalModel* new_copy = nullptr;
 
   // this is safe
   new_copy = this->create_new();
@@ -272,10 +272,10 @@ PhysicalModelInterface::copy(void) const
 
 
 
-PhysicalModelInterface*
-PhysicalModelInterface::create_new(void) const
+PhysicalModel*
+PhysicalModel::create_new(void) const
 {
-  PhysicalModelInterface* pmi = create_from_object(this, get_owner());
+  PhysicalModel* pmi = create_from_object(this, get_owner());
   if (pmi == nullptr)
   {
     ostringstream os;
@@ -292,7 +292,7 @@ PhysicalModelInterface::create_new(void) const
 
 
 string
-PhysicalModelInterface::get_default_name(void) const
+PhysicalModel::get_default_name(void) const
 {
   return Utils::extract_typename(typeid(*this));
 }
@@ -301,7 +301,7 @@ PhysicalModelInterface::get_default_name(void) const
 
 
 const Database&
-PhysicalModelInterface::get_database(void)
+PhysicalModel::get_database(void)
 {
   if (_database != nullptr)
     return(*_database);
@@ -309,10 +309,18 @@ PhysicalModelInterface::get_database(void)
   return _owner->get_database();
 }
 
+void
+PhysicalModel::set_database(const Database* db)
+{
+  if (db != nullptr)
+    _database = db;
+  else
+    _database = &_owner->get_database();
+}
 
 
 void
-PhysicalModelInterface::override_parameter_string(const std::string& name,
+PhysicalModel::override_parameter_string(const std::string& name,
         std::string& s) const
 {
   const PhysicalObject* mat = get_owner();
@@ -344,73 +352,105 @@ PhysicalModelInterface::override_parameter_string(const std::string& name,
 }
 
 
-
-
-
-
-void
-PhysicalModelInterface::init(void)
+bool
+PhysicalModel::override_material(void)
 {
-  // first check if we want to override the material datafile
-  if (this->has_option("override_material") ||
-      this->has_option("override_database"))
+  bool overridden = false;
+
+  if (get_options().has_submodel("override_material"))
   {
-    string mat = get_option("override_material", get_material()->get_name());
-    Material* newmat = Material::create(mat, ModelOptions());
+    ModelOptions opts =
+      get_options().submodels_begin("override_material")->second;
+
+    if (opts.get_option("copy_from_region", false))
+    {
+      opts = get_owner()->get_options();
+      opts += get_options().submodels_begin("override_material")->second;
+    }
+
+    string mat = opts.get_name();
+    Material* newmat = Material::create(mat, opts);
+
+    get_options().delete_submodels("override_material");
+
+    const PhysicalObject* obj = this->get_owner();
+    newmat->add_model(this, this->get_simulator_id());
+    //_database = new Database(get_database());
+    _owner = obj;
     newmat->init();
-    _bulk_material = newmat;
-    _database = new Database(_bulk_material->get_database());
-    //_database = new Database(mat, get_option("override_database", ""));
+    //_bulk_material = newmat;
+
+    overridden = true;
   }
 
-
-  //
-  // we may arrive here, although the model is associated to an alloy
-  // in that case, we defer to the init_interface() routine
-  //
-  if (get_owner()->get_type() == PhysicalObject::BOUNDARY)
-  {
-    const MaterialBoundary* mb = static_cast<const MaterialBoundary*>(get_owner());
-    init_interface(mb->get_material_A(), mb->get_material_B());
-
-    // NOTE we immediately return here
-    return;
-  }
-
-  read_database();
-
-  _create_submodels();
-  Messages::debug("init() of " + get_material()->get_name());
-
-  // Now we initialize all "official" submodels
-  SubmodelIterator smit(submodels_begin());
-  const SubmodelIterator smend(submodels_end());
-  for ( ; smit != smend; ++smit)
-  {
-    PhysicalModelInterface* pm = smit->second;
-    //pm->_simulator_id = _simulator_id;
-    // we pass overriden database, if present
-    pm->_database = _database;
-    Messages::debug("Initializing " + smit->first + " ...");
-    pm->init();
-  }
-
-  do_init();
-
-  // dummy read
-  get_option("crystal_structure", "");
-  get_option("regions", "");
-  get_option("type", "");
-  get_option("name", "");
-
-  get_options().check_unused(1);
+  return(overridden);
 }
 
 
 
 
 void
-PhysicalModelInterface::reinit(void)
+PhysicalModel::init(void)
+{
+  // first check if we want to override the material datafile
+
+  if (!override_material())
+  {
+
+    //
+    // we may arrive here, although the model is associated to an alloy
+    // in that case, we defer to the init_interface() routine
+    //
+    if (get_owner()->get_type() == PhysicalObject::BOUNDARY)
+    {
+      const MaterialBoundary* mb = static_cast<const MaterialBoundary*>(get_owner());
+      init_interface(mb->get_material_A(), mb->get_material_B());
+
+      // NOTE we immediately return here
+      return;
+    }
+
+    read_database();
+
+    _create_submodels();
+    Messages::debug("init() of " + get_name() + " (" + get_material()->get_name() + ")");
+    Messages m;
+    m.indent();
+
+    // Now we initialize all "official" submodels
+    SubmodelIterator smit(submodels_begin());
+    const SubmodelIterator smend(submodels_end());
+    for ( ; smit != smend; ++smit)
+    {
+      PhysicalModel* pm = smit->second;
+
+      //pm->_simulator_id = _simulator_id;
+      // we pass overriden database, if present
+      pm->_database = _database;
+      Messages::debug("Initializing submodel " + smit->first + " ...");
+      pm->init();
+      Messages::debug("done (Initializing submodel " + smit->first + ")");
+    }
+
+    m.unindent();
+    do_init();
+
+    // dummy read
+    get_option("crystal_structure", "");
+    get_option("regions", "");
+    get_option("type", "");
+    get_option("name", "");
+
+    get_options().check_unused(1);
+    Messages::debug("finished init() of " + get_name() + " (" + get_material()->get_name() + ")");
+  }
+}
+
+
+
+
+void
+PhysicalModel::reinit(void)
 {
   // reinit submodels
   SubmodelIterator smit(submodels_begin());
@@ -425,7 +465,7 @@ PhysicalModelInterface::reinit(void)
 
 
 void
-PhysicalModelInterface::reinit(const Elem* elem)
+PhysicalModel::reinit(const Elem* elem)
 {
   // reinit submodels
   SubmodelIterator smit(submodels_begin());
@@ -440,7 +480,7 @@ PhysicalModelInterface::reinit(const Elem* elem)
 
 
 void
-PhysicalModelInterface::init_interface(const Material* comp_A,
+PhysicalModel::init_interface(const Material* comp_A,
     const Material* comp_B)
 {
   // sometimes this is not a good idea, and it even may not make
@@ -451,7 +491,7 @@ PhysicalModelInterface::init_interface(const Material* comp_A,
 
   // setup the submodels
   _create_submodels();
-  Messages::debug("init() of " + get_owner()->get_name());
+  Messages::debug("init_interface() of " + this->get_name() + " (" + get_owner()->get_name() + ")");
 
   SubmodelIterator it(submodels_begin());
   const SubmodelIterator end(submodels_end());
@@ -472,10 +512,11 @@ PhysicalModelInterface::init_interface(const Material* comp_A,
 
 
 void
-PhysicalModelInterface::init_alloy(const PhysicalModelInterface* comp_A,
-    const PhysicalModelInterface* comp_B, double xa)
+PhysicalModel::init_alloy(const PhysicalModel* comp_A,
+    const PhysicalModel* comp_B, double xa)
 {
   assert(typeid(*comp_A) == typeid(*comp_B));
+  Messages::debug("init_alloy() of " + this->get_name() + " (" + get_owner()->get_name() + ")");
 
   //
   // NOTE:
@@ -484,58 +525,54 @@ PhysicalModelInterface::init_alloy(const PhysicalModelInterface* comp_A,
   //   better be changed in the future!
 
   // first check if we want to override the material datafile
-  if (this->has_option("override_material") ||
-      this->has_option("override_database"))
+  if (!override_material())
   {
-    string mat = get_option("override_material", get_material()->get_name());
-    Material* newmat = Material::create(mat, ModelOptions());
-    newmat->init();
-    _bulk_material = newmat;
-    _database = new Database(_bulk_material->get_database());
-    //_database = new Database(mat, get_option("override_database", ""));
+
+    read_database();
+
+    // some models might treat alloys in a special way
+    // disable alloy mixing
+    Database::AlloyMixing mixing = get_database().get_alloy_mixing();
+    get_database().set_alloy_mixing(Database::NONE);
+    read_database_alloy();
+    get_database().set_alloy_mixing(mixing);
+
+
+    // setup the submodels
+    _create_submodels();
+
+    Messages m;
+    m.indent();
+
+    SubmodelIterator it(submodels_begin());
+    ConstSubmodelIterator it_A(comp_A->submodels_begin());
+    ConstSubmodelIterator it_B(comp_B->submodels_begin());
+    const SubmodelIterator end(submodels_end());
+    for ( ; it != end; ++it, ++it_A, ++it_B)
+    {
+      PhysicalModel* pm = it->second;
+      pm->init_alloy(it_A->second, it_B->second, xa);
+    }
+    m.unindent();
+
+    // some models might treat alloys in a special way
+    do_init_alloy(comp_A, comp_B, xa);
+
+    do_init();
+
+    // dummy read
+    get_option("crystal_structure", "");
+    get_option("regions", "");
+    get_option("type", "");
+    get_option("name", "");
+
+    get_options().check_unused(1);
   }
-
-  read_database();
-
-  // some models might treat alloys in a special way
-  // disable alloy mixing
-  // This const cast is very ugly, better would be to not touch the database at all
-  Database::AlloyMixing mixing = get_database().get_alloy_mixing();
-  get_database().set_alloy_mixing(Database::NONE);
-  read_database_alloy();
-  get_database().set_alloy_mixing(mixing);
-
-
-  // setup the submodels
-  _create_submodels();
-
-  SubmodelIterator it(submodels_begin());
-  ConstSubmodelIterator it_A(comp_A->submodels_begin());
-  ConstSubmodelIterator it_B(comp_B->submodels_begin());
-  const SubmodelIterator end(submodels_end());
-  for ( ; it != end; ++it, ++it_A, ++it_B)
-  {
-    PhysicalModelInterface* pm = it->second;
-    pm->init_alloy(it_A->second, it_B->second, xa);
-  }
-
-  // some models might treat alloys in a special way
-  do_init_alloy(comp_A, comp_B, xa);
-
-  do_init();
-
-  // dummy read
-  get_option("crystal_structure", "");
-  get_option("regions", "");
-  get_option("type", "");
-  get_option("name", "");
-
-  get_options().check_unused(1);
 }
 
 
 void
-PhysicalModelInterface::set_material(const Material* mat)
+PhysicalModel::set_material(const Material* mat)
 {
   _bulk_material = mat;
 
@@ -547,7 +584,7 @@ PhysicalModelInterface::set_material(const Material* mat)
 
 
 void
-PhysicalModelInterface::add_submodel(const std::string& key, PhysicalModelInterface* pm)
+PhysicalModel::add_submodel(const std::string& key, PhysicalModel* pm)
 {
   if (pm != nullptr)
   {
@@ -563,21 +600,21 @@ PhysicalModelInterface::add_submodel(const std::string& key, PhysicalModelInterf
 
 
 void
-PhysicalModelInterface::delete_submodel(const std::string& key)
+PhysicalModel::delete_submodel(const std::string& key)
 {
   _submodels.erase(key);
 }
 
 
 void
-PhysicalModelInterface::delete_submodel(SubmodelIterator it)
+PhysicalModel::delete_submodel(SubmodelIterator it)
 {
   _submodels.erase(it);
 }
 
 //template <>
 void
-PhysicalModelInterface::_create_submodel(PhysicalModelInterface*& model,
+PhysicalModel::_create_submodel(PhysicalModel*& model,
     const std::string& type)
 {
   model = nullptr;
@@ -624,7 +661,7 @@ PhysicalModelInterface::_create_submodel(PhysicalModelInterface*& model,
 
 //template <>
 void
-PhysicalModelInterface::_create_submodel(PhysicalModelInterface*& model,
+PhysicalModel::_create_submodel(PhysicalModel*& model,
     const std::string& type, const ModelOptions& default_opts)
 {
   create_submodel(model, type);
@@ -664,7 +701,7 @@ PhysicalModelInterface::_create_submodel(PhysicalModelInterface*& model,
 
 //template <>
 void
-PhysicalModelInterface::_create_submodels(std::vector<PhysicalModelInterface*>& models,
+PhysicalModel::_create_submodels(std::vector<PhysicalModel*>& models,
     const std::string& type)
 {
   models.resize(0);
@@ -685,7 +722,7 @@ PhysicalModelInterface::_create_submodels(std::vector<PhysicalModelInterface*>& 
 
 
     // we try to create it from the same module
-    PhysicalModelInterface* mod =
+    PhysicalModel* mod =
         create(modname, get_owner(), it->second, get_module_name());
 
     if (mod == nullptr)
@@ -712,14 +749,14 @@ PhysicalModelInterface::_create_submodels(std::vector<PhysicalModelInterface*>& 
 
 //template <>
 void
-PhysicalModelInterface::_create_submodels(std::vector<PhysicalModelInterface*>& models,
+PhysicalModel::_create_submodels(std::vector<PhysicalModel*>& models,
     const std::string& type, const ModelOptions& default_opts)
 {
   create_submodels(models, type);
 
   if (models.empty())
   {
-    PhysicalModelInterface* mod = nullptr;
+    PhysicalModel* mod = nullptr;
 
     string modname(type);
 
@@ -756,7 +793,7 @@ PhysicalModelInterface::_create_submodels(std::vector<PhysicalModelInterface*>& 
 
 
 void
-PhysicalModelInterface::_create_submodels(void)
+PhysicalModel::_create_submodels(void)
 {
   // first call the user defined method
   prepare_submodels();

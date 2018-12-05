@@ -25,7 +25,7 @@ ExcitonProperties*
 ExcitonProperties::create(const std::string& name, const Material* mat,
     const ModelOptions& options)
 {
-  return PhysicalModelInterface::create<ExcitonProperties>("exbulk_" + name, mat, options);
+  return PhysicalModel::create<ExcitonProperties>("exbulk_" + name, mat, options);
 }
 
 

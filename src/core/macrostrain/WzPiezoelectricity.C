@@ -53,7 +53,7 @@ void WzPiezoelectricity:: set_moduli(double  e33_i, double e31_i, double e15_i)
 }
 
 //------------------------------------------------------------//
-PhysicalModelInterface* WzPiezoelectricity::create_new(void) const
+PhysicalModel* WzPiezoelectricity::create_new(void) const
 {
   return new WzPiezoelectricity(get_options());
 }

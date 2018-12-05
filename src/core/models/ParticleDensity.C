@@ -20,7 +20,7 @@ ParticleDensity::MINDENSITY = 1e-64;
 
 
 ParticleDensity::ParticleDensity(const ModelOptions& options) :
-  PhysicalModelInterface(options),
+  PhysicalModel(options),
   _name(""),
   _charge(-1),
   _statistics(TiberCad::BOLTZMANN),
@@ -39,7 +39,7 @@ ParticleDensity::ParticleDensity(const ModelOptions& options) :
 
 ParticleDensity::ParticleDensity(const string& name,
     TiberCad::Statistics statistics)
-: PhysicalModelInterface(ModelOptions()),
+: PhysicalModel(ModelOptions()),
   _name(name),
   _statistics(statistics),
   _use_quantum(false),

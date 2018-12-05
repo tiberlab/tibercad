@@ -3,14 +3,14 @@
 #ifndef _CHARGEDENSITYMODEL_H_
 #define _CHARGEDENSITYMODEL_H_
 
-#include "PhysicalModelInterface.h"
+#include "PhysicalModel.h"
 
 
 class Elem;
 class Point;
 
 // Base class for charge density models
-class ChargeDensityModel : public PhysicalModelInterface
+class ChargeDensityModel : public PhysicalModel
 {
 
   public:
@@ -30,7 +30,7 @@ class ChargeDensityModel : public PhysicalModelInterface
 
 
 ChargeDensityModel::ChargeDensityModel(const ModelOptions& options) :
-  PhysicalModelInterface(options)
+  PhysicalModel(options)
 {
 }
 

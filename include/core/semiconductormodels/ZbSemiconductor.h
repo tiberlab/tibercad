@@ -81,7 +81,7 @@ class ZbSemiconductor  : public Semiconductor
   //!Constructor
   ZbSemiconductor(const ModelOptions& options);
 
-  virtual PhysicalModelInterface* create_new(void) const;
+  virtual PhysicalModel* create_new(void) const;
 
   virtual void do_init(void);
 
@@ -187,7 +187,7 @@ class ZbSemiconductor  : public Semiconductor
 
 
 
-inline PhysicalModelInterface* ZbSemiconductor::create_new(void) const
+inline PhysicalModel* ZbSemiconductor::create_new(void) const
 {
   return ( new ZbSemiconductor(get_options()) );
 }

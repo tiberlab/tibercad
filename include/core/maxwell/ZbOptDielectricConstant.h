@@ -41,7 +41,7 @@ class  ZbOptDielectricConstant: public OptDielectricConstant
   virtual void do_init(void);
 
   
-  inline  virtual PhysicalModelInterface*  create_new (void) const;
+  inline  virtual PhysicalModel*  create_new (void) const;
 
 };
 
@@ -61,7 +61,7 @@ ZbOptDielectricConstant* ZbOptDielectricConstant::create(const ModelOptions& opt
 }
 
 inline
-PhysicalModelInterface*  ZbOptDielectricConstant::create_new (void) const
+PhysicalModel*  ZbOptDielectricConstant::create_new (void) const
 {
   return (new ZbOptDielectricConstant(get_options()) );
 }

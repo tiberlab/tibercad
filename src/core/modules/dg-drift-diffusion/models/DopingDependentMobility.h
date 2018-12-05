@@ -67,7 +67,7 @@ class TBDLLOCAL DopingDependentMobility : public MobilityModelInterface
     virtual void prepare_submodels(void);
 
     //! \copydoc MobilityModelInterface::create_new()
-    virtual PhysicalModelInterface* create_new(void) const;
+    virtual PhysicalModel* create_new(void) const;
 
 
   private:
@@ -166,7 +166,7 @@ DopingDependentMobility::create(const ModelOptions& options)
 
 
 inline
-PhysicalModelInterface*
+PhysicalModel*
 DopingDependentMobility::create_new(void) const
 {
   return new DopingDependentMobility(get_options());
