@@ -302,6 +302,14 @@ Control::setup_globals(const ModelOptions& opts)
 
   Messages::set_log_file(logfile, _device->get_communicator(), 0);
 
+  // Copy input file
+  if (opts.get_option("backup_inputfile", true))
+  {
+    copy_file(_inputfile,
+        _outputdir + "/" + Utils::basename(_inputfile) + ".tib",
+        copy_option::overwrite_if_exists);
+  }
+
   {
     ostringstream os;
     os << "tiberCAD release " << TiberCad::version_string()
