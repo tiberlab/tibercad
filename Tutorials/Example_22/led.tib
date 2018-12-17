@@ -1,0 +1,243 @@
+@define PROFILE tail
+
+Device
+{
+  
+  meshfile = led.msh
+  mesh_units = 1e-9
+
+  material = GaN
+  y-growth-direction = (1,0,-1,0)
+  z-growth-direction = (-1,2,-1,0)
+  x-growth-direction = (0,0,0,1)
+
+  plot_Alloy_composition = true
+
+  Doping
+  {
+    density = 1e16
+    type =  donor
+    level = 0.025
+  }
+
+  Region well
+  {
+    mesh_regions = (well1, qbarrier1)
+    material = InGaN
+    x = 0.22
+    alloy_composition 1d_profile
+     { 
+       # takes min and max from data file
+       
+       # subdivisions:
+       intervals = 20
+       # direction, default is x = (1 0 0):
+       #direction = (1, 1, 0)
+       # we can specify the origin, default (0,0,0)
+       origin = (-1, 0, 0)
+       source = PROFILE".dat"
+     }
+  }
+
+  
+  Region  top_barrier
+  {
+  }
+  
+
+
+  Region  buffer
+  {
+    Doping
+    {
+      density = 1e18
+      type =  donor
+      level = 0.025
+    }
+
+  }
+
+  Region  cap
+  {
+   Doping
+    {
+      density = 5e19
+      type =  acceptor
+      level = 0.18
+    }
+  }
+
+
+  Region  ebl
+  {
+    material = AlGaN
+    x = 0.15
+  }
+
+
+}
+
+
+Module elasticity 
+{
+
+  name = strain
+  regions = all
+
+  plot = (Strain, Stress)
+
+
+  Physics 
+  {
+    body_force lattice_mismatch 
+    {
+      reference_material = GaN
+      y-growth-direction = (1,0,-1,0)
+      z-growth-direction = (-1,2,-1,0)
+      x-growth-direction = (0,0,0,1)
+    }
+       
+  }
+
+  Contact substrate  
+  {type = clamp}
+
+}
+
+
+
+
+
+
+Module  driftdiffusion
+{ 
+        
+  name = dd
+      
+ 
+  plot = (Ec, Ev, Eg, eQFermi, eDensity, eCurrentDensity, eMobility,
+          hQFermi, hDensity, hCurrentDensity, hMobility,
+          NetRecombination, ElField, ElPotential, Polarization, ContactCurrents)
+  Solver
+  {
+    linear_solver
+    {
+      #preconditioner = jacobi
+    }
+
+    step_tolerance = 1e-2
+  }
+
+  Physics
+  {
+
+    background_conductivity = 1e-7
+
+
+    band_properties
+    {
+      density_of_states bulk_kp
+      {
+        strain_simulation = strain
+      }
+    }
+
+    trap acceptor
+    {
+      regions = (ebl, top_barrier)
+      Et = 0.23
+      reference = vb
+      Nt = 5e19
+      sigma_n = 1e-18
+      sigma_p = 1e-16
+      recombination_center = true
+#      trap_assisted_tunneling
+#      {
+#        tunneling_mass = 0.11
+#      }
+      profile exponential
+      {
+        origin = (15, 0, 0)
+        direction = (-1, 0, 0)
+        lambda = 0.5
+        max = 1.0
+        type = continued
+      }
+
+    }
+
+    polarization piezo 
+    {
+      strain_simulation = strain
+    }
+
+    polarization pyro { }
+
+
+    recombination srh
+    {
+      tau_n = 200e-9
+      tau_p = 200e-9
+    }
+
+    recombination direct
+    {
+      C = 2e-12
+    }
+
+    recombination auger
+    {
+      Cn = 1e-31
+      Cp = 1e-31
+    }
+
+    mobility constant
+    {
+      mu_e = 300
+      mu_h = 5
+    }
+
+
+  }
+
+  Contact substrate {
+    rec_velocity_p = 1e3
+  }
+
+  Contact top {
+    voltage = $bias
+    rec_velocity_n = 1e3
+  }
+
+
+
+}
+
+
+
+
+
+Module sweep
+{
+  solve = dd
+  variable = $bias
+  start = 0.0
+  stop = 3.0
+  steps = 60
+  min_step = 0.005
+  plot_data = each
+}
+
+  
+
+ 
+
+Simulation
+{  
+   
+  temperature = 300
+  solve = (strain, dd, sweep)   
+  # we can use defines to create strings by concatenation
+  resultpath = PROFILE"/output"
+
+}
