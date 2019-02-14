@@ -480,6 +480,9 @@ Database::get(const string& variable, const string& default_value, bool required
    {
      //for alloys we always get the string of the first component
      result = _comp_db[0].get(variable, default_value, required);
+
+    // override from alloy DB
+    result = (*_file)(variable.c_str(), result);
    }
    else
    {
@@ -530,6 +533,9 @@ Database::get(const string& variable, double default_value,
       double bow = (*_file)(string("bow_" + variable).c_str(), 0.0);
       result -= bow * _comp_fractions[0] * _comp_fractions[1];
     }
+
+    // override from alloy DB
+    result = (*_file)(variable.c_str(), result);
 
   }
   else
@@ -590,7 +596,11 @@ Database::get(const string& variable, vector<double>& data, bool required) const
   else
   {
     if (required) require_variable(variable);
-    else if (!has_variable(variable)) return;
+  }
+
+  // override from alloy file if present
+  if (has_variable(variable))
+  {
 
     size_t n = data.size();
     string s(get(variable, ""));
@@ -668,9 +678,11 @@ Database::get(const string& variable,
   }
   else
   {
-
     if (required) require_variable(variable);
-    else if (!has_variable(variable)) return;
+  }
+
+  if (has_variable(variable))
+  {
 
     string s(get(variable, ""));
     vector<string> vec;
@@ -772,8 +784,9 @@ Database::get(const string& variable, libMesh::RealTensor& tensor,
   else
   {
     if (required) require_variable(variable);
-    else if (!has_variable(variable)) return;
-
+  }
+  if (has_variable(variable))
+  {
     string s(get(variable, ""));
     Utils::extract_tensor(s, tensor);
   }
