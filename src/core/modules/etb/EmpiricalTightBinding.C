@@ -436,6 +436,7 @@ void ETB::get_c_axis(void)
   {
     const Material* mat = get_environment().get_device().get_material( (*reg) );
     Tensor2Gen RotM = (mat->get_rotated_crystal()).RotMatrix;
+    // NOTE: the z axis is assumed to be the reference axis as used in uptight
     Tensor1 zz(0); zz(3) = 1.0;
     cc[*reg] = RotM * zz; 
   }
