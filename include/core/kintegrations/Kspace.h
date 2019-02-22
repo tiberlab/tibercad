@@ -45,7 +45,7 @@ class Kspace
   {
     ALL = 0,
     HALF = 1,
-    QUARTER =2,
+    QUARTER = 2,
     EIGHTH = 3
   };
 
@@ -58,6 +58,9 @@ class Kspace
 
   void inv_rotate_mesh(void);
 
+  //calculates angular between 2D k space basis (y-z) vectors to different between quadratic and hexagonal k space
+  void define_type_of_k_space();
+
  protected:
 
    virtual void  do_init(void) throw (InitFailedException);
@@ -66,7 +69,13 @@ class Kspace
 
 
  private:
+   enum Symmetry
+     {
+       QUADRATIC = 0,
+       RECTANGULAR = 1,
+       HEXAGONAL = 2
 
+     };
    //!build k space grid
    void build_k_grid( );
 
@@ -133,6 +142,18 @@ class Kspace
 
    //! matrix that rotates mesh
    Tensor2Gen transform_matrix;
+
+   //k basis vector of the k space
+   libMesh::Point k_basis_vector1;
+   libMesh::Point k_basis_vector2;
+   libMesh::Point k_basis_vector3;
+
+   //checking for different k spaces
+
+   Symmetry k_space_symmetry;
+
+
+
 
    bool k_path;
 

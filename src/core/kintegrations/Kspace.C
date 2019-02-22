@@ -5,8 +5,11 @@
 #include "Constants.h"
 #include "Messages.h"
 #include "gmsh_io.h"
+#include "Utils.h"
+#include <cmath>
 
 #include <mesh_modification.h>
+#include <face_tri3.h>
 
 
 using namespace std;
@@ -117,7 +120,30 @@ void Kspace::build_k_grid()
 
     }
 
+    //lattice constant for MoS2
+    float a = 3.16;
 
+    // points for triangle (1/12 of the hexagon)
+    libMesh::Node * new_node = kmesh->add_point(libMesh::Point(0, 0, 0));
+    new_node = kmesh->add_point(libMesh::Point(0, 2 * M_PI/(sqrt(3) * a), 0));
+    new_node = kmesh->add_point(libMesh::Point(- 2 * M_PI/(3 * a), 2* M_PI/(sqrt(3) * a), 0));
+
+    //forming a triangle
+    libMesh::Elem * new_elem = kmesh->add_elem(new libMesh::Tri3);
+
+    for(int i=0; i < kmesh->n_nodes(); i++)
+    {
+
+        new_elem->set_node(i) = kmesh->node_ptr(i);
+
+        //std::cout << kmesh->node(i) << std::endl;
+
+    }
+
+    kmesh->prepare_for_use();
+
+
+    
     // to restrict the extension of the k-space
     libMesh::RealVectorValue k_max(1.0, 1.0, 1.0);
     mod_opt.get_option("k_max", k_max);
@@ -135,6 +161,8 @@ void Kspace::build_k_grid()
 				       kmin[2] * k_max(2), kmax[2] * k_max(2),
 				       type);
 
+    
+    
     switch (k_dim)
     {
       case 2:
@@ -156,6 +184,7 @@ void Kspace::build_k_grid()
           p(2) = p(0);
           p(1) = 0.0;
           p(0) = 0.0;
+
         }
         //MeshTools::Modification::rotate(*kmesh, 0, 90, 90);
         break;
@@ -171,6 +200,7 @@ void Kspace::build_k_grid()
     kmesh = new libMesh::Mesh(kspace_comm, 0);
     kmesh->add_point(Point(0,0,0), 0, 0);
   }
+
 }
 
 
@@ -218,8 +248,12 @@ void  Kspace::define_k_space(Tensor1 k_vector, unsigned int n)
 	     transform_matrix(i,1) = basis2(i);
 	     transform_matrix(i,2) = basis3(i);
 	     transform_matrix(i,3) = basis1(i);
+
+	     k_basis_vector1(i-1) = basis1(i);
+	     k_basis_vector2(i-1) = basis2(i);
+	     k_basis_vector3(i-1) = basis3(i);
 	   }
-      
+
   }
 
 }
@@ -269,15 +303,23 @@ void Kspace::define_k_space(Tensor1 k_vector1,unsigned int n,  Tensor1 k_vector2
   Tensor1 basis3 = vectorProduct(basis1, basis2);  // x
 
 
+
   for (short i = 1; i < 4; i++)
   {
+
     transform_matrix(i,1) = basis3(i);
     transform_matrix(i,2) = basis1(i);
     transform_matrix(i,3) = basis2(i);
+
+
+    k_basis_vector1(i-1) = basis1(i);
+    k_basis_vector2(i-1) = basis2(i);
+    k_basis_vector3(i-1) = basis3(i);
+
   }
 
   // cerr << setw(12) << transform_matrix << endl;
-
+ 
 }
 
 //----------------------------------------------------------------------------//
@@ -343,7 +385,16 @@ void Kspace::define_k_space(Tensor1 k_vector1, unsigned int n, Tensor1 k_vector2
    transform_matrix(i,1) = k_vector1(i);
    transform_matrix(i,2) = k_vector2(i);
    transform_matrix(i,3) = k_vector3(i);
+
+   k_basis_vector1(i-1) = k_vector1(i);
+   k_basis_vector2(i-1) = k_vector2(i);
+   k_basis_vector3(i-1) = k_vector3(i);
+
+
+
  }
+
+
 
 
  // cerr << setw(12) << transform_matrix << endl;
@@ -657,7 +708,6 @@ void Kspace::do_init() throw (InitFailedException)
       define_k_space(vec1, num_nodes[0],vec2, num_nodes[1],vec3, num_nodes[2]);
 
 
-
     }
 
     case 0:
@@ -667,7 +717,13 @@ void Kspace::do_init() throw (InitFailedException)
       throw  InitFailedException("Kspace: k_space_dimension should be or 0 or  1 or 2 or 3");
       break;
   }
-  
+
+
+
+
+
+  define_type_of_k_space();
+
 
   if (k_path)
   {
@@ -685,8 +741,38 @@ void Kspace::do_init() throw (InitFailedException)
 }
 
 
+//---------------------------------------------------------------------------------------------------------------//
+//calculates angular between 2D k space basis (y-z) vectors to different between quadratic and hexagonal k space
+
+void Kspace::define_type_of_k_space()
+{
+  double scalar12 = k_basis_vector1 * k_basis_vector2;
+  //scalar12 = k_basis_vector1(0) * k_basis_vector2(0) + k_basis_vector1(1) * k_basis_vector2(1) + k_basis_vector1(2) * k_basis_vector2(2);
+
+  double amount1 = sqrt(k_basis_vector1(0) * k_basis_vector1(0) +
+
+                      + k_basis_vector1(1) * k_basis_vector1(1) + k_basis_vector1(2) * k_basis_vector1(2));;
 
 
+  double amount2 = sqrt(k_basis_vector2(0) * k_basis_vector2(0) +
+
+                      + k_basis_vector2(1) * k_basis_vector2(1) + k_basis_vector2(2) * k_basis_vector2(2));
+
+
+  double angular = acos(scalar12/(amount1 * amount2)) * 180.0 / M_PI;
+
+
+
+  if (Utils::almost_equal::compare(angular, 90))
+    k_space_symmetry = QUADRATIC;
+
+  else if (Utils::almost_equal::compare(angular, 120))
+    k_space_symmetry = HEXAGONAL;
+
+  else
+    std::cout << "The Brillouin zone is not defined for a structure with an angular of " << angular << " between the basis vectors." << std::endl;
+
+}
 //---------------------------------------------------------------------------------------------------------------//
 void Kspace::define_k_path(void)
 {
@@ -710,12 +796,67 @@ void Kspace::define_k_path(void)
   os <<"(KSP) points per line "<<npoints<<std::endl; 
   Messages::info(os.str());
 
-  if (k_space_dim == 2)
+
+  //k space symmetry points of a hexagonal lattice
+  if ((k_space_dim == 3) && (k_space_symmetry == HEXAGONAL))
+  {
+    double G[3], M[3], X[3];
+    double *k1, *k2;
+    //hexagonal in x-y plane
+    G[0]=0.0;                        G[1]=0.0;                       G[2]=0.0;
+    M[0]=0.0;                        M[1]=0.5*k_basis_vector2(1);    M[2]=0.0;
+    X[0]= -1/3 * k_basis_vector1(0); X[1]= -1*k_basis_vector1(1);    X[2]=0.0;
+
+
+    //hexagonal in y-z plane
+    //G[0]=0.0;        G[1]=0.0;                         G[2]=0.0;
+    //M[0]=0.0;        M[1]=0.0;                         M[2]=0.5*k_basis_vector2(1);
+    //X[0]=0.0;        X[1]= -1/3 * k_basis_vector1(0);  X[2]= -1*k_basis_vector1(1);
+
+    std::vector<std::string> tokens;
+
+    tokenize(kpath, tokens, "-");
+
+    unsigned int id = 0;
+
+    for (short i = 1; i < tokens.size(); i++)
+    {
+
+      if(tokens[i-1]=="G")        k1 = G;
+      else if(tokens[i-1]=="M")   k1 = M;
+      else if(tokens[i-1]=="X")   k1 = X;
+      else                        k1 = G;
+
+      if(tokens[i]=="G")          k2 = G;
+      else if(tokens[i]=="M")     k2 = M;
+      else if(tokens[i]=="X")     k2 = X;
+      else                        k2 = G;
+
+      for (int j = (i > 1) ? 1 : 0; j < npoints; j++)
+      {
+        double b1 = k1[0]*(nelem-j)/nelem + k2[0]*j/nelem;
+        double b2 = k1[1]*(nelem-j)/nelem + k2[1]*j/nelem;
+        double b3 = k1[2]*(nelem-j)/nelem + k2[2]*j/nelem;
+
+
+        libMesh::Point pt(b1,b2,b3);
+
+        kmesh->add_point(pt,id,0);
+
+        id++;
+
+      }
+    }
+
+    std::cerr << "2 DIMENSIONAL K-SPACE AND HEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEXAGONAL";
+  }
+
+  else if ((k_space_dim == 2) && (k_space_symmetry == QUADRATIC))
   {    
     double G[3], M[3], X[3], X1[3];
     double *k1, *k2;
 
-
+    
     G[0]=0.0;  G[1]=0.0;          G[2]=0.0;        //( 0   0    0  )
     M[0]=0.0;  M[1]=0.5*k_max(1); M[2]=0.5*k_max(2);  //( 0  1/2  1/2 )
     X[0]=0.0;  X[1]=0.5*k_max(1); X[2]=0.0;        //( 0  1/2   0  )
@@ -771,12 +912,11 @@ void Kspace::define_k_path(void)
     }
 
   }
-  else if (k_space_dim == 3)
+  else if ((k_space_dim == 3) && (k_space_symmetry == QUADRATIC))
   {
     double G[3], X1[3], X2[3], X3[3], M[3], M1[3], M2[3],  L[3];
     double *k1, *k2;
     
-
     G[0]=0.0;           G[1]=0.0;           G[2]=0.0;  //( 0  0  0 )
     M[0]=0.5*k_max(0);  M[1]=0.5*k_max(1);  M[2]=0.0;  //( 1/2  1/2  0 )
     M1[0]=0.5*k_max(0); M1[1]=0.0;          M1[2]=0.5*k_max(2);  //( 1/2  0  1/2 )
@@ -831,7 +971,22 @@ void Kspace::define_k_path(void)
 
         id++;
       }
-
+        for(int i = 0; i < 3; ++i)
+        {
+           std::cerr << "vector 1, " << i + 1 << ": ";
+           std::cerr << k_basis_vector1(i) << std::endl;
+        }
+        for(int i = 0; i < 3; ++i)
+        {
+           std::cerr << "vector 2, " << i + 1 << ": ";
+           std::cerr << k_basis_vector2(i) << std::endl;
+        }
+        for(int i = 0; i < 3; ++i)
+        {
+           std::cerr << "vector 3, " << i + 1 << ": ";
+           std::cerr << k_basis_vector3(i) << std::endl;
+        }
+        std::cerr << "3 DIMENSIONAL K-SPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACE";
     }
 
     // if there is a single point only
