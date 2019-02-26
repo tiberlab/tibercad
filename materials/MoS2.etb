@@ -42,20 +42,20 @@ number of orbitals per ion = 5 3
 
 
 Mo onsite
-
 'dz2r2'  -11.683  1
 'dyz'   -208.435  1
 'dzx'   -208.435  1
 'dxy'    -75.942  1
 'dx2y2'  -75.942  1
+
 Mo offset = 0.0
 
 
 S onsite
-
 'px'     -23.761  1
 'py'     -23.761  1
 'pz'     -35.968  1
+
 S offset = 0.0
 
 
@@ -65,30 +65,28 @@ Mo b_d parameter = 0.0
 
 # ETB couplings  integrals ##
 ##
-number of pairs = 1  
+number of pairs = 2  
 
 
 # pair <number> = 'ion1' 'ion2' <number of ETB data> 
- <order of nearest neighbours>
+# <order of nearest neighbours>
 
 pair 1 = 'Mo' 'S' 2 1 
 
 Mo S coupling 1
-
 'dps'   -56.738   0
 'dpp'     1.318   0
 
 Mo S pair reference distance 1 = 2.4072
 
-#pair 2 = 'Mo' 'Mo' 3 2 
+pair 2 = 'Mo' 'Mo' 3 2 
 
-#Mo Mo coupling 2 
-#
-#'dds'    -2.652   0
-#'ddp'     1.750   0
-#'ddd'     1.482   0
-#
-#Mo Mo pair reference distance 2 = 3.16
+Mo Mo coupling 2 
+'dds'    -2.652   0
+'ddp'     1.750   0
+'ddd'     1.482   0
+
+Mo Mo pair reference distance 2 = 3.16
 
 Mo min cutoff = 0
 Mo max cutoff = 1.3
