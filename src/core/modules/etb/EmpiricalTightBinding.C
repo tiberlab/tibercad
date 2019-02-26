@@ -577,6 +577,7 @@ ETB::call_uptight(void)
   if (_assemble && _upt_options.assemble_H) assemble(options);
 
   if (!_upt_options.assemble_H) create_dummy_H(); 
+  //print_H("./");
 
   if (_upt_solver_options.read_states)
   {
@@ -1071,7 +1072,7 @@ void ETB::parse_options(void)
   _upt_solver_options.n_vb =
       solopts.get_option("num_hole_states", _upt_solver_options.n_vb);
   
-  if (_upt_solver_options.n_vb%2==1) _upt_solver_options.n_vb += 1;
+  //if (_upt_solver_options.n_vb%2==1) _upt_solver_options.n_vb += 1;
   
   _upt_solver_options.n_cb =  get_option("num_conduction_eigenvalues", 0);
   _upt_solver_options.n_cb =
@@ -1081,7 +1082,7 @@ void ETB::parse_options(void)
   _upt_solver_options.n_cb =
       solopts.get_option("num_electron_states", _upt_solver_options.n_cb);
 
-  if (_upt_solver_options.n_cb%2==1) _upt_solver_options.n_cb += 1;
+  //if (_upt_solver_options.n_cb%2==1) _upt_solver_options.n_cb += 1;
   
   _upt_solver_options.min_iter =  solopts.get_option("min_iter", 30);
   _upt_solver_options.long_iter =  solopts.get_option("long_iter", 32);
