@@ -721,6 +721,7 @@ void AtomisticGenerator::make_conv_cell()
   vec_y(1) = _conv_vect(1,2); vec_y(2) = _conv_vect(2,2); vec_y(3) = _conv_vect(3,2);
   vec_z(1) = _conv_vect(1,3); vec_z(2) = _conv_vect(2,3); vec_z(3) = _conv_vect(3,3);
   
+
   //Check orthogonality of the final conventional vectors
   assert(((vec_x * vec_y) < 1e-10) && 
       ((vec_x * vec_z) < 1e-10) && 
@@ -1439,6 +1440,8 @@ void AtomisticGenerator::scale_to_int(Tensor1& a)
   //Expand a double vector to a vector having same direction but integer values
   //If vector is not in a reduced form (having integer values with gcd > 1) it's reduced
   //If input is a zero vector, a zero vector is returned
+
+  double tol = 1e-3;
 
   //Check if a is already integer
   if ( (fabs(a(1) - round(a(1))) < tol) && (fabs(a(2) - round(a(2))) < tol) && (fabs(a(3) - round(a(3))) < tol) )
