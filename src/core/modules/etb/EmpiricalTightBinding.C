@@ -1325,9 +1325,8 @@ ETB::project_atom_strain(void)
     {
       const Elem* el = structure[i].get_elem();
 
-      // 6/5/2016 I believe on should take strain in crsyatl coordinates, here
-      //_strain_int.get_crystal_strain(el, el->centroid(), epsilon);
-      _strain_int.get_strain(el, el->centroid(), epsilon);
+      // 6/5/2016 I believe one should take strain in crystal coordinates, here
+      _strain_int.get_crystal_strain(el, el->centroid(), epsilon);
 
       exx[i] = epsilon(1,1);
       eyy[i] = epsilon(2,2);
