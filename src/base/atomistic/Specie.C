@@ -33,7 +33,7 @@ Specie::specie_to_string = boost::assign::map_list_of
        "Cu") (Re, "Re") (Rh, "Rh") (Rb, "Rb") (Ru, "Ru") (Rf, "Rf") (Sm, "Sm") (Sc, "Sc") (Sg, "Sg") (Se, "Se")
        (Si, "Si") (Na, "Na") (Sn, "Sn") (Sr, "Sr") (Ta, "Ta") (Tc, "Tc") (Te, "Te") (Tb, "Tb") (Tl, "Tl") (Th, "Th")
        (Tm, "Tm") (Ti, "Ti") (W, "W") (U, "U") (V, "V") (Xe, "Xe") (Yb, "Yb") (Y, "Y") (Zn, "Zn") (Zr, "Zr") (S,
-       "S");
+       "S") (NONE, "Virt");
 
 std::map<std::string, Specie::Type> 
 Specie::string_to_specie = boost::assign::map_list_of

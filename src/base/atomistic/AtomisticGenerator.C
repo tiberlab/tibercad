@@ -440,6 +440,9 @@ AtomisticGenerator::assign_species(void)
       s = out.str();
       record = "specie_" + s;
       //note: db gets the species of the first alloy component
+      // 2019-03-12: currently Specie cannot handle virtual species like InGa,
+      //             they are called 'Virt' at the moment
+
       std::string db_record = db.get(record.c_str(),"none");
       assign[*reg][static_cast<Atom::label_t>(i)] = Specie(db_record);
     }
