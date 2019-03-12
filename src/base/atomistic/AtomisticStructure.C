@@ -2121,6 +2121,8 @@ AtomisticStructure::extract_statistics(map<Specie, vector<unsigned int>>& stats,
     m.info(os.str());
   }
 
+  int bin_size = opt.get_option("bin_size", 0);
+  int binning_atom = opt.get_option("binning_atom", 0);
 
   // A random starting seed is needed to actually have different sequences
   // we try to use something that is different also if launching simulations
@@ -2226,17 +2228,18 @@ AtomisticStructure::extract_statistics(map<Specie, vector<unsigned int>>& stats,
         stats[atm.get_specie()].resize(len, 0);
       }
 
+      unsigned int counter = 0;
 
       if (detect.empty() || detect[i])
       {
         stats[atm.get_specie()][0] += 1;
+
+        if (atm.get_label() == binning_atom)
+          counter++;
       }
 
       if ((ref_atom < 0) || (atm.get_label() == ref_atom))
       {
-        //cerr << "start: " << i << endl;
-        unsigned int counter = 0;
-        unsigned int total = 1;
 
         map<Specie, vector<unsigned int>>::iterator mit(stats.begin());
         map<Specie, vector<unsigned int>>::iterator mend(stats.end());
@@ -2245,16 +2248,18 @@ AtomisticStructure::extract_statistics(map<Specie, vector<unsigned int>>& stats,
 
         neighbor_iterator it(neighbors_begin(i, 10 * cutoff, 10 * y, 10 * z));
         neighbor_iterator end(neighbors_end(i));
-        for ( ; it != end; ++it)
+        for ( ; (it != end) && (counter < bin_size); ++it)
         {
           const Atom& neigh = *(*it);
-          //cerr << " " << it.atom_index() << endl;
 
           if (!regions.count(neigh.get_region_ID()))
             continue;
 
           if (detect.empty() || detect[it.atom_index()])
           {
+            if (neigh.get_label() == binning_atom)
+              counter++;
+
             if (!stats.count(neigh.get_specie()))
             {
               stats[neigh.get_specie()].resize(stats[atm.get_specie()].size(), 0);

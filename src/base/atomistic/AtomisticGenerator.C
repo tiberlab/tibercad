@@ -934,9 +934,9 @@ void AtomisticGenerator::make_conv_lattice()
   a2(0) = _conv_vect(1,2); a2(1) = _conv_vect(2,2); a2(2) = _conv_vect(3,2);
   a3(0) = _conv_vect(1,3); a3(1) = _conv_vect(2,3); a3(2) = _conv_vect(3,3);
 
-  cout<<a1<<endl;
-  cout<<a2<<endl;
-  cout<<a3<<endl;
+  //cout<<a1<<endl;
+  //cout<<a2<<endl;
+  //cout<<a3<<endl;
   //Define a box including conventional cell
  
   for (i=1; i<=3; i++)
@@ -1776,7 +1776,7 @@ AtomisticGenerator::build_random_alloy()
   //
   std::tr1::uniform_int<size_t> random(0, _structure_basis.size() - 1);
 
-  // We keep drowing numbers until a region is done (not_finished)
+  // We keep drawing numbers until a region is done (not_finished)
   size_t ctr = 0;
   size_t id = 0;
   for (; !not_finished.empty(); ++ctr)
@@ -1787,8 +1787,8 @@ AtomisticGenerator::build_random_alloy()
     unsigned int lb = atm.get_label();
 
     //std::cout << "atom: "<<id<<" reg: "<<regid<<" lb: "<<lb<<"; fg: "
-    //          << static_cast<unsigned int>(atm.get_type())
-    //          << " is done? "<<done[regid][lb]<<std::endl;
+     //         << static_cast<unsigned int>(atm.get_type())
+     //         << " is done? "<<done[regid][lb]<<std::endl;
 
     // NOTE: random numbers may repeat, so we have to check if this atom
     // has already been substituted: we use atom.type to flag substituted atoms
