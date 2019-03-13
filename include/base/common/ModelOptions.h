@@ -113,6 +113,16 @@ class ModelOptions
     void get_option(const std::string& name, std::vector<T>& vec) const;
 
 
+    //! Get an option which is a set of values (of the same type)
+    /*!
+     * \param name the name of the option
+     * \param data the set, where the values will be stored. \c data can
+     * contain default values.
+     */
+    template <typename T>
+    void get_option(const std::string& name, std::set<T>& data) const;
+
+
     //! Get an option which is a three component vector
     /*!
      * \param name the name of the option

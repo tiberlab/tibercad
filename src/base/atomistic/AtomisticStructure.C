@@ -2108,12 +2108,25 @@ AtomisticStructure::extract_statistics(map<Specie, vector<unsigned int>>& stats,
 
   int ref_atom = _options.get_option("reference_atom", -1);
 
+  int bin_size = opt.get_option("bin_size", 0);
+  set<unsigned int> binning_atom;
+  opt.get_option("binning_atom", binning_atom);
+
   Messages m;
   m.info("Extracting alloy statistics for structure " + this->get_name() + ": ");
   m.indent();
   ostringstream os;
-  os << "control sphere radius: " << cutoff << " nm";
+  if (bin_size > 0)
+  {
+    os << "bin size: " << bin_size << ", counting atoms with label ";
+    for (auto&& ba : binning_atom)
+      os << ba << " ";
+  }
+  else
+    os << "control sphere radius: " << cutoff << " nm";
+
   m.info(os.str());
+
   if (ref_atom >= 0)
   {
     os.str("");
@@ -2121,8 +2134,6 @@ AtomisticStructure::extract_statistics(map<Specie, vector<unsigned int>>& stats,
     m.info(os.str());
   }
 
-  int bin_size = opt.get_option("bin_size", 0);
-  int binning_atom = opt.get_option("binning_atom", 0);
 
   // A random starting seed is needed to actually have different sequences
   // we try to use something that is different also if launching simulations
@@ -2246,7 +2257,7 @@ AtomisticStructure::extract_statistics(map<Specie, vector<unsigned int>>& stats,
         if (detect.empty() || detect[i])
         {
           stats[atm.get_specie()].back() += 1;
-          if (atm.get_label() == binning_atom)
+          if (!binning_atom.empty() && binning_atom.count(atm.get_label()))
             counter++;
         }
 
@@ -2261,7 +2272,7 @@ AtomisticStructure::extract_statistics(map<Specie, vector<unsigned int>>& stats,
 
           if (detect.empty() || detect[it.atom_index()])
           {
-            if (neigh.get_label() == binning_atom)
+            if (!binning_atom.empty() && binning_atom.count(neigh.get_label()))
               counter++;
 
             if (!stats.count(neigh.get_specie()))

@@ -162,6 +162,23 @@ ModelOptions::get_option(const string& name,
     Utils::extract_vector(it->second, vec);
 }
 
+template <typename T>
+void
+ModelOptions::get_option(const string& name,
+    set<T>& data) const
+{
+  OptionsMap::const_iterator it(_find(name));
+
+  if (it != _options.end())
+  {
+    vector<T> vec;
+    Utils::extract_vector(it->second, vec);
+    for (size_t i = 0; i < vec.size(); ++i)
+      data.insert(vec[i]);
+  }
+}
+
+
 
 template <typename T>
 void
@@ -433,6 +450,20 @@ void
 ModelOptions::get_option<string>(const string& name,
     vector<string>& vec) const;
 
+template
+void
+ModelOptions::get_option<unsigned int>(const string& name,
+    set<unsigned int>& vec) const;
+
+template
+void
+ModelOptions::get_option<int>(const string& name,
+    set<int>& vec) const;
+
+template
+void
+ModelOptions::get_option<string>(const string& name,
+    set<string>& vec) const;
 
 template
 void
