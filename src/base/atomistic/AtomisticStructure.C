@@ -2233,9 +2233,6 @@ AtomisticStructure::extract_statistics(map<Specie, vector<unsigned int>>& stats,
       if (detect.empty() || detect[i])
       {
         stats[atm.get_specie()][0] += 1;
-
-        if (atm.get_label() == binning_atom)
-          counter++;
       }
 
       if ((ref_atom < 0) || (atm.get_label() == ref_atom))
@@ -2245,6 +2242,13 @@ AtomisticStructure::extract_statistics(map<Specie, vector<unsigned int>>& stats,
         map<Specie, vector<unsigned int>>::iterator mend(stats.end());
         for ( ; mit != mend; ++mit)
           (mit->second).push_back(0);
+
+        if (detect.empty() || detect[i])
+        {
+          stats[atm.get_specie()].back() += 1;
+          if (atm.get_label() == binning_atom)
+            counter++;
+        }
 
         neighbor_iterator it(neighbors_begin(i, 10 * cutoff, 10 * y, 10 * z));
         neighbor_iterator end(neighbors_end(i));
