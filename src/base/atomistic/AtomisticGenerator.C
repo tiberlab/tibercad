@@ -2,9 +2,9 @@
 
 #include "AtomisticGenerator.h"
 #include "AtomisticStructure.h"
-#include "AtomisticGenerator1D.h"
-#include "AtomisticGenerator2D.h"
-#include "AtomisticGenerator3D.h"
+//#include "AtomisticGenerator1D.h"
+//#include "AtomisticGenerator2D.h"
+//#include "AtomisticGenerator3D.h"
 #include "BondMap.h"
 #include "Messages.h"
 #include "MeshUtils.h"
@@ -13,6 +13,7 @@
 #include "RotatedCrystal.h"
 #include "Atom.h"
 #include "BulkCrystal.h"
+
 #include <plane.h>
 
 #include <stdio.h>
@@ -31,7 +32,7 @@
 using namespace std;
 
 
-AtomisticGenerator::AtomisticGenerator(void)
+AtomisticGenerator::AtomisticGenerator(AtomisticStructure* const as)
 :_bondmap(NULL),
 _reference_material(NULL),
 _conv_vect(0),
@@ -40,6 +41,7 @@ _local_origin(0),
 _translation(0),
 _cell_translation(0),
 _period(0),
+_as(as),
 _bulk(NULL)
 {
 
@@ -56,10 +58,9 @@ const double AtomisticGenerator::tol = 5e-2;
 AtomisticGenerator*
 AtomisticGenerator::create(AtomisticStructure* const as, unsigned int dimension)
 {
-  AtomisticGenerator* ag =  NULL;
-  if (dimension == 1) ag = AtomisticGenerator1D::create(as);
-  if (dimension == 2) ag = AtomisticGenerator2D::create(as);
-  if (dimension == 3) ag = AtomisticGenerator3D::create(as);
+  AtomisticGenerator* ag =  new AtomisticGenerator(as);
+
+  ag->_dim = dimension;
 
   return ag;
 }
@@ -86,6 +87,77 @@ void AtomisticGenerator::print_basis(std::vector<Atom> &basis, const std::string
   }while(basis_iterator != basis.end());
 
   output_file.close();
+
+}
+
+
+void
+AtomisticGenerator::build(void)
+{
+
+  //Common building operations
+  make_conv_cell();
+
+  if (_as->get_options().get_option("minimal_cell",false))
+  {
+    minimal_conv_cell();
+  }
+  make_conv_lattice();
+  move_origin();
+  make_conv_basis();
+
+  // Get bounding box for building structure
+
+  double min_x = numeric_limits<double>::max(),
+         min_y = numeric_limits<double>::max(),
+         min_z = numeric_limits<double>::max(),
+         max_x = numeric_limits<double>::min(),
+         max_y = numeric_limits<double>::min(),
+         max_z = numeric_limits<double>::min();
+
+  MeshBase::element_iterator el(_as->get_device()->get_mesh().elements_begin());
+  const MeshBase::element_iterator el_end(_as->get_device()->get_mesh().elements_end());
+  for ( ; el != el_end; ++el)
+  {
+    Elem* elem = *el;
+    if (_as->get_IDset().count(elem->subdomain_id()))
+    {
+      for (unsigned int i = 0; i < elem->n_nodes(); i++)
+      {
+        Node* nd = elem->get_node(i);
+        if ( (*nd)(0) < min_x ) min_x = (*nd)(0);
+        if ( (*nd)(0) > max_x ) max_x = (*nd)(0);
+        if ( (*nd)(1) < min_y ) min_y = (*nd)(1);
+        if ( (*nd)(1) > max_y ) max_y = (*nd)(1);
+        if ( (*nd)(2) < min_z ) min_z = (*nd)(2);
+        if ( (*nd)(2) > max_z ) max_z = (*nd)(2);
+      }
+    }
+  }
+
+
+  // the small shift of 1e-3 prevents from subsequently cutting away
+  // atoms due to roundoff errors
+  _local_origin(1) += min_x * scale + 1e-3;
+  _local_origin(2) += min_y * scale;
+  _local_origin(3) += min_z * scale;
+  if (_dim > 1)
+    _local_origin(2) += 1e-3;
+  if (_dim > 2)
+    _local_origin(3) += 1e-3;
+
+
+  double l1 = (fabs(max_x - min_x)) * scale;
+  double l2 = (fabs(max_y - min_y)) * scale;
+  double l3 = (fabs(max_z - min_z)) * scale;
+
+  // Minimum periodic direction is considered along y and z axis, but eventually other lengths can be
+  // specified by user in input (conventional cells along these direction are assured also in this case!!)
+  l1 = _as->get_options().get_option("supercell_size_x", l1);
+  l2 = _as->get_options().get_option("supercell_size_y", l2);
+  l3 = _as->get_options().get_option("supercell_size_z", l3);
+
+  make_supercell(l1, l2, l3);
 
 }
 
@@ -169,26 +241,6 @@ AtomisticGenerator::do_init()
   std::ostringstream os;
 
   init_commons();
-
-  // Set the vector of elements covered by structure regions,
-  // useful for change specie and cut
-  MeshBase::element_iterator el(_as->get_device()->get_mesh().elements_begin());
-  const MeshBase::element_iterator el_end(_as->get_device()->get_mesh().elements_end());
-  //number of elements in atomistic regions
-  unsigned int num_elem = 0;
-  for ( ; el != el_end; ++el)
-  {
-    libMesh::Elem* elem = *el;
-    if (_as->get_IDset().count(elem->subdomain_id()))
-      ++num_elem;
-  }
-  _structure_elements.reserve(num_elem);
-  for (el = _as->get_device()->get_mesh().elements_begin(); el != el_end; ++el)
-  {
-    libMesh::Elem* elem = *el;
-    if (_as->get_IDset().count(elem->subdomain_id()))
-      _structure_elements.push_back(elem);
-  }
 
   //Build up supercell structure with proper options
   Messages::info("Build a first oversized structure");

@@ -4,14 +4,14 @@
 topdir := ../../..
 
 # we have to compile each module
-subdirs += excitons dssc common signals
+subdirs += dssc common signals
 subdirs += thermal drift-diffusion elasticity
 subdirs += vff etb 
-subdirs += polarizationgrid 
 subdirs += dd_generic
 #subdirs += interpolation
 subdirs += quantumespresso
 subdirs += imagereader
+subdirs += polarizationgrid 
 #subdirs += negf 
 #subdirs += maxwell maxwellabsorption 
 

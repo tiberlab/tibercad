@@ -35,9 +35,7 @@ class TBDLLOCAL AtomisticGenerator
 
 public:
 
-  AtomisticGenerator(void);
-
-  virtual   ~AtomisticGenerator(void);
+  virtual  ~AtomisticGenerator(void);
 
   //! Initialize structure informations
   void do_init();
@@ -77,6 +75,8 @@ public:
 
 protected:
 
+  explicit AtomisticGenerator(AtomisticStructure* const as);
+
   //! Change atom species according to regions
   void cut_and_change_specie(std::string preserve);
 
@@ -111,7 +111,7 @@ protected:
   //! Final structure basis
   std::vector<Atom> _structure_basis;
 
-  //! Dimensionality of the system (1, 2 or 3)
+  //! Dimensionality of the device mesh (1, 2 or 3)
   unsigned int _dim;
 
   //! Lenght of supercell in conventional cells units
@@ -148,10 +148,6 @@ protected:
    */
   AtomisticStructure*  _as;
 
-  //! List of elements covered by structure
-  std::vector<libMesh::Elem*> _structure_elements;
-
-
   //! Setting growth conventional cell vectors (in primitive vectors basis)
   void make_conv_cell();
 
@@ -166,11 +162,11 @@ protected:
   //! A function to build supercells (basis+lattice filling space)
   void make_supercell(double l1, double l2, double l3);
 
-  //! Virtual function for building up the structure.
-  virtual void build() = 0;
+  //! Function for building up the structure.
+  virtual void build(void);
 
   //! Find the origin of the conventional cell such that all atoms have positive coordinates
-  void move_origin();  
+  void move_origin(void);
 
 
   //! Calculate a reciprocal basis from a real basis
@@ -209,6 +205,8 @@ protected:
   static bool fold_in_cell(Point& p, const Point& orig, const Point& a1, const Point& a2, const Point& a3, bool fold=true);
 
 private:
+
+  AtomisticGenerator(void) {};
 
   //! Common 0d,1d,2d,3d init operations
   void init_commons();
