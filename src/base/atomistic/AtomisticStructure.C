@@ -2,9 +2,6 @@
 
 #include "AtomisticStructure.h"
 #include "AtomisticGenerator.h"
-#include "AtomisticGenerator1D.h"
-#include "AtomisticGenerator2D.h"
-#include "AtomisticGenerator3D.h"
 #include "BondMap.h"
 #include "Messages.h"
 #include "MeshUtils.h"
