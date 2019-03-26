@@ -40,7 +40,6 @@ AtomisticStructure::AtomisticStructure()
  _random_alloy(false),
  _N_without_H(0)
 {
-  N_atoms= 0;
 }
 
 
@@ -52,7 +51,6 @@ AtomisticStructure::AtomisticStructure(const std::string& name)
  _random_alloy(false),
  _N_without_H(0)
 {
-  N_atoms= 0;
 }
 
 AtomisticStructure::AtomisticStructure(const AtomisticStructure& other) :
@@ -106,7 +104,6 @@ void
 AtomisticStructure::init(const std::string& name,
     const Device* const device, const ModelOptions& options)
 {
-  std::ostringstream os;
   std::string random_alloy;
 
   _name = name;
@@ -135,7 +132,11 @@ AtomisticStructure::init(const std::string& name,
   // If reference_region is defined and physical_regions is defined
   // the atomistic generator for complex structures is invoked
   //
-  // Read from file
+
+  Messages m;
+  m.newline();
+  m.info("Building Atomistic Structure " + get_name());
+  m.indent();
 
   random_alloy = _options.get_option("random_alloy", "false");
   if (random_alloy == "true") _random_alloy = true;
@@ -144,71 +145,102 @@ AtomisticStructure::init(const std::string& name,
 
   if (_options.find_option("load_structure") || _options.find_option("load"))
   {
-      std::string filename;
+    std::string filename;
 
-      if (_options.find_option("load_structure")) filename = _options.get_option("load_structure","none");
-      if (_options.find_option("load")) filename = _options.get_option("load","none");
+    if (_options.find_option("load_structure")) filename = _options.get_option("load_structure","none");
+    if (_options.find_option("load")) filename = _options.get_option("load","none");
 
-      //------------------------------------------------------------
-      os << "Reading structure from file " << filename <<
-          ". Any further information will be neglected" << std::endl;
-      Messages::info(os.str(), true);
-      os.str(std::string());
-      //---------------------------------------------------------------
-      read_structure(filename);
+    //------------------------------------------------------------
+    ostringstream os;
+    os << "Reading structure from file " << filename <<
+        ". Any further information will be neglected" << std::endl;
+    Messages::info(os.str(), true);
+    os.str(std::string());
+    //---------------------------------------------------------------
+    read_structure(filename);
 
-      Messages::info("Parse regions");
-      parse_regions();
+    Messages::info("Parse regions");
+    parse_regions();
 
-      //NOTE: I'm calculating the bond map again anyway because otherwise the translation vectors are not
-      //correctly reproduced for periodic structures. If we really want to import the bond map,
-      //this needs to be changed
-      if (_bondmap != NULL)
+    //NOTE: I'm calculating the bond map again anyway because otherwise the translation vectors are not
+    //correctly reproduced for periodic structures. If we really want to import the bond map,
+    //this needs to be changed
+    if (_bondmap != NULL)
+    {
+      delete _bondmap;
+      _bondmap = NULL;
+    }
+
+    Messages::info("Build Bond Map");
+    build_bond_map();
+
+    //Messages::info("Associate elements");
+    if (!_atomistic_structure_options.is_associated)
+      associate_elements();
+
+    set_labels();
+
+    dorestrict(_IDset);
+
+  }
+  else if (_options.find_option("combine_structures"))
+  {
+
+    vector<string> pieces;
+    _options.get_option("combine_structures", pieces);
+
+    ostringstream os;
+    os << "Combining atomistic structures : ";
+    for (auto&& i : pieces)
+      os << i << ", ";
+
+    Messages::info(os.str());
+
+    bool first = true;
+    for (auto&& i : pieces)
+    {
+      const AtomisticStructure* const as = _device->get_atomistic_structure(i);
+
+      if (first)
       {
-        delete _bondmap;
-        _bondmap = NULL;
+        *this = *as;
+        _name = name;
+        first = false;
       }
+      else
+      {
 
-      Messages::info("Build Bond Map");
-      build_bond_map();
+        _IDset.insert(as->_IDset.begin(), as->_IDset.end());
+        _virtual_atom_types.insert(_virtual_atom_types.end(),
+            as->_virtual_atom_types.begin(), as->_virtual_atom_types.end());
 
-      //Messages::info("Associate elements");
-      if (!_atomistic_structure_options.is_associated) 
-           associate_elements();
+        _atoms.insert(_atoms.end(), as->_atoms.begin(), as->_atoms.end());
+      }
+    }
 
-      set_labels();
+    refresh();
 
-      dorestrict(_IDset);
+  }
+  else
+  {
+    // Build mesh based representation
+    Utils::Timer tt;
+    tt.reset();
 
-   }
-   else 
-   {
-      //if (!_options.find_option("reference_region") &&
-      //    !_options.find_option("reference_material"))
-      //   throw RuntimeException("missing reference_region or reference_material");
-          
-      // Build mesh based representation
-      Utils::Timer tt;
-      tt.reset();
-      Messages m;
-      m.indent();
+    parse_regions();
+    init_mesh_structure();
 
-      parse_regions();
-      init_mesh_structure();
- 
-      Messages::newline();
-      Messages::info("Atomistic structure build time: "+tt.elapsed_string());
+    Messages::info("Atomistic structure build time: "+tt.elapsed_string());
 
-   }
+  }
       
    //Calculate the number of atoms excluding hydrogens 
    //(Useful for passivated semiconductors)
    compute_N_without_H();
 
-   Messages m;
    m.newline();
-   m.indent();
-   os << "Atomistic Structure containing " << N_atoms << 
+   ostringstream os;
+   os << "Atomistic Structure containing " << get_N_atoms() <<
          " atoms has been built. " <<std::endl;
    os << "Size not counting passivation hydrogens: "<< get_N_without_H()<<std::endl;
    m.info(os.str());
@@ -247,9 +279,9 @@ AtomisticStructure::init(const std::string& name,
        (*it)();
      }
    }
-
-
 }
+
+
 
 void
 AtomisticStructure::parse_lattice_vectors(void)
@@ -334,9 +366,6 @@ AtomisticStructure::init_mesh_structure()
   std::ostringstream os;
   assert(_device != NULL);
 
-  // Read structure from file
-  std::string path;
-
   //---------------------------------------------------------------
   os << "Mesh_units is " << _device->get_mesh_units() << std::endl
       << "Scale factor is " << _scale << std::endl;
@@ -370,10 +399,6 @@ AtomisticStructure::init_mesh_structure()
 
   periodicity.resize(3,true);
   this->set_periodicity(periodicity);
-
-  //--------------------------------------------------------------
-  Messages::info("Building Atomistic Structure " + get_name());
-  //-----------------------------------------------------------
   
   //---------------------------------------------------------------
   // Extend mesh for contacts 
@@ -402,9 +427,12 @@ AtomisticStructure::init_mesh_structure()
   for (size_t i = 0; i < _atoms.size(); ++i)
     _elem_to_atoms[_atoms[i].get_elem()].push_back(i);
  
-  Messages::info("Build final Bond Map...");
   parse_lattice_vectors();
-  build_bond_map();
+
+  Messages::info("Build final Bond Map...");
+
+  // extract atom types and create final bondmap
+  refresh();
 
   delete generator;
 
@@ -431,7 +459,7 @@ AtomisticStructure::dorestrict(const std::set<ID>& rgn_ids)
   delete generator;
 
   std::ostringstream os;
-  os << "New structure size: "<<N_atoms;
+  os << "New structure size: "<< get_N_atoms();
   Messages::info(os.str());
   os.str("");
   os << "Without H: "<<_N_without_H;
@@ -546,7 +574,7 @@ unsigned int
 AtomisticStructure::get_virtual_type_index(const std::string& type) const
 {
   unsigned int result = 0;
-  for (unsigned int i = 0; i < N_types; i++){
+  for (unsigned int i = 0; i < get_N_types(); i++){
       if ( (type.compare( _atom_types[i] ) == 0) ) result = i + 1;
   }
 
@@ -668,7 +696,7 @@ AtomisticStructure::assign_virtual_species(void)
 void
 AtomisticStructure::set_labels(void)
 {
-  for (unsigned int i = 0; i < N_atoms; i++)
+  for (unsigned int i = 0; i < get_N_atoms(); i++)
   {
     Atom& atom = _atoms[i];
     if ( atom.get_elem() == NULL)
@@ -759,7 +787,7 @@ AtomisticStructure::read_xyz(const std::string& path, const Tensor1& transl)
   // First line is number of atoms
   
   getline(file, line);
-  N_atoms = atoi(line.c_str());
+  unsigned int N_atoms = atoi(line.c_str());
   _atoms.reserve(N_atoms);
 
   if (N_atoms == 0)
@@ -819,8 +847,6 @@ AtomisticStructure::read_xyz(const std::string& path, const Tensor1& transl)
   // Warning: XYZ file has no informations about structure periodicity
   parse_lattice_vectors();
 
-  N_types = _atom_types.size();
-
 }  // end read_xyz
 
 void
@@ -837,7 +863,7 @@ AtomisticStructure::read_gen(const std::string& path, const Tensor1& transl)
   getline(file, line);
   std::stringstream line_string(line);
 
-  N_atoms = atoi(line.c_str());
+  unsigned int N_atoms = atoi(line.c_str());
   _atoms.reserve(N_atoms);
 
   if (N_atoms == 0)
@@ -870,8 +896,6 @@ AtomisticStructure::read_gen(const std::string& path, const Tensor1& transl)
   {
     _atom_types.push_back(record);
   }
-
-  N_types = _atom_types.size();
 
   // Cycle upon specified number of atoms (last rows are for periodicity vectors)
   for (unsigned int i = 1; i <= N_atoms; i++)
@@ -938,7 +962,7 @@ AtomisticStructure::read_tgn(const std::string& path, const Tensor1& transl)
   line_string >> record;
  
 
-  N_atoms = atoi(record.c_str());
+  unsigned int N_atoms = atoi(record.c_str());
   _atoms.reserve(N_atoms);
 
   //Prepare bond map object
@@ -982,9 +1006,6 @@ AtomisticStructure::read_tgn(const std::string& path, const Tensor1& transl)
     {
       _atom_types.push_back(record);
     }
-
-
-  N_types = _atom_types.size();
 
 
   // Cycle upon specified number of atoms (last rows are for periodicity vectors)
@@ -2928,6 +2949,8 @@ AtomisticStructure::radial_distribution(std::string suffix)
   // transform mesh_units^3 to Ang^3
   Vol *= _scale * _scale * _scale; 
   
+  unsigned int N_atoms = get_N_atoms();
+
   for (unsigned int i=0; i<species.size(); i++) 
   {
     ofstream of(TiberCad::get_output_dir() + "/" + get_name() +
@@ -2976,7 +2999,7 @@ AtomisticStructure::compute_g(const Specie& sp, double Rc, double dr, vector<map
   // a set with all species:
   set<Specie> spset;
 
-  for (unsigned int atom=0; atom < N_atoms; atom++)
+  for (unsigned int atom=0; atom < get_N_atoms(); atom++)
   { 
     spset.insert(_atoms[atom].get_specie());
     if (_atoms[atom].get_specie() == sp)

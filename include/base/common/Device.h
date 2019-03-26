@@ -285,7 +285,7 @@ class Device
 
 
     //! Get the pointer for the atomistic structure defined with \c name
-    AtomisticStructure* get_atomistic_structure(const std::string& name);
+    AtomisticStructure* get_atomistic_structure(const std::string& name) const;
 
     //! Get the requested atomistic structures in a vector
     void get_atomistic_structures(const std::string& names,
@@ -697,10 +697,10 @@ Device::quantum_contacts_end(void)
 
 inline
 AtomisticStructure*
-Device::get_atomistic_structure(const std::string& name)
+Device::get_atomistic_structure(const std::string& name) const
 {
   if (_atomistic_structure_map.find(name) != _atomistic_structure_map.end())
-    return _atomistic_structure_map[name];
+    return _atomistic_structure_map.find(name)->second;
   else
     return NULL;
 }

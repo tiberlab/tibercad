@@ -102,16 +102,16 @@ class AtomisticBasis
   BondMap* build_bond_map(bool periodicity[3]) const;
 
   //! get the number of atoms in the structure
-  int get_N_atoms() const {return N_atoms;}
+  int get_N_atoms() const {return _atoms.size();}
 
   //! set number of atoms
-  void set_N_atoms(long N) {N_atoms=N;}
+  //void set_N_atoms(long N) {N_atoms=N;}
 
   //! get the number of types in the structure
-  int get_N_types() const {return N_types;}
+  int get_N_types() const {return _atom_types.size();}
 
   //! set number of atoms
-  void set_N_types(int N) {N_types=N;}
+  //void set_N_types(int N) {N_types=N;}
 
   //! Print structure in xyz format
   void print_xyz(const std::string& path) const;
@@ -203,12 +203,6 @@ class AtomisticBasis
   //! Periodicity vectors in canonical basis
   std::vector<double> _lattice_vectors;
   
-  //! Number of atoms in structure
-  unsigned int N_atoms;
-
-  //! Number of species
-  int N_types;
-
   //! Set of all atom types in structure
   std::vector<std::string> _atom_types;
 

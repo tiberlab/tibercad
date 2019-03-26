@@ -34,8 +34,6 @@ AtomisticBasis::AtomisticBasis(const AtomisticBasis& other) :
   _bondmap(nullptr),
   _atoms(other._atoms),
   _lattice_vectors(other._lattice_vectors),
-  N_atoms(other.N_atoms),
-  N_types(other.N_types),
   _atom_types(other._atom_types),
   _periodicity(other._periodicity)
 {
@@ -108,7 +106,7 @@ int
 AtomisticBasis::get_type_index(const std::string& type) const
 {
   int result = 0;
-  for (int i = 0; i < N_types; i++){
+  for (int i = 0; i < _atom_types.size(); i++){
       if ( (type.compare( _atom_types[i] ) == 0) ) result = i + 1;
   }
 
@@ -125,8 +123,6 @@ AtomisticBasis::set_atom_types(const std::set<std::string>& atom_types)
   {
     _atom_types.push_back( *types );
   }
-
-  N_types = _atom_types.size();
 }
 
 
@@ -175,18 +171,16 @@ AtomisticBasis::build_bond_map(void)
 void
 AtomisticBasis::refresh(void)
 {
-//This should contain all important operation which build additional infos
-//(bondmap, atom types, N atoms) starting from lattice vectors and
-//atom vector only
 
-  build_bond_map();
-  N_atoms = _atoms.size();
   std::set<std::string> types;
   for (std::vector<Atom>::iterator it = _atoms.begin(); it != _atoms.end(); ++it)
   {
     types.insert(it->get_specie().get_string());
   } 
+  clear_atom_types();
   set_atom_types(types);
+
+  build_bond_map();
 }
 
 //-------------------------------------------------------------------

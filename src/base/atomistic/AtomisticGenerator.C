@@ -353,22 +353,6 @@ AtomisticGenerator::finalize(void)
  
   //_as->set_periodicity(_periodicity);
 
-  _as->set_N_atoms( _structure_basis.size() );
-
-  std::set<std::string> atom_types;
-
-  for (unsigned int i = 0; i < _structure_basis.size(); i++)
-  {
-    atom_types.insert(_structure_basis[i].get_specie().get_string());
-  }
-
-  _as->set_N_types( atom_types.size() );
-
-  _as->clear_atom_types();
-
-  _as->set_atom_types(atom_types);
-
-
 }
 
 
@@ -413,10 +397,10 @@ AtomisticGenerator::associate_elements(const std::set<ID>& reg_ids)
     {
       (*atom).set_elem(elem);
     }
-    else
-    {
-      //cout<<endl<<"(debug) atom coords: "<<p(0)<<", "<<p(1)<<", "<<p(2)<<"  have no elem."<<endl;
-    }
+    //else
+    //{
+    //  cerr << "(debug) atom coords: "<<p(0)<<", "<<p(1)<<", "<<p(2)<<"  have no elem."<<endl;
+    //}
 
     progress++;
     prog.progress_message(progress);
@@ -1299,7 +1283,7 @@ void  AtomisticGenerator::bond_map_gen(const std::vector<Atom>& basis){
 }
 
 
-void AtomisticGenerator::passivate()
+void AtomisticGenerator::passivate(void)
 {
   double hydrogen_distance = _as->get_options().get_option("hydrogen_distance", 1.2);
   Atom* bonded_atom;

@@ -133,7 +133,7 @@ protected:
   void remove_atoms(void);
 
   //! Real passivation routine (implemented in derived classes, it takes in account periodicity)
-  void passivate();
+  void passivate(void);
 
 
   //!Supercell periodicity vectors
