@@ -136,7 +136,7 @@ class MeshUtils
 
 
         //! A static list of all GridMapper objects
-        static std::map<const libMesh::MeshBase*, GridMapper*> _mappers;
+        static std::multimap<const libMesh::MeshBase*, GridMapper*> _mappers;
 
     };
 };

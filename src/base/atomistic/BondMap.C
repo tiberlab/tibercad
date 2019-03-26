@@ -98,7 +98,6 @@ BondMap::do_solve(const std::vector<Atom>& basis, const Tensor2Gen& period)
   }
  
   _period = period;
-
   //define the minimum spacing of the grid. the smaller it is, the faster is bonds calculations
   //cannot be smaller than the higher bond lenght. (in amstrong)
   GridCells cells(basis, period, 6.0);
@@ -106,7 +105,7 @@ BondMap::do_solve(const std::vector<Atom>& basis, const Tensor2Gen& period)
   // Loop on all cells
   Utils::Progress prog("BondMap", cells.size());
 
-  for (unsigned int c1=0; c1 < cells.size(); c1++)
+  for (unsigned int c1 = 0; c1 < cells.size(); c1++)
   {
     GridCells::NeighborIterator it = cells.begin(c1);
     GridCells::NeighborIterator end = cells.end(c1);
@@ -117,7 +116,7 @@ BondMap::do_solve(const std::vector<Atom>& basis, const Tensor2Gen& period)
     //          << static_cast<int>(100*(c1+1)/cells.size())<<"% ..."<<std::flush;
 
     // Loop on all 27 neighboring cells (periodicity is taken care by the iterator)
-    for ( ; it!=end; ++it)
+    for ( ; it != end; ++it)
     {
       unsigned int c2 = (*it).first;
       const Tensor1& shift = *((*it).second);

@@ -212,7 +212,7 @@ MeshUtils::search_element(const libMesh::MeshBase* mesh, const libMesh::Point& p
 
 
 
-map<const libMesh::MeshBase*, MeshUtils::GridMapper*>
+multimap<const libMesh::MeshBase*, MeshUtils::GridMapper*>
 MeshUtils::GridMapper::_mappers;
 
 
@@ -290,7 +290,6 @@ MeshUtils::GridMapper::setup(void)
     }
 
 
-
     int tg0[3];
     int tg1[3];
     _tensor_grid.find_element(p0, tg0);
@@ -322,7 +321,7 @@ MeshUtils::GridMapper::setup(void)
 
   ostringstream os;
   os << timer.elapsed_string() << ", memory usage: "
-      << mem / (1024*1024) << " MB";
+      << mem / (1024*1024) << " MB " << mem;
   Messages::info(os.str());
 }
 
@@ -331,10 +330,14 @@ MeshUtils::GridMapper::setup(void)
 MeshUtils::GridMapper&
 MeshUtils::GridMapper::get_mapper(const libMesh::MeshBase* mesh, const set<ID>& regions)
 {
-  map<const libMesh::MeshBase*, GridMapper*>::iterator it(_mappers.find(mesh));
-  if (it == _mappers.end())
+  multimap<const libMesh::MeshBase*, GridMapper*>::iterator it(_mappers.lower_bound(mesh));
+
+  while ((it != _mappers.upper_bound(mesh)) && (it->second->_regids != regions))
+    ++it;
+
+  if (it == _mappers.upper_bound(mesh))
   {
-    it = (_mappers.insert(make_pair(mesh, new GridMapper(mesh, regions)))).first;
+    it = _mappers.insert(make_pair(mesh, new GridMapper(mesh, regions)));
   }
 
   return(*(it->second));
