@@ -148,7 +148,14 @@ class Kspace
    libMesh::Point k_basis_vector2;
    libMesh::Point k_basis_vector3;
 
+   //vector identification for symmetry points
+   std::vector<unsigned int> identification;
+
+
+
    //checking for different k spaces
+
+
 
    Symmetry k_space_symmetry;
 

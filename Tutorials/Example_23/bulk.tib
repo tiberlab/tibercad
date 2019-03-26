@@ -1,0 +1,78 @@
+#
+# Example 0: Bulk Si. This example calculates the IV of a piece 
+# of slightly doped bulk silicon
+#
+
+
+# Description of the device physical regions
+Device
+{
+  meshfile = bulk.msh
+  mesh_units = 1e-9
+  Region bulk 
+  {
+    material = MoS2
+#for wz growth direction can be set
+
+  y-growth-direction = (1,0,-1,0)
+  z-growth-direction = (-1,2,-1,0)
+  x-growth-direction = (0,0,0,1)
+   
+  }
+
+
+   Atomistic tb
+   {
+     regions = bulk
+     reference_region = bulk
+     periodicity = (1)
+     minimal_cell = true 
+	     
+     supercell_size_y = 0 
+     supercell_size_z = 0  
+ }
+
+}
+
+
+Module empirical_tb
+{
+    regions = bulk
+    name = tb
+    atomistic_structure = tb
+    Harrison_scaling = false
+    relativistic = false 
+    #verbose = 9
+
+    plot = (tbstates)
+    
+    Dispersion
+    {
+      k-path = G-K-M-G 
+      k_max = 1
+      number_of_nodes = 20
+    }
+
+    Solver
+    {
+      solver = lapack
+      guess_valence = 0.5  # -0.4
+      guess_conduction = 1.0 # 0.1 
+      num_valence_eigenvalues = 7 
+      num_conduction_eigenvalues = 4 
+    }
+}
+
+
+Simulation
+{
+  # this increases the amount of information
+  # written to the screen
+  verbose = 2
+  
+  solve = tb
+  resultpath = output
+}
+
+
+

@@ -40,4 +40,9 @@ Example 19: I-V characteristic of a single layer organic device (ITO/aNPD (200nm
 
 Example 20: ITO/P3HT interface
 
-Example 21: InGaN/GaN SQW LED, tight-binding with random alloy 
+Example 21: InGaN/GaN SQW LED, tight-binding with random alloy
+
+Example 22: InGaN/GaN SQW with indium concentration profile
+
+Example 23: MoS2 monolayer dispersion
+
