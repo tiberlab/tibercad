@@ -265,7 +265,7 @@ EigenvalueProblem::plot_dispersion(const std::string& filename)
 
     short kdim =  _kspace->dimension();
 
-    if (kdim == 1)
+    if (_kspace->is_k_path())
     {
       formats.resize(1);
       formats[0] = "grace";
@@ -278,7 +278,11 @@ EigenvalueProblem::plot_dispersion(const std::string& filename)
 
       std::string format = formats[k];
 
-      if ((format == "grace") && (kdim > 1)) format = "vtk";
+      if (!(_kspace->is_k_path()) &&
+          (format == "grace") && (kdim > 1))
+      {
+        format = "vtk";
+      }
 
       std::vector<double> results;
       std::vector<std::string> names;

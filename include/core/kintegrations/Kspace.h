@@ -33,9 +33,14 @@ class Kspace
   //! returns reference to kmesh object
   const libMesh::MeshBase* get_k_mesh(void) const;
 
+  //! Get the dimensionality of the k-space
   unsigned int dimension(void) const;
 
+  //! Get the degeneracy
   double get_degeneracy_factor(void);
+
+  //! Tells whether this is a k-path or not
+  bool is_k_path(void) const;
 
   //! Transform a k-point to relative coordinates
   void inverse_transform(libMesh::Point& p) const;
@@ -50,10 +55,6 @@ class Kspace
   };
 
   //! Rotate mesh
-  /*!
-    \param mesh  pointer to the mesh
-    \RotMatrix transformation matrix (not necessaryly rotation matrix)
-  */
   void rotate_mesh(void);
 
   void inv_rotate_mesh(void);
@@ -63,19 +64,22 @@ class Kspace
 
  protected:
 
-   virtual void  do_init(void) throw (InitFailedException);
+   virtual void  do_init(void);
 
    virtual void  parse_options(void);
 
 
  private:
-   enum Symmetry
-     {
-       QUADRATIC = 0,
-       RECTANGULAR = 1,
-       HEXAGONAL = 2
 
-     };
+   //! Known symmetry types of the Brillouin zone
+   enum Symmetry
+   {
+     QUADRATIC = 0,
+     RECTANGULAR = 1,
+     HEXAGONAL = 2
+
+   };
+
    //!build k space grid
    void build_k_grid( );
 
@@ -93,7 +97,6 @@ class Kspace
     \param k_vector2  Basis k-vector  \f$ {\bf K}_2 \f$ [atom. units]
     \param m - initial number of nodes in direction 2
     */
-
    void define_k_space(Tensor1 k_vector1,unsigned int n,  Tensor1 k_vector2, unsigned int m);
 
    //!defines 3D  Brilluoin zone  \f$ k \in [-{\bf K}_1 / 2; {\bf K}_1 / 2) \otimes [-{\bf K}_2 / 2; {\bf K}_2 / 2)   \otimes [-{\bf K}_3 / 2; {\bf K}_3 / 2) \f$
@@ -105,7 +108,6 @@ class Kspace
     \param k_vector3  Basis k-vector  \f$ {\bf K}_3 \f$ [atom. units]
     \param k - initial number of nodes in direction 3
     */
-
    void define_k_space(Tensor1 k_vector1, unsigned int n, Tensor1 k_vector2, 
                        unsigned int m, Tensor1 k_vector3, unsigned int k);
 
@@ -121,49 +123,48 @@ class Kspace
 
    Wedge wedge;
 
-   //!mesh_order;
+   //! mesh_order
    libMeshEnums::Order _mesh_order;
 
 
-   //!Brilluoin zone
+   //! Brilluoin zone
    libMesh::Mesh* kmesh;
 
-   //!Boundaries of the Brilluoin zone
+   //! Boundaries of the Brilluoin zone
    double kmin[3], kmax[3];
 
-   //!Dimension of the k_space
-   unsigned int  k_dim;
-
-   //!Dimension of the Brilluoin zone
+   //! Dimension of the k_space
    unsigned int  k_space_dim;
 
-   //!number of nodes in k-domain
+   //! number of nodes in k-domain
    std::vector<unsigned int>  num_nodes;
 
    //! matrix that rotates mesh
    Tensor2Gen transform_matrix;
 
-   //k basis vector of the k space
+   //! k-space basis vector 1
    libMesh::Point k_basis_vector1;
+
+   //! k-space basis vector 2
    libMesh::Point k_basis_vector2;
+
+   //! k-space basis vector 3
    libMesh::Point k_basis_vector3;
 
-   //vector identification for symmetry points
+   //! Generic identifier vector
+   /*!
+    * This vector is used to identify the different basis
+    * vector according to the k-space symmetry.
+    */
    std::vector<unsigned int> identification;
 
-
-
-   //checking for different k spaces
-
-
-
+   //! The symmetry class of the k-space
    Symmetry k_space_symmetry;
 
-
-
-
+   //! True if this is a path in k-space
    bool k_path;
 
+   //! The communicator for the k-space
    libMesh::Parallel::Communicator kspace_comm;
 
 };
@@ -175,7 +176,10 @@ inline  double Kspace::get_degeneracy_factor(void)
 }
 
 
-
+inline bool Kspace::is_k_path(void) const
+{
+  return(k_path);
+}
 
 inline libMesh::MeshBase* Kspace::get_k_mesh()
 {
@@ -184,12 +188,12 @@ inline libMesh::MeshBase* Kspace::get_k_mesh()
 
 inline const libMesh::MeshBase* Kspace::get_k_mesh() const
 {
-  return kmesh;
+  return(kmesh);
 }
 
 inline unsigned int Kspace::dimension(void) const
 {
-  return k_dim;
+  return(k_space_dim);
 }
 
 #endif

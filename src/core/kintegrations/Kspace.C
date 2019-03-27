@@ -35,7 +35,8 @@ Kspace::Kspace( const Kspace& kspace)
  : mod_opt(kspace.mod_opt),
    degeneracy_factor(kspace.degeneracy_factor),
    _mesh_order(kspace._mesh_order),
-   k_dim(kspace.k_dim),
+   k_space_dim(kspace.k_space_dim),
+   k_path(kspace.k_path),
    num_nodes(kspace.num_nodes)
 {
    kmin[0] = kspace.kmin[0];  kmin[1] = kspace.kmin[1];  kmin[2] = kspace.kmin[2];
@@ -75,44 +76,44 @@ Kspace::inverse_transform(Point& p) const
 void Kspace::build_k_grid()
 {
 
-  if (k_dim > 0)
+  if (k_space_dim > 0)
   {
 
     //build mesh
-    kmesh = new libMesh::Mesh(kspace_comm, k_dim);
+    kmesh = new libMesh::Mesh(kspace_comm, k_space_dim);
 
     libMesh::ElemType type(libMesh::EDGE2);
     if (_mesh_order == libMesh::SECOND)
     {
 
-      if (k_dim == 1)
+      if (k_space_dim == 1)
       {
         	type = libMesh::EDGE3;
       }
     
-      if (k_dim == 2)
+      if (k_space_dim == 2)
       {
         	type = libMesh::QUAD8;
       }
     
-      if (k_dim == 3)
+      if (k_space_dim == 3)
       {
         	type = libMesh::HEX27;
       }
     }
     else 
     {
-      if (k_dim == 1)
+      if (k_space_dim == 1)
       {
         	type = libMesh::EDGE2;
       }
     
-      if (k_dim == 2)
+      if (k_space_dim == 2)
       {
         	type = libMesh::QUAD4;
       }
     
-      if (k_dim == 3)
+      if (k_space_dim == 3)
       {
         	type = libMesh::HEX8;
       }
@@ -120,6 +121,7 @@ void Kspace::build_k_grid()
 
     }
 
+    /* test code for MoS2
     //lattice constant for MoS2
     float a = 3.16;
 
@@ -144,6 +146,7 @@ void Kspace::build_k_grid()
     }
 
     kmesh->prepare_for_use();
+    */
 
 
     
@@ -166,7 +169,7 @@ void Kspace::build_k_grid()
 
     
     
-    switch (k_dim)
+    switch (k_space_dim)
     {
       case 2:
         for (unsigned int n=0; n < kmesh->n_nodes(); n++)
@@ -403,7 +406,7 @@ void Kspace::define_k_space(Tensor1 k_vector1, unsigned int n, Tensor1 k_vector2
 
 
 //----------------------------------------------------------------------------------------//
-void Kspace::do_init() throw (InitFailedException)
+void Kspace::do_init()
 {
 
   //if (! mod_opt.find_option("mesh_units") )
@@ -416,31 +419,26 @@ void Kspace::do_init() throw (InitFailedException)
   
   k_space_dim = mod_opt.get_option("k_space_dimension", 0);
  
-  k_dim = k_space_dim;
-
   k_path = false;
   
 
-  if ((mod_opt.find_option("k-path") ||
-       mod_opt.find_option("k_path")) && k_dim > 1)
+  if (mod_opt.find_option("k-path"))
   {
-    //std::cout<<"(KSP) found k-path "  << std::endl;
-    k_dim = 1;
     k_path = true;
     mod_opt.get_option("number_of_nodes", num_nodes);
     if ( num_nodes.size() == 0 ) num_nodes.resize(1, 20);
   }
 
 
-  if (k_dim > 0)
+  if (k_space_dim > 0)
   {
     mod_opt.get_option("number_of_nodes", num_nodes);
-    if ( num_nodes.size() == 0 ) num_nodes.resize(k_dim, 5);
+    if ( num_nodes.size() == 0 ) num_nodes.resize(k_space_dim, 5);
   }
 
   // NOTE: for the mesh creation we always need all three indices
   // of num_nodes, so we define the missing ones as 1
-  num_nodes.resize(k_dim);
+  num_nodes.resize(k_space_dim);
   num_nodes.resize(3, 1);
 
   string mesh_order = mod_opt.get_option("mesh_order","first");
