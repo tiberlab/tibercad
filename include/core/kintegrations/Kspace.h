@@ -74,9 +74,11 @@ class Kspace
    //! Known symmetry types of the Brillouin zone
    enum Symmetry
    {
-     QUADRATIC = 0,
-     RECTANGULAR = 1,
-     HEXAGONAL = 2
+     GAMMA     = 0, //< Gamma point only
+     LINEAR,        //< 1D is always linear
+     QUADRATIC,     //< 2D quadratic
+     RECTANGULAR,   //< 2D rectangular
+     HEXAGONAL      //< 2/3D hexagonal
 
    };
 

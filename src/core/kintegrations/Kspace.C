@@ -240,25 +240,25 @@ void  Kspace::define_k_space(Tensor1 k_vector, unsigned int n)
     transform_matrix = Tensor2Sym(1);
   else
   {
-      Tensor1 basis2;
-     
-      basis2(1) = 0;
-      basis2(2) = -basis1(3);
-      basis2(3) =  basis1(2);
+    Tensor1 basis2;
 
-      Tensor1 basis3 = vectorProduct(basis1, basis2);
+    basis2(1) = 0;
+    basis2(2) = -basis1(3);
+    basis2(3) =  basis1(2);
 
-      
-     for (short i = 1; i < 4; i++)
-	   {
-	     transform_matrix(i,1) = basis2(i);
-	     transform_matrix(i,2) = basis3(i);
-	     transform_matrix(i,3) = basis1(i);
+    Tensor1 basis3 = vectorProduct(basis1, basis2);
 
-	     k_basis_vector1(i-1) = basis1(i);
-	     k_basis_vector2(i-1) = basis2(i);
-	     k_basis_vector3(i-1) = basis3(i);
-	   }
+
+    for (short i = 1; i < 4; i++)
+    {
+      transform_matrix(i,1) = basis2(i);
+      transform_matrix(i,2) = basis3(i);
+      transform_matrix(i,3) = basis1(i);
+
+      k_basis_vector1(i-1) = basis1(i);
+      k_basis_vector2(i-1) = basis2(i);
+      k_basis_vector3(i-1) = basis3(i);
+    }
 
   }
 
@@ -744,50 +744,66 @@ void Kspace::do_init()
 
 void Kspace::define_type_of_k_space()
 {
-  double scalar12 = k_basis_vector1* k_basis_vector2;
-  double scalar13 = k_basis_vector1* k_basis_vector3;
-  double scalar23 = k_basis_vector2* k_basis_vector3;
-
-  double amountVector1 = sqrt(k_basis_vector1 * k_basis_vector1);
-  double amountVector2 = sqrt(k_basis_vector2 * k_basis_vector2);
-  double amountVector3 = sqrt(k_basis_vector3 * k_basis_vector3);
-
-  double angular12 = acos(scalar12/(amountVector1 * amountVector2)) * 180.0 / M_PI;
-  double angular13 = acos(scalar13/(amountVector1 * amountVector3)) * 180.0 / M_PI;
-  double angular23 = acos(scalar23/(amountVector2 * amountVector3)) * 180.0 / M_PI;
-
-  // to define the symmetry of the structure angular between basis vectors are evaluated
-  if ((Utils::almost_equal::compare(angular12, 90, 1e-6)) &&
-      (Utils::almost_equal::compare(angular13, 90, 1e-6)) &&
-      (Utils::almost_equal::compare(angular23, 90, 1e-6)))
+  if (k_space_dim == 0)
   {
-    (amountVector1 == amountVector2 == amountVector3) ?
-        k_space_symmetry = QUADRATIC : k_space_symmetry = RECTANGULAR;
+    k_space_symmetry = GAMMA;
+    degeneracy_factor = 1;
   }
+  else if (k_space_dim == 1)
+  {
+    k_space_symmetry = LINEAR;
+    degeneracy_factor = 2;
+  }
+  else if (k_space_dim > 1)
+  {
+    double scalar12 = k_basis_vector1* k_basis_vector2;
+    double scalar13 = k_basis_vector1* k_basis_vector3;
+    double scalar23 = k_basis_vector2* k_basis_vector3;
 
-  //defining basis for symmetry points of the hexagonal plane
-  else if (Utils::almost_equal::compare(angular12, 60, 1e-5))
-  {
-    identification = vector<unsigned int>(1, 3);
-    k_space_symmetry = HEXAGONAL;
-  }
-  else if (Utils::almost_equal::compare(angular13, 60, 1e-5))
-  {
-    identification = vector<unsigned int>(1, 2);
-    k_space_symmetry = HEXAGONAL;
-  }
-  else if (Utils::almost_equal::compare(angular23, 60, 1e-5))
-  {
-    identification = vector<unsigned int>(1, 1);
-    k_space_symmetry = HEXAGONAL;
-  }
+    double amountVector1 = sqrt(k_basis_vector1 * k_basis_vector1);
+    double amountVector2 = sqrt(k_basis_vector2 * k_basis_vector2);
+    double amountVector3 = sqrt(k_basis_vector3 * k_basis_vector3);
 
-  else
-    std::cout << "The Brillouin zone is not defined for a structure with"
-    " one of the given angulars between the basis vectors: "
-    << angular12 << ", " << angular13 << " or " << angular23 << std::endl;
+    double angular12 = acos(scalar12/(amountVector1 * amountVector2)) * 180.0 / M_PI;
+    double angular13 = acos(scalar13/(amountVector1 * amountVector3)) * 180.0 / M_PI;
+    double angular23 = acos(scalar23/(amountVector2 * amountVector3)) * 180.0 / M_PI;
+
+    // to define the symmetry of the structure angular between basis vectors are evaluated
+    if ((Utils::almost_equal::compare(angular12, 90, 1e-6)) &&
+        (Utils::almost_equal::compare(angular13, 90, 1e-6)) &&
+        (Utils::almost_equal::compare(angular23, 90, 1e-6)))
+    {
+      (amountVector1 == amountVector2 == amountVector3) ?
+          k_space_symmetry = QUADRATIC : k_space_symmetry = RECTANGULAR;
+    }
+
+    //defining basis for symmetry points of the hexagonal plane
+    else if (Utils::almost_equal::compare(angular12, 60, 1e-5))
+    {
+      identification = vector<unsigned int>(1, 3);
+      k_space_symmetry = HEXAGONAL;
+    }
+    else if (Utils::almost_equal::compare(angular13, 60, 1e-5))
+    {
+      identification = vector<unsigned int>(1, 2);
+      k_space_symmetry = HEXAGONAL;
+    }
+    else if (Utils::almost_equal::compare(angular23, 60, 1e-5))
+    {
+      identification = vector<unsigned int>(1, 1);
+      k_space_symmetry = HEXAGONAL;
+    }
+
+    else
+      std::cout << "The Brillouin zone is not defined for a structure with"
+      " one of the given angulars between the basis vectors: "
+      << angular12 << ", " << angular13 << " or " << angular23 << std::endl;
+  }
 
 }
+
+
+
 //---------------------------------------------------------------------------------------------------------------//
 void Kspace::define_k_path(void)
 {
