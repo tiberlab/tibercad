@@ -205,6 +205,7 @@ AtomisticStructure::init(const std::string& name,
       {
         *this = *as;
         _name = name;
+        set_options(options);
         first = false;
       }
       else
