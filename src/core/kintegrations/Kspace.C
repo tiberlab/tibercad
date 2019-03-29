@@ -981,7 +981,8 @@ void Kspace::define_k_path(void)
     }
   }
 
-  else if ((k_space_dim == 3) && (k_space_symmetry == QUADRATIC))
+  else if ((k_space_dim == 3) &&
+           ((k_space_symmetry == QUADRATIC) || (k_space_symmetry == RECTANGULAR)))
   {
     double G[3], X1[3], X2[3], X3[3], M[3], M1[3], M2[3],  L[3];
     double *k1, *k2;

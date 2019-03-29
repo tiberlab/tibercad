@@ -200,6 +200,8 @@ AtomisticStructure::init(const std::string& name,
     Messages::warning("Currently combined structures will share "
         "their atoms with the original structures!");
 
+    const MeshBase& mesh = get_device()->get_mesh();
+
     // we need to recalculate the lattice vectors
     libMesh::RealVectorValue a;
     libMesh::RealVectorValue b;
@@ -241,9 +243,17 @@ AtomisticStructure::init(const std::string& name,
 
         libMesh::RealVectorValue ai, bi, ci;
         as->get_lattice_vectors(ai, bi, ci);
-        a += ai;
-        b += bi;
-        c += ci;
+        switch (mesh.mesh_dimension())
+        {
+          case 3:
+            c += ci;
+          case 2:
+            b += bi;
+          case 1:
+            a += ai;
+          default:
+            break;
+        }
 
         const auto& bbox = as->get_bounding_box();
         size += bbox.second - bbox.first;
