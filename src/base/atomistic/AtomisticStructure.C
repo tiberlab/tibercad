@@ -186,6 +186,8 @@ AtomisticStructure::init(const std::string& name,
   else if (_options.find_option("combine_structures"))
   {
 
+    // combine two structures into a single one
+
     vector<string> pieces;
     _options.get_option("combine_structures", pieces);
 
@@ -195,6 +197,20 @@ AtomisticStructure::init(const std::string& name,
       os << i << ", ";
 
     Messages::info(os.str());
+    Messages::warning("Currently combined structures will share "
+        "their atoms with the original structures!");
+
+    // we need to recalculate the lattice vectors
+    libMesh::RealVectorValue a;
+    libMesh::RealVectorValue b;
+    libMesh::RealVectorValue c;
+
+    // the sum of sizes
+    Point size(0);
+
+    // the combined bbox
+    Point bb_min(0);
+    Point bb_max(0);
 
     bool first = true;
     for (auto&& i : pieces)
@@ -206,6 +222,12 @@ AtomisticStructure::init(const std::string& name,
         *this = *as;
         _name = name;
         set_options(options);
+        as->get_lattice_vectors(a, b, c);
+        const auto& bbox = as->get_bounding_box();
+        bb_min = bbox.first;
+        bb_max = bbox.second;
+        size = bb_max - bb_min;
+
         first = false;
       }
       else
@@ -216,8 +238,31 @@ AtomisticStructure::init(const std::string& name,
             as->_virtual_atom_types.begin(), as->_virtual_atom_types.end());
 
         _atoms.insert(_atoms.end(), as->_atoms.begin(), as->_atoms.end());
+
+        libMesh::RealVectorValue ai, bi, ci;
+        as->get_lattice_vectors(ai, bi, ci);
+        a += ai;
+        b += bi;
+        c += ci;
+
+        const auto& bbox = as->get_bounding_box();
+        size += bbox.second - bbox.first;
+        for (unsigned int i = 0; i < 3; ++i)
+        {
+          if (bbox.first(i) < bb_min(i))
+            bb_min(i) = bbox.first(i);
+
+          if (bbox.second(i) > bb_max(i))
+            bb_max(i) = bbox.second(i);
+        }
+
       }
     }
+    cerr << size << endl;
+    cerr << bb_min << endl;
+    cerr << bb_max << endl;
+
+    set_lattice_vectors(a, b, c);
 
     refresh();
 

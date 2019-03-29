@@ -168,6 +168,40 @@ AtomisticBasis::build_bond_map(void)
 }
 
 
+std::pair<Point, Point>
+AtomisticBasis::get_bounding_box(void) const
+{
+  Point pmax(std::numeric_limits<double>::min(),
+      std::numeric_limits<double>::min(),
+      std::numeric_limits<double>::min());
+  Point pmin(std::numeric_limits<double>::max(),
+      std::numeric_limits<double>::max(),
+      std::numeric_limits<double>::max());
+
+  for (auto&& at : _atoms)
+  {
+
+    const Point& p = at.get_position();
+    if (p(0) < pmin(0))
+      pmin(0) = p(0);
+    else if (p(0) > pmax(0))
+      pmax(0) = p(0);
+
+    if (p(1) < pmin(1))
+      pmin(1) = p(1);
+    else if (p(1) > pmax(1))
+      pmax(1) = p(1);
+
+    if (p(2) < pmin(2))
+      pmin(2) = p(2);
+    else if (p(2) > pmax(2))
+      pmax(2) = p(2);
+
+  }
+  return(make_pair(pmin, pmax));
+}
+
+
 void
 AtomisticBasis::refresh(void)
 {

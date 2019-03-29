@@ -44,6 +44,10 @@ class AtomisticBasis
 
   //! Get bond map
   const BondMap& get_bond_map(void) const;
+
+  //! Get the bounding box
+  std::pair<libMesh::Point, libMesh::Point> get_bounding_box(void) const;
+
     
   //! Get neighbor periodic image translation
   /*!
