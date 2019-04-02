@@ -14,6 +14,10 @@
 
 using namespace std;
 
+std::vector<std::string>
+Kspace::symmetry_names = {"Gamma", "linear", "quadratic", "rectangular",
+                          "hexagonal", "fcc", "bcc", "cubic",
+                          "tetragonal", "orthorhombic"};
 
 //------------------------------------------------------------------------------//
 Kspace::Kspace(const ModelOptions& options, const libMesh::Parallel::Communicator& comm)
@@ -36,6 +40,9 @@ Kspace::Kspace( const Kspace& kspace)
    degeneracy_factor(kspace.degeneracy_factor),
    _mesh_order(kspace._mesh_order),
    k_space_dim(kspace.k_space_dim),
+   b1(0),
+   b2(1),
+   b3(2),
    k_path(kspace.k_path),
    num_nodes(kspace.num_nodes)
 {
@@ -493,7 +500,7 @@ void Kspace::do_init()
       if (k_space_dim != 3)
 	throw  InitFailedException("Kspace: wedge " + wedge_type + " can be used only with 3D k-space");
     }
-    else 
+    else
     {
       throw  InitFailedException("Kspace: unknown wedge: " + wedge_type + "\n");
     }
@@ -707,6 +714,7 @@ void Kspace::do_init()
 
 
     }
+    break;
 
     case 0:
       break;
@@ -720,7 +728,7 @@ void Kspace::do_init()
 
 
 
-  define_type_of_k_space();
+  find_k_space_symmetry();
 
 
   if (k_path)
@@ -739,70 +747,273 @@ void Kspace::do_init()
 }
 
 
-//---------------------------------------------------------------------------------------------------------------//
-//calculates angular between k space basis vectors to differentiate between quadratic and hexagonal k space
 
-void Kspace::define_type_of_k_space()
+void Kspace::find_k_space_symmetry()
 {
+  b1 = 0;
+  b2 = 1;
+  b3 = 2;
+
   if (k_space_dim == 0)
   {
     k_space_symmetry = GAMMA;
-    degeneracy_factor = 1;
   }
   else if (k_space_dim == 1)
   {
     k_space_symmetry = LINEAR;
-    degeneracy_factor = 2;
   }
   else if (k_space_dim > 1)
   {
-    double scalar12 = k_basis_vector1* k_basis_vector2;
-    double scalar13 = k_basis_vector1* k_basis_vector3;
-    double scalar23 = k_basis_vector2* k_basis_vector3;
+    double scalar12 = k_basis_vector1 * k_basis_vector2;
+    double scalar13 = k_basis_vector1 * k_basis_vector3;
+    double scalar23 = k_basis_vector2 * k_basis_vector3;
 
-    double amountVector1 = sqrt(k_basis_vector1 * k_basis_vector1);
-    double amountVector2 = sqrt(k_basis_vector2 * k_basis_vector2);
-    double amountVector3 = sqrt(k_basis_vector3 * k_basis_vector3);
+    double norm1 = k_basis_vector1.norm();
+    double norm2 = k_basis_vector2.norm();
+    double norm3 = k_basis_vector3.norm();
 
-    double angular12 = acos(scalar12/(amountVector1 * amountVector2)) * 180.0 / M_PI;
-    double angular13 = acos(scalar13/(amountVector1 * amountVector3)) * 180.0 / M_PI;
-    double angular23 = acos(scalar23/(amountVector2 * amountVector3)) * 180.0 / M_PI;
+    double angle12 = acos(scalar12/(norm1 * norm2)) * 180.0 / M_PI;
+    double angle13 = acos(scalar13/(norm1 * norm3)) * 180.0 / M_PI;
+    double angle23 = acos(scalar23/(norm2 * norm3)) * 180.0 / M_PI;
 
-    // to define the symmetry of the structure angular between basis vectors are evaluated
-    if ((Utils::almost_equal::compare(angular12, 90, 1e-6)) &&
-        (Utils::almost_equal::compare(angular13, 90, 1e-6)) &&
-        (Utils::almost_equal::compare(angular23, 90, 1e-6)))
+    // to define the symmetry of the structure angle between basis vectors are evaluated
+    if ((Utils::almost_equal::compare(angle12, 90, 1e-6)) &&
+        (Utils::almost_equal::compare(angle13, 90, 1e-6)) &&
+        (Utils::almost_equal::compare(angle23, 90, 1e-6)))
     {
-      (amountVector1 == amountVector2 == amountVector3) ?
-          k_space_symmetry = QUADRATIC : k_space_symmetry = RECTANGULAR;
+      if (k_space_dim == 2)
+        if (Utils::almost_equal::compare(norm1, norm2, 1e-6))
+          k_space_symmetry = QUADRATIC;
+        else
+          k_space_symmetry = RECTANGULAR;
+      else
+      {
+        if (Utils::almost_equal::compare(norm1, norm2, 1e-6))
+        {
+          if (Utils::almost_equal::compare(norm1, norm3, 1e-6))
+            k_space_symmetry = CUBIC;
+          else
+            k_space_symmetry = TETRAGONAL;
+        }
+        else if (Utils::almost_equal::compare(norm1, norm3, 1e-6))
+        {
+          k_space_symmetry = TETRAGONAL;
+          b2 = 2;
+          b3 = 1;
+        }
+        else if (Utils::almost_equal::compare(norm2, norm3, 1e-6))
+        {
+          k_space_symmetry = TETRAGONAL;
+          b1 = 1;
+          b2 = 2;
+          b3 = 0;
+        }
+        else
+        {
+          // convention: a < b < c with a||x, b||y, c||z
+          k_space_symmetry = ORTHORHOMBIC;
+          vector<double> len = {norm1, norm2, norm3};
+          if (len[1] > len[0])
+          {
+            b1 = 1;
+            b2 = 0;
+            len[0] = norm2;
+            len[1] = norm1;
+          }
+          if (len[2] > len[1])
+          {
+            b3 = b2;
+            b2 = 2;
+            len[2] = len[1];
+            len[1] = norm3;
+            len[2] = len[1];
+          }
+          if (len[1] > len[0])
+          {
+            unsigned int tmpi = b1;
+            b1 = b2;
+            b2 = tmpi;
+            double tmpd = len[0];
+            len[0] = len[1];
+            len[1] = tmpd;
+          }
+
+        }
+      }
     }
-
-    //defining basis for symmetry points of the hexagonal plane
-    else if (Utils::almost_equal::compare(angular12, 60, 1e-5))
+    else if (Utils::almost_equal::compare(angle12, 60, 1e-5))
     {
-      identification = vector<unsigned int>(1, 3);
       k_space_symmetry = HEXAGONAL;
     }
-    else if (Utils::almost_equal::compare(angular13, 60, 1e-5))
+    else if (Utils::almost_equal::compare(angle13, 60, 1e-5))
     {
-      identification = vector<unsigned int>(1, 2);
+      b2 = 2;
+      b3 = 1;
       k_space_symmetry = HEXAGONAL;
     }
-    else if (Utils::almost_equal::compare(angular23, 60, 1e-5))
+    else if (Utils::almost_equal::compare(angle23, 60, 1e-5))
     {
-      identification = vector<unsigned int>(1, 1);
+      b1 = 1;
+      b2 = 2;
+      b3 = 0;
       k_space_symmetry = HEXAGONAL;
     }
 
     else
       std::cout << "The Brillouin zone is not defined for a structure with"
-      " one of the given angulars between the basis vectors: "
-      << angular12 << ", " << angular13 << " or " << angular23 << std::endl;
+      " one of the given angles between the basis vectors: "
+      << angle12 << ", " << angle13 << " or " << angle23 << std::endl;
   }
+
+  switch (k_space_symmetry)
+  {
+    case LINEAR:
+      degeneracy_factor = 2;
+      break;
+
+    case QUADRATIC:
+      degeneracy_factor = 8;
+      break;
+
+    case RECTANGULAR:
+      degeneracy_factor = 4;
+      break;
+
+    case CUBIC:
+      degeneracy_factor = 32;
+      break;
+
+    case TETRAGONAL:
+      degeneracy_factor = 16;
+      break;
+
+    case ORTHORHOMBIC:
+      degeneracy_factor = 8;
+      break;
+
+    case HEXAGONAL:
+      degeneracy_factor = 24;
+      break;
+
+    case FCC:
+    case BCC:
+      degeneracy_factor = 48;
+      break;
+
+    default:
+      degeneracy_factor = 1;
+      break;
+  }
+
+  Messages::info("Symmetry of k space: " + symmetry_names.at(k_space_symmetry));
 
 }
 
 
+libMesh::Point
+Kspace::get_symmetry_point(const std::string& name) const
+{
+  Point p(0, 0, 0);
+
+  if (name != "G")
+  {
+    switch (k_space_symmetry)
+    {
+      case LINEAR:
+        if (name == "X")
+          p(0) = 0.5;
+        break;
+
+      case QUADRATIC:
+        if (name == "X")
+          p(0) = 0.5;
+        else if (name == "M")
+          p(0) = p(1) = 0.5;
+        break;
+
+      case RECTANGULAR:
+        if (name == "X")
+          p(b1) = 0.5;
+        else if (name == "Y")
+          p(b2) = 0.5;
+        else if (name == "S")
+          p(b1) = p(b2) = 0.5;
+        break;
+
+      case CUBIC:
+        if (name == "X")
+          p(0) = 0.5;
+        else if (name == "M")
+          p(0) = p(1) = 0.5;
+        else if (name == "R")
+          p(0) = p(1) = p(2) = 0.5;
+        break;
+
+      case TETRAGONAL:
+        if (name == "X")
+          p(b1) = 0.5;
+        else if (name == "M")
+          p(b1) = p(b2) = 0.5;
+        else if (name == "Z")
+          p(b3) = 0.5;
+        else if (name == "R")
+          p(b1) = p(b3) = 0.5;
+        else if (name == "A")
+          p(b1) = p(b2) = p(b3) = 0.5;
+        break;
+
+      case ORTHORHOMBIC:
+        if (name == "X")
+          p(b1) = 0.5;
+        else if (name == "Y")
+          p(b2) = 0.5;
+        else if (name == "Z")
+          p(b3) = 0.5;
+        else if (name == "T")
+          p(b2) = p(b3) = 0.5;
+        else if (name == "U")
+          p(b1) = p(b3) = 0.5;
+        else if (name == "S")
+          p(b1) = p(b2) = 0.5;
+        else if (name == "R")
+          p(b1) = p(b2) = p(b3) = 0.5;
+        break;
+
+      case HEXAGONAL:
+        if (name == "A")
+          p(b3) = 0.5;
+        else if (name == "K")
+        {
+          p(b1) = 1.0/3.0;
+          p(b2) = 1.0/3.0;
+        }
+        else if (name == "H")
+        {
+          p(b1) = 1.0/3.0;
+          p(b2) = 1.0/3.0;
+          p(b3) = 0.5;
+        }
+        else if (name == "M")
+          p(b2) = 0.5;
+        else if (name == "L")
+          p(b2) = p(b3) = 0.5;
+        break;
+
+      case FCC:
+      case BCC:
+        break;
+
+      default:
+        break;
+    }
+
+    if (p == Point(0))
+      throw InitFailedException("Symmetry point " + name +
+          " is invalid for symmetry class " + symmetry_names[k_space_symmetry]);
+  }
+
+  return(p);
+}
 
 //---------------------------------------------------------------------------------------------------------------//
 void Kspace::define_k_path(void)
@@ -815,7 +1026,7 @@ void Kspace::define_k_path(void)
 
   std::string kpath = mod_opt.get_option("k_path","");
   // alternative accepted input:
-  kpath = mod_opt.get_option("k-path",kpath);
+  kpath = mod_opt.get_option("k-path", kpath);
   int npoints = num_nodes[0];
   int nelem = max(npoints - 1, 1);
 
@@ -828,269 +1039,38 @@ void Kspace::define_k_path(void)
   Messages::info(os.str());
 
 
-  //note: for 2D only quadratic is implemented
-  if ((k_space_dim == 2))
+  std::vector<std::string> tokens;
+
+  Utils::tokenize(kpath, tokens, "-");
+
+  unsigned int id = 0;
+
+  libMesh::Point p1(get_symmetry_point(tokens[0]));
+  kmesh->add_point(p1, id, 0);
+  id++;
+
+  for (short i = 1; i < tokens.size(); i++)
   {
-    double G[3], M[3], X[3], X1[3];
-    double *k1, *k2;
+    libMesh::Point p2(get_symmetry_point(tokens[i]));
 
+    libMesh::Point dp = (p2 - p1) / nelem;
 
-    G[0]=0.0;  G[1]=0.0;          G[2]=0.0;        //( 0   0    0  )
-    M[0]=0.0;  M[1]=0.5*k_max(1); M[2]=0.5*k_max(2);  //( 0  1/2  1/2 )
-    X[0]=0.0;  X[1]=0.5*k_max(1); X[2]=0.0;        //( 0  1/2   0  )
-    X1[0]=0.0; X1[1]=0.0;         X1[2]=0.5*k_max(2); //( 0   0   1/2 )
-
-    std::vector<std::string> tokens;
-
-    tokenize(kpath, tokens, "-");
-
-    unsigned int id = 0;
-
-    for (short i = 1; i < tokens.size(); i++)
+    for (int j = 0; j < nelem; j++)
     {
+      p1 += dp;
 
-      if(tokens[i-1]=="G")        k1 = G;
-      else if(tokens[i-1]=="M")   k1 = M;
-      else if(tokens[i-1]=="X")   k1 = X;
-      else if(tokens[i-1]=="X'")  k1 = X1;
-      else                        k1 = G;
-
-      if(tokens[i]=="G")          k2 = G;
-      else if(tokens[i]=="M")     k2 = M;
-      else if(tokens[i]=="X")     k2 = X;
-      else if(tokens[i]=="X'")    k2 = X1;
-      else                        k2 = G;
-
-      for (int j = (i > 1) ? 1 : 0; j < npoints; j++)
-      {
-        double b1 = k1[0]*(nelem-j)/nelem + k2[0]*j/nelem;
-        double b2 = k1[1]*(nelem-j)/nelem + k2[1]*j/nelem;
-        double b3 = k1[2]*(nelem-j)/nelem + k2[2]*j/nelem;
-
-
-        libMesh::Point pt(b1,b2,b3);
-
-        kmesh->add_point(pt,id,0);
-
-        id++;
-      }
-
+      kmesh->add_point(p1, id, 0);
+      id++;
     }
 
-    // if there is a single point only
-    if (id == 0)
-    {
-      if(tokens[0]=="G")          k1 = G;
-      else if(tokens[0]=="M")   k1 = M;
-      else if(tokens[0]=="X")   k1 = X;
-      else if(tokens[0]=="X'")  k1 = X1;
-      else                        k1 = G;
-
-      kmesh->add_point(Point(k1[0], k1[1], k1[2]),id,0);
-    }
-
-  }
-
-  else if ((k_space_dim == 3) && (k_space_symmetry == HEXAGONAL))
-  {
-    double G[3], M[3], K[3], A[3], L[3], H[3];
-    double *k1, *k2;
-
-
-    G[0]=0.0;            G[1]=0.0;               G[2]=0.0;
-    M[0]=0.5;            M[1]=0.5;               M[2]=0.5;
-    K[0]=0.333;          K[1]=0.333;             K[2]=0.333;
-    A[0]=0.0;            A[1]=0.0;               A[2]=0.0;
-    L[0]=0.5;            L[1]=0.5;               L[2]=0.5;
-    H[0]=0.333;          H[1]=0.333;             H[2]=0.333;
-
-    //basis for case 1 where k_2 and k_3 have an angular of 60 degrees:
-    //   k_1  K_2  K_3
-    //G   0    0    0
-    //M   0    0   1/2
-    //K   0   1/3  1/3
-    //A  1/2   0    0
-    //L  1/2   0   1/2
-    //H  1/2  1/3  1/3
-
-    std::cout << identification[0] << std::endl;
-    switch (identification[0])
-    {
-      case 1:
-        M[0] = 0;     M[1] = 0;
-        K[0] = 0;
-        A[0] = 0.5;
-                      L[1] = 0;
-        H[0] = 0.5;
-
-        break;
-
-      case 2:
-        M[1] = 0;     M[2] = 0;
-        K[1] = 0;
-        A[1] = 0.5;
-                      L[2] = 0;
-        H[1] = 0.5;
-        break;
-      case 3:
-        M[1] = 0;     M[2] = 0;
-                      K[2] = 0;
-                      A[2] = 0.5;
-        L[1] = 0;
-                      H[2] = 0.5;
-        break;
-    }
-    std::vector<std::string> tokens;
-
-    tokenize(kpath, tokens, "-");
-
-    unsigned int id = 0;
-
-    for (short i = 1; i < tokens.size(); i++)
-    {
-
-      if(tokens[i-1]=="G")        k1 = G;
-      else if(tokens[i-1]=="M")   k1 = M;
-      else if(tokens[i-1]=="K")   k1 = K;
-      else if(tokens[i-1]=="A")   k1 = A;
-      else if(tokens[i-1]=="L")   k1 = L;
-      else if(tokens[i-1]=="H")   k1 = H;
-      else                        k1 = G;
-
-      if(tokens[i]=="G")          k2 = G;
-      else if(tokens[i]=="M")     k2 = M;
-      else if(tokens[i]=="K")     k2 = K;
-      else if(tokens[i]=="A")     k2 = A;
-      else if(tokens[i]=="L")     k2 = L;
-      else if(tokens[i]=="H")     k2 = H;
-      else                        k2 = G;
-
-      for (int j = (i > 1) ? 1 : 0; j < npoints; j++)
-      {
-        double b1 = k1[0]*(nelem-j)/nelem + k2[0]*j/nelem;
-        double b2 = k1[1]*(nelem-j)/nelem + k2[1]*j/nelem;
-        double b3 = k1[2]*(nelem-j)/nelem + k2[2]*j/nelem;
-
-
-        libMesh::Point pt(b1,b2,b3);
-
-        kmesh->add_point(pt,id,0);
-
-        id++;
-      }
-    }
-  }
-
-  else if ((k_space_dim == 3) &&
-           ((k_space_symmetry == QUADRATIC) || (k_space_symmetry == RECTANGULAR)))
-  {
-    double G[3], X1[3], X2[3], X3[3], M[3], M1[3], M2[3],  L[3];
-    double *k1, *k2;
-
-    G[0]=0.0;           G[1]=0.0;           G[2]=0.0;  //( 0  0  0 )
-    M[0]=0.5*k_max(0);  M[1]=0.5*k_max(1);  M[2]=0.0;  //( 1/2  1/2  0 )
-    M1[0]=0.5*k_max(0); M1[1]=0.0;          M1[2]=0.5*k_max(2);  //( 1/2  0  1/2 )
-    M2[0]=0.0;          M2[1]=0.5*k_max(1); M2[2]=0.5*k_max(2);  //( 0  1/2  1/2 )
-    X1[0]=0.5*k_max(0); X1[1]=0.0;          X1[2]=0.0;
-    X2[0]=0.0;          X2[1]=0.5*k_max(1); X2[2]=0.0;
-    X3[0]=0.0;          X3[1]=0.0;          X3[2]=0.5*k_max(2);
-    L[0]=0.5*k_max(0);  L[1]=0.5*k_max(1);  L[2]=0.5*k_max(2);  //( 1/2  1/2  1/2 )
-
-    std::vector<std::string> tokens;
-
-    tokenize(kpath, tokens, "-");
-
-    unsigned int id = 0;
-
-    for (short i = 1; i < tokens.size(); i++)
-    {
-
-
-      if(tokens[i-1]=="G")        k1 = G;
-      else if(tokens[i-1]=="M")   k1 = M;
-      else if(tokens[i-1]=="M1")  k1 = M1;
-      else if(tokens[i-1]=="M2")  k1 = M2;
-      else if(tokens[i-1]=="X")   k1 = X1;
-      else if(tokens[i-1]=="X1")  k1 = X1;
-      else if(tokens[i-1]=="X2")  k1 = X2;
-      else if(tokens[i-1]=="X3")  k1 = X3;
-      else if(tokens[i-1]=="L")   k1 = L;
-      else                        k1 = G;
-
-      if(tokens[i]=="G")          k2 = G;
-      else if(tokens[i]=="M")     k2 = M;
-      else if(tokens[i]=="M1")    k2 = M1;
-      else if(tokens[i]=="M2")    k2 = M2;
-      else if(tokens[i]=="X")     k2 = X1;
-      else if(tokens[i]=="X1")    k2 = X1;
-      else if(tokens[i]=="X2")    k2 = X2;
-      else if(tokens[i]=="X3")    k2 = X3;
-      else if(tokens[i]=="L")     k2 = L;
-      else                        k2 = G;
-
-
-      for (int j = (i > 1) ? 1 : 0; j < npoints; j++)
-      {
-        double b1 = k1[0]*(nelem-j)/nelem + k2[0]*j/nelem;
-        double b2 = k1[1]*(nelem-j)/nelem + k2[1]*j/nelem;
-        double b3 = k1[2]*(nelem-j)/nelem + k2[2]*j/nelem;
-
-        libMesh::Point pt(b1,b2,b3);
-
-        kmesh->add_point(pt,id,0);
-
-        id++;
-      }
-
-    }
-
-    // if there is a single point only
-    if (id == 0)
-    {
-      if(tokens[0]=="G")        k1 = G;   
-      else if(tokens[0]=="M")   k1 = M; 
-      else if(tokens[0]=="M1")  k1 = M1; 
-      else if(tokens[0]=="M2")  k1 = M2; 
-      else if(tokens[0]=="X")   k1 = X1;   
-      else if(tokens[0]=="X1")  k1 = X1;    
-      else if(tokens[0]=="X2")  k1 = X2;    
-      else if(tokens[0]=="X3")  k1 = X3;   
-      else if(tokens[0]=="L")   k1 = L;
-      else                      k1 = G;  
-
-      kmesh->add_point(Point(k1[0], k1[1], k1[2]),id,0);
-    }
-
-
-
+    // we could have accumulated round off errors
+    p1 = p2;
   }
 
   //kmesh->print_info();
 }
 
 
-
-
-//---------------------------------------------------------------------------------------------------------------//
-void Kspace::tokenize(const std::string& str,
-              std::vector<std::string>& tokens,
-              const std::string& delimiters)
-{
-    // Skip delimiters at beginning.
-    string::size_type lastPos = str.find_first_not_of(delimiters, 0);
-    // Find first "non-delimiter".
-    string::size_type pos     = str.find_first_of(delimiters, lastPos);
-
-    while (string::npos != pos || string::npos != lastPos)
-    {
-        // Found a token, add it to the vector.
-        tokens.push_back(str.substr(lastPos, pos - lastPos));
-        // Skip delimiters.  Note the "not_of"
-        lastPos = str.find_first_not_of(delimiters, pos);
-        // Find next "non-delimiter"
-        pos = str.find_first_of(delimiters, lastPos);
-    }
-}
 
 
 
