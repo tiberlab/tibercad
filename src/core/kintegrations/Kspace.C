@@ -40,9 +40,13 @@ Kspace::Kspace( const Kspace& kspace)
    degeneracy_factor(kspace.degeneracy_factor),
    _mesh_order(kspace._mesh_order),
    k_space_dim(kspace.k_space_dim),
+   k_basis_vector1(kspace.k_basis_vector1),
+   k_basis_vector2(kspace.k_basis_vector2),
+   k_basis_vector3(kspace.k_basis_vector3),
    b1(0),
    b2(1),
    b3(2),
+   k_space_symmetry(kspace.k_space_symmetry),
    k_path(kspace.k_path),
    num_nodes(kspace.num_nodes)
 {
@@ -262,9 +266,9 @@ void  Kspace::define_k_space(Tensor1 k_vector, unsigned int n)
       transform_matrix(i,2) = basis3(i);
       transform_matrix(i,3) = basis1(i);
 
-      k_basis_vector1(i-1) = basis1(i);
-      k_basis_vector2(i-1) = basis2(i);
-      k_basis_vector3(i-1) = basis3(i);
+      k_basis_vector1(i-1) = basis2(i);
+      k_basis_vector2(i-1) = basis3(i);
+      k_basis_vector3(i-1) = basis1(i);
     }
 
   }
@@ -325,9 +329,9 @@ void Kspace::define_k_space(Tensor1 k_vector1,unsigned int n,  Tensor1 k_vector2
     transform_matrix(i,3) = basis2(i);
 
 
-    k_basis_vector1(i-1) = basis1(i);
-    k_basis_vector2(i-1) = basis2(i);
-    k_basis_vector3(i-1) = basis3(i);
+    k_basis_vector1(i-1) = basis3(i);
+    k_basis_vector2(i-1) = basis1(i);
+    k_basis_vector3(i-1) = basis2(i);
 
   }
 
@@ -781,11 +785,30 @@ void Kspace::find_k_space_symmetry()
         (Utils::almost_equal::compare(angle13, 90, 1e-6)) &&
         (Utils::almost_equal::compare(angle23, 90, 1e-6)))
     {
-      if (k_space_dim == 2)
-        if (Utils::almost_equal::compare(norm1, norm2, 1e-6))
+      if (k_space_dim == 1)
+      {
+        b1 = 2;
+        b2 = 0;
+        b3 = 1;
+      }
+      else if (k_space_dim == 2)
+      {
+        // NOTE this is not generic, assumes 2D k space on yz plane
+        if (Utils::almost_equal::compare(norm2, norm3, 1e-6))
+        {
           k_space_symmetry = QUADRATIC;
+          b1 = 1;
+          b2 = 2;
+          b3 = 0;
+        }
         else
+        {
           k_space_symmetry = RECTANGULAR;
+          b1 = 1;
+          b2 = 2;
+          b3 = 0;
+        }
+      }
       else
       {
         if (Utils::almost_equal::compare(norm1, norm2, 1e-6))
@@ -921,14 +944,14 @@ Kspace::get_symmetry_point(const std::string& name) const
     {
       case LINEAR:
         if (name == "X")
-          p(0) = 0.5;
+          p(b1) = 0.5;
         break;
 
       case QUADRATIC:
         if (name == "X")
-          p(0) = 0.5;
+          p(b1) = 0.5;
         else if (name == "M")
-          p(0) = p(1) = 0.5;
+          p(b1) = p(b2) = 0.5;
         break;
 
       case RECTANGULAR:
