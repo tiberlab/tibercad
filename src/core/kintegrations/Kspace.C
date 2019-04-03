@@ -574,6 +574,9 @@ void Kspace::find_k_space_symmetry()
   else if (k_space_dim == 1)
   {
     k_space_symmetry = LINEAR;
+    b1 = 2;
+    b2 = 0;
+    b3 = 1;
   }
   else if (k_space_dim > 1)
   {
@@ -594,13 +597,7 @@ void Kspace::find_k_space_symmetry()
         (Utils::almost_equal::compare(angle13, 90, 1e-6)) &&
         (Utils::almost_equal::compare(angle23, 90, 1e-6)))
     {
-      if (k_space_dim == 1)
-      {
-        b1 = 2;
-        b2 = 0;
-        b3 = 1;
-      }
-      else if (k_space_dim == 2)
+      if (k_space_dim == 2)
       {
         // NOTE this is not generic, assumes 2D k space on yz plane
         if (Utils::almost_equal::compare(norm2, norm3, 1e-6))
