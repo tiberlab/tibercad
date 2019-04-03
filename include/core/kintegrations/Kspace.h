@@ -55,15 +55,6 @@ class Kspace
    */
   libMesh::Point get_symmetry_point(const std::string& name) const;
 
-
-  enum Wedge
-  {
-    ALL = 0,
-    HALF = 1,
-    QUARTER = 2,
-    EIGHTH = 3
-  };
-
   //! Rotate mesh
   void rotate_mesh(void);
 
@@ -137,17 +128,12 @@ class Kspace
    //! Degeneracy factor for reduced wedge of the BZ
    double degeneracy_factor;
 
-   Wedge wedge;
-
    //! mesh_order
    libMeshEnums::Order _mesh_order;
 
 
    //! Brilluoin zone
    libMesh::Mesh* kmesh;
-
-   //! Boundaries of the Brilluoin zone
-   double kmin[3], kmax[3];
 
    //! Dimension of the k_space
    unsigned int  k_space_dim;

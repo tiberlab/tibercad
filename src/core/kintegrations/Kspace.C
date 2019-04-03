@@ -50,8 +50,6 @@ Kspace::Kspace( const Kspace& kspace)
    k_path(kspace.k_path),
    num_nodes(kspace.num_nodes)
 {
-   kmin[0] = kspace.kmin[0];  kmin[1] = kspace.kmin[1];  kmin[2] = kspace.kmin[2];
-   kmax[0] = kspace.kmax[0];  kmax[1] = kspace.kmax[1];  kmax[2] = kspace.kmax[2];
    transform_matrix = 0;
    transform_matrix += kspace.transform_matrix;
    kmesh = new libMesh::Mesh(*(kspace.kmesh));
@@ -132,34 +130,6 @@ void Kspace::build_k_grid()
 
     }
 
-    /* test code for MoS2
-    //lattice constant for MoS2
-    float a = 3.16;
-
-    // points for triangle (1/12 of the hexagon) of the 1. Brillouin zone in y-z plane
-    //G
-    libMesh::Node * new_node = kmesh->add_point(libMesh::Point(0, 0, 0));
-    //K
-    new_node = kmesh->add_point(libMesh::Point(0, 0, 2 * M_PI/(sqrt(3) * a)));
-    //M
-    new_node = kmesh->add_point(libMesh::Point(0, 2 * M_PI/(3 * a), 2 * M_PI/(sqrt(3) * a)));
-
-    //forming a triangle
-    libMesh::Elem * new_elem = kmesh->add_elem(new libMesh::Tri3);
-
-    for(int i=0; i < kmesh->n_nodes(); i++)
-    {
-
-        new_elem->set_node(i) = kmesh->node_ptr(i);
-
-        //std::cout << kmesh->node(i) << std::endl;
-
-    }
-
-    kmesh->prepare_for_use();
-    */
-
-
     
     // to restrict the extension of the k-space
     libMesh::RealVectorValue k_max(1.0, 1.0, 1.0);
@@ -173,9 +143,9 @@ void Kspace::build_k_grid()
 				       num_nodes[0] - 1,
 				       num_nodes[1] - 1,
 				       num_nodes[2] - 1,
-				       kmin[0] * k_max(0), kmax[0] * k_max(0),
-				       kmin[1] * k_max(1), kmax[1] * k_max(1),
-				       kmin[2] * k_max(2), kmax[2] * k_max(2),
+				       -k_max(0), k_max(0),
+				       -k_max(1), k_max(1),
+				       -k_max(2), k_max(2),
 				       type);
 
     
@@ -226,26 +196,7 @@ void Kspace::build_k_grid()
 void  Kspace::define_k_space(Tensor1 k_vector, unsigned int n)
 {
 
-  // k_vector is along z
-
-  double norm_k = 0.5;
-
-  if (wedge == HALF)
-  {
-    kmin[0] = 0.0; 
-    kmax[0] = norm_k;
-  }
-  else
-  {
-    kmin[0] = -norm_k;  
-    kmax[0] =  norm_k;
-  } 
-  
-
-  kmin[1] = 0.0; kmin[2] = 0.0;
-  kmax[1] = 0.0; kmax[2] = 0.0;
-  
-  Tensor1 basis1 = k_vector;
+  Tensor1& basis1 = k_vector;
 
   if (basis1(1) == 1)
     transform_matrix = Tensor2Sym(1);
@@ -280,41 +231,6 @@ void Kspace::define_k_space(Tensor1 k_vector1,unsigned int n,  Tensor1 k_vector2
 {
   // 1 -> y, 2 -> z
 
-  double norm_k1 = 0.5;
-  double norm_k2 = 0.5;
-  //double norm_k1 = 1;
-  //double norm_k2 = 1;
-
-  if (wedge == QUARTER)
-  {
-       
-    kmin[0] = 0;  kmax[0] = norm_k1; 
-  
-    kmin[1] = 0;  kmax[1] = norm_k2; 
-
-  }
-
-
-
-  if (wedge == HALF)
-  {
-     
-    kmin[0] = -norm_k1;  kmax[0] = norm_k1; 
-  
-    kmin[1] = 0;  kmax[1] = norm_k2; 
-
-  }  
-
-  if (wedge == ALL)
-  {
-   
-    kmin[0] = -norm_k1;  kmax[0] = norm_k1; num_nodes[0] = n;
-
-    kmin[1] = -norm_k2;  kmax[1] = norm_k2; num_nodes[1] = m;
-  }
-
-  kmin[2] = 0.0; kmax[2] = 0.0;
-  
   Tensor1 basis1 = k_vector1;  // y
   Tensor1 basis2 = k_vector2;  // z
   Tensor1 basis3 = vectorProduct(basis1, basis2);  // x
@@ -344,59 +260,6 @@ void Kspace::define_k_space(Tensor1 k_vector1,unsigned int n,  Tensor1 k_vector2
 void Kspace::define_k_space(Tensor1 k_vector1, unsigned int n, Tensor1 k_vector2, 
 				    unsigned int m, Tensor1 k_vector3, unsigned int k)
 {
-
-
-  double norm_k1 = 0.5;
-  double norm_k2 = 0.5;
-  double norm_k3 = 0.5;
-
- if (wedge == ALL)
- {
-
-  
-   kmin[0] = -norm_k1;  kmax[0] = norm_k1;
-   
-   kmin[1] = -norm_k2;  kmax[1] = norm_k2;
-
-   kmin[2] = -norm_k3;  kmax[2] = norm_k3;
-
- }
-
- if (wedge == HALF)
- {
-
-   kmin[0] = -norm_k1;  kmax[0] = norm_k1;
-
-   kmin[1] = -norm_k2;  kmax[1] = norm_k2;
-
-   kmin[2] = 0;  kmax[2] = norm_k3;
-
- }
- 
- if (wedge == QUARTER)
- {
-
-   kmin[0] = -norm_k1;  kmax[0] = norm_k1;
-
-   kmin[1] = 0;  kmax[1] = norm_k2;
-
-   kmin[2] = 0;  kmax[2] = norm_k3;
-
- }
- 
-
- if (wedge == EIGHTH)
- {
-
-   kmin[0] = 0;  kmax[0] = norm_k1;
-
-   kmin[1] = 0;  kmax[1] = norm_k2;
-
-   kmin[2] = 0;  kmax[2] = norm_k3;
-
- }
- 
-  
  for (short i = 1; i < 4; i++)
  {
    transform_matrix(i,1) = k_vector1(i);
@@ -406,8 +269,6 @@ void Kspace::define_k_space(Tensor1 k_vector1, unsigned int n, Tensor1 k_vector2
    k_basis_vector1(i-1) = k_vector1(i);
    k_basis_vector2(i-1) = k_vector2(i);
    k_basis_vector3(i-1) = k_vector3(i);
-
-
 
  }
 
@@ -457,58 +318,6 @@ void Kspace::do_init()
   if ( mesh_order == "first") _mesh_order = libMesh::FIRST;
   else if (mesh_order == "second") _mesh_order =  libMesh::SECOND;
   else throw  InitFailedException("Kspace: incorrect mesh order " + mesh_order );
-
-
-  {
-    string def_weg("all");
-    switch (k_space_dim)
-    {
-      case 1:
-        def_weg = "half";
-        break;
-
-      case 2:
-        def_weg = "quarter";
-        break;
-
-      case 3:
-        def_weg = "eighth";
-        break;
-
-      default:
-        break;
-    }
-
-    string wedge_type = mod_opt.get_option("wedge", def_weg);
-    if (wedge_type == "all" )
-    {
-      wedge = ALL;
-      degeneracy_factor = 1.0;
-    }
-    else if (wedge_type == "half")
-    {
-      wedge = HALF;
-      degeneracy_factor = 2.0;
-    }
-    else if (wedge_type == "quarter")
-    {
-      wedge = QUARTER;
-      degeneracy_factor = 4.0;
-      if (k_space_dim == 1)
-	throw  InitFailedException("Kspace: wedge " + wedge_type + " cannot be used with 1D k-space");
-    }
-    else if (wedge_type == "eighth")
-    {
-      wedge = EIGHTH;
-      degeneracy_factor = 8.0;
-      if (k_space_dim != 3)
-	throw  InitFailedException("Kspace: wedge " + wedge_type + " can be used only with 3D k-space");
-    }
-    else
-    {
-      throw  InitFailedException("Kspace: unknown wedge: " + wedge_type + "\n");
-    }
-  }
 
 
   bool k_basis =  mod_opt.find_option("k1");
