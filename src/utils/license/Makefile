@@ -7,8 +7,8 @@ include $(topdir)/Make.common
 target := .$(ARCH)/liblicense.a
 
 ifeq ($(enable_license_check), yes)
-  CPPFLAGS += -I/home/maufder/Projects/TIBERCAD/LM-X/lmx-sdk/include
-  LMXCLIENTLIB := /home/maufder/Projects/TIBERCAD/LM-X/lmx-sdk/linux_x64/liblmxclient.a
+  CPPFLAGS += -I/home/maufder/Projects/TIBERCAD/LM-X/lmx-sdk-4.9.8/include
+  LMXCLIENTLIB := /home/maufder/Projects/TIBERCAD/LM-X/lmx-sdk-4.9.8/linux_x64/liblmxclient.a
 
 .$(ARCH)/liblicense.a: $(objects)
 	@echo "Creating $@ ..."
