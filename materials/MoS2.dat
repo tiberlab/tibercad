@@ -7,10 +7,19 @@ structure = wz
 [lattice] # [3]
 a = 0.316
 c = 1.0 
+
+
+[permittivity]
+permittivity = (7, 7, 3.2)
+
+[mobility/constant]
+mu_max   = (1417.0,   470.5)
+exponent = (   2.5,   2.2)
+
 #Atomistic structure informations
 #
 [atomistic_structure]
-lattice_type = TMD
+lattice_type = hexagonal
 
 #Basis 
 
