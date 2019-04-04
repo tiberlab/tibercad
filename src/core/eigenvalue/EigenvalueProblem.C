@@ -69,7 +69,7 @@ ModelOptions EigenvalueProblem::parse_kspace_options(const ModelOptions& opts)
   // these are the real space lattice vectors, in nm
   // why pi? Because then the default max k becomes 1 ( = 2*pi/(2*a) ), and
   // k_max can be interpreted in nm^-1
-  RealVectorValue a(2*M_PI, 0.0, 0.0), b(0.0, 2*M_PI, 0.0), c(0.0, 0.0, 2*M_PI);
+  RealVectorValue a(M_PI, 0.0, 0.0), b(0.0, M_PI, 0.0), c(0.0, 0.0, M_PI);
   auto bbox = get_environment().get_bounding_box();
   if (get_option("x-periodicity", false) && (mesh_dim > 0))
     a(0) = (bbox.second(0) - bbox.first(0)) * get_mesh_units() * 1e9;
