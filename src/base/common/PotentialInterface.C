@@ -32,11 +32,14 @@ PotentialInterface::set_simulation(const std::string& name, const std::string& v
   bool answer = false;
   if (name != "")
   {
-    _simulation = SimulationInterface::find_simulation(name);
+    SimulationInterface::SolutionProvider prov =
+        SimulationInterface::find_solution_provider(name, variable);
+
+    _simulation = prov.first;
     if (_simulation == NULL)
       throw InitFailedException("No such simulation found: " + name);
 
-    _id = _simulation->get_solution_id(variable);
+    _id = prov.second;
 
     if (_id == INVALID_ID)
       throw InitFailedException("Simulation " + name +

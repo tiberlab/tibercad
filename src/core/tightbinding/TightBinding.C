@@ -167,9 +167,13 @@ TightBinding::project_potential(const std::string model_name, const std::string 
   Point p;
 
   //Use PotentialInterface to get the right simulation: currently hard-coded variables
-  PotentialInterface pot_model(model_name,"ElPotential");
-  PotentialInterface elchem_model(model_name,"eQFermi");
-  PotentialInterface hlchem_model(model_name,"hQFermi");
+  string el_pot  = get_option("electrostatic_potential", model_name);
+  string el_chem = get_option("el_electrochemical_potential", "");
+  string hl_chem = get_option("hl_electrochemical_potential", "");
+
+  PotentialInterface pot_model(el_pot, "ElPotential");
+  PotentialInterface elchem_model(el_chem, "eQFermi");
+  PotentialInterface hlchem_model(hl_chem, "hQFermi");
 
   if( !pot_model.get_simulation()->is_solved() )
     throw InitFailedException("Potential model has not been solved");

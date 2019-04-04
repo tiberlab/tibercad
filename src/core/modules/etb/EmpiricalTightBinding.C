@@ -1641,9 +1641,15 @@ ETB::get_band_edge(const std::string& edge)
 
     Messages::info("("+get_name()+") get potential from "+_upt_options.potential_sim);
 
-    ID id = _dd_int->get_solution_id(edge);
+    string band_src("");
+    if (edge=="Ec")
+      band_src = get_option("cb_edge", _dd_int->get_name() + ".Ec");
+    else
+      band_src = get_option("vb_edge", _dd_int->get_name() + ".Ev");
 
-    if ((id == INVALID_ID))
+    SolutionProvider cb = find_solution_provider(band_src);
+
+    if ((cb.second == INVALID_ID))
       throw RuntimeException("Simulation \'" + _dd_int->get_name() +
           "\' lacks band edge solution variables.");
 
@@ -1660,7 +1666,7 @@ ETB::get_band_edge(const std::string& edge)
       for (size_t i = 0; i < elem->n_nodes(); ++i)
         p[i] = elem->point(i);
 
-      _dd_int->get_solution(elem, id, edges, p);
+      cb.first->get_solution(elem, cb.second, edges, p);
 
       for (size_t i = 0; i < elem->n_nodes(); ++i)
       {
@@ -1711,14 +1717,13 @@ ETB::get_band_extrema(double& cb_min, double& vb_max)
   {
     Messages::info("("+get_name()+") get band edges from model: "+_upt_options.potential_sim);
 
-    string cbedge("Ec");
-    string vbedge("Ev");
+    string cb_src = get_option("cb_edge", _dd_int->get_name() + ".Ec");
+    string vb_src = get_option("vb_edge", _dd_int->get_name() + ".Ev");
 
-    // here we assume that the simulation exists (it was checked before)
-    ID cb_id = _dd_int->get_solution_id(cbedge);
-    ID vb_id = _dd_int->get_solution_id(vbedge);
+    SolutionProvider cb = find_solution_provider(cb_src);
+    SolutionProvider vb = find_solution_provider(vb_src);
 
-    if ((cb_id == INVALID_ID) || (vb_id == INVALID_ID))
+    if ((cb.second == INVALID_ID) || (vb.second == INVALID_ID))
       throw RuntimeException("Simulation \'" + _dd_int->get_name() +
           "\' lacks band edge solution variables.");
 
@@ -1740,8 +1745,8 @@ ETB::get_band_extrema(double& cb_min, double& vb_max)
       for (size_t i = 0; i < elem->n_nodes(); ++i)
         p[i] = elem->point(i);
 
-      _dd_int->get_solution(elem, vb_id, vb_edges, p);
-      _dd_int->get_solution(elem, cb_id, cb_edges, p);
+      cb.first->get_solution(elem, cb.second, vb_edges, p);
+      vb.first->get_solution(elem, vb.second, cb_edges, p);
 
       //for (size_t i = 0; i < elem->n_nodes(); ++i)
       //  std::cout<<vb_edges[i]<<" ";
