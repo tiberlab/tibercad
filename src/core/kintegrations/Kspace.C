@@ -85,11 +85,49 @@ Kspace::inverse_transform(Point& p) const
 void Kspace::build_k_grid()
 {
 
+  //build mesh
+  kmesh = new libMesh::Mesh(kspace_comm, k_space_dim);
+
   if (k_space_dim > 0)
   {
 
-    //build mesh
-    kmesh = new libMesh::Mesh(kspace_comm, k_space_dim);
+    switch (k_space_symmetry)
+    {
+      case LINEAR:
+      {
+        libMesh::ElemType type(libMesh::EDGE2);
+        if (_mesh_order == libMesh::SECOND)
+          type = libMesh::EDGE3;
+
+        break;
+      }
+
+      case QUADRATIC:
+        break;
+
+      case RECTANGULAR:
+        break;
+
+      case CUBIC:
+        break;
+
+      case TETRAGONAL:
+        break;
+
+      case ORTHORHOMBIC:
+        break;
+
+      case HEXAGONAL:
+        break;
+
+      case FCC:
+      case BCC:
+        break;
+
+      default:
+        kmesh->add_point(Point(0,0,0), 0, 0);
+        break;
+    }
 
     libMesh::ElemType type(libMesh::EDGE2);
     if (_mesh_order == libMesh::SECOND)
@@ -849,9 +887,12 @@ void Kspace::define_k_path(void)
 {
   kmesh = new libMesh::Mesh(kspace_comm, k_space_dim);
 
-  // to restrict the extension of the k-space, by an isotropic scale
-  double k_max = 1.0;
-  k_max = mod_opt.get_option("k_max", k_max);
+  // to restrict the extension of the k-space
+  libMesh::RealVectorValue k_max(1.0, 1.0, 1.0);
+  mod_opt.get_option("k_max", k_max);
+  bool scale = (k_max(0) != 1.0) ||
+               (k_max(1) != 1.0) ||
+               (k_max(2) != 1.0);
 
   std::string kpath = mod_opt.get_option("k_path","");
   // alternative accepted input:
@@ -863,8 +904,13 @@ void Kspace::define_k_path(void)
   Messages::info("(KSP) defining a k-path: " + kpath);
   ostringstream os;
   os <<"(KSP) k-dimension: "<< k_space_dim<<std::endl;
-  if (k_max != 1.0)
-    os <<"(KSP) scale with " << k_max << " (k_max)" << std::endl;
+  if (scale)
+  {
+    scale = true;
+    os <<"(KSP) k_max: " << k_max(0) << " "
+                         << k_max(1) << " "
+                         << k_max(2) <<std::endl;
+  }
   os <<"(KSP) points per line "<<npoints<<std::endl; 
   Messages::info(os.str());
 
@@ -876,14 +922,24 @@ void Kspace::define_k_path(void)
   unsigned int id = 0;
 
   libMesh::Point p1(get_symmetry_point(tokens[0]));
-  p1 *= k_max;
+  if (scale)
+  {
+    p1(0) *= k_max(0);
+    p1(1) *= k_max(1);
+    p1(2) *= k_max(2);
+  }
   kmesh->add_point(p1, id, 0);
   id++;
 
   for (short i = 1; i < tokens.size(); i++)
   {
     libMesh::Point p2(get_symmetry_point(tokens[i]));
-    p2 *= k_max;
+    if (scale)
+    {
+      p2(0) *= k_max(0);
+      p2(1) *= k_max(1);
+      p2(2) *= k_max(2);
+    }
 
     libMesh::Point dp = (p2 - p1) / nelem;
 
