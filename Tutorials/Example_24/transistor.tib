@@ -1,0 +1,148 @@
+#
+# Mos2 monolayer as channel of a transistor
+#
+
+
+# Description of the device physical regions
+Device
+{
+  meshfile = transistor.msh
+  write_boundary_mesh = true
+  mesh_units = 1e-9
+
+  Region substrate
+  {
+    material = SiO2
+  }
+
+  Region dielectric
+  {
+    material = SiO2
+  }
+
+  Region channel 
+  {
+    material = MoS2
+
+    z-growth-direction = (1,0,-1,0)
+    x-growth-direction = (-1,2,-1,0)
+    y-growth-direction = (0,0,0,1)
+   
+  }
+
+
+   Atomistic tb
+   {
+     regions = channel
+     reference_region = channel
+     #minimal_cell = true 
+     passivate = true
+	     
+     cells_along_z = 1  
+
+     print = xyz
+ }
+
+}
+
+
+
+Module dd_generic
+{ 
+
+  name = dd
+              
+  plot = (QFermi, Density, CurrentDensity, Mobility,
+          NetRecombination, ElField, ElPotential, ContactCurrents)
+
+  Solver
+  {
+    type = linesearch
+    max_iterations = 20
+
+    linear_solver
+    {
+      preconditioner = lu
+    }
+  }
+
+
+  Physics
+  {
+
+    #carrier electron
+    #{
+    #}
+
+  }
+
+
+  Contact gate
+  {
+    type = schottky
+    metal_fermilevel = 0
+
+    voltage = $Vg[0.5]
+  }
+
+  Contact source
+  {
+    voltage = 0.0
+  }
+ 
+  Contact back
+  {
+    voltage = 0.0
+  }
+
+  Contact drain
+  {
+    voltage = $Vd[0]
+  }
+}
+
+Module empirical_tb
+{
+    regions = channel
+    name = tb
+    atomistic_structure = tb
+
+    potential_simulation = dd
+    el_qfermi_level = 0
+    hl_qfermi_level = 0
+
+    Harrison_scaling = false
+    relativistic = false 
+    #verbose = 9
+
+    plot = (tbstates)
+    
+    Dispersion
+    {
+      k-path = G-X
+      number_of_nodes = 20
+    }
+
+    Solver
+    {
+      solver = lapack
+      guess_valence = 0.5  # -0.4
+      guess_conduction = 1.0 # 0.1 
+      num_valence_eigenvalues = 7 
+      num_conduction_eigenvalues = 4 
+    }
+}
+
+
+Simulation
+{
+  # this increases the amount of information
+  # written to the screen
+  verbose = 2
+  
+  solve = (dd, tb)
+  resultpath = output
+}
+
+
+
