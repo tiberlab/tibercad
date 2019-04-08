@@ -1538,17 +1538,13 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
              << " "  << nameB
              << " "  << std::setprecision(3) << x
              << " "  << std::setprecision(3) << 1.0 - x
-             << " "  << nameA
-             << " "  << etb_dataset + ".etb"
-             << " "  << nameB
-             << " "  << etb_dataset + ".etb";
+             << " "  << nameA << etb_dataset + ".etb"
+             << " "  << nameB << etb_dataset + ".etb";
       }
 
       if (alloy_type=="binary")
       {
-        file << " " << nameA
-             << " " << nameB
-             << " " << etb_dataset + ".etb";
+        file << " " << nameA << nameB << etb_dataset + ".etb";
       }
     
       if (alloy_type == "quaternary")
