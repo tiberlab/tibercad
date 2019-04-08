@@ -501,9 +501,6 @@ void ZbSemiconductor::apply_temperature(void)
   if (get_material()->is_alloy())
   {
 
-    std::cerr << get_material()->get_name() << " : " << 
-          modelA->get_material()->get_name() << " , " << modelB->get_material()->get_name() << "\n";
-
     const ZbSemiconductor::ZbDDparameters& parA_zero =  (dynamic_cast<const ZbSemiconductor*> (modelA))->get_initial_parameters();
 
     const ZbSemiconductor::ZbDDparameters& parB_zero =  (dynamic_cast<const ZbSemiconductor*> (modelB))->get_initial_parameters();
