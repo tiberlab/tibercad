@@ -6,10 +6,18 @@
 #include "Messages.h"
 #include "gmsh_io.h"
 #include "Utils.h"
+
+#include "libmesh/mesh_modification.h"
+#include "libmesh/mesh_refinement.h"
+#include "libmesh/edge_edge2.h"
+#include "libmesh/face_tri3.h"
+#include "libmesh/face_quad4.h"
+#include "libmesh/cell_tet4.h"
+#include "libmesh/cell_prism6.h"
+
+
 #include <cmath>
 
-#include <mesh_modification.h>
-#include <face_tri3.h>
 
 
 using namespace std;
@@ -85,6 +93,11 @@ Kspace::inverse_transform(Point& p) const
 void Kspace::build_k_grid()
 {
 
+  // to restrict the extension of the k-space
+  // we understand them in order b1, b2, b3
+  libMesh::RealVectorValue k_max(1, 1, 1);
+  mod_opt.get_option("k_max", k_max);
+
   //build mesh
   kmesh = new libMesh::Mesh(kspace_comm, k_space_dim);
 
@@ -99,26 +112,118 @@ void Kspace::build_k_grid()
         if (_mesh_order == libMesh::SECOND)
           type = libMesh::EDGE3;
 
+        kmesh->add_point(Point(0,0,0), 0, 0);
+        kmesh->add_point(get_symmetry_point("X"), 1, 0);
+
+        Elem* elem = kmesh->add_elem(new libMesh::Edge2);
+        elem->set_node(0) = kmesh->node_ptr(0);
+        elem->set_node(1) = kmesh->node_ptr(1);
+
         break;
       }
 
       case QUADRATIC:
+      {
+        kmesh->add_point(Point(0,0,0), 0, 0);
+        kmesh->add_point(get_symmetry_point("X"), 1, 0);
+        kmesh->add_point(get_symmetry_point("M"), 2, 0);
+
+        Elem* elem = kmesh->add_elem(new libMesh::Tri3);
+        elem->set_node(0) = kmesh->node_ptr(0);
+        elem->set_node(1) = kmesh->node_ptr(1);
+        elem->set_node(2) = kmesh->node_ptr(2);
+
         break;
+      }
 
       case RECTANGULAR:
+      {
+        kmesh->add_point(Point(0,0,0), 0, 0);
+        kmesh->add_point(get_symmetry_point("X"), 1, 0);
+        kmesh->add_point(get_symmetry_point("S"), 2, 0);
+        kmesh->add_point(get_symmetry_point("Y"), 3, 0);
+
+        Elem* elem = kmesh->add_elem(new libMesh::Quad4);
+        elem->set_node(0) = kmesh->node_ptr(0);
+        elem->set_node(1) = kmesh->node_ptr(1);
+        elem->set_node(2) = kmesh->node_ptr(2);
+        elem->set_node(3) = kmesh->node_ptr(3);
+
         break;
+      }
 
       case CUBIC:
+      {
+        kmesh->add_point(Point(0,0,0), 0, 0);
+        kmesh->add_point(get_symmetry_point("X"), 1, 0);
+        kmesh->add_point(get_symmetry_point("M"), 2, 0);
+        kmesh->add_point(get_symmetry_point("R"), 3, 0);
+
+        Elem* elem = kmesh->add_elem(new libMesh::Tet4);
+        elem->set_node(0) = kmesh->node_ptr(0);
+        elem->set_node(1) = kmesh->node_ptr(1);
+        elem->set_node(2) = kmesh->node_ptr(2);
+        elem->set_node(3) = kmesh->node_ptr(3);
+
         break;
+      }
 
       case TETRAGONAL:
+      {
+        kmesh->add_point(get_symmetry_point("M"), 0, 0);
+        kmesh->add_point(get_symmetry_point("X"), 1, 0);
+        kmesh->add_point(Point(0,0,0), 1, 0);
+        kmesh->add_point(get_symmetry_point("A"), 3, 0);
+        kmesh->add_point(get_symmetry_point("R"), 4, 0);
+        kmesh->add_point(get_symmetry_point("Z"), 5, 0);
+
+        Elem* elem = kmesh->add_elem(new libMesh::Prism6);
+        elem->set_node(0) = kmesh->node_ptr(0);
+        elem->set_node(1) = kmesh->node_ptr(1);
+        elem->set_node(2) = kmesh->node_ptr(2);
+        elem->set_node(3) = kmesh->node_ptr(3);
+        elem->set_node(4) = kmesh->node_ptr(4);
+        elem->set_node(5) = kmesh->node_ptr(5);
+
         break;
+      }
 
       case ORTHORHOMBIC:
         break;
 
       case HEXAGONAL:
+      {
+        if (k_space_dim == 2)
+        {
+          kmesh->add_point(Point(0,0,0), 0, 0);
+          kmesh->add_point(get_symmetry_point("M"), 1, 0);
+          kmesh->add_point(get_symmetry_point("K"), 2, 0);
+
+          Elem* elem = kmesh->add_elem(new libMesh::Tri3);
+          elem->set_node(0) = kmesh->node_ptr(0);
+          elem->set_node(1) = kmesh->node_ptr(1);
+          elem->set_node(2) = kmesh->node_ptr(2);
+        }
+        else
+        {
+          kmesh->add_point(get_symmetry_point("M"), 0, 0);
+          kmesh->add_point(get_symmetry_point("K"), 1, 0);
+          kmesh->add_point(Point(0,0,0), 2, 0);
+          kmesh->add_point(get_symmetry_point("L"), 3, 0);
+          kmesh->add_point(get_symmetry_point("H"), 4, 0);
+          kmesh->add_point(get_symmetry_point("A"), 5, 0);
+
+          Elem* elem = kmesh->add_elem(new libMesh::Prism6);
+          elem->set_node(0) = kmesh->node_ptr(0);
+          elem->set_node(1) = kmesh->node_ptr(1);
+          elem->set_node(2) = kmesh->node_ptr(2);
+          elem->set_node(3) = kmesh->node_ptr(3);
+          elem->set_node(4) = kmesh->node_ptr(4);
+          elem->set_node(5) = kmesh->node_ptr(5);
+        }
+
         break;
+      }
 
       case FCC:
       case BCC:
@@ -129,101 +234,11 @@ void Kspace::build_k_grid()
         break;
     }
 
-    libMesh::ElemType type(libMesh::EDGE2);
     if (_mesh_order == libMesh::SECOND)
-    {
+      kmesh->all_second_order();
 
-      if (k_space_dim == 1)
-      {
-        	type = libMesh::EDGE3;
-      }
-    
-      if (k_space_dim == 2)
-      {
-        	type = libMesh::QUAD8;
-      }
-    
-      if (k_space_dim == 3)
-      {
-        	type = libMesh::HEX27;
-      }
-    }
-    else 
-    {
-      if (k_space_dim == 1)
-      {
-        	type = libMesh::EDGE2;
-      }
-    
-      if (k_space_dim == 2)
-      {
-        	type = libMesh::QUAD4;
-      }
-    
-      if (k_space_dim == 3)
-      {
-        	type = libMesh::HEX8;
-      }
-
-
-    }
-
-    
-    // to restrict the extension of the k-space
-    libMesh::RealVectorValue k_max(1.0, 1.0, 1.0);
-    mod_opt.get_option("k_max", k_max);
-
-    // NOTE: build cube produces a mesh along x for 1D and on
-    //       x-y plane for 2D, but 1D k-space is along z and 2D one
-    //       is on y-z plane, so we rotate the mesh after its creation
-
-    libMesh::MeshTools::Generation::build_cube (*kmesh,
-				       num_nodes[0] - 1,
-				       num_nodes[1] - 1,
-				       num_nodes[2] - 1,
-				       -k_max(0), k_max(0),
-				       -k_max(1), k_max(1),
-				       -k_max(2), k_max(2),
-				       type);
-
-    
-    
-    switch (k_space_dim)
-    {
-      case 2:
-        for (unsigned int n=0; n < kmesh->n_nodes(); n++)
-        {
-          Point& p = kmesh->node(n);
-          p(2) = p(1);
-          p(1) = p(0);
-          p(0) = 0.0;
-        }
-        // does not work for some reason:
-        //MeshTools::Modification::rotate(*kmesh, 90, 90, 0);
-        break;
-
-      case 1:
-        for (unsigned int n=0; n < kmesh->n_nodes(); n++)
-        {
-          Point& p = kmesh->node(n);
-          p(2) = p(0);
-          p(1) = 0.0;
-          p(0) = 0.0;
-
-        }
-        //MeshTools::Modification::rotate(*kmesh, 0, 90, 90);
-        break;
-
-      default:
-        break;
-    }
-
-  
-  }
-  else
-  {
-    kmesh = new libMesh::Mesh(kspace_comm, 0);
-    kmesh->add_point(Point(0,0,0), 0, 0);
+    libMesh::MeshRefinement mr(*kmesh);
+    mr.uniformly_refine(num_nodes[0] - 1);
   }
 
 }
@@ -231,7 +246,7 @@ void Kspace::build_k_grid()
 
 
 //---------------------------------------------------------------------------//
-void  Kspace::define_k_space(Tensor1 k_vector, unsigned int n)
+void  Kspace::define_k_space(Tensor1 k_vector)
 {
 
   Tensor1& basis1 = k_vector;
@@ -265,7 +280,7 @@ void  Kspace::define_k_space(Tensor1 k_vector, unsigned int n)
 }
 
 //-----------------------------------------------------------------------------//
-void Kspace::define_k_space(Tensor1 k_vector1,unsigned int n,  Tensor1 k_vector2, unsigned int m)
+void Kspace::define_k_space(Tensor1 k_vector1, Tensor1 k_vector2)
 {
   // 1 -> y, 2 -> z
 
@@ -295,8 +310,9 @@ void Kspace::define_k_space(Tensor1 k_vector1,unsigned int n,  Tensor1 k_vector2
 
 //----------------------------------------------------------------------------//
 
-void Kspace::define_k_space(Tensor1 k_vector1, unsigned int n, Tensor1 k_vector2, 
-				    unsigned int m, Tensor1 k_vector3, unsigned int k)
+void Kspace::define_k_space(Tensor1 k_vector1,
+                            Tensor1 k_vector2,
+                            Tensor1 k_vector3)
 {
  for (short i = 1; i < 4; i++)
  {
@@ -343,7 +359,7 @@ void Kspace::do_init()
   if (k_space_dim > 0)
   {
     mod_opt.get_option("number_of_nodes", num_nodes);
-    if ( num_nodes.size() == 0 ) num_nodes.resize(k_space_dim, 5);
+    if ( num_nodes.size() == 0 ) num_nodes.resize(k_space_dim, 1);
   }
 
   // NOTE: for the mesh creation we always need all three indices
@@ -399,7 +415,7 @@ void Kspace::do_init()
 
       }
 
-      define_k_space(vec, num_nodes[0]);
+      define_k_space(vec);
 
     }
     break;
@@ -472,7 +488,7 @@ void Kspace::do_init()
 
       }
 
-      define_k_space(vec1, num_nodes[0],vec2, num_nodes[1] );
+      define_k_space(vec1, vec2);
 
 
     }
@@ -561,7 +577,7 @@ void Kspace::do_init()
       }
 
 
-      define_k_space(vec1, num_nodes[0],vec2, num_nodes[1],vec3, num_nodes[2]);
+      define_k_space(vec1, vec2, vec3);
 
 
     }
@@ -592,6 +608,9 @@ void Kspace::do_init()
   //GmshIO(*kmesh).write("kspace_as_built.msh");
   // transform the mesh to real units
   rotate_mesh();
+
+  if (!k_path)
+    libMesh::GmshIO(*kmesh).write("kspace.msh");
 
   //GmshIO(*kmesh).write("kspace.msh");
 

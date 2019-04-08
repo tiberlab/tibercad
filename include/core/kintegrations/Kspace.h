@@ -94,30 +94,24 @@ class Kspace
    //!defines 1D  Brilluoin zone \f$ k \in [-{\bf K}/2; {\bf K}/2) \f$
    /*!
     \param k_vector Basis k-vector  \f$ \bf K \f$ [atom. units]
-    \param n - initial number of nodes
     */
-   void define_k_space(Tensor1 k_vector, unsigned int n);
+   void define_k_space(Tensor1 k_vector);
 
    //!defines 2D  Brilluoin zone  \f$ k \in [-{\bf K}_1 / 2; {\bf K}_1 / 2) \otimes [-{\bf K}_2 / 2; {\bf K}_2 / 2) \f$
    /*!
     \param k_vector1  Basis k-vector  \f$ {\bf K}_1 \f$ [atom. units]
-    \param n - initial number of nodes in direction 1
     \param k_vector2  Basis k-vector  \f$ {\bf K}_2 \f$ [atom. units]
-    \param m - initial number of nodes in direction 2
     */
-   void define_k_space(Tensor1 k_vector1,unsigned int n,  Tensor1 k_vector2, unsigned int m);
+   void define_k_space(Tensor1 k_vector1, Tensor1 k_vector2);
 
    //!defines 3D  Brilluoin zone  \f$ k \in [-{\bf K}_1 / 2; {\bf K}_1 / 2) \otimes [-{\bf K}_2 / 2; {\bf K}_2 / 2)   \otimes [-{\bf K}_3 / 2; {\bf K}_3 / 2) \f$
    /*!
     \param k_vector1  Basis k-vector  \f$ {\bf K}_1 \f$ [atom. units]
-    \param n - initial number of nodes in direction 1
     \param k_vector2  Basis k-vector  \f$ {\bf K}_2 \f$ [atom. units]
-    \param m - initial number of nodes in direction 2
     \param k_vector3  Basis k-vector  \f$ {\bf K}_3 \f$ [atom. units]
-    \param k - initial number of nodes in direction 3
     */
-   void define_k_space(Tensor1 k_vector1, unsigned int n, Tensor1 k_vector2, 
-                       unsigned int m, Tensor1 k_vector3, unsigned int k);
+   void define_k_space(Tensor1 k_vector1, Tensor1 k_vector2,
+                       Tensor1 k_vector3);
 
    //! Define a linear path in k space for dispersions
    void define_k_path(void);
