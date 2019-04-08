@@ -63,6 +63,8 @@ void GraceIO::write_nodal_data(const std::string& fname,
 
   map_type node_map;
 
+  // the first point
+  const Point& po = mesh.point(0);
   double po_x = mesh.point(0)(0);
   double po_y = mesh.point(0)(1);
   double po_z = mesh.point(0)(2);
@@ -83,12 +85,26 @@ void GraceIO::write_nodal_data(const std::string& fname,
     // This is done to make the Grace plot independent 
     // from the mesh dimension
 
-    //if (mesh.mesh_dimension()==1)
-    //{
-    //  double p_x = mesh.point(global_id)(0);
-    //  node_map[p_x] = values;
-    //}
-    //else
+    if (mesh.mesh_dimension()==1)
+    {
+      const Point& p = mesh.point(global_id);
+
+      // TODO as origin, we use the x coordinate of the first point
+      double p_x = po_x;
+      if (i > 0)
+      {
+        Point dp = p - po;
+        double len = dp.norm();
+        if (len > 0)
+          dp /= len;
+
+        double dl = p * dp;
+        p_x += dl;
+      }
+
+      node_map[p_x] = values;
+    }
+    else
     {
       double p_x = mesh.point(global_id)(0);
       double p_y = mesh.point(global_id)(1);
