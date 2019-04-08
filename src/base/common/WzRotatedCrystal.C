@@ -58,18 +58,12 @@ void WzRotatedCrystal::calculate_lat_consts()
   Tensor1 rec_basis3;
 
 
-
-
-//   Rx = Tensor1(0); Rx(1) = a_lat;
-//   Ry = Tensor1(0); Ry(1) = -0.5*a_lat; Ry(2) = std::sqrt(3.0)/2.0*a_lat;
-//   Rz = Tensor1(0); Rz(3) = c_lat;
-// TODO maybe these would be more standard directions?
    Rx = Tensor1(0); Rx(1) = 0.5*a_lat; Rx(2) = (-std::sqrt(3.0)/2.0)*a_lat;
    Ry = Tensor1(0); Ry(1) = 0.5*a_lat; Ry(2) = (std::sqrt(3.0)/2.0)*a_lat;
    Rz = Tensor1(0); Rz(3) = c_lat;
 
 
-   const double volume =Rx *vectorProduct(Ry, Rz);
+   const double volume = Rx *vectorProduct(Ry, Rz);
 
    rec_basis1 = vectorProduct(Ry, Rz)/volume;      
    rec_basis2 = vectorProduct(Rz, Rx)/volume;
@@ -112,9 +106,6 @@ void WzRotatedCrystal::calculate_rot_matrix_miller(std::vector<int> vec_x_mil, s
 
   //assign proncipal directions
       
-//  mil1=Tensor1(0); mil1(1) = a_lat;
-//  mil2=Tensor1(0); mil2(1) = -0.5*a_lat; mil2(2) = std::sqrt(3.0)/2.0*a_lat;
-//  mil3=Tensor1(0); mil3(3) = c_lat;
   mil1=Tensor1(0); mil1(1) = a_lat; mil1(2) = (-1.0/std::sqrt(3.0)) * a_lat;
   mil2=Tensor1(0); mil2(1) = a_lat; mil2(2) = (1.0/std::sqrt(3.0)) * a_lat;
   mil3=Tensor1(0); mil3(3) = c_lat;

@@ -283,7 +283,7 @@ void Optics::init_k_space_integration(void)
    // these are the real space lattice vectors, in nm
    // why pi? Because then the default max k becomes 1 ( = 2*pi/(2*a) ), and
    // k_max can be interpreted in nm^-1
-   libMesh::RealVectorValue a(M_PI, 0.0, 0.0), b(0.0, M_PI, 0.0), c(0.0, 0.0, M_PI);
+   libMesh::RealVectorValue a(M_PI, 0.0, 0.0), b(0.0, 1.01*M_PI, 0.0), c(0.0, 0.0, 1.005*M_PI);
    auto bbox = _initial_state_model->get_environment().get_bounding_box();
    if (x_per && (mesh_dim > 0))
      a(0) = (bbox.second(0) - bbox.first(0)) * get_mesh_units() * 1e9;

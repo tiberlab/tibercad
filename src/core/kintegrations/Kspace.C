@@ -105,10 +105,6 @@ void Kspace::build_k_grid()
     {
       case LINEAR:
       {
-        libMesh::ElemType type(libMesh::EDGE2);
-        if (_mesh_order == libMesh::SECOND)
-          type = libMesh::EDGE3;
-
         kmesh->add_point(Point(0,0,0), 0, 0);
         kmesh->add_point(get_symmetry_point("X"), 1, 0);
 
