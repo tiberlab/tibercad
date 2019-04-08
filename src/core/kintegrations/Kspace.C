@@ -169,7 +169,7 @@ void Kspace::build_k_grid()
       {
         kmesh->add_point(get_symmetry_point("M"), 0, 0);
         kmesh->add_point(get_symmetry_point("X"), 1, 0);
-        kmesh->add_point(Point(0,0,0), 1, 0);
+        kmesh->add_point(Point(0,0,0), 2, 0);
         kmesh->add_point(get_symmetry_point("A"), 3, 0);
         kmesh->add_point(get_symmetry_point("R"), 4, 0);
         kmesh->add_point(get_symmetry_point("Z"), 5, 0);
