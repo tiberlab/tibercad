@@ -1,5 +1,15 @@
+Version 3.1.0
+-------------
+
 New features:
-	- can to some extent handle 2D materials
+	- can now handle 2D materials for atomistic simulations
+	- improvements for k space generation (dispersion and integration)
+	- empirical tight binding works now for any orbital combinations
+	- new examples for tight binding, and for doping profiles / alloy
+	  profiles
+	- new module to create quantum espresso input files
+	- alloy statistics extraction can now include APT detection efficiencies
+	  and use binning based on counting atoms
 
 
 Version 3.0.0
