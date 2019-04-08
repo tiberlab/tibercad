@@ -360,7 +360,8 @@ BulkCrystal::set_prim_vec(void)
 
   }
 
-  else if (_lattice_type.compare("hexagonal") == 0) {
+  else if ((_lattice_type.compare("hexagonal") == 0) ||
+           (_lattice_type.compare("TMD") == 0)) {
 
     assert(_lattice_constant[0] == _lattice_constant[1]);
 
@@ -380,27 +381,6 @@ BulkCrystal::set_prim_vec(void)
 
   }
   
-
-  else if (_lattice_type.compare("TMD") == 0) {
-
-    //prim_vec_dir(1,1) = 1.0; prim_vec_dir(2,1) = 0.0; prim_vec_dir(3,1) = 0.0;
-    prim_vec_dir(1,1) = 0.5; prim_vec_dir(2,1) = -sqrt(3.0) / 2.0; prim_vec_dir(3,1) = 0.0;
-    prim_vec_dir(1,2) = 0.5; prim_vec_dir(2,2) = sqrt(3.0) / 2.0; prim_vec_dir(3,2) = 0.0;
-    //prim_vec_dir(1,2) = -0.5; prim_vec_dir(2,2) = sqrt(3.0) / 2.0; prim_vec_dir(3,2) = 0.0;
-    prim_vec_dir(1,3) = 0.0; prim_vec_dir(2,3) = 0.0; prim_vec_dir(3,3) = 1.0;
-
-    _prim_vec(1,1) = prim_vec_dir(1,1) * _lattice_constant[0]; 
-    _prim_vec(2,1) = prim_vec_dir(2,1) * _lattice_constant[0];
-    _prim_vec(3,1) = prim_vec_dir(3,1) * _lattice_constant[0];
-    _prim_vec(1,2) = prim_vec_dir(1,2) * _lattice_constant[0]; 
-    _prim_vec(2,2) = prim_vec_dir(2,2) * _lattice_constant[0];
-    _prim_vec(3,2) = prim_vec_dir(3,2) * _lattice_constant[0];
-    _prim_vec(1,3) = prim_vec_dir(1,3) * _lattice_constant[2];
-    _prim_vec(2,3) = prim_vec_dir(2,3) * _lattice_constant[2];
-    _prim_vec(3,3) = prim_vec_dir(3,3) * _lattice_constant[2];
-  }
-
-
   else if (_lattice_type.compare("anatase") == 0) {
 
     assert(_lattice_constant[0] == _lattice_constant[1]);
