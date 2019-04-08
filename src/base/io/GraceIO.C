@@ -85,7 +85,7 @@ void GraceIO::write_nodal_data(const std::string& fname,
     // This is done to make the Grace plot independent 
     // from the mesh dimension
 
-    if (mesh.mesh_dimension()==1)
+    if (mesh.mesh_dimension() == 1)
     {
       const Point& p = mesh.point(global_id);
 
@@ -93,12 +93,13 @@ void GraceIO::write_nodal_data(const std::string& fname,
       double p_x = po_x;
       if (i > 0)
       {
-        Point dp = p - po;
+        // the positive direction
+        Point dp = mesh.point(1) - po;
         double len = dp.norm();
         if (len > 0)
           dp /= len;
 
-        double dl = p * dp;
+        double dl = (p - po) * dp;
         p_x += dl;
       }
 
