@@ -163,6 +163,9 @@ class Kspace
    //! Identify k basis vector b1
    unsigned int b3;
 
+   //! The maximum k to use (relative to k space basis)
+   libMesh::RealVectorValue k_max;
+
    //! The symmetry class of the k-space
    Symmetry k_space_symmetry;
 
