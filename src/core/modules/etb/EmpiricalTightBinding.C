@@ -1745,8 +1745,8 @@ ETB::get_band_extrema(double& cb_min, double& vb_max)
       for (size_t i = 0; i < elem->n_nodes(); ++i)
         p[i] = elem->point(i);
 
-      cb.first->get_solution(elem, cb.second, vb_edges, p);
-      vb.first->get_solution(elem, vb.second, cb_edges, p);
+      cb.first->get_solution(elem, cb.second, cb_edges, p);
+      vb.first->get_solution(elem, vb.second, vb_edges, p);
 
       //for (size_t i = 0; i < elem->n_nodes(); ++i)
       //  std::cout<<vb_edges[i]<<" ";
