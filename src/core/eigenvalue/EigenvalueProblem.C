@@ -111,50 +111,70 @@ ModelOptions EigenvalueProblem::parse_kspace_options(const ModelOptions& opts)
   kopts.set_option("k_space_dimension", k_dim);
 
 
-  switch (k_dim)
-  {
-    case 1:
-      if (mesh_dim == 3)
-      {
-        if (x_periodic)
-          c = a;
-        else if (y_periodic)
-          c = b;
-      }
-      kopts.set_option("r1", c);
-      break;
-
-    case 2:
-      if (mesh_dim == 3)
-      {
-        if (!z_periodic)
+  // for now, we have the old approach for continuum models,
+  // while we use directly the periodicity info for atomistic models
+    switch (k_dim)
+    {
+      case 1:
+        if (get_atomistic_structure() != NULL)
         {
-          c = b;
-          b = a;
+          if (x_periodic)
+            c = a;
+          else if (y_periodic)
+            c = b;
         }
-        else if (x_periodic)
+        else if (mesh_dim == 3)
         {
-          b = a;
+          if (x_periodic)
+            c = a;
+          else if (y_periodic)
+            c = b;
         }
-      }
-      else if (mesh_dim == 2)
-      {
-        if (x_periodic)
-          b = a;
-      }
-      kopts.set_option("r1", b);
-      kopts.set_option("r2", c);
-      break;
+        kopts.set_option("r1", c);
+        break;
 
-    case 3:
-      kopts.set_option("r1", a);
-      kopts.set_option("r2", b);
-      kopts.set_option("r3", c);
-      break;
+      case 2:
+        if (get_atomistic_structure() != NULL)
+        {
+          if (!y_periodic)
+            b = a;
+          else if (!z_periodic)
+          {
+            c = b;
+            b = a;
+          }
 
-    default:
-      break;
-  }
+        }
+        else if (mesh_dim == 3)
+        {
+          if (!z_periodic)
+          {
+            c = b;
+            b = a;
+          }
+          else if (x_periodic)
+          {
+            b = a;
+          }
+        }
+        else if (mesh_dim == 2)
+        {
+          if (x_periodic)
+            b = a;
+        }
+        kopts.set_option("r1", b);
+        kopts.set_option("r2", c);
+        break;
+
+      case 3:
+        kopts.set_option("r1", a);
+        kopts.set_option("r2", b);
+        kopts.set_option("r3", c);
+        break;
+
+      default:
+        break;
+    }
 
 
   kopts.set_option("mesh_order", opts.get_option("mesh_order", "first"));

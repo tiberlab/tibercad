@@ -448,10 +448,10 @@ AtomisticStructure::init_mesh_structure()
   vector<bool> periodicity;
   get_options().get_option("periodicity",periodicity);
 
-  if (periodicity.size() != this->get_device()->get_mesh().mesh_dimension())
-  {
-     throw RuntimeException("periodicity must have the same dimension of mesh");
-  }
+  //if (periodicity.size() != this->get_device()->get_mesh().mesh_dimension())
+  //{
+  //   throw RuntimeException("periodicity must have the same dimension of mesh");
+  //}
 
   periodicity.resize(3,true);
   this->set_periodicity(periodicity);

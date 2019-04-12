@@ -654,18 +654,36 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3)
 
   if (!_as->is_periodic(0))
   {
-    start_i = -2;
-    n1 = n1 + 2;
+    if (((_dim == 1) && (fabs(_conv_vect(1,1)) > 1e-9)) ||
+        ((_dim == 2) && (fabs(_conv_vect(1,1)) > 1e-9) &&
+                        (fabs(_conv_vect(2,1)) > 1e-9)) ||
+         (_dim == 3))
+    {
+      start_i = -2;
+      n1 = n1 + 2;
+    }
   }
   if (!_as->is_periodic(1))
   {
-    start_j = -2;
-    n2 = n2 + 2;
+    if (((_dim == 1) && (fabs(_conv_vect(1,2)) > 1e-9)) ||
+        ((_dim == 2) && (fabs(_conv_vect(1,2)) > 1e-9) &&
+                        (fabs(_conv_vect(2,2)) > 1e-9)) ||
+         (_dim == 3))
+    {
+      start_j = -2;
+      n2 = n2 + 2;
+    }
   }
   if (!_as->is_periodic(2))
   {
-    start_l = -2;
-    n3 = n3 + 2;
+    if (((_dim == 1) && (fabs(_conv_vect(1,3)) > 1e-9)) ||
+        ((_dim == 2) && (fabs(_conv_vect(1,3)) > 1e-9) &&
+                        (fabs(_conv_vect(2,3)) > 1e-9)) ||
+         (_dim == 3))
+    {
+      start_l = -2;
+      n3 = n3 + 2;
+    }
   }
 
   //Definition of number of conventional cells, useful for reserving arrays
