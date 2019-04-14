@@ -24,7 +24,6 @@ Device
    {
      regions = bulk
      reference_region = bulk
-     periodicity = (1)
      minimal_cell = true 
 	     
      supercell_size_y = 0 

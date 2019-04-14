@@ -1,0 +1,1259 @@
+
+Log start: Sun Apr 14 13:47:54 2019
+
+
+tiberCAD release 3.1.0 (rev. 4787, x86_64-linux)
+
+Input file: bulk.tib
+
+Initialize global simulation options
+  Simulation temperature: 300 K
+  Database search path  : /home/maufder/Work/TiberCAD/3.0/materials
+  Log file              : output/bulk.log.0
+
+Setup mesh
+  Reading mesh file 'bulk.msh ...
+    mesh reading time: 0h 0m 0.00017s
+    mesh preparation time: 0h 0m 0.00016s
+    bd_regions preparation time: 0h 0m 3.8e-06s
+
+    mesh units          : 1e-09 m
+    mesh dimension      :       1
+    number of nodes     :       7
+    number of elements  :       6
+    number of subdomains:       1
+    number of boundaries:       0
+
+Create materials ...
+  Added material MoS2 for region 'bulk' (mesh regions 1)
+    (using datafile /home/maufder/Work/TiberCAD/3.0/materials/MoS2.dat)
+    x growth direction : (0,0,0,1)
+    y growth direction : (1,0,-1,0)
+    z growth direction : (-1,2,-1,0)
+Creation of materials done.
+
+Building Atomistic Structure tb
+  Create reference lattice: MoS2
+  BondMap progress  done.
+  Build a first oversized structure
+  Make conventional cell
+  Relative origin of atomic structure: 1.56864 0.912213 1e-06
+  Conventional cells along x, y, z: 1 1 1
+
+  Setup of grid mapper: 0h 0m 9.1e-06s, memory usage: 0 MB 440
+  Assign elements progress  done.
+  Assign Species progress  done.
+  Check periodicity ... 
+    structure is periodic along y z
+    BondMap progress  done.
+    Adding needed atoms for correct passivation
+  done
+  Rebuild bondmap
+  BondMap progress  done.
+  Build final Bond Map...
+  BondMap progress  done.
+  Atomistic structure build time: 0h 0m 0.0021s
+
+  Atomistic Structure containing 3 atoms has been built. 
+  Size not counting passivation hydrogens: 3
+  Supercell structure
+  Lattice vectors (A):
+    a1 = (200.000 0.00000 0.00000 )
+    a2 = (0.00000 2.73664 -1.58000 )
+    a3 = (0.00000 -2.22045e-16 3.16000 )
+    Output structure(s)
+
+Setting up simulation of type 'empirical_tb' ...
+  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/empirical_tb/empirical_tb.so)
+Creating bulk models... 
+  Region: bulk
+
+Setting up bulk models ...
+
+Setting up lower dimensional (boundary) models ...
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for tb (empirical_tb)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+Symmetry of k space: hexagonal
+k-space initialized
+
+*** Warning: Empirical tight binding calculations are preformed at T=0
+
+*** Warning: Neither potential_simulation nor el_qfermi_level have been specified
+
+*** Warning: Neither potential_simulation nor hl_qfermi_level have been specified
+(tb) creating map elem->atoms
+(tb) database path: /home/maufder/Work/TiberCAD/3.0/materials
+(tb) default  path: /home/maufder/Work/TiberCAD/3.0/materials
+(tb) work path: output
+(tb) output path: output
+
+*** Warning: found unused options in block Solver: guess_conduction, guess_valence, num_conduction_eigenvalues, num_valence_eigenvalues, solver
+
+Available solution variables:
+------------------------------------------------------------------
+Name                     Units          Type      Association Plot
+------------------------------------------------------------------
+MeshStates               1/cm           n-tuple   cell        n
+MeshStatesNodes          1/cm           n-tuple   nodal       n
+eDensity                 q/cm           real      nodal       n
+hDensity                 q/cm           real      nodal       n
+RegionIDs                               real      cell        n
+------------------------------------------------------------------
+
+Output directory      : output
+Output file format    : grace
+Output file basename  : tb
+
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+We solve: tb 
+
+>>>>----------------------------------- (tb) -----------------------------------
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.0208107 Fermi          0   0.308958
+  1 hl -35.968 Fermi          0          0
+  2 hl -44.9392 Fermi          0          0
+  3 hl -103.019 Fermi          0          0
+  4 hl -103.019 Fermi          0          0
+  5 hl -227.53 Fermi          0          0
+  6 hl -227.53 Fermi          0          0
+  7 el 3.71044 Fermi          0 4.64996e-63
+  8 el 3.71044 Fermi          0 4.64994e-63
+  9 el 5.02972 Fermi          0 3.19542e-85
+  10 el 5.02972 Fermi          0 3.19541e-85
+
+
+Solve time: 0h 0m 0.001s
+<<<<----------------------------------------------------------------------------
+(tb) compute atom-projected charges
+(tb) print atom-projected charges on files
+(tb) write wave functions on files
+Compute Dispersion ...
+  Symmetry of k space: hexagonal
+  (KSP) defining a k-path: G-K-M-G
+  (KSP) k-dimension: 2
+  (KSP) points per line 20
+  k-space initialized
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.0208107 Fermi          0   0.308958
+  1 hl -35.968 Fermi          0          0
+  2 hl -44.9392 Fermi          0          0
+  3 hl -103.019 Fermi          0          0
+  4 hl -103.019 Fermi          0          0
+  5 hl -227.53 Fermi          0          0
+  6 hl -227.53 Fermi          0          0
+  7 el 3.71044 Fermi          0 4.64996e-63
+  8 el 3.71044 Fermi          0 4.64994e-63
+  9 el 5.02972 Fermi          0 3.19542e-85
+  10 el 5.02972 Fermi          0 3.19541e-85
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.0435805 Fermi          0   0.156334
+  1 hl -35.8559 Fermi          0          0
+  2 hl -44.8599 Fermi          0          0
+  3 hl -102.955 Fermi          0          0
+  4 hl -103.185 Fermi          0          0
+  5 hl -227.643 Fermi          0          0
+  6 hl -227.768 Fermi          0          0
+  7 el 3.70325 Fermi          0 6.13964e-63
+  8 el 3.72116 Fermi          0 3.0709e-63
+  9 el 5.03055 Fermi          0 3.09423e-85
+  10 el 5.03403 Fermi          0 2.70426e-85
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.10904 Fermi          0  0.0145165
+  1 hl -35.5254 Fermi          0          0
+  2 hl -44.6291 Fermi          0          0
+  3 hl -102.769 Fermi          0          0
+  4 hl -103.671 Fermi          0          0
+  5 hl -227.98 Fermi          0          0
+  6 hl -228.474 Fermi          0          0
+  7 el 3.68274 Fermi          0 1.35776e-62
+  8 el 3.75139 Fermi          0 9.53997e-64
+  9 el 5.03295 Fermi          0 2.82001e-85
+  10 el 5.04697 Fermi          0 1.63977e-85
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.209227 Fermi          0 0.000305505
+  1 hl -34.9934 Fermi          0          0
+  2 hl -44.2669 Fermi          0          0
+  3 hl -102.471 Fermi          0          0
+  4 hl -104.447 Fermi          0          0
+  5 hl -228.529 Fermi          0          0
+  6 hl -229.614 Fermi          0          0
+  7 el 3.65177 Fermi          0 4.49852e-62
+  8 el 3.7958 Fermi          0 1.71167e-64
+  9 el 5.03664 Fermi          0 2.44476e-85
+  10 el 5.06846 Fermi          0 7.1412e-86
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.332533 Fermi          0 2.59237e-06
+  1 hl -34.2862 Fermi          0          0
+  2 hl -43.8028 Fermi          0          0
+  3 hl -102.082 Fermi          0          0
+  4 hl -105.466 Fermi          0          0
+  5 hl -229.272 Fermi          0          0
+  6 hl -231.14 Fermi          0          0
+  7 el 3.61446 Fermi          0 1.90469e-61
+  8 el 3.8471 Fermi          0 2.35288e-65
+  9 el 5.04121 Fermi          0 2.04854e-85
+  10 el 5.0983 Fermi          0 2.25092e-86
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.465476 Fermi          0 1.51478e-08
+  1 hl -33.4369 Fermi          0          0
+  2 hl -43.2713 Fermi          0          0
+  3 hl -101.626 Fermi          0          0
+  4 hl -106.667 Fermi          0          0
+  5 hl -230.186 Fermi          0          0
+  6 hl -232.987 Fermi          0          0
+  7 el 3.57527 Fermi          0 8.67288e-61
+  8 el 3.8975 Fermi          0 3.34919e-66
+  9 el 5.04617 Fermi          0 1.69135e-85
+  10 el 5.13606 Fermi          0 5.22511e-87
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.594369 Fermi          0 1.03527e-10
+  1 hl -32.4829 Fermi          0          0
+  2 hl -42.7072 Fermi          0          0
+  3 hl -101.13 Fermi          0          0
+  4 hl -107.987 Fermi          0          0
+  5 hl -231.241 Fermi          0          0
+  6 hl -235.079 Fermi          0          0
+  7 el 3.53801 Fermi          0 3.66502e-60
+  8 el 3.94 Fermi          0 6.47001e-67
+  9 el 5.05097 Fermi          0 1.40445e-85
+  10 el 5.18091 Fermi          0 9.21696e-88
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.70675 Fermi          0 1.34004e-12
+  1 hl -31.4628 Fermi          0          0
+  2 hl -42.1421 Fermi          0          0
+  3 hl -100.627 Fermi          0          0
+  4 hl -109.36 Fermi          0          0
+  5 hl -232.405 Fermi          0          0
+  6 hl -237.335 Fermi          0          0
+  7 el 3.50479 Fermi          0 1.32496e-59
+  8 el 3.96947 Fermi          0 2.06977e-67
+  9 el 5.05511 Fermi          0 1.19667e-85
+  10 el 5.23162 Fermi          0 1.29648e-88
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.79253 Fermi          0 4.86278e-14
+  1 hl -30.4143 Fermi          0          0
+  2 hl -41.6018 Fermi          0          0
+  3 hl -100.147 Fermi          0          0
+  4 hl -110.722 Fermi          0          0
+  5 hl -233.64 Fermi          0          0
+  6 hl -239.671 Fermi          0          0
+  7 el 3.47485 Fermi          0 4.21891e-59
+  8 el 3.98365 Fermi          0 1.19585e-67
+  9 el 5.05811 Fermi          0 1.06562e-85
+  10 el 5.28648 Fermi          0 1.55283e-89
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.844759 Fermi          0 6.43929e-15
+  1 hl -29.3723 Fermi          0          0
+  2 hl -41.105 Fermi          0          0
+  3 hl -99.7171 Fermi          0          0
+  4 hl -112.015 Fermi          0          0
+  5 hl -234.91 Fermi          0          0
+  6 hl -242.006 Fermi          0          0
+  7 el 3.44331 Fermi          0 1.42865e-58
+  8 el 3.98443 Fermi          0 1.16033e-67
+  9 el 5.05956 Fermi          0 1.00744e-85
+  10 el 5.34341 Fermi          0 1.71675e-90
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.85992 Fermi          0 3.55271e-15
+  1 hl -28.3674 Fermi          0          0
+  2 hl -40.6635 Fermi          0          0
+  3 hl -99.3632 Fermi          0          0
+  4 hl -113.189 Fermi          0          0
+  5 hl -236.177 Fermi          0          0
+  6 hl -244.265 Fermi          0          0
+  7 el 3.40042 Fermi          0 7.50864e-58
+  8 el 3.97869 Fermi          0 1.44875e-67
+  9 el 5.05915 Fermi          0 1.02363e-85
+  10 el 5.40008 Fermi          0 1.91752e-91
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.837752 Fermi          0 8.43769e-15
+  1 hl -27.4259 Fermi          0          0
+  2 hl -40.2827 Fermi          0          0
+  3 hl -99.1041 Fermi          0          0
+  4 hl -114.204 Fermi          0          0
+  5 hl -237.406 Fermi          0          0
+  6 hl -246.381 Fermi          0          0
+  7 el 3.33327 Fermi          0 1.00843e-56
+  8 el 3.97681 Fermi          0 1.55801e-67
+  9 el 5.05667 Fermi          0 1.12668e-85
+  10 el 5.45411 Fermi          0 2.3722e-92
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.780729 Fermi          0 7.66054e-14
+  1 hl -26.5691 Fermi          0          0
+  2 hl -39.9629 Fermi          0          0
+  3 hl -98.9521 Fermi          0          0
+  4 hl -115.031 Fermi          0          0
+  5 hl -238.561 Fermi          0          0
+  6 hl -248.297 Fermi          0          0
+  7 el 3.23189 Fermi          0 5.09008e-55
+  8 el 3.98711 Fermi          0 1.0463e-67
+  9 el 5.05206 Fermi          0 1.34652e-85
+  10 el 5.50331 Fermi          0 3.53576e-93
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.693483 Fermi          0 2.23865e-12
+  1 hl -25.8131 Fermi          0          0
+  2 hl -39.7009 Fermi          0          0
+  3 hl -98.911 Fermi          0          0
+  4 hl -115.655 Fermi          0          0
+  5 hl -239.613 Fermi          0          0
+  6 hl -249.97 Fermi          0          0
+  7 el 3.09507 Fermi          0 1.01207e-52
+  8 el 4.01068 Fermi          0 4.20356e-68
+  9 el 5.04545 Fermi          0 1.73897e-85
+  10 el 5.54597 Fermi          0 6.79016e-94
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.58251 Fermi          0 1.63787e-10
+  1 hl -25.17 Fermi          0          0
+  2 hl -39.4917 Fermi          0          0
+  3 hl -98.9749 Fermi          0          0
+  4 hl -116.075 Fermi          0          0
+  5 hl -240.536 Fermi          0          0
+  6 hl -251.37 Fermi          0          0
+  7 el 2.93027 Fermi          0 5.93885e-50
+  8 el 4.04247 Fermi          0 1.22926e-68
+  9 el 5.03719 Fermi          0 2.39365e-85
+  10 el 5.58097 Fermi          0 1.75394e-94
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.456431 Fermi          0 2.14935e-08
+  1 hl -24.647 Fermi          0          0
+  2 hl -39.3298 Fermi          0          0
+  3 hl -99.1263 Fermi          0          0
+  4 hl -116.306 Fermi          0          0
+  5 hl -241.309 Fermi          0          0
+  6 hl -252.483 Fermi          0          0
+  7 el 2.75062 Fermi          0 6.19065e-47
+  8 el 4.07543 Fermi          0 3.43439e-69
+  9 el 5.02791 Fermi          0 3.42717e-85
+  10 el 5.60789 Fermi          0 6.18916e-95
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.326961 Fermi          0 3.21587e-06
+  1 hl -24.2474 Fermi          0          0
+  2 hl -39.21 Fermi          0          0
+  3 hl -99.3346 Fermi          0          0
+  4 hl -116.382 Fermi          0          0
+  5 hl -241.918 Fermi          0          0
+  6 hl -253.308 Fermi          0          0
+  7 el 2.57336 Fermi          0 5.88173e-44
+  8 el 4.1035 Fermi          0 1.15957e-69
+  9 el 5.01853 Fermi          0 4.92536e-85
+  10 el 5.62704 Fermi          0 2.9516e-95
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.210178 Fermi          0 0.000294472
+  1 hl -23.9705 Fermi          0          0
+  2 hl -39.1279 Fermi          0          0
+  3 hl -99.5555 Fermi          0          0
+  4 hl -116.352 Fermi          0          0
+  5 hl -242.351 Fermi          0          0
+  6 hl -253.859 Fermi          0          0
+  7 el 2.41973 Fermi          0 2.2408e-41
+  8 el 4.12285 Fermi          0 5.48511e-70
+  9 el 5.01024 Fermi          0 6.78887e-85
+  10 el 5.63921 Fermi          0 1.84295e-95
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.126424 Fermi          0 0.00746303
+  1 hl -23.8114 Fermi          0          0
+  2 hl -39.0805 Fermi          0          0
+  3 hl -99.7328 Fermi          0          0
+  4 hl -116.281 Fermi          0          0
+  5 hl -242.608 Fermi          0          0
+  6 hl -254.162 Fermi          0          0
+  7 el 2.31365 Fermi          0 1.35664e-39
+  8 el 4.13251 Fermi          0 3.77549e-70
+  9 el 5.00435 Fermi          0 8.52695e-85
+  10 el 5.64558 Fermi          0 1.44058e-95
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.0955237 Fermi          0  0.0242446
+  1 hl -23.761 Fermi          0          0
+  2 hl -39.0652 Fermi          0          0
+  3 hl -99.8047 Fermi          0          0
+  4 hl -116.242 Fermi          0          0
+  5 hl -242.691 Fermi          0          0
+  6 hl -254.253 Fermi          0          0
+  7 el 2.27575 Fermi          0 5.87709e-39
+  8 el 4.13467 Fermi          0 3.47215e-70
+  9 el 5.00214 Fermi          0 9.28799e-85
+  10 el 5.64742 Fermi          0 1.34151e-95
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.103454 Fermi          0  0.0179547
+  1 hl -23.7727 Fermi          0          0
+  2 hl -39.0689 Fermi          0          0
+  3 hl -99.7838 Fermi          0          0
+  4 hl -116.255 Fermi          0          0
+  5 hl -242.672 Fermi          0          0
+  6 hl -254.233 Fermi          0          0
+  7 el 2.28513 Fermi          0 4.08813e-39
+  8 el 4.13456 Fermi          0 3.48694e-70
+  9 el 5.00274 Fermi          0 9.07291e-85
+  10 el 5.64704 Fermi          0 1.36171e-95
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.126733 Fermi          0  0.0073751
+  1 hl -23.8063 Fermi          0          0
+  2 hl -39.0797 Fermi          0          0
+  3 hl -99.7181 Fermi          0          0
+  4 hl -116.3 Fermi          0          0
+  5 hl -242.613 Fermi          0          0
+  6 hl -254.177 Fermi          0          0
+  7 el 2.31217 Fermi          0 1.43621e-39
+  8 el 4.13495 Fermi          0 3.43516e-70
+  9 el 5.00461 Fermi          0 8.44141e-85
+  10 el 5.64597 Fermi          0 1.41912e-95
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.163827 Fermi          0 0.00176632
+  1 hl -23.8598 Fermi          0          0
+  2 hl -39.0972 Fermi          0          0
+  3 hl -99.6051 Fermi          0          0
+  4 hl -116.379 Fermi          0          0
+  5 hl -242.52 Fermi          0          0
+  6 hl -254.09 Fermi          0          0
+  7 el 2.35423 Fermi          0 2.82293e-40
+  8 el 4.13705 Fermi          0 3.1669e-70
+  9 el 5.00777 Fermi          0 7.46842e-85
+  10 el 5.64435 Fermi          0 1.51096e-95
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.212462 Fermi          0 0.000269572
+  1 hl -23.9305 Fermi          0          0
+  2 hl -39.121 Fermi          0          0
+  3 hl -99.4447 Fermi          0          0
+  4 hl -116.496 Fermi          0          0
+  5 hl -242.394 Fermi          0          0
+  6 hl -253.98 Fermi          0          0
+  7 el 2.40765 Fermi          0 3.57567e-41
+  8 el 4.14225 Fermi          0 2.59057e-70
+  9 el 5.01224 Fermi          0 6.2839e-85
+  10 el 5.64229 Fermi          0 1.63625e-95
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.270009 Fermi          0 2.91096e-05
+  1 hl -24.0159 Fermi          0          0
+  2 hl -39.1505 Fermi          0          0
+  3 hl -99.2393 Fermi          0          0
+  4 hl -116.648 Fermi          0          0
+  5 hl -242.24 Fermi          0          0
+  6 hl -253.85 Fermi          0          0
+  7 el 2.46821 Fermi          0 3.43459e-42
+  8 el 4.15199 Fermi          0 1.77746e-70
+  9 el 5.01795 Fermi          0 5.03788e-85
+  10 el 5.63989 Fermi          0 1.79512e-95
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.333797 Fermi          0 2.4687e-06
+  1 hl -24.1132 Fermi          0          0
+  2 hl -39.1849 Fermi          0          0
+  3 hl -98.9937 Fermi          0          0
+  4 hl -116.834 Fermi          0          0
+  5 hl -242.063 Fermi          0          0
+  6 hl -253.707 Fermi          0          0
+  7 el 2.53163 Fermi          0 2.95541e-43
+  8 el 4.16767 Fermi          0 9.69015e-71
+  9 el 5.02481 Fermi          0 3.86296e-85
+  10 el 5.63725 Fermi          0 1.98818e-95
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.40132 Fermi          0 1.81189e-07
+  1 hl -24.2195 Fermi          0          0
+  2 hl -39.2236 Fermi          0          0
+  3 hl -98.7148 Fermi          0          0
+  4 hl -117.048 Fermi          0          0
+  5 hl -241.866 Fermi          0          0
+  6 hl -253.557 Fermi          0          0
+  7 el 2.59388 Fermi          0 2.65956e-44
+  8 el 4.19045 Fermi          0 4.0147e-71
+  9 el 5.03269 Fermi          0 2.8488e-85
+  10 el 5.63445 Fermi          0 2.21607e-95
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.470339 Fermi          0 1.25506e-08
+  1 hl -24.3318 Fermi          0          0
+  2 hl -39.2656 Fermi          0          0
+  3 hl -98.4108 Fermi          0          0
+  4 hl -117.283 Fermi          0          0
+  5 hl -241.656 Fermi          0          0
+  6 hl -253.402 Fermi          0          0
+  7 el 2.65163 Fermi          0 2.8488e-45
+  8 el 4.22099 Fermi          0 1.23201e-71
+  9 el 5.04138 Fermi          0 2.0352e-85
+  10 el 5.63155 Fermi          0 2.47893e-95
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.538904 Fermi          0 8.84735e-10
+  1 hl -24.4472 Fermi          0          0
+  2 hl -39.3099 Fermi          0          0
+  3 hl -98.091 Fermi          0          0
+  4 hl -117.532 Fermi          0          0
+  5 hl -241.439 Fermi          0          0
+  6 hl -253.248 Fermi          0          0
+  7 el 2.70245 Fermi          0  3.989e-46
+  8 el 4.25924 Fermi          0 2.80573e-72
+  9 el 5.05067 Fermi          0 1.42079e-85
+  10 el 5.62862 Fermi          0 2.77582e-95
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.605345 Fermi          0 6.77129e-11
+  1 hl -24.5625 Fermi          0          0
+  2 hl -39.3552 Fermi          0          0
+  3 hl -97.7651 Fermi          0          0
+  4 hl -117.787 Fermi          0          0
+  5 hl -241.219 Fermi          0          0
+  6 hl -253.099 Fermi          0          0
+  7 el 2.74499 Fermi          0 7.69559e-47
+  8 el 4.3043 Fermi          0 4.9092e-73
+  9 el 5.06031 Fermi          0 9.78843e-86
+  10 el 5.62573 Fermi          0 3.10411e-95
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.668234 Fermi          0 5.94547e-12
+  1 hl -24.675 Fermi          0          0
+  2 hl -39.4005 Fermi          0          0
+  3 hl -97.4428 Fermi          0          0
+  4 hl -118.04 Fermi          0          0
+  5 hl -241.003 Fermi          0          0
+  6 hl -252.957 Fermi          0          0
+  7 el 2.77892 Fermi          0 2.07163e-47
+  8 el 4.35446 Fermi          0 7.05295e-74
+  9 el 5.07 Fermi          0 6.72692e-86
+  10 el 5.62294 Fermi          0 3.45877e-95
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.726362 Fermi          0 6.27498e-13
+  1 hl -24.7817 Fermi          0          0
+  2 hl -39.4444 Fermi          0          0
+  3 hl -97.1335 Fermi          0          0
+  4 hl -118.283 Fermi          0          0
+  5 hl -240.796 Fermi          0          0
+  6 hl -252.826 Fermi          0          0
+  7 el 2.80474 Fermi          0 7.63068e-48
+  8 el 4.40736 Fermi          0 9.11303e-75
+  9 el 5.07947 Fermi          0 4.66353e-86
+  10 el 5.62029 Fermi          0 3.83176e-95
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.778704 Fermi          0 8.28226e-14
+  1 hl -24.8801 Fermi          0          0
+  2 hl -39.4857 Fermi          0          0
+  3 hl -96.8462 Fermi          0          0
+  4 hl -118.509 Fermi          0          0
+  5 hl -240.605 Fermi          0          0
+  6 hl -252.708 Fermi          0          0
+  7 el 2.8235 Fermi          0 3.69229e-48
+  8 el 4.4603 Fermi          0 1.17582e-75
+  9 el 5.08842 Fermi          0 3.29858e-86
+  10 el 5.61785 Fermi          0 4.21149e-95
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.824402 Fermi          0 1.42109e-14
+  1 hl -24.9677 Fermi          0          0
+  2 hl -39.5232 Fermi          0          0
+  3 hl -96.5887 Fermi          0          0
+  4 hl -118.712 Fermi          0          0
+  5 hl -240.433 Fermi          0          0
+  6 hl -252.605 Fermi          0          0
+  7 el 2.83652 Fermi          0 2.23117e-48
+  8 el 4.51051 Fermi          0  1.686e-76
+  9 el 5.09657 Fermi          0 2.40678e-86
+  10 el 5.61566 Fermi          0 4.58272e-95
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.862742 Fermi          0 3.10862e-15
+  1 hl -25.0425 Fermi          0          0
+  2 hl -39.5556 Fermi          0          0
+  3 hl -96.368 Fermi          0          0
+  4 hl -118.886 Fermi          0          0
+  5 hl -240.286 Fermi          0          0
+  6 hl -252.518 Fermi          0          0
+  7 el 2.84513 Fermi          0 1.59934e-48
+  8 el 4.5554 Fermi          0 2.96931e-77
+  9 el 5.10365 Fermi          0 1.83023e-86
+  10 el 5.61379 Fermi          0 4.9271e-95
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.893151 Fermi          0 8.88178e-16
+  1 hl -25.1026 Fermi          0          0
+  2 hl -39.582 Fermi          0          0
+  3 hl -96.1901 Fermi          0          0
+  4 hl -119.026 Fermi          0          0
+  5 hl -240.167 Fermi          0          0
+  6 hl -252.45 Fermi          0          0
+  7 el 2.85052 Fermi          0 1.29853e-48
+  8 el 4.59274 Fermi          0 7.00486e-78
+  9 el 5.10943 Fermi          0 1.46386e-86
+  10 el 5.61228 Fermi          0 5.22438e-95
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.915187 Fermi          0 4.44089e-16
+  1 hl -25.1466 Fermi          0          0
+  2 hl -39.6015 Fermi          0          0
+  3 hl -96.0597 Fermi          0          0
+  4 hl -119.129 Fermi          0          0
+  5 hl -240.08 Fermi          0          0
+  6 hl -252.4 Fermi          0          0
+  7 el 2.85366 Fermi          0 1.15008e-48
+  8 el 4.62072 Fermi          0 2.37322e-78
+  9 el 5.1137 Fermi          0 1.24082e-86
+  10 el 5.61116 Fermi          0 5.45455e-95
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.928534 Fermi          0 2.22045e-16
+  1 hl -25.1735 Fermi          0          0
+  2 hl -39.6134 Fermi          0          0
+  3 hl -95.98 Fermi          0          0
+  4 hl -119.192 Fermi          0          0
+  5 hl -240.027 Fermi          0          0
+  6 hl -252.37 Fermi          0          0
+  7 el 2.85525 Fermi          0 1.08114e-48
+  8 el 4.63804 Fermi          0 1.21463e-78
+  9 el 5.11633 Fermi          0 1.12101e-86
+  10 el 5.61048 Fermi          0 5.60046e-95
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.933004 Fermi          0 2.22045e-16
+  1 hl -25.1825 Fermi          0          0
+  2 hl -39.6175 Fermi          0          0
+  3 hl -95.9532 Fermi          0          0
+  4 hl -119.213 Fermi          0          0
+  5 hl -240.009 Fermi          0          0
+  6 hl -252.36 Fermi          0          0
+  7 el 2.85574 Fermi          0 1.06104e-48
+  8 el 4.6439 Fermi          0 9.6827e-79
+  9 el 5.11721 Fermi          0 1.08327e-86
+  10 el 5.61025 Fermi          0 5.65048e-95
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.935655 Fermi          0 2.22045e-16
+  1 hl -25.2468 Fermi          0          0
+  2 hl -39.6351 Fermi          0          0
+  3 hl -96.0018 Fermi          0          0
+  4 hl -119.112 Fermi          0          0
+  5 hl -239.924 Fermi          0          0
+  6 hl -252.199 Fermi          0          0
+  7 el 2.86198 Fermi          0 8.33429e-49
+  8 el 4.63741 Fermi          0 1.2446e-78
+  9 el 5.11664 Fermi          0 1.10727e-86
+  10 el 5.60542 Fermi          0 6.80962e-95
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.942956 Fermi          0 2.22045e-16
+  1 hl -25.4387 Fermi          0          0
+  2 hl -39.6887 Fermi          0          0
+  3 hl -96.1463 Fermi          0          0
+  4 hl -118.812 Fermi          0          0
+  5 hl -239.671 Fermi          0          0
+  6 hl -251.72 Fermi          0          0
+  7 el 2.8805 Fermi          0 4.0714e-49
+  8 el 4.61822 Fermi          0 2.61418e-78
+  9 el 5.11496 Fermi          0 1.1819e-86
+  10 el 5.59117 Fermi          0 1.18204e-94
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.952995 Fermi          0          0
+  1 hl -25.7549 Fermi          0          0
+  2 hl -39.7804 Fermi          0          0
+  3 hl -96.3825 Fermi          0          0
+  4 hl -118.319 Fermi          0          0
+  5 hl -239.257 Fermi          0          0
+  6 hl -250.934 Fermi          0          0
+  7 el 2.91069 Fermi          0 1.26647e-49
+  8 el 4.58716 Fermi          0 8.69243e-78
+  9 el 5.11219 Fermi          0 1.31541e-86
+  10 el 5.5681 Fermi          0 2.88466e-94
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.96276 Fermi          0          0
+  1 hl -26.1897 Fermi          0          0
+  2 hl -39.9135 Fermi          0          0
+  3 hl -96.7039 Fermi          0          0
+  4 hl -117.645 Fermi          0          0
+  5 hl -238.694 Fermi          0          0
+  6 hl -249.86 Fermi          0          0
+  7 el 2.95157 Fermi          0 2.60569e-50
+  8 el 4.54548 Fermi          0 4.35868e-77
+  9 el 5.10841 Fermi          0 1.52266e-86
+  10 el 5.53722 Fermi          0 9.52665e-94
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.968418 Fermi          0          0
+  1 hl -26.7351 Fermi          0          0
+  2 hl -40.0918 Fermi          0          0
+  3 hl -97.1015 Fermi          0          0
+  4 hl -116.803 Fermi          0          0
+  5 hl -237.996 Fermi          0          0
+  6 hl -248.524 Fermi          0          0
+  7 el 3.00182 Fermi          0 3.73023e-51
+  8 el 4.49473 Fermi          0 3.10424e-76
+  9 el 5.1037 Fermi          0 1.8268e-86
+  10 el 5.49978 Fermi          0 4.05337e-93
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.965697 Fermi          0          0
+  1 hl -27.3805 Fermi          0          0
+  2 hl -40.3189 Fermi          0          0
+  3 hl -97.5643 Fermi          0          0
+  4 hl -115.813 Fermi          0          0
+  5 hl -237.183 Fermi          0          0
+  6 hl -246.959 Fermi          0          0
+  7 el 3.05987 Fermi          0 3.94947e-52
+  8 el 4.43659 Fermi          0 2.94166e-75
+  9 el 5.09818 Fermi          0 2.26161e-86
+  10 el 5.45726 Fermi          0 2.09959e-92
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.950378 Fermi          0          0
+  1 hl -28.1128 Fermi          0          0
+  2 hl -40.5975 Fermi          0          0
+  3 hl -98.0795 Fermi          0          0
+  4 hl -114.698 Fermi          0          0
+  5 hl -236.277 Fermi          0          0
+  6 hl -245.203 Fermi          0          0
+  7 el 3.12394 Fermi          0 3.31299e-53
+  8 el 4.37276 Fermi          0 3.47482e-74
+  9 el 5.09199 Fermi          0 2.87406e-86
+  10 el 5.41122 Fermi          0 1.24642e-91
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.918843 Fermi          0 4.44089e-16
+  1 hl -28.916 Fermi          0          0
+  2 hl -40.9284 Fermi          0          0
+  3 hl -98.6328 Fermi          0          0
+  4 hl -113.483 Fermi          0          0
+  5 hl -235.302 Fermi          0          0
+  6 hl -243.3 Fermi          0          0
+  7 el 3.19212 Fermi          0 2.37062e-54
+  8 el 4.30482 Fermi          0 4.81193e-73
+  9 el 5.08527 Fermi          0 3.72649e-86
+  10 el 5.36322 Fermi          0 7.98046e-91
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.868621 Fermi          0 2.66454e-15
+  1 hl -29.7714 Fermi          0          0
+  2 hl -41.3095 Fermi          0          0
+  3 hl -99.209 Fermi          0          0
+  4 hl -112.198 Fermi          0          0
+  5 hl -234.286 Fermi          0          0
+  6 hl -241.299 Fermi          0          0
+  7 el 3.26243 Fermi          0 1.56164e-55
+  8 el 4.23421 Fermi          0 7.38868e-72
+  9 el 5.07821 Fermi          0 4.89687e-86
+  10 el 5.31477 Fermi          0 5.19923e-90
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.798866 Fermi          0 3.79696e-14
+  1 hl -30.6578 Fermi          0          0
+  2 hl -41.7355 Fermi          0          0
+  3 hl -99.7924 Fermi          0          0
+  4 hl -110.874 Fermi          0          0
+  5 hl -233.255 Fermi          0          0
+  6 hl -239.254 Fermi          0          0
+  7 el 3.33292 Fermi          0 1.02198e-56
+  8 el 4.16223 Fermi          0 1.19609e-70
+  9 el 5.07099 Fermi          0 6.47456e-86
+  10 el 5.26725 Fermi          0 3.26693e-89
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.710674 Fermi          0 1.1513e-12
+  1 hl -31.5517 Fermi          0          0
+  2 hl -42.1966 Fermi          0          0
+  3 hl -100.367 Fermi          0          0
+  4 hl -109.545 Fermi          0          0
+  5 hl -232.239 Fermi          0          0
+  6 hl -237.218 Fermi          0          0
+  7 el 3.40167 Fermi          0 7.15316e-58
+  8 el 4.09011 Fermi          0 1.94632e-69
+  9 el 5.06381 Fermi          0 8.54829e-86
+  10 el 5.2219 Fermi          0 1.88798e-88
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.607217 Fermi          0 6.29823e-11
+  1 hl -32.4278 Fermi          0          0
+  2 hl -42.6792 Fermi          0          0
+  3 hl -100.917 Fermi          0          0
+  4 hl -108.247 Fermi          0          0
+  5 hl -231.264 Fermi          0          0
+  6 hl -235.248 Fermi          0          0
+  7 el 3.46688 Fermi          0 5.74076e-59
+  8 el 4.01913 Fermi          0 3.03148e-68
+  9 el 5.05686 Fermi          0 1.11831e-85
+  10 el 5.17977 Fermi          0 9.63371e-88
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.493641 Fermi          0 5.0957e-09
+  1 hl -33.2597 Fermi          0          0
+  2 hl -43.1654 Fermi          0          0
+  3 hl -101.428 Fermi          0          0
+  4 hl -107.018 Fermi          0          0
+  5 hl -230.357 Fermi          0          0
+  6 hl -233.4 Fermi          0          0
+  7 el 3.52691 Fermi          0 5.63111e-60
+  8 el 3.95071 Fermi          0 4.27658e-67
+  9 el 5.05035 Fermi          0 1.43857e-85
+  10 el 5.14173 Fermi          0 4.19528e-87
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.376763 Fermi          0 4.68453e-07
+  1 hl -34.0207 Fermi          0          0
+  2 hl -43.6343 Fermi          0          0
+  3 hl -101.887 Fermi          0          0
+  4 hl -105.895 Fermi          0          0
+  5 hl -229.544 Fermi          0          0
+  6 hl -231.728 Fermi          0          0
+  7 el 3.58027 Fermi          0 7.14678e-61
+  8 el 3.88656 Fermi          0 5.11311e-66
+  9 el 5.04447 Fermi          0 1.80627e-85
+  10 el 5.10851 Fermi          0 1.51688e-86
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.264562 Fermi          0 3.59373e-05
+  1 hl -34.6854 Fermi          0          0
+  2 hl -44.0625 Fermi          0          0
+  3 hl -102.279 Fermi          0          0
+  4 hl -104.914 Fermi          0          0
+  5 hl -228.846 Fermi          0          0
+  6 hl -230.283 Fermi          0          0
+  7 el 3.62571 Fermi          0 1.23278e-61
+  8 el 3.82878 Fermi          0 4.77891e-65
+  9 el 5.03938 Fermi          0 2.19873e-85
+  10 el 5.08065 Fermi          0 4.45626e-86
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.1655 Fermi          0 0.00165578
+  1 hl -35.23 Fermi          0          0
+  2 hl -44.4266 Fermi          0          0
+  3 hl -102.596 Fermi          0          0
+  4 hl -104.11 Fermi          0          0
+  5 hl -228.282 Fermi          0          0
+  6 hl -229.108 Fermi          0          0
+  7 el 3.66215 Fermi          0 3.0106e-62
+  8 el 3.77981 Fermi          0 3.17701e-64
+  9 el 5.03526 Fermi          0 2.5793e-85
+  10 el 5.05858 Fermi          0 1.04638e-85
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.0876875 Fermi          0  0.0325496
+  1 hl -35.6346 Fermi          0          0
+  2 hl -44.7049 Fermi          0          0
+  3 hl -102.829 Fermi          0          0
+  4 hl -103.512 Fermi          0          0
+  5 hl -227.868 Fermi          0          0
+  6 hl -228.241 Fermi          0          0
+  7 el 3.68878 Fermi          0 1.07481e-62
+  8 el 3.74226 Fermi          0 1.35782e-63
+  9 el 5.03221 Fermi          0 2.90157e-85
+  10 el 5.04261 Fermi          0 1.9406e-85
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.0379337 Fermi          0   0.187347
+  1 hl -35.8838 Fermi          0          0
+  2 hl -44.8796 Fermi          0          0
+  3 hl -102.971 Fermi          0          0
+  4 hl -103.144 Fermi          0          0
+  5 hl -227.615 Fermi          0          0
+  6 hl -227.709 Fermi          0          0
+  7 el 3.70499 Fermi          0 5.74013e-63
+  8 el 3.71855 Fermi          0 3.39708e-63
+  9 el 5.03035 Fermi          0 3.11868e-85
+  10 el 5.03295 Fermi          0 2.81979e-85
+
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using LAPACK
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -0.0208107 Fermi          0   0.308958
+  1 hl -35.968 Fermi          0          0
+  2 hl -44.9392 Fermi          0          0
+  3 hl -103.019 Fermi          0          0
+  4 hl -103.019 Fermi          0          0
+  5 hl -227.53 Fermi          0          0
+  6 hl -227.53 Fermi          0          0
+  7 el 3.71044 Fermi          0 4.64996e-63
+  8 el 3.71044 Fermi          0 4.64994e-63
+  9 el 5.02972 Fermi          0 3.19542e-85
+  10 el 5.02972 Fermi          0 3.19541e-85
+
+
+Total solve time: 0h 0m 0.6s
+Simulation finished.
+
+4 warnings during run
+0 errors detected
+
+
+Log end: Sun Apr 14 13:47:54 2019
+
+
