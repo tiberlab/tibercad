@@ -86,6 +86,9 @@ class ModelOptions
      */
     const std::string& get_name(void) const;
 
+    //! Get the index of the model
+    int get_index(void) const;
+
 
     //! Get an option as string as given in input file
     std::string get_raw_option_string(const std::string& name) const;
@@ -323,6 +326,12 @@ class ModelOptions
      */
     std::string _name;
 
+    //! A counter used to count blocks of the same type
+    /*!
+     * This can be used to identify submodels based on the order they are defined
+     */
+    int _index;
+
     //! The map holding all options
     OptionsMap _options;
 
@@ -348,7 +357,8 @@ class ModelOptions
 inline
 ModelOptions::ModelOptions(void) :
   _key(""),
-  _name("")
+  _name(""),
+  _index(-1)
 {
 
 }
@@ -381,6 +391,12 @@ ModelOptions::get_key(void) const
 }
 
 
+inline
+int
+ModelOptions::get_index(void) const
+{
+  return(_index);
+}
 
 
 inline

@@ -206,6 +206,11 @@ ModelOptions::add_submodel(const string& name,
   SubmodelMap::iterator it(_submodels.insert(SubmodelMap::value_type(name, options)));
   assert(it != _submodels.end());
   it->second.set_key(name);
+
+  // index will only be set if it is not already set in the input
+  // options
+  if (it->second._index < 0)
+    it->second._index = (_submodels.count(name) - 1);
 }
 
 
@@ -230,8 +235,19 @@ ModelOptions::operator+=(const ModelOptions& rhs)
   const_submodel_iterator subit(rhs.submodels_begin());
   const const_submodel_iterator subend(rhs.submodels_end());
 
-  for ( ; subit != subend; ++subit)
-    add_submodel(subit->first, subit->second);
+  vector<const_submodel_iterator> ordered;
+  ordered.reserve(rhs._submodels.size());
+
+  for (int id = 0; subit != subend; ++subit, ++id)
+  {
+    if (ordered.size() <= id)
+      ordered.resize(id+1);
+
+    ordered[id] = subit;
+  }
+
+  for (int id = 0; id < ordered.size(); ++id)
+    add_submodel(ordered[id]->first, ordered[id]->second);
 
   return *this;
 }

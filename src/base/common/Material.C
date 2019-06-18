@@ -150,7 +150,7 @@ Material::create(const std::string& name, const ModelOptions& options)
     double x_B = comp_it->second.get_option("x", 0.5);
 
     // we use this to disable database files
-    alloy_opts["datafile"] = alloy_opts.get_option("datafile", "none");
+    alloy_opts["datafile"] = alloy_opts.get_option("datafile", "");
 
     mat = Alloy::create(alloy_opts.get_name(), alloy_opts);
 
