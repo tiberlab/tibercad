@@ -608,7 +608,7 @@ DriftDiffusion::do_solve(void)
   {
     solve_equilibrium();
 
-    build_local_scaling();
+    //build_local_scaling();
 
     // if we would repeat the equilibrium simulation, we can stop now
     if (equilibrium)
@@ -660,7 +660,7 @@ DriftDiffusion::do_solve(void)
   // NOTE we calculate the local scaling factors AFTER, because otherwise
   // new results of other coupled models (thermal, quantum) may disturb
   // the calculation
-  build_local_scaling();
+  //build_local_scaling();
 
   get_my_options().coupling = coupling;
 
@@ -958,7 +958,7 @@ DriftDiffusion::do_equilibrium(void)
   // make a rough guess
   guess_equilibrium();
 
-  build_local_scaling();
+  //build_local_scaling();
 
 
 
@@ -1345,7 +1345,7 @@ DriftDiffusion::do_set_to_remembered_solution(ID id)
   SimulationInterface::do_set_to_remembered_solution(id);
 
   get_environment().prepare_for_solve();
-  build_local_scaling();
+  //build_local_scaling();
 
 }
 
@@ -4642,7 +4642,6 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 
   START_LOG(get_name() + ": Matrix assembly", "");
 
-  //build_local_scaling();
 
   // references for nicer code
   const MeshBase& mesh = get_mesh();
@@ -4660,7 +4659,8 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
   libMesh::NumericVector<Number>& loc_scaling = system.get_vector("scaling");
   //SparseMatrix<double>& sysmat = system.get_matrix("Preconditioner");
   //if (residual != NULL)
-  //if (jacobian != NULL)
+  if (jacobian != NULL)
+    build_local_scaling();
   //  sysmat.zero();
 
   //

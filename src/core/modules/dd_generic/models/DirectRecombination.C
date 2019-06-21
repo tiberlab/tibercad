@@ -57,6 +57,8 @@ DirectRecombination::do_init(void)
     // TODO should check for consistency of regions
   }
 
+  get_parameter("extraction_barrier", _extraction_barrier);
+
 }
 
 
@@ -155,6 +157,10 @@ DirectRecombination::calculate_rate_and_derivatives(std::vector<double>& R, std:
     double dn2 = dd.get_q_density_derivative(id2);
     double Ef1 = -dd.get_q_fermi_potential(id1);
     double Ef2 = -dd.get_q_fermi_potential(id2);
+
+    if (_extraction_barrier > 0)
+      kT = _extraction_barrier;
+
     double beta = (ct1 == 'e') ? 1.0/kT : -1.0/kT;
 
     double thermal = exp(-fabs(E2 - E1) / kT);

@@ -193,7 +193,7 @@ class DriftDiffusionProperties : public PhysicalModel
 
     //! Get the ID of a carrier
     /*!
-     * \return -1 if \c name is not present
+     * \return \c unknown_carrier_id if \c name is not present
      *
      * This method should be called only with carrier names known
      * to be present.
@@ -1265,7 +1265,7 @@ inline
 int
 DriftDiffusionProperties::get_carrier_id(const std::string& name) const
 {
-  int id = -1;
+  int id = unknown_carrier_id;
   for (unsigned int i = 0; i < _known_carriers_ordered.size(); ++i)
   {
     if (name == _known_carriers_ordered[i])

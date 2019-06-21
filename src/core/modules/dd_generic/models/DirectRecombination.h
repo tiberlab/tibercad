@@ -51,6 +51,8 @@ class TBDLLOCAL DirectRecombination : public RecombinationModelInterface
     //! Recombination rate parameter
     double C_;
 
+    double _extraction_barrier;
+
     //! The quantum optics simulation, if available
     SimulationInterface* _quantum_optics;
 
@@ -76,6 +78,7 @@ inline
 DirectRecombination::DirectRecombination(const ModelOptions& options)
   : RecombinationModelInterface(options),
     C_(0.0),
+    _extraction_barrier(0.0),
     _quantum_optics(NULL)
 {
 }

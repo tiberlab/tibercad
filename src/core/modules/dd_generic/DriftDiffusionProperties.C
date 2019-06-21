@@ -129,6 +129,7 @@ DriftDiffusionProperties::prepare_submodels(void)
 
   }
 
+  _grad_fermi.resize(n_known_carriers());
 
 }
 
@@ -427,7 +428,8 @@ DriftDiffusionProperties::calculate_traps(void)
     for (auto&& trap : _etraps)
     {
       // get coupled carriers
-      vector<string> carriers({"electrons", "holes"});
+      //vector<string> carriers({"electrons", "holes"});
+      vector<string> carriers;
       trap->get_options().get_option("carriers", carriers);
       if (carriers.size() != 2)
         throw InitFailedException("trap declaration needs two carriers");
@@ -478,7 +480,8 @@ DriftDiffusionProperties::calculate_traps(void)
     for (auto&& trap : _htraps)
     {
       // get coupled carriers
-      vector<string> carriers({"electrons", "holes"});
+      //vector<string> carriers({"electrons", "holes"});
+      vector<string> carriers;
       trap->get_options().get_option("carriers", carriers);
       if (carriers.size() != 2)
         throw InitFailedException("trap declaration needs two carriers");
