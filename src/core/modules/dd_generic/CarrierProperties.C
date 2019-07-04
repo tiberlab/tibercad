@@ -90,6 +90,8 @@ CarrierProperties::do_init(void)
 {
   _carrier_id = this->get_driftdiffusionproperties().get_carrier_id(_particle_name);
 
+  _mobility_model->set_carrier(_carrier_id);
+
   _background_conductivity = get_option("background_conductivity", _background_conductivity);
 
   string conductivity_model("standard");
@@ -147,7 +149,8 @@ CarrierProperties::prepare_submodels(void)
 
   create_submodel(_mobility_model, "mobility", it->second);
   _mobility_model->set_carrier_type(_particle);
-  _mobility_model->set_carrier(_carrier_id);
+  // this is still undefined here
+  //_mobility_model->set_carrier(_carrier_id);
 
   if (++it != get_options().submodels_end("mobility"))
     throw InitFailedException("Carrier " + this->get_particle_name() +

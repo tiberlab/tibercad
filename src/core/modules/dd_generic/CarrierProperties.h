@@ -177,6 +177,8 @@ class CarrierProperties : public DriftDiffusionModelInterface
 
   private:
 
+    CarrierProperties(const CarrierProperties& cp);
+
     //! The different conductivity models available
     enum ConductivityModel
     {
