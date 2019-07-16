@@ -4630,6 +4630,112 @@ DriftDiffusion::assemble_system(const libMesh::NumericVector<Number>& x,
 
 
 
+void
+DriftDiffusion::do_check_nonlinear_step(
+        libMesh::NumericVector<Number>& dx)
+{
+  if (!get_option("limit_step", true)) return;
+  // references for nicer code
+  const MeshBase& mesh = get_mesh();
+  TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
+
+  const unsigned int dim = mesh.mesh_dimension();
+
+  //const Device& device = *_device;
+  const SimulationEnvironment& environment = get_environment();
+
+  const libMesh::DofMap& dof_map = system.get_dof_map();
+
+  // numeric ids corresponding to the variables
+  const unsigned int u_var = system.variable_number("potential");
+
+  vector<unsigned int> dof_indices;
+  vector<unsigned int> dof_indices_u;
+  // dof indices vectors for fermi potentials are defined within element loop
+  // since different variables can ben set in different regions
+
+
+
+  MeshBase::const_element_iterator el =
+                                  this->active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el =
+                                  this->active_local_elements_end();
+
+  // loop over all active elements
+  for ( ; el != end_el ; ++el)
+  {
+    const Elem* elem = *el;
+    const Elem* top_parent = (*el)->top_parent();
+
+    ID subdomain = elem->subdomain_id();
+
+    DDBulkModel* sc = get_bulk_model<DDBulkModel>(elem);
+
+    // Get variables for fermi potentials
+    set<ID> q_var;
+
+    // we will loop only over carriers that are present in this element
+    q_var.insert(u_var);
+    for (auto&& cp : sc->get_carrier_properties())
+      q_var.insert(cp.first);
+
+
+    //Get dof indices
+    map<unsigned int, vector<unsigned int>> dof_indices_var;
+
+    dof_indices.clear();
+
+    for (auto var : q_var)
+    {
+      //insert variable number and dof indices for the element
+      dof_map.dof_indices(elem, dof_indices_var[var], var);
+      dof_indices.insert(dof_indices.end(),
+          dof_indices_var[var].begin(), dof_indices_var[var].end());
+    }
+
+    for (auto&& scalar : _conservation)
+    {
+      unsigned int dof = scalar.first;
+      dof_map.dof_indices(elem, dof_indices_var[dof], dof);
+      dof_indices.insert(dof_indices.end(),
+          dof_indices_var[dof].begin(), dof_indices_var[dof].end());
+    }
+
+    // dof_indices now contains all DOFs, also scalar ones
+
+    // they have all the same number of DOFs
+    unsigned int n_dofs     = dof_indices_var[u_var].size();
+    unsigned int n_dofs_tot = dof_indices.size();
+
+    for (unsigned int i = 0; i < n_dofs; ++i)
+    {
+      double dmax = 0;
+      for (auto& cp : sc->get_carrier_properties())
+      {
+        ID var = cp.first;
+        double chrg = sc->get_carrier_properties(var)->get_charge();
+
+        if (chrg != 0) chrg = fabs(chrg);
+        double chempot = fabs(dx(dof_indices_var[var][i]) -
+          chrg * dx(dof_indices_var[u_var][i]));
+
+        if (chempot > dmax) dmax = chempot;
+      }
+
+      double maxstep = 10;
+      if (dmax > maxstep)
+      {
+        for (auto var : q_var)
+        {
+          double value = maxstep * dx.el(dof_indices_var[var][i]) / dmax;
+          dx.set(dof_indices_var[var][i], value);
+        }
+
+      }
+    }
+  }
+  dx.close();
+}
 
 
 

@@ -387,6 +387,10 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
     virtual void do_load_data(std::istream& is);
 
 
+    //! Check and limit the nonlinear step size
+virtual void do_check_nonlinear_step(
+        libMesh::NumericVector<Number>& dx);
+
 
   private:
 
