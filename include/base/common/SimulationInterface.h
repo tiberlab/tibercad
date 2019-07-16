@@ -362,6 +362,9 @@ class SimulationInterface : public TiberModelObject
     libMesh::NumericVector<double>* get_remembered_solution(ID id);
 
 
+    //! For nonlinear solvers, check the proposed step size
+    void check_nonlinear_step(libMesh::NumericVector<Number>& dx);
+
     /*!
      * \brief Get the maximum norm of the difference between the
      * current and a remembered solution.
@@ -985,6 +988,9 @@ class SimulationInterface : public TiberModelObject
      */
     void do_analyze_errors(const ModelOptions& options);
 
+    //! Check the nonlinear step, if necessary
+    virtual void do_check_nonlinear_step(
+        libMesh::NumericVector<Number>& dx);
 
     //! Find excluded DoFs
     /*!

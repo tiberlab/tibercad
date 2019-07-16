@@ -913,6 +913,18 @@ SimulationInterface::find_solution_provider(const string& simulation,
   return result;
 }
 
+void
+SimulationInterface::check_nonlinear_step(libMesh::NumericVector<Number>& dx)
+{
+  do_check_nonlinear_step(dx);
+}
+
+
+void
+SimulationInterface::do_check_nonlinear_step(libMesh::NumericVector<Number>& dx)
+{
+
+}
 
 void
 SimulationInterface::get_region_ids(std::set<ID>& region_ids) const

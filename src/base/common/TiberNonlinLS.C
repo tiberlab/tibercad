@@ -5,6 +5,7 @@
 #include "TiberLinearSolver.h"
 #include "TiberPetscLinearSolver.h"
 #include "InitFailedException.h"
+#include "SimulationInterface.h"
 
 #include "SolveFailedException.h"
 #include "PetscDivergedError.h"
@@ -46,6 +47,10 @@ TiberNonlinLS::do_solve(void)
 
   assert(_assemble != NULL);
 
+  SimulationInterface* sim =
+      SimulationInterface::find_simulation(
+          get_options().get_option("simulation", ""));
+
   // the ghosted solution vector
   NumericVector<Number>& u = get_solution_vector();
   if (!u.closed()) u.close();
@@ -53,6 +58,8 @@ TiberNonlinLS::do_solve(void)
   // the linear system solution
   libMesh::UniquePtr<NumericVector<Number> > du_ptr = solution->clone();
   NumericVector<Number>& du = *du_ptr;
+  //libMesh::UniquePtr<NumericVector<Number> > du_ptr_t = solution->clone();
+  //NumericVector<Number>& du_t = *du_ptr_t;
 
   // the old local solution values
   libMesh::UniquePtr<NumericVector<Number> > u_old_ptr = solution->clone();
@@ -114,6 +121,9 @@ TiberNonlinLS::do_solve(void)
 
 
     du.close();
+    //du_t = du;
+
+    sim->check_nonlinear_step(du);
 
     // the l2 norm of the current residual
     //norm_rhs = rhs->l2_norm();
@@ -292,10 +302,10 @@ TiberNonlinLS::do_solve(void)
 
 
 
-    //if (norm_du > _max_step_size)
+    //if (norm_du > get_max_abs_step())
     //{
-    //  du.scale(_max_step_size / norm_du);
-    //  norm_du = _max_step_size;
+    //  du.scale(get_max_abs_step() / norm_du);
+    //  norm_du = get_max_abs_step();
     //}
 
     {
