@@ -961,7 +961,8 @@ DriftDiffusion::do_equilibrium(void)
   //build_local_scaling();
 
 
-
+  bool limitstep = get_option("limit_step", false);
+  get_options().set_option("limit_step", false);
   try
   {
     Messages::info("Solving equilibrium");
@@ -977,6 +978,8 @@ DriftDiffusion::do_equilibrium(void)
     Messages::error(os.str());
     throw (e);
   }
+  //build_local_scaling();
+  get_options().set_option("limit_step", limitstep);
 
   // set the contact voltages back to the desired values
   it = sim_voltages.begin();
@@ -4634,7 +4637,7 @@ void
 DriftDiffusion::do_check_nonlinear_step(
         libMesh::NumericVector<Number>& dx)
 {
-  if (!get_option("limit_step", true)) return;
+  if (!get_option("limit_step", false)) return;
   // references for nicer code
   const MeshBase& mesh = get_mesh();
   TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
