@@ -31,7 +31,8 @@ Kspace::symmetry_names = {"Gamma", "linear", "quadratic", "rectangular",
 Kspace::Kspace(const ModelOptions& options, const libMesh::Parallel::Communicator& comm)
  : mod_opt(options),
    _mesh_order(libMesh::FIRST),
-   k_max(1, 1, 1)
+   k_max(1, 1, 1),
+   k_space_symmetry(GAMMA)
 {
   kmesh = NULL;
 
@@ -731,17 +732,20 @@ void Kspace::find_k_space_symmetry()
         }
       }
     }
-    else if (Utils::almost_equal::compare(angle12, 60, 1e-5))
+    else if (Utils::almost_equal::compare(angle12, 60, 1e-5) ||
+        Utils::almost_equal::compare(angle12, 120, 1e-5))
     {
       k_space_symmetry = HEXAGONAL;
     }
-    else if (Utils::almost_equal::compare(angle13, 60, 1e-5))
+    else if (Utils::almost_equal::compare(angle13, 60, 1e-5) ||
+        Utils::almost_equal::compare(angle13, 120, 1e-5))
     {
       b2 = 2;
       b3 = 1;
       k_space_symmetry = HEXAGONAL;
     }
-    else if (Utils::almost_equal::compare(angle23, 60, 1e-5))
+    else if (Utils::almost_equal::compare(angle23, 60, 1e-5) ||
+        Utils::almost_equal::compare(angle23, 120, 1e-5))
     {
       b1 = 1;
       b2 = 2;
@@ -752,7 +756,7 @@ void Kspace::find_k_space_symmetry()
     else
       std::cout << "The Brillouin zone is not defined for a structure with"
       " one of the given angles between the basis vectors: "
-      << angle12 << ", " << angle13 << " or " << angle23 << std::endl;
+      << angle12 << ", " << angle13 << " and " << angle23 << std::endl;
   }
 
   switch (k_space_symmetry)
