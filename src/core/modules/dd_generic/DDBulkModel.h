@@ -264,23 +264,6 @@ class DDBulkModel : public DriftDiffusionProperties
     libMesh::RealVectorValue _polarization;
 
 
-    //! A background conductivity
-    /*!
-     * Mainly used for stability reasons in pathologic cases
-     * Units are S/cm
-     */
-    double _background_conductivity;
-
-    
-    //! A background conductivity for holes
-    /*!
-     * Mainly used for stability reasons in pathologic cases
-     * Units are S/cm
-     */
-    //double _background_conductivity_h;
-
-
-
     //! The copy constructor is disabled
     DDBulkModel(const DDBulkModel& rhs);
 
