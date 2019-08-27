@@ -12,6 +12,13 @@ New features:
 	  and use binning based on counting atoms
 
 
+Version 3.0.2
+-------------
+
+Bug fixes:
+	- fixed a bug in dssc_generation for cylindrical symmetry
+
+
 Version 3.0.0
 -------------
 

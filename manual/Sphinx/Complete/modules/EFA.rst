@@ -508,12 +508,19 @@ The main parameters are:
  ``dE``:
     energy step
 
+ ``line_shape``: 
+     gaussian | lorentzian
+
  ``polarization`` :  vector
       light polarization 
 
  ``plot`` :
-    to  select  spectrum in *k=0* (:math:`\Gamma` point)  or  spectrum integrated in k-space 
+    *optical_spectrum_k_0* to  select  spectrum in *k=0* (:math:`\Gamma` point) 
 
+    *optical_spectrum* to  select k-space integrated optical emission spectrum
+    (see in the following)
+
+    *matrix_elements* to  select calculation of  the optical matrix elements 
 
 Here, ``initial_state_model`` and ``final_state_model`` are, respectively, the quantum simulations 
 ( ``efaschroedinger`` module) associated respectively to the initial state of the optical

@@ -105,6 +105,27 @@ Solver section
 The ``Solver`` section of the Drift-Diffusion module refers to a nonlinear solver. 
 See  :ref:`Nonlinear_solver` for details on nonlinear solver options.
 
+Usually the default options provide a good convergence to the solution.
+Anyway there could be special cases where they can fail.
+
+In particular, it has been found that for **1D** simulations performed in **parallel** with MPI, the default linear solver may fail.  In this case it can be improved  by choosing **gmres** as a Krylov subspace method, in this way: ::
+
+  
+  Solver
+   {
+    
+    linear_solver
+    {
+      method = gmres
+    }
+   }
+
+
+   
+For serial calculations and for 2D and 3D simulations the default choice is suggested.
+
+
+
 Physics section
 --------------------
 

@@ -2,9 +2,11 @@
 #Example 13: Si-nanowire FET
 
 
+
 Device
 {
-  meshfile = Si_NWFET.msh  
+  meshfile = Si_NWFET.msh 
+
   mesh_units = 1e-9
 
   material = Si
@@ -46,9 +48,7 @@ Module driftdiffusion
 
   quadrature_rule = trapez
 
-  plot = (Ec, Ev, eQFermi, eQFermi, eDensity, hDensity,
-          eCurrentDensity, hCurrentDensity, NetRecombination,
-          ElField, ElPotential, ContactCurrent)
+   plot = (Ec, Ev, eQFermi, eQFermi, eDensity, hDensity, eCurrentDensity, hCurrentDensity, NetRecombination, ElField, ElPotential, ContactCurrent)
 
   Physics
   {
@@ -57,6 +57,12 @@ Module driftdiffusion
       low_field_model = doping_dependent
     }
   }
+
+  Solver	
+  {		
+    max_iterations = 30
+  }
+
 
 
   Contact gate
@@ -87,28 +93,30 @@ Module sweep
   variable = $Vd
   start = 0.0
   stop = 3.5
-  steps = 70 
+  steps = 70  
+  # plot_data = true
+
 }
 
-Module sweep
+Module sweep  
 {
   name = sweep_gate
   variable = $Vg
-  start = -0.5
-  stop = 2.0
-  steps =  10 
+  start = -0.5 
+  stop = 1.5 
+  steps =  8 
   max_step = 0.2
   solve = sweep_drain 
   plot_data = true
 }
 
-Module sweep
+Module sweep  
 {
   name = transchar
   variable = $Vg
-  start = 2.0
+  start = 1.5 
   stop = -0.5
-  steps =  100 
+  steps = 80 
   solve = driftdiffusion 
 }
 
@@ -119,10 +127,15 @@ Module sweep
 Simulation
 {
   temperature = 300
+ 
   solve = (sweep_gate, transchar)
-  resultpath = output_IV  
+
+  resultpath = output
+
   output_format = vtk
 }
+
+
 
 
 

@@ -563,6 +563,9 @@ Compiler::Compiler(const ModelOptions& options) :
 
   _linker_flags += options.get_option("linker_flags", "");
 
+  BuildModule::replace(_linker_flags, "@ROOT", BuildModule::tc_root);
+  BuildModule::replace(_linker_flags, "@ARCH", ARCH);
+
   if ((ARCH == "i686-w64-mingw32") || (ARCH == "x86_64-w64-mingw32"))
   {
     BuildModule::replace(_compiler_flags, "-fPIC", "");

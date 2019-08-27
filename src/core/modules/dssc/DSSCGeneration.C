@@ -169,6 +169,7 @@ DSSCGeneration::get_solution_secure(const Elem* elem,
   //vector<unsigned int> dof_indices_g;
 
   const vector<vector<Real> >& phi = fe->get_phi();
+  const vector<Point>& xyz = fe->get_xyz();
 
   fe->reinit(elem, &p);
 
