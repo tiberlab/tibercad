@@ -98,7 +98,14 @@ C44 = 48
 [pyroelectricity]
 Pz = -0.042
 
-
+# for nonlinear model
+[polarization/PRB88]
+# PRB 88, 121304 
+Pz = -0.035
+e33 = 1.14
+e31 = -0.59
+e15 = -0.43
+2nd_order_coefficients = (4.5, 2.8, 1.6, 4.8, 3.7, 0.5, -18.6, 0.5)
 
 #
 # mobility
