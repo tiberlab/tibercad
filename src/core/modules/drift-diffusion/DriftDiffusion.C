@@ -5421,7 +5421,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
   else
   {
     residual->close();
-    write_nodal_vector("residual", *residual);
+    //write_nodal_vector("residual", *residual);
 
     //sysmat.close();
     //sysmat.print_matlab("sysmat.m");
