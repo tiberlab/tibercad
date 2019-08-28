@@ -3,7 +3,7 @@
 Device
 {
   
-  meshfile = bulk0.0.msh
+  meshfile = bulk.msh
   mesh_units = 1e-9
 
   y-growth-direction = (1,0,-1,0)
@@ -309,7 +309,8 @@ Module empirical_tb
 
   Dispersion
   {
-    k_path = (G, X)
+    k_path = G-X
+    number_of_nodes = 20
   }
 
 #  DOS
