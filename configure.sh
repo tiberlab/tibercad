@@ -59,4 +59,5 @@ fi
   --disable-pardiso \
   ${CONFIGOPTS} \
   --with-libmesh-prefix=${LIBMESHDIR} \
+  --with-cuda=/usr/pack/cudatoolkit-5.5.11-ma \
   --with-libmesh-petsc-libdir=${SDKDIR}/${ARCH}-linux/lib
