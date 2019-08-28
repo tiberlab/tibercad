@@ -418,7 +418,8 @@ void
 DDBulkModel::do_reinit(const Elem* elem)
 {
 
-  if (get_element() != elem)
+  if ((get_element() != elem) ||
+      _nodal_lattice_vt.empty())
   {
     set_coordinates(elem, elem->centroid());
 
