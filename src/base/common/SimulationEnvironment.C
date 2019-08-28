@@ -360,37 +360,12 @@ SimulationEnvironment::prepare_for_solve(void)
   if (!_is_initialized)
     init();
 
-  MeshBase& mesh = get_mesh();
-
-  MeshBase::element_iterator it = mesh.elements_begin();
-  const MeshBase::element_iterator end = mesh.elements_end();
-/*
-  for ( ; it != end; ++it)
-  {
-    Elem* el = *it;
-
-    if (contains_element(el))
-      el->set_refinement_flag(Elem::DO_NOTHING);
-    else
-      el->set_refinement_flag(Elem::INACTIVE);
-  }
-*/
-  invalidate_all();
 
   _is_prepared = true;
 }
 
 
 
-void
-SimulationEnvironment::invalidate_all(void)
-{
-  EnvironmentSet::iterator it(_environments.begin());
-  const EnvironmentSet::iterator end(_environments.end());
-
-  for ( ; it != end; ++it)
-    (*it)->invalidate();
-}
 
 
 void

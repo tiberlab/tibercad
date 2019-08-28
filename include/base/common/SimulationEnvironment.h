@@ -379,10 +379,6 @@ class SimulationEnvironment
     bool is_prepared(void) const;
 
 
-    //! Set the \c unprepared flag
-    void invalidate(void);
-
-
     //! Get the region numbers
     const std::set<ID>& get_region_ids(void) const;
 
@@ -421,13 +417,6 @@ class SimulationEnvironment
 
     //! Calculate the bounding box
     void calculate_bounding_box(void);
-
-
-    //! Invalidate all relevant environments
-    /*!
-     * Marks all environments as unprepared
-     */
-    static void invalidate_all(void) TBDLLOCAL;
 
 
 
@@ -537,12 +526,6 @@ SimulationEnvironment::is_prepared(void) const
 }
 
 
-inline
-void
-SimulationEnvironment::invalidate(void)
-{
-  _is_prepared = false;
-}
 
 
 

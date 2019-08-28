@@ -597,26 +597,7 @@ class SimulationInterface : public TiberModelObject
      * \see SolutionDescriptor
      */
     bool get_solution(std::map<ID, std::vector<double> >& values);
-////
-    //! Get some value not directly associated to the mesh.
-    /*!
-     *  It is used to get some value that needs a module to be calculated,
-     *  but that is not associated to the mesh (elem or node).
-     *  For example it could be a value interpolated from a look-up table.
-     *
-     *  Each value is identified by an ID (value_id)
-     *  Each value may depend on several parameters, identified by IDs
-     *  The derivative of value w.r.t. a parameter is identified 
-     *  by the ID of the corresponding parameter (dvar_id)
-     */
-    std::pair<double, double> get_value_and_derivative(ID value_id, std::map<ID, double> params, ID dvar_id = INVALID_ID);
 
-    //! Get the value id
-    ID get_value_id(std::string name);
-
-    //! Get the parameter id for a specific value
-    ID get_param_id(std::string name, ID value_id); 
-////
     /*!
      * \copydoc build_nodal_results()
      *
@@ -1300,18 +1281,6 @@ class SimulationInterface : public TiberModelObject
 
 
 
-////
-    //! Add a value in the value map defining its id
-    void add_value(std::string name);
-
-    //! Add a parameter to an existent value
-    void add_parameter(std::string name, ID value_id);
-
-    //! The effective routine to be reimplemented
-    virtual std::pair<double, double> get_value_and_derivative_secure(
-              ID value_id, std::map<ID, double> params, ID dvar_id = INVALID_ID);
-////
-
 
     //! Get solutions at specified points in an element
     /*!
@@ -1617,17 +1586,6 @@ class SimulationInterface : public TiberModelObject
     //! The excluded domains
     std::map<ID, std::set<std::string>> _excluded_domains;
 
-
-////
-    //! A map associating value names to ids
-    std::map<std::string, ID> _value_map;
-    std::map<ID, std::string> _value_id_map;
-
-    //! A map associating parameters to a value
-    std::map<ID, std::map<std::string, ID> > _param_map;
-    std::map<ID, std::map<ID, std::string> > _param_id_map;
-
-////
 
 
     //! create a unique name for the equation system
@@ -2251,29 +2209,6 @@ SimulationInterface::simulations_end(void)
 }
 
 
-inline
-ID 
-SimulationInterface::get_value_id(std::string name)
-{
-  if (_value_map.count(name))
-    return _value_map.at(name);
-
-  return INVALID_ID;
-}
-
-
-inline
-ID 
-SimulationInterface::get_param_id(std::string name, ID value_id)
-{
-  if (_param_map.count(value_id))
-  {
-    if (_param_map.at(value_id).count(name))
-      return _param_map.at(value_id).at(name);
-  }
-
-  return INVALID_ID;
-}
 
 
 #endif // _SIMULATIONINTERFACE_H_
