@@ -75,6 +75,13 @@ class CarrierProperties : public DriftDiffusionModelInterface
     //! Get the conductivity
     double get_conductivity(void) const;
 
+    //! Get the electric conductivity
+    /*!
+     * the signed value (negative for negatively charged carriers)
+     * is returned, without multiplication with the elementary charge
+     */
+    double get_electric_conductivity(void) const;
+
     //! Get the mobility
     double get_mobility(void) const;
 
@@ -306,6 +313,14 @@ double
 CarrierProperties::get_conductivity(void) const
 {
   return(_conductivity);
+}
+
+
+inline
+double
+CarrierProperties::get_electric_conductivity(void) const
+{
+  return(_conductivity*_charge);
 }
 
 

@@ -1,0 +1,387 @@
+
+Log start: Mon Sep  2 14:27:27 2019
+
+
+tiberCAD release 3.1.0 (rev. 4804, x86_64-linux)
+
+Input file: nin.tib
+
+Initialize global simulation options
+  Simulation temperature: 300 K
+  Database search path  : /home/maufder/Projects/TIBERCAD/trunk/materials
+  Log file              : output/nin.log.0
+
+Setup mesh
+  Reading mesh file 'nin.msh ...
+    mesh reading time: 0h 0m 0.072s
+    mesh preparation time: 0h 0m 0.0095s
+    bd_regions preparation time: 0h 0m 2.4e-05s
+
+    mesh units          : 1e-06 m
+    mesh dimension      :       1
+    number of nodes     :    5279
+    number of elements  :    5278
+    number of subdomains:       3
+    number of boundaries:       2
+
+Create materials ...
+  Added material GaAs for region 'intrinsic' (mesh regions 1)
+    (using datafile /home/maufder/Projects/TIBERCAD/trunk/materials/GaAs.dat)
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+  Added material GaAs for region 'ndop' (mesh regions 2)
+    (using datafile /home/maufder/Projects/TIBERCAD/trunk/materials/GaAs.dat)
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+  Added material GaAs for region 'pdop' (mesh regions 3)
+    (using datafile /home/maufder/Projects/TIBERCAD/trunk/materials/GaAs.dat)
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+Creation of materials done.
+
+Setting up simulation of type 'dd_generic' ...
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/dd_generic/dd_generic.so)
+  Adding boundary 'anode'
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/dd_generic/ddbnd_ohmic.so)
+  Adding boundary 'cathode'
+Creating bulk models... 
+  Region: intrinsic
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/dd_generic/ddbulk_default.so)
+  Region: ndop
+  Region: pdop
+
+Setting up simulation of type 'sweep' ...
+
+Setting up bulk models ...
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/dd_generic/carrier.so)
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/permittivity_constant.so)
+    (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/density_of_states_bulk_kp.so)
+    (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/dd_generic/mobility_constant.so)
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge
+
+*** Warning: found unused options in block bulk_ham (bulk_kp): charge
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge
+
+*** Warning: found unused options in block kp (bulk_kp): charge
+
+*** Warning: found unused options in block density_of_states (bulk_kp): charge
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge
+
+*** Warning: found unused options in block bulk_ham (bulk_kp): charge
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge
+
+*** Warning: found unused options in block kp (bulk_kp): charge
+
+*** Warning: found unused options in block density_of_states (bulk_kp): charge
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge
+
+*** Warning: found unused options in block bulk_ham (bulk_kp): charge
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge
+
+*** Warning: found unused options in block kp (bulk_kp): charge
+
+*** Warning: found unused options in block density_of_states (bulk_kp): charge
+
+Setting up lower dimensional (boundary) models ...
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge
+
+*** Warning: found unused options in block bulk_ham (bulk_kp): charge
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge
+
+*** Warning: found unused options in block kp (bulk_kp): charge
+
+*** Warning: found unused options in block density_of_states (bulk_kp): charge
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge
+
+*** Warning: found unused options in block bulk_ham (bulk_kp): charge
+
+*** Warning: found unused options in block semiconductor (bulk_kp): charge
+
+*** Warning: found unused options in block kp (bulk_kp): charge
+
+*** Warning: found unused options in block density_of_states (bulk_kp): charge
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for driftdiffusion (dd_generic)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+
+Available solution variables:
+------------------------------------------------------------------
+Name                     Units          Type      Association Plot
+------------------------------------------------------------------
+ElPotential              V              real      nodal       n
+ElField                  V/cm           vector    cell        n
+Polarization             C/m^2          vector    cell        n
+TotalCurrentDensity      A/cm^2         vector    cell        n
+IonizedDonors            cm^-3          real      nodal       n
+IonizedAcceptors         cm^-3          real      nodal       n
+IQE                                     real      none        n
+anode.current            A/cm^2         real      none        y
+cathode.current          A/cm^2         real      none        y
+electronQFermi           eV             real      nodal       y
+electronRefEnergy        eV             real      nodal       y
+electronDensity          cm^-3          real      nodal       n
+electronMobility         cm^2/(V*s)     real      nodal       n
+electronConductivity     S/cm           real      nodal       y
+electronFlux             1/(s*cm^2)     vector    cell        y
+electronCurrentDensity   A/cm^2         vector    cell        n
+electronJoule            W/cm^3         real      nodal       n
+TotalJouleHeat           W/cm^3         real      nodal       n
+electronThElPower        eV/K           real      nodal       n
+TotalRecombinationHeat   W/cm^3         real      nodal       n
+electronNetRecombination 1/(s*cm^3)     real      nodal       n
+RegionIDs                               real      cell        n
+------------------------------------------------------------------
+
+Output directory      : output
+Output file format    : grace
+Output file basename  : driftdiffusion
+
+
+solving for : poisson electrons holes 
+using local scaling
+
+# Region intrinsic, GaAs
+  Carrier:
+    name = electron, charge = -1, spin = 0.5
+    DOS: bulk_kp
+      band edge :  0.622482  0.906964  0.906964  0.906964  0.906964  1.09886  1.09886  1.09886
+      eff. mass :  0.067  0.221054  0.221054  0.221054  0.221054  0.4097  0.4097  0.4097
+      degeneracy:  2  4  4  4  4  4  4  4
+    Band edge = 0.622482, N0 = 4.35196e+17 cm^-3
+    m_dos = 0.067, v_th = 4.51213e+07 cm/s
+
+# Region ndop, GaAs
+  Carrier:
+    name = electron, charge = -1, spin = 0.5
+    DOS: bulk_kp
+      band edge :  0.622482  0.906964  0.906964  0.906964  0.906964  1.09886  1.09886  1.09886
+      eff. mass :  0.067  0.221054  0.221054  0.221054  0.221054  0.4097  0.4097  0.4097
+      degeneracy:  2  4  4  4  4  4  4  4
+    Band edge = 0.622482, N0 = 4.35196e+17 cm^-3
+    m_dos = 0.067, v_th = 4.51213e+07 cm/s
+
+# Region pdop, GaAs
+  Carrier:
+    name = electron, charge = -1, spin = 0.5
+    DOS: bulk_kp
+      band edge :  0.622482  0.906964  0.906964  0.906964  0.906964  1.09886  1.09886  1.09886
+      eff. mass :  0.067  0.221054  0.221054  0.221054  0.221054  0.4097  0.4097  0.4097
+      degeneracy:  2  4  4  4  4  4  4  4
+    Band edge = 0.622482, N0 = 4.35196e+17 cm^-3
+    m_dos = 0.067, v_th = 4.51213e+07 cm/s
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for sweep (sweep)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+
+Output directory      : output
+Output file format    : grace
+Output file basename  : sweep
+
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+We solve: sweep 
+
+>>>>--------------------------------- (sweep) ----------------------------------
+  Ramping to sweep value $Vb = 0
+
+*** Warning: driftdiffusion has never been solved before ramping.
+  Trying $Vb = 0
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    Setting max_iterations for nonlinear solver to 150
+    Solving equilibrium
+    it 1, |du| = 6.71593, |r| = 0.223343  alpha = 1
+    it 2, |du| = 1.12916, |r| = 0.0515423  alpha = 1
+    it 3, |du| = 0.794343, |r| = 0.00966296  alpha = 1
+    it 4, |du| = 0.332673, |r| = 0.000747183  alpha = 1
+    it 5, |du| = 0.0390075, |r| = 6.80668e-06  alpha = 1
+
+    iterations: 6, |du| = 0.000447372, |r| = 7.25508e-10
+    Equilibrium done
+
+  Solve time: 0h 0m 3.4s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.1
+  Trying $Vb = 0.1
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 3.86817, |r| = 1.57949e-13  alpha = 1
+
+    iterations: 2, |du| = 3.46585e-11, |r| = 1.61547e-13
+    Surface recombination current = 0
+
+    contact name:       voltage:            current:
+    anode               0.1                -9.61538e-05
+    cathode             0                   9.61538e-05
+
+  Solve time: 0h 0m 1.2s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.2
+  Trying $Vb = 0.2
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 3.86817, |r| = 1.6444e-13  alpha = 1
+
+    iterations: 2, |du| = 3.32616e-11, |r| = 1.6618e-13
+    Surface recombination current = 0
+
+    contact name:       voltage:            current:
+    anode               0.2                -0.000192308
+    cathode             0                   0.000192308
+
+  Solve time: 0h 0m 1.2s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.3
+  Trying $Vb = 0.3
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 3.86817, |r| = 1.68251e-13  alpha = 1
+
+    iterations: 2, |du| = 6.31354e-11, |r| = 1.61465e-13
+    Surface recombination current = 0
+
+    contact name:       voltage:            current:
+    anode               0.3                -0.000288462
+    cathode             0                   0.000288462
+
+  Solve time: 0h 0m 1.2s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.4
+  Trying $Vb = 0.4
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 3.86817, |r| = 1.80502e-13  alpha = 1
+
+    iterations: 2, |du| = 2.46177e-11, |r| = 1.8653e-13
+    Surface recombination current = 0
+
+    contact name:       voltage:            current:
+    anode               0.4                -0.000384615
+    cathode             0                   0.000384615
+
+  Solve time: 0h 0m 1.2s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.5
+  Trying $Vb = 0.5
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 3.86817, |r| = 2.28207e-13  alpha = 1
+
+    iterations: 2, |du| = 3.7845e-11, |r| = 2.35283e-13
+    Surface recombination current = 0
+
+    contact name:       voltage:            current:
+    anode               0.5                -0.000480769
+    cathode             0                   0.000480769
+
+  Solve time: 0h 0m 1.2s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.6
+  Trying $Vb = 0.6
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 3.86817, |r| = 2.39749e-13  alpha = 1
+
+    iterations: 2, |du| = 9.24041e-11, |r| = 2.25995e-13
+    Surface recombination current = 0
+
+    contact name:       voltage:            current:
+    anode               0.6                -0.000576923
+    cathode             0                   0.000576923
+
+  Solve time: 0h 0m 1.2s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.7
+  Trying $Vb = 0.7
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 3.86817, |r| = 2.51311e-13  alpha = 1
+
+    iterations: 2, |du| = 5.4788e-11, |r| = 2.69105e-13
+    Surface recombination current = 0
+
+    contact name:       voltage:            current:
+    anode               0.7                -0.000673077
+    cathode             0                   0.000673077
+
+  Solve time: 0h 0m 1.2s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.8
+  Trying $Vb = 0.8
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 3.86817, |r| = 2.59578e-13  alpha = 1
+
+    iterations: 2, |du| = 3.64971e-11, |r| = 2.57892e-13
+    Surface recombination current = 0
+
+    contact name:       voltage:            current:
+    anode               0.8                -0.000769231
+    cathode             0                   0.000769231
+
+  Solve time: 0h 0m 1.2s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.9
+  Trying $Vb = 0.9
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 3.86817, |r| = 2.77647e-13  alpha = 1
+
+    iterations: 2, |du| = 7.49496e-11, |r| = 2.58846e-13
+    Surface recombination current = 0
+
+    contact name:       voltage:            current:
+    anode               0.9                -0.000865385
+    cathode             0                   0.000865385
+
+  Solve time: 0h 0m 1.2s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1
+  Trying $Vb = 1
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 3.86817, |r| = 2.9294e-13  alpha = 1
+
+    iterations: 2, |du| = 1.99292e-11, |r| = 2.63959e-13
+    Surface recombination current = 0
+
+    contact name:       voltage:            current:
+    anode               1                  -0.000961538
+    cathode             0                   0.000961538
+
+  Solve time: 0h 0m 1.2s
+  <<<<--------------------------------------------------------------------------
+
+Solve time: 0h 0m 17s
+<<<<----------------------------------------------------------------------------
+
+Total solve time: 0h 0m 17s
+Simulation finished.
+
+26 warnings during run
+0 errors detected
+
+
+Log end: Mon Sep  2 14:27:45 2019
+
+

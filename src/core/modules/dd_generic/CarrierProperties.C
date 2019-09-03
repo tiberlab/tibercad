@@ -322,6 +322,9 @@ CarrierProperties::get_density_and_derivative(double Ef, double Epot)
   }
 
 
+  // reset consuctivity
+  _conductivity = 0.0;
+
   double mobility = _mobility_model->get_mobility();
   switch (_conductivity_model)
   {

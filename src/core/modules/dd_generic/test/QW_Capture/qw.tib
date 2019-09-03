@@ -133,6 +133,7 @@ Module dd_generic
     {
       regions = quantum
       charge = -1
+      constant_qFermi = true
 
       density_of_states quantum
       {

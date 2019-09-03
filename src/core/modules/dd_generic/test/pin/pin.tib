@@ -1,0 +1,137 @@
+Device
+{
+  meshfile = pin.msh
+  material = GaAs
+
+
+   Region intrinsic 
+   {
+     Doping { Nd = 1e15 type = donor}
+   }
+
+   Region ndop 
+   {
+     Doping { Nd = 1e19 type = donor }
+   }
+
+   Region pdop 
+   {
+     Doping { Nd = 1e19 type = acceptor }
+   }
+
+
+}
+
+
+Module dd_generic
+{ 
+
+  name = driftdiffusion
+  plot = (RefEnergy, QFermi, Mobility, Density,
+          Flux, NetRecombination, ContactCurrents, TotalRecombinationHeat, IQE)
+
+  #local_scaling = false
+  #limit_step = true
+  current_integration_method = compact_rstf
+
+  Solver {
+    linear_solver {
+      preconditioner = lu
+    }
+  }
+
+  iqe
+  {
+    radiative_recombination = electronRecombination_rad
+    nonradiative_recombination = electronRecombination_srh
+  }
+
+  Physics
+  {
+
+    carrier electron
+    {
+      density_of_states bulk_kp
+      {
+      }
+      mobility constant {}
+    }
+
+    carrier hole
+    {
+      density_of_states bulk_kp
+      {
+      }
+      mobility constant {}
+    }
+
+
+
+    recombination direct
+    {
+      plot_name = "rad"
+      carriers = (electron, hole)
+      radiative = true
+    }
+
+    recombination srh
+    {
+      plot_name = "srh"
+      carriers = (electron, hole)
+      tau = 1e-8
+    }
+
+  }   
+
+
+  Contact anode
+  {
+    type = ohmic
+    isolated_carriers = electron
+    voltage = $Vb
+  }
+
+  Contact cathode
+  {
+    type = ohmic
+    isolated_carriers = hole
+    voltage = 0.0
+  }
+
+}  
+
+
+
+Module sweep
+{
+  solve = driftdiffusion
+  variable = $Vb
+  start = 0.0
+  stop = 2
+  steps = 20
+  plot_data = true
+}
+
+
+
+Simulation
+{
+  temperature = 300
+  solve = sweep
+  resultpath = output
+  output_format = grace
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

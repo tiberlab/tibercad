@@ -10,6 +10,7 @@ New features:
 	- new module to create quantum espresso input files
 	- alloy statistics extraction can now include APT detection efficiencies
 	  and use binning based on counting atoms
+	- mp-DD functional and mostly complete
 
 
 Version 3.0.2
