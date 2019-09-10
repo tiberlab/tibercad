@@ -1,0 +1,639 @@
+Device
+{
+  meshfile = CYNORA_stack.msh
+  mesh_units = 1e-9
+  material = Alq3
+
+
+
+  Region htl  
+  { 
+    #Doping { density = 1e17 type = acceptor incomplete_ionization = false} 
+  }
+
+  Region ebl
+  {
+  } 
+
+  Region eml 
+  {
+  }
+
+  Region etl 
+  {
+    #Doping { density = 1e17 type = donor incomplete_ionization = false  } #1.8e18
+  } 
+
+
+}
+
+Module dd_generic
+{
+  name = ddg
+  plot = (Ec, Ev, ElPotential, QFermi, RefEnergy, Density, Mobility, 
+            CurrentDensity, Flux, NetRecombination, ContactCurrents, TotalRecombinationHeat, TotalJouleHeat, MaxTemp)
+
+  Physics
+  {
+
+   
+    #----------------------------------------
+
+    # CARRIERS = ETL (NBPhen)
+
+    #----------------------------------------
+
+    carrier electron
+    {
+      regions = (etl)
+      charge = -1
+
+      density_of_states gauss
+      {
+        level = -2.9
+        sigma = 0.1 
+        N0 = 1e21
+      }
+ 
+      mobility hopping_mobility
+      {
+        nu0 = 1e20  #1e19   
+        N0 = 1e21 
+        sigma = 0.1
+      }
+    }
+
+
+    carrier hole
+    {
+      regions = (etl)
+      charge = 1
+
+      density_of_states gauss
+      {
+        level = -6.23
+        sigma = 0.1 
+        N0 = 1e21
+      }
+
+      mobility hopping_mobility
+      {
+        nu0 =  1e19  #1e14   
+        N0 = 1e21 
+        sigma = 0.1
+      }
+    }
+
+
+    #----------------------------------------
+
+    # CARRIERS = EML (E001 CT - mCBP)
+
+    #----------------------------------------
+
+    carrier electron
+    {
+      regions = eml
+      charge = -1
+
+      density_of_states gauss
+      {
+        level = -1.68  # -2.34 + 0.66
+        sigma = 0.18  #0.095   
+        N0 = 1.16e21 #0.8e21
+      }
+
+      mobility hopping_mobility
+      {
+        nu0 = 1.5e20 #5e17
+        N0 = 1.16e21 #0.8e21
+        sigma = 0.18  #0.095  #0.1
+      }
+    }
+
+
+    carrier hole
+    {
+      regions = eml
+      charge = 1
+
+      density_of_states gauss
+      {
+        level = -5.93  #-6.02 + 0.09
+        sigma = 0.16  #0.075  #0.1 
+        N0 = 1.16e21 #0.8e21
+      }
+
+      mobility hopping_mobility
+      {
+        nu0 = 1.5e20  # 5e17 
+        N0 = 1.16e21 #0.8e21
+        sigma = 0.16  # 0.075  #0.1
+      }
+    }
+
+    
+    carrier mCBP_T
+    {
+      regions = eml
+      charge = 0
+      spin = 1
+
+      density_of_states gauss
+      {
+        sigma = 0.05
+        level = 2.84 
+        N0 =  1.16e21  #0.8e21
+      }
+
+      mobility constant  #hopping_mobility
+      {
+        mu = 4e-4 # 1e-5  #4e-4
+      }
+    }
+
+
+
+    carrier E001_S
+    {
+      regions = eml
+      charge = 0
+      spin = 0
+
+      density_of_states gauss
+      {
+        sigma = 0.25 #0.05
+        level = 2.56 
+        N0 = 5e21  #0.2e21
+      }
+
+      mobility constant  #hopping_mobility
+      {
+        mu =  3e-3 # 1e-4  #3e-3
+      }
+    }
+
+
+
+    carrier E001_T
+    {
+      regions = eml
+      charge = 0
+      spin = 1
+
+      density_of_states gauss
+      {
+        sigma = 0.25 #0.05
+        level = 2.53   #2.49 
+        N0 = 5e21  #0.2e21
+      }
+
+      mobility constant  #hopping_mobility
+      {
+        mu = 4e-4  #1e-5 #4e-4
+      }
+    }
+
+
+
+    carrier eguest
+    {
+      regions = eml
+      charge = -1
+
+      density_of_states gauss
+      {
+        level = -2.02  #-3.17 +1.15
+        sigma =  0.21  #0.1 
+        N0 = 0.29e21 #0.2e21
+      }
+
+      mobility hopping_mobility
+      {
+        nu0 = 1e17  #2e17   
+        N0 = 0.29e21 # 0.2e21
+        sigma = 0.21  #0.1
+      }
+    }
+
+
+
+    carrier hguest
+    {
+      regions = eml
+      charge = 1
+
+      density_of_states gauss
+      {
+        level = -6.68 #-6.07 - 0.61 
+        sigma = 0.18  #0.1 
+        N0 =  0.29e21 #0.2e21
+      }
+
+      mobility hopping_mobility
+      {
+        nu0 = 1e17  #2e17 
+        N0 =  0.29e21 #0.2e21
+        sigma = 0.18 #0.1
+      }     
+    }
+
+
+
+    #----------------------------------------
+
+    # CARRIERS = EBL (TCTA)
+
+    #----------------------------------------
+
+
+    carrier hole
+    {
+      regions = (ebl)
+      charge = 1
+
+      density_of_states gauss
+      {
+        level = -5.62
+        sigma = 0.095  #0.1 
+        N0 = 1e21
+      }
+ 
+      mobility hopping_mobility
+      {
+        nu0 = 3.25e20   
+        N0 = 1e21  
+        sigma = 0.096  #0.136
+      }
+    }
+
+
+
+    carrier electron
+    {
+      regions = (ebl)
+      charge = -1
+
+      density_of_states gauss
+      {
+        level = -2.15
+        sigma = 0.125  #0.1 
+        N0 = 1e21
+      }
+
+      mobility hopping_mobility
+      {
+        nu0 = 7.5e20     
+        N0 = 1e21  
+        sigma = 0.125 #0.1
+      }
+    }
+
+
+
+    #----------------------------------------
+
+    # CARRIERS = HTL (aNPD)
+
+    #----------------------------------------
+
+
+    carrier hole
+    {
+      regions = htl
+      charge = 1
+
+      density_of_states gauss
+      {
+        level = -5.41
+        sigma = 0.08  #0.1 
+        N0 = 1e21
+      }
+
+      mobility hopping_mobility
+      {
+        nu0 =  7.65e19   
+        N0 = 1e21
+        sigma = 0.081  #0.13
+      }
+    }
+
+
+
+   carrier electron
+    {
+      regions = htl
+      charge = -1
+
+      density_of_states gauss
+      {
+        level = -2.23
+        sigma = 0.1  #0.1 
+        N0 = 1e21
+      }
+
+      mobility hopping_mobility
+      {  
+        nu0 = 3.6e20   
+        N0 = 1e21
+        sigma = 0.103  #0.137
+      }
+    }
+
+
+#----------------------------------------------------------------------------------------------------------------------------
+
+
+
+    #----------------------------------------
+
+    # CARRIERS BAND COUPLING RECOMBINATION
+
+    #----------------------------------------
+
+
+    recombination direct
+    {
+      regions = (eml)
+      plot_name = rad_electron_eguest
+      carriers = (electron, eguest)
+      C = 1e-10  # 1e-11   
+    }
+
+    recombination direct
+    {
+      regions = (eml)
+      plot_name = rad_hole_hguest
+      carriers = (hole, hguest)
+      C = 1e-10  #1e-10    
+    }
+
+    #----------------------------------------
+
+    # CARRIERS RECOMBINATION
+
+    #----------------------------------------
+
+    
+
+    recombination direct
+    {
+      regions = (eml)
+      plot_name = rad_host
+      carriers = (electron, hole)
+      C = 1e-14  #  C = 1e-12
+    }
+
+
+    recombination direct
+    {
+      regions = (etl)
+      plot_name = rad_etl
+      carriers = (electron, hole)
+      C = 1e-22  #1e-16  #  C = 1e-19
+    }
+
+    recombination direct
+    {
+      regions = (htl)
+      plot_name = rad_htl
+      carriers = (electron, hole)
+      C = 1e-14  #  C = 1e-13
+    }
+
+    recombination direct
+    {
+      regions = (ebl)
+      plot_name = rad_ebl
+      carriers = (electron, hole)
+      C = 1e-15 #  C = 1e-13
+    }
+
+
+    #----------------------------------------
+  
+    # EXCITON mCBP_T
+
+    #----------------------------------------
+
+
+    recombination exciton_generation
+    {
+      regions = eml
+      plot_name = exgen
+      carriers = (electron, hole, mCBP_T) 
+      C = 1e-30 #2.5e-30 #0.8e-30  #1e-29  #1e-27    
+    }
+ 
+
+    #----------------------------------------
+
+    #EXCITON DECAY mCBP_T
+
+    #----------------------------------------
+
+
+    recombination exciton_decay
+    {
+      regions = eml
+      plot_name = non_radiative
+      carriers =  mCBP_T 
+      tau = 1e-5  #5e-5   
+    }
+
+    #----------------------------------------
+  
+    # EXCITON E001_S AND E001_T
+
+    #----------------------------------------
+
+
+    recombination exciton_generation
+    {
+      regions = eml
+      plot_name = exgen
+      carriers = (eguest, hguest, E001_S) 
+      C = 2.5e-31 #1.5e-31  #20e-31  #1e-31 #1e-33   #1e-33 
+    }
+
+    recombination exciton_generation
+    {
+      regions = eml
+      plot_name = exgen
+      carriers = (eguest, hguest, E001_T) 
+      C = 2.5e-31 #1.5e-31  #20e-31  #1e-31  #1e-33  #1e-33
+    }
+
+
+    #----------------------------------------
+
+    #EXCITON DECAY E001_S AND DECAY E001_T
+
+    #----------------------------------------
+
+    recombination exciton_decay
+    {
+      regions = eml
+      plot_name = radiative
+      carriers = E001_S 
+      tau = 1e-8  #1.2e-8 # LAST
+    }
+
+    recombination exciton_decay
+    {
+      regions = eml
+      plot_name = non_radiative
+      carriers = E001_T
+      tau =  1e-5  #5e-5   
+    }
+
+
+    #----------------------------------------
+
+    # ISC
+
+    #----------------------------------------
+
+    recombination exciton_isc
+    {
+      regions = eml
+      plot_name = isc
+      carriers = (E001_S, E001_T)
+      C = 2e-13  #5e-14 # 1e-14  
+    }
+
+
+    #----------------------------------------
+
+    # TTA  
+
+    #----------------------------------------
+
+    recombination exciton_tta
+    {
+      regions = eml
+      plot_name = tta
+      carriers = mCBP_T
+      C = 4e-14 #1e-13
+    }
+
+    recombination exciton_tta
+    {
+      regions = eml
+      plot_name = tta
+      carriers = E001_T
+      C = 1e-11 #1e-9 # LAST
+    }
+
+
+
+    #----------------------------------------
+
+    # EPQ
+
+    #----------------------------------------
+
+    recombination exciton_polaron_quenching
+    {
+      regions = eml
+      plot_name = tpq
+      carriers = mCBP_T
+      quencher = hole
+      C = 2e-14 #2e-14
+    } 
+
+    recombination exciton_polaron_quenching
+    {
+      regions = eml
+      plot_name = tpq
+      carriers =  E001_T
+      quencher = hguest
+      C = 1e-9 # 7e-9 # LAST
+    } 
+
+
+
+    #----------------------------------------
+
+
+ }
+
+  Contact anode
+  {
+    type = schottky
+    metal_fermilevel = -5.21  
+    band = hole
+    voltage = $Vb
+    scott_malliaras = true
+    isolated_carriers = (electron)
+  }
+
+  Contact cathode
+  {
+    type = schottky
+    metal_fermilevel = -3.1 
+    band = electron
+    voltage = 0.0
+    scott_malliaras = true
+    isolated_carriers = (hole)  #, NBPhen_T)
+  }
+
+
+  Solver linesearch
+  {
+    max_iterations = 10  #30
+    step_tolerance =  1e-2 #1e-2
+    #absolute_tolerance = 1e-3
+    #relative_tolerance = 1e-10
+
+    #linear_solver
+    #{
+      #use_initial_guess = true
+      #preconditioner = #lu
+    #}
+
+  }
+
+}
+
+
+
+Module sweep
+{
+  name = sweep1
+  solve = ddg
+  variable = $Vb
+  start = 0.0
+  stop = 10.0
+  #steps = 50
+  values = (0:0.2:10)
+  plot_data = true
+}
+
+Module sweep
+{
+  name = sweep2
+  solve = ddg
+  variable = $Vb
+  start = 0.0
+  stop = 10.0
+  steps = 200 #200
+  plot_data = true
+}
+
+
+
+Simulation
+{
+  temperature = 300
+  #solve = (ddg, sweep1)
+  solve = sweep1
+  resultpath = new_test/   #new_sigma_shifted_energies_test_1
+  output_format = grace
+  searchpath = .
+}
+
+
+
+
+
