@@ -41,9 +41,6 @@ class TBDLLOCAL HoppingMobility : public MobilityModelInterface
     //! \copydoc MobilityModelInterface::get_mobility()
     virtual double get_mobility(void);
 
-    //! \copydoc MobilityModelInterface::get_mobility_derivatives()
-    virtual void get_mobility_derivatives(std::vector<double>& dm);
-
     //! \copydoc MobilityModelInterface::get_derivative_potential()
     virtual double get_derivative_potential(void);
 

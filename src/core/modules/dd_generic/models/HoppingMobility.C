@@ -90,7 +90,7 @@ void
 HoppingMobility::get_derivative_grad_potential(libMesh::RealGradient& dm)
 {
   ID id = get_carrier();
-  double mu = get_driftdiffusionproperties().get_q_mobility(id);
+  double mu = this->get_mobility();
 
   double F = get_driftdiffusionproperties().get_electric_field().size();
   double kT = get_driftdiffusionproperties().get_lattice_temperature();
@@ -110,11 +110,6 @@ HoppingMobility::get_derivative_grad_potential(libMesh::RealGradient& dm)
   }
 }
 
-void
-HoppingMobility::get_mobility_derivatives(std::vector<double>& dm)
-{
-  dm[0] = dm[1] = dm[2] = 0.0;
-}
 
 void
 HoppingMobility::get_derivative_grad_fermi(libMesh::RealGradient& dm)

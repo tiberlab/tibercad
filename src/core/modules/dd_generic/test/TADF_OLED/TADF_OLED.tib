@@ -1,6 +1,6 @@
 Device
 {
-  meshfile = CYNORA_stack.msh
+  meshfile = TADF_OLED.msh
   mesh_units = 1e-9
   material = Alq3
 
@@ -617,7 +617,7 @@ Module sweep
   variable = $Vb
   start = 0.0
   stop = 10.0
-  steps = 200 #200
+  steps = 200 
   plot_data = true
 }
 
@@ -628,8 +628,8 @@ Simulation
   temperature = 300
   #solve = (ddg, sweep1)
   solve = sweep1
-  resultpath = new_test/   #new_sigma_shifted_energies_test_1
-  output_format = grace
+  resultpath = output
+
   searchpath = .
 }
 
