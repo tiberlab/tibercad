@@ -93,6 +93,7 @@ DriftDiffusion::Options::Options(void)
 DriftDiffusion::DriftDiffusion(const ModelOptions& options)
   : SimulationInterface(options),
     _rebuild_eq_system(true),
+    _iqe(0.0),
     _reference_potential(0.0),
     _rstf(NULL)
 {
@@ -1201,8 +1202,6 @@ DriftDiffusion::calculate_iqe(void)
   _iqe = recs[0];
   Rnrad = recs[1];
 
-  // 2015-03-02: we take now only direct, SRH and Auger for the definition
-  // this eliminates problems in presence of optical generation
   double Rtot = _iqe + Rnrad;
 
   ostringstream rec;

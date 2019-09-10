@@ -30,8 +30,6 @@ Module dd_generic
   plot = (RefEnergy, QFermi, Mobility, Density,
           Flux, NetRecombination, ContactCurrents, TotalRecombinationHeat, IQE)
 
-  #local_scaling = false
-  #limit_step = true
   current_integration_method = compact_rstf
 
   Solver {
