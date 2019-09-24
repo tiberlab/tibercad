@@ -228,6 +228,8 @@ void Kspace::build_k_grid()
         break;
     }
 
+    kmesh->prepare_for_use();
+
     if (_mesh_order == libMesh::SECOND)
       kmesh->all_second_order();
 
@@ -237,6 +239,8 @@ void Kspace::build_k_grid()
     if (num_nodes[0] > 1)
       n = floor(log(num_nodes[0] - 1) / log(2));
     mr.uniformly_refine(n);
+
+    //kmesh->print_info();
   }
 
 }
