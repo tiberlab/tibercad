@@ -118,12 +118,42 @@ Module empirical_tb
 
   Solver
   {
+    # use built in lanczos algorithm
+    solver = upt_lanczos
     guess_valence = -0.5
     guess_conduction = 0.0
     num_valence_eigenvalues = 4
     num_conduction_eigenvalues = 4
   }
 
+}
+
+Module opticstb
+ {
+        name = opticstb
+        regions = Quantum
+        
+        plot = (optical_spectrum, matrix_elements, EigenStates)
+        
+        #put it to write output in 1D
+        output_format=grace
+        
+        initial_state_model = tb
+        final_state_model = tb
+        #skip_solve = true
+        
+        Emin = 3
+        Emax  = 6
+        dE = 0.001
+        broadening = 0.01
+
+  k_integration
+  {
+     k_max = 1 
+     write_k_mesh = true
+     number_of_nodes = (2,2)
+     quadrature_type = trapezoidal 
+  }
 }
 
 
@@ -149,7 +179,7 @@ Module efaschroedinger
 Simulation
 {
   temperature = 1
-  solve = (driftdiffusion, tb)
+  solve = (driftdiffusion, tb, opticstb)
   resultpath =  output
   output_format = grace
 
