@@ -300,9 +300,10 @@ Control::setup_globals(const ModelOptions& opts)
   // Copy input file
   if (opts.get_option("backup_inputfile", true))
   {
-    copy_file(_inputfile,
-        _outputdir + "/" + Utils::basename(_inputfile) + ".tib",
-        copy_option::overwrite_if_exists);
+    path in(_inputfile);
+    path out(_outputdir + "/" + Utils::basename(_inputfile) + ".tib");
+    if (!equivalent(in, out))
+      copy_file(in, out, copy_option::overwrite_if_exists);
   }
 
   {
