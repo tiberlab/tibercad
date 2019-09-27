@@ -164,6 +164,19 @@ TiberModelObject::get_option(const std::string& name,
 }
 
 
+template <typename T>
+void
+TiberModelObject::get_option(const std::string& name,
+    std::set<T>& vec, bool override) const
+{
+  vector<T> vvec;
+  get_option(name, vvec, override);
+
+  vec.insert(vvec.begin(), vvec.end());
+}
+
+
+
 
 void
 TiberModelObject::get_option(const std::string& name, libMesh::RealVectorValue& vec, bool override) const
@@ -480,3 +493,43 @@ template
 void
 TiberModelObject::get_parameter<string>(const string& name,
     vector<string>& vec, bool override);
+
+
+
+template
+void
+TiberModelObject::get_option<double>(const string& name,
+    set<double>& vec, bool override) const;
+
+template
+void
+TiberModelObject::get_option<int>(const string& name,
+    set<int>& vec, bool override) const;
+
+template
+void
+TiberModelObject::get_option<unsigned int>(const string& name,
+    set<unsigned int>& vec, bool override) const;
+
+template
+void
+TiberModelObject::get_option<short>(const string& name,
+    set<short>& vec, bool override) const;
+
+template
+void
+TiberModelObject::get_option<unsigned short>(const string& name,
+    set<unsigned short>& vec, bool override) const;
+
+
+template
+void
+TiberModelObject::get_option<char>(const string& name,
+    set<char>& vec, bool override) const;
+
+template
+void
+TiberModelObject::get_option<string>(const string& name,
+    set<string>& vec, bool override) const;
+
+

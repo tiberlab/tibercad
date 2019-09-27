@@ -1750,7 +1750,7 @@ inline
 void
 SimulationInterface::set_communicator(const libMesh::Parallel::Communicator& comm)
 {
-  _mpi_comm = comm;
+  _mpi_comm.duplicate(comm);
 }
 
 
@@ -1758,7 +1758,7 @@ inline
 void
 SimulationInterface::set_solver_communicator(const libMesh::Parallel::Communicator& comm)
 {
-  _solver_comm = comm;
+  _solver_comm.duplicate(comm);
 }
 
 

@@ -483,6 +483,12 @@ ModelOptions::get_option<string>(const string& name,
 
 template
 void
+ModelOptions::get_option<char>(const string& name,
+    set<char>& vec) const;
+
+
+template
+void
 ModelOptions::get_option<double>(const string& name,
     vector<vector<double> >& vec) const;
 
