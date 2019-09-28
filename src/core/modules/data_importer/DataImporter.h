@@ -3,12 +3,11 @@
 #ifndef _DATAIMPORTER_H_
 #define _DATAIMPORTER_H_
 
-#include<string>
+#include <string>
 
 #include "SimulationInterface.h"
-#include "TensorGrid.h"
 
-
+class TensorGrid;
 
 /*!
  *
@@ -31,24 +30,24 @@ class TBDLLOCAL DataImporter : public SimulationInterface
   protected:
 
     //! Initialisation
-    virtual void do_init(void);
+    virtual void do_init(void) override;
 
     //! Option parser
-    virtual void parse_options(void);
+    void parse_options(void);
 
     //! Setup available variables
-    virtual void do_setup_solution_variables(void);
+    virtual void do_setup_solution_variables(void) override;
 
     //! Solver function
-    virtual void do_solve(void);
+    virtual void do_solve(void) override;
 
     //! Print information
-    virtual void do_print_info(void);
+    virtual void do_print_info(void) override;
 
     //! Provide generation profile to outside world
     virtual void get_solution_secure(const Elem* elem,
         std::map<ID, std::vector<double> >& values,
-        const std::vector<Point>& p);
+        const std::vector<Point>& p) override;
 
   private:
 
@@ -67,28 +66,6 @@ class TBDLLOCAL DataImporter : public SimulationInterface
     //! Static pointer to this
     static DataImporter* _this;
 
-    struct Options
-    {
-      std::string filename;
-      std::string filetype;
-      std::string variable_name;
-      std::string unit;
-      std::string variable_alias;
-      std::string dataset_name;
-      std::string num_dimensions;
-      std::string sizes;
-      std::string delimiter;
-      std::string print_data;
-      int int_num_dimensions;
-      std::vector<int> int_sizes;
-    };
-
-    //! Sanity check of supplied options
-    void _check_options(void);
-
-    //! Information printout
-    void _print_module_info(void);
-
     //! Wrapper for reading the right file type
     void _read_file(void);
 
@@ -98,28 +75,14 @@ class TBDLLOCAL DataImporter : public SimulationInterface
     //! Image Reader
     void _read_image(void);
     
-    //! 1-dimensional CSV Reader
-    void _read_csv1d(void);
+    //! n-dimensional CSV Reader
+    void _read_csv(void);
     
-    //! 2-dimensional CSV Reader
-    void _read_csv2d(void);
-    
-    //! 3-dimensional CSV Reader
-    //! Each line has the form:
-    //! x;y;z;value
-    void _read_csv3d(void);
-
     //! VTK Reader
     void _read_vtk(void);
 
     //! COMSOL Reader
     void _read_comsol(void);
-
-    //! Index conversion from 2d to 1d
-    int _at(int pos_x, int pos_y);
-
-    //! Index conversion from 3d o 1d
-    int _at(int pos_x, int pos_y, int pos_z);
 
 
     static const std::string valid_filetypes[];
@@ -127,20 +90,23 @@ class TBDLLOCAL DataImporter : public SimulationInterface
 
     int _dims, _size_x, _size_y, _size_z;
 
-    std::string _filename, _filetype, _variable_name,
+    //! The file to read from
+    std::string _filename;
+
+    //! The file type
+    std::string _filetype, _variable_name,
     _unit, _variable_alias, _dataset_name, _num_dimensions, _sizes, _print_data;
 
     //! Delimiters
     std::string _delimiter;
 
     //! Characters interpreted as comments
-    std::set<std::string> _comment_chars;
+    std::set<char> _comment_chars;
 
     double* _data;
     TensorGrid* _tensorgrid;
     Point _origin,_bound;
 
-    Options myopts;
 };
 
 
