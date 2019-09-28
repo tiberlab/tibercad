@@ -489,7 +489,7 @@ class DriftDiffusionProperties : public PhysicalModel
 
     //! Get the gradient of the electrochemical potential
     const std::vector<libMesh::RealGradient>& get_grad_fermi(void) const;
-    void get_grad_fermi(ID id, libMesh::RealGradient& gradf);
+    void get_grad_fermi(ID id, libMesh::RealGradient& gradf) const;
 
     //! Get carrier densities
     const std::vector<double>& get_q_density(void) const
@@ -1190,9 +1190,9 @@ DriftDiffusionProperties::get_grad_fermi(void) const
 
 inline
 void 
-DriftDiffusionProperties::get_grad_fermi(ID id, libMesh::RealGradient& gradf)
+DriftDiffusionProperties::get_grad_fermi(ID id, libMesh::RealGradient& gradf) const
 {
-  gradf = _grad_fermi[id];
+  gradf = _grad_fermi.at(id);
 }
 
 inline
