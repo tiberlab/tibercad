@@ -56,7 +56,7 @@ DataImporter::_this = NULL;
 
 DataImporter::DataImporter(const ModelOptions& options):
   SimulationInterface(options),
-  _delimiter("\\t\\s,"),
+  _delimiter("\t ,"),
   _comment_chars({'#', '%', '!', '/'})
 {
   // Move along, nothing to see here...
@@ -84,15 +84,15 @@ DataImporter::do_init(void)
   TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
 
   // get the module options
-  get_option("filename", _filename);
-  get_option("filetype", _filetype);
+  _filename = get_option("filename", _filename);
+  _filetype = get_option("filetype", _filetype);
   get_option("variable_name", _variable_name);
   get_option("unit", _unit);
   get_option("variable_alias",_variable_alias);
   get_option("dataset_name", _dataset_name);
   get_option("num_dimensions",_num_dimensions);
   get_option("sizes",_sizes);
-  get_option("delimiter", _delimiter);
+  _delimiter = get_option("delimiter", _delimiter);
 
   get_option("comment_characters", _comment_chars);
   get_option("print_data",_print_data);
@@ -276,7 +276,7 @@ DataImporter::_read_csv(void)
   vector<vector<double>> data;
 
   size_t ctr = 0;
-  size_t data_size = 1000;
+  const size_t reserve_size = 1000;
   unsigned int n_values = 0;
 
   string line;
@@ -290,7 +290,8 @@ DataImporter::_read_csv(void)
       continue;
 
     // split up the line
-    boost::split(splitted, line, boost::is_any_of(_delimiter));
+    boost::split(splitted, line, boost::is_any_of(_delimiter),
+                                 boost::token_compress_on);
 
     if (ctr == 0)
     {
@@ -298,12 +299,12 @@ DataImporter::_read_csv(void)
       n_values = splitted.size();
       data.resize(n_values);
       for (unsigned int i = 0; i < n_values; ++i)
-      data[i].reserve(data_size);
+      data[i].reserve(reserve_size);
     }
-    else if (ctr == data_size)
+    else if (ctr == data.size())
     {
       for (unsigned int i = 0; i < n_values; ++i)
-        data[i].reserve(data.size() + data_size);
+        data[i].reserve(data.size() + reserve_size);
     }
 
     if (splitted.size() != n_values)
@@ -316,12 +317,15 @@ DataImporter::_read_csv(void)
       is >> value;
       data[i].push_back(value);
     }
-  }
 
-  for (unsigned int i = 0; i < data[0].size(); ++i)
-  {
-    cerr << data[0][i] << "  " << data[1][i] << "  " << data[2][i] << endl;
+    ctr++;
   }
+  ostringstream os;
+  os << "Read " << data.size() << " datasets of size " << data[0].size();
+  Messages::info(os.str());
+
+
+  // Now create mesh
 
 }
 
