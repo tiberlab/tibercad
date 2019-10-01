@@ -1,0 +1,24 @@
+Device bulk
+{
+
+  meshfile = test.msh
+  mesh_units = 1
+
+  Region bulk
+  {
+    material = Air
+  }
+}
+
+Module data_import
+{
+  filename = normE_field_566Thz.dat
+  filetype = csv
+}
+
+Simulation
+{
+  solve = data_import
+
+  resultpath = output
+}
