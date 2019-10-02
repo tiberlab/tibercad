@@ -84,11 +84,16 @@ class TBDLLOCAL DataImporter : public SimulationInterface
     //! COMSOL Reader
     void _read_comsol(void);
 
+    //! Create an unstructured grid from a point set
+    void _create_mesh_from_points(const std::vector<double>* x = nullptr,
+                                  const std::vector<double>* y = nullptr,
+                                  const std::vector<double>* z = nullptr);
 
     static const std::string valid_filetypes[];
     static const int num_valid_filetypes;
 
-    int _dims, _size_x, _size_y, _size_z;
+    unsigned int _dims;
+    size_t _size_x, _size_y, _size_z;
 
     //! The file to read from
     std::string _filename;

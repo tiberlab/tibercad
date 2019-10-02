@@ -8,8 +8,13 @@
 #include "SimulationEnvironment.h"
 #include "TensorGrid.h"
 
-#include "equation_systems.h"
-#include "dof_map.h"
+#include "libmesh/equation_systems.h"
+#include "libmesh/dof_map.h"
+#include "libmesh/mesh.h"
+#include "libmesh/mesh_tetgen_interface.h"
+#include "libmesh/mesh_triangle_interface.h"
+// unfortunately tetgen defines REAL
+#undef REAL
 
 // STL imports
 #include <stdlib.h>
@@ -56,10 +61,11 @@ DataImporter::_this = NULL;
 
 DataImporter::DataImporter(const ModelOptions& options):
   SimulationInterface(options),
+  _dims(0),
   _delimiter("\t ,"),
   _comment_chars({'#', '%', '!', '/'})
 {
-  // Move along, nothing to see here...
+  //is_task(true);
 }
 
 DataImporter::~DataImporter(void)
@@ -86,11 +92,12 @@ DataImporter::do_init(void)
   // get the module options
   _filename = get_option("filename", _filename);
   _filetype = get_option("filetype", _filetype);
+  _dims = get_option("dimensions", _dims);
+
   get_option("variable_name", _variable_name);
   get_option("unit", _unit);
   get_option("variable_alias",_variable_alias);
   get_option("dataset_name", _dataset_name);
-  get_option("num_dimensions",_num_dimensions);
   get_option("sizes",_sizes);
   _delimiter = get_option("delimiter", _delimiter);
 
@@ -280,6 +287,7 @@ DataImporter::_read_csv(void)
   unsigned int n_values = 0;
 
   string line;
+  string last_comment;
 
   vector<string> splitted;
 
@@ -287,7 +295,10 @@ DataImporter::_read_csv(void)
   {
     // skip commented lines
     if (line.empty() || _comment_chars.count(line[0]))
+    {
+      last_comment = line;
       continue;
+    }
 
     // split up the line
     boost::split(splitted, line, boost::is_any_of(_delimiter),
@@ -324,11 +335,115 @@ DataImporter::_read_csv(void)
   os << "Read " << data.size() << " datasets of size " << data[0].size();
   Messages::info(os.str());
 
+  // get info on column content
+  // last_comment could contain the info on columns
+  if (!last_comment.empty())
+  {
+
+  }
+
+  vector<double>* x = nullptr;
+  vector<double>* y = nullptr;
+  vector<double>* z = nullptr;
+  switch (_dims)
+  {
+    case 3:
+      z = &(data[2]);
+
+    case 2:
+      y = &(data[1]);
+
+    case 1:
+      x = &(data[0]);
+  }
 
   // Now create mesh
+  _create_mesh_from_points(x, y, z);
 
 }
 
+
+void
+DataImporter::_create_mesh_from_points(const vector<double>* x,
+                                       const vector<double>* y,
+                                       const vector<double>* z)
+{
+  unsigned int dim = 3;
+  (x == nullptr) && --dim;
+  (y == nullptr) && --dim;
+  (z == nullptr) && --dim;
+
+  if (dim == 0)
+    throw InitFailedException("Data mesh has no x,y or z coordinates associated.");
+
+  UnstructuredMesh* mesh = new Mesh(get_solver_communicator(), dim);
+
+  size_t n_points = 0;
+
+  if (x != nullptr)
+    n_points = x->size();
+  else if (y != nullptr)
+    n_points = y->size();
+  else if (z != nullptr)
+    n_points = z->size();
+
+  for (size_t i = 0; i < n_points; ++i)
+  {
+    Point p(0, 0, 0);
+    if (x != nullptr) p(0) = (*x)[i];
+    if (y != nullptr) p(1) = (*y)[i];
+    if (z != nullptr) p(2) = (*z)[i];
+    mesh->add_point(p);
+  }
+
+  if (dim == 1)
+  {
+
+  }
+  else if (dim == 2)
+  {
+    TriangleInterface triangleif(*mesh);
+    triangleif.triangulate();
+  }
+  else if (dim == 3)
+  {
+    TetGenMeshInterface tetgenif(*mesh);
+    tetgenif.triangulate_pointset();
+  }
+
+  // check for degenerate elements and assign region ids
+  MeshBase::element_iterator it(mesh->elements_begin());
+  while (it != mesh->elements_end())
+  {
+    Elem* el = *it;
+
+    ++it;
+
+    if (el->volume() <= 1e-12)
+    {
+      // eliminate all degenerate elements
+      mesh.delete_elem(el);
+    }
+    else
+    {
+      Point centroid(el->centroid());
+      const Elem* dev_el = MeshUtils::search_element(
+          &(get_device()->get_mesh()), centroid);
+      ID id = INVALID_ID;
+      if (dev_el != NULL)
+        id = dev_el->subdomain_id();
+
+      el->subdomain_id() = id;
+
+      // eliminate all elements that seem to lie outside of the structure
+      if (id == INVALID_ID)
+        mesh->delete_elem(el);
+    }
+  }
+
+  mesh->prepare_for_use(true);
+  set_mesh(mesh);
+}
 
 
 void

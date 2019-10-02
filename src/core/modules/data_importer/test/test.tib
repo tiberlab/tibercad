@@ -14,6 +14,7 @@ Module data_import
 {
   filename = normE_field_566Thz.dat
   filetype = csv
+  dimensions = 2
 }
 
 Simulation
