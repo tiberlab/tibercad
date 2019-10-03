@@ -2,7 +2,7 @@ Device bulk
 {
 
   meshfile = test.msh
-  mesh_units = 1
+  mesh_units = 1e-6
 
   Region bulk
   {
@@ -15,11 +15,12 @@ Module data_import
   filename = normE_field_566Thz.dat
   filetype = csv
   dimensions = 2
+  length_units = m
 }
 
 Simulation
 {
-  solve = data_import
+  #solve = data_import
 
   resultpath = output
 }

@@ -42,30 +42,14 @@
 using namespace std;
 using namespace libMesh;
 
-//! List of compatible file types
-const std::string DataImporter::valid_filetypes[] = {
-  "hdf5",
-  "vtk_structured",
-  "vtk_unstructured",
-  "csv1d_col",
-  "csv1d_row",
-  "csv2d",
-  "csv3d",
-  "image",
-  "comsol"
-};
 
-//! Number of compatible file types
-const int DataImporter::num_valid_filetypes = 9;
-
-DataImporter*
-DataImporter::_this = NULL;
 
 DataImporter::DataImporter(const ModelOptions& options):
   SimulationInterface(options),
   _dims(0),
   _delimiter("\t ,"),
-  _comment_chars({'#', '%', '!', '/'})
+  _comment_chars({'#', '%', '!', '/'}),
+  _origin(0.0)
 {
   //is_task(true);
 }
@@ -85,34 +69,18 @@ DataImporter::create(const ModelOptions& options)
 void
 DataImporter::do_init(void)
 {
-  // create linear equation system
-  create_equation_system("linear");
 
-  // get the reference to it
-  TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
-
-  // get the module options
-  _filename = get_option("filename", _filename);
-  _filetype = get_option("filetype", _filetype);
-  _dims = get_option("dimensions", _dims);
-
-  get_option("variable_name", _variable_name);
-  get_option("unit", _unit);
-  get_option("variable_alias",_variable_alias);
-  get_option("dataset_name", _dataset_name);
-  get_option("sizes",_sizes);
-  _delimiter = get_option("delimiter", _delimiter);
-
-  get_option("comment_characters", _comment_chars);
-  get_option("print_data",_print_data);
+}
 
 
-  // add variables and attach assembly function
-  system.add_variable("Data",FIRST);
-  system.init();
+void
+DataImporter::setup_mesh(void)
+{
+
   parse_options();
 
   _read_file();
+
 
   increment_solve_sequence_number();
 }
@@ -122,6 +90,7 @@ DataImporter::do_init(void)
 void
 DataImporter::do_setup_solution_variables(void)
 {
+  /*
   // we only have one solution variable
   Messages::info("Setting up variables...");
   declare_solution(Data,REAL,CELL,_unit.c_str());
@@ -132,6 +101,7 @@ DataImporter::do_setup_solution_variables(void)
   Messages::info(MyMessage.str());
   add_alias(_variable_name,Data);
   add_alias(_variable_alias,Data);
+  */
 }
 
 void
@@ -176,10 +146,7 @@ DataImporter::get_solution_secure(const Elem* elem,
     {
       double data = 0.0;
       // Get the actual position
-      int pos = _tensorgrid->find_element(real_pts[n]);
-      // Only do something if the point is inside the domain
-      if ((pos >= 0) && (pos < _tensorgrid->num_elements()))
-        values[Data][n] = _data[pos];
+
     }
   }
 }
@@ -207,14 +174,7 @@ DataImporter::_read_file(void)
   else
     Messages::info("Unknown filetype: " + _filetype);
 
-  // Get the bounding box for automatically calculating local resolutions
-  pair<Point,Point> b_box = get_environment().get_bounding_box();
-  _origin=b_box.first;
-  _bound=b_box.second;
 
-  // Generate the grid
-  Messages::info("Generating grid...");
-  _tensorgrid = new TensorGrid(_origin,_bound,_size_x,_size_y,_size_z);
 }
 
 void
@@ -273,7 +233,7 @@ DataImporter::_read_image(void)
 void
 DataImporter::_read_csv(void)
 {
-  Messages::info("Reading 2d CSV file...");
+  Messages::info("Reading csv file...");
 
   std::ifstream in_file(_filename.c_str());
   if (!in_file.is_open())
@@ -291,13 +251,46 @@ DataImporter::_read_csv(void)
   string line;
   string last_comment;
 
+  Filetype format = unknown;
+
   vector<string> splitted;
 
   while (getline(in_file, line))
   {
-    // skip commented lines
-    if (line.empty() || _comment_chars.count(line[0]))
+    // skip empty lines
+    if (line.empty())
     {
+      continue;
+    }
+
+    // skip commented lines
+    if (_comment_chars.count(line[0]))
+    {
+      // split up the line
+      boost::split(splitted, line, boost::is_any_of(_delimiter),
+                                   boost::token_compress_on);
+      if (splitted.size() > 3)
+      {
+        // try to guess format
+        if ((splitted[0] == "%") && (splitted[1] == "Version:") &&
+            (splitted[2] == "COMSOL"))
+        {
+          format = comsol;
+        }
+        else if ((splitted[0] == "%") && (splitted[1] == "Dimension:"))
+        {
+          boost::trim(splitted[2]);
+          istringstream is(splitted[2]);
+          is >> _dims;
+        }
+        else if ((splitted[0] == "%") && (splitted[1] == "Length") &&
+                 (splitted[2] == "unit:"))
+        {
+          boost::trim(splitted[3]);
+          get_options().set_option("length_units", splitted[3]);
+        }
+      }
+
       last_comment = line;
       continue;
     }
@@ -337,12 +330,48 @@ DataImporter::_read_csv(void)
   os << "Read " << data.size() << " datasets of size " << data[0].size();
   Messages::info(os.str());
 
+  unsigned int xcol = 0;
+  unsigned int ycol = 1;
+  unsigned int zcol = 2;
+
+  vector<string> data_vars;
+  get_option("data_variables", data_vars);
+  vector<string> data_units(data_vars.size(), "");
+  get_option("data_units", data_units);
+
   // get info on column content
   // last_comment could contain the info on columns
   if (!last_comment.empty())
   {
+    boost::split(splitted, last_comment, boost::is_any_of(_delimiter),
+                                         boost::token_compress_on);
+    if (format == comsol)
+    {
+      int num_vars = n_values - _dims;
+      int strings_per_var = (splitted.size() - (_dims + 1)) / num_vars;
+
+      data_vars.resize(0);
+      data_vars.reserve(num_vars);
+      data_units = data_vars;
+      for (unsigned int i = _dims + 1; i < (splitted.size() - 1); i += strings_per_var)
+      {
+        data_vars.push_back(splitted[i]);
+        string unit(splitted[i+1]);
+        cerr << splitted[i] << "  " << splitted[i+1] << endl;
+        unit.erase(0, 1);
+        unit.pop_back();
+        data_units.push_back(unit);
+      }
+    }
 
   }
+
+  if (data_units.size() != data_vars.size())
+  {
+    data_units.resize(0);
+    data_units.resize(data_vars.size(), "");
+  }
+
 
   vector<double>* x = nullptr;
   vector<double>* y = nullptr;
@@ -362,6 +391,26 @@ DataImporter::_read_csv(void)
   // Now create mesh
   _create_mesh_from_points(x, y, z);
 
+  //
+  //now create the system and variables
+  //
+
+  // create linear equation system
+  create_equation_system("linear");
+
+  // get the reference to it
+  TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
+
+  // add variables
+  for (unsigned int i = 0; i < data_vars.size(); ++i)
+  {
+    cerr << "Add " << data_vars[i] << endl;
+    system.add_variable(data_vars[i], FIRST);
+    declare_solution_ext(data_vars[i], i, SolutionDescriptor::REAL,
+        SolutionDescriptor::NODES, data_units[i]);
+  }
+
+  system.init();
 }
 
 
@@ -378,6 +427,25 @@ DataImporter::_create_mesh_from_points(const vector<double>* x,
   if (dim == 0)
     throw InitFailedException("Data mesh has no x,y or z coordinates associated.");
 
+  // as default we assume mesh units for all lengths
+  double length_units = this->get_mesh_units();
+
+  double m = 1;
+  string units = get_option("length_units", "");
+  if (units == "m") m = 1;
+  else if (units == "cm") m = 0.01;
+  else if (units == "mm") m = 0.001;
+  else if (units == "um") m = 1e-6;
+  else if (units == "nm") m = 1e-9;
+  else
+  {
+    m = get_option("length_units", length_units);
+  }
+
+  m /= length_units;
+  //cerr << "multiplier = " << m << endl;
+
+
   UnstructuredMesh* mesh = new Mesh(get_solver_communicator(), dim);
 
   size_t n_points = 0;
@@ -392,9 +460,9 @@ DataImporter::_create_mesh_from_points(const vector<double>* x,
   for (size_t i = 0; i < n_points; ++i)
   {
     Point p(0, 0, 0);
-    if (x != nullptr) p(0) = (*x)[i];
-    if (y != nullptr) p(1) = (*y)[i];
-    if (z != nullptr) p(2) = (*z)[i];
+    if (x != nullptr) p(0) = m * (*x)[i];
+    if (y != nullptr) p(1) = m * (*y)[i];
+    if (z != nullptr) p(2) = m * (*z)[i];
     mesh->add_point(p);
   }
 
@@ -412,7 +480,6 @@ DataImporter::_create_mesh_from_points(const vector<double>* x,
     TetGenMeshInterface tetgenif(*mesh);
     tetgenif.triangulate_pointset();
   }
-  mesh->print_info();
 
   // check for degenerate elements and assign region ids
   MeshBase::element_iterator it(mesh->elements_begin());
@@ -427,6 +494,7 @@ DataImporter::_create_mesh_from_points(const vector<double>* x,
       // eliminate all degenerate elements
       mesh->delete_elem(el);
     }
+    /*
     else
     {
       Point centroid(el->centroid());
@@ -442,7 +510,14 @@ DataImporter::_create_mesh_from_points(const vector<double>* x,
       if (id == INVALID_ID)
         mesh->delete_elem(el);
     }
+    */
   }
+
+  if (mesh->n_elem() == 0)
+    throw InitFailedException("Data import results in empty mesh: "
+        "check units or geometry.");
+
+  //mesh->print_info();
   libMesh::GmshIO(*mesh).write("mesh.msh");
 
   mesh->allow_renumbering(false);
@@ -460,11 +535,26 @@ DataImporter::_read_vtk(void)
 void
 DataImporter::do_print_info(void)
 {
-  Messages::info("Using external source for generation rate");
 }
 
 void
 DataImporter::parse_options(void)
 {
+
+  // get the module options
+  _filename = get_option("filename", _filename);
+  _filetype = get_option("filetype", _filetype);
+  _dims = get_option("dimensions", _dims);
+
+  get_option("variable_name", _variable_name);
+  get_option("unit", _unit);
+  get_option("variable_alias",_variable_alias);
+  get_option("dataset_name", _dataset_name);
+  get_option("sizes",_sizes);
+  _delimiter = get_option("delimiter", _delimiter);
+
+  get_option("comment_characters", _comment_chars);
+  get_option("print_data",_print_data);
+
 }
 

@@ -38,6 +38,9 @@ class TBDLLOCAL DataImporter : public SimulationInterface
     //! Setup available variables
     virtual void do_setup_solution_variables(void) override;
 
+    //! Setup the mesh, read from file
+    virtual void setup_mesh(void) override;
+
     //! Solver function
     virtual void do_solve(void) override;
 
@@ -57,14 +60,19 @@ class TBDLLOCAL DataImporter : public SimulationInterface
       Data //! Generation rate from file
     };
 
+    //! Known file types
+    enum Filetype
+    {
+      csv,      //! comma or space separated text file
+      comsol,   //! comsol generated data file
+      unknown
+    };
+
     //! Assembly function
     //static void assemble(EquationSystems& es, const std::string& system_name);
 
     //! Real assembly function
     //void do_assemble(EquationSystems& es, const std::string& system_name);
-
-    //! Static pointer to this
-    static DataImporter* _this;
 
     //! Wrapper for reading the right file type
     void _read_file(void);
@@ -89,14 +97,15 @@ class TBDLLOCAL DataImporter : public SimulationInterface
                                   const std::vector<double>* y = nullptr,
                                   const std::vector<double>* z = nullptr);
 
-    static const std::string valid_filetypes[];
-    static const int num_valid_filetypes;
 
     unsigned int _dims;
     size_t _size_x, _size_y, _size_z;
 
     //! The file to read from
     std::string _filename;
+
+    //! The filetype
+    //Filetype _filetype;
 
     //! The file type
     std::string _filetype, _variable_name,
@@ -108,9 +117,8 @@ class TBDLLOCAL DataImporter : public SimulationInterface
     //! Characters interpreted as comments
     std::set<char> _comment_chars;
 
-    double* _data;
     TensorGrid* _tensorgrid;
-    Point _origin,_bound;
+    Point _origin, _bound;
 
 };
 
