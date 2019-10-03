@@ -27,6 +27,7 @@
 //---------------------
 
 using namespace std;
+using namespace libMesh;
 
 map<string, list<boost::function<void(void)>>>
 AtomisticStructure::_callback_functions;
