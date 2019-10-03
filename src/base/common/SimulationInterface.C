@@ -702,6 +702,20 @@ SimulationInterface::init(void)
     m.indent();
   }
 
+
+  bool plot_all = _plotvariables.count("all");
+
+  // check which variables should be plotted
+  for (auto&& var : _solution_descriptors)
+  {
+    if (_plotvariables.count(var.second.name()) || plot_all)
+      _plotvariable_ids.insert(var.first);
+
+    // a string of type "-pippo" prevents plotting of "pippo"
+    if (_plotvariables.count("-" + var.second.name()))
+      _plotvariable_ids.erase(var.first);
+  }
+
   if (!_is_initialized)
   {
     Messages::debug("Initialize " + get_name() + "... ");
@@ -2613,15 +2627,7 @@ SimulationInterface::declare_solution_ext(const std::string& name, ID id,
           units, n_comp);
   _solution_ids[name] = id;
 
-  bool plot_all = _plotvariables.count("all");
 
-  // check if it should be plotted
-  if (_plotvariables.count(name) || plot_all)
-    _plotvariable_ids.insert(id);
-
-  // a string of type "-pippo" prevents plotting of "pippo"
-  if (_plotvariables.count("-" + name))
-    _plotvariable_ids.erase(id);
 
 }
 
