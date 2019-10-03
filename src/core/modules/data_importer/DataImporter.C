@@ -7,6 +7,7 @@
 #include "Messages.h"
 #include "SimulationEnvironment.h"
 #include "TensorGrid.h"
+#include "MeshUtils.h"
 
 #include "libmesh/equation_systems.h"
 #include "libmesh/dof_map.h"
@@ -422,13 +423,13 @@ DataImporter::_create_mesh_from_points(const vector<double>* x,
     if (el->volume() <= 1e-12)
     {
       // eliminate all degenerate elements
-      mesh.delete_elem(el);
+      mesh->delete_elem(el);
     }
     else
     {
       Point centroid(el->centroid());
       const Elem* dev_el = MeshUtils::search_element(
-          &(get_device()->get_mesh()), centroid);
+          &(get_environment().get_device().get_mesh()), centroid);
       ID id = INVALID_ID;
       if (dev_el != NULL)
         id = dev_el->subdomain_id();
