@@ -12,6 +12,7 @@
 #include "libmesh/equation_systems.h"
 #include "libmesh/dof_map.h"
 #include "libmesh/mesh.h"
+#include "libmesh/gmsh_io.h"
 #include "libmesh/mesh_tetgen_interface.h"
 #include "libmesh/mesh_triangle_interface.h"
 // unfortunately tetgen defines REAL
@@ -411,6 +412,7 @@ DataImporter::_create_mesh_from_points(const vector<double>* x,
     TetGenMeshInterface tetgenif(*mesh);
     tetgenif.triangulate_pointset();
   }
+  mesh->print_info();
 
   // check for degenerate elements and assign region ids
   MeshBase::element_iterator it(mesh->elements_begin());
@@ -441,8 +443,10 @@ DataImporter::_create_mesh_from_points(const vector<double>* x,
         mesh->delete_elem(el);
     }
   }
+  libMesh::GmshIO(*mesh).write("mesh.msh");
 
-  mesh->prepare_for_use(true);
+  mesh->allow_renumbering(false);
+  mesh->prepare_for_use();
   set_mesh(mesh);
 }
 
