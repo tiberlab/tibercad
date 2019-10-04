@@ -90,18 +90,7 @@ DataImporter::setup_mesh(void)
 void
 DataImporter::do_setup_solution_variables(void)
 {
-  /*
-  // we only have one solution variable
-  Messages::info("Setting up variables...");
-  declare_solution(Data,REAL,CELL,_unit.c_str());
-  _variable_name = get_options().get_option("variable_name","");
-  _variable_alias = get_options().get_option("variable_alias","");
-  std::stringstream MyMessage;
-  MyMessage << "Adding aliases: " << _variable_name << ", " << _variable_alias << std::endl;
-  Messages::info(MyMessage.str());
-  add_alias(_variable_name,Data);
-  add_alias(_variable_alias,Data);
-  */
+
 }
 
 void
@@ -115,48 +104,56 @@ DataImporter::get_solution_secure(const Elem* elem,
     std::map<ID, std::vector<double> >& values,
     const std::vector<Point>& p)
 {
-  int i=0;
-  if (values.count(Data))
+cerr << "here\n";
+  TiberLinearSystem* system = &get_equation_system<TiberLinearSystem>();
+  const NumericVector<Number>& solution = system->get_solution_vector();
+  const DofMap& dof_map = system->get_dof_map();
+
+  // Get mesh dimensions
+  unsigned int dim = get_mesh().mesh_dimension();
+  // Set the variable ID to the one(s) you defined before
+  vector<unsigned int> varids;
+  system->get_all_variable_numbers(varids);
+
+  // This section maps 3d equidistat data to the fem grid
+  FEType fe_type = system->variable_type(varids[0]);
+  UniquePtr<FEBase> fe(build_finite_element(dim, fe_type));
+  vector<vector<unsigned int>> dof_indices;
+
+  //element shape functions
+  const vector<vector<Real> >& phi = fe->get_phi();
+  const vector<Point>& real_pts = fe->get_xyz();
+  ID subdomain = elem->subdomain_id();
+
+  fe->reinit(elem, &p);
+
+  for (unsigned int i = 0; i < varids.size(); ++i)
   {
-    TiberLinearSystem* system = &get_equation_system<TiberLinearSystem>();
-    const NumericVector<Number>& solution = system->get_solution_vector();
-    const DofMap& dof_map = system->get_dof_map();
+    dof_map.dof_indices(elem, dof_indices[i], varids[i]);
+  }
 
-    // Get mesh dimensions
-    unsigned int dim = get_mesh().mesh_dimension();
-    // Set the variable ID to the one(s) you defined before
-    const unsigned int varid = system->variable_number("Data");
-
-    // This section maps 3d equidistat data to the fem grid
-    FEType fe_type = system->variable_type(varid);
-    UniquePtr<FEBase> fe(build_finite_element(dim, fe_type));
-    vector<unsigned int> dof_indices;
-
-    //element shape functions
-    const vector<Point>& real_pts = fe->get_xyz();
-    ID subdomain = elem->subdomain_id();
-
-    fe->reinit(elem, &p);
-
-    dof_map.dof_indices(elem, dof_indices, varid);
-
-    const unsigned int n_dofs = dof_indices.size();
-    // Loop over grid positions
-    for (unsigned int n = 0; n < p.size(); n++)
+  const unsigned int n_dofs = dof_indices[0].size();
+  // Loop over grid positions
+  for (unsigned int n = 0; n < p.size(); n++)
+  {
+    for (unsigned int i = 0; i < varids.size(); ++i)
     {
-      double data = 0.0;
-      // Get the actual position
+      if (values.count(i))
+      {
+        double value = 0;
+        for (unsigned int k = 0; k < dof_indices[i].size(); ++k)
+        {
+          value += solution(dof_indices[i][k]) * phi[k][n];
+        }
 
+        values[i][n] = value;
+
+      }
     }
   }
 }
 
-//void
-//DataImporter::do_assemble(EquationSystems& es, const std::string& system_name)
-//{
-//    es;
-//    system_name;
-//}
+
 
 void
 DataImporter::_read_file(void)
@@ -257,6 +254,8 @@ DataImporter::_read_csv(void)
 
   while (getline(in_file, line))
   {
+    boost::trim(line);
+
     // skip empty lines
     if (line.empty())
     {
@@ -269,7 +268,8 @@ DataImporter::_read_csv(void)
       // split up the line
       boost::split(splitted, line, boost::is_any_of(_delimiter),
                                    boost::token_compress_on);
-      if (splitted.size() > 3)
+
+      if (splitted.size() > 2)
       {
         // try to guess format
         if ((splitted[0] == "%") && (splitted[1] == "Version:") &&
@@ -355,9 +355,9 @@ DataImporter::_read_csv(void)
       data_units = data_vars;
       for (unsigned int i = _dims + 1; i < (splitted.size() - 1); i += strings_per_var)
       {
+        boost::trim(splitted[i]);
         data_vars.push_back(splitted[i]);
         string unit(splitted[i+1]);
-        cerr << splitted[i] << "  " << splitted[i+1] << endl;
         unit.erase(0, 1);
         unit.pop_back();
         data_units.push_back(unit);
@@ -404,13 +404,25 @@ DataImporter::_read_csv(void)
   // add variables
   for (unsigned int i = 0; i < data_vars.size(); ++i)
   {
-    cerr << "Add " << data_vars[i] << endl;
     system.add_variable(data_vars[i], FIRST);
     declare_solution_ext(data_vars[i], i, SolutionDescriptor::REAL,
         SolutionDescriptor::NODES, data_units[i]);
   }
 
   system.init();
+
+  for (size_t n = 0; n < get_mesh().n_nodes(); ++n)
+  {
+
+    for (unsigned int i = _dims; i < n_values; ++i)
+    {
+      unsigned int var = i - _dims;
+      dof_id_type dofid = get_mesh().node(n).dof_number(system.number(), var, 0);
+      get_solution_vector().set(dofid, data[i][n]);
+    }
+  }
+
+  get_solution_vector().close();
 }
 
 
