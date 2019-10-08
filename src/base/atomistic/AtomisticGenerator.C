@@ -1955,8 +1955,8 @@ AtomisticGenerator::build_random_alloy()
       // checks whether a region/label is done
       if (num_substituted[regid][lb][sp] >= num_to_substitute[regid][lb][sp])
       {
-         specie_number::iterator it = num_substituted[regid][lb].begin(); 
-         specie_number::iterator itend = num_substituted[regid][lb].end(); 
+         specie_number::iterator it = num_to_substitute[regid][lb].begin();
+         specie_number::iterator itend = num_to_substitute[regid][lb].end();
          done[regid][lb] = true;
          for ( ; it != itend; ++it)
          {
@@ -1967,14 +1967,14 @@ AtomisticGenerator::build_random_alloy()
                 break;
             }
          }
+
          // remove a region when all of a lb are substituted
          bool alldone = true; 
-         for (unsigned int i=1; i < done[regid].size(); i++)
+         for (unsigned int i = 1; i < done[regid].size(); i++)
          {
-           //std::cout<<"reg: "<<regid<<" "<<done[regid][i]<<";"; 
-           if (done[regid][i] == false){ alldone=false; break;}
+           alldone &= done[regid][i];
          }
-         //std::cout<<std::endl;
+
          if (alldone) not_finished.erase(regid);
       }  
 
