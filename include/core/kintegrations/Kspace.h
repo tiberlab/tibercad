@@ -55,6 +55,9 @@ class Kspace
    */
   libMesh::Point get_symmetry_point(const std::string& name) const;
 
+  //! Transform a point according to the rotation matrix
+  void transform_point(libMesh::Point& p) const;
+
   //! Rotate mesh
   void rotate_mesh(void);
 

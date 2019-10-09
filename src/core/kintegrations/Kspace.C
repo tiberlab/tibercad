@@ -933,47 +933,74 @@ void Kspace::define_k_path(void)
   // alternative accepted input:
   kpath = mod_opt.get_option("k-path", kpath);
   int npoints = num_nodes[0];
-  int nelem = max(npoints - 1, 1);
 
 
-  Messages::info("(KSP) defining a k-path: " + kpath);
+  Messages::info("defining a k-path: " + kpath);
   ostringstream os;
-  os <<"(KSP) k-dimension: "<< k_space_dim<<std::endl;
-
-  os <<"(KSP) points per line "<<npoints<<std::endl; 
-  Messages::info(os.str());
+  os <<"k-dimension: " << k_space_dim << std::endl;
 
 
   std::vector<std::string> tokens;
 
   Utils::tokenize(kpath, tokens, "-");
 
-  unsigned int id = 0;
+  vector<libMesh::Point> points(tokens.size());
+  points[0] = get_symmetry_point(tokens[0]);
 
-  libMesh::Point p1(get_symmetry_point(tokens[0]));
-  kmesh->add_point(p1, id, 0);
-  id++;
+  vector<double> segments(tokens.size() - 1);
+  double x = 0.0;
+
+  for (short i = 1; i < tokens.size(); i++)
+  {
+    points[i] = get_symmetry_point(tokens[i]);
+
+    libMesh::Point dp = points[i] - points[i-1];
+    transform_point(dp);
+    segments[i-1] = dp.norm();
+    x += segments[i-1];
+  }
+
+
+  os << "# points   : (";
+
+  vector<unsigned int> n_elems(tokens.size() - 1);
+
+  for (short i = 0; i < segments.size(); ++i)
+  {
+    n_elems[i] = round((npoints - 1) * segments[i] / x);
+    os << n_elems[i] << " ";
+  }
+
+  os << ")";
+  Messages::info(os.str());
+
+
 
   Messages m;
   m.info("Coordinates of symmetry points:");
   m.indent();
   m.info(tokens[0] + " : 0.0");
-  double x = 0.0;
 
+
+  kmesh->add_point(points[0], 0, 0);
+
+  unsigned int id = 1;
+  libMesh::Point p1(points[0]);
+  x = 0.0;
 
   for (short i = 1; i < tokens.size(); i++)
   {
-    libMesh::Point p2(get_symmetry_point(tokens[i]));
+    libMesh::Point p2(points[i]);
     libMesh::Point dp = (p2 - p1);
 
-    x = x + dp.norm();
+    x = x + segments[i-1];
     ostringstream os;
     os << tokens[i] << " : " << x;
     m.info(os.str());
 
-    dp /= nelem;
+    dp /= n_elems[i-1];
 
-    for (int j = 0; j < nelem; j++)
+    for (int j = 0; j < n_elems[i-1]; j++)
     {
       p1 += dp;
 
@@ -996,6 +1023,22 @@ void Kspace::define_k_path(void)
 void Kspace::parse_options(void)
 {
 
+
+}
+
+
+void Kspace::transform_point(libMesh::Point& p) const
+{
+  Tensor1 vec1;
+  vec1(1) = p(0);
+  vec1(2) = p(1);
+  vec1(3) = p(2);
+
+  vec1 = transform_matrix * vec1;
+
+  p(0) = vec1(1);
+  p(1) = vec1(2);
+  p(2) = vec1(3);
 
 }
 
