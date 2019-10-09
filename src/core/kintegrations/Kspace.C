@@ -4,11 +4,11 @@
 #include "SimulationEnvironment.h"
 #include "Constants.h"
 #include "Messages.h"
-#include "gmsh_io.h"
 #include "Utils.h"
 
 #include "libmesh/mesh_modification.h"
 #include "libmesh/mesh_refinement.h"
+#include "libmesh/gmsh_io.h"
 #include "libmesh/edge_edge2.h"
 #include "libmesh/face_tri3.h"
 #include "libmesh/face_quad4.h"
@@ -954,10 +954,24 @@ void Kspace::define_k_path(void)
   kmesh->add_point(p1, id, 0);
   id++;
 
+  Messages m;
+  m.info("Coordinates of symmetry points:");
+  m.indent();
+  m.info(tokens[0] + " : 0.0");
+  double x = 0.0;
+
+
   for (short i = 1; i < tokens.size(); i++)
   {
     libMesh::Point p2(get_symmetry_point(tokens[i]));
-    libMesh::Point dp = (p2 - p1) / nelem;
+    libMesh::Point dp = (p2 - p1);
+
+    x = x + dp.norm();
+    ostringstream os;
+    os << tokens[i] << " : " << x;
+    m.info(os.str());
+
+    dp /= nelem;
 
     for (int j = 0; j < nelem; j++)
     {
