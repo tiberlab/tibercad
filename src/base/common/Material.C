@@ -149,10 +149,19 @@ Material::create(const std::string& name, const ModelOptions& options)
     std::string comp_B(comp_it->second.get_name());
     double x_B = comp_it->second.get_option("x", 0.5);
 
+    alloy_opts.set_option("comp_A", comp_A);
+    alloy_opts.set_option("comp_B", comp_B);
+
     // we use this to disable database files
     alloy_opts["datafile"] = alloy_opts.get_option("datafile", "");
+    alloy_opts.set_option("x_A", x_A);
+    alloy_opts.set_option("x_B", x_B);
 
-    mat = Alloy::create(alloy_opts.get_name(), alloy_opts);
+    ModelOptions new_options(options);
+    new_options.delete_submodels("alloy");
+    new_options += alloy_opts;
+    new_options["material"] = alloy_opts.get_name();
+    mat = Alloy::create(alloy_opts.get_name(), new_options);
 
   }
   else
@@ -181,7 +190,11 @@ void
 Material::preinit(void)
 {
   // set the database
-  Database db(get_name(), get_options().get_option("datafile", ""));
+  ModelOptions opts;
+  if (is_alloy())
+    opts.set_option("alloy", "1");
+
+  Database db(get_name(), get_options().get_option("datafile", ""), opts);
   set_database(db);
 
   // set the crystal structure at this point

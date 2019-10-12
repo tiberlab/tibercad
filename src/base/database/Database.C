@@ -30,9 +30,11 @@ Database::_path = "";
 
 
 Database::Database(const string& material,
-    const string& datafile)
+    const string& datafile,
+    const ModelOptions& options)
   : _section(""),
     _file(NULL),
+    _options(options),
     _is_alloy(false),
     _is_interface(false),
    _mixing_type(VCA)
@@ -71,6 +73,7 @@ Database::operator=(const Database& rhs)
   {
     _material = rhs._material;
     _datafile = rhs._datafile;
+    _options = rhs._options;
     _is_alloy = rhs._is_alloy;
     _is_interface = rhs._is_interface;
     _mixing_type = rhs._mixing_type;
@@ -93,6 +96,9 @@ Database::set_material(const string& material,
   if (_material.find("%", 0) != string::npos)
     _is_interface = true;
   
+  if (_options.find_option("alloy"))
+    _is_alloy = true;
+
 
   string df(datafile);
   if (df.size() == 0)
@@ -134,7 +140,8 @@ Database::set_material(const string& material,
   {
     string msg("Cannot open material data file for ");
     msg += material;
-    throw DatabaseException(msg);
+    Messages::warning(msg);
+    //throw DatabaseException(msg);
   }
   
   _datafile = df;
@@ -159,7 +166,8 @@ Database::do_open(void) const
   {
     string msg("Cannot open material data file '");
     msg += _datafile + "'";
-    throw DatabaseException(msg);
+    Messages::warning(msg);
+    //throw DatabaseException(msg);
   }
 
   if (_datafile.empty())

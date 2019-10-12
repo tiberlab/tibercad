@@ -41,8 +41,6 @@ Alloy::do_preinit(void)
     names.resize(2);
     names[0] = get_options()["comp_A"];
     names[1] = get_options()["comp_B"];
-    xa = get_options().get_option("x_A", xa);
-    xb = get_options().get_option("x_B", xb);
   }
 
   // for now, alloys can have only two components!
@@ -58,8 +56,15 @@ Alloy::do_preinit(void)
   // the components may be alloys
   Database::AlloyMixing mixing = get_database().get_alloy_mixing();
   get_database().set_alloy_mixing(Database::NONE);
+
   xa = get_database().get("x_A", xa);
   xb = get_database().get("x_B", xb);
+  if (get_options().find_option("x_A"))
+  {
+    xa = get_options().get_option("x_A", xa);
+    xb = get_options().get_option("x_B", xb);
+  }
+
   get_database().set_alloy_mixing(mixing);
 
   {
@@ -72,6 +77,10 @@ Alloy::do_preinit(void)
 
 
   ModelOptions opts(get_options());
+  opts.delete_option("comp_A");
+  opts.delete_option("comp_B");
+  opts.delete_option("x_A");
+  opts.delete_option("x_B");
   if (xa >= 0)
     opts.set_option("x", xa);
   _mat_A = Material::create(names[0], opts);

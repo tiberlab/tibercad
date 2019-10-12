@@ -3,6 +3,7 @@
 #ifndef _DATABASE_H_
 #define _DATABASE_H_
 
+#include "ModelOptions.h"
 #include "tiber_dll.h"
 
 #include <string>
@@ -36,7 +37,8 @@ class Database
 
     //! Constructor taking arguments
     Database(const std::string& material,
-        const std::string& datafile = "");
+             const std::string& datafile = "",
+             const ModelOptions& options = ModelOptions());
 
     //! Copy constructor
     Database(const Database& other);
@@ -216,6 +218,13 @@ class Database
      * on the fly when accessing the database.
      */
     mutable GetPot* _file;
+
+
+    //! The options to control database access
+    /*!
+     * In future this will contain the data read from the database
+     */
+    ModelOptions _options;
 
 
     //! \c true if this is the database of an alloy
