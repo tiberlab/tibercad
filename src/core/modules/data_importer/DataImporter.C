@@ -414,11 +414,17 @@ DataImporter::_read_csv(void)
   for (size_t n = 0; n < get_mesh().n_nodes(); ++n)
   {
 
-    for (unsigned int i = _dims; i < n_values; ++i)
+    if (get_mesh().node(n).n_vars(system.number()) > 0)
     {
-      unsigned int var = i - _dims;
-      dof_id_type dofid = get_mesh().node(n).dof_number(system.number(), var, 0);
-      get_solution_vector().set(dofid, data[i][n]);
+      for (unsigned int i = _dims; i < n_values; ++i)
+      {
+        unsigned int var = i - _dims;
+        if (get_mesh().node(n).n_comp(system.number(), var) > 0)
+        {
+          dof_id_type dofid = get_mesh().node(n).dof_number(system.number(), var, 0);
+          get_solution_vector().set(dofid, data[i][n]);
+        }
+      }
     }
   }
 
@@ -506,14 +512,28 @@ DataImporter::_create_mesh_from_points(const vector<double>* x,
       // eliminate all degenerate elements
       mesh->delete_elem(el);
     }
-    /*
     else
     {
       Point centroid(el->centroid());
       const Elem* dev_el = MeshUtils::search_element(
           &(get_environment().get_device().get_mesh()), centroid);
+
+      if (dev_el == nullptr)
+      {
+        for (unsigned int n = 0; n < el->n_nodes(); ++n)
+        {
+          const Elem* tmp_el = MeshUtils::search_element(
+              &(get_environment().get_device().get_mesh()), el->point(n));
+          if (tmp_el != nullptr)
+          {
+            dev_el = tmp_el;
+            break;
+          }
+        }
+      }
+
       ID id = INVALID_ID;
-      if (dev_el != NULL)
+      if (dev_el != nullptr)
         id = dev_el->subdomain_id();
 
       el->subdomain_id() = id;
@@ -522,7 +542,6 @@ DataImporter::_create_mesh_from_points(const vector<double>* x,
       if (id == INVALID_ID)
         mesh->delete_elem(el);
     }
-    */
   }
 
   if (mesh->n_elem() == 0)
