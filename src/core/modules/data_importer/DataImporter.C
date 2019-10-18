@@ -98,13 +98,12 @@ DataImporter::do_solve(void)
 {
 }
 
-//  Actual computation is done here!
 void
 DataImporter::get_solution_secure(const Elem* elem,
     std::map<ID, std::vector<double> >& values,
     const std::vector<Point>& p)
 {
-cerr << "here\n";
+
   TiberLinearSystem* system = &get_equation_system<TiberLinearSystem>();
   const NumericVector<Number>& solution = system->get_solution_vector();
   const DofMap& dof_map = system->get_dof_map();
@@ -118,7 +117,7 @@ cerr << "here\n";
   // This section maps 3d equidistat data to the fem grid
   FEType fe_type = system->variable_type(varids[0]);
   UniquePtr<FEBase> fe(build_finite_element(dim, fe_type));
-  vector<vector<unsigned int>> dof_indices;
+  vector<vector<unsigned int>> dof_indices(varids.size());
 
   //element shape functions
   const vector<vector<Real> >& phi = fe->get_phi();
@@ -143,6 +142,7 @@ cerr << "here\n";
         double value = 0;
         for (unsigned int k = 0; k < dof_indices[i].size(); ++k)
         {
+          //cerr << solution(dof_indices[i][k]) << "  " << phi[k][n] << "\n";
           value += solution(dof_indices[i][k]) * phi[k][n];
         }
 
@@ -429,6 +429,8 @@ DataImporter::_read_csv(void)
   }
 
   get_solution_vector().close();
+  system.update();
+  //get_solution_vector().print_matlab("test.m");
 }
 
 
@@ -548,8 +550,7 @@ DataImporter::_create_mesh_from_points(const vector<double>* x,
     throw InitFailedException("Data import results in empty mesh: "
         "check units or geometry.");
 
-  //mesh->print_info();
-  libMesh::GmshIO(*mesh).write("mesh.msh");
+  //libMesh::GmshIO(*mesh).write("mesh.msh");
 
   mesh->allow_renumbering(false);
   mesh->prepare_for_use();
