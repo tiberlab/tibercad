@@ -54,11 +54,6 @@ class TBDLLOCAL DataImporter : public SimulationInterface
 
   private:
 
-    //! Known solution variables
-    enum Solutions
-    {   
-      Data //! Generation rate from file
-    };
 
     //! Known file types
     enum Filetype
@@ -98,8 +93,8 @@ class TBDLLOCAL DataImporter : public SimulationInterface
                                   const std::vector<double>* z = nullptr);
 
 
+    //! Spatial dimensions
     unsigned int _dims;
-    size_t _size_x, _size_y, _size_z;
 
     //! The file to read from
     std::string _filename;
@@ -108,8 +103,7 @@ class TBDLLOCAL DataImporter : public SimulationInterface
     //Filetype _filetype;
 
     //! The file type
-    std::string _filetype, _variable_name,
-    _unit, _variable_alias, _dataset_name, _num_dimensions, _sizes, _print_data;
+    std::string _filetype;
 
     //! Delimiters
     std::string _delimiter;
@@ -118,7 +112,9 @@ class TBDLLOCAL DataImporter : public SimulationInterface
     std::set<char> _comment_chars;
 
     TensorGrid* _tensorgrid;
-    Point _origin, _bound;
+
+    //! coordinate translation
+    Point _translate;
 
 };
 

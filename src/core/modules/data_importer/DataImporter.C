@@ -49,7 +49,7 @@ DataImporter::DataImporter(const ModelOptions& options):
   _dims(0),
   _delimiter("\t ,"),
   _comment_chars({'#', '%', '!', '/'}),
-  _origin(0.0)
+  _translate(0.0)
 {
   //is_task(true);
 }
@@ -483,7 +483,7 @@ DataImporter::_create_mesh_from_points(const vector<double>* x,
     if (x != nullptr) p(0) = m * (*x)[i];
     if (y != nullptr) p(1) = m * (*y)[i];
     if (z != nullptr) p(2) = m * (*z)[i];
-    mesh->add_point(p);
+    mesh->add_point(p + _translate);
   }
 
   if (dim == 1)
@@ -578,15 +578,11 @@ DataImporter::parse_options(void)
   _filetype = get_option("filetype", _filetype);
   _dims = get_option("dimensions", _dims);
 
-  get_option("variable_name", _variable_name);
-  get_option("unit", _unit);
-  get_option("variable_alias",_variable_alias);
-  get_option("dataset_name", _dataset_name);
-  get_option("sizes",_sizes);
   _delimiter = get_option("delimiter", _delimiter);
 
   get_option("comment_characters", _comment_chars);
-  get_option("print_data",_print_data);
+
+  get_option("coordinate_translation", _translate);
 
 }
 
