@@ -1709,14 +1709,6 @@ SimulationInterface::get_mesh(void) const
 
 
 inline
-void
-SimulationInterface::set_mesh(MeshBase* mesh)
-{
-  _mesh = mesh;
-}
-
-
-inline
 libMesh::Parallel::Communicator&
 SimulationInterface::get_communicator(void)
 {

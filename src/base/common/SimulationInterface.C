@@ -613,6 +613,15 @@ SimulationInterface::setup_environment(Device& device, const set<ID>& region_num
 
 
 void
+SimulationInterface::set_mesh(MeshBase* mesh)
+{
+  get_environment().set_mesh(mesh);
+  _mesh = mesh;
+}
+
+
+
+void
 SimulationInterface::setup_mesh(void)
 {
   if (get_option("atomistic_mesh", false))
