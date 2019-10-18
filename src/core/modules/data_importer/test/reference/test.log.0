@@ -1,0 +1,86 @@
+
+Log start: Fri Oct 18 21:12:20 2019
+
+
+tiberCAD release 3.1.0 (rev. 4857, x86_64-linux)
+
+Input file: test.tib
+
+Initialize global simulation options
+  Simulation temperature: 300 K
+  Database search path  : /home/maufder/Work/TiberCAD/3.0/materials
+  Log file              : output/test.log.0
+
+Setup mesh
+  Reading mesh file 'test.msh ...
+    mesh reading time: 0h 0m 0.0004s
+    mesh preparation time: 0h 0m 0.00047s
+    bd_regions preparation time: 0h 0m 4.1e-06s
+
+    mesh units          : 1e-06 m
+    mesh dimension      :       2
+    number of nodes     :     109
+    number of elements  :     184
+    number of subdomains:       1
+    number of boundaries:       0
+
+Create materials ...
+
+*** Warning: found unused options in block : x-growth-direction, y-growth-direction, z-growth-direction
+  Added material Air for region 'bulk' (mesh regions 1)
+    (using datafile /home/maufder/Work/TiberCAD/3.0/materials/Air.dat)
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+Creation of materials done.
+
+Setting up simulation of type 'data_import' ...
+  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/data_import/data_import.so)
+  Reading csv file...
+  Read 3 datasets of size 919
+
+  Setup of grid mapper: 0h 0m 0.00042s, memory usage: 0 MB 58488
+Creating bulk models... 
+  Region: bulk
+
+Setting up bulk models ...
+
+Setting up lower dimensional (boundary) models ...
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for data_import (data_import)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+
+Available solution variables:
+------------------------------------------------------------------
+Name                     Units          Type      Association Plot
+------------------------------------------------------------------
+ewfd.normE               V/m            real      nodal       y
+RegionIDs                               real      cell        y
+------------------------------------------------------------------
+
+Output directory      : output
+Output file format    : vtk
+Output file basename  : data_import
+
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+We solve: data_import 
+
+>>>>------------------------------ (data_import) -------------------------------
+
+Solve time: 0h 0m 7.2e-06s
+<<<<----------------------------------------------------------------------------
+
+Total solve time: 0h 0m 0.0087s
+Simulation finished.
+
+2 warnings during run
+0 errors detected
+
+
+Log end: Fri Oct 18 21:12:20 2019
+
+
