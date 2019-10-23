@@ -15,4 +15,4 @@
 inputfile = DSC.tib
 outputdir = output
 
-#check = sweep_V_dssc.dat : $V anode.current cathode.current 
+check = sweep_V_dssc.dat : $V anode.current cathode.current 
