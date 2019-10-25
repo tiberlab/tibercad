@@ -166,10 +166,13 @@ TightBinding::project_potential(const std::string model_name, const std::string 
 {
   Point p;
 
-  //Use PotentialInterface to get the right simulation: currently hard-coded variables
+  // Use PotentialInterface to get the right simulation
+  // The default is to assume them to com from the driftdiffusion module
+  // (this is for backwards compatibility, but it would be better to always
+  // specify the sources explicitly in the input)
   string el_pot  = get_option("electrostatic_potential", model_name);
-  string el_chem = get_option("el_electrochemical_potential", "");
-  string hl_chem = get_option("hl_electrochemical_potential", "");
+  string el_chem = get_option("el_electrochemical_potential", model_name);
+  string hl_chem = get_option("hl_electrochemical_potential", model_name);
 
   PotentialInterface pot_model(el_pot, "ElPotential");
   PotentialInterface elchem_model(el_chem, "eQFermi");
