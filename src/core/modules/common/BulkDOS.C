@@ -275,16 +275,16 @@ BulkDOS::calculate_density_and_derivative(std::vector<double>& result,
     dens *= Neff;
 
     // is this needed???
-    if (dens > min_dens)
+    //if (dens > min_dens)
     {
       der *= Neff / kT;
       der2 *= Neff / kT / kT;
-    }
+    }/*
     else
     {
       der = 0.0;
       der2 = 0.0;
-    }
+    }*/
 
 
       density += dens;
