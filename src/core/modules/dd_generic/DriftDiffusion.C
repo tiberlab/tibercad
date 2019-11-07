@@ -2500,7 +2500,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
       double q = sc->get_carrier_properties(v)->get_charge();
       double sign = sc->get_carrier_properties(v)->get_charge_sign();
       double sigma = sc->get_q_conductivity(v);
-      thel_pow[v] = 0.0; //sc->get_carrier_properties(v)->get_thermoelectric_power();
+      thel_pow[v] = sc->get_carrier_properties(v)->get_thermoelectric_power();
       RealGradient flux_loc = -sigma * (sign * grad_qf_loc[v] + thel_pow[v] * grad_T_loc);
       flux[v] += flux_loc;
       curr[v] += Constants::e * q  * flux_loc;
@@ -3276,8 +3276,9 @@ DriftDiffusion::calculate_currents_rstf_global(void)
 
           for (auto& var : qf_vars)
           {
-            _boundary_currents[rstf_it->first] -= (curr[var] * dphi[n][qp] +
+            double value = (curr[var] * dphi[n][qp] +
                 net_rate * phi[n][qp]) * sol(dof_indices_rstf[n]);
+            _boundary_currents[rstf_it->first] -= value;
           }
 
         }
@@ -5223,10 +5224,8 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
           CarrierProperties* cp = sc->get_carrier_properties(var);
           dens.insert( make_pair(var, sc->get_q_density(var)) );
           R.insert( make_pair(var, sc->get_net_q_recombination_rate(var)) );
-          //mu.insert( make_pair(var, sc->get_q_mobility(var)) );
           sigma.insert( make_pair(var, cp->get_conductivity() / (mu0 * C0_q)) );
-          //tep.insert( make_pair(var, cp->get_thermoelectric_power() / phi0) );
-          tep.insert( make_pair(var, 0.0) );
+          tep.insert( make_pair(var, cp->get_thermoelectric_power() / phi0) );
         }
       }
       //double Nd = sc->get_ionized_donor_density();
@@ -5602,7 +5601,6 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
               {
                 Fv.at(var)(ii) += sign * net_recomb;
 
-                /*
                 double sigma_x_P_x_J = J * sign * sigma[var] * tep[var] / scalev.at(var)(i);
                 if (sigma_x_P_x_J != 0)
                 {
@@ -5614,7 +5612,6 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                     Fv.at(var)(i) += sigma_x_P_x_J * laplace * T_nodes[k];
                   }
                 }
-                */
               }
               else
                 Fv.at(var)(ii) -= Xv.at(var)(ii);
