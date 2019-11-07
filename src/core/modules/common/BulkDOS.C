@@ -294,13 +294,17 @@ BulkDOS::calculate_density_and_derivative(std::vector<double>& result,
 
     // calculate thermoelectric power
     double temp = kT / Constants::k_B;
-    double Pth = dens / der * 1.5 / temp + Constants::k_Boltzmann * (1 - arg);
+    //double Pth = dens / der * 1.5 / temp + Constants::k_Boltzmann * (1 - arg);
+    double Pth = Constants::k_Boltzmann * (2.5 - arg);
+    if (get_particle() == 'h')
+      Pth *= -1.0;
 
-    _th_el_power += dens * Pth;
+    //_th_el_power += dens * Pth;
+    _th_el_power += Pth;
 
   }
 
-  _th_el_power /= density;
+  //_th_el_power /= density;
 
 
 
