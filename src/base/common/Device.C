@@ -213,6 +213,10 @@ Device::prepare(void)
 
   if (_options.get_option("plot_alloy_composition", false))
   {
+    if (get_mesh().comm().size() > 1)
+      Messages::warning("plot_alloy_composition not implemented in parallel.");
+    else
+    {
     string format = "vtk";
     if (get_mesh().mesh_dimension() == 1)
       format = "dat";
@@ -237,7 +241,7 @@ Device::prepare(void)
     vector<string> legend(1, "x");
     string filename = Utils::basename(_options["meshfile"]) + "_alloy_comp";
     writer.write_cell_data(filename, data, legend);
-
+    }
   }
 }
 
