@@ -5601,7 +5601,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
               {
                 Fv.at(var)(ii) += sign * net_recomb;
 
-                double sigma_x_P_x_J = J * sign * sigma[var] * tep[var] / scalev.at(var)(i);
+                double sigma_x_P_x_J = J * sign * sigma[var] * tep[var] / scalev.at(var)(ii);
                 if (sigma_x_P_x_J != 0)
                 {
                   // include Seebeck contribution -> Residual
@@ -5609,7 +5609,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                   {
                     Real laplace = dphi[i][qp] * dphi[k][qp];
 
-                    Fv.at(var)(i) += sigma_x_P_x_J * laplace * T_nodes[k];
+                    Fv.at(var)(ii) += sigma_x_P_x_J * laplace * T_nodes[k];
                   }
                 }
               }
