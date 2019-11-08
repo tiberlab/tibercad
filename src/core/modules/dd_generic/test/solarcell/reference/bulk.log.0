@@ -1,21 +1,21 @@
 
-Log start: Mon Sep  2 16:59:52 2019
+Log start: Fri Nov  8 07:29:59 2019
 
 
-tiberCAD release 3.1.0 (rev. 4804, x86_64-linux)
+tiberCAD release 3.1.0 (rev. 4864, x86_64-linux)
 
 Input file: bulk.tib
 
 Initialize global simulation options
   Simulation temperature: 300 K
-  Database search path  : /home/maufder/Projects/TIBERCAD/trunk/materials
+  Database search path  : /scratch/maufder/TiberCAD_testsuite/trunk/materials
   Log file              : output/bulk.log.0
 
 Setup mesh
   Reading mesh file 'bulk.msh ...
-    mesh reading time: 0h 0m 0.011s
-    mesh preparation time: 0h 0m 0.00038s
-    bd_regions preparation time: 0h 0m 2.3e-05s
+    mesh reading time: 0h 0m 0.0023s
+    mesh preparation time: 0h 0m 0.00036s
+    bd_regions preparation time: 0h 0m 2.1e-05s
 
     mesh units          : 1e-06 m
     mesh dimension      :       1
@@ -26,30 +26,30 @@ Setup mesh
 
 Create materials ...
   Added material GaAs for region 'bulk' (mesh regions 1)
-    (using datafile /home/maufder/Projects/TIBERCAD/trunk/materials/GaAs.dat)
+    (using datafile /scratch/maufder/TiberCAD_testsuite/trunk/materials/GaAs.dat)
     x growth direction : (1,0,0)
     y growth direction : (0,1,0)
     z growth direction : (0,0,1)
   Added material GaAs for region 'ndop' (mesh regions 2)
-    (using datafile /home/maufder/Projects/TIBERCAD/trunk/materials/GaAs.dat)
+    (using datafile /scratch/maufder/TiberCAD_testsuite/trunk/materials/GaAs.dat)
     x growth direction : (1,0,0)
     y growth direction : (0,1,0)
     z growth direction : (0,0,1)
   Added material GaAs for region 'pdop' (mesh regions 3)
-    (using datafile /home/maufder/Projects/TIBERCAD/trunk/materials/GaAs.dat)
+    (using datafile /scratch/maufder/TiberCAD_testsuite/trunk/materials/GaAs.dat)
     x growth direction : (1,0,0)
     y growth direction : (0,1,0)
     z growth direction : (0,0,1)
 Creation of materials done.
 
 Setting up simulation of type 'dd_generic' ...
-  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/dd_generic/dd_generic.so)
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/dd_generic/dd_generic.so)
   Adding boundary 'anode'
-  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/dd_generic/ddbnd_ohmic.so)
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/dd_generic/ddbnd_ohmic.so)
   Adding boundary 'cathode'
 Creating bulk models... 
   Region: bulk
-  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/dd_generic/ddbulk_default.so)
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/dd_generic/ddbulk_default.so)
   Region: ndop
   Region: pdop
 
@@ -60,17 +60,17 @@ Setting up simulation of type 'sweep' ...
 Setting up simulation of type 'sweep' ...
 
 Setting up bulk models ...
-  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/dd_generic/carrier.so)
-  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/dd_generic/recombination_direct.so)
-  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/dd_generic/recombination_exciton_generation.so)
-  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/dd_generic/recombination_exciton_decay.so)
-  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/dd_generic/recombination_optical.so)
-  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/permittivity_constant.so)
-    (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/density_of_states_gauss.so)
-    (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/dd_generic/mobility_constant.so)
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/dd_generic/carrier.so)
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/dd_generic/recombination_direct.so)
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/dd_generic/recombination_exciton_generation.so)
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/dd_generic/recombination_exciton_decay.so)
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/dd_generic/recombination_optical.so)
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/permittivity_constant.so)
+    (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/density_of_states_gauss.so)
+    (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/dd_generic/mobility_constant.so)
 
 *** Warning: found unused options in block density_of_states (gauss): charge
-    (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/density_of_states_bulk.so)
+    (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/density_of_states_bulk.so)
 
 *** Warning: found unused options in block density_of_states (bulk): charge
 
@@ -297,14 +297,14 @@ Solve time: 0h 0m 0.26s
     it 1, |du| = 3.86817, |r| = 0.0147412  alpha = 1
     it 2, |du| = 0.0184194, |r| = 2.33393e-06  alpha = 1
 
-    iterations: 3, |du| = 4.61792e-05, |r| = 7.64176e-11
+    iterations: 3, |du| = 4.61792e-05, |r| = 7.6418e-11
     Surface recombination current = 0
 
     contact name:       voltage:            current:
     anode               0.1                 3.7677e-11
     cathode             0                  -3.7677e-11
 
-  Solve time: 0h 0m 0.093s
+  Solve time: 0h 0m 0.089s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.2
   Trying $Vb = 0.2
@@ -317,10 +317,10 @@ Solve time: 0h 0m 0.26s
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               0.2                -1.8404e-13
-    cathode             0                   1.8404e-13
+    anode               0.2                -1.84508e-13
+    cathode             0                   1.84508e-13
 
-  Solve time: 0h 0m 0.092s
+  Solve time: 0h 0m 0.089s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.3
   Trying $Vb = 0.3
@@ -333,10 +333,10 @@ Solve time: 0h 0m 0.26s
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               0.3                 9.4499e-14
-    cathode             0                  -9.4499e-14
+    anode               0.3                 8.22578e-14
+    cathode             0                  -8.22578e-14
 
-  Solve time: 0h 0m 0.092s
+  Solve time: 0h 0m 0.09s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.4
   Trying $Vb = 0.4
@@ -349,10 +349,10 @@ Solve time: 0h 0m 0.26s
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               0.4                -8.75832e-13
-    cathode             0                   8.75832e-13
+    anode               0.4                -4.00048e-12
+    cathode             0                   4.00048e-12
 
-  Solve time: 0h 0m 0.092s
+  Solve time: 0h 0m 0.09s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.5
   Trying $Vb = 0.5
@@ -365,10 +365,10 @@ Solve time: 0h 0m 0.26s
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               0.5                -5.87558e-11
-    cathode             0                   5.87558e-11
+    anode               0.5                -5.31995e-11
+    cathode             0                   5.31995e-11
 
-  Solve time: 0h 0m 0.091s
+  Solve time: 0h 0m 0.09s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.6
   Trying $Vb = 0.6
@@ -377,14 +377,14 @@ Solve time: 0h 0m 0.26s
     it 1, |du| = 3.86817, |r| = 0.000898911  alpha = 1
     it 2, |du| = 0.0741339, |r| = 1.24452e-05  alpha = 1
 
-    iterations: 3, |du| = 0.000939006, |r| = 2.52498e-09
+    iterations: 3, |du| = 0.000939006, |r| = 2.52497e-09
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               0.6                -3.4345e-09
-    cathode             0                   3.4345e-09
+    anode               0.6                -4.71131e-09
+    cathode             0                   4.71131e-09
 
-  Solve time: 0h 0m 0.091s
+  Solve time: 0h 0m 0.09s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.7
   Trying $Vb = 0.7
@@ -394,12 +394,12 @@ Solve time: 0h 0m 0.26s
     it 2, |du| = 0.101398, |r| = 2.45107e-05  alpha = 1
     it 3, |du| = 0.00196135, |r| = 1.09908e-08  alpha = 1
 
-    iterations: 4, |du| = 8.00441e-07, |r| = 4.07442e-14
+    iterations: 4, |du| = 8.00441e-07, |r| = 4.02095e-14
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               0.7                -1.46439e-07
-    cathode             0                   1.46439e-07
+    anode               0.7                -1.44359e-07
+    cathode             0                   1.44359e-07
 
   Solve time: 0h 0m 0.12s
   <<<<--------------------------------------------------------------------------
@@ -411,12 +411,12 @@ Solve time: 0h 0m 0.26s
     it 2, |du| = 0.137399, |r| = 5.15323e-05  alpha = 1
     it 3, |du| = 0.0040336, |r| = 4.99704e-08  alpha = 1
 
-    iterations: 4, |du| = 3.62763e-06, |r| = 6.26406e-14
+    iterations: 4, |du| = 3.62763e-06, |r| = 6.41672e-14
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               0.8                -7.02457e-06
-    cathode             0                   7.02457e-06
+    anode               0.8                -7.02067e-06
+    cathode             0                   7.02067e-06
 
   Solve time: 0h 0m 0.12s
   <<<<--------------------------------------------------------------------------
@@ -428,7 +428,7 @@ Solve time: 0h 0m 0.26s
     it 2, |du| = 0.168037, |r| = 9.61742e-05  alpha = 1
     it 3, |du| = 0.00612618, |r| = 1.35575e-07  alpha = 1
 
-    iterations: 4, |du| = 8.24708e-06, |r| = 2.85434e-13
+    iterations: 4, |du| = 8.24708e-06, |r| = 2.84181e-13
     Surface recombination current = 0
 
     contact name:       voltage:            current:
@@ -445,7 +445,7 @@ Solve time: 0h 0m 0.26s
     it 2, |du| = 0.200706, |r| = 0.000254537  alpha = 1
     it 3, |du| = 0.00621223, |r| = 3.04253e-07  alpha = 1
 
-    iterations: 4, |du| = 7.67647e-06, |r| = 4.63697e-13
+    iterations: 4, |du| = 7.67647e-06, |r| = 4.61594e-13
     Surface recombination current = 0
 
     contact name:       voltage:            current:
@@ -462,7 +462,7 @@ Solve time: 0h 0m 0.26s
     it 2, |du| = 0.588082, |r| = 0.0100994  alpha = 1
     it 3, |du| = 0.0589775, |r| = 1.06992e-05  alpha = 1
 
-    iterations: 4, |du| = 6.72063e-05, |r| = 5.16228e-11
+    iterations: 4, |du| = 6.72063e-05, |r| = 5.16251e-11
     Surface recombination current = 0
 
     contact name:       voltage:            current:
@@ -479,7 +479,7 @@ Solve time: 0h 0m 0.26s
     it 2, |du| = 0.528327, |r| = 0.0260719  alpha = 1
     it 3, |du| = 0.0473264, |r| = 1.73283e-05  alpha = 1
 
-    iterations: 4, |du| = 2.26842e-05, |r| = 7.03834e-11
+    iterations: 4, |du| = 2.26842e-05, |r| = 7.03813e-11
     Surface recombination current = 0
 
     contact name:       voltage:            current:
@@ -514,7 +514,7 @@ Solve time: 0h 0m 0.26s
     it 3, |du| = 0.197921, |r| = 0.0332886  alpha = 1
     it 4, |du| = 0.0148262, |r| = 0.00013903  alpha = 1
 
-    iterations: 5, |du| = 5.85515e-05, |r| = 2.10416e-09
+    iterations: 5, |du| = 5.85515e-05, |r| = 2.10415e-09
     Surface recombination current = 0
 
     contact name:       voltage:            current:
@@ -541,7 +541,7 @@ Solve time: 0h 0m 0.26s
   Solve time: 0h 0m 0.13s
   <<<<--------------------------------------------------------------------------
 
-Solve time: 0h 0m 1.8s
+Solve time: 0h 0m 1.7s
 <<<<----------------------------------------------------------------------------
 
 >>>>------------------------------- (sweep_gen) --------------------------------
@@ -550,7 +550,7 @@ Solve time: 0h 0m 1.8s
 
   >>>>---------------------------- (driftdiffusion) ----------------------------
 
-    iterations: 1, |du| = 9.03272e-08, |r| = 3.65569e-11
+    iterations: 1, |du| = 9.03345e-08, |r| = 3.6569e-11
     Surface recombination current = 0
 
     contact name:       voltage:            current:
@@ -564,21 +564,21 @@ Solve time: 0h 0m 1.8s
 
   >>>>---------------------------- (driftdiffusion) ----------------------------
 
-    iterations: 1, |du| = 9.93141e-11, |r| = 8.81945e-14
+    iterations: 1, |du| = 9.37642e-11, |r| = 8.88825e-14
     Surface recombination current = 0
 
     contact name:       voltage:            current:
     anode               1.5                -217866
     cathode             0                   217866
 
-  Solve time: 0h 0m 0.035s
+  Solve time: 0h 0m 0.034s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $x = 1e-16
   Trying $x = 1e-16
 
   >>>>---------------------------- (driftdiffusion) ----------------------------
 
-    iterations: 1, |du| = 5.30119e-13, |r| = 7.84271e-14
+    iterations: 1, |du| = 2.23022e-12, |r| = 8.1012e-14
     Surface recombination current = 0
 
     contact name:       voltage:            current:
@@ -592,7 +592,7 @@ Solve time: 0h 0m 1.8s
 
   >>>>---------------------------- (driftdiffusion) ----------------------------
 
-    iterations: 1, |du| = 1.67356e-12, |r| = 7.94399e-14
+    iterations: 1, |du| = 3.86541e-12, |r| = 8.31357e-14
     Surface recombination current = 0
 
     contact name:       voltage:            current:
@@ -606,21 +606,21 @@ Solve time: 0h 0m 1.8s
 
   >>>>---------------------------- (driftdiffusion) ----------------------------
 
-    iterations: 1, |du| = 1.12737e-12, |r| = 7.92223e-14
+    iterations: 1, |du| = 7.90937e-13, |r| = 7.41031e-14
     Surface recombination current = 0
 
     contact name:       voltage:            current:
     anode               1.5                -217866
     cathode             0                   217866
 
-  Solve time: 0h 0m 0.034s
+  Solve time: 0h 0m 0.035s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $x = 1e-13
   Trying $x = 1e-13
 
   >>>>---------------------------- (driftdiffusion) ----------------------------
 
-    iterations: 1, |du| = 9.27423e-12, |r| = 7.66952e-14
+    iterations: 1, |du| = 9.92637e-12, |r| = 8.38183e-14
     Surface recombination current = 0
 
     contact name:       voltage:            current:
@@ -634,7 +634,7 @@ Solve time: 0h 0m 1.8s
 
   >>>>---------------------------- (driftdiffusion) ----------------------------
 
-    iterations: 1, |du| = 8.37258e-12, |r| = 8.17417e-14
+    iterations: 1, |du| = 1.13195e-11, |r| = 7.78479e-14
     Surface recombination current = 0
 
     contact name:       voltage:            current:
@@ -648,7 +648,7 @@ Solve time: 0h 0m 1.8s
 
   >>>>---------------------------- (driftdiffusion) ----------------------------
 
-    iterations: 1, |du| = 5.46127e-12, |r| = 7.95544e-14
+    iterations: 1, |du| = 3.06275e-12, |r| = 7.77023e-14
     Surface recombination current = 0
 
     contact name:       voltage:            current:
@@ -662,7 +662,7 @@ Solve time: 0h 0m 1.8s
 
   >>>>---------------------------- (driftdiffusion) ----------------------------
 
-    iterations: 1, |du| = 1.94366e-12, |r| = 7.8619e-14
+    iterations: 1, |du| = 1.56143e-11, |r| = 7.96706e-14
     Surface recombination current = 0
 
     contact name:       voltage:            current:
@@ -676,7 +676,7 @@ Solve time: 0h 0m 1.8s
 
   >>>>---------------------------- (driftdiffusion) ----------------------------
 
-    iterations: 1, |du| = 2.9732e-12, |r| = 7.77174e-14
+    iterations: 1, |du| = 1.64543e-11, |r| = 8.12562e-14
     Surface recombination current = 0
 
     contact name:       voltage:            current:
@@ -690,21 +690,21 @@ Solve time: 0h 0m 1.8s
 
   >>>>---------------------------- (driftdiffusion) ----------------------------
 
-    iterations: 1, |du| = 1.76724e-12, |r| = 8.12647e-14
+    iterations: 1, |du| = 2.61195e-12, |r| = 8.13754e-14
     Surface recombination current = 0
 
     contact name:       voltage:            current:
     anode               1.5                -217866
     cathode             0                   217866
 
-  Solve time: 0h 0m 0.035s
+  Solve time: 0h 0m 0.034s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $x = 1e-07
   Trying $x = 1e-07
 
   >>>>---------------------------- (driftdiffusion) ----------------------------
 
-    iterations: 1, |du| = 9.8186e-12, |r| = 7.6191e-14
+    iterations: 1, |du| = 6.76664e-12, |r| = 8.05035e-14
     Surface recombination current = 0
 
     contact name:       voltage:            current:
@@ -718,7 +718,7 @@ Solve time: 0h 0m 1.8s
 
   >>>>---------------------------- (driftdiffusion) ----------------------------
 
-    iterations: 1, |du| = 9.62504e-12, |r| = 7.4739e-14
+    iterations: 1, |du| = 5.05146e-12, |r| = 8.318e-14
     Surface recombination current = 0
 
     contact name:       voltage:            current:
@@ -732,7 +732,7 @@ Solve time: 0h 0m 1.8s
 
   >>>>---------------------------- (driftdiffusion) ----------------------------
 
-    iterations: 1, |du| = 6.19315e-12, |r| = 8.08903e-14
+    iterations: 1, |du| = 1.33423e-12, |r| = 8.2172e-14
     Surface recombination current = 0
 
     contact name:       voltage:            current:
@@ -746,21 +746,21 @@ Solve time: 0h 0m 1.8s
 
   >>>>---------------------------- (driftdiffusion) ----------------------------
 
-    iterations: 1, |du| = 7.44137e-12, |r| = 8.28436e-14
+    iterations: 1, |du| = 2.30493e-12, |r| = 7.77289e-14
     Surface recombination current = 0
 
     contact name:       voltage:            current:
     anode               1.5                -217866
     cathode             0                   217866
 
-  Solve time: 0h 0m 0.035s
+  Solve time: 0h 0m 0.034s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $x = 0.001
   Trying $x = 0.001
 
   >>>>---------------------------- (driftdiffusion) ----------------------------
 
-    iterations: 1, |du| = 3.25914e-11, |r| = 8.4957e-14
+    iterations: 1, |du| = 4.59739e-11, |r| = 8.75283e-14
     Surface recombination current = 0
 
     contact name:       voltage:            current:
@@ -774,7 +774,7 @@ Solve time: 0h 0m 1.8s
 
   >>>>---------------------------- (driftdiffusion) ----------------------------
 
-    iterations: 1, |du| = 3.94207e-10, |r| = 1.31683e-13
+    iterations: 1, |du| = 3.78505e-10, |r| = 1.27061e-13
     Surface recombination current = 0
 
     contact name:       voltage:            current:
@@ -788,7 +788,7 @@ Solve time: 0h 0m 1.8s
 
   >>>>---------------------------- (driftdiffusion) ----------------------------
 
-    iterations: 1, |du| = 3.79482e-09, |r| = 1.04964e-12
+    iterations: 1, |du| = 3.80369e-09, |r| = 1.04956e-12
     Surface recombination current = 0
 
     contact name:       voltage:            current:
@@ -802,7 +802,7 @@ Solve time: 0h 0m 1.8s
 
   >>>>---------------------------- (driftdiffusion) ----------------------------
 
-    iterations: 1, |du| = 3.80636e-08, |r| = 1.05329e-11
+    iterations: 1, |du| = 3.80631e-08, |r| = 1.05327e-11
     Surface recombination current = 0
 
     contact name:       voltage:            current:
@@ -812,7 +812,7 @@ Solve time: 0h 0m 1.8s
   Solve time: 0h 0m 0.034s
   <<<<--------------------------------------------------------------------------
 
-Solve time: 0h 0m 0.66s
+Solve time: 0h 0m 0.65s
 <<<<----------------------------------------------------------------------------
 
 >>>>------------------------------- (sweep_back) -------------------------------
@@ -821,7 +821,7 @@ Solve time: 0h 0m 0.66s
 
   >>>>---------------------------- (driftdiffusion) ----------------------------
 
-    iterations: 1, |du| = 2.80189e-11, |r| = 8.56486e-14
+    iterations: 1, |du| = 2.66963e-11, |r| = 8.19023e-14
     Surface recombination current = 0
 
     contact name:       voltage:            current:
@@ -838,14 +838,14 @@ Solve time: 0h 0m 0.66s
     it 2, |du| = 0.056236, |r| = 0.00741253  alpha = 1
     it 3, |du| = 0.00107438, |r| = 2.78707e-06  alpha = 1
 
-    iterations: 4, |du| = 6.19702e-07, |r| = 2.03804e-11
+    iterations: 4, |du| = 6.19712e-07, |r| = 2.03832e-11
     Surface recombination current = 0
 
     contact name:       voltage:            current:
     anode               1.45               -91720.1
     cathode             0                   91720.1
 
-  Solve time: 0h 0m 0.13s
+  Solve time: 0h 0m 0.12s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.4
   Trying $Vb = 1.4
@@ -855,7 +855,7 @@ Solve time: 0h 0m 0.66s
     it 2, |du| = 0.0778595, |r| = 0.014077  alpha = 1
     it 3, |du| = 0.00442804, |r| = 1.33494e-05  alpha = 1
 
-    iterations: 4, |du| = 5.99079e-06, |r| = 2.16398e-10
+    iterations: 4, |du| = 5.99079e-06, |r| = 2.164e-10
     Surface recombination current = 0
 
     contact name:       voltage:            current:
@@ -872,7 +872,7 @@ Solve time: 0h 0m 0.66s
     it 2, |du| = 0.206346, |r| = 0.0306877  alpha = 1
     it 3, |du| = 0.0133409, |r| = 8.90369e-05  alpha = 1
 
-    iterations: 4, |du| = 3.91158e-05, |r| = 7.3142e-10
+    iterations: 4, |du| = 3.91158e-05, |r| = 7.31413e-10
     Surface recombination current = 0
 
     contact name:       voltage:            current:
@@ -889,7 +889,7 @@ Solve time: 0h 0m 0.66s
     it 2, |du| = 0.214907, |r| = 0.0213546  alpha = 1
     it 3, |du| = 0.00948949, |r| = 3.60312e-05  alpha = 1
 
-    iterations: 4, |du| = 1.69905e-05, |r| = 1.01815e-10
+    iterations: 4, |du| = 1.69905e-05, |r| = 1.01818e-10
     Surface recombination current = 0
 
     contact name:       voltage:            current:
@@ -906,14 +906,14 @@ Solve time: 0h 0m 0.66s
     it 2, |du| = 0.165896, |r| = 0.00316944  alpha = 1
     it 3, |du| = 0.00224544, |r| = 9.92749e-07  alpha = 1
 
-    iterations: 4, |du| = 1.08715e-06, |r| = 2.93156e-13
+    iterations: 4, |du| = 1.08715e-06, |r| = 2.93471e-13
     Surface recombination current = 0
 
     contact name:       voltage:            current:
     anode               1.25               -231.618
     cathode             0                   231.618
 
-  Solve time: 0h 0m 0.13s
+  Solve time: 0h 0m 0.12s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.2
   Trying $Vb = 1.2
@@ -923,7 +923,7 @@ Solve time: 0h 0m 0.66s
     it 2, |du| = 0.157296, |r| = 0.00259798  alpha = 1
     it 3, |du| = 0.00281347, |r| = 1.25395e-06  alpha = 1
 
-    iterations: 4, |du| = 1.58455e-06, |r| = 4.07236e-13
+    iterations: 4, |du| = 1.58455e-06, |r| = 4.08217e-13
     Surface recombination current = 0
 
     contact name:       voltage:            current:
@@ -940,14 +940,14 @@ Solve time: 0h 0m 0.66s
     it 2, |du| = 0.151549, |r| = 0.00173087  alpha = 1
     it 3, |du| = 0.00325432, |r| = 9.81844e-07  alpha = 1
 
-    iterations: 4, |du| = 1.71171e-06, |r| = 3.22598e-13
+    iterations: 4, |du| = 1.71171e-06, |r| = 3.21824e-13
     Surface recombination current = 0
 
     contact name:       voltage:            current:
     anode               1.15               -5.22689
     cathode             0                   5.22689
 
-  Solve time: 0h 0m 0.13s
+  Solve time: 0h 0m 0.12s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.1
   Trying $Vb = 1.1
@@ -957,7 +957,7 @@ Solve time: 0h 0m 0.66s
     it 2, |du| = 0.154385, |r| = 0.000978351  alpha = 1
     it 3, |du| = 0.00358589, |r| = 6.20324e-07  alpha = 1
 
-    iterations: 4, |du| = 2.35109e-06, |r| = 2.62429e-13
+    iterations: 4, |du| = 2.35109e-06, |r| = 2.59516e-13
     Surface recombination current = 0
 
     contact name:       voltage:            current:
@@ -974,14 +974,14 @@ Solve time: 0h 0m 0.66s
     it 2, |du| = 0.162535, |r| = 0.000530991  alpha = 1
     it 3, |du| = 0.00439216, |r| = 4.22752e-07  alpha = 1
 
-    iterations: 4, |du| = 3.78365e-06, |r| = 3.19442e-13
+    iterations: 4, |du| = 3.78365e-06, |r| = 3.16247e-13
     Surface recombination current = 0
 
     contact name:       voltage:            current:
     anode               1.05               -0.0949915
     cathode             0                   0.0949915
 
-  Solve time: 0h 0m 0.13s
+  Solve time: 0h 0m 0.12s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1
   Trying $Vb = 1
@@ -991,12 +991,12 @@ Solve time: 0h 0m 0.66s
     it 2, |du| = 0.179818, |r| = 0.000346204  alpha = 1
     it 3, |du| = 0.00671523, |r| = 5.11321e-07  alpha = 1
 
-    iterations: 4, |du| = 1.06352e-05, |r| = 1.22404e-12
+    iterations: 4, |du| = 1.06352e-05, |r| = 1.22118e-12
     Surface recombination current = 0
 
     contact name:       voltage:            current:
-    anode               1                  -4.99824e-05
-    cathode             0                   4.99824e-05
+    anode               1                  -4.99763e-05
+    cathode             0                   4.99763e-05
 
   Solve time: 0h 0m 0.12s
   <<<<--------------------------------------------------------------------------
@@ -1008,7 +1008,7 @@ Solve time: 0h 0m 0.66s
     it 2, |du| = 0.151312, |r| = 0.000175556  alpha = 1
     it 3, |du| = 0.0061125, |r| = 2.94604e-07  alpha = 1
 
-    iterations: 4, |du| = 1.06506e-05, |r| = 8.59307e-13
+    iterations: 4, |du| = 1.06506e-05, |r| = 8.57118e-13
     Surface recombination current = 0
 
     contact name:       voltage:            current:
@@ -1031,7 +1031,7 @@ Solve time: 0h 0m 0.66s
     anode               0.9                 0.0156842
     cathode             0                  -0.0156842
 
-  Solve time: 0h 0m 0.094s
+  Solve time: 0h 0m 0.092s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.85
   Trying $Vb = 0.85
@@ -1041,7 +1041,7 @@ Solve time: 0h 0m 0.66s
     it 2, |du| = 0.201732, |r| = 0.000337388  alpha = 1
     it 3, |du| = 0.017971, |r| = 2.71177e-06  alpha = 1
 
-    iterations: 4, |du| = 0.000163394, |r| = 2.10806e-10
+    iterations: 4, |du| = 0.000163394, |r| = 2.10813e-10
     Surface recombination current = 0
 
     contact name:       voltage:            current:
@@ -1059,7 +1059,7 @@ Solve time: 0h 0m 0.66s
     it 3, |du| = 0.103578, |r| = 0.000132284  alpha = 1
     it 4, |du| = 0.00574941, |r| = 4.50703e-07  alpha = 1
 
-    iterations: 5, |du| = 1.65913e-05, |r| = 3.74811e-12
+    iterations: 5, |du| = 1.65913e-05, |r| = 3.74596e-12
     Surface recombination current = 0
 
     contact name:       voltage:            current:
@@ -1077,14 +1077,14 @@ Solve time: 0h 0m 0.66s
     it 3, |du| = 0.162751, |r| = 0.000563251  alpha = 1
     it 4, |du| = 0.0126215, |r| = 4.75811e-06  alpha = 1
 
-    iterations: 5, |du| = 8.00963e-05, |r| = 2.83823e-10
+    iterations: 5, |du| = 8.00963e-05, |r| = 2.83819e-10
     Surface recombination current = 0
 
     contact name:       voltage:            current:
     anode               0.75                0.0160201
     cathode             0                  -0.0160201
 
-  Solve time: 0h 0m 0.17s
+  Solve time: 0h 0m 0.16s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.7
   Trying $Vb = 0.7
@@ -1095,7 +1095,7 @@ Solve time: 0h 0m 0.66s
     it 3, |du| = 0.0552553, |r| = 8.33164e-05  alpha = 1
     it 4, |du| = 0.00157604, |r| = 3.95225e-08  alpha = 1
 
-    iterations: 5, |du| = 1.2429e-06, |r| = 4.83891e-14
+    iterations: 5, |du| = 1.2429e-06, |r| = 5.10965e-14
     Surface recombination current = 0
 
     contact name:       voltage:            current:
@@ -1120,7 +1120,7 @@ Solve time: 0h 0m 0.66s
     anode               0.65                0.0160213
     cathode             0                  -0.0160213
 
-  Solve time: 0h 0m 0.16s
+  Solve time: 0h 0m 0.17s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.6
   Trying $Vb = 0.6
@@ -1131,7 +1131,7 @@ Solve time: 0h 0m 0.66s
     it 3, |du| = 0.086738, |r| = 0.000803892  alpha = 1
     it 4, |du| = 0.00395402, |r| = 2.38186e-06  alpha = 1
 
-    iterations: 5, |du| = 7.7256e-06, |r| = 1.34023e-11
+    iterations: 5, |du| = 7.7256e-06, |r| = 1.34026e-11
     Surface recombination current = 0
 
     contact name:       voltage:            current:
@@ -1149,7 +1149,7 @@ Solve time: 0h 0m 0.66s
     it 3, |du| = 0.0648107, |r| = 0.000367868  alpha = 1
     it 4, |du| = 0.00217941, |r| = 6.61466e-07  alpha = 1
 
-    iterations: 5, |du| = 2.35338e-06, |r| = 1.20594e-12
+    iterations: 5, |du| = 2.35338e-06, |r| = 1.20598e-12
     Surface recombination current = 0
 
     contact name:       voltage:            current:
@@ -1167,7 +1167,7 @@ Solve time: 0h 0m 0.66s
     it 3, |du| = 0.0486421, |r| = 0.000215603  alpha = 1
     it 4, |du| = 0.00121399, |r| = 2.15521e-07  alpha = 1
 
-    iterations: 5, |du| = 7.29378e-07, |r| = 1.24254e-13
+    iterations: 5, |du| = 7.29378e-07, |r| = 1.26426e-13
     Surface recombination current = 0
 
     contact name:       voltage:            current:
@@ -1235,7 +1235,7 @@ Solve time: 0h 0m 0.66s
     it 2, |du| = 0.210442, |r| = 0.00300894  alpha = 1
     it 3, |du| = 0.0184277, |r| = 3.61977e-05  alpha = 1
 
-    iterations: 4, |du| = 0.000170131, |r| = 5.08779e-09
+    iterations: 4, |du| = 0.000170131, |r| = 5.0878e-09
     Surface recombination current = 0
 
     contact name:       voltage:            current:
@@ -1286,7 +1286,7 @@ Solve time: 0h 0m 0.66s
     it 2, |du| = 0.15363, |r| = 0.00171054  alpha = 1
     it 3, |du| = 0.0101493, |r| = 1.20872e-05  alpha = 1
 
-    iterations: 4, |du| = 5.13532e-05, |r| = 5.07865e-10
+    iterations: 4, |du| = 5.13532e-05, |r| = 5.07864e-10
     Surface recombination current = 0
 
     contact name:       voltage:            current:
@@ -1303,7 +1303,7 @@ Solve time: 0h 0m 0.66s
     it 2, |du| = 0.140716, |r| = 0.00145073  alpha = 1
     it 3, |du| = 0.00856518, |r| = 8.66305e-06  alpha = 1
 
-    iterations: 4, |du| = 3.64566e-05, |r| = 2.51293e-10
+    iterations: 4, |du| = 3.64566e-05, |r| = 2.51294e-10
     Surface recombination current = 0
 
     contact name:       voltage:            current:
@@ -1320,7 +1320,7 @@ Solve time: 0h 0m 0.66s
     it 2, |du| = 0.12783, |r| = 0.00124231  alpha = 1
     it 3, |du| = 0.0071286, |r| = 6.29604e-06  alpha = 1
 
-    iterations: 4, |du| = 2.52428e-05, |r| = 1.27703e-10
+    iterations: 4, |du| = 2.52428e-05, |r| = 1.27702e-10
     Surface recombination current = 0
 
     contact name:       voltage:            current:
@@ -1337,26 +1337,26 @@ Solve time: 0h 0m 0.66s
     it 2, |du| = 0.116263, |r| = 0.00107316  alpha = 1
     it 3, |du| = 0.00591465, |r| = 4.63523e-06  alpha = 1
 
-    iterations: 4, |du| = 1.73529e-05, |r| = 6.6531e-11
+    iterations: 4, |du| = 1.73529e-05, |r| = 6.65304e-11
     Surface recombination current = 0
 
     contact name:       voltage:            current:
     anode               0                   0.0160216
     cathode             0                  -0.0160216
 
-  Solve time: 0h 0m 0.13s
+  Solve time: 0h 0m 0.12s
   <<<<--------------------------------------------------------------------------
 
-Solve time: 0h 0m 7.3s
+Solve time: 0h 0m 4.4s
 <<<<----------------------------------------------------------------------------
 
-Total solve time: 0h 0m 10s
+Total solve time: 0h 0m 7.1s
 Simulation finished.
 
 11 warnings during run
 0 errors detected
 
 
-Log end: Mon Sep  2 17:00:02 2019
+Log end: Fri Nov  8 07:30:06 2019
 
 
