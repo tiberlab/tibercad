@@ -24,7 +24,7 @@ _rotated_prim_vec(0)
 }
 
 void
-BulkCrystal::do_init(void)
+BulkCrystal::init(void)
 {
  
   Atom tmp_atom;

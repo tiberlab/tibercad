@@ -234,15 +234,17 @@ double EigenvalueProblem::get_band_edge(const std::string&)
 
 void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
 {
-  Messages::info("Init k-space for dispersion");
+  Messages::info("Initialize k-space for dispersion");
 
   ModelOptions kopts(opts);
   string refmat_s = kopts.get_option("unfold_to", "");
+  kopts.delete_option("unfold_to");
+
+  init_kspace(kopts);
 
   Material* refmat = nullptr;
   if (!refmat_s.empty())
   {
-    kopts.delete_option("unfold_to");
     std::set<ID> ids;
     get_environment().get_device().get_active_region_ids(refmat_s, ids);
     if (ids.size() != 0)
@@ -265,15 +267,19 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
   const MeshBase* kmesh = nullptr;
   if (refmat != nullptr)
   {
+    Messages::newline();
     Messages::info("Dispersion will be unfolded to BZ of " +
         refmat->get_name());
+    Messages::info("Initialize primitive cell k-space");
 
     //Build the right BulkCrystal object
     BulkCrystal* bulk = BulkCrystal::create(refmat);
+    bulk->init();
+
     kopts.set_option("k_space_dimension", 3);
 
     RealVectorValue a, b, c;
-    get_atomistic_structure()->get_lattice_vectors(a, b, c);
+    bulk->get_lattice_vectors(a, b, c);
     a *= 0.1;
     b *= 0.1;
     c *= 0.1;
@@ -281,14 +287,10 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     kopts.set_option("r1", a);
     kopts.set_option("r2", b);
     kopts.set_option("r3", c);
-    Kspace* kspace = new Kspace(kopts, get_communicator());
-    kmesh = kspace->get_k_mesh();
+    _kspace = new Kspace(kopts, get_communicator());
   }
-  else
-  {
-    init_kspace(kopts);
-    kmesh = _kspace->get_k_mesh();
-  }
+
+  kmesh = _kspace->get_k_mesh();
 
 
     unsigned int number_of_k_points = kmesh->n_nodes();

@@ -33,7 +33,7 @@ StrainLattice::init(AtomisticStructure* as)
     Messages::info("Building reference lattice for region "
                    +(*it)->get_name() +" "+(*it)->get_structure());
     BulkCrystal* bulk = BulkCrystal::create(*it);
-    bulk->do_init();
+    bulk->init();
     
     bulk->print_gen((*it)->get_name()+".gen");
     bulk->print_xyb((*it)->get_name()+".xyb");

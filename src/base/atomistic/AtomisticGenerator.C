@@ -203,7 +203,7 @@ AtomisticGenerator::init_commons()
 
   _bulk = BulkCrystal::create(_reference_material); 
   
-  _bulk->do_init();
+  _bulk->init();
 
   //_bulk->print_xyb("Ref.xyb");
   //-----------------------------------------------------------------------
