@@ -39,13 +39,13 @@ void TiberVTKIO::write_nodal_data(const string& fname,
     const vector<string>& names)
 {
 
-  //if(libMesh::global_processor_id() != 0)
-  //  return;
+  const MeshBase& mesh = get_mesh();
+
+  if(mesh.comm().rank() != 0)
+    return;
 
   if (names.size() == 0)
     return;
-
-  const MeshBase& mesh = get_mesh();
 
 
   set<unsigned int> node_ids;
@@ -212,13 +212,13 @@ void TiberVTKIO::write_elemental_data(const string& fname,
     const vector<string>& names)
 {
 
-  //if(libMesh::global_processor_id() != 0)
-  //  return;
+  const MeshBase& mesh = get_mesh();
+
+  if(mesh.comm().rank() != 0)
+    return;
 
   if (names.size() == 0)
     return;
-
-  const MeshBase& mesh = get_mesh();
 
 
   set<unsigned int> node_ids;
