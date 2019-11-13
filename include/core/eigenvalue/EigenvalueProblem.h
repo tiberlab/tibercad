@@ -202,7 +202,7 @@ class EigenvalueProblem : public SimulationInterface
     ModelOptions parse_kspace_options(const ModelOptions&);
 
     //! method used to compute quantum dispersion
-    virtual void compute_dispersion(void);
+    virtual void compute_dispersion(const ModelOptions& opts);
 
     //! method used to plot quantum dispersion
     virtual void plot_dispersion(const std::string& filename);

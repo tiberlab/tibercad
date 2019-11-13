@@ -3,6 +3,7 @@
 #include "EigenvalueProblem.h"
 #include "SimulationEnvironment.h"
 #include "AtomisticStructure.h"
+#include "BulkCrystal.h"
 #include "Constants.h"
 #include "Messages.h"
 #include "DataOutput.h"
@@ -231,10 +232,65 @@ double EigenvalueProblem::get_band_edge(const std::string&)
 }
 
 
-void EigenvalueProblem::compute_dispersion(void)
+void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
 {
+  Messages::info("Init k-space for dispersion");
 
-    const MeshBase* kmesh = _kspace->get_k_mesh();
+  ModelOptions kopts(opts);
+  string refmat_s = kopts.get_option("unfold_to", "");
+
+  Material* refmat = nullptr;
+  if (!refmat_s.empty())
+  {
+    kopts.delete_option("unfold_to");
+    std::set<ID> ids;
+    get_environment().get_device().get_active_region_ids(refmat_s, ids);
+    if (ids.size() != 0)
+    {
+      refmat = get_environment().get_device().get_material(*ids.begin());
+    }
+  }
+  else
+  {
+    ModelOptions::const_submodel_iterator it =
+        kopts.submodels_begin("unfold_to");
+    if (it != kopts.submodels_end("unfold_to"))
+    {
+      const ModelOptions& refmat_opts = it->second;
+      refmat = Material::create(refmat_opts.get_name(), refmat_opts);
+      refmat->init();
+    }
+  }
+
+  const MeshBase* kmesh = nullptr;
+  if (refmat != nullptr)
+  {
+    Messages::info("Dispersion will be unfolded to BZ of " +
+        refmat->get_name());
+
+    //Build the right BulkCrystal object
+    BulkCrystal* bulk = BulkCrystal::create(refmat);
+    kopts.set_option("k_space_dimension", 3);
+
+    RealVectorValue a, b, c;
+    get_atomistic_structure()->get_lattice_vectors(a, b, c);
+    a *= 0.1;
+    b *= 0.1;
+    c *= 0.1;
+
+    kopts.set_option("r1", a);
+    kopts.set_option("r2", b);
+    kopts.set_option("r3", c);
+    Kspace* kspace = new Kspace(kopts, get_communicator());
+    kmesh = kspace->get_k_mesh();
+  }
+  else
+  {
+    init_kspace(kopts);
+    kmesh = _kspace->get_k_mesh();
+  }
+
+
     unsigned int number_of_k_points = kmesh->n_nodes();
     unsigned int number_of_eigs;
     
@@ -738,9 +794,7 @@ void EigenvalueProblem::do_plot(void)
     // Back up model kspace
     Kspace* original_kspace = _kspace;
 
-    init_kspace(opts);
-    
-    compute_dispersion();
+    compute_dispersion(opts);
     
     std::string filename(get_name() + "_dispersion");
     plot_dispersion(filename);
@@ -777,11 +831,8 @@ void EigenvalueProblem::do_plot(void)
        m.indent();
        opts.set_option("k_space_dimension",3);
    
-       Messages::info("Init k-space");
-       init_kspace(opts);
-    
        Messages::info("Compute dispersion");
-       compute_dispersion();
+       compute_dispersion(opts);
     
        std::string filename(get_name() + "_dispersion_" + os.str() );
        Messages::info("Plot dispersion");
