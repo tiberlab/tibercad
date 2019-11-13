@@ -626,7 +626,7 @@ SimulationInterface::setup_mesh(void)
 {
   if (get_option("atomistic_mesh", false))
   {
-    libMesh::UnstructuredMesh* mesh = new Mesh(TiberCad::get_mpi_comm() ,3);
+    libMesh::UnstructuredMesh* mesh = new Mesh(get_solver_communicator() ,3);
     if (get_atomistic_structure() == NULL)
       throw InitFailedException(get_name() + ": could not find atomistic structure");
 
