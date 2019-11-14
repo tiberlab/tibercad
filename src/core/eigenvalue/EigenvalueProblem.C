@@ -287,6 +287,14 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     kopts.set_option("r1", a);
     kopts.set_option("r2", b);
     kopts.set_option("r3", c);
+
+    // backup the SC k-space
+    Kspace* sc_kspace = _kspace;
+
+    // thw SC reciprocal basis
+    sc_kspace->get_basis(a, b, c);
+
+    // this is now the PC k-space
     _kspace = new Kspace(kopts, get_communicator());
   }
 

@@ -58,6 +58,11 @@ class Kspace
   //! Transform a point according to the rotation matrix
   void transform_point(libMesh::Point& p) const;
 
+  //! Get reciprocal space basis
+  void get_basis(libMesh::RealVectorValue& a,
+                 libMesh::RealVectorValue& b,
+                 libMesh::RealVectorValue& c) const;
+
   //! Rotate mesh
   void rotate_mesh(void);
 
@@ -208,6 +213,15 @@ inline const libMesh::MeshBase* Kspace::get_k_mesh() const
 inline unsigned int Kspace::dimension(void) const
 {
   return(k_space_dim);
+}
+
+inline void Kspace::get_basis(libMesh::RealVectorValue& a,
+                              libMesh::RealVectorValue& b,
+                              libMesh::RealVectorValue& c) const
+{
+  a = k_basis_vector1;
+  b = k_basis_vector2;
+  c = k_basis_vector3;
 }
 
 #endif
