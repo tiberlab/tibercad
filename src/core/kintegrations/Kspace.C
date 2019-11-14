@@ -99,6 +99,8 @@ void Kspace::build_k_grid()
   //build mesh
   kmesh = new libMesh::Mesh(kspace_comm, k_space_dim);
 
+  bool full = mod_opt.get_option("full_zone", false);
+
   if (k_space_dim > 0)
   {
 
@@ -620,8 +622,9 @@ void Kspace::do_init()
   // transform the mesh to real units
   rotate_mesh();
 
-  if (mod_opt.get_option("write_k_mesh", false))
-    libMesh::GmshIO(*kmesh).write("kspace.msh");
+  string filename = mod_opt.get_option("write_k_mesh", "");
+  if (!filename.empty())
+    libMesh::GmshIO(*kmesh).write(filename + ".msh");
 
 }
 
@@ -821,6 +824,8 @@ Kspace::get_symmetry_point(const std::string& name) const
       case LINEAR:
         if (name == "X")
           p(b1) = 0.5;
+        else if (name == "X2")
+          p(b1) = -0.5;
         break;
 
       case QUADRATIC:
@@ -828,6 +833,18 @@ Kspace::get_symmetry_point(const std::string& name) const
           p(b1) = 0.5;
         else if (name == "M")
           p(b1) = p(b2) = 0.5;
+        else if (name == "X2")
+          p(b2) = 0.5;
+        else if (name == "M2")
+        { p(b1) = -0.5; p(b2) = 0.5; }
+        else if (name == "X3")
+          p(b1) = -0.5;
+        else if (name == "M3")
+        { p(b1) = -0.5; p(b2) = -0.5; }
+        else if (name == "X4")
+          p(b2) = -0.5;
+        else if (name == "M4")
+        { p(b1) = 0.5; p(b2) = -0.5; }
         break;
 
       case RECTANGULAR:
@@ -837,6 +854,16 @@ Kspace::get_symmetry_point(const std::string& name) const
           p(b2) = 0.5;
         else if (name == "S")
           p(b1) = p(b2) = 0.5;
+        else if (name == "X2")
+          p(b1) = -0.5;
+        else if (name == "Y2")
+          p(b2) = -0.5;
+        else if (name == "S2")
+        { p(b1) = -0.5; p(b2) = 0.5; }
+        else if (name == "S3")
+        { p(b1) = -0.5; p(b2) = -0.5; }
+        else if (name == "S4")
+        { p(b1) = 0.5; p(b2) = -0.5; }
         break;
 
       case CUBIC:

@@ -16,6 +16,7 @@
 
 #include "libmesh/elem.h"
 #include "libmesh/quadrature_gauss.h"
+#include "libmesh/mesh_tools.h"
 
 #include <boost/shared_ptr.hpp>
 
@@ -234,13 +235,9 @@ double EigenvalueProblem::get_band_edge(const std::string&)
 
 void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
 {
-  Messages::info("Initialize k-space for dispersion");
-
   ModelOptions kopts(opts);
   string refmat_s = kopts.get_option("unfold_to", "");
   kopts.delete_option("unfold_to");
-
-  init_kspace(kopts);
 
   Material* refmat = nullptr;
   if (!refmat_s.empty())
@@ -270,9 +267,23 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     Messages::newline();
     Messages::info("Dispersion will be unfolded to BZ of " +
         refmat->get_name());
+
+    ModelOptions scopts(kopts);
+    scopts.delete_option("k-path");
+    scopts.delete_option("k_path");
+    scopts.set_option("write_k_mesh", "SC");
+
+    Messages::newline();
+    Messages::info("Initialize super cell k-space");
+    init_kspace(scopts);
+
+    // backup the SC k-space
+    Kspace* sc_kspace = _kspace;
+
+    Messages::newline();
     Messages::info("Initialize primitive cell k-space");
 
-    //Build the right BulkCrystal object
+    // build the BulkCrystal object
     BulkCrystal* bulk = BulkCrystal::create(refmat);
     bulk->init();
 
@@ -288,14 +299,79 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     kopts.set_option("r2", b);
     kopts.set_option("r3", c);
 
-    // backup the SC k-space
-    Kspace* sc_kspace = _kspace;
 
-    // thw SC reciprocal basis
+    // _kspace contains now the k-path in the PC k-space
+    init_kspace(kopts);
+
+    // this is the reduced BZ of the PC k-space
+    kopts.delete_option("k-path");
+    kopts.delete_option("k_path");
+    kopts.set_option("write_k_mesh", "PC");
+    Kspace pc_kspace(kopts, get_communicator());
+    const MeshBase* pc_mesh = pc_kspace.get_k_mesh();
+
+    // get the bounding box, to obtain BZ radius
+    MeshTools::BoundingBox pc_bb =
+        MeshTools::bounding_box(*pc_mesh);
+    double pc_diam = 2 * pc_bb.max().norm();
+    cerr << "PC diameter : " << pc_diam << endl;
+
+    vector<Point> G;
+
+    // the SC reciprocal basis
     sc_kspace->get_basis(a, b, c);
+    //a /= 2;
+    //b /= 2;
+    //c /= 2;
+    cerr << a << endl;
+    cerr << b << endl;
+    cerr << c << endl;
 
-    // this is now the PC k-space
-    _kspace = new Kspace(kopts, get_communicator());
+    // these are absolute upper limits
+    int Na = ceil(pc_diam / a.norm());
+    int Nb = ceil(pc_diam / b.norm());
+    int Nc = ceil(pc_diam / c.norm());
+    cerr << Na << " " << Nb << " " << Nc << endl;
+    for (int i = -Na; i < Na; ++i)
+    {
+      Point ga = i*a;
+      for (int j = -Nb; j < Nb; ++j)
+      {
+        Point gb = ga + j*b;
+        for (int l = -Nc; l < Nc; ++l)
+        {
+          Point g = gb + l*c;
+          if ((g.norm() < pc_diam ) && pc_bb.contains_point(g))
+          {
+            for (unsigned int el = 0; el < pc_mesh->n_elem(); ++el)
+            {
+              const Elem* elem = pc_mesh->elem_ptr(el);
+              if (elem->contains_point(g, 1e-9))
+              {
+                G.push_back(g);
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    ostringstream os;
+    os << "Found " << G.size() << " G vectors unfolding the supercell "
+        << "onto the primitive cell";
+    Messages::info(os.str());
+    for (int i = 0; i < G.size(); ++i)
+    {
+      cerr << "  " << G[i] << endl;
+    }
+
+    // does crash, why?
+    //delete sc_kspace;
+  }
+  else
+  {
+    init_kspace(kopts);
   }
 
   kmesh = _kspace->get_k_mesh();
@@ -809,6 +885,7 @@ void EigenvalueProblem::do_plot(void)
     std::string filename(get_name() + "_dispersion");
     plot_dispersion(filename);
 
+    delete _kspace;
     _kspace = original_kspace;
   }  
   
@@ -1017,7 +1094,7 @@ EigenvalueProblem::integrate_density(DofField& density)
 
 void
 EigenvalueProblem::calculate_density_at_k(const Point& k_point,
-        DofField& density, double& error)
+        DofField& density, double& )
 {
   solve_for_kpoint(k_point);
   do_calculate_density_at_k(density);
@@ -1047,7 +1124,7 @@ void EigenvalueProblem::solve_for_kpoint(const Point& kpoint)
 
 
 void
-EigenvalueProblem::do_solve_for_kpoint(const Point& k_point)
+EigenvalueProblem::do_solve_for_kpoint(const Point& )
 {
   solve();
 }
