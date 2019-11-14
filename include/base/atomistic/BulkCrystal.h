@@ -12,7 +12,7 @@ class BulkCrystal: public AtomisticBasis
 
   static BulkCrystal* create(const Material* mat, const ModelOptions& options = ModelOptions());
 
-  void do_init(void);
+  void init(void);
 
   //! Return the vector of Atoms defining the crystal basis
   //! unrotated in xyz basis
