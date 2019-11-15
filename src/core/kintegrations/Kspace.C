@@ -75,6 +75,130 @@ Kspace::~Kspace()
 }
 
 
+void
+Kspace::equivalent_points(const libMesh::Point& p,
+                          std::vector<libMesh::Point>& eq_points)
+{
+  Point c(p);
+
+  // get the relative coordinates
+  inverse_transform(c);
+
+  eq_points.resize(0);
+  eq_points.push_back(c);
+
+  switch (k_space_symmetry)
+  {
+    case LINEAR:
+      c(b1) *= -1;
+      eq_points.push_back(c);
+      break;
+
+    case QUADRATIC:
+      degeneracy_factor = 8;
+      break;
+
+    case RECTANGULAR:
+      degeneracy_factor = 4;
+      break;
+
+    case CUBIC:
+      degeneracy_factor = 32;
+      break;
+
+    case TETRAGONAL:
+      degeneracy_factor = 16;
+      break;
+
+    case ORTHORHOMBIC:
+      degeneracy_factor = 8;
+      break;
+
+    case HEXAGONAL:
+    {
+      // rotations are implemented by cyclic change of
+      // b1 and b2:
+      // a*b1             b*b2
+      // a*b2             b*(-b1 + b2)
+      // a*(-b1 + b2)     b*-b1
+      // a*-b1            b*-b2
+      // a*-b2            b*(b1 - b2)
+      // a*(b1 - b2)      b*b1
+      //
+      // mirroring is implemented by interchanging b1 and b2,
+      // and b3 -> -b3
+
+      Point np(c);
+      np(b1) = c(b2);
+      np(b2) = c(b1);
+      eq_points.push_back(np);
+
+      np(b1) = -c(b2);
+      np(b2) = c(b1) + c(b2);
+      eq_points.push_back(np);
+
+      np(b1) = -c(b1);
+      np(b2) = c(b1) + c(b2);
+      eq_points.push_back(np);
+
+      np(b1) = -c(b1) - c(b2);
+      np(b2) = c(b1);
+      eq_points.push_back(np);
+
+      np(b1) = -c(b1) - c(b2);
+      np(b2) = c(b2);
+      eq_points.push_back(np);
+
+      np(b1) = -c(b1);
+      np(b2) = -c(b2);
+      eq_points.push_back(np);
+
+      np(b1) = -c(b2);
+      np(b2) = -c(b1);
+      eq_points.push_back(np);
+
+      np(b1) = c(b2);
+      np(b2) = -c(b1) - c(b2);
+      eq_points.push_back(np);
+
+      np(b1) = c(b1);
+      np(b2) = -c(b1) - c(b2);
+      eq_points.push_back(np);
+
+      np(b1) = c(b1) + c(b2);
+      np(b2) = -c(b1);
+      eq_points.push_back(np);
+
+      np(b1) = c(b1) + c(b2);
+      np(b2) = -c(b2);
+      eq_points.push_back(np);
+
+      eq_points.insert(eq_points.end(), eq_points.begin(), eq_points.end());
+      for (unsigned int i = 12; i < 24; ++i)
+        eq_points[i](b3) *= -1;
+
+      break;
+    }
+
+    case FCC:
+    case BCC:
+      degeneracy_factor = 48;
+      break;
+
+    default:
+      degeneracy_factor = 1;
+      break;
+  }
+
+  sort(eq_points.begin(), eq_points.end());
+
+  vector<Point>::iterator ip = unique(eq_points.begin(), eq_points.end());
+  eq_points.resize(std::distance(eq_points.begin(), ip));
+
+  for (auto&& a : eq_points)
+    transform_point(a);
+
+}
 
 
 

@@ -314,24 +314,20 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     MeshTools::BoundingBox pc_bb =
         MeshTools::bounding_box(*pc_mesh);
     double pc_diam = 2 * pc_bb.max().norm();
-    cerr << "PC diameter : " << pc_diam << endl;
 
     vector<Point> G;
 
     // the SC reciprocal basis
     sc_kspace->get_basis(a, b, c);
-    //a /= 2;
-    //b /= 2;
-    //c /= 2;
-    cerr << a << endl;
-    cerr << b << endl;
-    cerr << c << endl;
+
+    // to store equivalent points;
+    vector<Point> points;
 
     // these are absolute upper limits
     int Na = ceil(pc_diam / a.norm());
     int Nb = ceil(pc_diam / b.norm());
     int Nc = ceil(pc_diam / c.norm());
-    cerr << Na << " " << Nb << " " << Nc << endl;
+
     for (int i = -Na; i < Na; ++i)
     {
       Point ga = i*a;
@@ -341,21 +337,32 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
         for (int l = -Nc; l < Nc; ++l)
         {
           Point g = gb + l*c;
-          if ((g.norm() < pc_diam ) && pc_bb.contains_point(g))
+          if (g.norm() < pc_diam )
           {
-            for (unsigned int el = 0; el < pc_mesh->n_elem(); ++el)
+            pc_kspace.equivalent_points(g, points);
+            for (auto&& p : points)
             {
-              const Elem* elem = pc_mesh->elem_ptr(el);
-              if (elem->contains_point(g, 1e-9))
+              if (pc_bb.contains_point(p))
               {
-                G.push_back(g);
-                break;
+                for (unsigned int el = 0; el < pc_mesh->n_elem(); ++el)
+                {
+                  const Elem* elem = pc_mesh->elem_ptr(el);
+                  if (elem->contains_point(p, 1e-9))
+                  {
+                    G.push_back(g);
+                    break;
+                  }
+                }
               }
             }
           }
         }
       }
     }
+
+    sort(G.begin(), G.end());
+    vector<Point>::iterator ip = unique(G.begin(), G.end());
+    G.resize(std::distance(G.begin(), ip));
 
     ostringstream os;
     os << "Found " << G.size() << " G vectors unfolding the supercell "
