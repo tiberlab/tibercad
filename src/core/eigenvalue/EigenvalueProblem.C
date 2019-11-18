@@ -395,22 +395,53 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     os << "Found " << G.size() << " G vectors unfolding the supercell "
         << "onto the primitive cell";
     Messages::info(os.str());
-    for (int i = 0; i < G.size(); ++i)
-    {
-      cerr << "  " << G[i] << endl;
-    }
+    //for (int i = 0; i < G.size(); ++i)
+    //{
+    //  cerr << "  " << G[i] << endl;
+    //}
 
     kmesh = _kspace->get_k_mesh();
     unsigned int num_k_points = kmesh->n_nodes();
 
+    // now construct all K (considering duplicates),
+    // and construct K->k and k->K tables
     vector<vector<Point>> k_to_K(num_k_points);
+    map<Point, vector<unsigned int>> K_to_k;
     for (unsigned int i = 1; i < num_k_points; i++)
     {
+      const Point& k = kmesh->point(i);
       k_to_K[i].resize(G.size());
       for (unsigned int j = 0; j < G.size(); ++j)
-        k_to_K[i][j] = kmesh->point(i) - G[j];
+      {
+        Point K = k - G[j];
+
+        vector<Point> eq_K;
+        sc_kspace->equivalent_points(K, eq_K);
+        unsigned eq = 0;
+        for ( ; eq < eq_K.size(); ++eq)
+        {
+          if (K_to_k.count(eq_K[eq]))
+            break;
+        }
+
+        if (eq == eq_K.size())
+          eq = 0;
+
+        K_to_k[eq_K[eq]].push_back(i);
+        k_to_K[i][j] = eq_K[eq];
+
+      }
 
     }
+
+    for (int i = 0; i < k_to_K.size(); ++i)
+    {
+      cerr << kmesh->point(i) << endl;
+      for (int j = 0; j < k_to_K[i].size(); ++j)
+        cerr << "  " << k_to_K[i][j] << endl;
+    }
+
+
 
     // does crash, why?
     //delete sc_kspace;
