@@ -364,6 +364,33 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     vector<Point>::iterator ip = unique(G.begin(), G.end());
     G.resize(std::distance(G.begin(), ip));
 
+
+    // now we still can have vectors g' = -g
+    {
+      set<int> ids;
+      for (unsigned int i = 0; i < G.size(); ++i)
+      {
+        for (unsigned int j = i+1; j < G.size(); ++j)
+        {
+          if (G[j] == -G[i])
+          {
+            ids.insert(j);
+            break;
+          }
+        }
+      }
+
+      vector<Point> Gtmp;
+      for (unsigned int i = 0; i < G.size(); ++i)
+      {
+        if (!ids.count(i))
+          Gtmp.push_back(G[i]);
+      }
+
+      G = Gtmp;
+    }
+
+
     ostringstream os;
     os << "Found " << G.size() << " G vectors unfolding the supercell "
         << "onto the primitive cell";
@@ -371,6 +398,18 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     for (int i = 0; i < G.size(); ++i)
     {
       cerr << "  " << G[i] << endl;
+    }
+
+    kmesh = _kspace->get_k_mesh();
+    unsigned int num_k_points = kmesh->n_nodes();
+
+    vector<vector<Point>> k_to_K(num_k_points);
+    for (unsigned int i = 1; i < num_k_points; i++)
+    {
+      k_to_K[i].resize(G.size());
+      for (unsigned int j = 0; j < G.size(); ++j)
+        k_to_K[i][j] = kmesh->point(i) - G[j];
+
     }
 
     // does crash, why?
@@ -382,6 +421,7 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
   }
 
   kmesh = _kspace->get_k_mesh();
+
 
 
     unsigned int number_of_k_points = kmesh->n_nodes();

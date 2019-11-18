@@ -223,7 +223,7 @@ void Kspace::build_k_grid()
   //build mesh
   kmesh = new libMesh::Mesh(kspace_comm, k_space_dim);
 
-  bool full = mod_opt.get_option("full_zone", false);
+  //bool full = mod_opt.get_option("full_zone", false);
 
   if (k_space_dim > 0)
   {
@@ -326,11 +326,11 @@ void Kspace::build_k_grid()
         }
         else
         {
-          kmesh->add_point(get_symmetry_point("M2"), 0, 0);
-          kmesh->add_point(get_symmetry_point("K2"), 1, 0);
+          kmesh->add_point(get_symmetry_point("M"), 0, 0);
+          kmesh->add_point(get_symmetry_point("K"), 1, 0);
           kmesh->add_point(Point(0,0,0), 2, 0);
-          kmesh->add_point(get_symmetry_point("L21"), 3, 0);
-          kmesh->add_point(get_symmetry_point("H21"), 4, 0);
+          kmesh->add_point(get_symmetry_point("L"), 3, 0);
+          kmesh->add_point(get_symmetry_point("H"), 4, 0);
           kmesh->add_point(get_symmetry_point("A"), 5, 0);
 
           Elem* elem = kmesh->add_elem(new libMesh::Prism6);
@@ -1047,24 +1047,6 @@ Kspace::get_symmetry_point(const std::string& name) const
           p(b2) = 0.5;
         else if (name == "L")
           p(b2) = p(b3) = 0.5;
-        else if (name == "A2")
-          p(b3) = -0.5;
-        else if (name == "K2") // b2 -> b1 - b2
-        {
-          p(b1) = 2.0/3.0;
-          p(b2) = -1.0/3.0;
-        }
-        else if (name == "H21")
-        {
-          p(b1) = 2.0/3.0;
-          p(b2) = -1.0/3.0;
-          p(b3) = 0.5;
-        }
-        else if (name == "M2")
-          p(b1) = 0.5;
-        else if (name == "L21")
-          p(b1) = p(b3) = 0.5;
-
         break;
 
       case FCC:
