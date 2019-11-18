@@ -405,9 +405,10 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
 
     // now construct all K (considering duplicates),
     // and construct K->k and k->K tables
-    vector<vector<Point>> k_to_K(num_k_points);
-    map<Point, vector<unsigned int>> K_to_k;
-    for (unsigned int i = 1; i < num_k_points; i++)
+    vector<Point> Kpoints;
+    vector<vector<unsigned int>> k_to_K(num_k_points);
+    vector<vector<unsigned int>> K_to_k;
+    for (unsigned int i = 0; i < num_k_points; i++)
     {
       const Point& k = kmesh->point(i);
       k_to_K[i].resize(G.size());
@@ -417,22 +418,38 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
 
         vector<Point> eq_K;
         sc_kspace->equivalent_points(K, eq_K);
-        unsigned eq = 0;
-        for ( ; eq < eq_K.size(); ++eq)
+
+        unsigned int foundK = 0;
+        for (unsigned int eq = 0 ; eq < eq_K.size(); ++eq)
         {
-          if (K_to_k.count(eq_K[eq]))
+          for (foundK = 0; foundK < Kpoints.size(); ++foundK)
+          {
+            if (Kpoints[foundK].absolute_fuzzy_equals(eq_K[eq]))
+            {
+              break;
+            }
+          }
+          if (foundK < Kpoints.size())
             break;
         }
 
-        if (eq == eq_K.size())
-          eq = 0;
+        if (foundK == Kpoints.size())
+        {
+          Kpoints.push_back(eq_K[0]);
+          K_to_k.resize(K_to_k.size() + 1);
+        }
 
-        K_to_k[eq_K[eq]].push_back(i);
-        k_to_K[i][j] = eq_K[eq];
+        K_to_k[foundK].push_back(i);
+        k_to_K[i][j] = foundK;
 
       }
 
     }
+
+
+    for (int i = 0; i < Kpoints.size(); ++i)
+      cerr << Kpoints[i] << endl;
+    cerr << endl;
 
     for (int i = 0; i < k_to_K.size(); ++i)
     {
