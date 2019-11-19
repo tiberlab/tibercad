@@ -352,7 +352,6 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     int Nb = ceil(pc_diam / b.norm());
     int Nc = ceil(pc_diam / c.norm());
 
-ofstream of("test.dat");
     for (int i = -Na; i < Na; ++i)
     {
       Point ga = i*a;
@@ -365,23 +364,10 @@ ofstream of("test.dat");
 
           if (g.norm() < (pc_diam + 1e-5))
           {
-            Point gg(g);
-            // get indices in PC basis and shift
-            pc_kspace.inverse_transform(gg);
-            //if (g(0) > 0.5001)
-              gg(0) -= 0.5 * (1 - 1.0/(2*Na));
-            //if (g(1) > 0.5001)
-              gg(1) -= 0.5 * (1 - 1.0/(2*Nb));
-            //if (g(2) > 0.5001)
-              gg(2) -= 0.5 * (1 - 1.0/(2*Nc));
-            pc_kspace.transform_point(gg);
-if (gg(0) < 1e-6)
-  of << gg(1) << " " << gg(2) << endl;
-
-            pc_kspace.equivalent_points(gg, points, false);
+            pc_kspace.equivalent_points(g, points, false);
             for (auto&& p : points)
             {
-              //if (pc_bb.contains_point(p))
+              if (pc_bb.contains_point(p))
               {
                 bool found = false;
                 for (unsigned int el = 0; el < pc_mesh->n_elem(); ++el)
@@ -389,6 +375,7 @@ if (gg(0) < 1e-6)
                   const Elem* elem = pc_mesh->elem_ptr(el);
                   if (elem->close_to_point(p, 1e-3))
                   {
+                    pc_kspace.inverse_transform(g);
                     G.push_back(g);
                     found = true;
                     break;
@@ -408,16 +395,25 @@ if (gg(0) < 1e-6)
 
     {
       set<int> ids;
+      vector<Point> star = {Point(0), Point(0,0,1), Point(0, 1, 0), Point(1, 0, 0),
+                            Point(1, 1, 0), Point(1, 0, 1), Point(0, 1, 1),
+                            Point(-1, 1, 0), Point(-1, 0, 1), Point(0, -1, 1),
+                            Point(1, 1, 1), Point(-1, 1, 1), Point(1, -1, 1), Point(1, 1, -1)};
       for (unsigned int i = 0; i < G.size(); ++i)
       {
         if (!ids.count(i))
         {
           for (unsigned int j = i+1; j < G.size(); ++j)
           {
-            if (G[j].absolute_fuzzy_equals(G[i], 1e-3))
-            {
-              ids.insert(j);
-            }
+            bool is_equal = false;
+            for (auto&& s : star)
+              if (G[j].absolute_fuzzy_equals(G[i] + s, 1e-3) ||
+                  G[j].absolute_fuzzy_equals(G[i] - s, 1e-3))
+              {
+                ids.insert(j);
+                break;
+              }
+
           }
         }
       }
@@ -426,60 +422,27 @@ if (gg(0) < 1e-6)
       for (unsigned int i = 0; i < G.size(); ++i)
       {
         if (!ids.count(i))
-          Gtmp.push_back(G[i]);
-      }
-
-      G = Gtmp;
-    }
-    //sort(G.begin(), G.end());
-
-    //vector<Point>::iterator ip = unique(G.begin(), G.end(), compare_points);
-    //G.resize(std::distance(G.begin(), ip));
-{
-ofstream of("test2.dat");
-for (unsigned int i = 0; i < G.size(); ++i)
-  if (G[i](0) < 1e-6)
-    of << G[i](1) << " " << G[i](2) << endl;
-}
-/*
-    // now we still can have vectors g' = -g
-    {
-      set<int> ids;
-      for (unsigned int i = 0; i < G.size(); ++i)
-      {
-        for (unsigned int j = i+1; j < G.size(); ++j)
         {
-          if (G[j].absolute_fuzzy_equals(-G[i], 1e-5))
-          {
-            ids.insert(j);
-            break;
-          }
-        }
-      }
-
-      vector<Point> Gtmp;
-      for (unsigned int i = 0; i < G.size(); ++i)
-      {
-        if (!ids.count(i))
+          pc_kspace.transform_point(G[i]);
           Gtmp.push_back(G[i]);
+        }
       }
 
       G = Gtmp;
     }
-*/
 
 
     ostringstream os;
     os << "Found " << G.size() << " G vectors unfolding the supercell "
         << "onto the primitive cell";
     Messages::info(os.str());
-    for (int i = 0; i < G.size(); ++i)
-    {
-      Point gg(G[i]);
-      sc_kspace->inverse_transform(gg);
-      cerr << "  " << G[i] << " " << gg << endl;
-    }
-    cerr << endl;
+    //for (int i = 0; i < G.size(); ++i)
+    //{
+    //  Point gg(G[i]);
+    //  sc_kspace->inverse_transform(gg);
+    //  cerr << "  " << G[i] << " " << gg << endl;
+    //}
+    //cerr << endl;
 
     kmesh = _kspace->get_k_mesh();
     unsigned int num_k_points = kmesh->n_nodes();
@@ -506,7 +469,7 @@ for (unsigned int i = 0; i < G.size(); ++i)
         {
           for (foundK = 0; foundK < Kpoints.size(); ++foundK)
           {
-            if (Kpoints[foundK].absolute_fuzzy_equals(eq_K[eq]))
+            if (Kpoints[foundK].absolute_fuzzy_equals(eq_K[eq], 1e-3))
             {
               break;
             }
