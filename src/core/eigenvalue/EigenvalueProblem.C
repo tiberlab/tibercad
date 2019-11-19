@@ -24,6 +24,14 @@ using namespace std;
 using namespace libMesh;
 
 
+namespace
+{
+  bool compare_points(const Point& a, const Point& b)
+  {
+    return(a.absolute_fuzzy_equals(b, 1e-5));
+  }
+}
+
 void
 EigenvalueProblem::initialize_solution_container(size_t num_solutions)
 {
@@ -112,6 +120,9 @@ ModelOptions EigenvalueProblem::parse_kspace_options(const ModelOptions& opts)
 
   kopts.set_option("k_space_dimension", k_dim);
 
+  // we skip this if dimension are provided explicitly
+  if (!opts.find_option("r1"))
+  {
 
   // for now, we have the old approach for continuum models,
   // while we use directly the periodicity info for atomistic models
@@ -177,6 +188,7 @@ ModelOptions EigenvalueProblem::parse_kspace_options(const ModelOptions& opts)
       default:
         break;
     }
+  }
 
 
   kopts.set_option("mesh_order", opts.get_option("mesh_order", "first"));
@@ -307,18 +319,30 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     kopts.delete_option("k-path");
     kopts.delete_option("k_path");
     kopts.set_option("write_k_mesh", "PC");
+    kopts = parse_kspace_options(kopts);
     Kspace pc_kspace(kopts, get_communicator());
     const MeshBase* pc_mesh = pc_kspace.get_k_mesh();
 
     // get the bounding box, to obtain BZ radius
     MeshTools::BoundingBox pc_bb =
         MeshTools::bounding_box(*pc_mesh);
+    pc_bb.max() += Point(1e-6, 1e-6, 1e-6);
+    pc_bb.min() -= Point(1e-6, 1e-6, 1e-6);
     double pc_diam = 2 * pc_bb.max().norm();
 
     vector<Point> G;
+    pc_kspace.get_basis(a, b, c);
+    //cerr << "PC : " << endl;
+    //cerr << a << endl;
+    //cerr << b << endl;
+    //cerr << c << endl;
 
     // the SC reciprocal basis
     sc_kspace->get_basis(a, b, c);
+    //cerr << "SC : " << endl;
+    //cerr << a << endl;
+    //cerr << b << endl;
+    //cerr << c << endl;
 
     // to store equivalent points;
     vector<Point> points;
@@ -328,6 +352,7 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     int Nb = ceil(pc_diam / b.norm());
     int Nc = ceil(pc_diam / c.norm());
 
+ofstream of("test.dat");
     for (int i = -Na; i < Na; ++i)
     {
       Point ga = i*a;
@@ -337,22 +362,41 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
         for (int l = -Nc; l < Nc; ++l)
         {
           Point g = gb + l*c;
-          if (g.norm() < pc_diam )
+
+          if (g.norm() < (pc_diam + 1e-5))
           {
-            pc_kspace.equivalent_points(g, points);
+            Point gg(g);
+            // get indices in PC basis and shift
+            pc_kspace.inverse_transform(gg);
+            //if (g(0) > 0.5001)
+              gg(0) -= 0.5 * (1 - 1.0/(2*Na));
+            //if (g(1) > 0.5001)
+              gg(1) -= 0.5 * (1 - 1.0/(2*Nb));
+            //if (g(2) > 0.5001)
+              gg(2) -= 0.5 * (1 - 1.0/(2*Nc));
+            pc_kspace.transform_point(gg);
+if (gg(0) < 1e-6)
+  of << gg(1) << " " << gg(2) << endl;
+
+            pc_kspace.equivalent_points(gg, points, false);
             for (auto&& p : points)
             {
-              if (pc_bb.contains_point(p))
+              //if (pc_bb.contains_point(p))
               {
+                bool found = false;
                 for (unsigned int el = 0; el < pc_mesh->n_elem(); ++el)
                 {
                   const Elem* elem = pc_mesh->elem_ptr(el);
-                  if (elem->contains_point(p, 1e-9))
+                  if (elem->close_to_point(p, 1e-3))
                   {
                     G.push_back(g);
+                    found = true;
                     break;
                   }
                 }
+
+                if (found)
+                  break;
               }
             }
           }
@@ -360,11 +404,44 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
       }
     }
 
-    sort(G.begin(), G.end());
-    vector<Point>::iterator ip = unique(G.begin(), G.end());
-    G.resize(std::distance(G.begin(), ip));
 
 
+    {
+      set<int> ids;
+      for (unsigned int i = 0; i < G.size(); ++i)
+      {
+        if (!ids.count(i))
+        {
+          for (unsigned int j = i+1; j < G.size(); ++j)
+          {
+            if (G[j].absolute_fuzzy_equals(G[i], 1e-3))
+            {
+              ids.insert(j);
+            }
+          }
+        }
+      }
+
+      vector<Point> Gtmp;
+      for (unsigned int i = 0; i < G.size(); ++i)
+      {
+        if (!ids.count(i))
+          Gtmp.push_back(G[i]);
+      }
+
+      G = Gtmp;
+    }
+    //sort(G.begin(), G.end());
+
+    //vector<Point>::iterator ip = unique(G.begin(), G.end(), compare_points);
+    //G.resize(std::distance(G.begin(), ip));
+{
+ofstream of("test2.dat");
+for (unsigned int i = 0; i < G.size(); ++i)
+  if (G[i](0) < 1e-6)
+    of << G[i](1) << " " << G[i](2) << endl;
+}
+/*
     // now we still can have vectors g' = -g
     {
       set<int> ids;
@@ -372,7 +449,7 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
       {
         for (unsigned int j = i+1; j < G.size(); ++j)
         {
-          if (G[j] == -G[i])
+          if (G[j].absolute_fuzzy_equals(-G[i], 1e-5))
           {
             ids.insert(j);
             break;
@@ -389,16 +466,20 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
 
       G = Gtmp;
     }
+*/
 
 
     ostringstream os;
     os << "Found " << G.size() << " G vectors unfolding the supercell "
         << "onto the primitive cell";
     Messages::info(os.str());
-    //for (int i = 0; i < G.size(); ++i)
-    //{
-    //  cerr << "  " << G[i] << endl;
-    //}
+    for (int i = 0; i < G.size(); ++i)
+    {
+      Point gg(G[i]);
+      sc_kspace->inverse_transform(gg);
+      cerr << "  " << G[i] << " " << gg << endl;
+    }
+    cerr << endl;
 
     kmesh = _kspace->get_k_mesh();
     unsigned int num_k_points = kmesh->n_nodes();
@@ -411,6 +492,7 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     for (unsigned int i = 0; i < num_k_points; i++)
     {
       const Point& k = kmesh->point(i);
+
       k_to_K[i].resize(G.size());
       for (unsigned int j = 0; j < G.size(); ++j)
       {
@@ -429,6 +511,7 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
               break;
             }
           }
+
           if (foundK < Kpoints.size())
             break;
         }
@@ -447,8 +530,13 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     }
 
 
+    cerr << endl << "K points: " << endl;
     for (int i = 0; i < Kpoints.size(); ++i)
-      cerr << Kpoints[i] << endl;
+    {
+      Point gg(Kpoints[i]);
+      sc_kspace->inverse_transform(gg);
+      cerr << Kpoints[i] << "  " << gg << endl;
+    }
     cerr << endl;
 
     for (int i = 0; i < k_to_K.size(); ++i)
@@ -470,6 +558,11 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
 
   kmesh = _kspace->get_k_mesh();
 
+  //for (unsigned int i = 0; i < kmesh->n_nodes(); i++)
+  //{
+  //  const Point&  k_point = kmesh->point(i);
+  //  cerr << k_point << endl;
+  //}
 
 
     unsigned int number_of_k_points = kmesh->n_nodes();

@@ -59,8 +59,12 @@ class Kspace
   void transform_point(libMesh::Point& p) const;
 
   //! Construct equivalent points according to the point group
+  /*!
+   * \param fold if true, fold into the 1st BZ
+   */
   void equivalent_points(const libMesh::Point& p,
-                         std::vector<libMesh::Point>& equivalent_points);
+                         std::vector<libMesh::Point>& equivalent_points,
+                         bool fold = true);
 
   //! Get reciprocal space basis
   void get_basis(libMesh::RealVectorValue& a,

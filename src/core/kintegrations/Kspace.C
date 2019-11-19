@@ -22,6 +22,15 @@
 
 using namespace std;
 
+
+namespace
+{
+  bool compare_points(const Point& a, const Point& b)
+  {
+    return(a.absolute_fuzzy_equals(b));
+  }
+}
+
 std::vector<std::string>
 Kspace::symmetry_names = {"Gamma", "linear", "quadratic", "rectangular",
                           "hexagonal", "fcc", "bcc", "cubic",
@@ -77,12 +86,31 @@ Kspace::~Kspace()
 
 void
 Kspace::equivalent_points(const libMesh::Point& p,
-                          std::vector<libMesh::Point>& eq_points)
+                          std::vector<libMesh::Point>& eq_points,
+                          bool fold)
 {
   Point c(p);
 
   // get the relative coordinates
   inverse_transform(c);
+
+
+  // reduce to 1. BZ
+  if (fold)
+  {
+    double intpart;
+    c(0) = modf(c(0), &intpart);
+    if (c(0) > 0.5)
+      c(0) -= 1.0;
+
+    c(1) = modf(c(1), &intpart);
+    if (c(1) > 0.5)
+      c(1) -= 1.0;
+
+    c(2) = modf(c(2), &intpart);
+    if (c(2) > 0.5)
+      c(2) -= 1.0;
+  }
 
   eq_points.resize(0);
   eq_points.push_back(c);
@@ -192,7 +220,9 @@ Kspace::equivalent_points(const libMesh::Point& p,
 
   sort(eq_points.begin(), eq_points.end());
 
-  vector<Point>::iterator ip = unique(eq_points.begin(), eq_points.end());
+  vector<Point>::iterator ip = unique(eq_points.begin(),
+                                      eq_points.end(),
+                                      compare_points);
   eq_points.resize(std::distance(eq_points.begin(), ip));
 
   for (auto&& a : eq_points)
