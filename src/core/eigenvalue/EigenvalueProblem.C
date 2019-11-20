@@ -283,7 +283,7 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     ModelOptions scopts(kopts);
     scopts.delete_option("k-path");
     scopts.delete_option("k_path");
-    scopts.set_option("write_k_mesh", "SC");
+    //scopts.set_option("write_k_mesh", "SC");
 
     Messages::newline();
     Messages::info("Initialize super cell k-space");
@@ -318,7 +318,7 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     // this is the reduced BZ of the PC k-space
     kopts.delete_option("k-path");
     kopts.delete_option("k_path");
-    kopts.set_option("write_k_mesh", "PC");
+    //kopts.set_option("write_k_mesh", "PC");
     kopts = parse_kspace_options(kopts);
     Kspace pc_kspace(kopts, get_communicator());
     const MeshBase* pc_mesh = pc_kspace.get_k_mesh();
@@ -326,11 +326,19 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     // get the bounding box, to obtain BZ radius
     MeshTools::BoundingBox pc_bb =
         MeshTools::bounding_box(*pc_mesh);
-    pc_bb.max() += Point(1e-6, 1e-6, 1e-6);
-    pc_bb.min() -= Point(1e-6, 1e-6, 1e-6);
+    pc_bb.max() += Point(1e-2, 1e-2, 1e-2);
+    pc_bb.min() -= Point(1e-2, 1e-2, 1e-2);
     double pc_diam = 2 * pc_bb.max().norm();
 
-    vector<Point> G;
+    // for debugging
+    //ofstream of("test.dat");
+
+    typedef vector<int> LPoint;
+
+    // the lattice points in the SC lattice for
+    // the unfolding vectors
+    vector<LPoint> G;
+
     pc_kspace.get_basis(a, b, c);
     //cerr << "PC : " << endl;
     //cerr << a << endl;
@@ -344,27 +352,34 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     //cerr << b << endl;
     //cerr << c << endl;
 
-    // to store equivalent points;
-    vector<Point> points;
 
     // these are absolute upper limits
-    int Na = ceil(pc_diam / a.norm());
-    int Nb = ceil(pc_diam / b.norm());
-    int Nc = ceil(pc_diam / c.norm());
+    int Na = ceil(0.5 * pc_diam / a.norm() + 1);
+    int Nb = ceil(0.5 * pc_diam / b.norm() + 1);
+    int Nc = ceil(0.5 * pc_diam / c.norm() + 1);
 
     for (int i = -Na; i < Na; ++i)
     {
-      Point ga = i*a;
       for (int j = -Nb; j < Nb; ++j)
       {
-        Point gb = ga + j*b;
         for (int l = -Nc; l < Nc; ++l)
         {
-          Point g = gb + l*c;
 
-          if (g.norm() < (pc_diam + 1e-5))
+          LPoint g = {i, j, l};
+
+          Point gg(g[0], g[1], g[2]);
+
+          sc_kspace->transform_point(gg);
+
+          if (gg.norm() < (pc_diam + 1e-5))
           {
-            pc_kspace.equivalent_points(g, points, false);
+            //if (gg(0) < 1e-6)
+            //  of << gg(1) << " " << gg(2) << endl;
+
+            // to store equivalent points;
+            vector<Point> points;
+            pc_kspace.equivalent_points(gg, points, false);
+
             for (auto&& p : points)
             {
               if (pc_bb.contains_point(p))
@@ -375,8 +390,8 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
                   const Elem* elem = pc_mesh->elem_ptr(el);
                   if (elem->close_to_point(p, 1e-3))
                   {
-                    pc_kspace.inverse_transform(g);
                     G.push_back(g);
+
                     found = true;
                     break;
                   }
@@ -392,57 +407,80 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     }
 
 
-
+    // sort out repeated points, checking with the translation group
     {
+      const vector<Point> star =
+          { Point(1, 0, 0), Point(0, 1, 0), Point(0, 0, 1),
+            Point(1, 1, 0), Point(0, 1, 1), Point(1, 0, 1),
+            Point(1, -1, 0), Point(0, 1, -1), Point(1, 0, -1),
+            Point(-1, 1, 1), Point(1, -1, 1), Point(1, 1, -1),
+            Point(1, 1, 1),
+          };
+
       set<int> ids;
-      vector<Point> star = {Point(0), Point(0,0,1), Point(0, 1, 0), Point(1, 0, 0),
-                            Point(1, 1, 0), Point(1, 0, 1), Point(0, 1, 1),
-                            Point(-1, 1, 0), Point(-1, 0, 1), Point(0, -1, 1),
-                            Point(1, 1, 1), Point(-1, 1, 1), Point(1, -1, 1), Point(1, 1, -1)};
       for (unsigned int i = 0; i < G.size(); ++i)
       {
         if (!ids.count(i))
         {
-          for (unsigned int j = i+1; j < G.size(); ++j)
+          Point g(G[i][0], G[i][1], G[i][2]);
+          sc_kspace->transform_point(g);
+          Point p(g);
+          pc_kspace.inverse_transform(p);
+
+          for (unsigned int j = 0; j < G.size(); ++j)
           {
-            bool is_equal = false;
-            for (auto&& s : star)
-              if (G[j].absolute_fuzzy_equals(G[i] + s, 1e-3) ||
-                  G[j].absolute_fuzzy_equals(G[i] - s, 1e-3))
+            if ((i != j) && !ids.count(j))
+            {
+              Point g2(G[j][0], G[j][1], G[j][2]);
+              sc_kspace->transform_point(g2);
+              Point p2(g2);
+              pc_kspace.inverse_transform(p2);
+
+              bool equal = p.absolute_fuzzy_equals(p2, 1e-3);
+
+              for (unsigned int s = 0; (s < star.size()) && !equal; ++s)
+                equal |= p.absolute_fuzzy_equals(p2 + star[s], 1e-3);
+
+              if (equal)
               {
                 ids.insert(j);
-                break;
               }
-
+            }
           }
         }
       }
 
-      vector<Point> Gtmp;
+      vector<LPoint> Gtmp;
       for (unsigned int i = 0; i < G.size(); ++i)
       {
         if (!ids.count(i))
-        {
-          pc_kspace.transform_point(G[i]);
           Gtmp.push_back(G[i]);
-        }
       }
 
       G = Gtmp;
     }
+
+    // for debugging
+    //ofstream of2("test2.dat");
 
 
     ostringstream os;
     os << "Found " << G.size() << " G vectors unfolding the supercell "
         << "onto the primitive cell";
     Messages::info(os.str());
-    //for (int i = 0; i < G.size(); ++i)
-    //{
-    //  Point gg(G[i]);
-    //  sc_kspace->inverse_transform(gg);
-    //  cerr << "  " << G[i] << " " << gg << endl;
-    //}
-    //cerr << endl;
+
+    /*
+    for (int i = 0; i < G.size(); ++i)
+    {
+      Point gg(G[i][0], G[i][1], G[i][2]);
+      sc_kspace->transform_point(gg);
+      Point p(gg);
+      pc_kspace.inverse_transform(p);
+      cerr << "  (" << G[i][0] << ", " << G[i][1] << ", " << G[i][2] << ") " << p << endl;
+      of2 << gg(1) << " " << gg(2) << " " << gg(0) << endl;
+    }
+    cerr << endl;
+    */
 
     kmesh = _kspace->get_k_mesh();
     unsigned int num_k_points = kmesh->n_nodes();
@@ -459,7 +497,9 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
       k_to_K[i].resize(G.size());
       for (unsigned int j = 0; j < G.size(); ++j)
       {
-        Point K = k - G[j];
+        Point gg(G[j][0], G[j][1], G[j][2]);
+        sc_kspace->transform_point(gg);
+        Point K = k - gg;
 
         vector<Point> eq_K;
         sc_kspace->equivalent_points(K, eq_K);
@@ -492,11 +532,19 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
 
     }
 
+    os.str("");
+    os << num_k_points << " primitive cell k points are folded into "
+        << Kpoints.size() << " supercell k points";
+    Messages::info(os.str());
+    Messages::newline();
 
+    /*
+    ofstream of_k("kpoints.dat");
     cerr << endl << "K points: " << endl;
     for (int i = 0; i < Kpoints.size(); ++i)
     {
       Point gg(Kpoints[i]);
+      of_k << gg(1) << " " << gg(2) << endl;
       sc_kspace->inverse_transform(gg);
       cerr << Kpoints[i] << "  " << gg << endl;
     }
@@ -508,6 +556,7 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
       for (int j = 0; j < k_to_K[i].size(); ++j)
         cerr << "  " << k_to_K[i][j] << endl;
     }
+    */
 
 
 

@@ -102,14 +102,20 @@ Kspace::equivalent_points(const libMesh::Point& p,
     c(0) = modf(c(0), &intpart);
     if (c(0) > 0.5)
       c(0) -= 1.0;
+    else if (c(0) < -0.5)
+      c(0) += 1.0;
 
     c(1) = modf(c(1), &intpart);
     if (c(1) > 0.5)
       c(1) -= 1.0;
+    else if (c(1) < -0.5)
+      c(1) += 1.0;
 
     c(2) = modf(c(2), &intpart);
     if (c(2) > 0.5)
       c(2) -= 1.0;
+    else if (c(2) < -0.5)
+      c(2) += 1.0;
   }
 
   eq_points.resize(0);
