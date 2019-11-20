@@ -276,8 +276,8 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
   // this will contain the necessary k-points
   vector<Point> Kpoints;
   // these map k points from SC to PC, in case of unfolding
-  vector<vector<unsigned int>> k_to_K;
-  vector<vector<unsigned int>> K_to_k;
+  vector<set<unsigned int>> k_to_K;
+  vector<set<unsigned int>> K_to_k;
 
   const MeshBase* kmesh = nullptr;
   if (refmat != nullptr)
@@ -498,7 +498,6 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     {
       const Point& k = kmesh->point(i);
 
-      k_to_K[i].resize(G.size());
       for (unsigned int j = 0; j < G.size(); ++j)
       {
         Point gg(G[j][0], G[j][1], G[j][2]);
@@ -529,12 +528,32 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
           K_to_k.resize(K_to_k.size() + 1);
         }
 
-        K_to_k[foundK].push_back(i);
-        k_to_K[i][j] = foundK;
+        K_to_k[foundK].insert(i);
+        k_to_K[i].insert(foundK);
 
       }
 
     }
+
+    for (unsigned int i = 0; i < K_to_k.size(); ++i)
+    {
+      cerr << i << " : ";
+      for (auto&& j : K_to_k[i])
+        cerr << j << " ";
+      cerr << endl;
+    }
+    cerr << endl;
+
+    for (unsigned int i = 0; i < k_to_K.size(); ++i)
+    {
+      cerr << i << " : ";
+      for (auto&& j : k_to_K[i])
+        cerr << j << " ";
+      cerr << endl;
+    }
+    cerr << endl;
+
+
 
     os.str("");
     os << num_k_points << " primitive cell k points are folded into "
@@ -574,42 +593,45 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
 
     unsigned int number_of_k_points = kmesh->n_nodes();
     Kpoints.reserve(number_of_k_points);
-    K_to_k.resize(number_of_k_points, vector<unsigned int>(1));
+    K_to_k.resize(number_of_k_points);
     for (unsigned int i = 0; i < number_of_k_points; i++)
     {
       const Point&  k_point = kmesh->point(i);
       Kpoints.push_back(k_point);
-      K_to_k[i][0] = i;
+      K_to_k[i].insert(i);
     }
   }
 
-    unsigned int number_of_k_points = Kpoints.size();
-    unsigned int number_of_eigs;
-    
-    {
-      unsigned int i = 0;
-      const Point&  k_point = Kpoints[i];
 
-      solve_for_kpoint(k_point);
-      number_of_eigs = get_num_states();
+  // now calculate for the K points
 
-      std::vector<double> temp(number_of_eigs);
-      _dispersion.resize(number_of_k_points, temp);
+  unsigned int number_of_k_points = Kpoints.size();
+  unsigned int number_of_eigs;
 
-      for (unsigned int j = 0 ; j <  _dispersion[0].size(); j++)
-        _dispersion[0][j] = _solution[j].eigen_energy;
-    }
+  {
+    unsigned int i = 0;
+    const Point&  k_point = Kpoints[i];
 
-    for (unsigned int i = 1; i < number_of_k_points; i++)
-    {
-      const Point&  k_point = Kpoints[i];
+    solve_for_kpoint(k_point);
+    number_of_eigs = get_num_states();
 
-      solve_for_kpoint(k_point);
-      number_of_eigs = get_num_states();
+    std::vector<double> temp(number_of_eigs);
+    _dispersion.resize(number_of_k_points, temp);
 
-      for (unsigned int j = 0 ; j < _dispersion[i].size() ; j++)
-        _dispersion[i][j] = _solution[j].eigen_energy;
-    }
+    for (unsigned int j = 0 ; j <  _dispersion[0].size(); j++)
+      _dispersion[0][j] = _solution[j].eigen_energy;
+  }
+
+  for (unsigned int i = 1; i < number_of_k_points; i++)
+  {
+    const Point&  k_point = Kpoints[i];
+
+    solve_for_kpoint(k_point);
+    number_of_eigs = get_num_states();
+
+    for (unsigned int j = 0 ; j < _dispersion[i].size() ; j++)
+      _dispersion[i][j] = _solution[j].eigen_energy;
+  }
 
 
 }
