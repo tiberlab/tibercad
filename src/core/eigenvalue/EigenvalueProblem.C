@@ -273,6 +273,12 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     }
   }
 
+  // this will contain the necessary k-points
+  vector<Point> Kpoints;
+  // these map k points from SC to PC, in case of unfolding
+  vector<vector<unsigned int>> k_to_K;
+  vector<vector<unsigned int>> K_to_k;
+
   const MeshBase* kmesh = nullptr;
   if (refmat != nullptr)
   {
@@ -484,12 +490,10 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
 
     kmesh = _kspace->get_k_mesh();
     unsigned int num_k_points = kmesh->n_nodes();
+    k_to_K.resize(num_k_points);
 
     // now construct all K (considering duplicates),
     // and construct K->k and k->K tables
-    vector<Point> Kpoints;
-    vector<vector<unsigned int>> k_to_K(num_k_points);
-    vector<vector<unsigned int>> K_to_k;
     for (unsigned int i = 0; i < num_k_points; i++)
     {
       const Point& k = kmesh->point(i);
@@ -566,23 +570,25 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
   else
   {
     init_kspace(kopts);
-  }
-
-  kmesh = _kspace->get_k_mesh();
-
-  //for (unsigned int i = 0; i < kmesh->n_nodes(); i++)
-  //{
-  //  const Point&  k_point = kmesh->point(i);
-  //  cerr << k_point << endl;
-  //}
-
+    kmesh = _kspace->get_k_mesh();
 
     unsigned int number_of_k_points = kmesh->n_nodes();
+    Kpoints.reserve(number_of_k_points);
+    K_to_k.resize(number_of_k_points, vector<unsigned int>(1));
+    for (unsigned int i = 0; i < number_of_k_points; i++)
+    {
+      const Point&  k_point = kmesh->point(i);
+      Kpoints.push_back(k_point);
+      K_to_k[i][0] = i;
+    }
+  }
+
+    unsigned int number_of_k_points = Kpoints.size();
     unsigned int number_of_eigs;
     
     {
       unsigned int i = 0;
-      const Point&  k_point = kmesh->point(i);
+      const Point&  k_point = Kpoints[i];
 
       solve_for_kpoint(k_point);
       number_of_eigs = get_num_states();
@@ -596,7 +602,7 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
 
     for (unsigned int i = 1; i < number_of_k_points; i++)
     {
-      const Point&  k_point = kmesh->point(i);
+      const Point&  k_point = Kpoints[i];
 
       solve_for_kpoint(k_point);
       number_of_eigs = get_num_states();
