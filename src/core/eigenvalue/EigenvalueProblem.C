@@ -535,7 +535,7 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
 
     }
 
-    ///*
+    /*
     for (unsigned int i = 0; i < K_to_k.size(); ++i)
     {
       cerr << i << " : ";
@@ -550,7 +550,7 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
       cerr << i << " : " << k_to_K[i] << endl;
     }
     cerr << endl;
-    //*/
+    */
 
 
     os.str("");
@@ -561,15 +561,18 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
 
     ///*
     ofstream of_k("kpoints.dat");
-    cerr << endl << "K points: " << endl;
+    os.str("");
+    os << "K points:  (absolute / relative)" << endl;
     for (int i = 0; i < Kpoints.size(); ++i)
     {
       Point gg(Kpoints[i]);
       of_k << gg(1) << " " << gg(2) << endl;
+      os << gg(0) << " " <<  gg(1) << " " << gg(2)  << "   /   ";
       sc_kspace->inverse_transform(gg);
-      cerr << Kpoints[i] << "  " << gg << endl;
+      os << gg(0) << " " <<  gg(1) << " " << gg(2)  << endl;
     }
-    cerr << endl;
+    Messages::info(os.str());
+    Messages::newline();
     //*/
 
 
