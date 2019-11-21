@@ -118,6 +118,8 @@ Kspace::equivalent_points(const libMesh::Point& p,
       c(2) += 1.0;
   }
 
+  // now c is in (-0.5, 0.5) for each direction
+
   eq_points.resize(0);
   eq_points.push_back(c);
 
@@ -162,7 +164,50 @@ Kspace::equivalent_points(const libMesh::Point& p,
       // mirroring is implemented by interchanging b1 and b2,
       // and b3 -> -b3
 
+      // first adjust first point, because it might be outside of
+      // the standard 1st BZ
       Point np(c);
+
+      if (fold)
+      {
+
+        //      ______
+        //     /   \ /
+        //    /|   |/
+        //   /_\___/
+        //
+        //  the lower left and upper right angle are out of the
+        //  standard 1st BZ, and we have to bring them back.
+        //
+
+        c(b3) = 0;
+
+        transform_point(np);
+        double np_norm = np.norm();
+        Point vec1(0);
+        vec1(b1) = 1;
+        transform_point(vec1);
+
+        double prod = vec1 * np;
+        double x = prod / vec1.norm();
+        double y = sqrt(np_norm * np_norm - x*x);
+
+        if ((fabs(x) > 0.5 * vec1.norm()) && (y < fabs(x) / sqrt(3)))
+        {
+          c(b1) -= (x > 0) ? 1 : -1;
+        }
+        else if ((y > fabs(x) / sqrt(3)) &&
+                 (y > (vec1.norm() - fabs(x)) / sqrt(3)))
+        {
+          c(b2) -= (x > 0) ? 1 : -1;
+        }
+
+        c(b3) = np(b3);
+        eq_points[0] = c;
+        np = c;
+      }
+
+
       np(b1) = c(b2);
       np(b2) = c(b1);
       eq_points.push_back(np);

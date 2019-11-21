@@ -276,7 +276,7 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
   // this will contain the necessary k-points
   vector<Point> Kpoints;
   // these map k points from SC to PC, in case of unfolding
-  vector<set<unsigned int>> k_to_K;
+  vector<unsigned int> k_to_K;  // this is one-to-one !
   vector<set<unsigned int>> K_to_k;
 
   const MeshBase* kmesh = nullptr;
@@ -529,12 +529,13 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
         }
 
         K_to_k[foundK].insert(i);
-        k_to_K[i].insert(foundK);
+        k_to_K[i] = foundK;
 
       }
 
     }
 
+    ///*
     for (unsigned int i = 0; i < K_to_k.size(); ++i)
     {
       cerr << i << " : ";
@@ -546,13 +547,10 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
 
     for (unsigned int i = 0; i < k_to_K.size(); ++i)
     {
-      cerr << i << " : ";
-      for (auto&& j : k_to_K[i])
-        cerr << j << " ";
-      cerr << endl;
+      cerr << i << " : " << k_to_K[i] << endl;
     }
     cerr << endl;
-
+    //*/
 
 
     os.str("");
@@ -561,7 +559,7 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     Messages::info(os.str());
     Messages::newline();
 
-    /*
+    ///*
     ofstream of_k("kpoints.dat");
     cerr << endl << "K points: " << endl;
     for (int i = 0; i < Kpoints.size(); ++i)
@@ -572,15 +570,7 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
       cerr << Kpoints[i] << "  " << gg << endl;
     }
     cerr << endl;
-
-    for (int i = 0; i < k_to_K.size(); ++i)
-    {
-      cerr << kmesh->point(i) << endl;
-      for (int j = 0; j < k_to_K[i].size(); ++j)
-        cerr << "  " << k_to_K[i][j] << endl;
-    }
-    */
-
+    //*/
 
 
     // does crash, why?
