@@ -89,6 +89,19 @@ class EigenvalueProblem : public SimulationInterface
         const std::string& j_particle,
         unsigned int j);
 
+    //! Projection on different Brillouin zone
+    /*!
+     * The main use of this method is for BZ unfolding of supercell dispersions
+     * onto the respective primitive cell.
+     *
+     * \param a the eigenstate to project
+     * \param k the k point in the target BZ
+     * \return the projection weight
+     */
+    libMesh::Complex project_to_primitive_cell(const eigen_problem_solution& a,
+        const libMesh::Point& k) const;
+
+
     //! get number of states
     unsigned int get_num_states(void) const;
 
@@ -194,6 +207,10 @@ class EigenvalueProblem : public SimulationInterface
     \param number_of_ev number of eigen functions to read
     */
     virtual bool read_SLEPC_solution(void) { return true; }
+
+    //! Implementation of projection on different BZ
+    virtual libMesh::Complex do_project_to_primitive_cell(
+        const eigen_problem_solution& a, const libMesh::Point& k) const;
 
 
     //!put spectrum shift energy to be almost equal to the 1st eigenvalue
@@ -318,6 +335,15 @@ EigenvalueProblem::assemble(const ModelOptions& options)
 //{
 //   return _solution;
 //}
+
+
+inline
+libMesh::Complex
+EigenvalueProblem::project_to_primitive_cell(const eigen_problem_solution& a,
+    const libMesh::Point& k) const
+{
+  return(do_project_to_primitive_cell(a, k));
+}
 
 inline 
 void EigenvalueProblem::set_k_point(const Point& k_vec)

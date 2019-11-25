@@ -273,6 +273,8 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     }
   }
 
+  Kspace* kspace_for_plot = nullptr;
+
   // this will contain the necessary k-points
   vector<Point> Kpoints;
   // these map k points from SC to PC, in case of unfolding
@@ -320,6 +322,8 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
 
     // _kspace contains now the k-path in the PC k-space
     init_kspace(kopts);
+
+    kspace_for_plot = _kspace;
 
     // this is the reduced BZ of the PC k-space
     kopts.delete_option("k-path");
@@ -544,9 +548,12 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
       cerr << endl;
     }
     cerr << endl;
+    */
 
+    /*
     for (unsigned int i = 0; i < k_to_K.size(); ++i)
     {
+      //cerr << i << " : " << k_to_K[i] << endl;
       cerr << i << " : " << k_to_K[i] << endl;
     }
     cerr << endl;
@@ -576,12 +583,13 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     //*/
 
 
-    // does crash, why?
-    //delete sc_kspace;
+    // for the calculations we need a consistent k space
+    _kspace = sc_kspace;
   }
   else
   {
     init_kspace(kopts);
+    kspace_for_plot = _kspace;
     kmesh = _kspace->get_k_mesh();
 
     unsigned int number_of_k_points = kmesh->n_nodes();
@@ -598,7 +606,8 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
 
   // now calculate for the K points
 
-  unsigned int number_of_k_points = Kpoints.size();
+  unsigned int number_of_k_points = kmesh->n_nodes();
+  unsigned int number_of_K_points = Kpoints.size();
   unsigned int number_of_eigs;
 
   {
@@ -611,21 +620,27 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     std::vector<double> temp(number_of_eigs);
     _dispersion.resize(number_of_k_points, temp);
 
-    for (unsigned int j = 0 ; j <  _dispersion[0].size(); j++)
-      _dispersion[0][j] = _solution[j].eigen_energy;
   }
 
-  for (unsigned int i = 1; i < number_of_k_points; i++)
+  for (unsigned int i = 0; i < number_of_K_points; i++)
   {
     const Point&  k_point = Kpoints[i];
 
-    solve_for_kpoint(k_point);
+    if (i > 0)
+      solve_for_kpoint(k_point);
+
     number_of_eigs = get_num_states();
 
     for (unsigned int j = 0 ; j < _dispersion[i].size() ; j++)
-      _dispersion[i][j] = _solution[j].eigen_energy;
+      for (auto&& k : K_to_k[i])
+      {
+        Complex w = project_to_primitive_cell(_solution[j], kmesh->node(k));
+        _dispersion[k][j] = _solution[j].eigen_energy;
+      }
   }
 
+  // in case of unfolding we have to set the correct k space back
+  _kspace = kspace_for_plot;
 
 }
 
@@ -728,6 +743,12 @@ EigenvalueProblem::plot_globaldata(void)
 
 
 
+libMesh::Complex
+EigenvalueProblem::do_project_to_primitive_cell(const eigen_problem_solution& a,
+    const Point& k) const
+{
+  return(1);
+}
 
 
 void
