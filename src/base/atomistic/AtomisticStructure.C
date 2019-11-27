@@ -674,6 +674,8 @@ AtomisticStructure::assign_virtual_species(void)
       db.set_section("atomistic_structure");
       unsigned int n_species = db.get("n_basis_specie", 0);
 
+      Atom::atom_t label = 0;
+
       //Build up conversion map from file
       for (unsigned int i = 1; i <= n_species; i++)
       {
@@ -688,7 +690,13 @@ AtomisticStructure::assign_virtual_species(void)
 
         ret = atom_types.insert(specie);
 
-        assign[*reg][static_cast<Atom::atom_t>(i)] = *(ret.first);
+        record = "n_" + s;
+        unsigned int n = db.get(record.c_str(), 0);
+
+        for (unsigned int j = 1; j <= n; j++)
+        {
+          assign[*reg][++label] = *(ret.first);
+        }
 
       }
 

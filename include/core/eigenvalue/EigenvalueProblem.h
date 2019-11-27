@@ -272,8 +272,15 @@ class EigenvalueProblem : public SimulationInterface
     std::vector<libMesh::dof_id_type> _perm;
     std::vector<libMesh::dof_id_type> _inv_perm;
 
-    //! bool do_dispersion;
+    //! Stores the energy values for each k point for dispersions
     std::vector< std::vector<double> > _dispersion;
+
+    //! Stores projection weights for the k points
+    /*!
+     * This is filled only in case of unfolding
+     */
+    std::vector< std::vector<double> > _projection_weights;
+
 
     //int disp_range[2];
     bool _haveS;

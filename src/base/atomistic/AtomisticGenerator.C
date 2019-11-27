@@ -2,9 +2,6 @@
 
 #include "AtomisticGenerator.h"
 #include "AtomisticStructure.h"
-//#include "AtomisticGenerator1D.h"
-//#include "AtomisticGenerator2D.h"
-//#include "AtomisticGenerator3D.h"
 #include "BondMap.h"
 #include "Messages.h"
 #include "MeshUtils.h"
@@ -465,6 +462,8 @@ AtomisticGenerator::assign_species(void)
 
     db.set_section("atomistic_structure");
     
+    Atom::atom_t label = 0;
+
     //Build up conversion map from file
     for (unsigned int i = 1; i <= db.get("n_basis_specie", 0); i++)
     {
@@ -479,8 +478,18 @@ AtomisticGenerator::assign_species(void)
       // 2019-03-12: currently Specie cannot handle virtual species like InGa,
       //             they are called 'Virt' at the moment
 
+      if (mat->is_alloy())
+      {
+        // combine strings from components
+      }
       std::string db_record = db.get(record.c_str(),"none");
-      assign[*reg][static_cast<Atom::label_t>(i)] = Specie(db_record);
+
+      record = "n_" + s;
+      unsigned int n = db.get(record.c_str(), 0);
+
+      for (unsigned int j = 1; j <= n; ++j)
+        assign[*reg][++label] = Specie(db_record);
+
     }
 
     //No more reading from section atomistic_structure in database are needed
@@ -1644,7 +1653,7 @@ AtomisticGenerator::build_random_alloy()
 
   // First build up a map with info per region and label between species and fractions
   vector<vector<specie_fraction>> frac;
-  // define two vectors   num_to_substitute[region][label][Specie]
+  // define two vectors num_to_substitute[region][label][Specie]
   vector<vector<specie_number>> num_to_substitute;
   vector<vector<specie_number>> num_substituted;
   // define vectors atm_to_substitute[region][label]

@@ -112,6 +112,9 @@ BulkCrystal::read_database(void)
 
     unsigned int n_basis_specie = db.get("n_basis_specie", 0);
 
+    // the unique label for atoms in the primitive cell
+    Atom::label_t label = 0;
+
     for (unsigned int i = 1; i <= n_basis_specie; i++)
     {
       std::string record, s, n_s;
@@ -137,7 +140,8 @@ BulkCrystal::read_database(void)
 
         //Putting specie label (defined by an integer) in label data
         //It's used in cut_and_change_specie() and build_random_alloy()
-        tmp.set_label(static_cast<Atom::label_t>(i));
+        label++;
+        tmp.set_label(label);
         tmp.set_specie(specie);
 
         std::vector<double> v(3,0.0);
@@ -239,6 +243,9 @@ BulkCrystal::read_database(void)
     Database* dbA = &(mat_alloy->get_component_A()->get_database());
     dbB->set_section("atomistic_structure");
     dbA->set_section("atomistic_structure");
+
+    // the unique label for atoms in the primitive cell
+    Atom::label_t label = 0;
         
     for (unsigned int i = 1; i <= n_basis_specie; i++)
     {
@@ -267,7 +274,8 @@ BulkCrystal::read_database(void)
 
         //Putting specie label (defined by an integer) in label data
         //It's used in cut_and_change_specie() and build_random_alloy()
-        tmp.set_label(static_cast<Atom::label_t>(i));
+        label++;
+        tmp.set_label(label);
         tmp.set_specie(specie);
 
         record = s2 + "_a";
