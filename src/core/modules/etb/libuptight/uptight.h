@@ -579,6 +579,19 @@ inline void f77_upt_get_ion_numorbitals (f77_int const* handler, f77_int*
 }
 
 
+extern "C" void upt_get_ion_orbitals_ (f77_int const*, f77_int&, f77_int*);
+
+// Corresponding F77 arguments for f77_upt_get_ion_orbitals:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// integer, intent(inout) :: ion
+// integer, intent(inout) :: orbitals(*)
+inline void f77_upt_get_ion_orbitals (f77_int const* handler, f77_int& ion, 
+    f77_int* orbitals)
+{
+  upt_get_ion_orbitals_ (handler, ion, orbitals);
+}
+
+
 extern "C" void upt_set_verbosity_ (f77_int const*, f77_int const&);
 
 // Corresponding F77 arguments for f77_upt_set_verbosity:

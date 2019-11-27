@@ -1463,6 +1463,76 @@ ETB::compute_atomic_charges(const std::string& particle, std::vector<double>& qm
 
 }
 
+
+Complex
+ETB::do_project_to_primitive_cell(const eigen_problem_solution& a,
+    const Point& k) const
+{
+
+  Complex weight = 0.0;
+
+  const std::vector<Atom>& atom = get_atomistic_structure()->get_structure_atoms();
+  size_t N = get_atomistic_structure()->get_N_without_H();
+
+  int n_spin = _upt_options.relat_flag ? 2 : 1;
+
+  vector<int> orbitals_i;
+  vector<int> orbitals_j;
+
+  size_t id_i = 0;
+
+  for (size_t i = 0; i < N; i++)
+  {
+    orbitals_i.resize(_ion_num_orbitals[i]);
+    inst->get_ion_orbitals(i+1, orbitals_i);
+
+    size_t id_j = 0;
+    for (size_t j = 0; j < N; j++)
+    {
+      if (atom[i].get_label() == atom[j].get_label())
+      {
+
+      orbitals_j.resize(_ion_num_orbitals[j]);
+      inst->get_ion_orbitals(j+1, orbitals_j);
+
+      Point d(atom[i].get_position());
+      d -= atom[j].get_position();
+
+      Complex arg = 0.1*Complex(0.0, k*d);
+      Complex phase = std::exp(-arg);
+
+      Complex value = 0.0;
+
+      for (size_t orb_i = 0; orb_i < orbitals_i.size(); ++orb_i)
+      {
+        for (size_t orb_j = 0; orb_j < orbitals_j.size(); ++orb_j)
+        {
+          if (orbitals_i[orb_i] == orbitals_j[orb_j])
+          {
+            value += a.eigen_vector[id_i + orb_i] *
+                libmesh_conj(a.eigen_vector[id_j + orb_j]);
+
+            if (_upt_options.relat_flag)
+              value += a.eigen_vector[id_i + orb_i + orbitals_i.size()] *
+                libmesh_conj(a.eigen_vector[id_j + orb_j + orbitals_j.size()]);
+          }
+        }
+      }
+
+      weight += value * phase;
+      }
+
+      id_j += n_spin * _ion_num_orbitals[j];
+    }
+
+    id_i += n_spin * _ion_num_orbitals[i];
+  }
+
+
+  return(weight);
+}
+
+
 void
 ETB::compute_eigenvector_mag(unsigned int eigenstate, std::vector<double>& densatm)
 {

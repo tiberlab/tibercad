@@ -269,13 +269,19 @@ void UptWrapper::get_ion_numorbitals(std::vector<int>& ion_block_vector)
   //int nAtoms = ion_block_vector.size(); 
   //int* p_ion_block_vec = new int[nAtoms];
 
-  f77_upt_get_ion_numorbitals(_handler,&ion_block_vector.front());
+  f77_upt_get_ion_numorbitals(_handler, &ion_block_vector.front());
 
   //for (int j = 0; j < nAtoms; j++) 
   //  ion_block_vector[j] = p_ion_block_vec[j];
 
   //delete [] p_ion_block_vec;
 
+}
+
+
+void UptWrapper::get_ion_orbitals(int i, std::vector<int>& orbitals)
+{
+  f77_upt_get_ion_orbitals(_handler, i, &orbitals.front());
 }
 
 

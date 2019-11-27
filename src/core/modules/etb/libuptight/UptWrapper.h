@@ -192,7 +192,11 @@ public:
 
   Complex get_matel(int i, int j);
 
+  //! Get number of orbitals for each atom
   void get_ion_numorbitals(std::vector<int>& ion_block_vector);
+
+  //! Get the orbital indices of atom i
+  void get_ion_orbitals(int i, std::vector<int>& orbitals);
 
 
   void complex_test(double& re, double& im, Complex& zz);
