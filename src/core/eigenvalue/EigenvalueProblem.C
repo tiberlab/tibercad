@@ -641,21 +641,25 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
 
     number_of_eigs = get_num_states();
 
-    for (unsigned int j = 0 ; j < _dispersion[i].size() ; j++)
+    for (unsigned int j = 0; j < _dispersion[i].size(); j++)
     {
       //Complex sum = 0;
       for (auto&& k : K_to_k[i])
       //for (auto&& g : G)
       {
-        //Point gg(g[0], g[1], g[2]);
-        //_kspace->transform_point(gg);
-        Complex w = project_to_primitive_cell(_solution[j], kmesh->node(k));
-        //Complex w = project_to_primitive_cell(_solution[j], k_point + gg);
-        w /= G.size();
-        //sum += w;
-        //cerr << i << " : " << _solution[j].eigen_energy << " " << w << endl;
         _dispersion[k][j] = _solution[j].eigen_energy;
-        _projection_weights[k][j] = libmesh_real(w);
+
+        if (_projection_weights.size() > 0)
+        {
+          //Point gg(g[0], g[1], g[2]);
+          //_kspace->transform_point(gg);
+          Complex w = project_to_primitive_cell(_solution[j], kmesh->node(k));
+          //Complex w = project_to_primitive_cell(_solution[j], k_point + gg);
+          w /= G.size();
+          //sum += w;
+          cerr << i << " : " << _solution[j].eigen_energy << " " << w << endl;
+          _projection_weights[k][j] = libmesh_real(w);
+        }
       }
 
       //cerr << "K" << i << " , " << j << " : " << sum << endl;
