@@ -181,6 +181,7 @@ Kspace::equivalent_points(const libMesh::Point& p,
         //
 
         c(b3) = 0;
+        c(b3) = np(b3);
 
         transform_point(np);
         double np_norm = np.norm();
@@ -202,7 +203,6 @@ Kspace::equivalent_points(const libMesh::Point& p,
           c(b2) -= (x > 0) ? 1 : -1;
         }
 
-        c(b3) = np(b3);
         eq_points[0] = c;
         np = c;
       }
