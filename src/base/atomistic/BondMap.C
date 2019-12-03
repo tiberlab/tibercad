@@ -151,7 +151,7 @@ BondMap::process_atoms(const std::vector<Atom>& basis,
   Tensor1 position1, position2;
   libMesh::Point per(period(1), period(2), period(3));
 
-  if ((i != j))
+  if ((i != j) || (per.norm() > 1e-5))
   {
    
     cutofftmp = _cutoff[basis[i].get_specie()] + _cutoff[basis[j].get_specie()];
