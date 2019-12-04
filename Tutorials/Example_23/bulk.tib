@@ -26,8 +26,8 @@ Device
      reference_region = bulk
      minimal_cell = true 
 	     
-     supercell_size_y = 0 
-     supercell_size_z = 0  
+     cells_along_y = 1 
+     cells_along_z = 1  
  }
 
 }
@@ -46,8 +46,12 @@ Module empirical_tb
     
     Dispersion
     {
+      # if a super cell is used, by increasing cells_along_x
+      # or cells_along_y, the bandstructure can be unfolded via
+      # unfold_to = bulk (the bulk identifies the material to take
+      # the primitive cell from)
+      # unfold_to = bulk
       k-path = G-K-M-G 
-      k_max = 1
       number_of_nodes = 20
     }
 
