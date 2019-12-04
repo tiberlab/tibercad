@@ -370,10 +370,10 @@ in k-space.
 The main parameters are:
 
  ``k-path`` : 
-    path of the  direction in  k-space; it  must be  a  string of the  kind G-K-M
+    path in  k-space; it  must be  a  string like G-K-M, i.e. high symmetry point names divided by a dash
 
  ``number_of_nodes`` : 
-   number of nodes in the mesh along each  direction
+   number of nodes in the mesh along the path. The number of nodes in each section is determined automatically
 
  ``k_max`` : 
    maximum value of k (in units of 1/nm) in each direction. Can be specified as vector in order to have
@@ -397,7 +397,7 @@ If  the  optional keyword ::
 
   k-path
 
-is  present,  then  the  dispersion is calculated in  1D  along  a  defined  path P1-P2-P3,  for  example G-K-M. Available symmetry points   are G,K,M,M'.
+is  present,  then  the  dispersion is calculated in  1D  along  a  defined  path P1-P2-P3,  for  example G-K-M. Valid symmetry points  depend on the symmetry, standard notation is used.
 In  this  case,  ``number_of_nodes`` is an  integer.
 
 

@@ -159,7 +159,7 @@ The relationship between these quantities and hopping matrix elements
 
 
 
-The chemestry of localized states in covalent semiconductors needs at 
+The chemistry of localized states in covalent semiconductors needs at 
 least an eight band parameterization (one *s* and three *p* orbitals with spin
 degeneracy) 
 (see [Vogl]_ ).
@@ -385,6 +385,47 @@ Through the keyword *tbstates*, the  states eigenfuctions may be stored  in  a  
 
 By defining *MeshStatesNodes* (or *MeshStates* in 1D), square  modules of  the  eigenstate wawefunctions  may be  plotted on  the FEM  mesh through the  output  file *simulation_name_msh*.vtu, e.g  tb_msh.vtu.
 
+
+Band structure calculation
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Within  the **Module** ``empirical_tb``   it is possible to calculate the dependence of quantum eigenstates 
+on ``k``-vector, similar to the **module** ``efaschroedinger``. Such dependence gives the energy dispersion or band structure
+To  calculate the  dispersion we  need  to  define the  block *Dispersion*
+
+
+::
+
+  Dispersion 
+  {
+    k-path = G-K-M
+    number_of_nodes = 10
+  }
+
+The dispersion of quantum states is calculated at k-points that are nodes of a mesh
+in k-space.
+
+The main parameters are:
+
+ ``k-path`` : 
+    path in  k-space; it  must be  a  string like G-K-M, i.e. high symmetry point names divided by a dash
+
+ ``number_of_nodes`` : 
+   number of nodes in the mesh along the path. The number of nodes in each section is determined automatically
+
+ ``k_max`` : 
+   maximum value of k (0 <= ``k_max`` <= 1), relative to the Brillouin zone. Can be specified as vector in order to have
+   different extensions in different directions. This is usually not used for atomistic models.
+
+ ``unfold_to`` :
+   in case of supercell (SC) calculations, the bandstructure can be unfolded to a smaller primitive crystal cell. The 
+   reference material can be specified via a region (e.g. ``unfold_to =`` *region name*), or defined explicitly using 
+   a subblock, i.e. ``unfold_to GaN { }``, providing the necessary options.
+   Unfolded band structures can be plot using a Matlab script provided in the ``tools`` directory.
+
+
+Note that the valid high symmetry points depend on the actual symmetry of the atomistic structure. In case of unfolding, the symmetry points must match the symmetry of the bulk reference material.
 
 
 Module opticstb

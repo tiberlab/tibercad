@@ -4,6 +4,8 @@ Version 3.1.0
 New features:
 	- can now handle 2D materials for atomistic simulations
 	- improvements for k space generation (dispersion and integration)
+	- implemented unfolding of supercell dispersions (for wurtzite and
+	  simple cubic/tetragonal currently)
 	- empirical tight binding works now for any orbital combinations
 	- new examples for tight binding, and for doping profiles / alloy
 	  profiles
