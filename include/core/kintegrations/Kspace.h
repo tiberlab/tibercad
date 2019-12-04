@@ -131,6 +131,11 @@ class Kspace
 
    //! Define a linear path in k space for dispersions
    void define_k_path(void);
+
+   //! apply mirror with given planes
+   void mirror(const libMesh::Point& p,
+               std::vector<libMesh::Point>& mirrored_points,
+               const std::set<unsigned int>& planes = {0, 1, 2});
     
    //! The options
    ModelOptions mod_opt;

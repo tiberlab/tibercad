@@ -321,6 +321,9 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     b *= 0.1;
     c *= 0.1;
 
+    // TODO we should add a method to adjust a,b,c if they are not
+    // already commensurate, due to strain, for example
+
     kopts.set_option("r1", a);
     kopts.set_option("r2", b);
     kopts.set_option("r3", c);
@@ -339,12 +342,21 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     Kspace pc_kspace(kopts, get_communicator());
     const MeshBase* pc_mesh = pc_kspace.get_k_mesh();
 
-    // get the bounding box, to obtain BZ radius
+    // get the bounding box, to obtain PC BZ radius
     MeshTools::BoundingBox pc_bb =
         MeshTools::bounding_box(*pc_mesh);
     pc_bb.max() += Point(1e-2, 1e-2, 1e-2);
     pc_bb.min() -= Point(1e-2, 1e-2, 1e-2);
     double pc_diam = 2 * pc_bb.max().norm();
+
+    // the SC k-space mesh
+    const MeshBase* sc_mesh = sc_kspace->get_k_mesh();
+
+    // get the bounding box, to obtain SC BZ radius
+    MeshTools::BoundingBox sc_bb =
+        MeshTools::bounding_box(*sc_mesh);
+    sc_bb.max() += Point(1e-2, 1e-2, 1e-2);
+    sc_bb.min() -= Point(1e-2, 1e-2, 1e-2);
 
     // for debugging
     //ofstream of("test.dat");
@@ -383,7 +395,7 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
 
           sc_kspace->transform_point(gg);
 
-          if (gg.norm() < (pc_diam + 1e-5))
+          if (gg.norm() < pc_diam)
           {
             //if (gg(0) < 1e-6)
             //  of << gg(1) << " " << gg(2) << endl;
@@ -419,7 +431,9 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     }
 
 
+    //
     // sort out repeated points, checking with the translation group
+    //
     {
       const vector<Point> star =
           { Point(1, 0, 0), Point(0, 1, 0), Point(0, 0, 1),
@@ -476,6 +490,7 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     //ofstream of2("test2.dat");
 
 
+    // now we have all necessary G vectors
     ostringstream os;
     os << "Found " << G.size() << " G vectors unfolding the supercell "
         << "onto the primitive cell";
@@ -511,33 +526,57 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
         sc_kspace->transform_point(gg);
         Point K = k - gg;
 
+        // check whether K is in the 1st BZ of the SC
         vector<Point> eq_K;
-        sc_kspace->equivalent_points(K, eq_K);
+        sc_kspace->equivalent_points(K, eq_K, false);
 
-        unsigned int foundK = 0;
-        for (unsigned int eq = 0 ; eq < eq_K.size(); ++eq)
+        unsigned int l = 0;
+        for (; l < eq_K.size(); ++l)
         {
+          const Point& p = eq_K[l];
+          if (sc_bb.contains_point(p))
+          {
+            bool found = false;
+            for (unsigned int el = 0; el < sc_mesh->n_elem(); ++el)
+            {
+              const Elem* elem = sc_mesh->elem_ptr(el);
+              if (elem->close_to_point(p, 1e-3))
+              {
+                found = true;
+                break;
+              }
+            }
+
+            if (found)
+              break;
+          }
+        }
+
+        // if we found it, check for duplicates
+        if (l < eq_K.size())
+        {
+          const Point& p = K;
+
+          unsigned int foundK = 0;
           for (foundK = 0; foundK < Kpoints.size(); ++foundK)
           {
-            if (Kpoints[foundK].absolute_fuzzy_equals(eq_K[eq], 1e-3))
+            if (Kpoints[foundK].absolute_fuzzy_equals(p, 1e-3))
             {
               break;
             }
           }
 
-          if (foundK < Kpoints.size())
-            break;
+          if (foundK == Kpoints.size())
+          {
+            Kpoints.push_back(p);
+            K_to_k.resize(K_to_k.size() + 1);
+          }
+
+          K_to_k[foundK].insert(i);
+          k_to_K[i] = foundK;
+
+          break;
         }
-
-        if (foundK == Kpoints.size())
-        {
-          Kpoints.push_back(eq_K[0]);
-          K_to_k.resize(K_to_k.size() + 1);
-        }
-
-        K_to_k[foundK].insert(i);
-        k_to_K[i] = foundK;
-
       }
 
     }
@@ -643,26 +682,18 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
 
     for (unsigned int j = 0; j < _dispersion[i].size(); j++)
     {
-      //Complex sum = 0;
       for (auto&& k : K_to_k[i])
-      //for (auto&& g : G)
       {
         _dispersion[k][j] = _solution[j].eigen_energy;
 
         if (_projection_weights.size() > 0)
         {
-          //Point gg(g[0], g[1], g[2]);
-          //_kspace->transform_point(gg);
-          Complex w = project_to_primitive_cell(_solution[j], kmesh->node(k));
-          //Complex w = project_to_primitive_cell(_solution[j], k_point + gg);
+          Complex w = project_to_primitive_cell(_solution[j], kmesh->point(k));
           w /= G.size();
-          //sum += w;
-          cerr << i << " : " << _solution[j].eigen_energy << " " << w << endl;
           _projection_weights[k][j] = libmesh_real(w);
         }
       }
 
-      //cerr << "K" << i << " , " << j << " : " << sum << endl;
     }
   }
 

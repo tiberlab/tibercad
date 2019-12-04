@@ -1496,7 +1496,7 @@ ETB::do_project_to_primitive_cell(const eigen_problem_solution& a,
       inst->get_ion_orbitals(j+1, orbitals_j);
 
       Point d(atom[i].get_position());
-      d -= atom[j].get_position();
+      d.subtract(atom[j].get_position());
 
       Complex arg = 0.1*Complex(0.0, k*d);
       Complex phase = std::exp(-arg);

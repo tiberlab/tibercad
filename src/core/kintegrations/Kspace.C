@@ -86,7 +86,7 @@ Kspace::~Kspace()
 
 void
 Kspace::equivalent_points(const libMesh::Point& p,
-                          std::vector<libMesh::Point>& eq_points,
+                          vector<libMesh::Point>& eq_points,
                           bool fold)
 {
   Point c(p);
@@ -139,12 +139,73 @@ Kspace::equivalent_points(const libMesh::Point& p,
       break;
 
     case CUBIC:
-      degeneracy_factor = 32;
+    {
+      // possible operations:
+      // interchange of axes + mirroring on orthogonal planes
+
+      eq_points.resize(0);
+
+      Point np(c);
+      vector<libMesh::Point> mirrored;
+      mirror(np, mirrored);
+
+      for (auto&& k : mirrored)
+        eq_points.push_back(k);
+
+      np(0) = c(1);
+      np(1) = c(0);
+
+      mirror(np, mirrored);
+
+      for (auto&& k : mirrored)
+        eq_points.push_back(k);
+
+      np(0) = c(0);
+      np(1) = c(2);
+      np(2) = c(1);
+
+      mirror(np, mirrored);
+
+      for (auto&& k : mirrored)
+        eq_points.push_back(k);
+
+      np(0) = c(2);
+      np(1) = c(1);
+      np(2) = c(0);
+
+      mirror(np, mirrored);
+
+      for (auto&& k : mirrored)
+        eq_points.push_back(k);
+
       break;
+    }
 
     case TETRAGONAL:
-      degeneracy_factor = 16;
+    {
+      // possible operations:
+      // interchange of b1,b2 axes + mirroring on orthogonal planes
+
+      eq_points.resize(0);
+
+      Point np(c);
+      vector<libMesh::Point> mirrored;
+      mirror(np, mirrored);
+
+      for (auto&& k : mirrored)
+        eq_points.push_back(k);
+
+      np(b1) = c(b2);
+      np(b2) = c(b1);
+
+      mirror(np, mirrored);
+
+      for (auto&& k : mirrored)
+        eq_points.push_back(k);
+
+
       break;
+    }
 
     case ORTHORHOMBIC:
       degeneracy_factor = 8;
@@ -281,6 +342,58 @@ Kspace::equivalent_points(const libMesh::Point& p,
 
 }
 
+void
+Kspace::mirror(const libMesh::Point& p,
+    vector<libMesh::Point>& mirrored_points,
+    const set<unsigned int>& planes)
+{
+  mirrored_points.resize(0);
+  mirrored_points.push_back(p);
+
+  Point np(p);
+  if (planes.count(2))
+  {
+    np(2) *= -1;
+    mirrored_points.push_back(np);
+    np(2) *= -1;
+  }
+
+  if (planes.count(1))
+  {
+    np(1) *= -1;
+    mirrored_points.push_back(np);
+
+    if (planes.count(2))
+    {
+      np(2) *= -1;
+      mirrored_points.push_back(np);
+      np(2) *= -1;
+    }
+    np(1) *= -1;
+  }
+
+  if (planes.count(0))
+  {
+    np(0) *= -1;
+    mirrored_points.push_back(np);
+
+    if (planes.count(1))
+    {
+      np(1) *= -1;
+      mirrored_points.push_back(np);
+
+      if (planes.count(2))
+      {
+        np(2) *= -1;
+        mirrored_points.push_back(np);
+
+        np(1) *= -1;
+        mirrored_points.push_back(np);
+      }
+    }
+  }
+
+}
 
 
 void
@@ -891,6 +1004,9 @@ void Kspace::find_k_space_symmetry()
       }
       else
       {
+        // Convention for tetragonal:
+        //   b1,b2 -> a
+        //   b3    -> c
         if (Utils::almost_equal::compare(norm1, norm2, 1e-6))
         {
           if (Utils::almost_equal::compare(norm1, norm3, 1e-6))
@@ -913,7 +1029,8 @@ void Kspace::find_k_space_symmetry()
         }
         else
         {
-          // convention: a < b < c with a||x, b||y, c||z
+          // Convention for orthorhombic:
+          //   a < b < c with a||b1, b||b2, c||b3
           k_space_symmetry = ORTHORHOMBIC;
           vector<double> len = {norm1, norm2, norm3};
           if (len[1] > len[0])
