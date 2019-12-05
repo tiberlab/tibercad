@@ -1359,10 +1359,11 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
   assign_virtual_species();
 
   std::ofstream file, os;
-  const BondMap& bondmap = *_bondmap;
 
   if (_bondmap == NULL)
     Messages::error("print upg file requires a valid bondmap");
+
+  const BondMap& bondmap = *_bondmap;
 
   Messages::info("Printing upg file");
 
@@ -1619,16 +1620,33 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
 
   file << "#Interfaces " << std::endl;
 
-  std::set<Utils::Couple<const Material*>>::iterator int_it = interfaces.begin(); 
-  for (;int_it != interfaces.end(); ++int_it)
+  //std::set<Utils::Couple<const Material*>>::iterator int_it = interfaces.begin();
+  //for (;int_it != interfaces.end(); ++int_it)
+
+  for (size_t i = 0; i < get_N_atoms(); ++i)
   {
-    const Material* mat1 = (*int_it).first;
-    const Material* mat2 = (*int_it).second;
+    //const Material* mat1 = (*int_it).first;
+    //const Material* mat2 = (*int_it).second;
+    ID reg_i = _atoms[i].get_region_ID();
+
+    if (reg_i == INVALID_ID)
+      continue;
+
+    for (unsigned int j = 0; j < bondmap[i].size(); ++j)
+    {
+      ID reg_j = _atoms[bondmap[i][j]].get_region_ID();
+
+      if ((reg_j == INVALID_ID) || (reg_i == reg_j))
+        continue;
+
+
+    const Material* mat1 = _device->get_material(reg_i);
+    const Material* mat2 = _device->get_material(reg_j);
+
     // Put interfaces in increasing order
     if (material_map[mat1] > material_map[mat2])
     {
-      mat1 = (*int_it).second;
-      mat2 = (*int_it).first;
+      swap(mat1, mat2);
     }
 
     file << std::setw(3) << material_map[mat1]<<"  "<< material_map[mat2]<<"  ";
@@ -1672,6 +1690,7 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
        //  Messages::error("Database file does not exist"+Database::get_search_path()+"/"+str[i]+etb_dataset+".etb");
     
     file<<std::endl;
+    }
   }
 
   file.close();
