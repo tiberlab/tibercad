@@ -184,7 +184,7 @@ Alloy::fill_species(void)
   std::set<const Material*> materials;
   std::map<const Material*, double> mmap;
   
-  if (_specie_fraction.size()>0) _specie_fraction.clear();
+  if (_specie_fraction.size() > 0) _specie_fraction.clear();
   _species.clear();
 
   // Ga(x)In(1-x)N =>  GaN(x) InN(1-x)
@@ -227,6 +227,8 @@ Alloy::fill_species(void)
     _specie_fraction.resize((*it)->count_labels()+1);
 
     db.set_section("atomistic_structure");
+
+    unsigned int ctr = 1;
     unsigned int n_species = db.get("n_basis_specie", 0);
     for (unsigned int i = 1; i <= n_species; i++)
     {
@@ -235,13 +237,22 @@ Alloy::fill_species(void)
       Specie tmp(db.get("specie_"+out.str(), "None"));
       _species.insert(tmp);
 
-      double x=0.0;
-      if ( _specie_fraction[i].count(tmp)){ x=_specie_fraction[i][tmp]; }
+      std::string record = "n_" + out.str();
+      unsigned int n = db.get(record.c_str(), 0);
 
-      // x is used to sum up all fraction for the same specie.
-      _specie_fraction[i][tmp] = x+mmap[*it];
+      for (unsigned int j = 0; j < n; ++j, ++ctr)
+      {
+        double x = 0.0;
+        if ( _specie_fraction[ctr].count(tmp))
+        {
+          x = _specie_fraction[ctr][tmp];
+        }
 
-      _crystal_type_map[i].insert(tmp);
+        // x is used to sum up all fraction for the same specie.
+        _specie_fraction[ctr][tmp] = x + mmap[*it];
+
+        _crystal_type_map[ctr].insert(tmp);
+      }
     }
  
 

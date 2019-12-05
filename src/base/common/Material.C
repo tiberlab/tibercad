@@ -337,13 +337,20 @@ Material::fill_species(void)
   //Useful for assigning components to atoms in random alloys
   get_database().set_section("atomistic_structure");
   unsigned int n_species = get_database().get("n_basis_specie", 0);
+  unsigned int ctr = 0;
   for (unsigned int i = 1; i <= n_species; i++)
   {
     std::stringstream out;
     out << i; 
-    Specie tmp(get_database().get("specie_" + out.str(), "None"));
+    std::string s = out.str();
+
+    Specie tmp(get_database().get("specie_" + s, "None"));
     _species.insert(tmp);
-    _crystal_type_map[i].insert(tmp);
+
+    std::string record = "n_" + s;
+    unsigned int n = get_database().get(record.c_str(), 0);
+    for (unsigned int j = 0; j < n; ++j)
+      _crystal_type_map[++ctr].insert(tmp);
   }
 }
 

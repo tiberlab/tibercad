@@ -77,7 +77,8 @@ public:
     *  Label is used to mark the atom number within the primitive cell
     *  In binary materials this is equivalent to cation/anion species
     *  Database follows the convention that specie_1 is cation
-    *  Valid numbers are in the range 0 to 255 (unsigned char)
+    *  Valid numbers are in the range 1 to 255 (unsigned char)
+    *  0 is reserved for passivation atoms.
     */
   void set_label(unsigned int fg);
 

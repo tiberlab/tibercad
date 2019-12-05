@@ -306,7 +306,7 @@ BulkCrystal::set_prim_vec(void)
 
   Tensor2Gen prim_vec_dir(0);
 
-  if (_lattice_type.compare("orthorombic") == 0) {
+  if (_lattice_type.compare("orthorhombic") == 0) {
 
     prim_vec_dir(1,1) = 1.0; prim_vec_dir(2,1) = 0; prim_vec_dir(3,1) = 0;
     prim_vec_dir(1,2) = 0; prim_vec_dir(2,2) = 1.0; prim_vec_dir(3,2) = 0;

@@ -1753,6 +1753,8 @@ AtomisticStructure::interface_interactions(const Material* mat1,
                                            std::vector<std::string>& str,
                                            std::vector<double>& frac)
 {
+  // TODO adjust interfaces
+  return;
   //str.clear();
   stringstream ss;
   double conc1, conc2; 

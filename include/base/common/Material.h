@@ -341,7 +341,7 @@ inline
 unsigned int
 Material::count_species(unsigned int label) const
 {
-  if (_crystal_type_map.count(label)>0)
+  if (_crystal_type_map.count(label) > 0)
     return (_crystal_type_map.find(label)->second).size();
   else
     return 0;
