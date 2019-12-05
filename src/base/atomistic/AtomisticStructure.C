@@ -1623,6 +1623,8 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
   //std::set<Utils::Couple<const Material*>>::iterator int_it = interfaces.begin();
   //for (;int_it != interfaces.end(); ++int_it)
 
+  std::set<Utils::Couple<ID>> processed;
+
   for (size_t i = 0; i < get_N_atoms(); ++i)
   {
     //const Material* mat1 = (*int_it).first;
@@ -1636,60 +1638,63 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
     {
       ID reg_j = _atoms[bondmap[i][j]].get_region_ID();
 
-      if ((reg_j == INVALID_ID) || (reg_i == reg_j))
+      if ((reg_j == INVALID_ID) ||
+          (reg_i == reg_j) ||
+          processed.count(Utils::Couple<ID>(reg_i, reg_j)))
         continue;
 
+      processed.insert(Utils::Couple<ID>(reg_i, reg_j));
 
-    const Material* mat1 = _device->get_material(reg_i);
-    const Material* mat2 = _device->get_material(reg_j);
+      const Material* mat1 = _device->get_material(reg_i);
+      const Material* mat2 = _device->get_material(reg_j);
 
-    // Put interfaces in increasing order
-    if (material_map[mat1] > material_map[mat2])
-    {
-      swap(mat1, mat2);
-    }
+      // Put interfaces in increasing order
+      if (material_map[mat1] > material_map[mat2])
+      {
+        swap(mat1, mat2);
+      }
 
-    file << std::setw(3) << material_map[mat1]<<"  "<< material_map[mat2]<<"  ";
+      file << std::setw(3) << material_map[mat1]<<"  "<< material_map[mat2]<<"  ";
 
-    if (mat1->is_alloy() || mat2->is_alloy()) 
-    {
-      if (is_random_alloy())
-        file <<  " RND";
+      if (mat1->is_alloy() || mat2->is_alloy())
+      {
+        if (is_random_alloy())
+          file <<  " RND";
+        else
+          file <<  " VCA";
+      }
       else
-        file <<  " VCA";
-    }
-    else
-    {
-      file <<  " CRY";
-    }
+      {
+        file <<  " CRY";
+      }
 
-    std::vector<std::string> str;
-    std::vector<double> frac;
-    str.reserve(8); frac.reserve(8);
+      std::vector<std::string> str;
+      std::vector<double> frac;
+      str.reserve(8); frac.reserve(8);
 
-    interface_interactions(mat1, mat2, str, frac);
- 
-    unsigned int size1 = str.size();
-    file << " " << size1 << "  ";
+      interface_interactions(mat1, mat2, str, frac);
 
-    interface_interactions(mat2, mat1, str, frac);
-    
-    file << " " << str.size()-size1 << "  ";
+      unsigned int size1 = str.size();
+      file << " " << size1 << "  ";
 
-    for (unsigned int i=0; i < str.size(); i++) 
+      interface_interactions(mat2, mat1, str, frac);
+
+      file << " " << str.size()-size1 << "  ";
+
+      for (unsigned int i=0; i < str.size(); i++)
         file <<"  " << str[i];
-    
-    for (unsigned int i=0; i < str.size(); i++)
+
+      for (unsigned int i=0; i < str.size(); i++)
         file <<"  " << frac[i];
- 
-    for (unsigned int i=0; i<str.size(); i++)
-       file <<"  " << str[i]<<etb_dataset<<".etb";
-       //if (check_data_file(Database::get_search_path()+"/"+str[i]+etb_dataset+".etb") ) 
-       //    file <<"  " << str[i]<<etb_dataset<<".etb";
-       //else
-       //  Messages::error("Database file does not exist"+Database::get_search_path()+"/"+str[i]+etb_dataset+".etb");
-    
-    file<<std::endl;
+
+      for (unsigned int i=0; i<str.size(); i++)
+        file <<"  " << str[i]<<etb_dataset<<".etb";
+      //if (check_data_file(Database::get_search_path()+"/"+str[i]+etb_dataset+".etb") )
+      //    file <<"  " << str[i]<<etb_dataset<<".etb";
+      //else
+      //  Messages::error("Database file does not exist"+Database::get_search_path()+"/"+str[i]+etb_dataset+".etb");
+
+      file<<std::endl;
     }
   }
 
