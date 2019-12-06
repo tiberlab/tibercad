@@ -14,6 +14,7 @@
 #include "libmesh/face_quad4.h"
 #include "libmesh/cell_tet4.h"
 #include "libmesh/cell_prism6.h"
+#include "libmesh/cell_hex8.h"
 
 
 #include <cmath>
@@ -121,29 +122,57 @@ Kspace::equivalent_points(const libMesh::Point& p,
   // now c is in (-0.5, 0.5) for each direction
 
   eq_points.resize(0);
-  eq_points.push_back(c);
 
   switch (k_space_symmetry)
   {
     case LINEAR:
+      eq_points.push_back(c);
       c(b1) *= -1;
       eq_points.push_back(c);
       break;
 
     case QUADRATIC:
-      degeneracy_factor = 8;
+    {
+      // possible operations:
+      // interchange of b1 and b2 axes + mirroring on orthogonal planes
+
+      Point np(c);
+      vector<libMesh::Point> mirrored;
+      mirror(np, mirrored, {b1, b2});
+
+      for (auto&& k : mirrored)
+        eq_points.push_back(k);
+
+      np(b1) = c(b2);
+      np(b2) = c(b1);
+
+      mirror(np, mirrored, {b1, b2});
+
+      for (auto&& k : mirrored)
+        eq_points.push_back(k);
+
       break;
+    }
 
     case RECTANGULAR:
-      degeneracy_factor = 4;
+    {
+      // possible operations:
+      // mirroring on orthogonal planes
+
+      Point np(c);
+      vector<libMesh::Point> mirrored;
+      mirror(np, mirrored, {b1, b2});
+
+      for (auto&& k : mirrored)
+        eq_points.push_back(k);
+
       break;
+    }
 
     case CUBIC:
     {
       // possible operations:
       // interchange of axes + mirroring on orthogonal planes
-
-      eq_points.resize(0);
 
       Point np(c);
       vector<libMesh::Point> mirrored;
@@ -186,8 +215,6 @@ Kspace::equivalent_points(const libMesh::Point& p,
       // possible operations:
       // interchange of b1,b2 axes + mirroring on orthogonal planes
 
-      eq_points.resize(0);
-
       Point np(c);
       vector<libMesh::Point> mirrored;
       mirror(np, mirrored);
@@ -208,8 +235,21 @@ Kspace::equivalent_points(const libMesh::Point& p,
     }
 
     case ORTHORHOMBIC:
-      degeneracy_factor = 8;
+    {
+      // possible operations:
+      // mirroring on orthogonal planes
+
+      eq_points.resize(0);
+
+      Point np(c);
+      vector<libMesh::Point> mirrored;
+      mirror(np, mirrored);
+
+      for (auto&& k : mirrored)
+        eq_points.push_back(k);
+
       break;
+    }
 
     case HEXAGONAL:
     {
@@ -228,6 +268,7 @@ Kspace::equivalent_points(const libMesh::Point& p,
       // first adjust first point, because it might be outside of
       // the standard 1st BZ
       Point np(c);
+      eq_points.push_back(np);
 
       if (fold)
       {
@@ -322,11 +363,11 @@ Kspace::equivalent_points(const libMesh::Point& p,
 
     case FCC:
     case BCC:
-      degeneracy_factor = 48;
+      throw InitFailedException("Necessary BZ not implemented yet for unfolding");
       break;
 
     default:
-      degeneracy_factor = 1;
+      eq_points.push_back(Point(0));
       break;
   }
 
@@ -503,7 +544,28 @@ void Kspace::build_k_grid()
       }
 
       case ORTHORHOMBIC:
+      {
+        kmesh->add_point(Point(0,0,0), 0, 0);
+        kmesh->add_point(get_symmetry_point("X"), 1, 0);
+        kmesh->add_point(get_symmetry_point("S"), 2, 0);
+        kmesh->add_point(get_symmetry_point("Y"), 3, 0);
+        kmesh->add_point(get_symmetry_point("Z"), 4, 0);
+        kmesh->add_point(get_symmetry_point("U"), 5, 0);
+        kmesh->add_point(get_symmetry_point("R"), 6, 0);
+        kmesh->add_point(get_symmetry_point("T"), 7, 0);
+
+        Elem* elem = kmesh->add_elem(new libMesh::Hex8);
+        elem->set_node(0) = kmesh->node_ptr(0);
+        elem->set_node(1) = kmesh->node_ptr(1);
+        elem->set_node(2) = kmesh->node_ptr(2);
+        elem->set_node(3) = kmesh->node_ptr(3);
+        elem->set_node(4) = kmesh->node_ptr(4);
+        elem->set_node(5) = kmesh->node_ptr(5);
+        elem->set_node(6) = kmesh->node_ptr(6);
+        elem->set_node(7) = kmesh->node_ptr(7);
+
         break;
+      }
 
       case HEXAGONAL:
       {

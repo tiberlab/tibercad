@@ -293,11 +293,14 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     Messages::newline();
     Messages::info("Dispersion will be unfolded to BZ of " +
         refmat->get_name());
+    Messages::info("Dispersion will be unfolded to BZ of " +
 
     ModelOptions scopts(kopts);
     scopts.delete_option("k-path");
     scopts.delete_option("k_path");
-    //scopts.set_option("write_k_mesh", "SC");
+    scopts.set_option("number_of_nodes", 2); // to impede refinement
+    if (scopts.find_option("write_SC_mesh"))
+      scopts.set_option("write_k_mesh", scopts.get_option("write_SC_mesh", ""));
 
     Messages::newline();
     Messages::info("Initialize super cell k-space");
@@ -337,7 +340,9 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     // this is the reduced BZ of the PC k-space
     kopts.delete_option("k-path");
     kopts.delete_option("k_path");
-    //kopts.set_option("write_k_mesh", "PC");
+    kopts.set_option("number_of_nodes", 2); // to impede refinement
+    if (kopts.find_option("write_PC_mesh"))
+      kopts.set_option("write_k_mesh", kopts.get_option("write_PC_mesh", ""));
     kopts = parse_kspace_options(kopts);
     Kspace pc_kspace(kopts, get_communicator());
     const MeshBase* pc_mesh = pc_kspace.get_k_mesh();
