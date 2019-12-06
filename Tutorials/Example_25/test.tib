@@ -1,0 +1,167 @@
+Device
+{
+  
+  meshfile = sl.msh
+  mesh_units = 1e-9
+
+  y-growth-direction = (1,0,-1,0)
+  z-growth-direction = (-1,2,-1,0)
+  x-growth-direction = (0,0,0,1)
+
+  Region GaN
+  {
+    material = GaN
+  }
+
+  Region AlN
+  {
+    material = GaN
+  }
+
+  Region qGaN
+  {
+    material = GaN
+  }
+
+  Region qAlN
+  {
+    material = GaN
+  }
+
+
+
+  Cluster quantum
+  {
+    regions = (qGaN)
+  }
+
+  Atomistic tb
+  {
+    reference_material GaN {}
+    regions = quantum
+    passivation = no
+    print = xyz
+
+    periodicity = 1
+    minimal_cell = true
+    cells_along_z = 2
+    cells_along_y = 2
+    #fold_into_box = true
+
+  }
+
+}
+
+
+Module elasticity 
+{
+
+  name = strain
+  nonlinear_strain = true
+
+  plot = (Strain, Stress)
+
+
+  Physics 
+  {
+    body_force lattice_mismatch 
+    {
+      reference_material = GaN
+      y-growth-direction = (1,0,-1,0)
+      z-growth-direction = (-1,2,-1,0)
+      x-growth-direction = (0,0,0,1)
+    }
+       
+  }
+
+  Contact left  
+  {type = clamp}
+
+}
+
+
+
+Module vff
+{
+
+ regions = quantum
+ atomistic_structure = tb
+ #boundary_conditions = substrate
+ #substrate_plane = x
+ #substrate_tol = 0.1 # 0.519
+
+ plot = xyz
+
+ Physics
+ {
+
+  keating automatic
+  {
+  }
+
+ }
+}
+
+
+
+
+ 
+Module empirical_tb
+{
+  regions = quantum
+  name = tb
+
+  atomistic_structure = tb
+  Harrison_scaling = true     #set false when no strain
+
+  #potential_simulation = dd
+ 
+  relativistic = false
+  sparse_format = full
+  add_band_shifts = true
+
+  jmol_output_format = cube
+
+  #plot = (tbstates)
+
+  Solver
+  {
+    solver = lapack
+    
+    num_conduction_eigenvalues = 16
+    num_valence_eigenvalues = 48
+
+    long_tolerance = 1e-5
+
+  }
+
+  Dispersion
+  {
+    unfold_to = quantum
+    #write_k_points = kpoints.dat
+    #write_SC_mesh = SC
+    #write_PC_mesh = PC
+    k_path = M-G-A
+    number_of_nodes = 40
+  }
+
+#  DOS
+#  {
+#    k_max = 0.05
+#    number_of_nodes = (8, 8)	
+#  }
+}
+
+
+
+ 
+
+Simulation
+{  
+   
+  verbose = 0
+  solve = (strain, vff, tb) 
+  resultpath = output
+  output_format = grace
+
+}
