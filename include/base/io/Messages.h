@@ -60,6 +60,10 @@ class Messages
     static void info(const std::string& msg, bool newline = true);
 
 
+    //! Print an hint
+    static void hint(const std::string& msg, bool newline = true);
+
+
     //! Add empty line
     static void newline(void);
 

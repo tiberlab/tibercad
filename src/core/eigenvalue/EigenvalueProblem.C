@@ -293,7 +293,9 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     Messages::newline();
     Messages::info("Dispersion will be unfolded to BZ of " +
         refmat->get_name());
-    Messages::info("Dispersion will be unfolded to BZ of " +
+
+    Messages::hint("You may plot the SC and PC Brillouin zones by using the "
+        "write_SC_mesh and write_PC_mesh options in the Dispersion block.");
 
     ModelOptions scopts(kopts);
     scopts.delete_option("k-path");

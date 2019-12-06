@@ -21,8 +21,10 @@ namespace
 {
 #ifndef _WIN32
   const char* red     = "\033[1;31m";
+  const char* green   = "\033[1;32m";
   const char* yellow  = "\033[1;33m";
   const char* redb    = "\033[1;41m";
+  const char* greenb  = "\033[1;42m";
   const char* yellowb = "\033[1;43m";
   const char* blue    = "\033[1;34m";
   const char* white   = "\033[1;37m";
@@ -245,6 +247,62 @@ Messages::error(const string& msg)
   _error_count++;
 }
 
+
+
+void
+Messages::hint(const string& msg, bool newline)
+{
+  if (_mpi_comm.rank() == _rank)
+  {
+    static bool contd = false;
+
+    vector<string> lines;
+    Utils::tokenize(msg, lines, "\n");
+
+    TeeStream ts(*_cout, _log);
+    ts << Messages::endl;
+
+#ifdef _WIN32
+    HANDLE hstdout = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    GetConsoleScreenBufferInfo(hstdout, &csbi);
+    SetConsoleTextAttribute(hstdout, FOREGROUND_GREEN);
+#else
+    *_cout << greenb;
+#endif
+    _log << "*** ";
+    ts << "HINT:";
+#ifdef _WIN32
+    SetConsoleTextAttribute(hstdout, csbi.wAttributes);
+#else
+    *_cout << normal;
+    *_cout << green;
+#endif
+
+    ts << " ";
+
+    size_t nl = lines.size();
+
+    for (size_t l = 0; l < nl; l++)
+    {
+      if (!contd)
+        for (int i = 0; i < _indent * _indent_width; i++)
+          ts << " ";
+      ts << lines[l];
+      if (newline || (l < nl - 1)) ts << endl;
+
+      ts << flush;
+    }
+
+#ifndef _WIN32
+    *_cout << normal;
+#endif
+
+    if (newline) contd = false;
+    else contd = true;
+  }
+
+}
 
 
 void
