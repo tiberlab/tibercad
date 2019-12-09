@@ -1623,7 +1623,7 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
   //std::set<Utils::Couple<const Material*>>::iterator int_it = interfaces.begin();
   //for (;int_it != interfaces.end(); ++int_it)
 
-  std::set<Utils::Couple<ID>> processed;
+  std::multimap<Utils::Couple<ID>, Utils::Couple<Specie>> processed;
 
 
   for (size_t i = 0; i < get_N_atoms(); ++i)
@@ -1643,12 +1643,26 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
           (reg_i == reg_j))
         continue;
 
-      if(processed.count(Utils::Couple<ID>(reg_i, reg_j)))
+      Utils::Couple<ID> couple(reg_i, reg_j);
+      Utils::Couple<Specie> sp_couple(_atoms[i].get_specie(),
+          _atoms[bondmap[i][j]].get_specie());
+      if(processed.count(couple))
       {
-        continue;
+        auto range = processed.equal_range(couple);
+        //auto it = find(range.first, range.second,
+        //    make_pair(couple, sp_couple));
+        bool found = false;
+        for (auto& it = range.first; it != range.second; ++it)
+        {
+          if (it->second == sp_couple)
+            found = true;
+        }
+
+        if (found)
+          continue;
       }
 
-      processed.insert(Utils::Couple<ID>(reg_i, reg_j));
+      processed.insert(make_pair(couple, sp_couple));
 
       const Material* mat1 = _device->get_material(reg_i);
       const Material* mat2 = _device->get_material(reg_j);
