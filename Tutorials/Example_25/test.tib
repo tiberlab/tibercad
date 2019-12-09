@@ -43,7 +43,7 @@ Device
     print = xyz
 
     periodicity = 1
-    minimal_cell = true
+    #minimal_cell = true
     cells_along_z = 2
     cells_along_y = 2
     #fold_into_box = true
@@ -128,8 +128,8 @@ Module empirical_tb
   {
     solver = lapack
     
-    num_conduction_eigenvalues = 16
-    num_valence_eigenvalues = 48
+    num_conduction_eigenvalues = 24
+    num_valence_eigenvalues = 56
 
     long_tolerance = 1e-5
 
