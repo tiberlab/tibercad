@@ -214,7 +214,9 @@ public:
   void interface_interactions(const Material* mat1, 
                               const Material* mat2, 
                               std::vector<std::string>& str,
-                              std::vector<double>& frac);
+                              std::vector<double>& frac,
+                              const Atom& at1,
+                              const Atom& at2);
 
   //! extract alloy statistics
   void extract_alloy_statistics(const ModelOptions& opt);

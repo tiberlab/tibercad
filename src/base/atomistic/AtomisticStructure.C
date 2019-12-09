@@ -1625,6 +1625,7 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
 
   std::set<Utils::Couple<ID>> processed;
 
+
   for (size_t i = 0; i < get_N_atoms(); ++i)
   {
     //const Material* mat1 = (*int_it).first;
@@ -1639,9 +1640,13 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
       ID reg_j = _atoms[bondmap[i][j]].get_region_ID();
 
       if ((reg_j == INVALID_ID) ||
-          (reg_i == reg_j) ||
-          processed.count(Utils::Couple<ID>(reg_i, reg_j)))
+          (reg_i == reg_j))
         continue;
+
+      if(processed.count(Utils::Couple<ID>(reg_i, reg_j)))
+      {
+        continue;
+      }
 
       processed.insert(Utils::Couple<ID>(reg_i, reg_j));
 
@@ -1672,12 +1677,14 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
       std::vector<double> frac;
       str.reserve(8); frac.reserve(8);
 
-      interface_interactions(mat1, mat2, str, frac);
+      interface_interactions(mat1, mat2, str, frac,
+          _atoms[i], _atoms[bondmap[i][j]]);
 
       unsigned int size1 = str.size();
       file << " " << size1 << "  ";
 
-      interface_interactions(mat2, mat1, str, frac);
+      interface_interactions(mat2, mat1, str, frac,
+          _atoms[bondmap[i][j]], _atoms[i]);
 
       file << " " << str.size()-size1 << "  ";
 
@@ -1708,10 +1715,11 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
 void
 AtomisticStructure::interface_interactions(const Material* mat1, 
                                            const Material* mat2, 
-                                            std::set<std::string>& str)
+                                           std::set<std::string>& str)
 {
   str.clear();
   stringstream ss;
+
      
   {
     // sets all possible cation then all anions, e.g. AlGa-AsP = AlAs, AlP, GaAs, GaP
@@ -1775,51 +1783,64 @@ void
 AtomisticStructure::interface_interactions(const Material* mat1, 
                                            const Material* mat2, 
                                            std::vector<std::string>& str,
-                                           std::vector<double>& frac)
+                                           std::vector<double>& frac,
+                                           const Atom& at1,
+                                           const Atom& at2)
 {
-  // TODO adjust interfaces
-  return;
-  //str.clear();
+
+  str.clear();
   stringstream ss;
-  double conc1, conc2; 
-  Material::crystal_species_iterator sp_it1;  
-  Material::crystal_species_iterator sp_end1;
+  double conc1, conc2;
+
+  Specie sp1(at1.get_specie());
+  Specie sp2(at2.get_specie());
   
   // Number of interctions (ca1)*(an2)
   // sets all possible cation then all anions, e.g. AlGa-AsP = AlAs, AlP, GaAs, GaP
   // repetitions are possible!
   // e.g.: SiGe-SiGe = SiSi SiGe GeSi GeGe
-  sp_it1 = mat1->species_begin(1);
-  sp_end1 = mat1->species_end(1);
+  unsigned int label1 = at1.get_label();
+
+  Material::crystal_species_iterator sp_it1 = mat1->species_begin(label1);
+  Material::crystal_species_iterator sp_end1 = mat1->species_end(label1);
   for (;sp_it1 != sp_end1; ++sp_it1)
   {
-    conc1 = 1.0;
-    if (mat1->is_alloy())    
-      conc1=(static_cast<const Alloy*>(mat1))->get_molar_fraction(1, *sp_it1);
-    
-    unsigned int label=2;
-    Material::crystal_species_iterator sp_it2 = mat2->species_begin(label);
-    Material::crystal_species_iterator sp_end2 = mat2->species_end(label);
-
-    if ( sp_it2 == sp_end2 ) label = 1;
-    
-    sp_it2 = mat2->species_begin(label);
-    sp_end2 = mat2->species_end(label);
-
-    for (;sp_it2 != sp_end2; ++sp_it2)
+    if (*sp_it1 == sp1)
     {
-      ss << (*sp_it1)<<(*sp_it2);
-      str.push_back(ss.str());
-      ss.str("");
-      
-      conc2 = 1.0;
-      if (mat2->is_alloy())    
-        conc2=(static_cast<const Alloy*>(mat2))->get_molar_fraction(label, *sp_it2);
+      conc1 = 1.0;
+      if (mat1->is_alloy())
+        conc1=(static_cast<const Alloy*>(mat1))->get_molar_fraction(label1, sp1);
 
-      frac.push_back(conc1*conc2); 
+      unsigned int label2 = at2.get_label();
+
+      Material::crystal_species_iterator sp_it2 = mat2->species_begin(label2);
+      Material::crystal_species_iterator sp_end2 = mat2->species_end(label2);
+
+
+      for (;sp_it2 != sp_end2; ++sp_it2)
+      {
+        if (*sp_it2 == sp2)
+        {
+
+          if (label2 < label1)
+            swap(sp1, sp2);
+
+          ss << (sp1)<<(sp2);
+          str.push_back(ss.str());
+          ss.str("");
+
+          conc2 = 1.0;
+          if (mat2->is_alloy())
+            conc2=(static_cast<const Alloy*>(mat2))->get_molar_fraction(label2, sp2);
+
+          frac.push_back(conc1*conc2);
+        }
+      }
     }
 
+
   }
+
  
 }
 
