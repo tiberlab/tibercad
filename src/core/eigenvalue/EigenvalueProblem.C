@@ -290,12 +290,17 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
   const MeshBase* kmesh = nullptr;
   if (refmat != nullptr)
   {
+    if (this->get_atomistic_structure() == nullptr)
+    {
+      throw InitFailedException(
+          "Unfolding only makes sense for atomistic calculations");
+    }
     Messages::newline();
     Messages::info("Dispersion will be unfolded to BZ of " +
         refmat->get_name());
 
     Messages::hint("You may plot the SC and PC Brillouin zones by using the "
-        "write_SC_mesh and write_PC_mesh options in the Dispersion block.");
+        "write_SC_mesh \n and write_PC_mesh options in the Dispersion block.");
 
     ModelOptions scopts(kopts);
     scopts.delete_option("k-path");
@@ -326,16 +331,57 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     b *= 0.1;
     c *= 0.1;
 
-    // TODO we should add a method to adjust a,b,c if they are not
-    // already commensurate, due to strain, for example
+    cerr << "PC (real space): " << endl;
+    cerr << a << endl;
+    cerr << b << endl;
+    cerr << c << endl;
+
 
     kopts.set_option("r1", a);
     kopts.set_option("r2", b);
     kopts.set_option("r3", c);
 
+    // the transformation matrix
+    RealTensor T(a, b, c);
+    T = T.transpose();
+    RealTensor invT(T.inverse());
+
+    // the SC lattice vectors
+    get_atomistic_structure()->get_lattice_vectors(a, b, c);
+    a *= 0.1;
+    b *= 0.1;
+    c *= 0.1;
+
+    cerr << "SC (real space): " << endl;
+    cerr << a << endl;
+    cerr << b << endl;
+    cerr << c << endl;
+
+    // now check whether SC is commensurate with PC
+    // If not, we assume it is strained and calculate a
+    // tranformation matrix, to transform the k-points afterwards
+    a = invT * a;
+    b = invT * b;
+    c = invT * c;
+
+    T = RealTensor(a, b, c);
+    for (unsigned int i = 0; i < 3; i++)
+      for (unsigned int j = 0; j < 3; j++)
+        T(i, j) = round(T(i,j));
+
+    T = T * RealTensor(a, b, c).inverse();
+    invT = T.inverse();
 
     // _kspace contains now the k-path in the PC k-space
     init_kspace(kopts);
+
+    // tranform all points according to T
+    MeshBase* kpath = _kspace->get_k_mesh();
+    for (unsigned int i = 0; i < kpath->n_nodes(); i++)
+    {
+      Point& k = *kpath->node_ptr(i);
+      k = Point(T * k);
+    }
 
     kspace_for_plot = _kspace;
 
@@ -371,17 +417,32 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     G.resize(0);
 
     pc_kspace.get_basis(a, b, c);
-    //cerr << "PC : " << endl;
-    //cerr << a << endl;
-    //cerr << b << endl;
-    //cerr << c << endl;
+    cerr << "PC : " << endl;
+    cerr << a << endl;
+    cerr << b << endl;
+    cerr << c << endl;
+    Point ka(a);
+    Point kb(b);
+    Point kc(c);
 
     // the SC reciprocal basis
     sc_kspace->get_basis(a, b, c);
-    //cerr << "SC : " << endl;
-    //cerr << a << endl;
-    //cerr << b << endl;
-    //cerr << c << endl;
+    cerr << "SC : " << endl;
+    cerr << a << endl;
+    cerr << b << endl;
+    cerr << c << endl;
+
+    ka = T*ka;
+    kb = T*kb;
+    kc = T*kc;
+    sc_kspace->inverse_transform(ka);
+    sc_kspace->inverse_transform(kb);
+    sc_kspace->inverse_transform(kc);
+
+    cerr << ka << endl;
+    cerr << kb << endl;
+    cerr << kc << endl;
+
 
 
     // these are absolute upper limits
@@ -404,12 +465,10 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
 
           if (gg.norm() < pc_diam)
           {
-            //if (gg(0) < 1e-6)
-            //  of << gg(1) << " " << gg(2) << endl;
 
             // to store equivalent points;
             vector<Point> points;
-            pc_kspace.equivalent_points(gg, points, false);
+            pc_kspace.equivalent_points(invT * gg, points, false);
 
             for (auto&& p : points)
             {
@@ -504,18 +563,18 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     Messages::info(os.str());
 
 
-    /*
+    ///*
     for (int i = 0; i < G.size(); ++i)
     {
       Point gg(G[i][0], G[i][1], G[i][2]);
       sc_kspace->transform_point(gg);
-      Point p(gg);
-      pc_kspace.inverse_transform(p);
-      cerr << "  (" << G[i][0] << ", " << G[i][1] << ", " << G[i][2] << ") " << p << endl;
-      of2 << gg(1) << " " << gg(2) << " " << gg(0) << endl;
+      //Point p(gg);
+      //pc_kspace.inverse_transform(p);
+      cerr << "  (" << G[i][0] << ", " << G[i][1] << ", " << G[i][2] << ") " << gg << endl;
+      //of2 << gg(1) << " " << gg(2) << " " << gg(0) << endl;
     }
     cerr << endl;
-    */
+    //*/
 
     kmesh = _kspace->get_k_mesh();
     unsigned int num_k_points = kmesh->n_nodes();
