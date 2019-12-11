@@ -298,9 +298,11 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     Messages::newline();
     Messages::info("Dispersion will be unfolded to BZ of " +
         refmat->get_name());
+    Messages msg;
+    msg.indent();
 
-    Messages::hint("You may plot the SC and PC Brillouin zones by using the "
-        "write_SC_mesh \n and write_PC_mesh options in the Dispersion block.");
+    Messages::hint("You may plot the SC and PC Brillouin zones by using the \n"
+                   "write_SC_mesh and write_PC_mesh options in the Dispersion block.");
 
     ModelOptions scopts(kopts);
     scopts.delete_option("k-path");
@@ -331,10 +333,11 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     b *= 0.1;
     c *= 0.1;
 
-    cerr << "PC (real space): " << endl;
-    cerr << a << endl;
-    cerr << b << endl;
-    cerr << c << endl;
+    ostringstream os;
+    os << "Reference cell (PC, real space): " << endl;
+    os << " a = (" << a(0) << ", " << a(1) << ", " << a(2) << ")\n";
+    os << " b = (" << b(0) << ", " << b(1) << ", " << b(2) << ")\n";
+    os << " c = (" << c(0) << ", " << c(1) << ", " << c(2) << ")\n\n";
 
 
     kopts.set_option("r1", a);
@@ -352,10 +355,10 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     b *= 0.1;
     c *= 0.1;
 
-    cerr << "SC (real space): " << endl;
-    cerr << a << endl;
-    cerr << b << endl;
-    cerr << c << endl;
+    os << "Supercell (SC, real space): " << endl;
+    os << " a = (" << a(0) << ", " << a(1) << ", " << a(2) << ")\n";
+    os << " b = (" << b(0) << ", " << b(1) << ", " << b(2) << ")\n";
+    os << " c = (" << c(0) << ", " << c(1) << ", " << c(2) << ")\n\n";
 
     // now check whether SC is commensurate with PC
     // If not, we assume it is strained and calculate a
@@ -365,6 +368,9 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     c = invT * c;
 
     T = RealTensor(a, b, c);
+    double Tdet = T.det();
+    os << "PC/SC volume ratio: " << Tdet;
+
     for (unsigned int i = 0; i < 3; i++)
       for (unsigned int j = 0; j < 3; j++)
         T(i, j) = round(T(i,j));
@@ -372,8 +378,15 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     T = T * RealTensor(a, b, c).inverse();
     invT = T.inverse();
 
+    if (abs(1.0 - T.det()) > 1e-5)
+      os << " (rounded to " << Tdet*T.det() << " for unfolding procedure)";
+
+    Messages::info(os.str());
+    Messages::newline();
+
     // _kspace contains now the k-path in the PC k-space
     init_kspace(kopts);
+    Messages::newline();
 
     // tranform all points according to T
     MeshBase* kpath = _kspace->get_k_mesh();
@@ -417,6 +430,7 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     G.resize(0);
 
     pc_kspace.get_basis(a, b, c);
+    /*
     cerr << "PC : " << endl;
     cerr << a << endl;
     cerr << b << endl;
@@ -424,9 +438,11 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     Point ka(a);
     Point kb(b);
     Point kc(c);
+    */
 
     // the SC reciprocal basis
     sc_kspace->get_basis(a, b, c);
+    /*
     cerr << "SC : " << endl;
     cerr << a << endl;
     cerr << b << endl;
@@ -442,7 +458,7 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     cerr << ka << endl;
     cerr << kb << endl;
     cerr << kc << endl;
-
+    */
 
 
     // these are absolute upper limits
@@ -516,7 +532,7 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
         {
           Point g(G[i][0], G[i][1], G[i][2]);
           sc_kspace->transform_point(g);
-          Point p(g);
+          Point p(invT * g);
           pc_kspace.inverse_transform(p);
 
           for (unsigned int j = 0; j < G.size(); ++j)
@@ -525,7 +541,7 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
             {
               Point g2(G[j][0], G[j][1], G[j][2]);
               sc_kspace->transform_point(g2);
-              Point p2(g2);
+              Point p2(invT * g2);
               pc_kspace.inverse_transform(p2);
 
               bool equal = p.absolute_fuzzy_equals(p2, 1e-3);
@@ -552,18 +568,19 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
       G = Gtmp;
     }
 
-    // for debugging
-    //ofstream of2("test2.dat");
 
 
     // now we have all necessary G vectors
-    ostringstream os;
+    os.str("");
     os << "Found " << G.size() << " G vectors unfolding the supercell "
         << "onto the primitive cell";
+    Messages::newline();
     Messages::info(os.str());
 
 
-    ///*
+    // for debugging
+    /*
+    ofstream of2("test2.dat");
     for (int i = 0; i < G.size(); ++i)
     {
       Point gg(G[i][0], G[i][1], G[i][2]);
@@ -574,7 +591,7 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
       //of2 << gg(1) << " " << gg(2) << " " << gg(0) << endl;
     }
     cerr << endl;
-    //*/
+    */
 
     kmesh = _kspace->get_k_mesh();
     unsigned int num_k_points = kmesh->n_nodes();
