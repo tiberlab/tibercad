@@ -1483,7 +1483,8 @@ ETB::do_project_to_primitive_cell(const eigen_problem_solution& a,
 
   for (size_t i = 0; i < N; i++)
   {
-    orbitals_i.resize(_ion_num_orbitals[i]);
+    // WARNING: _ion_num_orbitals consideres the two spins!
+    orbitals_i.resize(_ion_num_orbitals[i] / n_spin);
     inst->get_ion_orbitals(i+1, orbitals_i);
 
     size_t id_j = 0;
@@ -1492,7 +1493,7 @@ ETB::do_project_to_primitive_cell(const eigen_problem_solution& a,
       if (atom[i].get_label() == atom[j].get_label())
       {
 
-      orbitals_j.resize(_ion_num_orbitals[j]);
+      orbitals_j.resize(_ion_num_orbitals[j] / n_spin);
       inst->get_ion_orbitals(j+1, orbitals_j);
 
       Point d(atom[i].get_position());
@@ -1522,10 +1523,10 @@ ETB::do_project_to_primitive_cell(const eigen_problem_solution& a,
       weight += value * phase;
       }
 
-      id_j += n_spin * _ion_num_orbitals[j];
+      id_j += _ion_num_orbitals[j];
     }
 
-    id_i += n_spin * _ion_num_orbitals[i];
+    id_i += _ion_num_orbitals[i];
   }
 
 
