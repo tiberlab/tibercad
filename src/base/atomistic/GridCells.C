@@ -1,6 +1,7 @@
 
 #include "GridCells.h"
-#include "vector_value.h"
+#include "libmesh/vector_value.h"
+#include "libmesh/tensor_value.h"
 
 
 
@@ -14,34 +15,53 @@ GridCells::GridCells(const std::vector<Atom>& basis, const Tensor2Gen& period,
   _minimum_spacing_y = minimum_spacing;
   _minimum_spacing_z = minimum_spacing;
   
+  libMesh::RealVectorValue period_x(0.0), period_y(0.0), period_z(0.0);
+  period_x(0) = _period(1,1);
+  period_x(1) = _period(2,1);
+  period_x(2) = _period(3,1);
+  period_y(0) = _period(1,2);
+  period_y(1) = _period(2,2);
+  period_y(2) = _period(3,2);
+  period_z(0) = _period(1,3);
+  period_z(1) = _period(2,3);
+  period_z(2) = _period(3,3);
+
   if (projected_dim < 3)
   {
-    libMesh::RealVectorValue period_x(0.0), period_y(0.0), period_z(0.0);
-    period_x(0) = _period(1,1);
-    period_x(1) = _period(2,1);
-    period_x(2) = _period(3,1);
-    period_y(0) = _period(1,2);
-    period_y(1) = _period(2,2);
-    period_y(2) = _period(3,2);
-    period_z(0) = _period(1,3);
-    period_z(1) = _period(2,3);
-    period_z(2) = _period(3,3);
+
     switch (projected_dim)
     {
       case 0:
-        _minimum_spacing_x = period_x.size();
+        _minimum_spacing_x = period_x.norm();
 
       case 1:
-        _minimum_spacing_y = period_y.size();
+        _minimum_spacing_y = period_y.norm();
 
       case 2:
-        _minimum_spacing_z = period_z.size();
+        _minimum_spacing_z = period_z.norm();
     }
   }
 
   define_edges(basis);
 
-  define_grid();
+  double length_x = period_x.norm();
+  double length_y = period_y.norm();
+  double length_z = period_z.norm();
+
+  //define_grid();
+  n_x = static_cast<unsigned int>((floor(length_x / _minimum_spacing_x)) + 1);
+  _x_spacing = length_x / n_x;
+
+  n_y = static_cast<unsigned int>((floor(length_y / _minimum_spacing_y)) + 1);
+  _y_spacing = length_y / n_y;
+
+  n_z = static_cast<unsigned int>((floor(length_z / _minimum_spacing_z)) + 1);
+  _z_spacing = length_z / n_z;
+
+  // transformation matrix to get coordinates
+  libMesh::RealTensor T(period_x / n_x, period_y / n_y, period_z / n_z);
+  T = T.transpose();
+  _inv_transform = T.inverse();
 
   //resize grid_cell according to grid dimensions
   _grid_cell.resize(n_x * n_y * n_z);
@@ -76,6 +96,7 @@ GridCells::define_edges(const std::vector<Atom>& basis)
   _edge_min(1) = 1e9; _edge_min(2) = 1e9; _edge_min(3) = 1e9;
   _edge_max(1) =-1e9; _edge_max(2) =-1e9; _edge_max(3) =-1e9;
 
+
   for (unsigned int i = 0; i < basis.size(); i++)
     {
       if (basis[i].get_position(0) < _edge_min(1)) _edge_min(1) = basis[i].get_position(0);
@@ -96,6 +117,8 @@ GridCells::define_edges(const std::vector<Atom>& basis)
   _edge_max(2) = _edge_max(2) + 0.1;
   _edge_max(3) = _edge_max(3) + 0.1;
 
+
+
 }
 
 
@@ -105,11 +128,22 @@ GridCells::define_edges(const std::vector<Atom>& basis)
 void
 GridCells::define_grid(void)
 {
+
+
   double lenght_x, lenght_y, lenght_z;
 
   lenght_x = _edge_max(1) - _edge_min(1);
   lenght_y = _edge_max(2) - _edge_min(2);
   lenght_z = _edge_max(3) - _edge_min(3);
+
+  libMesh::Point d(lenght_x, lenght_y, lenght_z);
+
+  // project diagonal onto basis
+  libMesh::Point coord(_inv_transform * d);
+
+  int x = ceil(coord(0));
+  int y = ceil(coord(1));
+  int z = ceil(coord(2));
 
   n_x = static_cast<unsigned int>((floor(lenght_x / _minimum_spacing_x)) + 1);
   _x_spacing = lenght_x / n_x;
@@ -138,6 +172,8 @@ GridCells::include_atoms(const std::vector<Atom>& basis)
 
 }
 
+
+
 void 
 GridCells::get_cell(const libMesh::Point& p, unsigned int& x,  unsigned int& y, unsigned int& z) const
 {
@@ -145,25 +181,34 @@ GridCells::get_cell(const libMesh::Point& p, unsigned int& x,  unsigned int& y, 
   double dx = p(0) - _edge_min(1);
   double dy = p(1) - _edge_min(2); 
   double dz = p(2) - _edge_min(3);
+
+  libMesh::Point d(dx, dy, dz);
+
+  // project diagonal onto basis
+  libMesh::Point coord(_inv_transform * d);
+
  
-  if (dx < 0){ x = 0;}
+  if (d(0) < 0){ x = 0;}
   else
   {
-    x = static_cast<unsigned int>(( floor( dx / _x_spacing ) ));
+    //x = static_cast<unsigned int>(( floor( dx / _x_spacing ) ));
+    x = static_cast<unsigned int>(floor( coord(0) ));
     if (x>n_x-1){x = n_x-1;}
   }
 
-  if (dy < 0){ y = 0;}
+  if (d(1) < 0){ y = 0;}
   else
   {
-    y = static_cast<unsigned int>(( floor( dy / _y_spacing ) ));
+    //y = static_cast<unsigned int>(( floor( dy / _y_spacing ) ));
+    y = static_cast<unsigned int>(floor( coord(1) ));
     if (y>n_y-1){y = n_y-1;}
   }
 
-  if (dz < 0){ z = 0;}
+  if (d(2) < 0){ z = 0;}
   else
   {
-    z = static_cast<unsigned int>(( floor( dz / _z_spacing ) ));
+    //z = static_cast<unsigned int>(( floor( dz / _z_spacing ) ));
+    z = static_cast<unsigned int>(floor( coord(2) ));
     if (z>n_z-1){z = n_z-1;}
   }
 

@@ -7,6 +7,8 @@
 #include "tensor.h"
 #include "tiber_dll.h"
 
+#include "libmesh/tensor_value.h"
+
 #include <vector>
 #include <map>
 
@@ -83,7 +85,9 @@ class GridCells
   //! Include atom indexes in proper cells
   void include_atoms(const std::vector<Atom>& basis) TBDLLOCAL;
 
- 
+  //! The transformation matrix to get point coordinates in given basis
+  libMesh::RealTensor _inv_transform;
+
   Tensor1 _edge_min;
   Tensor1 _edge_max;
 
