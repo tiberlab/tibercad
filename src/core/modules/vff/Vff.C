@@ -99,9 +99,16 @@ Vff::do_init()
   Messages::debug("Setting boundary conditions");
   check_structure();
   parse_options();
-  declare_solution(StrainNodes, TENSOR, NODES,"unitless");
-  declare_solution(StrainCells, TENSOR, CELL,"unitless");
 }
+
+void
+Vff::do_setup_solution_variables(void)
+{
+  declare_solution(StrainNodes, TENSOR, NODES,"");
+  declare_solution(StrainCells, TENSOR, CELL,"");
+
+}
+
 
 void
 Vff::do_solve(void)

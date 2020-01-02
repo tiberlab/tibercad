@@ -66,7 +66,7 @@ protected:
 
 
   //! Setup the available variables
-  virtual void do_setup_solution_variables(void){};
+  virtual void do_setup_solution_variables(void);
 
 
   //! Solve the MyPoisson equation
