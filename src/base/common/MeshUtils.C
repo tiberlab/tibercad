@@ -361,6 +361,16 @@ MeshUtils::GridMapper::get_element(const libMesh::Point& point) const
   {
     // we can assume that _elem_list is assembled when getting here
     const vector<const libMesh::Elem*>& list = _elem_list[tgrid_el];
+    libMesh::Point p(point);
+    switch (_mesh->mesh_dimension())
+    {
+      [[fallthrough]] case 1:
+        p(1) = 0;
+
+      case 2:
+        p(2) = 0;
+        break;
+    }
 
     for (int i = 0; i < list.size(); ++i)
     {
@@ -368,7 +378,7 @@ MeshUtils::GridMapper::get_element(const libMesh::Point& point) const
       // note: by construction it is inside the bounding box of elem
       //if (MeshUtils::may_belong_to_element(elem, point))
       {
-        if (elem->contains_point(point))
+        if (elem->contains_point(p))
         {
           el = elem;
           break;
