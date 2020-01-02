@@ -67,7 +67,7 @@ StrainLattice::init(AtomisticStructure* as)
     for (unsigned int i = 0; i < bulk->get_N_atoms(); i++)
     {
       ref_atm = bulk->get_structure_atoms()[i]; 
-      if (ref_atm.get_label() == 1) 
+      if ((ref_atm.get_label() == 1) || (ref_atm.get_label() == 3))
       {
         build_tetraedron(structure, i, _reference[*it]);
         ref_found = i;
@@ -88,7 +88,7 @@ StrainLattice::init(AtomisticStructure* as)
        {
          ref_atm = bulk->get_structure_atoms()[i]; 
        
-         if (ref_atm.get_label() == 1 && i != ref_found)
+         if (((ref_atm.get_label() == 1) || (ref_atm.get_label() == 3)) && (i != ref_found))
          {
            build_tetraedron(structure, i, _reference2[*it]);
            ref_found2 = i;
@@ -218,12 +218,12 @@ StrainLattice::build_tetraedron(const AtomisticBasis* as, unsigned int atm, Stra
     Messages::error("Bulk badly defined in StrainLattice. An atom has not 4 bonds.");
 
   //All the vertices are supposed to have same specie, we pick the first neighbor
-  tet.vertex_label = atoms[bondmap[atm][0]].get_label();
+  tet.vertex_label = atoms[bondmap[atm][0]].get_specie();
 
   //We check that all neghbors are really of the same type (cations or anions)
   for (unsigned int i = 0; i < n_bonds; i++)
   {
-    if (atoms[bondmap[atm][i]].get_label() != tet.vertex_label)
+    if (atoms[bondmap[atm][i]].get_specie() != tet.vertex_label)
       Messages::error("Error in StrainLattice. Try to build tetraedron on ill conditioned structure");
   } 
   
