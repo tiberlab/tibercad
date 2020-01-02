@@ -178,7 +178,7 @@ Atom::label_t Atom::get_label(void) const
 inline
 bool Atom::is_cation(void) const
 {
-  return (get_label() == 1);
+  return ((get_label() == 1) || (get_label() == 3));
 }
 
 inline
