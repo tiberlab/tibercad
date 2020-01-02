@@ -72,7 +72,7 @@ class StrainLattice
 
       //! Specie of vertices
       /*! useful to discriminate central atom in alloys */
-      unsigned char vertex_label;
+      Specie vertex_label;
     };
 
     //! Build tetraedron for a given atom of a given structure
