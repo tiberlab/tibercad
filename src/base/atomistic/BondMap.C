@@ -101,7 +101,7 @@ BondMap::do_solve(const std::vector<Atom>& basis, const Tensor2Gen& period)
   _period = period;
   //define the minimum spacing of the grid. the smaller it is, the faster is bonds calculations
   //cannot be smaller than the higher bond lenght. (in amstrong)
-  GridCells cells(basis, period, 6.0);
+  GridCells cells(basis, period, 9.0);
 
   // Loop on all cells
   Utils::Progress prog("BondMap", cells.size());

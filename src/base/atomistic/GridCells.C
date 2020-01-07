@@ -44,11 +44,15 @@ GridCells::GridCells(const std::vector<Atom>& basis, const Tensor2Gen& period,
 
   define_edges(basis);
 
+  // TODO project onto basis vectors
+
   double length_x = period_x.norm();
   double length_y = period_y.norm();
   double length_z = period_z.norm();
 
   //define_grid();
+  // we now define the grid based on the periodicity
+
   n_x = static_cast<unsigned int>((floor(length_x / _minimum_spacing_x)) + 1);
   _x_spacing = length_x / n_x;
 
@@ -136,14 +140,40 @@ GridCells::define_grid(void)
   lenght_y = _edge_max(2) - _edge_min(2);
   lenght_z = _edge_max(3) - _edge_min(3);
 
+  // the diagonal
   libMesh::Point d(lenght_x, lenght_y, lenght_z);
+
+
+  libMesh::RealVectorValue period_x(0.0), period_y(0.0), period_z(0.0);
+  period_x(0) = _period(1,1);
+  period_x(1) = _period(2,1);
+  period_x(2) = _period(3,1);
+  period_y(0) = _period(1,2);
+  period_y(1) = _period(2,2);
+  period_y(2) = _period(3,2);
+  period_z(0) = _period(1,3);
+  period_z(1) = _period(2,3);
+  period_z(2) = _period(3,3);
+
+  // transformation matrix to get coordinates
+  {
+    libMesh::RealTensor T(period_x, period_y, period_z);
+    T = T.transpose();
+    _inv_transform = T.inverse();
+  }
 
   // project diagonal onto basis
   libMesh::Point coord(_inv_transform * d);
 
-  int x = ceil(coord(0));
-  int y = ceil(coord(1));
-  int z = ceil(coord(2));
+  lenght_x = coord(0) * period_x.norm();
+  lenght_y = coord(1) * period_y.norm();
+  lenght_z = coord(2) * period_z.norm();
+
+  {
+    libMesh::RealTensor T(coord(0) * period_x, coord(1) * period_y, coord(2) * period_z);
+    T = T.transpose();
+    _inv_transform = T.inverse();
+  }
 
   n_x = static_cast<unsigned int>((floor(lenght_x / _minimum_spacing_x)) + 1);
   _x_spacing = lenght_x / n_x;
@@ -184,10 +214,9 @@ GridCells::get_cell(const libMesh::Point& p, unsigned int& x,  unsigned int& y, 
 
   libMesh::Point d(dx, dy, dz);
 
-  // project diagonal onto basis
+  // project onto basis
   libMesh::Point coord(_inv_transform * d);
 
- 
   if (d(0) < 0){ x = 0;}
   else
   {
@@ -246,7 +275,7 @@ GridCells::NeighborIterator::operator ++(void)
   if (_dz < 1 ){ _dz += 1;}
   else if (_dy < 1){_dy += 1; _dz=-1;}
   else if (_dx < 1){_dx += 1; _dy=-1; _dz=-1;}
-  else {_dz+=1; return (*this);}
+  else {_dz = 2; return *this; }
  
   //std::cout<<"dx="<<_dx<<" dy="<<_dy<<" dz="<<_dz<<std::endl; 
   
