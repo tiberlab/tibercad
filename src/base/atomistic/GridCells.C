@@ -220,21 +220,21 @@ GridCells::get_cell(const libMesh::Point& p, unsigned int& x,  unsigned int& y, 
   // project onto basis
   libMesh::Point coord(_inv_transform * d);
 
-  if (d(0) < 0){ x = 0;}
+  if (coord(0) < 0){ x = 0;}
   else
   {
     x = static_cast<unsigned int>(floor( coord(0) ));
     if (x>n_x-1){x = n_x-1;}
   }
 
-  if (d(1) < 0){ y = 0;}
+  if (coord(1) < 0){ y = 0;}
   else
   {
     y = static_cast<unsigned int>(floor( coord(1) ));
     if (y>n_y-1){y = n_y-1;}
   }
 
-  if (d(2) < 0){ z = 0;}
+  if (coord(2) < 0){ z = 0;}
   else
   {
     z = static_cast<unsigned int>(floor( coord(2) ));
