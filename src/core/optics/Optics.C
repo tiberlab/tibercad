@@ -783,7 +783,6 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
       //Note that it differs from usual literature where usually f1 and f2 states initial state and final state
       //occupation probability, so it's related to electrons and it becomes f1*(1-f2)
 
-      //spectrum[elem] += 1 / (2 * M_PI ) * (omega * omega) /(c*c*c)  * Lorenzian * abs (Me) * abs (Me) * f1 * f2;
       double strength = 2 * _opt.nr * (omega * omega) / (c*c*c) * abs (Me) * abs (Me);
 
       //  we need to take 2/3, since in the integration over the solid angle the 3
@@ -1185,6 +1184,7 @@ Optics::plot_globaldata(void)
     _initial_state_model->get_eigenvalues(_initial_state_particle, is_ene);
     _final_state_model->get_eigenvalues(_final_state_particle, fs_ene);
 
+    file << "# Matrix elements given in atomic units\n";
     file << "# initial_state final_state transition_energy |Px|^2 |Py|^2 |Pz|^2\n";
     unsigned int n1 =  _initial_state_numbers.size();
     unsigned int n2 =  _final_state_numbers.size();
