@@ -42,7 +42,10 @@ GridCells::GridCells(const std::vector<Atom>& basis, const Tensor2Gen& period,
     }
   }
 
-  define_edges(basis);
+  //define_edges(basis);
+  // we assume that the first atom is in the corner, and the periodicity
+  // spans the structure
+  _edge_min = basis[0].get_ttype_position();
 
   // TODO project onto basis vectors
 
@@ -114,12 +117,12 @@ GridCells::define_edges(const std::vector<Atom>& basis)
     }
 
   // min max edges must be slightly enlarged to avoid strict inclusion errors
-  _edge_min(1) = _edge_min(1) - 0.1;
-  _edge_min(2) = _edge_min(2) - 0.1;
-  _edge_min(3) = _edge_min(3) - 0.1;
-  _edge_max(1) = _edge_max(1) + 0.1;
-  _edge_max(2) = _edge_max(2) + 0.1;
-  _edge_max(3) = _edge_max(3) + 0.1;
+  _edge_min(1) = _edge_min(1) - 0.001;
+  _edge_min(2) = _edge_min(2) - 0.001;
+  _edge_min(3) = _edge_min(3) - 0.001;
+  _edge_max(1) = _edge_max(1) + 0.001;
+  _edge_max(2) = _edge_max(2) + 0.001;
+  _edge_max(3) = _edge_max(3) + 0.001;
 
 
 
@@ -220,7 +223,6 @@ GridCells::get_cell(const libMesh::Point& p, unsigned int& x,  unsigned int& y, 
   if (d(0) < 0){ x = 0;}
   else
   {
-    //x = static_cast<unsigned int>(( floor( dx / _x_spacing ) ));
     x = static_cast<unsigned int>(floor( coord(0) ));
     if (x>n_x-1){x = n_x-1;}
   }
@@ -228,7 +230,6 @@ GridCells::get_cell(const libMesh::Point& p, unsigned int& x,  unsigned int& y, 
   if (d(1) < 0){ y = 0;}
   else
   {
-    //y = static_cast<unsigned int>(( floor( dy / _y_spacing ) ));
     y = static_cast<unsigned int>(floor( coord(1) ));
     if (y>n_y-1){y = n_y-1;}
   }
@@ -236,7 +237,6 @@ GridCells::get_cell(const libMesh::Point& p, unsigned int& x,  unsigned int& y, 
   if (d(2) < 0){ z = 0;}
   else
   {
-    //z = static_cast<unsigned int>(( floor( dz / _z_spacing ) ));
     z = static_cast<unsigned int>(floor( coord(2) ));
     if (z>n_z-1){z = n_z-1;}
   }
