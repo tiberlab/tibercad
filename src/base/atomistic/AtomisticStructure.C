@@ -1726,6 +1726,7 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
 
 }
  
+/*
 void
 AtomisticStructure::interface_interactions(const Material* mat1, 
                                            const Material* mat2, 
@@ -1792,6 +1793,7 @@ AtomisticStructure::interface_interactions(const Material* mat1,
   }
 
 }
+*/
 
 void
 AtomisticStructure::interface_interactions(const Material* mat1, 
