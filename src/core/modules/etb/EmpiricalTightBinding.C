@@ -294,7 +294,8 @@ void ETB::do_reinit(void)
   
   // set load state file  
   _upt_solver_options.read_states = false;
-  if (solopts.find_option("load_file") || solopts.find_option("load_path"))
+  if (solopts.find_option("load_file") || solopts.find_option("load_path") ||
+      solopts.get_option("load_states", false))
   {
     _upt_solver_options.read_states = true;
     string load_path = solopts.get_option("load_path", get_output_directory());
