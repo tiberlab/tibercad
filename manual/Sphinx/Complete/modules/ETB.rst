@@ -338,10 +338,13 @@ The Solver section of the **Module**  ``empirical_tb`` contains the following op
     defines the number of conduction band eigenvalues and eigenfunctions to be found.
 
  ``load_states`` : boolean 
-    if **true**, a list of quantum states (eigenvalues  and eigenfunctions) are  loaded from  the  file specified by  ``load_path``. If the number of loaded electron or hole states is  lower  of  respectively *num_conduction_eigenvalues* or  *num_valence_eigenvalues*, then the remaining  states are calculated. 
+    if **true**, a list of quantum states (eigenvalues  and eigenfunctions) are  loaded from  the  file specified by  ``load_path`` and ``load_file``. If the latter two are not specified, the same filenames and paths as for output will be used. If the number of loaded electron or hole states is  lower  of  respectively *num_conduction_eigenvalues* or  *num_valence_eigenvalues*, then the remaining  states are calculated. 
 
  ``load_path`` : string 
-    path of  the file  from  which  tb  states  can  be loaded
+    directory path of  the file  from  which  tb  states  can  be loaded, default is the output directory
+
+ ``load_file`` : string 
+    file name  from  which  tb  states  can  be loaded (will be combined with ``load_path``
 
  ``guess_conduction`` : double
      the solver algorithm tries  to  find  the closest eigenvalues to this absolute  value  of  energy (eV). If *guess_conduction* is not defined, then by  default it is  calculated internally based on  the band edges.
