@@ -34,7 +34,7 @@ for ik=1:length(k)
      Wki = d.data(ik, Ne + ie + 1);
    end
    
-   A(:, ik) = A(:, ik) + Wki*gauss(E'-Eki);
+   A(:, ik) = A(:, ik) + Wki*lorentzian(E'-Eki);
    
   end
 end
@@ -44,19 +44,27 @@ figure;
 pcolor(X, Y, real(A))
 %shading flat
 shading('interp')
+colormap('hot')
 %m = colormap('gray');
 %colormap(1-m);
 %hold on
 %plot(k, Epc, 'r');
 
+%figure;
+%hold on
+%for ik=1:length(k)
+%    scatter(k(ik)*ones(size(E)), E, 5, A(:, ik), 'filled');
+%end
+%m = colormap('gray');
+%colormap(1-m);
 end
 
 function y = lorentzian(x)
-g = 0.05;
+g = 0.02;
 y = 1.0/pi* g ./ (x.^2 + g^2);
 end
 
 function y = gauss(x)
-g = 0.25;
+g = 0.02;
 y = 1.0/pi* exp(-x.^2 / g^2);
 end
