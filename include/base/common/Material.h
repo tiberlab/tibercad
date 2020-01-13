@@ -137,6 +137,11 @@ class Material : public PhysicalObject
   
     crystal_species_iterator species_end(unsigned int label) const;
     
+    //! iterators over all species in one specific position
+    crystal_species_iterator species_begin(void) const;
+
+    crystal_species_iterator species_end(void) const;
+
     //! Print the list of atomic species in material
     void print_species(void) const;
 
@@ -316,7 +321,7 @@ Material::acceptors_end(void) const
   return _acceptors.end();
 }
 
-  
+
 inline
 Material::crystal_species_iterator 
 Material::species_begin(unsigned int label) const
@@ -335,6 +340,20 @@ Material::species_end(unsigned int label) const
     return (_crystal_type_map.find(label)->second).end();
   else
     return (_crystal_type_map.find(1)->second).end();
+}
+
+inline
+Material::crystal_species_iterator
+Material::species_begin(void) const
+{
+  return (_species.begin());
+}
+
+inline
+Material::crystal_species_iterator
+Material::species_end(void) const
+{
+  return (_species.end());
 }
 
 inline
@@ -357,77 +376,3 @@ Material::count_labels(void) const
 
 #endif // _MATERIAL_H_
 
-
-
-    /*
-    OLD ITERATOR:
-
-    class crystal_species_iterator
-    {
-      public:
-      crystal_species_iterator(const std::map<unsigned int, std::set<Specie>>& map, 
-                               unsigned int label,
-                               bool end = false) :
-        _map(map),
-        _iter(map.begin()),
-        _label(label)
-      {
-        if (!end && _iter != _map.end())
-        {
-          while ( (_iter != _map.end()) && (label != _iter->second ) )
-            ++_iter;
-        }
-        else
-          _iter = _map.end();       
-      }
-      
-      //! Copy constructor
-      crystal_species_iterator(const crystal_species_iterator& it) :
-        _map(it._map),
-        _iter(it._iter),
-        _label(it._label)
-      { };
-        
-      //! Prefix increment
-      crystal_species_iterator& operator++(void)
-      {
-        do{
-          ++_iter;
-        }
-        while ( (_iter != _map.end()) && (_iter->second != _label) );
-        return *this;
-      }
-      
-      // Assignment
-      //crystal_species_iterator& operator=(const  crystal_species_iterator& rhs)
-      //{
-      //  _map = rhs._map;
-      //  _iter = rhs._iter;
-      //  _label = rhs._label;
-      //  return *this;
-      //}
-
-      //! Comparison
-      bool operator==(const crystal_species_iterator& rhs)
-      {
-        return (_iter == rhs._iter);
-      }
-      
-      //! Comparison
-      bool operator!=(const crystal_species_iterator& rhs)
-      {
-        return (_iter != rhs._iter);
-      }
-      
-      //! Dereference the iterator to get the Specie
-      Specie operator*(void)
-      {
-        return _iter->first;
-      }
-      
-    private:
-      const std::map<unsigned int, std::set<Specie>>& _map;
-      unsigned int _label;
-      std::set<Specie>::const_iterator _iter;
-    };
-    */
