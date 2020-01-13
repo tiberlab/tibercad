@@ -1628,8 +1628,6 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
 
   for (size_t i = 0; i < get_N_atoms(); ++i)
   {
-    //const Material* mat1 = (*int_it).first;
-    //const Material* mat2 = (*int_it).second;
     ID reg_i = _atoms[i].get_region_ID();
 
     if (reg_i == INVALID_ID)
@@ -1817,45 +1815,25 @@ AtomisticStructure::interface_interactions(const Material* mat1,
   // e.g.: SiGe-SiGe = SiSi SiGe GeSi GeGe
   unsigned int label1 = at1.get_label();
 
-  Material::crystal_species_iterator sp_it1 = mat1->species_begin();
-  Material::crystal_species_iterator sp_end1 = mat1->species_end();
-  for (;sp_it1 != sp_end1; ++sp_it1)
-  {
-    if (*sp_it1 == sp1)
-    {
-      conc1 = 1.0;
-      if (mat1->is_alloy())
-        conc1=(static_cast<const Alloy*>(mat1))->get_molar_fraction(label1, sp1);
+  conc1 = 1.0;
+  if (mat1->is_alloy())
+    conc1=(static_cast<const Alloy*>(mat1))->get_molar_fraction(label1, sp1);
 
-      unsigned int label2 = at2.get_label();
-
-      Material::crystal_species_iterator sp_it2 = mat2->species_begin();
-      Material::crystal_species_iterator sp_end2 = mat2->species_end();
+  unsigned int label2 = at2.get_label();
 
 
-      for (;sp_it2 != sp_end2; ++sp_it2)
-      {
-        if (*sp_it2 == sp2)
-        {
+  if (label2 < label1)
+    swap(sp1, sp2);
 
-          if (label2 < label1)
-            swap(sp1, sp2);
+  ss << (sp1)<<(sp2);
+  str.push_back(ss.str());
+  ss.str("");
 
-          ss << (sp1)<<(sp2);
-          str.push_back(ss.str());
-          ss.str("");
+  conc2 = 1.0;
+  if (mat2->is_alloy())
+    conc2=(static_cast<const Alloy*>(mat2))->get_molar_fraction(label2, sp2);
 
-          conc2 = 1.0;
-          if (mat2->is_alloy())
-            conc2=(static_cast<const Alloy*>(mat2))->get_molar_fraction(label2, sp2);
-
-          frac.push_back(conc1*conc2);
-        }
-      }
-    }
-
-
-  }
+  frac.push_back(conc1*conc2);
 
  
 }
