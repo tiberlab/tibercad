@@ -1817,8 +1817,8 @@ AtomisticStructure::interface_interactions(const Material* mat1,
   // e.g.: SiGe-SiGe = SiSi SiGe GeSi GeGe
   unsigned int label1 = at1.get_label();
 
-  Material::crystal_species_iterator sp_it1 = mat1->species_begin(label1);
-  Material::crystal_species_iterator sp_end1 = mat1->species_end(label1);
+  Material::crystal_species_iterator sp_it1 = mat1->species_begin();
+  Material::crystal_species_iterator sp_end1 = mat1->species_end();
   for (;sp_it1 != sp_end1; ++sp_it1)
   {
     if (*sp_it1 == sp1)
@@ -1829,8 +1829,8 @@ AtomisticStructure::interface_interactions(const Material* mat1,
 
       unsigned int label2 = at2.get_label();
 
-      Material::crystal_species_iterator sp_it2 = mat2->species_begin(label2);
-      Material::crystal_species_iterator sp_end2 = mat2->species_end(label2);
+      Material::crystal_species_iterator sp_it2 = mat2->species_begin();
+      Material::crystal_species_iterator sp_end2 = mat2->species_end();
 
 
       for (;sp_it2 != sp_end2; ++sp_it2)
