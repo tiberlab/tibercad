@@ -739,18 +739,11 @@ void Kspace::do_init()
     mod_opt.get_option("number_of_nodes", num_nodes);
     if ( num_nodes.size() == 0 ) num_nodes.resize(1, 20);
   }
-
-
-  if (k_space_dim > 0)
+  else if (k_space_dim > 0)
   {
     mod_opt.get_option("number_of_nodes", num_nodes);
     if ( num_nodes.size() == 0 ) num_nodes.resize(k_space_dim, 1);
   }
-
-  // NOTE: for the mesh creation we always need all three indices
-  // of num_nodes, so we define the missing ones as 1
-  num_nodes.resize(k_space_dim);
-  num_nodes.resize(3, 1);
 
   string mesh_order = mod_opt.get_option("mesh_order","first");
 
@@ -1343,7 +1336,6 @@ void Kspace::define_k_path(void)
   std::string kpath = mod_opt.get_option("k_path","");
   // alternative accepted input:
   kpath = mod_opt.get_option("k-path", kpath);
-  int npoints = num_nodes[0];
 
 
   Messages::info("defining a k-path: " + kpath);
@@ -1371,15 +1363,35 @@ void Kspace::define_k_path(void)
     x += segments[i-1];
   }
 
+  vector<unsigned int> n_elems(segments.size());
 
   os << "# points   : (";
 
-  vector<unsigned int> n_elems(tokens.size() - 1);
-
-  for (short i = 0; i < segments.size(); ++i)
+  if (num_nodes.size() > 1)
   {
-    n_elems[i] = round((npoints - 1) * segments[i] / x);
-    os << n_elems[i] << " ";
+    if (num_nodes.size() == segments.size())
+    {
+      for (short i = 0; i < segments.size(); ++i)
+      {
+        n_elems[i] = num_nodes[i] - 1;
+        os << n_elems[i] << " ";
+      }
+    }
+    else
+    {
+      throw InitFailedException("The list of number of nodes per segments "
+          "in Dispersion does not match the number of k-path segments.");
+    }
+  }
+  else
+  {
+
+    int npoints = num_nodes[0];
+    for (short i = 0; i < segments.size(); ++i)
+    {
+      n_elems[i] = round((npoints - 1) * segments[i] / x);
+      os << n_elems[i] << " ";
+    }
   }
 
   os << ")";
