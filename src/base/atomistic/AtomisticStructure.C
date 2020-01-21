@@ -1390,6 +1390,9 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
   }
   //-----------------------------------------------------------
 
+  // too keep track of actually used materials
+  std::set<const Material*> used_materials;
+
   std::set<Utils::Couple<const Material* > > interfaces;
 
   //Standard gen section (modified with material index)
@@ -1414,11 +1417,13 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
     {
       mati = _device->get_material(_atoms[bondmap[i][0]].get_region_ID()); 
       file << material_map[mati];
+      used_materials.insert(mati);
     }
     else
     {
       mati = _device->get_material(_atoms[i].get_region_ID()); 
       file << material_map[ mati ];
+      used_materials.insert(mati);
     }
 
     file << std::setw(5) << static_cast<unsigned int>(_atoms[i].get_type());
@@ -1475,7 +1480,6 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
   
   //Information about materials
   
-  file << "#Materials " << std::endl;
 
   std::map<const Material*, unsigned int> n_species_map;
 
@@ -1485,9 +1489,12 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
     std::map<const Material*, unsigned int>::iterator mat_it = material_map.begin();
     for ( ; mat_it != material_map.end(); ++mat_it)
     {
-      inv_material_map[mat_it->second] = mat_it->first;
+      if (used_materials.count(mat_it->first))
+        inv_material_map[mat_it->second] = mat_it->first;
     }
   }
+
+  file << "#Materials " << inv_material_map.size() << std::endl;
 
   std::map<unsigned int, const Material*>::iterator mat_it = inv_material_map.begin();
   for ( ; mat_it != inv_material_map.end(); ++mat_it)
