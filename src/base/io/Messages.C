@@ -254,7 +254,6 @@ Messages::hint(const string& msg, bool newline)
 {
   if (_mpi_comm.rank() == _rank)
   {
-    static bool contd = false;
 
     vector<string> lines;
     Utils::tokenize(msg, lines, "\n");
@@ -285,9 +284,6 @@ Messages::hint(const string& msg, bool newline)
 
     for (size_t l = 0; l < nl; l++)
     {
-      if (!contd)
-        for (int i = 0; i < _indent * _indent_width; i++)
-          ts << " ";
       ts << lines[l];
       if (newline || (l < nl - 1)) ts << endl;
 
@@ -298,8 +294,6 @@ Messages::hint(const string& msg, bool newline)
     *_cout << normal;
 #endif
 
-    if (newline) contd = false;
-    else contd = true;
   }
 
 }
