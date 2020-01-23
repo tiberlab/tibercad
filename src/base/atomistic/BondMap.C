@@ -101,7 +101,7 @@ BondMap::do_solve(const std::vector<Atom>& basis, const Tensor2Gen& period)
   _period = period;
   //define the minimum spacing of the grid. the smaller it is, the faster is bonds calculations
   //cannot be smaller than the higher bond lenght. (in amstrong)
-  GridCells cells(basis, period, 8.0);
+  GridCells cells(basis, period, 6.0);
 
   // Loop on all cells
   Utils::Progress prog("BondMap", cells.size());
@@ -135,55 +135,6 @@ BondMap::do_solve(const std::vector<Atom>& basis, const Tensor2Gen& period)
       
     }
   }
-  print(basis);
-
-  for (unsigned int i = 0; i < basis.size(); i++)
-  {
-    libMesh::Point p_i(basis[i].get_position());
-
-    for (unsigned int j = 0; j < (*this)[i].size(); j++)
-    {
-      size_t aj = (*this)[i][j];
-      libMesh::Point d(basis[aj].get_position() + _translation[i][j] - p_i);
-      double d_ij = d.norm();
-
-      std::set<size_t> to_be_deleted;
-
-      for (unsigned int k = 0; k < (*this)[aj].size(); k++)
-      {
-        libMesh::Point shift(_translation[aj][k]);
-        if (((*this)[aj][k] != i) || (shift.norm() > 1e-6))
-        {
-          size_t ak = (*this)[aj][k];
-
-          for (unsigned int r = 0; r < (*this)[ak].size(); r++)
-          {
-            if ((*this)[ak][r] == i)
-            {
-              size_t ar = (*this)[ak][r];
-              libMesh::Point d2(basis[ar].get_position() + shift - _translation[ak][r] - p_i);
-              double d_ir = d2.norm();
-
-              if (d_ir < 0.75*d_ij)
-                to_be_deleted.insert(aj);
-            }
-          }
-
-        }
-      }
-
-      for (auto&& j : to_be_deleted)
-      {
-        auto it_i = std::find((*this)[j].begin(), (*this)[j].end(), i);
-        (*this)[j].erase(it_i);
-
-        it_i = std::find((*this)[i].begin(), (*this)[i].end(), j);
-        (*this)[i].erase(it_i);
-      }
-    }
-
-  }
-  print(basis);
 }
 
 
