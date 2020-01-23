@@ -227,6 +227,9 @@ public:
   //! compute radial distribution
   void radial_distribution(std::string suffix = "");
 
+  //! Set the origin
+  void set_origin(const libMesh::Point& origin);
+
 
 private:
 
@@ -292,6 +295,8 @@ private:
   //! Scale factor (from mesh_units to amstrong mesh_units/1e-10)
   double _scale;
 
+  //! The origin for the structure
+  libMesh::Point _origin;
 
   //! Set of mesh regions covered by atomistic structure (numbers: mesh regions)
   std::set <ID> _IDset;
@@ -343,6 +348,12 @@ ModelOptions& AtomisticStructure::get_options(void)
     return _options;
 }
 
+inline
+void
+AtomisticStructure::set_origin(const libMesh::Point& origin)
+{
+  _origin = origin;
+}
 
 
 inline

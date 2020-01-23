@@ -701,6 +701,9 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3)
   
   Tensor1 origin(_local_origin +  _translation);
 
+  libMesh::Point origin_p(origin(1), origin(2), origin(3));
+  _as->set_origin(origin_p);
+
    cout<<"(debug) basis size: "<<basis.size()<<endl;
    cout<<"(debug) conv_latt size: "<<_conv_lattice.size()<<endl;
 
