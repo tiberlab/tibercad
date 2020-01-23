@@ -2389,7 +2389,7 @@ AtomisticStructure::extract_statistics(map<Specie, vector<unsigned int>>& stats,
 
         neighbor_iterator it(neighbors_begin(i, 10 * cutoff, 10 * y, 10 * z));
         neighbor_iterator end(neighbors_end(i));
-        for ( ; (it != end) && (counter < bin_size); ++it)
+        for ( ; (it != end) && (counter <= bin_size); ++it)
         {
           const Atom& neigh = *(*it);
 
