@@ -632,7 +632,7 @@ void FEMEigenvalueProblem::apply_bc()
   {
     create_dirichlet_dofs();
     
-    make_constraints(); //creates a copy of them
+    //make_constraints(); //creates a copy of them
     
     make_nodes_periodic();
     
@@ -657,6 +657,7 @@ void FEMEigenvalueProblem::apply_periodic_bc()
   PerfLog perf_log ("Periodic bc. Assembly",false);
 
   DofMap& dof_map = system->get_dof_map();
+  //dof_map.create_dof_constraints(get_mesh());
 
   unsigned int number_of_variables = dof_map.n_variables();
   
@@ -781,6 +782,7 @@ void FEMEigenvalueProblem::apply_periodic_bc()
 		      DofConstraintRow constraint;
 		      constraint.clear();
 		      
+
 		      dof_map.dof_indices (elem1, dof_indices_component, uvar[var_index]);
 		      
 		      std::vector<Point> point2_vec(1);
@@ -797,16 +799,20 @@ void FEMEigenvalueProblem::apply_periodic_bc()
 		      Point point_temp = point2_ref_vec[0];
 		     
 		      
+		      double sum = 0;
 		      for (int i1 = 0; i1 < phi.size(); i1++)
 			{
 			
-			  if ( std::abs(phi[i1][0]) >  func_tol )  
+			  //if ( std::abs(phi[i1][0]) >  func_tol )
 			    {
 			     
 			      constraint[dof_indices_component[i1]] = phi[i1][0];
+			      sum += phi[i1][0];
 			    
 			    }
 			}
+
+		      constraint[n_dof] = sum;
 
 
 		       
@@ -822,13 +828,16 @@ void FEMEigenvalueProblem::apply_periodic_bc()
 	  
 	}
     }  
+
+  dof_map.process_constraints(get_mesh());
+  system->reinit();
  
 }
 //---------------------------------------------------------------------------------------------
 
 void FEMEigenvalueProblem::make_nodes_periodic()
 {
-  const double pos_tol = 1e-10;
+  const double pos_tol = 1e-9;
  
   nodes_periodic.clear();
 
@@ -841,12 +850,15 @@ void FEMEigenvalueProblem::make_nodes_periodic()
     
     if (solver_opt.periodicity[dir]) 
     {  
-      for (unsigned int n = 0; n < get_mesh().n_nodes(); n++) // Loop over all the nodes
+      // Loop over all the nodes
+      for (unsigned int n = 0; n < get_mesh().n_nodes(); n++)
       {
 	const Node* node1 = & (get_mesh().node(n));
+	// look only at the ones used by the module
 	if (node1->n_dofs(system_number) > 0)
 	{		
-	  if ( std::abs( (*node1)(dir) - min_coord[dir]) < pos_tol)  temp_vec.push_back(node1);
+	  if ( std::abs( (*node1)(dir) - min_coord[dir]) < pos_tol)
+	    temp_vec.push_back(node1);
 	}
       }
     }

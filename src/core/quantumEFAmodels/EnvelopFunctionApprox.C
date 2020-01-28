@@ -1188,8 +1188,6 @@ void EnvelopFunctionApprox::do_solve_for_kpoint(const Point& k_point)
 void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 {
 
-  apply_bc();
-
   _H_real->zero();
   _H_imag->zero();
   _S_real->zero();
@@ -1493,10 +1491,11 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
         dof_indices_tmp = dof_indices;
         dof_map.constrain_element_matrix(ham_real, dof_indices_tmp, false);
-        new_dof_indices.resize(dof_indices_tmp.size());
+        new_dof_indices = dof_indices_tmp;
 
         dof_indices_tmp = dof_indices;
         dof_map.constrain_element_matrix(ham_imag, dof_indices_tmp, false);
+
 
         for (unsigned int i=0; i< new_dof_indices.size(); i++)
         {
@@ -1508,15 +1507,24 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
             //cerr << "arg = " << arg << " " << get_k_point() << " " << get_periodicity_vector(dof_indices_tmp[i]) << endl;
             //constrained.insert(i);
             double sign = ham_real(i,i) / abs(ham_real(i,i));
-            ham_real(i,i) += sign * penalty;
+
             for (int j = 0; j < ham_real.n(); j++)
             {
-              DofConstraintRow::iterator constr(
-                  (it->second).find(dof_indices_tmp[j]));
-              if (constr != (it->second).end())
               {
-                ham_real(i,j) -= sign * penalty * real(phase) * constr->second;
-                ham_imag(i,j) -= sign * penalty * imag(phase) * constr->second;
+                DofConstraintRow::iterator constr(
+                    (it->second).find(dof_indices_tmp[j]));
+                if (constr != (it->second).end())
+                {
+                  if (j == i)
+                  {
+                    ham_real(i,i) += sign * penalty * constr->second;
+                  }
+                  else
+                  {
+                    ham_real(i,j) -= sign * penalty * real(phase) * constr->second;
+                    ham_imag(i,j) -= sign * penalty * imag(phase) * constr->second;
+                  }
+                }
               }
             }
           }
