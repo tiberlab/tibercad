@@ -98,8 +98,8 @@ void FEMEigenvalueProblem::make_constraints(void)
   {
       
 
-    MeshBase::const_element_iterator       elem_it  = get_mesh().elements_begin();
-    const MeshBase::const_element_iterator elem_end = get_mesh().elements_end();
+    MeshBase::const_element_iterator       elem_it  = this->active_local_elements_begin();
+    const MeshBase::const_element_iterator elem_end = this->active_local_elements_end();
       
     for ( ; elem_it != elem_end; ++elem_it)
       FEInterface::compute_constraints (my_dof_constraints,
@@ -725,7 +725,8 @@ void FEMEigenvalueProblem::apply_periodic_bc()
 		
 
 
-		  if (! dof_map.is_constrained_dof(n_dof) ) //only if the dof is not constrained do the job
+                  //only if the dof is not constrained and not a dirichlet node do the job
+		  if (!(dof_map.is_constrained_dof(n_dof) || dirichlet_dofs.count(n_dof)))
 		    {
 		      //let us make a  point that lies at the opposite side
 		      Point point2(*node1);
@@ -831,8 +832,7 @@ void FEMEigenvalueProblem::make_nodes_periodic()
  
   nodes_periodic.clear();
 
- 
-  
+  unsigned int system_number = system->number();
 
   for (unsigned dir = 0; dir <=dim-1; dir++)
   {//directions
@@ -844,7 +844,7 @@ void FEMEigenvalueProblem::make_nodes_periodic()
       for (unsigned int n = 0; n < get_mesh().n_nodes(); n++) // Loop over all the nodes
       {
 	const Node* node1 = & (get_mesh().node(n));
-	if (node1->active())
+	if (node1->n_dofs(system_number) > 0)
 	{		
 	  if ( std::abs( (*node1)(dir) - min_coord[dir]) < pos_tol)  temp_vec.push_back(node1);
 	}
