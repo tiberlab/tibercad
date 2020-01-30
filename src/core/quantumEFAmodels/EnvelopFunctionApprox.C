@@ -1491,7 +1491,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
         dof_indices_tmp = dof_indices;
         dof_map.constrain_element_matrix(ham_real, dof_indices_tmp, false);
-        new_dof_indices = dof_indices_tmp;
+        new_dof_indices.resize(dof_indices_tmp.size());
 
         dof_indices_tmp = dof_indices;
         dof_map.constrain_element_matrix(ham_imag, dof_indices_tmp, false);
