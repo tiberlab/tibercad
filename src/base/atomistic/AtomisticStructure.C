@@ -1650,6 +1650,14 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
           (reg_i == reg_j))
         continue;
 
+      const Material* mat1 = _device->get_material(reg_i);
+      const Material* mat2 = _device->get_material(reg_j);
+
+      // TODO
+      // we assume here that only couplings foreseen in the material can appear
+      if (mat1->get_name() == mat2->get_name())
+        continue;
+
       Utils::Couple<ID> couple(reg_i, reg_j);
       Utils::Couple<Specie> sp_couple(_atoms[i].get_specie(),
           _atoms[bondmap[i][j]].get_specie());
@@ -1670,9 +1678,6 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
       }
 
       processed.insert(make_pair(couple, sp_couple));
-
-      const Material* mat1 = _device->get_material(reg_i);
-      const Material* mat2 = _device->get_material(reg_j);
 
       // Put interfaces in increasing order
       if (material_map[mat1] > material_map[mat2])
