@@ -1,4 +1,4 @@
-function plot_unfolded_bandstructure(filename, Emin, Emax, dE, unfold)
+function plot_unfolded_bandstructure(filename, Emin, Emax, dE, unfold, labels)
 % PLOT_UNFOLDED_BANDSTRUCTURE plot a band structure calculated 
 %   in tibercad using the unfold_to flag
 %
@@ -39,7 +39,6 @@ for ik=1:length(k)
   end
 end
 
-figure;
 [X,Y] = meshgrid(k, E);
 pcolor(X, Y, real(A))
 %shading flat
@@ -49,6 +48,11 @@ colormap('hot')
 %colormap(1-m);
 %hold on
 %plot(k, Epc, 'r');
+
+if (exist('labels', 'var'))
+  xticks(labels.value);
+  xticklabels(labels.name);
+end
 
 %figure;
 %hold on
