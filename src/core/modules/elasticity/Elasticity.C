@@ -167,11 +167,14 @@ Elasticity::do_solve(void)
   double tot_norm = 0.0;
   double energy = 0.0;
 
-  //if ((SimulationOptions::verbose() > 2) &&  myopt.shape_iterations>1)
-  // {
-  //  cout<<"| Iteration | Elastic energy [J] | norm(u) [m] | Energy error [%] | Displ error [%] |"<<endl;
-  //  cout<<"-----------------------------------------------------------------------------------------------"<<endl;
-  // }
+  if ((SimulationOptions::verbose() > 1) &&  myopt.shape_iterations>1)
+  {
+    Messages::newline();
+    ostringstream os;
+    os << "| Iteration | Elastic energy [J] | ||u|| [m.u.] | dE [%] | du [m.u.] |\n";
+    os << "-------------------------------------------------------------------------------------";
+    Messages::info(os.str());
+  }
 
 
   int max_iterations = 0;
@@ -184,6 +187,9 @@ Elasticity::do_solve(void)
 
   do {
 
+    Messages m;
+    m.indent();
+
     accumulate_strain();
     if (myopt.non_linear_strain == true)
       apply_shape_deformation();
@@ -195,24 +201,31 @@ Elasticity::do_solve(void)
     system.update();
     sol->add(1.0,*(system.current_local_solution));
     
-    double tot_norm = sol->l2_norm();
-    double norm = (system.solution)->l2_norm();
-    error_u = norm/tot_norm;
+    //double tot_norm = sol->l2_norm();
+    double tot_norm = sol->linfty_norm();
+    //double norm = (system.solution)->l2_norm();
+    double norm = (system.solution)->linfty_norm();
+    error_u = norm;
+    //error_u = norm/tot_norm;
 
     //The error is based on the elastic energy
-    //double elastic_energy = abs(compute_elastic_energy());
-    //error_energy = abs((new_energy - energy)/energy) * 100.0;
-    //energy = new_energ���y;
+    double elastic_energy = abs(compute_elastic_energy());
+    error_energy = abs((elastic_energy - energy)/energy) * 100.0;
+    energy = elastic_energy;
+
+    // apply_shape_deformation() leads to negative jacobian for certain structures??
+    shape_iteration += 1;
+
+    m.unindent();
 
     if ((verbose() > 1) && shape_iteration > 0)
     {
       ostringstream os;
-      os << "iteration " << shape_iteration << ":  Error =  " << error_u;
+      os << "|" << setw(10) << shape_iteration << " |" <<
+        setw(19) << energy << " |" << setw(13) << tot_norm << " |" <<
+        setw(7) << error_energy << " |" << setw(10) << error_u << " |";
       Messages::info(os.str());
     }
-
-    // apply_shape_deformation() leads to negative jacobian for certain structures??
-    shape_iteration += 1;
 
   } while ((error_u > myopt.shape_error) && (shape_iteration <= max_iterations));
 
@@ -592,11 +605,11 @@ Elasticity::compute_elastic_energy(void)
 
     std::vector<double> energy_p(qrule.n_points(),0.0);
     std::map<ID, std::vector<double> > values;
-    values[Energy] = energy_p;
+    values[EnergyDensity] = energy_p;
     get_solution_secure(elem, values, ref_points);
     
     for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
-      energy += JxW[qp] * values[Energy][qp];
+      energy += JxW[qp] * values[EnergyDensity][qp];
 
   }
 
