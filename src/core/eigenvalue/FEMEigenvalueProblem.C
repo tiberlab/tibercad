@@ -812,7 +812,7 @@ void FEMEigenvalueProblem::apply_periodic_bc()
 			    }
 			}
 
-		      constraint[n_dof] = sum;
+		      //constraint[n_dof] = sum;
 
 
 		       
