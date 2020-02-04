@@ -10,9 +10,11 @@ using namespace std;
 
 CompositeProfile::CompositeProfile(const ModelOptions& options) :
   ExternalProfile(options),
-  _peak(1.0)
+  _peak(1.0),
+  _offset(0.0)
 {
   _peak = get_option("peak_value", _peak);
+  _offset = get_option("offset", _offset);
 
   ModelOptions& opts = get_options();
   auto it = opts.submodels_begin("profile");
@@ -60,5 +62,5 @@ CompositeProfile::get_data(const Elem* elem, const Point& p) const
   for (auto&& it : _profiles)
     data *= it->get_data(elem, p);
 
-  return(_peak * data);
+  return(_peak * data + _offset);
 }

@@ -10,13 +10,15 @@ using namespace std;
 
 GaussianProfile::GaussianProfile(const ModelOptions& options) :
   ExternalProfile(options),
-  _max(0.0),
+  _max(1.0),
+  _offset(0.0),
   _sigma(1.0),
   _type(onesided),
   _direction(1, 0, 0),
   _origin(0)
 {
   _max = get_option("max", _max);
+  _offset = get_option("offset", _offset);
   get_option("origin", _origin);
   get_option("direction", _direction);
   _sigma = get_option("sigma", _sigma);
@@ -40,7 +42,7 @@ GaussianProfile::~GaussianProfile(void)
 pair<double, double>
 GaussianProfile::get_min_max(void) const
 {
-  return(make_pair(0.0, _max));
+  return(make_pair(0.0, _max + _offset));
 }
 
 
@@ -63,5 +65,5 @@ GaussianProfile::get_data(const Elem* elem, const Point& p) const
   if ((_type == continued) && (xcoord < 0))
     data = _max;
 
-  return data;
+  return(data + _offset);
 }

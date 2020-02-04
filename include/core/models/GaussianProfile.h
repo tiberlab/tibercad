@@ -30,6 +30,8 @@ class GaussianProfile : public ExternalProfile
 
     double _max;
 
+    double _offset;
+
     double _sigma;
 
     enum Type {

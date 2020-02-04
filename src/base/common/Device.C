@@ -450,7 +450,7 @@ Device::setup_regions(void)
 
       for (int i = 0; i < comp.size(); ++i)
       {
-        cerr << region_ids[i] << " -> " << comp[i] << endl;
+        //cerr << region_ids[i] << " -> " << comp[i] << endl;
 
         data.set_option("x", comp[i]);
         Material* mat = Material::create(material, data);
