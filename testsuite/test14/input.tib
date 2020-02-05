@@ -26,7 +26,7 @@ Module elasticity
 
   mesh_deformation = true
 
-  shape_error = 0.1
+  shape_error = 0.01
 
   Contact (Lower,Upper){type = clamp}
 
