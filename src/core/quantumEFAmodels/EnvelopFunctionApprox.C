@@ -1507,7 +1507,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
             //cerr << "arg = " << arg << " " << get_k_point() << " " << get_periodicity_vector(dof_indices_tmp[i]) << endl;
             //constrained.insert(i);
             double sign = ham_real(i,i) / abs(ham_real(i,i));
-
+            ham_real(i,i) += sign * penalty;
             for (int j = 0; j < ham_real.n(); j++)
             {
               {
@@ -1515,11 +1515,12 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
                     (it->second).find(dof_indices_tmp[j]));
                 if (constr != (it->second).end())
                 {
-                  if (j == i)
+                  /*if (j == i)
                   {
                     ham_real(i,i) += sign * penalty * constr->second;
                   }
                   else
+                  */
                   {
                     ham_real(i,j) -= sign * penalty * real(phase) * constr->second;
                     ham_imag(i,j) -= sign * penalty * imag(phase) * constr->second;
