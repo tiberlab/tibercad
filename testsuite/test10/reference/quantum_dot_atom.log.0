@@ -1,0 +1,568 @@
+
+Log start: Wed Feb  5 07:18:37 2020
+
+
+tiberCAD release 3.1.0 (rev. 4940, x86_64-linux)
+
+Input file: quantum_dot_atom.tib
+
+Initialize global simulation options
+  Simulation temperature: 300 K
+  Database search path  : /scratch/maufder/TiberCAD_testsuite/trunk/materials
+  Log file              : output/quantum_dot_atom.log.0
+
+Setup mesh
+  Reading mesh file 'box_in_cube.msh ...
+    mesh reading time: 0h 0m 0.1s
+    mesh preparation time: 0h 0m 0.019s
+    bd_regions preparation time: 0h 0m 2.5e-05s
+
+    mesh units          : 1e-09 m
+    mesh dimension      :       3
+    number of nodes     :    1113
+    number of elements  :    5960
+    number of subdomains:       5
+    number of boundaries:       2
+
+Create materials ...
+  Added material GaN for region 'ball' (mesh regions 1)
+    (using datafile /scratch/maufder/TiberCAD_testsuite/trunk/materials/GaN.dat)
+    x growth direction : (-1,2,-1,0)
+    y growth direction : (1,0,-1,0)
+    z growth direction : (0,0,0,-1)
+  Added material AlN for region 'qbox' (mesh regions 2)
+    (using datafile /scratch/maufder/TiberCAD_testsuite/trunk/materials/AlN.dat)
+    x growth direction : (-1,2,-1,0)
+    y growth direction : (1,0,-1,0)
+    z growth direction : (0,0,0,-1)
+  Added material AlN for region 'intrinsic' (mesh regions 5)
+    (using datafile /scratch/maufder/TiberCAD_testsuite/trunk/materials/AlN.dat)
+    x growth direction : (-1,2,-1,0)
+    y growth direction : (1,0,-1,0)
+    z growth direction : (0,0,0,-1)
+  Added material AlN for region 'nside' (mesh regions 3)
+    (using datafile /scratch/maufder/TiberCAD_testsuite/trunk/materials/AlN.dat)
+    x growth direction : (-1,2,-1,0)
+    y growth direction : (1,0,-1,0)
+    z growth direction : (0,0,0,-1)
+  Added material AlN for region 'pside' (mesh regions 4)
+    (using datafile /scratch/maufder/TiberCAD_testsuite/trunk/materials/AlN.dat)
+    x growth direction : (-1,2,-1,0)
+    y growth direction : (1,0,-1,0)
+    z growth direction : (0,0,0,-1)
+Creation of materials done.
+
+Setting up Cluster 'atomistic' containing regions 1, 2
+
+Building Atomistic Structure tb1
+  Create reference lattice: AlN
+  BondMap progress  done.
+  Build a first oversized structure
+  Make conventional cell
+  Relative origin of atomic structure: 1.11022e-16 1e-06 4.39363
+  Conventional cells along x, y, z: 12 7 8
+
+  Setup of grid mapper: 0h 0m 0.011s, memory usage: 0 MB 730336
+  Assign elements progress  done.
+  Assign Species progress  done.
+  Check periodicity ... 
+    BondMap progress  done.
+    Adding needed atoms for correct passivation
+  done
+  Rebuild bondmap
+  BondMap progress  done.
+  Starting passivation...
+  Cut & Passivation done
+  Build final Bond Map...
+  BondMap progress  done.
+  Atomistic structure build time: 0h 0m 1.6s
+
+  Atomistic Structure containing 8111 atoms has been built. 
+  Size not counting passivation hydrogens: 6435
+  Supercell structure
+  Lattice vectors (A):
+    a1 = (74.6880 0.00000 0.00000 )
+    a2 = (0.00000 75.4620 0.00000 )
+    a3 = (0.00000 0.00000 79.7120 )
+    Output structure(s)
+
+Setting up simulation of type 'empirical_tb' ...
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/empirical_tb/empirical_tb.so)
+Creating bulk models... 
+  Region: ball
+  Region: qbox
+
+Setting up simulation of type 'empirical_tb' ...
+Creating bulk models... 
+  Region: ball
+  Region: qbox
+
+Setting up simulation of type 'elasticity' ...
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/elasticity/elasticity.so)
+  Adding boundary 'cathode'
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/elasticity/ebnd_clamp.so)
+Creating bulk models... 
+  Region: ball
+  Region: qbox
+  Region: nside
+  Region: pside
+  Region: intrinsic
+
+Setting up simulation of type 'driftdiffusion' ...
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/driftdiffusion/driftdiffusion.so)
+  Adding boundary 'anode'
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/driftdiffusion/ddbnd_ohmic.so)
+  Adding boundary 'cathode'
+Creating bulk models... 
+  Region: ball
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/driftdiffusion/ddbulk_default.so)
+  Region: qbox
+  Region: nside
+  Region: pside
+  Region: intrinsic
+(using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/driftdiffusion/recombination_srh.so)
+(using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/driftdiffusion/recombination_direct.so)
+
+Setting up simulation of type 'opticstb' ...
+Creating bulk models... 
+  Region: ball
+  Region: qbox
+
+Setting up bulk models ...
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/elasticity/stiffness_anisotropic.so)
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/elasticity/body_force_lattice_mismatch.so)
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/driftdiffusion/band_properties.so)
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/permittivity_constant.so)
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/polarization_pyro.so)
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/polarization_piezo.so)
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/driftdiffusion/mobility_doping_dependent.so)
+    (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/density_of_states_bulk_kp.so)
+    (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/driftdiffusion/mobility_constant.so)
+
+Setting up lower dimensional (boundary) models ...
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for tb (empirical_tb)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+Symmetry of k space: Gamma
+k-space initialized
+
+*** Warning: Empirical tight binding calculations are preformed at T=0
+(tb) creating map elem->atoms
+(tb) database path: /scratch/maufder/TiberCAD_testsuite/trunk/materials
+(tb) default  path: /scratch/maufder/TiberCAD_testsuite/trunk/materials
+(tb) work path: output
+(tb) output path: output
+
+*** Warning: found unused options in block Solver: long_tolerance, num_conduction_eigenvalues, num_valence_eigenvalues
+
+Available solution variables:
+------------------------------------------------------------------
+Name                     Units          Type      Association Plot
+------------------------------------------------------------------
+MeshStates               1/cm^3         n-tuple   cell        n
+MeshStatesNodes          1/cm^3         n-tuple   nodal       n
+eDensity                 q/cm^3         real      nodal       n
+hDensity                 q/cm^3         real      nodal       n
+RegionIDs                               real      cell        n
+------------------------------------------------------------------
+
+Output directory      : output
+Output file format    : vtk
+Output file basename  : tb
+
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for tb2 (empirical_tb)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+Symmetry of k space: Gamma
+k-space initialized
+
+*** Warning: Empirical tight binding calculations are preformed at T=0
+(tb2) creating map elem->atoms
+(tb2) database path: /scratch/maufder/TiberCAD_testsuite/trunk/materials
+(tb2) default  path: /scratch/maufder/TiberCAD_testsuite/trunk/materials
+(tb2) work path: output
+(tb2) output path: output
+
+*** Warning: found unused options in block Solver: load_path, load_states, long_tolerance, num_conduction_eigenvalues, num_valence_eigenvalues
+
+Available solution variables:
+------------------------------------------------------------------
+Name                     Units          Type      Association Plot
+------------------------------------------------------------------
+MeshStates               1/cm^3         n-tuple   cell        n
+MeshStatesNodes          1/cm^3         n-tuple   nodal       y
+eDensity                 q/cm^3         real      nodal       n
+hDensity                 q/cm^3         real      nodal       n
+RegionIDs                               real      cell        n
+------------------------------------------------------------------
+
+Output directory      : output
+Output file format    : vtk
+Output file basename  : tb2
+
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for str (elasticity)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+
+Available solution variables:
+------------------------------------------------------------------
+Name                     Units          Type      Association Plot
+------------------------------------------------------------------
+Strain                                  tensor    nodal       y
+StrainCell                              tensor    cell        n
+StrainCrystal                           tensor    nodal       n
+Stress                   GPa            tensor    nodal       n
+RelativeStrain                          tensor    nodal       n
+StressCrystal                           tensor    nodal       n
+Displacement             m              vector    nodal       n
+ForceSource              N/m3           tensor    nodal       n
+StrainSource                            tensor    nodal       n
+StressSource             GPa            tensor    nodal       n
+HydrostaticStrain                       real      nodal       n
+EnergyDensity            J/m^3          real      nodal       n
+RegionIDs                               real      cell        n
+------------------------------------------------------------------
+
+Output directory      : output
+Output file format    : vtk
+Output file basename  : str
+
+
+# Region ball, GaN
+  Stiffness Constants (GPa, in calculation coordinate system):
+    C11 = 367 C12 = 135 C13 = 103 C33 = 405 C44 = 95
+
+# Region intrinsic, AlN
+  Stiffness Constants (GPa, in calculation coordinate system):
+    C11 = 396 C12 = 137 C13 = 108 C33 = 373 C44 = 116
+
+# Region nside, AlN
+  Stiffness Constants (GPa, in calculation coordinate system):
+    C11 = 396 C12 = 137 C13 = 108 C33 = 373 C44 = 116
+
+# Region pside, AlN
+  Stiffness Constants (GPa, in calculation coordinate system):
+    C11 = 396 C12 = 137 C13 = 108 C33 = 373 C44 = 116
+
+# Region qbox, AlN
+  Stiffness Constants (GPa, in calculation coordinate system):
+    C11 = 396 C12 = 137 C13 = 108 C33 = 373 C44 = 116
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for dd (driftdiffusion)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+
+Available solution variables:
+------------------------------------------------------------------
+Name                     Units          Type      Association Plot
+------------------------------------------------------------------
+Ec                       eV             real      nodal       y
+Ev                       eV             real      nodal       y
+eQFermi                  eV             real      nodal       y
+hQFermi                  eV             real      nodal       y
+ElPotential              V              real      nodal       y
+Ec0                      eV             real      nodal       n
+Ev0                      eV             real      nodal       n
+Eg                       eV             real      nodal       n
+ConductionBands          eV             n-tuple   cell        n
+ValenceBands             eV             n-tuple   cell        n
+eDensity                 cm^-3          real      nodal       y
+hDensity                 cm^-3          real      nodal       y
+ChargeDensity            cm^-3          real      nodal       n
+eMobility                cm^2/(V*s)     real      nodal       n
+hMobility                cm^2/(V*s)     real      nodal       n
+eConductivity            S/cm           real      nodal       n
+hConductivity            S/cm           real      nodal       n
+ElField                  V/cm           vector    cell        y
+Polarization             C/m^2          vector    cell        y
+Displacement             C/m^2          vector    cell        n
+CurrentDensity           A/cm^2         vector    cell        n
+eCurrentDensity          A/cm^2         vector    cell        n
+hCurrentDensity          A/cm^2         vector    cell        n
+IonizedDonors            cm^-3          real      nodal       n
+IonizedAcceptors         cm^-3          real      nodal       n
+IonizedElectronTraps     cm^-3          real      nodal       n
+IonizedHoleTraps         cm^-3          real      nodal       n
+eThElPower               eV/K           real      nodal       n
+hThElPower               eV/K           real      nodal       n
+eJoule                   W/cm^3         real      nodal       n
+hJoule                   W/cm^3         real      nodal       n
+ePowerFlux               W/cm^2         vector    nodal       n
+hPowerFlux               W/cm^2         vector    nodal       n
+ePeltier                 W/cm^3         real      nodal       n
+hPeltier                 W/cm^3         real      nodal       n
+RecombHeat               W/cm^3         real      nodal       n
+IQE                                     real      none        n
+ArtificialDiffusion                     real      nodal       n
+eNetRecombination        1/(s*cm^3)     real      nodal       n
+eSRHRecombination        1/(s*cm^3)     real      nodal       n
+eDirectRecombination     1/(s*cm^3)     real      nodal       n
+hNetRecombination        1/(s*cm^3)     real      nodal       n
+hSRHRecombination        1/(s*cm^3)     real      nodal       n
+hDirectRecombination     1/(s*cm^3)     real      nodal       n
+anode.current            A              real      none        n
+cathode.current          A              real      none        n
+RegionIDs                               real      cell        n
+------------------------------------------------------------------
+
+Output directory      : output
+Output file format    : vtk
+Output file basename  : dd
+
+
+solving for : poisson electrons holes 
+using local scaling
+
+# Region ball, GaN
+  Conduction band:
+    DOS: bulk_kp
+      band edge :  2.72727
+      eff. mass :  0.203325
+      degeneracy:  2
+    Ec = 2.72727, Nc = 2.30069e+18 cm^-3
+    m_dos = 0.203325, v_th = 2.59014e+07 cm/s
+  Valence band:
+    DOS: bulk_kp
+      band edge :  -0.732132  -0.715528  -0.71033
+      eff. mass :  0.414872  0.364748  0.498748
+      degeneracy:  2  2  2
+    Ev = -0.71033, Nv = 6.70569e+18 cm^-3
+    m_dos = 0.498748, v_th = 1.65378e+07 cm/s
+  Eg = 3.4376, Ef0 = 2.5271, ni = 8.16029e-11
+
+# Region intrinsic, AlN
+  Conduction band:
+    DOS: bulk_kp
+      band edge :  4.63257
+      eff. mass :  0.306524
+      degeneracy:  2
+    Ec = 4.63257, Nc = 4.25862e+18 cm^-3
+    m_dos = 0.306524, v_th = 2.10953e+07 cm/s
+  Valence band:
+    DOS: bulk_kp
+      band edge :  -1.70179  -1.68866  -1.52554
+      eff. mass :  1.12097  1.13158  1.59317
+      degeneracy:  2  2  2
+    Ev = -1.52554, Nv = 2.97826e+19 cm^-3
+    m_dos = 1.59317, v_th = 9.25312e+06 cm/s
+  Eg = 6.15811, Ef0 = 4.47577, ni = 2.75756e-33
+
+# Region nside, AlN
+  Conduction band:
+    DOS: bulk_kp
+      band edge :  4.63257
+      eff. mass :  0.306524
+      degeneracy:  2
+    Ec = 4.63257, Nc = 4.25862e+18 cm^-3
+    m_dos = 0.306524, v_th = 2.10953e+07 cm/s
+  Valence band:
+    DOS: bulk_kp
+      band edge :  -1.70179  -1.68866  -1.52554
+      eff. mass :  1.12097  1.13158  1.59317
+      degeneracy:  2  2  2
+    Ev = -1.52554, Nv = 2.97826e+19 cm^-3
+    m_dos = 1.59317, v_th = 9.25312e+06 cm/s
+  Eg = 6.15811, Ef0 = 4.58198, ni = 2.69389e-33
+
+# Region pside, AlN
+  Conduction band:
+    DOS: bulk_kp
+      band edge :  4.63257
+      eff. mass :  0.306524
+      degeneracy:  2
+    Ec = 4.63257, Nc = 4.25862e+18 cm^-3
+    m_dos = 0.306524, v_th = 2.10953e+07 cm/s
+  Valence band:
+    DOS: bulk_kp
+      band edge :  -1.70179  -1.68866  -1.52554
+      eff. mass :  1.12097  1.13158  1.59317
+      degeneracy:  2  2  2
+    Ev = -1.52554, Nv = 2.97826e+19 cm^-3
+    m_dos = 1.59317, v_th = 9.25312e+06 cm/s
+  Eg = 6.15811, Ef0 = 4.58198, ni = 2.69389e-33
+
+# Region qbox, AlN
+  Conduction band:
+    DOS: bulk_kp
+      band edge :  4.63257
+      eff. mass :  0.306524
+      degeneracy:  2
+    Ec = 4.63257, Nc = 4.25862e+18 cm^-3
+    m_dos = 0.306524, v_th = 2.10953e+07 cm/s
+  Valence band:
+    DOS: bulk_kp
+      band edge :  -1.70179  -1.68866  -1.52554
+      eff. mass :  1.12097  1.13158  1.59317
+      degeneracy:  2  2  2
+    Ev = -1.52554, Nv = 2.97826e+19 cm^-3
+    m_dos = 1.59317, v_th = 9.25312e+06 cm/s
+  Eg = 6.15811, Ef0 = 4.4165, ni = 2.75858e-33
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for opt (opticstb)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+Setting up k-space integration
+  Doing Gamma point calculation
+  Symmetry of k space: Gamma
+  cell volume for normalization : 1 nm
+
+Available solution variables:
+------------------------------------------------------------------
+Name                     Units          Type      Association Plot
+------------------------------------------------------------------
+OpticalPower             W              real      none        n
+Recombination            1/s            real      none        n
+PeakEnergy               eV             real      none        n
+RegionIDs                               real      cell        n
+------------------------------------------------------------------
+
+Output directory      : output
+Output file format    : grace
+Output file basename  : opt
+
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+We solve: str dd tb tb2 opt 
+
+>>>>---------------------------------- (str) -----------------------------------
+
+  | Iteration | Elastic energy [J] | ||u|| [m.u.] | dE [%] | du [m.u.] |
+  -------------------------------------------------------------------------------------
+    BondMap progress  done.
+    New periodicity (ratios : 1 1 1)
+    (x,y,z)=(  74.688,        0,        0)
+    (x,y,z)=(       0,   75.462,        0)
+    (x,y,z)=(       0,        0,   79.712)
+  |         1 |        1.64736e+09 |    0.0208306 |    inf | 0.0208306 |
+    BondMap progress  done.
+    New periodicity (ratios : 1.00145 1.00146 1.00298)
+    (x,y,z)=( 74.7965,        0,        0)
+    (x,y,z)=(       0,  75.5721,        0)
+    (x,y,z)=(       0,        0,  79.9494)
+  |         2 |        1.68433e+09 |      0.02102 |2.24397 |0.00019816 |
+
+Solve time: 0h 0m 5.1s
+<<<<----------------------------------------------------------------------------
+
+>>>>----------------------------------- (dd) -----------------------------------
+  Setting max_iterations for nonlinear solver to 150
+  Solving equilibrium
+  it 1, |du| = 84.2036, |r| = 8.74835  alpha = 1
+  it 2, |du| = 14.6809, |r| = 0.519524  alpha = 1
+  it 3, |du| = 1.66015, |r| = 0.0428846  alpha = 1
+  it 4, |du| = 0.101637, |r| = 0.000229314  alpha = 1
+  it 5, |du| = 0.000423872, |r| = 5.699e-09  alpha = 1
+
+  iterations: 6, |du| = 8.85783e-09, |r| = 3.51554e-13
+  Equilibrium done
+
+Solve time: 0h 0m 9.6s
+<<<<----------------------------------------------------------------------------
+
+>>>>----------------------------------- (tb) -----------------------------------
+  (tb) get band edges from model: dd
+        CB min = -1.45769  VB max = -4.70022
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using lanczos
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -5.05023 Fermi          0          0
+  1 el -0.620721 Fermi          0          1
+
+
+Solve time: 0h 4m 56s
+<<<<----------------------------------------------------------------------------
+(tb) compute atom-projected charges
+(tb) print atom-projected charges on files
+(tb) write wave functions on files
+
+>>>>---------------------------------- (tb2) -----------------------------------
+  (tb2) get band edges from model: dd
+        CB min = -1.45769  VB max = -4.70022
+  Assign Virtual Species
+  Printing upg file
+
+*** Warning: found unused options in block Solver: load_states
+  (tb2) reading old states
+  ...done
+  (tb2) consistency check:
+  (tb2) solving using lanczos
+   
+  (tb2) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -5.05023 Fermi          0          0
+  1 hl -5.05023 Fermi          0          0
+  2 el -0.620721 Fermi          0          1
+  3 el -0.620721 Fermi          0          1
+
+
+Solve time: 0h 6m 9s
+<<<<----------------------------------------------------------------------------
+(tb2) compute atom-projected charges
+(tb2) print atom-projected charges on files
+(tb2) write wave functions on files
+
+>>>>---------------------------------- (opt) -----------------------------------
+  (tb2) get band edges from model: dd
+        CB min = -1.45769  VB max = -4.70022
+  Assign Virtual Species
+  Printing upg file
+
+*** Warning: found unused options in block Solver: load_states
+  (tb2) reading old states
+  ...done
+  (tb2) consistency check:
+  (tb2) solving using lanczos
+   
+  (tb2) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -5.05023 Fermi          0          0
+  1 hl -5.05023 Fermi          0          0
+  2 el -0.620721 Fermi          0          1
+  3 el -0.620721 Fermi          0          1
+
+  calculation of matrix elements for dipole optical transition...
+  (OPT) write matrix elements in output/opt.dat
+  Total emitted power     : 2.95708e-09 W
+  Total recombination rate: 4.16625e+09 1/s
+  Peak emission energy    : 4.43 eV
+
+Solve time: 0h 0m 4.3s
+<<<<----------------------------------------------------------------------------
+
+Total solve time: 0h 11m 51s
+Simulation finished.
+
+6 warnings during run
+0 errors detected
+
+
+Log end: Wed Feb  5 07:30:31 2020
+
+
