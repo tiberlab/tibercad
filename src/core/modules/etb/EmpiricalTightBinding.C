@@ -153,7 +153,7 @@ ETB::UptSolverOptions::~UptSolverOptions(void)
 void
 ETB::do_init(void){
 
-  std::cerr << "("+get_name()+") Empirical TB Initialisation..." << std::endl;
+  //std::cerr << "("+get_name()+") Empirical TB Initialisation..." << std::endl;
 
   inst = UptWrapper::create();
 
@@ -210,7 +210,7 @@ ETB::do_init(void){
 
   build_map_elem_atoms(_upt_options.projection_length);
 
-  cerr << "done\n";
+  //cerr << "done\n";
 
   Messages::info("("+get_name()+") database path: "+database_path);
   Messages::info("("+get_name()+") default  path: "+default_path);
@@ -763,7 +763,6 @@ ETB::call_uptight(void)
   else if (_dim == 3) units = "/cm^3";
   declare_solution(MeshStates, NTUPLE, CELL, "1"+units, _solution_size);
   declare_solution(MeshStatesNodes, NTUPLE, NODES, "1"+units, _solution_size);
-
 }
 
 //-------------------------------------------------------------------------
@@ -1478,7 +1477,7 @@ ETB::do_project_to_primitive_cell(const eigen_problem_solution& a,
   int n_spin = _upt_options.relat_flag ? 2 : 1;
 
   vector<int> orbitals_i;
-  vector<int> orbitals_j;
+  vector<int>& orbitals_j = orbitals_i;
 
   size_t id_i = 0;
 
@@ -1494,8 +1493,8 @@ ETB::do_project_to_primitive_cell(const eigen_problem_solution& a,
       if (atom[i].get_label() == atom[j].get_label())
       {
 
-      orbitals_j.resize(_ion_num_orbitals[j] / n_spin);
-      inst->get_ion_orbitals(j+1, orbitals_j);
+      //orbitals_j.resize(_ion_num_orbitals[j] / n_spin);
+      //inst->get_ion_orbitals(j+1, orbitals_j);
 
       Point d(atom[i].get_position());
       d.subtract(atom[j].get_position());
@@ -1507,9 +1506,10 @@ ETB::do_project_to_primitive_cell(const eigen_problem_solution& a,
 
       for (size_t orb_i = 0; orb_i < orbitals_i.size(); ++orb_i)
       {
-        for (size_t orb_j = 0; orb_j < orbitals_j.size(); ++orb_j)
+        //for (size_t orb_j = 0; orb_j < orbitals_j.size(); ++orb_j)
+        size_t orb_j = orb_i;
         {
-          if (orbitals_i[orb_i] == orbitals_j[orb_j])
+          //if (orbitals_i[orb_i] == orbitals_j[orb_j])
           {
             value += a.eigen_vector[id_i + orb_i] *
                 libmesh_conj(a.eigen_vector[id_j + orb_j]);
