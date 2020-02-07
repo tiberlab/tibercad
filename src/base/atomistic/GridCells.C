@@ -7,6 +7,7 @@
 
 
 GridCells::GridCells(const std::vector<Atom>& basis, const Tensor2Gen& period,
+    const libMesh::Point& origin,
     const double minimum_spacing, unsigned int projected_dim)
 {
   _period = period;
@@ -45,7 +46,10 @@ GridCells::GridCells(const std::vector<Atom>& basis, const Tensor2Gen& period,
   //define_edges(basis);
   // we assume that the first atom is in the corner, and the periodicity
   // spans the structure
-  _edge_min = basis[0].get_ttype_position();
+  //_edge_min = basis[0].get_ttype_position();
+  _edge_min(1) = origin(0);
+  _edge_min(2) = origin(1);
+  _edge_min(3) = origin(2);
 
   // TODO project onto basis vectors
 

@@ -24,7 +24,8 @@ AtomisticBasis::~AtomisticBasis(void)
 AtomisticBasis::AtomisticBasis(void)
 :_bondmap(nullptr),
  _lattice_vectors(9,0.0),
- _periodicity({0, 0, 0})
+ _periodicity({0, 0, 0}),
+ _origin(0)
 {
 
 }
@@ -35,7 +36,8 @@ AtomisticBasis::AtomisticBasis(const AtomisticBasis& other) :
   _atoms(other._atoms),
   _lattice_vectors(other._lattice_vectors),
   _atom_types(other._atom_types),
-  _periodicity(other._periodicity)
+  _periodicity(other._periodicity),
+  _origin(other._origin)
 {
 }
 
@@ -140,7 +142,7 @@ AtomisticBasis::build_bond_map(bool periodicity[3]) const
       period(j + 1, i + 1) = scale * _lattice_vectors[i*3 + j];
     }
   }
-  bm->do_solve(_atoms, period);
+  bm->do_solve(_atoms, period, _origin);
 
   return bm;
 }
@@ -163,7 +165,7 @@ AtomisticBasis::build_bond_map(void)
           period(j + 1, i + 1) = _lattice_vectors[i*3 + j];
         }
     }
-  _bondmap->do_solve(_atoms, period);
+  _bondmap->do_solve(_atoms, period, _origin);
 
 }
 

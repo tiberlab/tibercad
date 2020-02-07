@@ -2851,7 +2851,9 @@ SimulationInterface::build_map_elem_atoms(double sigma, double cutoff)
 
   // Partition the structure into cells for O(N) scheme
   Tensor2Gen period = get_atomistic_structure()->get_ttype_lattice_vectors(); 
-  GridCells cells(structure, period, deltar_max, get_mesh().mesh_dimension());
+  GridCells cells(structure, period,
+      get_atomistic_structure()->get_origin(),
+      deltar_max, get_mesh().mesh_dimension());
   //cells.print_statistics();
 
   unsigned int notassociated = 0;

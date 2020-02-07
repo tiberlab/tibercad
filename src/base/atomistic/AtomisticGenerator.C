@@ -346,6 +346,8 @@ AtomisticGenerator::finalize(void)
   
   _as->set_structure_atoms(_structure_basis);
   
+  // origin has already been set
+
   _as->set_ttype_lattice_vectors(_period);
  
   //_as->set_periodicity(_periodicity);
@@ -1308,7 +1310,7 @@ void  AtomisticGenerator::bond_map_gen(const std::vector<Atom>& basis){
   //os.str(std::string());
   //---------------------------------------------------------------------------
 
-  _bondmap->do_solve(basis, _period);
+  _bondmap->do_solve(basis, _period, _as->get_origin());
 
 }
 

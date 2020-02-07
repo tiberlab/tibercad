@@ -150,10 +150,14 @@ class AtomisticBasis
    */
   bool is_periodic(unsigned int direction) const;
 
-  //void set_periodic(bool periodic) {};
-
   //! Tells if the structure is periodic in any direction
   bool is_periodic(void) const;
+
+  //! Set the origin
+  void set_origin(const libMesh::Point& origin);
+
+  //! Get the origin of the structure
+  const libMesh::Point& get_origin(void) const;
 
   const Atom& operator[](unsigned int i) const;
 
@@ -214,6 +218,9 @@ class AtomisticBasis
 
   //! Periodicity for each direction
   std::vector<bool> _periodicity;
+
+  //! The origin for the structure
+  libMesh::Point _origin;
 
 
   public:
@@ -312,6 +319,22 @@ AtomisticBasis::set_periodicity(bool px, bool py, bool pz)
   _periodicity[1] = py;
   _periodicity[2] = pz;
 }
+
+inline
+void
+AtomisticBasis::set_origin(const libMesh::Point& origin)
+{
+  _origin = origin;
+}
+
+
+inline
+const libMesh::Point&
+AtomisticBasis::get_origin(void) const
+{
+  return(_origin);
+}
+
 
 
 inline

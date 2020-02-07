@@ -48,7 +48,6 @@ AtomisticStructure::AtomisticStructure(const std::string& name)
 :_name(name),
  _atomistic_structure_options(),
  _scale(1.0),
- _origin(0),
  _device(NULL),
  _random_alloy(false),
  _N_without_H(0)
@@ -60,7 +59,6 @@ AtomisticStructure::AtomisticStructure(const AtomisticStructure& other) :
   _options(other._options),
   _name(other._name),
   _scale(other._scale),
-  _origin(other._origin),
   _IDset(other._IDset),
   _is_initialized(other._is_initialized),
   _random_alloy(other._random_alloy),

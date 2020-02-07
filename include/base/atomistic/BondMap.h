@@ -41,7 +41,8 @@ public:
 
 
   //!Calculates bond map
-  void do_solve(const std::vector<Atom>& basis, const Tensor2Gen& period);
+  void do_solve(const std::vector<Atom>& basis,
+      const Tensor2Gen& period, const libMesh::Point& origin);
 
   //! Define edges of atomic basis
   static

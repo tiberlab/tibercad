@@ -22,6 +22,7 @@ class GridCells
   class NeighborIterator;
 
   GridCells(const std::vector<Atom>& basis, const Tensor2Gen& period,
+      const libMesh::Point& origin,
       const double minimum_spacing, unsigned int projected_dim = 3);
 
   ~GridCells(void);
