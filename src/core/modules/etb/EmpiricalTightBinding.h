@@ -179,8 +179,10 @@ class ETB : public TightBinding
   virtual void setup_atomistic_structure(void);
 
   //! Implementation of projection on different BZ
-  virtual libMesh::Complex do_project_to_primitive_cell(
-      const eigen_problem_solution& a, const libMesh::Point& k) const;
+  virtual void do_project_to_primitive_cell(
+      const std::vector<eigen_problem_solution>& a,
+      const std::vector<libMesh::Point>& kpoints,
+      std::vector<std::vector<libMesh::Complex>>& weights) const override;
 
   //Mesh dimension (used many times by charge projection function)
   int _dim;

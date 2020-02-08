@@ -762,18 +762,38 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
       solve_for_kpoint(k_point);
 
     number_of_eigs = get_num_states();
+    Utils::Timer tt;
+
+    // weight for each k and each eigenstate
+    vector<vector<Complex>> weights;
 
     for (unsigned int j = 0; j < _dispersion[i].size(); j++)
     {
       for (auto&& k : K_to_k[i])
       {
         _dispersion[k][j] = _solution[j].eigen_energy;
+      }
+    }
 
-        if (_projection_weights.size() > 0)
+    if (_projection_weights.size() > 0)
+    {
+      vector<Point> kpoints;
+      for (auto&& k : K_to_k[i])
+        kpoints.push_back(kmesh->point(k));
+
+      ostringstream os;
+      project_to_primitive_cell(_solution, kpoints, weights);
+      os << "time for projection : " << tt.elapsed_string();
+      Messages::info(os.str());
+
+      for (unsigned int j = 0; j < _dispersion[i].size(); j++)
+      {
+        int id = 0;
+        for (auto&& k : K_to_k[i])
         {
-          Complex w = project_to_primitive_cell(_solution[j], kmesh->point(k));
-          w /= G.size();
-          _projection_weights[k][j] = libmesh_real(w);
+          double w = libmesh_real(weights[id][j]) / G.size();
+          _projection_weights[k][j] = w;
+          ++id;
         }
       }
 
@@ -902,13 +922,28 @@ EigenvalueProblem::plot_globaldata(void)
 
 }
 
-
-
-libMesh::Complex
-EigenvalueProblem::do_project_to_primitive_cell(const eigen_problem_solution& ,
-    const Point& ) const
+void
+EigenvalueProblem::project_to_primitive_cell(
+    const vector<eigen_problem_solution>& a,
+    const vector<libMesh::Point>& kpoints,
+    vector<vector<libMesh::Complex>>& weights) const
 {
-  return(1);
+  weights.resize(0);
+  weights.resize(kpoints.size(), vector<Complex>(a.size(), 0.0));
+
+  do_project_to_primitive_cell(a, kpoints, weights);
+}
+
+
+void
+EigenvalueProblem::do_project_to_primitive_cell(
+    const vector<eigen_problem_solution>& ,
+    const vector<libMesh::Point>&,
+    vector<vector<libMesh::Complex>>& weights) const
+{
+  for (auto&& w_k : weights)
+    for (auto&& w : w_k)
+      w = 1;
 }
 
 

@@ -98,8 +98,10 @@ class EigenvalueProblem : public SimulationInterface
      * \param k the k point in the target BZ
      * \return the projection weight
      */
-    libMesh::Complex project_to_primitive_cell(const eigen_problem_solution& a,
-        const libMesh::Point& k) const;
+    void project_to_primitive_cell(
+        const std::vector<eigen_problem_solution>& a,
+        const std::vector<libMesh::Point>& kpoints,
+        std::vector<std::vector<libMesh::Complex>>& weights) const;
 
 
     //! get number of states
@@ -209,8 +211,14 @@ class EigenvalueProblem : public SimulationInterface
     virtual bool read_SLEPC_solution(void) { return true; }
 
     //! Implementation of projection on different BZ
-    virtual libMesh::Complex do_project_to_primitive_cell(
-        const eigen_problem_solution& a, const libMesh::Point& k) const;
+    /*!
+     * Precondition: \c weights is initialized to the size of
+     * \c kpoints, and all elements set to 0.
+     */
+    virtual void do_project_to_primitive_cell(
+        const std::vector<eigen_problem_solution>& a,
+        const std::vector<libMesh::Point>& kpoints,
+        std::vector<std::vector<libMesh::Complex>>& weights) const;
 
 
     //!put spectrum shift energy to be almost equal to the 1st eigenvalue
@@ -344,13 +352,6 @@ EigenvalueProblem::assemble(const ModelOptions& options)
 //}
 
 
-inline
-libMesh::Complex
-EigenvalueProblem::project_to_primitive_cell(const eigen_problem_solution& a,
-    const libMesh::Point& k) const
-{
-  return(do_project_to_primitive_cell(a, k));
-}
 
 inline 
 void EigenvalueProblem::set_k_point(const Point& k_vec)
