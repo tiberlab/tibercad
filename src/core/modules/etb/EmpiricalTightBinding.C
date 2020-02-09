@@ -1502,7 +1502,7 @@ ETB::do_project_to_primitive_cell(const vector<eigen_problem_solution>& a,
         orbitals_j.resize(_ion_num_orbitals[j] / n_spin);
         inst->get_ion_orbitals(j+1, orbitals_j);
 
-        for (auto&& v : values)
+        for (auto&& v : value)
           v = 0.0;
 
         for (size_t orb_i = 0; orb_i < orbitals_i.size(); ++orb_i)
