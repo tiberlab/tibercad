@@ -1474,6 +1474,7 @@ ETB::do_project_to_primitive_cell(const vector<eigen_problem_solution>& a,
   int n_k = kpoints.size();
 
   int n_states = a.size();
+  vector<Complex> value(n_states, 0.0);
 
 
   const std::vector<Atom>& atom = get_atomistic_structure()->get_structure_atoms();
@@ -1492,8 +1493,8 @@ ETB::do_project_to_primitive_cell(const vector<eigen_problem_solution>& a,
     orbitals_i.resize(_ion_num_orbitals[i] / n_spin);
     inst->get_ion_orbitals(i+1, orbitals_i);
 
-    size_t id_j = 0;
-    for (size_t j = 0; j < N; j++)
+    size_t id_j = id_i;
+    for (size_t j = i; j < N; j++)
     {
       if (atom[i].get_label() == atom[j].get_label())
       {
@@ -1501,7 +1502,8 @@ ETB::do_project_to_primitive_cell(const vector<eigen_problem_solution>& a,
         orbitals_j.resize(_ion_num_orbitals[j] / n_spin);
         inst->get_ion_orbitals(j+1, orbitals_j);
 
-        vector<Complex> value(n_states, 0.0);
+        for (auto&& v : values)
+          v = 0.0;
 
         for (size_t orb_i = 0; orb_i < orbitals_i.size(); ++orb_i)
         {
@@ -1531,7 +1533,7 @@ ETB::do_project_to_primitive_cell(const vector<eigen_problem_solution>& a,
           Complex phase = std::exp(-arg);
 
           for (int s = 0; s < n_states; ++s)
-            weights[k][s] += value[s] * phase;
+            weights[k][s] += libmesh_real(value[s] * phase);
         }
       }
 
