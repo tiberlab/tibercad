@@ -1527,13 +1527,15 @@ ETB::do_project_to_primitive_cell(const vector<eigen_problem_solution>& a,
         Point d(atom[i].get_position());
         d.subtract(atom[j].get_position());
 
+        double mul = (j == i) ? 1 : 2;
+
         for (int k = 0; k < n_k; ++k)
         {
           Complex arg = 0.1*Complex(0.0, kpoints[k]*d);
           Complex phase = std::exp(-arg);
 
           for (int s = 0; s < n_states; ++s)
-            weights[k][s] += libmesh_real(value[s] * phase);
+            weights[k][s] += mul*libmesh_real(value[s] * phase);
         }
       }
 
