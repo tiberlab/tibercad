@@ -104,7 +104,7 @@ Device qdot
   Atomistic tb2
   {
     regions = atomistic
-    load = output/tb1.xyz
+    load = output/tb1.tgn
     print = (tgn,upg)
   }
 }
