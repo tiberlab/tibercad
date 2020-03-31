@@ -20,3 +20,10 @@ PetscRuntimeError::what(void) const throw()
 {
   return _msg.c_str();
 }
+
+
+void
+PetscRuntimeError::set_message(const std::string& msg)
+{
+  _msg = msg;
+}

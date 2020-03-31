@@ -20,6 +20,9 @@ class PetscRuntimeError : public SolverException
 
     virtual const char* what(void) const throw();
 
+  protected:
+
+    void set_message(const std::string& msg);
 
   private:
 

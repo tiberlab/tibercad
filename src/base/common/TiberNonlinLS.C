@@ -115,6 +115,7 @@ TiberNonlinLS::do_solve(void)
     {
       // reset the old linear tolerance
       get_linear_solver()->set_linear_rtol(tol_orig);
+      Messages::warning("Linear solver in line search failed.");
 
       throw;
     }

@@ -25,10 +25,8 @@ class PetscDivergedError : public PetscRuntimeError
     enum PETScSolverType { UNKNOWN = 0, KSP, SNES };
     
     PetscDivergedError(int reason, int iteration, double fnorm,
-        PETScSolverType type = UNKNOWN)
-      : PetscRuntimeError(PETSC_ERR_CONV_FAILED),
-        _iteration(iteration), _fnorm(fnorm),
-        _reason(reason), _type(type) {};
+        PETScSolverType type = UNKNOWN);
+
 
     int get_iteration(void) const { return _iteration; };
     double get_fnorm(void) const { return _fnorm; };
