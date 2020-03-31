@@ -38,6 +38,8 @@
 #include "libmesh/libmesh_logging.h"
 #include "libmesh/perf_log.h"
 //#include "libMeshDefs.h"
+#include "petsc_matrix.h"
+
 
 #include "DataOutput.h"
 #include "Messages.h"
@@ -971,7 +973,7 @@ DriftDiffusion::do_equilibrium(void)
   catch (runtime_error& e)
   {
     ostringstream os;
-    os << "Equilibrium did not converge: " << e.what() << endl;
+    os << "Equilibrium did not converge: \n" << e.what() << endl;
     Messages::error(os.str());
     throw (e);
   }
@@ -1383,7 +1385,7 @@ DriftDiffusion::parse_const_options(void)
 
   //string qrule = get_mesh().mesh_dimension() == 1 ? "trapez" : "gauss";
   string qrule = "trapez";
-  qrule = opts.get_option("quadrature_rule", qrule);
+  //qrule = opts.get_option("quadrature_rule", qrule);
   if (qrule == "gauss")
     myopts.quadrature_type = QGAUSS;
   else if (qrule == "trapez")
@@ -4653,7 +4655,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
   const double mu0 = scaling.get_mobility_scaling();
   // x 1e4 because we calculate in cm, but P comes in C/m^2
   const double P0 = (Constants::e * x0 * C0) * 1e4;
-cerr << "l2 = " << l2 << endl;
+
   double C0_q = C0;
   C0_q = 1.0;
 
@@ -4752,8 +4754,8 @@ cerr << "l2 = " << l2 << endl;
   if (jacobian != NULL)
     jacobian->zero();
 
-  map<numeric_index_type, pair<vector<numeric_index_type>,
-                               vector<double>>> dirichlet_data;
+  map<numeric_index_type, map<numeric_index_type, double>> dirichlet_jac;
+  map<numeric_index_type, double> dirichlet_res;
 
   MeshBase::const_element_iterator el =
                                   this->active_local_elements_begin();
@@ -5175,9 +5177,7 @@ cerr << "l2 = " << l2 << endl;
               // here we could add a correction from the doping/traps
               Kvv[u_var].at(vari)(qp,ii) -= node_volumes[qp] *
                   sc->get_carrier_properties(vari)->get_charge_sign();
-            }
-            else
-            {
+
               for (auto&& varj : q_var)
               {
                  unsigned int jj = id_map[varj][qp];
@@ -5263,10 +5263,10 @@ cerr << "l2 = " << l2 << endl;
             double dBn = 1 + dBp;
 
             double coeff = D * edge_areas[e] / edge_lengths[e];
-            Kvv[var].at(var)(n1, n1) += coeff * Bp;
-            Kvv[var].at(var)(n1, n2) -= coeff * Bn;
-            Kvv[var].at(var)(n2, n2) += coeff * Bn;
-            Kvv[var].at(var)(n2, n1) -= coeff * Bp;
+            Kvv[var].at(var)(i, i) += coeff * Bp;
+            Kvv[var].at(var)(i, j) -= coeff * Bn;
+            Kvv[var].at(var)(j, j) += coeff * Bn;
+            Kvv[var].at(var)(j, i) -= coeff * Bp;
 
           }
         }
@@ -5275,10 +5275,6 @@ cerr << "l2 = " << l2 << endl;
     }
 
 
-
-    map<unsigned int, vector<double> > dirichlet_jac;
-    map<unsigned int, unsigned int > dirichlet_node;
-    map<unsigned int, double> dirichlet_res;
 
     // now loop over the element sides to find boundary elements
     // and to include von Neumann and mixed type boundary conditions
@@ -5296,15 +5292,22 @@ cerr << "l2 = " << l2 << endl;
 
       bool true_boundary = environment.is_outer_boundary(ElementSide(elem, s));
 
-      if (sm != NULL)
+      if ((sm != NULL) || ((true_boundary) && (residual != NULL)))
       {
-        // from fe_face we get the normal
-        fe_face->reinit(elem, s);
-
-        sm->reinit(elem, s);
-
         // for getting geometrical quantities
         UniquePtr<Elem> side = elem->side(s);
+
+        vector<double> side_areas(side->n_nodes(), 1);
+
+        unsigned int dim = elem->dim();
+        if (dim == 2)
+        {
+
+        }
+        else if (dim == 3)
+        {
+
+        }
 
         vector<unsigned int> node_map(side->n_nodes());
         // associate side nodes to elem local node ids
@@ -5315,130 +5318,171 @@ cerr << "l2 = " << l2 << endl;
               node_map[qp] = i;
         }
 
-        // qface is set up as trapezoidal, so it loops on the side nodes
-        for (unsigned int qp = 0; qp < side->n_nodes(); qp++)
+        if (sm != NULL)
         {
-
-          // prepare for calculating local properties
-          sc->set_coordinates(side->point(qp));
-
-          double grad_fac = phi0 / x0;
-          for (auto var : q_var)
-          {
-            //cout<<"u"<<var<<" = "<<u[var]<<endl;
-            if (var == u_var)
-            {
-              sc->set_el_potential(phi0 * u[var][node_map[qp]]);
-              sc->set_electric_field(-grad_fac * grad_u[var][node_map[qp]]);
-            }
-            else
-            {
-              sc->set_fermi_potential(var, phi0 * u[var][node_map[qp]]);
-              sc->set_grad_fermi(var, grad_fac * grad_u[var][node_map[qp]]);
-            }
-          }
-
-          sc->calculate_densities();
-          sc->calculate_mobilities();
-
-
-          sm->set_face_normal(face_normals[qp]);
-          sm->set_coordinates(side->point(qp));
-
-          for (auto var : q_var)
-          {
-            if (var == u_var)
-            {
-              sm->set_el_potential(phi0 * u[var][node_map[qp]]);
-              sm->set_electric_field(-grad_fac * grad_u[var][node_map[qp]]);
-            }
-            else
-            {
-              sm->set_fermi_potential(var, phi0 * u[var][node_map[qp]]);
-              sm->set_grad_fermi(var, grad_fac * grad_u[var][node_map[qp]]);
-            }
-          }
-
-          sm->compute();
-
-
-
-
-        } // end loop over qp
-      } // end if (sm != NULL)
-      else if ((true_boundary) && (residual != NULL))
-      {
-        // If we are on an outer boundary, we have to include
-        // the polarization
-        //
-        // NOTE:
-        // we only include the polarization when no explicit
-        // boundary is defined
-
-        if (params.default_boundary_condition == ZEROFIELD)
-        {
+          // from fe_face we get the normal
           fe_face->reinit(elem, s);
 
-          for (unsigned int qp = 0; qp < qface->n_points(); qp++)
+          sm->reinit(elem, s);
+
+          // loop on the side nodes
+          for (unsigned int qp = 0; qp < side->n_nodes(); qp++)
           {
 
-            libMesh::RealVectorValue P(0.0);
-            P = sc->get_total_polarization();
-            double Pn = (P * face_normals[qp]) / P0;
-            double value_u = Pn;
+            // prepare for calculating local properties
+            sc->set_coordinates(side->point(qp));
 
-            if (coupling & POISSON)
+            double grad_fac = phi0 / x0;
+            for (auto var : q_var)
             {
-              for (unsigned int i = 0; i < n_dofs; i++)
+              if (var == u_var)
               {
-                Fv.at(u_var)(i) -= value_u * phi_face[i][qp];
+                sc->set_el_potential(phi0 * u[var][node_map[qp]]);
+                sc->set_electric_field(-grad_fac * grad_u[var][node_map[qp]]);
+              }
+              else
+              {
+                sc->set_fermi_potential(var, phi0 * u[var][node_map[qp]]);
+                sc->set_grad_fermi(var, grad_fac * grad_u[var][node_map[qp]]);
               }
             }
 
+            sc->calculate_densities();
+            sc->calculate_mobilities();
+
+
+            sm->set_face_normal(face_normals[qp]);
+            sm->set_coordinates(side->point(qp));
+
+            for (auto var : q_var)
+            {
+              if (var == u_var)
+              {
+                sm->set_el_potential(phi0 * u[var][node_map[qp]]);
+                sm->set_electric_field(-grad_fac * grad_u[var][node_map[qp]]);
+              }
+              else
+              {
+                sm->set_fermi_potential(var, phi0 * u[var][node_map[qp]]);
+                sm->set_grad_fermi(var, grad_fac * grad_u[var][node_map[qp]]);
+              }
+            }
+
+            sm->compute();
+
+
+            // contribution to the jacobian
+            if (jacobian != NULL)
+            {
+              // for Dirichlet DOFs we do not add anything
+              vector<double> scale_v(_carriers.size() + 1, 0.0);
+              vector<vector<double>> deriv_v(_carriers.size() + 1, vector<double>(_carriers.size() + 1, 0));
+              for (auto&& var : q_var)
+              {
+                double val = phi0 * side_areas[qp] / x0;
+                scale_v[var] = (var == u_var) ?  val / C0 : val / R0;
+
+                vector<double> deriv_tmp = sm->get_jacobian_row(var);
+                deriv_v[var] = deriv_tmp;
+              }
+
+
+              // copy dirichlet values to global container
+              for (auto&& vari : q_var)
+              {
+                unsigned int ii = id_map[vari][node_map[qp]];
+                numeric_index_type i = dof_indices_var[vari][ii];
+
+                for (auto&& varj : q_var)
+                {
+                  unsigned int jj = id_map[varj][node_map[qp]];
+                  numeric_index_type j = dof_indices_var[varj][jj];
+
+                  if (sm->get_type(vari) == DDInterfaceModel::DIRICHLET)
+                  {
+                    dirichlet_jac[i][j] -= deriv_v[vari][varj];
+                  }
+                  else
+                  {
+                    Kvv.at(vari).at(varj)(ii,jj) -= scale_v[vari] * deriv_v[vari][varj];
+                  }
+                }
+
+
+
+                ////
+                // NOTE:
+                //   the signs are inverted here because outflow means recombination
+                //   and the normal point outwards, giving a positive current for
+                //   outflow
+              }
+            } // end jacobian
+
+            // contribution to -Fe_i
+            if (residual != NULL)
+            {
+              vector<double> value_v(_carriers.size() + 1, 0.0);
+
+              const vector<double>& coeff_a = sm->get_a();
+              const vector<double>& coeff_g = sm->get_g();
+
+              for (auto&& var : q_var)
+              {
+                double val = side_areas[qp] / x0;
+                value_v[var] = (var == u_var) ? val / C0 : val / R0;
+                double bc_val = (coeff_g[var] - coeff_a[var] * u[var][node_map[qp]] * phi0);
+                if (sm->get_type(var) != DDInterfaceModel::DIRICHLET)
+                  value_v[var] *= bc_val;
+                else
+                  value_v[var] = bc_val / phi0;
+
+              }
+
+
+              for (auto&& vari : q_var)
+              {
+                unsigned int ii = id_map[vari][node_map[qp]];
+                numeric_index_type i = dof_indices_var[vari][ii];
+
+                if (sm->get_type(vari) == DDInterfaceModel::DIRICHLET)
+                {
+                  dirichlet_res[i] -= value_v[vari];
+                }
+                else
+                {
+                  Fv.at(vari)(i) -= value_v[vari];
+                }
+              }
+            }  // end residual
+
+          } // end loop over qp
+        } // end if (sm != NULL)
+        else if ((true_boundary) && (residual != NULL))
+        {
+          // If we are on an outer boundary, we have to include
+          // the polarization
+          //
+          // NOTE:
+          // we only include the polarization when no explicit
+          // boundary is defined
+
+          if ((coupling & POISSON) &&
+              (params.default_boundary_condition == ZEROFIELD))
+          {
+            fe_face->reinit(elem, s);
+
+            for (unsigned int qp = 0; qp < side->n_nodes(); qp++)
+            {
+
+              double Pn = (polarization[node_map[qp]] * face_normals[qp]) / P0;
+
+              Fv.at(u_var)(node_map[qp]) -= side_areas[qp] * Pn;
+            }
           }
-        }
-      }  // end true boundary && residual
+        }  // end true boundary && residual
+      }
     } // end loop over element side
 
-
-
-    // impose Dirichlet BCs
-    if (jacobian != NULL)
-    {
-      map<unsigned int, vector<double> >::iterator it(dirichlet_jac.begin());
-      const map<unsigned int, vector<double> >::iterator end(dirichlet_jac.end());
-      for ( ; it != end; ++it)
-      {
-        unsigned int i = it->first;
-        for (unsigned int j = 0; j < n_dofs_tot; ++j)
-          Ke(i,j) = 0.0;
-
-
-        unsigned int j = dirichlet_node[i];
-        unsigned int ctr = 0;
-        for (auto&& var : q_var)
-        {
-          unsigned int jj = id_map[var][j];
-          Ke(i,ctr + jj) = -(it->second)[var];
-          ctr += dof_indices_var[var].size();
-        }
-      }
-    }
-
-    if (residual != NULL)
-    {
-      map<unsigned int, double>::iterator it(dirichlet_res.begin());
-      const map<unsigned int, double>::iterator end(dirichlet_res.end());
-      for ( ; it != end; ++it)
-      {
-        unsigned int i = it->first;
-        for (unsigned int j = 0; j < n_dofs_tot; ++j)
-          Ke(i,j) = 0.0;
-        Ke(i,i) = 1;
-
-        Fe(i) = -(it->second);
-      }
-    }
 
 
     // constrain the jacobian and the rhs to account for constrained
@@ -5474,10 +5518,32 @@ cerr << "l2 = " << l2 << endl;
 
   if (jacobian != NULL)
   {
-    jacobian->close();
 
-    //jacobian->zero_rows(vec, 0.0);
-    //vector<numeric_index_type> vec(1,3);
+    // adjust Dirichlet BCs
+    if (!dirichlet_jac.empty())
+    {
+      PetscMatrix<Number>* matrix   = dynamic_cast<PetscMatrix<Number>*>(jacobian);
+      MatSetOption(matrix->mat(), MAT_KEEP_NONZERO_PATTERN, PETSC_TRUE);
+      jacobian->close();
+      vector<numeric_index_type> rows;
+      rows.reserve(dirichlet_jac.size());
+      for (auto&& dr : dirichlet_jac)
+      {
+        rows.push_back(dr.first);
+      }
+      jacobian->zero_rows(rows, 0.0);
+
+      for (auto&& dr : dirichlet_jac)
+      {
+        numeric_index_type i = dr.first;
+        for (auto&& col : dr.second)
+        {
+          jacobian->set(i, col.first, col.second);
+        }
+      }
+    }
+
+    jacobian->close();
 
     jacobian->print_matlab("J.m");
     //exit(0);
@@ -5511,6 +5577,16 @@ cerr << "l2 = " << l2 << endl;
           residual->add(scalars[0], var.second.conserved_number / scale);
       }
     //}
+
+    // adjust Dirichlet BCs
+    if (!dirichlet_res.empty())
+    {
+      for (auto&& dr : dirichlet_res)
+      {
+        numeric_index_type i = dr.first;
+        residual->set(i, dr.second);
+      }
+    }
 
     residual->close();
     residual->print_matlab("r.m");
