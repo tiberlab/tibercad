@@ -1,5 +1,7 @@
 #!/usr/bin/env perl
 
+use lib '.';
+
 use strict;
 
 use TestSuite qw(run_test
