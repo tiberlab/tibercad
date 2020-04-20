@@ -27,8 +27,10 @@ class BandProperties : public DriftDiffusionModelInterface
     //! Creator method
     static BandProperties* create(const ModelOptions& options);
 
-    //! Set the temperature interface
+    /*
+    // ! Set the temperature interface
     void set_temperature_interface(const TemperatureInterface& temp);
+    */
 
     //! Calculate for a given temperature
     void calculate(double temperature);
@@ -154,7 +156,7 @@ class BandProperties : public DriftDiffusionModelInterface
     double _temperature;
 
     //! The lattice temperature interface
-    TemperatureInterface _lattice_temp;
+    //TemperatureInterface _lattice_temp;
 
     //! The parabolic band DOS factor
     const double _dos_factor;
@@ -176,13 +178,14 @@ BandProperties::create(const ModelOptions& options)
 }
 
 
+/*
 inline
 void
 BandProperties::set_temperature_interface(const TemperatureInterface& temp)
 {
   _lattice_temp = temp;
 }
-
+*/
 
 
 inline

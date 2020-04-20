@@ -388,17 +388,16 @@ DriftDiffusionProperties::create_recombination_models(void)
 void
 DriftDiffusionProperties::do_init(void)
 {
-
   // hand the temperature interface over to the band parameter models
-  _conduction_band->set_temperature_interface(_lattice_temp);
-  _valence_band->set_temperature_interface(_lattice_temp);
+  //_conduction_band->set_temperature_interface(_lattice_temp);
+  //_valence_band->set_temperature_interface(_lattice_temp);
 
 
   SubmodelIterator it = submodels_begin("trap");
   SubmodelIterator end = submodels_end("trap");
   for ( ; it != end; ++it)
   {
-    Trap* t = static_cast<Trap*>(it->second);
+    Trap* t = dynamic_cast<Trap*>(it->second);
 
     if (t->get_particle() == 'e')
       _etraps.insert(t);
@@ -410,7 +409,6 @@ DriftDiffusionProperties::do_init(void)
 
   // calculate the equilibrium
   set_lattice_temperature(SimulationOptions::T);
-
 
 }
 
