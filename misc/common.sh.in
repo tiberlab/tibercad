@@ -104,7 +104,7 @@ CPP="@CPP@"
 CC="@CC@"
 CXX="@CXX@"
 FC="@FC@"
-F90="${F90:-$FC}"
+#F90="${F90:-$FC}"
 F77="${F77:-$FC}"
 RANLIB="@RANLIB@"
 

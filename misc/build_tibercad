@@ -43,6 +43,7 @@ export LDFLAGS="$LDFLAGS -fopenmp"
 ./configure \
   --with-petsc-prefix=${BUILDDIR}/petsc-${PETSCVERSION}${PETSCPATCHLEVEL} \
   --with-petsc-arch=${TCHOST} \
+  --with-mpiexec=${MPIEXEC} \
   --with-slepc-prefix=${BUILDDIR}/slepc-${PETSCVERSION}${SLEPCPATCHLEVEL} \
   $TIBEROPTS \
   --with-libmesh-prefix=${BUILDDIR}/libmesh-${LIBMESHVERSION}-${TCHOST} \

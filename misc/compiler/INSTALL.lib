@@ -53,25 +53,28 @@ elif [ $OS = Darwin ]; then
              make "$@"
         }
 else
-        if [ ! -f /etc/debian_version ]; then
-                echo "ERROR: this isn't Debian?"
-                exit 1
-        fi
-        DEBIAN=`cat /etc/debian_version | sed 's/\(^[0-9]*\.[0-9]*\)\(\.[0-9]*\)\?/\1/'`
         CPU=`uname -m`
+        LDFLAG_AS_NEEDED="-Wl,--as-needed"
+        if [ -f /etc/debian_version ]; then
+          DEBIAN=`cat /etc/debian_version | sed 's/\(^[0-9]*)(\.[0-9]*\)\(\.[0-9]*\)\?/\1/'`
+          ARCH=debian-linux$DEBIAN
+
+          if [ $DEBIAN = "3.0" ]; then
+            LDFLAG_AS_NEEDED=""
+          fi
+        elif [ -f /etc/redhat-release ]; then
+          CENTOS=`cat /etc/redhat-release | awk '{print $4}' | sed 's/\(^[0-9]*)(\.[0-9]*\)\(\.[0-9]*\)\?/\1/'`
+          ARCH=centos-linux$CENTOS
+        fi
+
         if [ $CPU = x86_64 ]; then
-                ARCH=amd64-debian-linux$DEBIAN
+                ARCH=amd64-$ARCH
         else
-                ARCH=i686-debian-linux$DEBIAN
+                ARCH=i686-$ARCH
         fi
         R="-Wl,-rpath -Wl,"
         XINC=/usr/X11R6/include
         XLIB=/usr/X11R6/lib
-        if [ $DEBIAN = "3.0" ]; then
-                LDFLAG_AS_NEEDED=""
-        else
-                LDFLAG_AS_NEEDED="-Wl,--as-needed"
-        fi
 
         function gcp () {
              cp "$@"
@@ -85,6 +88,11 @@ else
         function gmake () {
              make "$@"
         }
+fi
+
+# with SINGLEOS=no we can recover the old behaviour
+if [ ${SINGLEOS:-yes} = yes ]; then
+        ARCH=
 fi
 
 PACK=${PROD}-${VERSION}-${PACKAGER}
@@ -136,6 +144,9 @@ function prepare () {
    unset SRCDIR
    [ -f $2.srcdir ] && SRCDIR=`cat $2.srcdir`
    case $2 in
+     *.tar.xz)
+         SRCDIR=${SRCDIR:-$WORKDIR/`basename $2 .tar.xz`}
+         [ -d $SRCDIR ] || xzcat $2 | gtar xf -;;
      *.tar.bz2)
          SRCDIR=${SRCDIR:-$WORKDIR/`basename $2 .tar.bz2`}
          [ -d $SRCDIR ] || bunzip2 -c $2 | gtar xf -;;

@@ -1,0 +1,130 @@
+#!/bin/bash
+PACKAGER=ma
+VERSION=6.5.0
+PROD=gcc
+
+topdir=$(dirname $(dirname $PWD))
+
+ARCH=$(${topdir}/share/arch.sh)
+# You can set these to any reasonable value
+#INSTALLPREFIX=${topdir}/SDK/gcc-$VERSION
+#INSTALLEPREFIX=${INSTALLPREFIX}/$(${topdir}/share/arch.sh)
+INSTALLPREFIX=${topdir}/SDK
+INSTALLEPREFIX=${topdir}/SDK/$ARCH
+WORKDIR=${topdir}/extern/gcc-$VERSION
+
+
+. `dirname $0`/INSTALL.lib
+
+PREFIX=$INSTALLPREFIX
+EPREFIX=$INSTALLEPREFIX
+
+export LD_LIBRARY_PATH=${EPREFIX}/lib
+#export LDFLAGS="-Wl,-rpath-link,${EPREFIX}/lib -Wl,-rpath,'\$\$ORIGIN/../../../../../lib' -Wl,-rpath,'\$\$ORIGIN/../lib'"
+export LD_RUN_PATH='$ORIGIN:$ORIGIN/../lib:$ORIGIN/../../../../lib'
+echo $INSTALLEPREFIX
+echo "$LD_RUN_PATH"
+
+
+
+GCCARCH=i686-pc-linux-gnu
+LIBSWITCH=
+if [ `uname -m` == "x86_64" ]
+then
+  GCCARCH=x86_64-pc-linux-gnu
+  LIBSWITCH='%{!m32:64}%{m32:32}'
+fi
+
+cat <<PATCH >$WORKDIR/specs.patch
+--- libgcc/config/i386/linux-unwind.h.orig	2020-04-20 19:06:37.708693357 +0200
++++ libgcc/config/i386/linux-unwind.h	2020-04-20 19:07:05.844718392 +0200
+@@ -58,7 +58,7 @@
+   if (*(unsigned char *)(pc+0) == 0x48
+       && *(unsigned long long *)(pc+1) == RT_SIGRETURN_SYSCALL)
+     {
+-      struct ucontext *uc_ = context->cfa;
++      struct ucontext_t *uc_ = context->cfa;
+       /* The void * cast is necessary to avoid an aliasing warning.
+          The aliasing warning is correct, but should not be a problem
+          because it does not alias anything.  */
+@@ -138,7 +138,7 @@
+ 	siginfo_t *pinfo;
+ 	void *puc;
+ 	siginfo_t info;
+-	struct ucontext uc;
++	struct ucontext_t uc;
+       } *rt_ = context->cfa;
+       /* The void * cast is necessary to avoid an aliasing warning.
+          The aliasing warning is correct, but should not be a problem
+PATCH
+
+#cat <<PATCH >$WORKDIR/specs.patch
+#--- ./lib/gcc/${GCCARCH}/${VERSION}/specs~	2005-05-11 18:34:14.000000000 +0200
+#+++ ./lib/gcc/${GCCARCH}/${VERSION}/specs	2005-05-11 18:34:13.000000000 +0200
+#@@ -93,7 +93,7 @@
+# collect2
+# 
+# *link_libgcc:
+#-%D
+#+-rpath /usr/pack/gcc-${VERSION}-ma/${ARCH}/lib${LIBSWITCH} %D
+# 
+# *md_exec_prefix:
+ 
+#PATCH
+
+
+#export LD_LIBRARY_PATH=${PREFIX}/${ARCH}/lib
+#export LDFLAGS="-Wl,-rpath,${PREFIX}/${ARCH}/lib"
+
+#simplebuild http://ftp.sunet.se/mirror/gnu.org/gnu/gmp gmp-6.1.1.tar.bz2 --enable-cxx --enable-mpbsd
+#simplebuild http://www.mpfr.org/mpfr-current mpfr-3.1.5.tar.bz2 --with-gmp=${EPREFIX}
+#simplebuild http://www.multiprecision.org/mpc/download mpc-1.0.3.tar.gz --with-gmp-include=${EPREFIX}/include --with-gmp-lib=${EPREFIX}/lib --with-mpfr-include=${PREFIX}/include --with-mpfr-lib=${EPREFIX}/lib
+#export CXXFLAGS="-I ${PREFIX}/include"
+#export CFLAGS="-I ${PREFIX}/include"
+#export CPPLAGS="-I ${PREFIX}/include"
+#simplebuild ftp://gcc.gnu.org/pub/gcc/infrastructure isl-0.12.2.tar.bz2  
+#simplebuild ftp://gcc.gnu.org/pub/gcc/infrastructure cloog-0.18.1.tar.gz  --with-gmp-library=${EPREFIX}/lib --with-gmp-eprefix=${EPREFIX} --with-gmp-prefix=${PREFIX} --with-isl=system --with-isl-prefix=${PREFIX} --with-isl-exec-prefix=${EPREFIX}
+
+prepare http://ftp.sunet.se/mirror/gnu.org/gnu/gmp gmp-6.1.1.tar.bz2
+cd ..
+prepare http://www.mpfr.org/mpfr-3.1.6 mpfr-3.1.6.tar.bz2
+cd ..
+prepare http://ftp.gnu.org/gnu/mpc mpc-1.0.3.tar.gz
+cd ..
+prepare ftp://gcc.gnu.org/pub/gcc/infrastructure isl-0.16.1.tar.bz2
+cd ..
+prepare ftp://gcc.gnu.org/pub/gcc/infrastructure cloog-0.18.1.tar.gz
+cd ..
+
+MIRROR=http://mirror.koddos.net/gcc/releases
+#MIRROR=ftp://mirror.switch.ch/mirror/gnu/${PROD}
+
+if prepare ${MIRROR}/${PROD}-${VERSION} ${PROD}-${VERSION}.tar.xz
+then
+  ln -f -s ../gmp-6.1.1 gmp
+  ln -f -s ../mpfr-3.1.6 mpfr
+  ln -f -s ../mpc-1.0.3 mpc
+  ln -f -s ../isl-0.16.1 isl
+  ln -f -s ../cloog-0.18.1 cloog
+  cd ..
+  mkdir -p build
+  cd build
+  ../${PROD}-${VERSION}/configure --prefix=${PREFIX} --enable-languages=c,c++,fortran --enable-__cxa_atexit --enable-threads --exec-prefix=${EPREFIX} --disable-multilib
+ 
+ # --with-gmp-include=${EPREFIX}/include --with-gmp-lib="${EPREFIX}/lib -Wl,-rpath,${EPREFIX}/lib" --with-mpfr-include=${PREFIX}/include --with-mpfr-lib="${EPREFIX}/lib -Wl,-rpath,${EPREFIX}/lib" --with-ppl="${PREFIX}" --with-cloog="${PREFIX}" --with-isl-lib="${EPREFIX}/lib -Wl,-rpath,${EPREFIX}/lib"  --with-isl-include="${PREFIX}/include"
+
+  make bootstrap
+  make install
+  #cd /usr/pack/${PACK}
+  #./bin/gcc -dumpspecs > ./lib/gcc/${GCCARCH}/${VERSION}/specs
+  #patch -p0 -l <${WORKDIR}/specs.patch
+  rm ${EPREFIX}/bin/${GCCARCH}*
+
+  startfiledir=$(dirname "$(find /usr/lib -name crti.o)")
+  cp ${startfiledir}/crt*.o ${EPREFIX}/lib
+
+  cp ${EPREFIX}/lib64/libstdc++.so.6 ${topdir}/${ARCH}/lib
+  cp ${EPREFIX}/lib64/libgfortran.so.3 ${topdir}/${ARCH}/lib
+  cp ${EPREFIX}/lib64/libgcc_s.so.1 ${topdir}/${ARCH}/lib
+
+fi

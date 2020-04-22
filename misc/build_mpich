@@ -41,10 +41,11 @@ fi
 #F90=
 #export F90
 
+export LD_RUN_PATH="\$ORIGIN:\$ORIGIN/../lib:\$ORIGIN/../${TCHOST}/lib64"
 
 cd mpich-${VERSION}
 
-./configure --prefix=${SDKDIR} --enable-shared=yes \
+./configure --prefix=${SDKDIR} --exec_prefix=${SDKDIR}/${TCHOST} --enable-shared=yes \
             --host=$HOST --build=$BUILD
             
 #            --with-thread-package=none --with-pmi=none \
