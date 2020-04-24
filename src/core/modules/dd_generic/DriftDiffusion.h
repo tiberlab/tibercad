@@ -220,9 +220,6 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
         //! Use exact jacobian or not
         bool exact_newton;
 
-        //! Reference contact for the potential
-        std::string reference_contact;
-
 
         //! Integrate polarization along the boundary
         DefaultBC default_boundary_condition;
@@ -577,12 +574,6 @@ virtual void do_check_nonlinear_step(
      */
     ContactData _boundary_currents;
 
-    //! the mean electron quasi Fermi potential
-    ContactData _boundary_eqfermi;
-
-    //! the mean hole quasi Fermi potential
-    ContactData _boundary_hqfermi;
-
 
     //! The voltages of the former solve step
     ContactData _voltages;
@@ -590,10 +581,6 @@ virtual void do_check_nonlinear_step(
 
     //! The IQE
     double _iqe;
-
-
-    //! Reference potential
-    double _reference_potential;
 
 
     //! If true, local density scaling should be applied
@@ -664,15 +651,9 @@ virtual void do_check_nonlinear_step(
     void compute_scaling(Scaling::ScalingType type = Scaling::UNITS);
 
 
-    //! Find the reference potential, if needed
-    void compute_reference_potential(void);
-
 
     //! Find elements that touch a real contact
     void find_contact_elements(void);
-
-    //! Calculate mean Fermi level on boundaries
-    void calculate_mean_fermi_levels(void);
 
 
     //! Reset solver environment.
@@ -786,7 +767,19 @@ virtual void do_check_nonlinear_step(
      * This implementation uses standard FEM.
      */
     template <int T>
-    void do_assembly(const libMesh::NumericVector<Number>& x,
+    void do_assembly_fem(const libMesh::NumericVector<Number>& x,
+        libMesh::NumericVector<Number>* residual,
+        libMesh::SparseMatrix<Number>* jacobian);
+
+    //! Assembles the residual vector or the jacobian matrix
+    /*!
+     * Assembles the residual vector or the jacobian matrix for
+     * the equation system with @c Coupling T.
+     *
+     * This implementation uses BIM.
+     */
+    template <int T>
+    void do_assembly_bim(const libMesh::NumericVector<Number>& x,
         libMesh::NumericVector<Number>* residual,
         libMesh::SparseMatrix<Number>* jacobian);
 

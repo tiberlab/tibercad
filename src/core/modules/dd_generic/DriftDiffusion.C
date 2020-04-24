@@ -38,6 +38,8 @@
 #include "libmesh/libmesh_logging.h"
 #include "libmesh/perf_log.h"
 //#include "libMeshDefs.h"
+#include "petsc_matrix.h"
+
 
 #include "DataOutput.h"
 #include "Messages.h"
@@ -94,7 +96,6 @@ DriftDiffusion::DriftDiffusion(const ModelOptions& options)
   : SimulationInterface(options),
     _rebuild_eq_system(true),
     _iqe(0.0),
-    _reference_potential(0.0),
     _rstf(NULL)
 {
 
@@ -1003,36 +1004,8 @@ DriftDiffusion::do_equilibrium(void)
 
   solveropts.set_option("max_iterations", max_it);
 
-
-  // compute the reference potential
-  compute_reference_potential();
 }
 
-
-
-void
-DriftDiffusion::compute_reference_potential(void)
-{
-  if (get_my_options().reference_contact != "")
-  {
-    SimulationEnvironment& si = get_environment();
-    std::set<const Node*> nodelist;
-    si.get_boundary_nodes(get_my_options().reference_contact, nodelist);
-    if (nodelist.size() > 0)
-    {
-      TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
-
-      const libMesh::NumericVector<Number>& solution = system.get_solution_vector();
-      const unsigned int system_number = system.number();
-      const unsigned int u_var = system.variable_number("potential");
-
-      const Node* node = *nodelist.begin();
-      const unsigned int n_dof = node->dof_number(system_number, u_var, 0);
-      _reference_potential = solution(n_dof) * get_scaling().get_potential_scaling();
-    }
-  }
-
-}
 
 
 
@@ -1468,7 +1441,6 @@ DriftDiffusion::parse_options(void)
   get_parameter("guess_el_qfermi", _el_qfermi_guess);
   get_parameter("guess_hl_qfermi", _hl_qfermi_guess);
 
-  myopts.reference_contact = opts.get_option("reference_contact", "");
 
   string s(opts.get_option("default_boundary_condition", "zero_field"));
   if (s == "zero_field")
@@ -2513,7 +2485,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
 
     if (values.count(ElPotential))
-      values[ElPotential][n] = u - _reference_potential;
+      values[ElPotential][n] = u;
 
     for (unsigned int v = 0; v < n_vars; ++v)
     {
@@ -2837,203 +2809,6 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 }
 
 
-
-void
-DriftDiffusion::calculate_mean_fermi_levels(void)
-{
-  ContactData::iterator it = _boundary_eqfermi.begin();
-  for ( ; it != _boundary_eqfermi.end(); ++it)
-  {
-    // zero out current
-    (*it).second = 0.0;
-  }
-
-  for (it =  _boundary_hqfermi.begin(); it != _boundary_hqfermi.end(); ++it)
-  {
-    // zero out current
-    (*it).second = 0.0;
-  }
-
-  ContactData boundary_area;
-
-  SimulationEnvironment& env = get_environment();
-
-  const MeshBase& mesh = get_mesh();
-  TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
-  const libMesh::NumericVector<Number>& solution = system.get_solution_vector();
-
-  const unsigned int dim = mesh.mesh_dimension();
-
-  //const Device& device = *_device;
-  //const SimulationEnvironment& environment = get_environment();
-
-  libMesh::DenseVector<Number> X;
-  libMesh::DenseSubVector<Number>
-                                  Xu(X),
-                                  Xn(X),
-                                  Xp(X);
-
-  const Options& params = get_my_options();
-
-  // the scaling parameters
-  const Scaling& scaling = get_scaling();
-  const double x0 = scaling.get_length_scaling();
-  const double phi0 = scaling.get_potential_scaling();
-
-  const DofMap& dof_map = system.get_dof_map();
-
-  // numeric ids corresponding to the variables
-  const unsigned int en_var = system.variable_number("fermi_e");
-  const unsigned int ep_var = system.variable_number("fermi_h");
-
-  FEType fe_type = system.variable_type(en_var);
-
-  libMeshEnums::Order integration_order = params.integration_order;
-
-  // the finite element for boundary integration
-  UniquePtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
-
-
-  UniquePtr<QBase> qface(QBase::build(
-        params.quadrature_type, dim - 1, libMeshEnums::CONSTANT));
-  fe_face->attach_quadrature_rule(qface.get());
-
-
-  const vector<vector<Real> >&  phi_face = fe_face->get_phi();
-  //
-  const vector<vector<libMesh::RealGradient> >&  dphi_face = fe_face->get_dphi();
-  //
-  // physical coordinates of the quadrature points
-  const vector<Point>& q_point_face = fe_face->get_xyz();
-  // Jacobian * quadrature weight at each integration point.
-  const vector<Real>& JxW_face = fe_face->get_JxW();
-
-  vector<unsigned int> dof_indices;
-  vector<unsigned int> dof_indices_en;
-  vector<unsigned int> dof_indices_ep;
-
-  // we construct a map of all interface models, and remember the
-  // associated Boundary pointer.
-  map<DDInterfaceModel*, Boundary*> ifmodels;
-
-
-  BoundaryElementMap::iterator bel(env.boundary_elements_begin());
-  const BoundaryElementMap::iterator bend(env.boundary_elements_end());
-  //MeshBase::const_element_iterator el =
-  //                                this->active_local_elements_begin();
-  //const MeshBase::const_element_iterator end_el =
-  //                                this->active_local_elements_end();
-
-  // loop over all active elements
-  for ( ; bel != bend ; ++bel)
-  {
-    const Elem* elem = *bel;
-    const Elem* top_parent = elem->top_parent();
-
-    dof_map.dof_indices(elem, dof_indices);
-    dof_map.dof_indices(elem, dof_indices_en, en_var);
-    dof_map.dof_indices(elem, dof_indices_ep, ep_var);
-
-    unsigned int n_dofs     = dof_indices_en.size();
-    unsigned int n_dofs_tot = 3 * n_dofs;
-
-
-    for (unsigned int s = 0; s < elem->n_sides(); s++)
-    {
-      Boundary* bd = get_environment().get_boundary(ElementSide(elem, s));
-      if (bd == NULL)
-        continue;
-
-      DDInterfaceModel* sm = get_interface_model<DDInterfaceModel>(elem, s);
-
-      if (sm != NULL)
-      {
-
-        X.resize(n_dofs_tot);    Xu.reposition(0, n_dofs);
-        Xn.reposition(n_dofs, n_dofs);
-        Xp.reposition(2 * n_dofs, n_dofs);
-
-        dof_map.extract_local_vector(solution, dof_indices, X);
-
-        fe_face->reinit(elem, s);
-
-        int phi_size = phi_face.size();
-
-        // now integrate to include von Neumann and mixed type BCs
-        // and polarization
-        for (unsigned int qp = 0; qp < qface->n_points(); qp++)
-        {
-          // get the solution values at the quadrature point
-          Real en = 0.0;
-          Real ep = 0.0;
-          for (unsigned int i = 0; i < n_dofs; i++)
-          {
-            en += phi_face[i][qp] * Xn(i);
-            ep += phi_face[i][qp] * Xp(i);
-          }
-
-          // the jacobian x weight x scaling
-          double J = JxW_face[qp];
-
-          _boundary_eqfermi[bd->get_name()] += J * en * phi0;
-          _boundary_hqfermi[bd->get_name()] += J * ep * phi0;
-          boundary_area[bd->get_name()] += J;
-        }
-
-        ifmodels[sm] = bd;
-
-      }
-    }
-  }
-
-  for (it = _boundary_eqfermi.begin(); it != _boundary_eqfermi.end(); ++it)
-  {
-    it->second /= boundary_area[it->first];
-  }
-  for (it = _boundary_hqfermi.begin(); it != _boundary_hqfermi.end(); ++it)
-  {
-    it->second /= boundary_area[it->first];
-  }
-
-  // search for interface models with external current source
-  // TODO to be implemented also for holes
-  map<const SimulationInterface*, set<Boundary*>> fluxmodels;
-  map<DDInterfaceModel*, Boundary*>::iterator ifit(ifmodels.begin());
-  for ( ; ifit != ifmodels.end(); ++ifit)
-  {
-    if ((ifit->first)->get_eflux_simulation() != NULL)
-      fluxmodels[(ifit->first)->get_eflux_simulation()].insert(ifit->second);
-  }
-
-  map<const SimulationInterface*, double> reffermi_e;
-  map<const SimulationInterface*, set<Boundary*>>::iterator sit(fluxmodels.begin());
-  for ( ; sit != fluxmodels.end(); ++sit)
-  {
-    const set<Boundary*>& bdset = sit->second;
-    reffermi_e[sit->first] = 0;
-    double count = bdset.size();
-    for (set<Boundary*>::iterator bdit(bdset.begin()); bdit != bdset.end(); ++bdit)
-      reffermi_e[sit->first] += _boundary_eqfermi[(*bdit)->get_name()] / count;
-  }
-
-
-  ifit = ifmodels.begin();
-  for ( ; ifit != ifmodels.end(); ++ifit)
-  {
-    double eref = 0.0;
-    double href = 0.0;
-
-    if ((ifit->first)->get_eflux_simulation() != NULL)
-    {
-      map<const SimulationInterface*, double>::iterator simit(
-          reffermi_e.find((ifit->first)->get_eflux_simulation()));
-      if (simit != reffermi_e.end())
-        eref = simit->second;
-    }
-
-    (ifit->first)->set_reference_fermi_potentials(eref, href);
-  }
-}
 
 
 void
@@ -4710,13 +4485,13 @@ DriftDiffusion::assemble_system(const libMesh::NumericVector<Number>& x,
   switch (_this->_options.coupling)
   {
     case (CURRENTS):
-      _this->do_assembly<CURRENTS>(x, residual, jacobian);
+      _this->do_assembly_fem<CURRENTS>(x, residual, jacobian);
       break;
     case (POISSON):
-      _this->do_assembly<POISSON>(x, residual, jacobian);
+      _this->do_assembly_fem<POISSON>(x, residual, jacobian);
       break;
     default:
-      _this->do_assembly<FULLYCOUPLED>(x, residual, jacobian);
+      _this->do_assembly_fem<FULLYCOUPLED>(x, residual, jacobian);
       break;
   }
 
@@ -4835,7 +4610,7 @@ DriftDiffusion::do_check_nonlinear_step(
 
 template <int coupling>
 void
-DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
+DriftDiffusion::do_assembly_fem(const libMesh::NumericVector<Number>& x,
     libMesh::NumericVector<Number>* residual,
     libMesh::SparseMatrix<Number>* jacobian)
 {
@@ -6158,7 +5933,1094 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 }
 
 
+template <int coupling>
+void
+DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
+    libMesh::NumericVector<Number>* residual,
+    libMesh::SparseMatrix<Number>* jacobian)
+{
 
+  START_LOG(get_name() + ": Matrix assembly", "");
+
+  // references for nicer code
+  const MeshBase& mesh = get_mesh();
+  TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
+
+  const unsigned int dim = mesh.mesh_dimension();
+
+  //const Device& device = *_device;
+  const SimulationEnvironment& environment = get_environment();
+
+  const Options& params = get_my_options();
+
+
+  libMesh::NumericVector<Number>& oldx = system.get_vector("old_sol");
+  libMesh::NumericVector<Number>& loc_scaling = system.get_vector("scaling");
+  //SparseMatrix<double>& sysmat = system.get_matrix("Preconditioner");
+  //if (residual != NULL)
+  if (jacobian != NULL)
+    build_local_scaling();
+  //  sysmat.zero();
+
+  //
+  // some scaling stuff...
+  //
+  // NOTE: the mesh and all parameters were not explicitly scaled, so
+  //       we have to treat scaling by explicit division/multiplication
+  //
+  // the scaling parameters
+  const Scaling& scaling = get_scaling();
+  // the scaling parameter for the poisson eq.
+  // The factor 1e-2 comes from the fact, that we are calculating in cm!
+  const double l2 = scaling.get_lambda_squared() * Constants::e0 * 1e-2;
+  const double x0 = scaling.get_length_scaling();
+  const double phi0 = scaling.get_potential_scaling();
+  //const double C0 = (_do_local_scaling) ? 1.0 : scaling.get_density_scaling();
+  const double C0 = scaling.get_density_scaling();
+  const double mu0 = scaling.get_mobility_scaling();
+  // x 1e4 because we calculate in cm, but P comes in C/m^2
+  const double P0 = (Constants::e * x0 * C0) * 1e4;
+
+  //double C0_q = C0;
+  //C0_q = 1.0;
+
+  // scaling for recombination rates
+  double R0 = C0 / scaling.get_time_scaling();
+
+  const libMesh::DofMap& dof_map = system.get_dof_map();
+
+  // numeric ids corresponding to the variables
+  const unsigned int u_var = system.variable_number("potential");
+
+  libMesh::FEType fe_type = system.variable_type(u_var);
+
+  libMeshEnums::Order integration_order = params.integration_order;
+
+  // the finite element
+  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+  libMesh::UniquePtr<libMesh::QBase> qrule(libMesh::QBase::build(
+        params.quadrature_type, dim, integration_order));
+  fe->attach_quadrature_rule(qrule.get());
+
+  // the finite element for boundary integration
+  libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
+
+  if (dim == 1)
+    integration_order = libMeshEnums::CONSTANT;
+
+  libMesh::UniquePtr<libMesh::QBase> qface(libMesh::QBase::build(
+        params.quadrature_type, dim - 1, integration_order));
+  fe_face->attach_quadrature_rule(qface.get());
+
+
+
+  //
+  // Box integration (finite volume method)
+  //
+  // We need:
+  //   - volume associated to each node
+  //   - mid-perpendicular on ech side
+
+  // references to cell-specific data that will be used to
+  // assemble the system.
+  // Data will be given for each quadrature point.
+  //
+  // Jacobian * quadrature weight at each integration point.
+  const vector<Real>& JxW = fe->get_JxW();
+  //
+  // physical coordinates of the quadrature points
+  const vector<Point>& q_point = fe->get_xyz();
+  //
+  // element shape functions
+  const vector<vector<Real> >& phi = fe->get_phi();
+  //
+  // element shape function gradients
+  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+
+
+
+  // references to boundary-specific data that will be used to
+  // assemble the system.
+  // Data will be given for each quadrature point.
+  //
+  const vector<vector<Real> >&  phi_face = fe_face->get_phi();
+  //
+  const vector<vector<RealGradient> >&  dphi_face = fe_face->get_dphi();
+  //
+  // physical coordinates of the quadrature points
+  const vector<Point>& q_point_face = fe_face->get_xyz();
+  //
+  const vector<Point>& face_normals = fe_face->get_normals();
+  //
+  // Jacobian * quadrature weight at each integration point.
+  const vector<Real>& JxW_face = fe_face->get_JxW();
+
+
+  // the system matrix (will hold also element jacobian contribution)
+  DenseMatrix<Number> Ke;
+  // the system rhs (will hold also element rhs contribution)
+  DenseVector<Number> Fe;
+  // the local solution
+  DenseVector<Number> X;
+  // the local old step
+  DenseVector<Number> oldX;
+  // the local scaling
+  DenseVector<Number> local_scaling;
+
+
+  vector<unsigned int> dof_indices;
+  vector<unsigned int> dof_indices_u;
+  // dof indices vectors for fermi potentials are defined within element loop
+  // since different variables can ben set in different regions
+
+  // zero out residual and jacobian !! IMPORTANT !!
+  if (residual != NULL)
+    residual->zero();
+  if (jacobian != NULL)
+    jacobian->zero();
+
+  map<numeric_index_type, map<numeric_index_type, double>> dirichlet_jac;
+  map<numeric_index_type, double> dirichlet_res;
+
+  MeshBase::const_element_iterator el =
+                                  this->active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el =
+                                  this->active_local_elements_end();
+
+  // loop over all active elements
+  for ( ; el != end_el ; ++el)
+  {
+    const Elem* elem = *el;
+    const Elem* top_parent = (*el)->top_parent();
+
+    ID subdomain = elem->subdomain_id();
+
+    DDBulkModel* sc = get_bulk_model<DDBulkModel>(elem);
+
+    assert(sc != NULL);
+    sc->reinit(elem);
+
+    // Get variables for fermi potentials
+    set<ID> q_var;
+
+    // we will loop only over carriers that are present in this element
+    q_var.insert(u_var);
+    for (auto&& cp : sc->get_carrier_properties())
+      q_var.insert(cp.first);
+
+
+
+    //Get dof indices
+    map<unsigned int, vector<unsigned int>> dof_indices_var;
+
+    dof_indices.clear();
+
+    for (auto var : q_var)
+    {
+      //insert variable number and dof indices for the element
+      dof_map.dof_indices(elem, dof_indices_var[var], var);
+      dof_indices.insert(dof_indices.end(),
+          dof_indices_var[var].begin(), dof_indices_var[var].end());
+    }
+
+    // they have all the same number of DOFs
+    unsigned int n_dofs     = dof_indices_var[u_var].size();
+
+    // a remapping for local dof ids, to allow for constant qFermi variables
+    // this will allow to use the normal assembly functions, but with constant
+    // potential
+    map<unsigned int, vector<unsigned int> > id_map;
+    for (auto var : q_var)
+    {
+      id_map[var].resize(n_dofs);
+      if (dof_indices_var[var].size() == 1)
+        fill(id_map[var].begin(), id_map[var].end(), 0);
+      else
+        iota(id_map[var].begin(), id_map[var].end(), 0);
+    }
+
+
+    for (auto&& scalar : _conservation)
+    {
+      unsigned int dof = scalar.first;
+      dof_map.dof_indices(elem, dof_indices_var[dof], dof);
+      dof_indices.insert(dof_indices.end(),
+          dof_indices_var[dof].begin(), dof_indices_var[dof].end());
+    }
+
+    // dof_indices now contains all DOFs, also scalar ones
+
+    unsigned int n_dofs_tot = dof_indices.size();
+
+    fe->reinit(elem);
+
+    Ke.resize(n_dofs_tot, n_dofs_tot);
+    Fe.resize(n_dofs_tot);
+    X.resize(n_dofs_tot);
+    oldX.resize(n_dofs_tot);
+    local_scaling.resize(n_dofs_tot);
+
+    // extract local solution, accounting for constraints
+    dof_map.extract_local_vector(x, dof_indices, X);
+    dof_map.extract_local_vector(oldx, dof_indices, oldX);
+    dof_map.extract_local_vector(loc_scaling, dof_indices, local_scaling);
+
+    //define submatrices
+    map<unsigned int, map<unsigned int, DenseSubMatrix<Number>>> Kvv;
+    map<unsigned int, DenseSubVector<Number>> Fv,
+                                              Xv,
+                                              oldXv,
+                                              scalev;
+
+    // Reposition the submatrices according to this scheme:
+    //
+    //        | K11 K12 ... K1u |        | F1 |
+    //   Ke = | K21 K22 ... ... |;  Fe = | F2 |
+    //        | ... ... ... ... |        | .. |
+    //        | Ku1 Ku2 ... Kuu |        | Fu |
+    //
+    // Note: conservation variables are added at the end
+
+    unsigned int n_var = 0;
+    for (auto&& var : q_var)
+    {
+
+      Fv.insert(make_pair(var, DenseSubVector<Real>(Fe)));
+      Xv.insert(make_pair(var, DenseSubVector<Real>(X)));
+      oldXv.insert(make_pair(var, DenseSubVector<Real>(oldX)));
+      scalev.insert(make_pair(var, DenseSubVector<Real>(local_scaling)));
+
+      unsigned int var_dofs = dof_indices_var[var].size();
+
+      Fv.at(var).reposition(n_var, var_dofs);
+      Xv.at(var).reposition(n_var, var_dofs);
+      oldXv.at(var).reposition(n_var, var_dofs);
+      scalev.at(var).reposition(n_var, var_dofs);
+
+      unsigned int n_varj = 0;
+      for (auto&& varj : q_var)
+      {
+        unsigned int varj_dofs = dof_indices_var[varj].size();
+
+        Kvv[var].insert(make_pair(varj, DenseSubMatrix<Real>(Ke)));
+        Kvv[var].at(varj).reposition(n_var, n_varj, var_dofs, varj_dofs);
+        n_varj += varj_dofs;
+      }
+      n_var += var_dofs;
+    }
+
+    unsigned int c_var = 0;
+    for (auto&& cons : _conservation)
+    {
+      unsigned int var = cons.first;
+
+      Fv.insert(make_pair(var, DenseSubVector<Real>(Fe)));
+      Xv.insert(make_pair(var, DenseSubVector<Real>(X)));
+      oldXv.insert(make_pair(var, DenseSubVector<Real>(oldX)));
+      //scalev.insert(make_pair(var, DenseSubVector<Real>(local_scaling)));
+
+      Fv.at(var).reposition(n_var + c_var, 1);
+      Xv.at(var).reposition(n_var + c_var, 1);
+      oldXv.at(var).reposition(n_var + c_var, 1);
+      //scalev.at(var).reposition(n_var*n_dofs, 1);
+
+      unsigned int n_varj = 0;
+      for (auto&& varj : q_var)
+      {
+        unsigned int varj_dofs = dof_indices_var[varj].size();
+
+        if ((find(cons.second.carrier_vars.begin(),
+            cons.second.carrier_vars.end(), varj) !=
+                cons.second.carrier_vars.end()) ||
+            (varj == u_var))
+        {
+          Kvv[var].insert(make_pair(varj, DenseSubMatrix<Real>(Ke)));
+          Kvv[var].at(varj).reposition(n_var + c_var,
+                                       n_varj, 1, varj_dofs);
+        }
+
+        Kvv[varj].insert(make_pair(var, DenseSubMatrix<Real>(Ke)));
+        Kvv[varj].at(var).reposition(n_varj,
+                                     n_var + c_var, varj_dofs, 1);
+        n_varj += varj_dofs;
+      }
+
+      Kvv[var].insert(make_pair(var, DenseSubMatrix<Real>(Ke)));
+      Kvv[var].at(var).reposition(n_var + c_var,
+                                  n_var + c_var, 1, 1);
+      c_var++;
+
+    }
+
+
+    // Get the temperature given the element
+    vector<double> T_nodes = sc->get_temperature_at_nodes();
+
+
+    //
+    // prepare geometric quantities associated to the edges and the nodes
+    //
+    double length_scaling = get_scaling().get_calc_mesh_units() / x0;
+
+    vector<double> edge_lengths(elem->n_edges());
+    vector<double> edge_areas(elem->n_edges());
+    vector<double> node_volumes(elem->n_nodes());
+
+    unsigned int dim = elem->dim();
+    if (dim == 1)
+    {
+      edge_lengths.resize(1);
+      edge_areas.resize(1);
+      edge_lengths[0] = elem->volume() * length_scaling;
+      edge_areas[0] = 1.0;
+
+      node_volumes[0] = length_scaling * elem->volume() / 2.0;
+      node_volumes[1] = node_volumes[0];
+    }
+    else if (dim == 2)
+    {
+
+    }
+    else if (dim == 3)
+    {
+
+    }
+
+    unsigned int n_edges = edge_lengths.size();
+    unsigned int n_nodes = elem->n_nodes();
+
+
+
+    map<unsigned int, vector<Real>> u;
+    map<unsigned int, vector<Real>> oldu;
+    map<unsigned int, vector<RealGradient>> grad_u;
+    // densities at nodes
+    map<unsigned int, vector<Real>> density;
+    // derivate of densities w.r.t. quasi Fermi level at nodes
+    map<unsigned int, vector<Real>> dn_dEf;
+    map<unsigned int, vector<Real>> diffusivity;
+    map<unsigned int, vector<Real>> sigma;
+    map<unsigned int, vector<Real>> dsigma_dEf;
+    map<unsigned int, vector<RealGradient>> dsigma_dgradEf;
+    map<unsigned int, vector<RealGradient>> dsigma_dgradu;
+    //map<unsigned int, vector<RealTensor>> diffusivity;
+    vector<RealTensor> permittivity;
+    vector<RealVectorValue> polarization;
+
+    for (auto&& var : q_var)
+    {
+      u[var].resize(n_nodes);
+      oldu[var].resize(n_nodes);
+      grad_u[var].resize(n_nodes);
+      density[var].resize(n_nodes);
+      dn_dEf[var].resize(n_nodes);
+      diffusivity[var].resize(n_nodes);
+      sigma[var].resize(n_nodes);
+      dsigma_dEf[var].resize(n_nodes);
+      dsigma_dgradEf[var].resize(n_nodes);
+      dsigma_dgradu[var].resize(n_nodes);
+
+      permittivity.resize(n_nodes);
+      polarization.resize(n_nodes);
+    }
+
+    // loop over the element's nodes and store potentials and densities
+    // at the nodes
+    for (unsigned int qp = 0; qp < n_nodes; qp++)
+    {
+
+      // get the solution values at the nodes
+      // phi[i][qp] = delta_{i,qp}
+      for (auto&& var : q_var)
+      {
+        unsigned int ii = id_map[var][qp];
+        u[var][qp] = Xv.at(var)(ii);
+        oldu[var][qp] = oldXv.at(var)(ii);
+
+        for (unsigned int j = 0; j < elem->n_nodes(); ++j)
+          grad_u[var][qp] += dphi[j][qp] * Xv.at(var)(id_map[var][j]);
+      }
+
+
+      // add the constant electrochemical potential
+      for (auto&& cons : _conservation)
+      {
+        for (auto&& var : cons.second.carrier_vars)
+        {
+          // we need this only if the carrier exists in this element
+          if (q_var.count(var))
+          {
+            u[var][qp] += Xv.at(cons.first)(0);
+            oldu[var][qp] += oldXv.at(cons.first)(0);
+          }
+        }
+      }
+
+      // prepare for calculating local properties
+      sc->set_coordinates(elem->point(qp));
+
+      double grad_fac = phi0 / x0;
+      for (auto&& var : q_var)
+      {
+        if (var == u_var)
+        {
+          sc->set_el_potential(phi0 * u[var][qp]);
+          sc->set_old_el_potential(phi0 * oldu[var][qp]);
+          sc->set_electric_field(-grad_fac * grad_u[var][qp]);
+        }
+        else
+        {
+          sc->set_fermi_potential(var, phi0 * u[var][qp]);
+          sc->set_old_fermi_potential(var, phi0 * oldu[var][qp]);
+          sc->set_grad_fermi(var, grad_fac * grad_u[var][qp]);
+        }
+      }
+
+      // calculate all local properties
+      sc->calculate_densities();
+      sc->calculate_traps();
+      sc->calculate_ionized_dopants();
+      sc->calculate_mobilities();
+      sc->calculate_net_recombination_rates();
+
+      map<unsigned int, long double> R;
+
+      for (auto&& var : q_var)
+      {
+        if (var != u_var)
+        {
+          density[var][qp] = sc->get_q_density(var);
+          dn_dEf[var][qp] = sc->get_q_density_derivative(var);
+          R.insert( make_pair(var, sc->get_net_q_recombination_rate(var)) );
+          diffusivity[var][qp] = Constants::k_B * T_nodes[qp] * sc->get_q_mobility(var);
+
+          CarrierProperties* cp = sc->get_carrier_properties(var);
+
+          double cond;
+          double der_qFermi;
+          libMesh::RealGradient der_grad_u(0);
+          libMesh::RealGradient der_grad_f(0);
+          cond = sc->get_carrier_properties(var)->
+                get_conductivity_and_derivatives(der_qFermi, der_grad_f, der_grad_u);
+          sigma[var][qp] = cond;
+          dsigma_dEf[var][qp] = der_qFermi;
+          dsigma_dgradEf[var][qp] = der_grad_f;
+          dsigma_dgradu[var][qp] = der_grad_u;
+          //tep.insert( make_pair(var, cp->get_thermoelectric_power() / phi0) );
+        }
+      }
+      //double Nd = sc->get_ionized_donor_density();
+      //double Na = sc->get_ionized_acceptor_density();
+
+      permittivity[qp] = sc->get_relative_permittivity();
+      polarization[qp] = sc->get_total_polarization();
+
+      /*
+      double sigma_e_x_Pe_x_J = J * sigma_e * eTEpower;
+      double sigma_h_x_Ph_x_J = J * sigma_h * hTEpower;
+      */
+
+      //
+      // The residual looks like this:
+      //
+      //      r_i = Ke_ij*X_j - Fe_i
+      //
+      // where X_j = (\phi_j, n_j', p_j'')
+      //
+      // The jacobian looks like this:
+      //
+      //      J_ij = dr_i/dX_j
+      //
+      //           = Ke_ij + dKe_il/dX_j * X_l - dFe_i/dX_j
+      //
+
+
+      //
+      // here we calculate Fe_i
+      //
+      if (residual != NULL)
+      {
+        for (auto&& var : q_var)
+        {
+          if (var == u_var)
+          {
+            if (coupling & POISSON)
+              Fv.at(var)(qp) -= node_volumes[qp] * sc->get_charge_density() / C0;
+            else
+              Fv.at(var)(qp) -= Xv.at(var)(qp);
+          }
+          else
+          {
+            double sign = sc->get_carrier_properties(var)->get_charge_sign();
+            unsigned int ii = id_map[var][qp];
+            long double net_recomb = node_volumes[qp] * R[var] / R0;
+
+            if (coupling & CURRENTS)
+            {
+              Fv.at(var)(ii) += sign * net_recomb;
+            }
+            else
+              Fv.at(var)(ii) -= Xv.at(var)(ii);
+          }
+
+        }
+      }
+
+
+
+      // here we calculate dFe_i/dX_j
+      if (jacobian != NULL)
+      {
+
+        map<unsigned int, double> drho;
+        drho[u_var] = 0.0;
+
+        for (auto&& vari : q_var)
+        {
+          if (vari != u_var)
+          {
+            unsigned int ii = id_map[vari][qp];
+
+            drho[vari] = sc->get_charge_density_derivative(vari) * phi0;
+            drho[u_var] -= drho[vari];
+
+            if (coupling & POISSON)
+              Kvv[u_var].at(vari)(qp,ii) -= node_volumes[qp] * drho[vari] / C0;
+
+            if (coupling & CURRENTS)
+            {
+              for (auto&& varj : q_var)
+              {
+                double sign = sc->get_carrier_properties(vari)->get_charge_sign();
+                unsigned int jj = id_map[varj][qp];
+                long double dR = sign * sc->get_net_q_recombination_rate_derivatives(vari)[varj];
+                Kvv[vari].at(varj)(ii,jj) += node_volumes[qp] * dR * phi0 / R0;
+              }
+            }
+            else
+              Kvv[vari].at(vari)(qp,qp) += 1;
+          }
+        }
+
+        if (coupling & POISSON)
+          Kvv[u_var].at(u_var)(qp,qp) -= node_volumes[qp] * drho[u_var] / C0;
+        else
+          Kvv[u_var].at(u_var)(qp,qp) += 1;
+
+
+
+/*
+          for (auto&& var : _conservation)
+          {
+            drho[var.first] = 0.0;
+            for (auto&& vari : var.second.carrier_vars)
+            {
+              // we need this only if the carrier exists in this element!
+              if (q_var.count(vari))
+                drho[var.first] += sc->get_charge_density_derivative(vari) * phi0 / C0;
+            }
+          }
+*/
+
+      }
+
+    } // end loop over vertices (= control volume centroids)
+
+
+
+    // now we loop on the edges, to add the flux contributions
+    for (unsigned int e = 0; e < n_edges; ++e)
+    {
+      vector<unsigned int> nodes;
+      nodes.reserve(2);
+
+      for (unsigned int n = 0; n < n_nodes; ++n)
+        if (elem->is_node_on_edge(n, e))
+          nodes.push_back(n);
+
+      assert(nodes.size() == 2);
+
+      unsigned int n1 = nodes[0];
+      unsigned int n2 = nodes[1];
+
+      // now we have the two nodes
+
+      if (coupling & POISSON)
+      {
+
+        if (residual != NULL)
+        {
+          // treat the polarization
+          RealVectorValue dir(elem->point(n2) - elem->point(n1));
+          RealVectorValue pol(polarization[n1]);
+          pol += polarization[n2];
+          double P = (pol * dir) * 0.5 / dir.norm();
+          double value = edge_areas[e] * P / P0;
+          Fv.at(u_var)(n1) += value;
+          Fv.at(u_var)(n2) -= value;
+        }
+
+        double perm = 0;
+        for (auto&& n : nodes)
+        {
+          // TODO for now take trace
+          // 1/3 for the trace, 1/2 for the mean of two nodes
+          perm += 1/6.0 * permittivity[n].tr();
+        }
+
+        double coeff = l2 * perm * edge_areas[e] / edge_lengths[e];
+        Kvv[u_var].at(u_var)(n1, n1) += coeff;
+        Kvv[u_var].at(u_var)(n1, n2) -= coeff;
+        Kvv[u_var].at(u_var)(n2, n2) += coeff;
+        Kvv[u_var].at(u_var)(n2, n1) -= coeff;
+      }
+
+
+      if (coupling & CURRENTS)
+      {
+        for (auto&& var : q_var)
+        {
+
+          if (var != u_var)
+          {
+            unsigned int i = id_map[var][n1];
+            unsigned int j = id_map[var][n2];
+
+            //double D = 0.5 * (diffusivity[var][n1] + diffusivity[var][n2]);
+            //double dn_i = dn_dEf[var][n1];
+            //double dn_j = dn_dEf[var][n2];
+
+            //double sgn = dn_i < 0 ? -1 : 1;
+            //double arg = 0.5 * (log(sgn * dn_i) + log(sgn * dn_j));
+            //double sigma_ij = D * exp(arg) / (mu0 * C0);
+
+            double sigma_i = sigma[var][n1];
+            double sigma_j = sigma[var][n2];
+            //double sigma_ij = sqrt(sigma_i) * sqrt(sigma_j) / (mu0 * C0);
+            double sigma_ij = 0.5 * (sigma_i + sigma_j) / (mu0 * C0);
+
+
+            double coeff = edge_areas[e] / edge_lengths[e];
+            Kvv[var].at(var)(i, i) += coeff * sigma_ij;
+            Kvv[var].at(var)(i, j) -= coeff * sigma_ij;
+            Kvv[var].at(var)(j, j) += coeff * sigma_ij;
+            Kvv[var].at(var)(j, i) -= coeff * sigma_ij;
+
+            if (jacobian != NULL)
+            {
+              double dsigma_i = dsigma_dEf[var][n1];
+              double dsigma_j = dsigma_dEf[var][n2];
+
+              coeff *= phi0 * (u[var][n1] - u[var][n2]);
+              //double sigma_ji = sigma_ij / sigma_j;
+              //sigma_ij /= sigma_i;
+
+              sigma_ij = 0.5 / (mu0 * C0);
+              double sigma_ji = sigma_ij;
+
+              Kvv[var].at(var)(i, i) -= coeff * sigma_ij * dsigma_i;
+              Kvv[var].at(var)(i, j) -= coeff * sigma_ji * dsigma_j;
+              Kvv[var].at(var)(j, j) += coeff * sigma_ji * dsigma_j;
+              Kvv[var].at(var)(j, i) += coeff * sigma_ij * dsigma_i;
+
+              if (coupling & POISSON)
+              {
+                Kvv[var].at(u_var)(i, n1) += coeff * sigma_ij * dsigma_i;
+                Kvv[var].at(u_var)(i, n2) += coeff * sigma_ji * dsigma_j;
+                Kvv[var].at(u_var)(j, n2) -= coeff * sigma_ji * dsigma_j;
+                Kvv[var].at(u_var)(j, n1) -= coeff * sigma_ij * dsigma_i;
+              }
+            }
+          }
+        }
+      }
+
+    }
+
+
+
+    // now loop over the element sides to find boundary elements
+    // and to include von Neumann and mixed type boundary conditions
+    //
+    // NOTE 1:
+    // we dont apply BC for nabla(Ef) but for the particle
+    // flux sigma * nabla(Ef)
+    //
+
+    for (unsigned int s = 0; s < elem->n_sides(); s++)
+    {
+
+      Material* mat = get_material(elem);
+      DDInterfaceModel* sm = get_interface_model<DDInterfaceModel>(elem, s);
+
+      bool true_boundary = environment.is_outer_boundary(ElementSide(elem, s));
+
+      if ((sm != NULL) || ((true_boundary) && (residual != NULL)))
+      {
+        // for getting geometrical quantities
+        UniquePtr<Elem> side = elem->side(s);
+
+        vector<double> side_areas(side->n_nodes(), 1);
+
+        unsigned int dim = elem->dim();
+        if (dim == 2)
+        {
+
+        }
+        else if (dim == 3)
+        {
+
+        }
+
+        vector<unsigned int> node_map(side->n_nodes());
+        // associate side nodes to elem local node ids
+        for (unsigned int qp = 0; qp < side->n_nodes(); qp++)
+        {
+          for (unsigned int i = 0; i < elem->n_nodes(); i++)
+            if (side->node_id(qp) == elem->node_id(i))
+              node_map[qp] = i;
+        }
+
+        if (sm != NULL)
+        {
+          // from fe_face we get the normal
+          fe_face->reinit(elem, s);
+
+          sm->reinit(elem, s);
+
+          // loop on the side nodes
+          for (unsigned int qp = 0; qp < side->n_nodes(); qp++)
+          {
+
+            // prepare for calculating local properties
+            sc->set_coordinates(side->point(qp));
+
+            double grad_fac = phi0 / x0;
+            for (auto var : q_var)
+            {
+              if (var == u_var)
+              {
+                sc->set_el_potential(phi0 * u[var][node_map[qp]]);
+                sc->set_electric_field(-grad_fac * grad_u[var][node_map[qp]]);
+              }
+              else
+              {
+                sc->set_fermi_potential(var, phi0 * u[var][node_map[qp]]);
+                sc->set_grad_fermi(var, grad_fac * grad_u[var][node_map[qp]]);
+              }
+            }
+
+            sc->calculate_densities();
+            sc->calculate_mobilities();
+
+
+            sm->set_face_normal(face_normals[qp]);
+            sm->set_coordinates(side->point(qp));
+
+            for (auto var : q_var)
+            {
+              if (var == u_var)
+              {
+                sm->set_el_potential(phi0 * u[var][node_map[qp]]);
+                sm->set_electric_field(-grad_fac * grad_u[var][node_map[qp]]);
+              }
+              else
+              {
+                sm->set_fermi_potential(var, phi0 * u[var][node_map[qp]]);
+                sm->set_grad_fermi(var, grad_fac * grad_u[var][node_map[qp]]);
+              }
+            }
+
+            sm->compute();
+
+
+            // contribution to the jacobian
+            if (jacobian != NULL)
+            {
+              // for Dirichlet DOFs we do not add anything
+              vector<double> scale_v(_carriers.size() + 1, 0.0);
+              vector<vector<double>> deriv_v(_carriers.size() + 1, vector<double>(_carriers.size() + 1, 0));
+              for (auto&& var : q_var)
+              {
+                double val = phi0 * side_areas[qp] / x0;
+                scale_v[var] = (var == u_var) ?  val / C0 : val / R0;
+
+                if (var != u_var)
+                {
+                  double sign = -sc->get_carrier_properties(var)->get_charge_sign();
+                  scale_v[var] *= sign;
+                }
+
+                vector<double> deriv_tmp = sm->get_jacobian_row(var);
+                deriv_v[var] = deriv_tmp;
+              }
+
+
+              // copy dirichlet values to global container
+              for (auto&& vari : q_var)
+              {
+                unsigned int ii = id_map[vari][node_map[qp]];
+                numeric_index_type i = dof_indices_var[vari][ii];
+
+
+                if ((vari == u_var) && (coupling & POISSON) ||
+                    (vari != u_var) && (coupling & CURRENTS))
+                {
+                  for (auto&& varj : q_var)
+                  {
+                    unsigned int jj = id_map[varj][node_map[qp]];
+
+                    if ( ((varj == u_var) && (coupling & POISSON)) || (varj != u_var) )
+                    {
+                      if (sm->get_type(vari) == DDInterfaceModel::DIRICHLET)
+                      {
+                        numeric_index_type j = dof_indices_var[varj][jj];
+                        dirichlet_jac[i][j] -= deriv_v[vari][varj];
+                      }
+                      else
+                      {
+                        Kvv.at(vari).at(varj)(ii,jj) -= scale_v[vari] * deriv_v[vari][varj];
+                      }
+                    }
+                  }
+                }
+
+
+
+                ////
+                // NOTE:
+                //   the signs are inverted here because outflow means recombination
+                //   and the normal point outwards, giving a positive current for
+                //   outflow
+              }
+            } // end jacobian
+
+            // contribution to -Fe_i
+            if (residual != NULL)
+            {
+              vector<double> value_v(_carriers.size() + 1, 0.0);
+
+              const vector<double>& coeff_a = sm->get_a();
+              const vector<double>& coeff_g = sm->get_g();
+
+              for (auto&& var : q_var)
+              {
+                double val = side_areas[qp] / x0;
+                value_v[var] = (var == u_var) ? val / C0 : val / R0;
+
+                double bc_val = (coeff_g[var] - coeff_a[var] * u[var][node_map[qp]] * phi0);
+                if (sm->get_type(var) != DDInterfaceModel::DIRICHLET)
+                  value_v[var] *= bc_val;
+                else
+                  value_v[var] = bc_val / phi0;
+
+              }
+
+
+              for (auto&& vari : q_var)
+              {
+                unsigned int ii = id_map[vari][node_map[qp]];
+                numeric_index_type i = dof_indices_var[vari][ii];
+
+                if (sm->get_type(vari) == DDInterfaceModel::DIRICHLET)
+                {
+                  dirichlet_res[i] -= value_v[vari];
+                }
+                else
+                {
+                  if ((vari == u_var) && (coupling & POISSON))
+                    Fv.at(vari)(ii) -= value_v[vari];
+                  else if ((vari != u_var) && (coupling & CURRENTS))
+                  {
+                    double sign = -sc->get_carrier_properties(vari)->get_charge_sign();
+                    Fv.at(vari)(ii) -= sign * value_v[vari];
+                  }
+                }
+              }
+            }  // end residual
+
+          } // end loop over qp
+        } // end if (sm != NULL)
+        else if ((true_boundary) && (residual != NULL))
+        {
+          // If we are on an outer boundary, we have to include
+          // the polarization
+          //
+          // NOTE:
+          // we only include the polarization when no explicit
+          // boundary is defined
+
+          if ((coupling & POISSON) &&
+              (params.default_boundary_condition == ZEROFIELD))
+          {
+            fe_face->reinit(elem, s);
+
+            for (unsigned int qp = 0; qp < side->n_nodes(); qp++)
+            {
+
+              double Pn = (polarization[node_map[qp]] * face_normals[qp]) / P0;
+
+              Fv.at(u_var)(node_map[qp]) -= side_areas[qp] * Pn;
+            }
+          }
+        }  // end true boundary && residual
+      }
+    } // end loop over element side
+
+
+
+    // constrain the jacobian and the rhs to account for constrained
+    // DOFs
+    // NOTE: this changes dof_indices that's why the application of
+    //       Dirichlet type BCs needs special care
+    dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
+
+    system.exclude_dofs(Ke, dof_indices, elem);
+
+
+
+    //perf_log.start_event("add");
+
+    if (residual != NULL)
+    {
+
+      for (unsigned int i = 0; i < n_dofs_tot; i++)
+        for (unsigned int j = 0; j < n_dofs_tot; j++)
+          Fe(i) += Ke(i,j) * x(dof_indices[j]);
+
+      system.exclude_dofs(Fe, dof_indices, elem);
+
+      residual->add_vector(Fe, dof_indices);
+    }
+    else
+    {
+      jacobian->add_matrix(Ke, dof_indices);
+    }
+
+
+  } // end loop over elements
+
+  if (jacobian != NULL)
+  {
+
+    // adjust Dirichlet BCs
+    if (!dirichlet_jac.empty())
+    {
+      PetscMatrix<Number>* matrix   = dynamic_cast<PetscMatrix<Number>*>(jacobian);
+      MatSetOption(matrix->mat(), MAT_KEEP_NONZERO_PATTERN, PETSC_TRUE);
+      jacobian->close();
+      vector<numeric_index_type> rows;
+      rows.reserve(dirichlet_jac.size());
+      for (auto&& dr : dirichlet_jac)
+      {
+        rows.push_back(dr.first);
+      }
+      jacobian->zero_rows(rows, 0.0);
+
+      for (auto&& dr : dirichlet_jac)
+      {
+        numeric_index_type i = dr.first;
+        for (auto&& col : dr.second)
+        {
+          jacobian->set(i, col.first, col.second);
+        }
+      }
+    }
+
+    jacobian->close();
+
+    //jacobian->print_matlab("J.m");
+    //exit(0);
+
+  }
+  else
+  {
+    // the following is done only on node 0, otherwise we would
+    // add up the constant term many times
+    //if (this->get_communicator().rank() == 0)
+    //{
+      for (auto&& var : _conservation)
+      {
+        vector<dof_id_type> scalars;
+        //dof_map.SCALAR_dof_indices(scalars, var.first);
+        dof_map.local_variable_indices(scalars, mesh, var.first);
+
+        double scale = x0 * C0;
+        switch (dim)
+        {
+          case 3:
+            scale *= x0;
+
+          case 2:
+            scale *= x0;
+
+          default:
+            break;
+        }
+        if (!scalars.empty())
+          residual->add(scalars[0], var.second.conserved_number / scale);
+      }
+    //}
+
+    // adjust Dirichlet BCs
+    if (!dirichlet_res.empty())
+    {
+      for (auto&& dr : dirichlet_res)
+      {
+        numeric_index_type i = dr.first;
+        residual->set(i, dr.second);
+      }
+    }
+
+    residual->close();
+    //residual->print_matlab("r.m");
+    //exit(0);
+
+    //sysmat.close();
+    //sysmat.print_matlab("sysmat.m");
+    /*
+    if (coupling & ELECTRONS)
+    {
+      //if (__private_counter > 0)
+      //  oldx -= x;
+      ostringstream os;
+      os << "_" << __private_counter;
+      write_nodal_vector("residual" + os.str(), *residual);
+      ostringstream ms;
+      ms << "writing " << "residual" << os.str() << " (norm = " << residual->l2_norm() << ")\n";
+      Messages::info(ms.str());
+      //residual->print_matlab("F" + os.str() + ".m");
+      //write_nodal_vector("x" + os.str(), oldx);
+      //NumericVector<Number>& weight = system.get_vector("scaling");
+      //write_nodal_vector("scaling" + os.str(), weight);
+      __private_counter++;
+      //oldx = x;
+    }
+    */
+  }
+
+
+  STOP_LOG(get_name() + ": Matrix assembly", "");
+}
+
+
+
+
+/*
+std::pair<double, double>
+DriftDiffusion::bernoulli(double x) const
+{
+  double b = 1.0;
+  double db = -0.5;
+  if (fabs(x) > 1e-6)
+  {
+    double exp_f = 1.0 / (exp(x) - 1);
+    b = x * exp_f;
+    db = exp_f * (1 - x * exp(x) * exp_f);
+  }
+  return(make_pair(b, db));
+}
+*/
 
 
 void
