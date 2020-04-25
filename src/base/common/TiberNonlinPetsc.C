@@ -7,6 +7,7 @@
 
 #include "InitFailedException.h"
 #include "PetscDivergedError.h"
+#include "SolveFailedException.h"
 
 
 #include "equation_systems.h"
@@ -68,9 +69,12 @@ void
 TiberNonlinPetsc::do_solve(void)
 {
 
-  assert(_assemble != NULL);
-
-  _solver->matvec = _assemble;
+  if (_assemble != NULL)
+    _solver->matvec = _assemble;
+  else if (_solver->residual_and_jacobian_object == NULL)
+  {
+    throw SolveFailedException("No assembly routines set for nonlinear solver");
+  }
 
   // setup the max line search step
   double sqrt_nn = std::sqrt((double) get_mesh().n_nodes() * n_vars());

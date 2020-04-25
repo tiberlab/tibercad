@@ -13,6 +13,7 @@
 
 
 #include "linear_solver.h"
+#include "nonlinear_solver.h"
 #include "equation_systems.h"
 #include "dof_map.h"
 
@@ -45,7 +46,12 @@ void
 TiberNonlinLS::do_solve(void)
 {
 
-  assert(_assemble != NULL);
+  if (_assemble != NULL)
+    nonlinear_solver->matvec = _assemble;
+  else if (nonlinear_solver->residual_and_jacobian_object == NULL)
+  {
+    throw SolveFailedException("No assembly routines set for nonlinear solver");
+  }
 
   SimulationInterface* sim =
       SimulationInterface::find_simulation(
@@ -96,8 +102,18 @@ TiberNonlinLS::do_solve(void)
     u_old = u_tmp;
 
     // prepare jacobian and residual
-    _assemble(u, NULL, matrix, *this);
-    _assemble(u, rhs, NULL, *this);
+    if (nonlinear_solver->matvec != NULL)
+    {
+      nonlinear_solver->matvec(u, NULL, matrix, *this);
+      nonlinear_solver->matvec(u, rhs, NULL, *this);
+    }
+    else // now the assembly object must be there
+    {
+      nonlinear_solver->residual_and_jacobian_object
+                            ->residual_and_jacobian(u, NULL, matrix, *this);
+      nonlinear_solver->residual_and_jacobian_object
+                            ->residual_and_jacobian(u, rhs, NULL, *this);
+    }
 
     get_linear_solver()->set_linear_rtol(tol);
 
@@ -184,7 +200,15 @@ TiberNonlinLS::do_solve(void)
       u_tmp.localize(u, get_dof_map().get_send_list());
 
       // evaluate the residual
-      _assemble(u, rhs, NULL, *this);
+      if (nonlinear_solver->matvec != NULL)
+      {
+        nonlinear_solver->matvec(u, rhs, NULL, *this);
+      }
+      else // now the assembly object must be there
+      {
+        nonlinear_solver->residual_and_jacobian_object
+        ->residual_and_jacobian(u, rhs, NULL, *this);
+      }
 
       old_norm = norm_res;
       //norm_res = rhs->l2_norm();
@@ -278,7 +302,15 @@ TiberNonlinLS::do_solve(void)
       u_tmp.localize(u, get_dof_map().get_send_list());
 
       // evaluate the residual
-      _assemble(u, rhs, NULL, *this);
+      if (nonlinear_solver->matvec != NULL)
+      {
+        nonlinear_solver->matvec(u, rhs, NULL, *this);
+      }
+      else // now the assembly object must be there
+      {
+        nonlinear_solver->residual_and_jacobian_object
+        ->residual_and_jacobian(u, rhs, NULL, *this);
+      }
 
       double norm_res_old = norm_res;
       //norm_res = rhs->l2_norm();

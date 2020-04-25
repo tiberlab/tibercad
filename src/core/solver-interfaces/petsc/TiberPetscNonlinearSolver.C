@@ -124,7 +124,9 @@ extern "C"
     R.zero();
 
     if (solver->residual != NULL) solver->residual(X_local, R, sys);
-    if (solver->matvec   != NULL) solver->matvec(X_local, &R, NULL, sys);
+    else if (solver->matvec   != NULL) solver->matvec(X_local, &R, NULL, sys);
+    else if (solver->residual_and_jacobian_object != NULL)
+      solver->residual_and_jacobian_object->residual_and_jacobian(X_local, &R, NULL, sys);
 
     R.close();
     X_global.close();
@@ -168,7 +170,9 @@ extern "C"
     PC.zero();
 
     if (solver->jacobian != NULL) solver->jacobian(X_local, PC, sys);
-    if (solver->matvec   != NULL) solver->matvec(X_local, NULL, &PC, sys);
+    else if (solver->matvec   != NULL) solver->matvec(X_local, NULL, &PC, sys);
+    else if (solver->residual_and_jacobian_object != NULL)
+      solver->residual_and_jacobian_object->residual_and_jacobian(X_local, NULL, &PC, sys);
 
     PC.close();
     Jac.close();

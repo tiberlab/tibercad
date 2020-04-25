@@ -133,6 +133,15 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
         ZERODISPLACEMENT
     };
 
+    //! The discretization types
+    enum Discretization
+    {
+      //! Galerkin FEM, using potentials
+      FEM,
+
+      //! Box integration w/o Scharfetter-Gummel, using potentials
+      BIM
+    };
 
 
     /**
@@ -192,6 +201,10 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
          * The order of gauss integration
          */
         libMeshEnums::Order integration_order;
+
+
+        //! The discretization type
+        Discretization discretization;
 
 
         /**
@@ -450,34 +463,28 @@ virtual void do_check_nonlinear_step(
         double volume;
     };
 
-    //! Base index for quasi Fermi energies
-    unsigned int _qFermi_base;
-    //! Base index for densities
-    unsigned int _refenergy_base;
-    //! Base index for densities
-    unsigned int _density_base;
-    //! Base index for mobilities
-    unsigned int _mobility_base;
-    //! Base index for conductivities
-    unsigned int _conductivity_base;
-    //! Base index for fluxes
-    unsigned int _flux_base;
-    //! Base index for currents
-    unsigned int _curr_base;
-    //! Base index for joule heat
-    unsigned int _joule_base;
-    //! Base index for thermoelectric power
-    unsigned int _thelpower_base;
-    //! Base index for Peltier heat
-    unsigned int _peltier_base;
-    //! Base index for recombination heat
-    unsigned int _recheat_base;
-    //! Base index for power flux
-    unsigned int _powerflux_base;
-    //! Base index for net recombination;
-    unsigned int _net_rec_base;
-    //! Base index for recombinations;
-    unsigned int _rec_base;
+
+    //! Callable object for interfacing with nonlinear solver
+    class JacobianAndResidual :
+        public libMesh::NonlinearImplicitSystem::ComputeResidualandJacobian
+    {
+      public:
+        JacobianAndResidual(DriftDiffusion* dd) : _dd(dd) {};
+
+        ~JacobianAndResidual(void) override {};
+
+        virtual void residual_and_jacobian(const libMesh::NumericVector<Number>& X,
+                                                 libMesh::NumericVector<Number>* R,
+                                                 libMesh::SparseMatrix<Number>* J,
+                                                 libMesh::NonlinearImplicitSystem& S) override;
+      private:
+
+        DriftDiffusion* _dd;
+
+    };
+
+    friend class JacobianAndResidual;
+
 
     //! Internal class for the RSTF test functions
     class RSTFSys : public libMesh::LinearImplicitSystem
@@ -509,6 +516,7 @@ virtual void do_check_nonlinear_step(
 
     friend class RSTFSys;
 
+
     //! The penalty value for Dirichlet BCs
 #ifdef HAVE_CONSTEXPR
     constexpr static double _penalty_value = 1e56;
@@ -516,13 +524,38 @@ virtual void do_check_nonlinear_step(
     const static double _penalty_value = 1e56;
 #endif
 
+    //! Base index for quasi Fermi energies
+    unsigned int _qFermi_base;
+    //! Base index for densities
+    unsigned int _refenergy_base;
+    //! Base index for densities
+    unsigned int _density_base;
+    //! Base index for mobilities
+    unsigned int _mobility_base;
+    //! Base index for conductivities
+    unsigned int _conductivity_base;
+    //! Base index for fluxes
+    unsigned int _flux_base;
+    //! Base index for currents
+    unsigned int _curr_base;
+    //! Base index for joule heat
+    unsigned int _joule_base;
+    //! Base index for thermoelectric power
+    unsigned int _thelpower_base;
+    //! Base index for Peltier heat
+    unsigned int _peltier_base;
+    //! Base index for recombination heat
+    unsigned int _recheat_base;
+    //! Base index for power flux
+    unsigned int _powerflux_base;
+    //! Base index for net recombination;
+    unsigned int _net_rec_base;
+    //! Base index for recombinations;
+    unsigned int _rec_base;
 
-    //! A static reference to \c this
-    /*!
-     * This is needed during matrix assembly, which is a static method.
-     */
-    static DriftDiffusion* _this;
 
+    //! The Assembly object to be used by the solver
+    JacobianAndResidual _jacobian_and_residual;
 
     //! An internal pointer to the device
     Device* _device;
@@ -746,17 +779,6 @@ virtual void do_check_nonlinear_step(
 
     //! Create a weight for the l2 norm
     void calculate_weights(void);
-
-
-    //! Assemble the residual vector or the jacobian matrix
-    /*!
-     * This method gets called from the underlying nonlinear solver
-     * library. It calls the real assembly routines.
-     */
-    static void assemble_system(const libMesh::NumericVector<Number>& x,
-        libMesh::NumericVector<Number>* residual,
-        libMesh::SparseMatrix<Number>* jacobian,
-        libMesh::NonlinearImplicitSystem& sys);
 
 
     //! Assembles the residual vector or the jacobian matrix

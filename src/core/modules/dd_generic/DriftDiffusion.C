@@ -32,12 +32,12 @@
 #include "libmesh/equation_systems.h"
 #include "libmesh/mesh_refinement.h"
 #include "libmesh/sparse_matrix.h"
+#include "libmesh/nonlinear_solver.h"
 #include "libmesh/numeric_vector.h"
 #include "libmesh/dense_submatrix.h"
 #include "libmesh/dense_subvector.h"
 #include "libmesh/libmesh_logging.h"
 #include "libmesh/perf_log.h"
-//#include "libMeshDefs.h"
 #include "petsc_matrix.h"
 
 
@@ -64,9 +64,6 @@ using namespace std;
 using namespace DriftDiffusionDefs;
 using namespace libMesh;
 
-DriftDiffusion*
-DriftDiffusion::_this;
-
 
 
 DriftDiffusion::Options::Options(void)
@@ -78,6 +75,7 @@ DriftDiffusion::Options::Options(void)
     refinement_tolerance(1e-6),
     quadrature_type(QTRAP),
     integration_order(libMeshEnums::FIFTH),
+    discretization(FEM),
     max_gummel_iterations(5),
     scaling_type(Scaling::UNITS),
     coupling(FULLYCOUPLED),
@@ -94,6 +92,7 @@ DriftDiffusion::Options::Options(void)
 
 DriftDiffusion::DriftDiffusion(const ModelOptions& options)
   : SimulationInterface(options),
+    _jacobian_and_residual(this),
     _rebuild_eq_system(true),
     _iqe(0.0),
     _rstf(NULL)
@@ -574,9 +573,6 @@ DriftDiffusion::do_solve(void)
   // rebuild the system if needed
   //rebuild_equation_system();
 
-  // set a static pointer to ourselves
-  // this is needed in the static assembly routine
-  _this = this;
 
   parse_options();
 
@@ -869,10 +865,6 @@ DriftDiffusion::do_equilibrium(void)
 
   // rebuild the system if needed
   //rebuild_equation_system();
-
-  // set a static pointer to ourselves
-  // this is needed in the static assembly routine
-  _this = this;
 
   //parse_options();
 
@@ -1390,8 +1382,16 @@ DriftDiffusion::parse_const_options(void)
   else if (qrule == "trapez")
     myopts.quadrature_type = QTRAP;
   else
-    throw InitFailedException("Unknown quadrature rule");
+    throw InitFailedException("Unknown quadrature rule: " + qrule);
 
+  method = "FEM";
+  qrule = opts.get_option("discretization", method);
+  if (method == "FEM")
+    myopts.discretization = FEM;
+  else if (method == "BIM")
+    myopts.discretization = BIM;
+  else
+    throw InitFailedException("Unknown discretization method: " + method);
 }
 
 
@@ -1405,6 +1405,7 @@ DriftDiffusion::parse_options(void)
 
   myopts.integration_order = static_cast<libMeshEnums::Order>(
       opts.get_option("integration_order", 5));
+
 
   string coupling = opts.get_option("coupling", "");
   if (coupling == "full")
@@ -1515,7 +1516,7 @@ DriftDiffusion::rebuild_equation_system(void)
   create_equation_system("nonlinear");
   TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>(0);
 
-  system.attach_assembly_routine(assemble_system);
+  system.nonlinear_solver->residual_and_jacobian_object = &this->_jacobian_and_residual;
 
   // setup the electrochemical potentials
   for (auto&& name : _carriers)
@@ -4472,30 +4473,55 @@ DriftDiffusion::do_maximum_norm_of_difference(ID id)
 }
 
 
-
-
-
 void
-DriftDiffusion::assemble_system(const libMesh::NumericVector<Number>& x,
-    libMesh::NumericVector<Number>* residual,
-    libMesh::SparseMatrix<Number>* jacobian,
+DriftDiffusion::JacobianAndResidual::residual_and_jacobian(
+    const libMesh::NumericVector<Number>& X,
+    libMesh::NumericVector<Number>* R,
+    libMesh::SparseMatrix<Number>* J,
     libMesh::NonlinearImplicitSystem&)
 {
-
-  switch (_this->_options.coupling)
+  switch (_dd->_options.discretization)
   {
-    case (CURRENTS):
-      _this->do_assembly_fem<CURRENTS>(x, residual, jacobian);
-      break;
-    case (POISSON):
-      _this->do_assembly_fem<POISSON>(x, residual, jacobian);
-      break;
-    default:
-      _this->do_assembly_fem<FULLYCOUPLED>(x, residual, jacobian);
-      break;
-  }
+    case (BIM):
+    {
+      switch (_dd->_options.coupling)
+      {
+        case (CURRENTS):
+          _dd->do_assembly_bim<CURRENTS>(X, R, J);
+        break;
 
+        case (POISSON):
+          _dd->do_assembly_bim<POISSON>(X, R, J);
+        break;
+
+        default:
+          _dd->do_assembly_bim<FULLYCOUPLED>(X, R, J);
+        break;
+      }
+      break;
+    }
+
+    default:
+    {
+      switch (_dd->_options.coupling)
+      {
+        case (CURRENTS):
+          _dd->do_assembly_fem<CURRENTS>(X, R, J);
+        break;
+
+        case (POISSON):
+          _dd->do_assembly_fem<POISSON>(X, R, J);
+        break;
+
+        default:
+          _dd->do_assembly_fem<FULLYCOUPLED>(X, R, J);
+        break;
+      }
+      break;
+    }
+  }
 }
+
 
 
 
