@@ -576,7 +576,6 @@ DriftDiffusion::do_solve(void)
 
   parse_options();
 
-
   bool equilibrium = true;
   {
     ContactData::iterator it(_voltages.begin());
@@ -1339,6 +1338,11 @@ DriftDiffusion::do_print_info(void)
   if (_do_local_scaling)
     os << "using local scaling";
 
+  os << endl;
+
+  os << "Using discretization method "
+     << get_options().get_option("discretization", "FEM");
+
   Messages::info(os.str());
 
 }
@@ -1389,7 +1393,16 @@ DriftDiffusion::parse_const_options(void)
   if (method == "FEM")
     myopts.discretization = FEM;
   else if (method == "BIM")
-    myopts.discretization = BIM;
+  {
+    if (get_mesh().mesh_dimension() > 1)
+    {
+      Messages::warning("BIM is currently not implemented for mesh "
+           "dimensions > 1. Falling back to FEM.");
+      myopts.discretization = FEM;
+    }
+    else
+      myopts.discretization = BIM;
+  }
   else
     throw InitFailedException("Unknown discretization method: " + method);
 }

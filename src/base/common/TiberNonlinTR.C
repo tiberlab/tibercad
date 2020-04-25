@@ -10,6 +10,7 @@
 
 
 #include "libmesh/linear_solver.h"
+#include "libmesh/nonlinear_solver.h"
 #include "libmesh/equation_systems.h"
 #include "libmesh/dof_map.h"
 
@@ -42,7 +43,12 @@ void
 TiberNonlinTR::do_solve(void)
 {
 
-  assert(_assemble != NULL);
+  if (_assemble != NULL)
+    nonlinear_solver->matvec = _assemble;
+  else if (nonlinear_solver->residual_and_jacobian_object == NULL)
+  {
+    throw SolveFailedException("No assembly routines set for nonlinear solver");
+  }
 
   // the ghosted solution vector
   NumericVector<Number>& u = get_solution_vector();
@@ -92,8 +98,18 @@ TiberNonlinTR::do_solve(void)
   {
 
     // prepare jacobian and residual
-    _assemble(u, NULL, matrix, *this);
-    _assemble(u, rhs, NULL, *this);
+    if (nonlinear_solver->matvec != NULL)
+    {
+      nonlinear_solver->matvec(u, NULL, matrix, *this);
+      nonlinear_solver->matvec(u, rhs, NULL, *this);
+    }
+    else // now the assembly object must be there
+    {
+      nonlinear_solver->residual_and_jacobian_object
+                            ->residual_and_jacobian(u, NULL, matrix, *this);
+      nonlinear_solver->residual_and_jacobian_object
+                            ->residual_and_jacobian(u, rhs, NULL, *this);
+    }
 
     double norm_rhs_now = rhs->l2_norm();
 
@@ -215,7 +231,15 @@ TiberNonlinTR::do_solve(void)
     }
 
 
-    _assemble(u, tmpvec.get(), NULL, *this);
+    if (nonlinear_solver->matvec != NULL)
+    {
+      nonlinear_solver->matvec(u, tmpvec.get(), NULL, *this);
+    }
+    else // now the assembly object must be there
+    {
+      nonlinear_solver->residual_and_jacobian_object
+      ->residual_and_jacobian(u, tmpvec.get(), NULL, *this);
+    }
 
     norm_rhs = tmpvec->l2_norm();
 
