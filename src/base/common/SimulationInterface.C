@@ -1021,7 +1021,7 @@ SimulationInterface::create_equation_system(const std::string& type,
 
 
 void
-SimulationInterface::solve_equilibrium(void) throw (SolveFailedException)
+SimulationInterface::solve_equilibrium(void)
 {
 
   if (!_equilibrium_is_solved)

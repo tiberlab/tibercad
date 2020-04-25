@@ -287,7 +287,7 @@ class SimulationInterface : public TiberModelObject
      * Calls do_equilibrium()
      *
      */
-    void solve_equilibrium(void) throw (SolveFailedException);
+    void solve_equilibrium(void);
 
 
     //! Solve the system
