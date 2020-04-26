@@ -46,9 +46,9 @@ void
 TiberNonlinLS::do_solve(void)
 {
 
-  if (_assemble != NULL)
+  if (_assemble != nullptr)
     nonlinear_solver->matvec = _assemble;
-  else if (nonlinear_solver->residual_and_jacobian_object == NULL)
+  else if (nonlinear_solver->residual_and_jacobian_object == nullptr)
   {
     throw SolveFailedException("No assembly routines set for nonlinear solver");
   }
@@ -102,10 +102,10 @@ TiberNonlinLS::do_solve(void)
     u_old = u_tmp;
 
     // prepare jacobian and residual
-    if (nonlinear_solver->matvec != NULL)
+    if (nonlinear_solver->matvec != nullptr)
     {
-      nonlinear_solver->matvec(u, NULL, matrix, *this);
-      nonlinear_solver->matvec(u, rhs, NULL, *this);
+      nonlinear_solver->matvec(u, nullptr, matrix, *this);
+      nonlinear_solver->matvec(u, rhs, nullptr, *this);
     }
     else // now the assembly object must be there
     {

@@ -24,10 +24,11 @@ TiberNonlinearSystem::TiberNonlinearSystem(libMesh::EquationSystems& es,
     const string& name, const unsigned int number)
 : TiberEqSystem(),
   Parent(es, name, number),
+  _assemble(nullptr),
   _n_nonlin_iterations(0),
   _final_residual_norm(1e20),
   _last_step_size(1e20),
-  _xmonitor(NULL)
+  _xmonitor(nullptr)
 {
   set_type(NONLINEAR);
 }
@@ -50,7 +51,7 @@ TiberNonlinearSystem*
 TiberNonlinearSystem::create(libMesh::EquationSystems& es,
     const std::string& sysname, const ModelOptions& options)
 {
-  TiberNonlinearSystem* sys = NULL;
+  TiberNonlinearSystem* sys = nullptr;
 
   std::string type(options.get_name());
   if (type.empty())
@@ -72,7 +73,7 @@ TiberNonlinearSystem::create(libMesh::EquationSystems& es,
     throw InitFailedException(s);
   }
 
-  assert(sys != NULL);
+  assert(sys != nullptr);
   sys->set_options(options);
 
   return sys;
@@ -93,14 +94,14 @@ TiberNonlinearSystem::solve(void)
   
   
   delete _xmonitor;
-  _xmonitor = NULL;
+  _xmonitor = nullptr;
 }
 
 
 void
 TiberNonlinearSystem::draw_point(double iteration, double error, bool logarithm)
 {
-  if (_xmonitor != NULL)
+  if (_xmonitor != nullptr)
   {
     if (logarithm)
       error = log10(error);
