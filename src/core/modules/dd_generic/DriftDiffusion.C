@@ -1389,7 +1389,7 @@ DriftDiffusion::parse_const_options(void)
     throw InitFailedException("Unknown quadrature rule: " + qrule);
 
   method = "FEM";
-  qrule = opts.get_option("discretization", method);
+  method = opts.get_option("discretization", method);
   if (method == "FEM")
     myopts.discretization = FEM;
   else if (method == "BIM")
@@ -5818,27 +5818,7 @@ DriftDiffusion::do_assembly_fem(const libMesh::NumericVector<Number>& x,
     {
 
       jacobian->add_matrix(Ke, dof_indices);
-      /*
-      for (unsigned int i = 0; i < n_dofs; i++)
-      i
-        unsigned int i2 = i + n_dofs;
-        unsigned int i3 = i2 + n_dofs;
-        for (unsigned int j = 0; j < n_dofs; j++)
-        {
-          if (j != i)
-          {
-            Ke(i, j) = Ke(i, j + n_dofs) = Ke(i, j + 2*n_dofs) = 0.0;
-            Ke(i2, j) = Ke(i2, j + n_dofs) = Ke(i2, j + 2*n_dofs) = 0.0;
-            Ke(i3, j) = Ke(i3, j + n_dofs) = Ke(i3, j + 2*n_dofs) = 0.0;
-          }
-        }
-      }
-      sysmat.add_matrix(Ke, dof_indices);
-      */
-      //cerr << Ke << endl;
-      //TiberMath::svd(Ke, Fe);
-      //elem->centroid().write_unformatted(cerr, false);
-      //cerr << " " << Fe(0) <<  "  " << Fe(Fe.size()-1) << endl;
+
     }
 
 
@@ -6503,6 +6483,20 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
           }
 
         }
+
+        for (auto&& var : _conservation)
+        {
+          for (auto&& vari : var.second.carrier_vars)
+          {
+            // we need this only if the carrier exists in this element!
+            if (q_var.count(vari))
+            {
+              double dens = sc->get_q_density(vari);
+
+              Fv.at(var.first)(0) -= node_volumes[qp] * dens / C0;
+            }
+          }
+        }
       }
 
 
@@ -6523,7 +6517,7 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
             drho[vari] = sc->get_charge_density_derivative(vari) * phi0;
             drho[u_var] -= drho[vari];
 
-            if (coupling & POISSON)
+            if (coupling & FULLYCOUPLED)
               Kvv[u_var].at(vari)(qp,ii) -= node_volumes[qp] * drho[vari] / C0;
 
             if (coupling & CURRENTS)
@@ -6541,25 +6535,56 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
           }
         }
 
+
+        for (auto&& var : _conservation)
+        {
+          drho[var.first] = 0.0;
+
+          for (auto&& vari : var.second.carrier_vars)
+          {
+            // we need this only if the carrier exists in this element!
+            if (q_var.count(vari))
+            {
+              drho[var.first] += sc->get_charge_density_derivative(vari) * phi0 / C0;
+
+              double ddens = sc->get_q_density_derivative(vari);
+              // diagonal part
+              Kvv[var.first].at(var.first)(0,0) += node_volumes[qp] * ddens * phi0 / C0;
+
+              if (coupling & POISSON)
+                Kvv[var.first].at(u_var)(0,qp) -= node_volumes[qp] * ddens * phi0 / C0;
+
+              unsigned int jj = id_map[vari][qp];
+              if (coupling & CURRENTS)
+              {
+                Kvv[var.first].at(vari)(0,jj) += node_volumes[qp] * ddens * phi0 / C0;
+
+                for (auto&& varj : q_var)
+                  {
+                    if (varj != u_var)
+                    {
+                      unsigned int jj = id_map[varj][qp];
+                      double sign = sc->get_carrier_properties(varj)->get_charge_sign();
+                      long double dR =
+                          sign * sc->get_net_q_recombination_rate_derivatives(varj)[vari];
+                      Kvv[varj].at(var.first)(jj,0) += node_volumes[qp] * phi0 / R0;
+                    }
+                  }
+              }
+            }
+          }
+
+          if (coupling & POISSON)
+            Kvv[u_var].at(var.first)(qp, 0) -= node_volumes[qp] * drho[var.first];
+
+        }
+
+
+
         if (coupling & POISSON)
           Kvv[u_var].at(u_var)(qp,qp) -= node_volumes[qp] * drho[u_var] / C0;
         else
           Kvv[u_var].at(u_var)(qp,qp) += 1;
-
-
-
-/*
-          for (auto&& var : _conservation)
-          {
-            drho[var.first] = 0.0;
-            for (auto&& vari : var.second.carrier_vars)
-            {
-              // we need this only if the carrier exists in this element!
-              if (q_var.count(vari))
-                drho[var.first] += sc->get_charge_density_derivative(vari) * phi0 / C0;
-            }
-          }
-*/
 
       }
 
