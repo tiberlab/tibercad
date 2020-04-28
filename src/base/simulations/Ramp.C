@@ -196,6 +196,10 @@ Ramp::ramp(void)
       ostringstream os;
       os << "Ramping to " << _variable << " = " << value
         << " failed while solving \'" << _simulations[j]->get_name() << "\'.";
+
+      if (_simulations[j]->verbose() > 1)
+        os << "\n" << e.what();
+
       Messages::warning(os.str());
 
       // this is a special case
