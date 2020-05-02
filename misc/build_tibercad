@@ -41,6 +41,7 @@ export CXXFLAGS="$CXXFLAGS -fopenmp"
 export LDFLAGS="$LDFLAGS -fopenmp"
 
 ./configure \
+  --with-cuda=/usr/pack/cudatoolkit-5.5.11-ma \
   --with-petsc-prefix=${BUILDDIR}/petsc-${PETSCVERSION}${PETSCPATCHLEVEL} \
   --with-petsc-arch=${TCHOST} \
   --with-mpiexec=${MPIEXEC} \
@@ -55,3 +56,9 @@ export LDFLAGS="$LDFLAGS -fopenmp"
 #  --with-boost-prefix=${SDKDIR} --with-boost-libdir=${SDKDIR}/${TCHOST}/lib \
 
 make METHOD=opt
+
+if test ! "${MPIDIR}" -ne "${SDKDIR}"
+then
+  mkdir -p SDK/bin
+  cp ${MPIDIR}/bin/mpiexec.hydra SDK/bin
+fi

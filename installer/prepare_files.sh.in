@@ -196,7 +196,7 @@ prepare_linux_package () {
   libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep petsc | awk '{print $3}'`"
   libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep slepc | awk '{print $3}'`"
   libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep libz | awk '{print $3}'`"
-  libs="$libs `ldd ${topdir}/SDK/bin/mpiexec.hydra | grep libnuma | awk '{print $3}'`"
+  libs="$libs `ldd ${topdir}/SDK/${ARCH}/bin/mpiexec.hydra | grep libnuma | awk '{print $3}'`"
   cp /usr/pack/intel_mkl-11.2-ma/mkl/lib/intel64/libmkl_def.so ${files}/${ARCH}/lib
   cp $libs ${files}/${ARCH}/lib
   cp ${topdir}/SDK/${ARCH}/bin/hydra_pmi_proxy ${files}/${ARCH}/bin
@@ -204,19 +204,19 @@ prepare_linux_package () {
   cp ${topdir}/SDK/bin/hydra_pmi_proxy ${files}/${ARCH}/bin
   cp ${topdir}/SDK/bin/mpiexec.hydra ${files}/${ARCH}/bin
   cp ${topdir}/${ARCH}/bin/tibercad ${files}/${ARCH}/bin/tibercad
+  cp ${topdir}/${ARCH}/lib/lib*.so* ${files}/${ARCH}/lib
   #
   # adjust rpath
   #
   for l in $(ls ${files}/${ARCH}/lib)
   do
-    patchelf --set-rpath '$ORIGIN' $l
+    patchelf --set-rpath '$ORIGIN' ${files}/${ARCH}/lib/$l
   done
   patchelf --set-rpath '$ORIGIN:$ORIGIN/../lib' ${files}/${ARCH}/bin/tibercad
   patchelf --set-rpath '$ORIGIN:$ORIGIN/../lib' ${files}/${ARCH}/bin/mpiexec.hydra
   patchelf --set-rpath '$ORIGIN:$ORIGIN/../lib' ${files}/${ARCH}/bin/hydra_pmi_proxy
   chmod a+x ${files}/${ARCH}/bin/tibercad
 
-  cp ${topdir}/${ARCH}/lib/lib*.so* ${files}/${ARCH}/lib
   cp -r ${topdir}/${ARCH}/modules ${files}/${ARCH}
   #
   # for now, delete some modules
