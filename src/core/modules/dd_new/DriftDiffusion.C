@@ -4503,12 +4503,20 @@ void
 DriftDiffusion::do_check_nonlinear_step(
         libMesh::NumericVector<Number>& dx)
 {
-  if (!get_option("limit_step", false)) return;
+  //if (!get_option("limit_step", false)) return;
+
+  if (_options.coupling == POISSON) return;
+
   // references for nicer code
   const MeshBase& mesh = get_mesh();
   TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
+  const libMesh::NumericVector<Number>& solution = system.get_solution_vector();
+  libMesh::NumericVector<Number>& tmp = system.get_vector("scaling");
 
   const unsigned int dim = mesh.mesh_dimension();
+
+  double phi0 = get_scaling().get_potential_scaling();
+  const double C0 = get_scaling().get_density_scaling();
 
   //const Device& device = *_device;
   const SimulationEnvironment& environment = get_environment();
@@ -4534,11 +4542,12 @@ DriftDiffusion::do_check_nonlinear_step(
   for ( ; el != end_el ; ++el)
   {
     const Elem* elem = *el;
-    const Elem* top_parent = (*el)->top_parent();
+    //const Elem* top_parent = (*el)->top_parent();
 
     ID subdomain = elem->subdomain_id();
 
     DDBulkModel* sc = get_bulk_model<DDBulkModel>(elem);
+    sc->reinit(elem);
 
     // Get variables for fermi potentials
     set<ID> q_var;
@@ -4578,31 +4587,37 @@ DriftDiffusion::do_check_nonlinear_step(
 
     for (unsigned int i = 0; i < n_dofs; ++i)
     {
+      sc->set_coordinates(elem->point(i));
+      sc->set_el_potential(phi0 * solution(dof_indices_var[u_var][i]));
+
+      for (auto& cp : sc->get_carrier_properties())
+      {
+        ID var = cp.first;
+        sc->set_fermi_potential(var, phi0 * solution(dof_indices_var[var][i]));
+      }
+      sc->calculate_densities();
+
+      tmp.set(dof_indices_var[u_var][i], dx.el(dof_indices_var[u_var][i]));
+
       double dmax = 0;
       for (auto& cp : sc->get_carrier_properties())
       {
         ID var = cp.first;
+
         double chrg = sc->get_carrier_properties(var)->get_charge();
+        double sign = sc->get_carrier_properties(var)->get_charge_sign();
 
-        if (chrg != 0) chrg = fabs(chrg);
-        double chempot = fabs(dx(dof_indices_var[var][i]) -
-          chrg * dx(dof_indices_var[u_var][i]));
+        double n0 = sc->get_q_density(var) / C0;
+        double n1 = n0 - dx.el(dof_indices_var[var][i]);
 
-        if (chempot > dmax) dmax = chempot;
-      }
+        double value = sign * (log(n1) - log(n0)) + dx.el(dof_indices_var[u_var][i]);
 
-      double maxstep = 10;
-      if (dmax > maxstep)
-      {
-        for (auto var : q_var)
-        {
-          double value = maxstep * dx.el(dof_indices_var[var][i]) / dmax;
-          dx.set(dof_indices_var[var][i], value);
-        }
-
+        tmp.set(dof_indices_var[var][i], value);
       }
     }
   }
+  tmp.close();
+  dx = tmp;
   dx.close();
 }
 
@@ -4656,11 +4671,8 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
   // x 1e4 because we calculate in cm, but P comes in C/m^2
   const double P0 = (Constants::e * x0 * C0) * 1e4;
 
-  double C0_q = C0;
-  C0_q = 1.0;
-
   // scaling for recombination rates
-  double R0 = C0_q / scaling.get_time_scaling();
+  double R0 = C0 / scaling.get_time_scaling();
 
   const libMesh::DofMap& dof_map = system.get_dof_map();
 
@@ -5176,7 +5188,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
             {
               // here we could add a correction from the doping/traps
               Kvv[u_var].at(vari)(qp,ii) -= node_volumes[qp] *
-                  sc->get_carrier_properties(vari)->get_charge_sign();
+                  sc->get_carrier_properties(vari)->get_charge();
 
               for (auto&& varj : q_var)
               {
@@ -5213,6 +5225,15 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 
       if (coupling & POISSON)
       {
+        double perm = 0;
+        for (auto&& n : nodes)
+        {
+          // TODO for now take trace
+          // 1/3 for the trace, 1/2 for the mean of two nodes
+          perm += 1/6.0 * permittivity[n].tr();
+        }
+        double coeff = l2 * perm * edge_areas[e] / edge_lengths[e];
+
 
         if (residual != NULL)
         {
@@ -5222,23 +5243,19 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
           pol += polarization[n2];
           double P = (pol * dir) * 0.5 / dir.norm();
           double value = edge_areas[e] * P / P0;
+          value += coeff * (u[u_var][n1] - u[u_var][n2]);
+
           Fv.at(u_var)(n1) += value;
           Fv.at(u_var)(n2) -= value;
         }
 
-        double perm = 0;
-        for (auto&& n : nodes)
+        if (jacobian != NULL)
         {
-          // TODO for now take trace
-          // 1/3 for the trace, 1/2 for the mean of two nodes
-          perm += 1/6.0 * permittivity[n].tr();
+          Kvv[u_var].at(u_var)(n1, n1) += coeff;
+          Kvv[u_var].at(u_var)(n1, n2) -= coeff;
+          Kvv[u_var].at(u_var)(n2, n2) += coeff;
+          Kvv[u_var].at(u_var)(n2, n1) -= coeff;
         }
-
-        double coeff = l2 * perm * edge_areas[e] / edge_lengths[e];
-        Kvv[u_var].at(u_var)(n1, n1) += coeff;
-        Kvv[u_var].at(u_var)(n1, n2) -= coeff;
-        Kvv[u_var].at(u_var)(n2, n2) += coeff;
-        Kvv[u_var].at(u_var)(n2, n1) -= coeff;
       }
 
 
@@ -5251,23 +5268,41 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
           {
 
             double D = 0.5 * (diffusivity[var][n1] + diffusivity[var][n2]);
-            double g = 0.5 * (dn_dEf[var][n1] / density[var][n1] + dn_dEf[var][n2] / density[var][n2]);
+            // change sign to get deriv. w.r.t q. Fermi potential
+            double g = -0.5 * (dn_dEf[var][n1] / density[var][n1] + dn_dEf[var][n2] / density[var][n2]);
             unsigned int i = id_map[var][n1];
             unsigned int j = id_map[var][n2];
 
-            double arg = g * (u[u_var][n2] - u[u_var][n2]);
+            double arg = g * phi0 * (u[u_var][n2] - u[u_var][n1]);
             auto ber = bernoulli(arg);
             double Bp = ber.first;
             double dBp = ber.second;
             double Bn = arg + Bp;
             double dBn = 1 + dBp;
 
-            double coeff = D * edge_areas[e] / edge_lengths[e];
-            Kvv[var].at(var)(i, i) += coeff * Bp;
-            Kvv[var].at(var)(i, j) -= coeff * Bn;
-            Kvv[var].at(var)(j, j) += coeff * Bn;
-            Kvv[var].at(var)(j, i) -= coeff * Bp;
+            double coeff = D * edge_areas[e] / edge_lengths[e] / mu0;
+            double dens1 = density[var][n1] / C0;
+            double dens2 = density[var][n2] / C0;
 
+            if (residual != NULL)
+            {
+              double value = coeff * (Bp * dens1 - Bn * dens2);
+              Fv.at(var)(i) += value;
+              Fv.at(var)(j) -= value;
+            }
+
+            if (jacobian != NULL)
+            {
+              Kvv[var].at(var)(i, i) += coeff * Bp;
+              Kvv[var].at(var)(i, j) -= coeff * Bn;
+              Kvv[var].at(var)(j, j) += coeff * Bn;
+              Kvv[var].at(var)(j, i) -= coeff * Bp;
+
+              Kvv[var].at(u_var)(i, i) -= coeff * g * (dBp * dens1 + dBn * dens2);
+              Kvv[var].at(u_var)(i, j) += coeff * g * (dBp * dens1 + dBn * dens2);
+              Kvv[var].at(u_var)(j, j) -= coeff * g * (dBn * dens1 + dBp * dens2);
+              Kvv[var].at(u_var)(j, i) += coeff * g * (dBn * dens1 + dBp * dens2);
+            }
           }
         }
       }
@@ -5430,11 +5465,34 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
               {
                 double val = side_areas[qp] / x0;
                 value_v[var] = (var == u_var) ? val / C0 : val / R0;
-                double bc_val = (coeff_g[var] - coeff_a[var] * u[var][node_map[qp]] * phi0);
-                if (sm->get_type(var) != DDInterfaceModel::DIRICHLET)
-                  value_v[var] *= bc_val;
+
+                if ((var == u_var) || (coupling == POISSON))
+                {
+                  double bc_val = (coeff_g[var] - coeff_a[var] * u[var][node_map[qp]] * phi0);
+                  if (sm->get_type(var) != DDInterfaceModel::DIRICHLET)
+                    value_v[var] *= bc_val;
+                  else
+                    value_v[var] = bc_val / phi0;
+                }
                 else
-                  value_v[var] = bc_val / phi0;
+                {
+                  if (sm->get_type(var) != DDInterfaceModel::DIRICHLET)
+                  {
+                    double bc_val = (coeff_g[var] - coeff_a[var] * u[var][node_map[qp]] * phi0);
+                    value_v[var] *= bc_val;
+                  }
+                  else
+                  {
+                    //double pot = u[var][node_map[qp]] * phi0;
+                    double pot = coeff_g[u_var];
+                    double elchem = coeff_g[var];
+                    auto bc_dens =
+                        sc->get_carrier_properties(var)->get_density_and_derivative(elchem, pot);
+                    double bc_val = (bc_dens.first - density[var][node_map[qp]]);
+                    value_v[var] = bc_val / C0;
+                  }
+                }
+
 
               }
 
@@ -5500,9 +5558,9 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
     if (residual != NULL)
     {
 
-      for (unsigned int i = 0; i < n_dofs_tot; i++)
-        for (unsigned int j = 0; j < n_dofs_tot; j++)
-          Fe(i) += Ke(i,j) * x(dof_indices[j]);
+      //for (unsigned int i = 0; i < n_dofs_tot; i++)
+      //  for (unsigned int j = 0; j < n_dofs_tot; j++)
+      //    Fe(i) += Ke(i,j) * x(dof_indices[j]);
 
       system.exclude_dofs(Fe, dof_indices, elem);
 
@@ -5545,8 +5603,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 
     jacobian->close();
 
-    jacobian->print_matlab("J.m");
-    //exit(0);
+    //jacobian->print_matlab("J.m");
 
   }
   else
@@ -5589,30 +5646,8 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
     }
 
     residual->close();
-    residual->print_matlab("r.m");
-    //exit(0);
+    //residual->print_matlab("r.m");
 
-    //sysmat.close();
-    //sysmat.print_matlab("sysmat.m");
-    /*
-    if (coupling & ELECTRONS)
-    {
-      //if (__private_counter > 0)
-      //  oldx -= x;
-      ostringstream os;
-      os << "_" << __private_counter;
-      write_nodal_vector("residual" + os.str(), *residual);
-      ostringstream ms;
-      ms << "writing " << "residual" << os.str() << " (norm = " << residual->l2_norm() << ")\n";
-      Messages::info(ms.str());
-      //residual->print_matlab("F" + os.str() + ".m");
-      //write_nodal_vector("x" + os.str(), oldx);
-      //NumericVector<Number>& weight = system.get_vector("scaling");
-      //write_nodal_vector("scaling" + os.str(), weight);
-      __private_counter++;
-      //oldx = x;
-    }
-    */
   }
 
 
