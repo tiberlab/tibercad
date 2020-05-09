@@ -846,7 +846,8 @@ DriftDiffusion::calculate_weights(void)
 
       for (auto var : var_q)
       {
-        double dens = min(1.0, log10(1 + sc->get_q_density(var.first)) / 18);// < 1e7 ? 0 : 1;
+        //double dens = min(1.0, log10(1 + sc->get_q_density(var.first)) / 18);// < 1e7 ? 0 : 1;
+        double dens = min(1.0, sc->get_q_density(var.first) / 1e18);
         weight.set(dofq[var.first], dens);
       }
 
@@ -3935,7 +3936,7 @@ DriftDiffusion::calculate_surface_recombination(void)
 
 
 void
-DriftDiffusion::build_local_scaling(void)
+DriftDiffusion::build_local_scaling_fem(void)
 {
   TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>(0);
 
@@ -4408,6 +4409,672 @@ DriftDiffusion::build_local_scaling(void)
 
 
 
+void
+DriftDiffusion::build_local_scaling_bim(void)
+{
+  TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>(0);
+
+  const SimulationEnvironment& environment = get_environment();
+
+  libMesh::NumericVector<Number>& solution = system.get_solution_vector();
+  libMesh::NumericVector<Number>& loc_scaling = system.get_vector("scaling");
+  loc_scaling.zero();
+
+  if (!_do_local_scaling)
+  {
+    // we do not use local scaling, therefore set it to 1
+    loc_scaling.add(1.0);
+    loc_scaling.close();
+    return;
+  }
+
+  // aliases for nicer code
+  const MeshBase& mesh = get_mesh();
+
+  const libMesh::DofMap& dof_map = system.get_dof_map();
+
+  const unsigned int dim = mesh.mesh_dimension();
+
+  const Options& params = get_my_options();
+
+  // the scaling parameters to scale back the result
+  const Scaling& scaling = get_scaling();
+  const double phi0 = scaling.get_potential_scaling();
+  const double x0 = scaling.get_length_scaling();
+  double C0 = scaling.get_density_scaling();
+  const double mu0 = scaling.get_mobility_scaling();
+  const double l2 = scaling.get_lambda_squared() * Constants::e0 * 1e-2;
+  // scaling for recombination rates
+  double R0 = C0 / scaling.get_time_scaling();
+
+  const unsigned int u_var = system.variable_number("potential");
+  // fermi potential variable numbers are defined within element loop
+  // since different variables can ben set in different regions
+
+  // we have to detect the dirichlet DOFs
+  set<unsigned int> dirichlet_dofs;
+
+  vector<unsigned int> dof_indices;
+  vector<unsigned int> dof_indices_u;
+  // dof indices vectors for fermi potentials are defined within element loop
+  // since (in future) different variables can ben set in different regions
+
+  libMesh::FEType fe_type = system.variable_type(u_var);
+  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+  libMesh::UniquePtr<libMesh::QBase> qrule(libMesh::QBase::build(
+      params.quadrature_type, dim, params.integration_order));
+  fe->attach_quadrature_rule(qrule.get());
+
+
+  // Jacobian * quadrature weight at each integration point.
+  const vector<Real>& JxW = fe->get_JxW();
+  //
+  // physical coordinates of the quadrature points
+  const vector<Point>& q_point = fe->get_xyz();
+  //
+  // element shape functions
+  const vector<vector<Real> >& phi = fe->get_phi();
+  //
+  const vector<vector<libMesh::RealGradient> >& dphi = fe->get_dphi();
+
+
+  //
+  // for boundary elements
+  //
+
+  libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
+  libMeshEnums::Order integration_order = params.integration_order;
+  if (dim == 1)
+    integration_order = libMeshEnums::CONSTANT;
+  libMesh::UniquePtr<libMesh::QBase> qface(libMesh::QBase::build(
+      params.quadrature_type, dim - 1, integration_order));
+  fe_face->attach_quadrature_rule(qface.get());
+
+  const vector<vector<Real> >&  phi_face = fe_face->get_phi();
+  //
+  const vector<vector<libMesh::RealGradient> >&  dphi_face = fe_face->get_dphi();
+  //
+  // physical coordinates of the quadrature points
+  const vector<Point>& q_point_face = fe_face->get_xyz();
+  //
+  const vector<Point>& face_normals = fe_face->get_normals();
+  //
+  // Jacobian * quadrature weight at each integration point.
+  const vector<Real>& JxW_face = fe_face->get_JxW();
+
+  DenseVector<Number> X;
+  DenseVector<Number> local_scaling;
+  DenseSubVector<Number> scaleu(local_scaling);
+  // scale vectors for fermi potentials are defined within element loop
+  // since different variables can ben set in different regions
+
+  auto el = this->active_local_elements_begin();
+  const auto end = this->active_local_elements_end();
+
+  for ( ; el != end; ++el)
+  {
+    const Elem* elem = *el;
+    const Elem* top_parent = (*el)->top_parent();
+
+    ID subdomain = elem->subdomain_id();
+
+    DDBulkModel* sc = get_bulk_model<DDBulkModel>(elem);
+
+    assert(sc != NULL);
+    sc->reinit(elem);
+
+    // Get variables for fermi potentials
+    set<ID> q_var;
+
+    // we will loop only over carriers that are present in this element
+    q_var.insert(u_var);
+    for (auto&& cp : sc->get_carrier_properties())
+      q_var.insert(cp.first);
+
+
+
+    //Get dof indices
+    map<unsigned int, vector<unsigned int>> dof_indices_var;
+
+    dof_indices.clear();
+
+    for (auto var : q_var)
+    {
+      //insert variable number and dof indices for the element
+      dof_map.dof_indices(elem, dof_indices_var[var], var);
+      dof_indices.insert(dof_indices.end(),
+          dof_indices_var[var].begin(), dof_indices_var[var].end());
+    }
+
+    // they have all the same number of DOFs
+    unsigned int n_dofs     = dof_indices_var[u_var].size();
+
+    // a remapping for local dof ids, to allow for constant qFermi variables
+    // this will allow to use the normal assembly functions, but with constant
+    // potential
+    map<unsigned int, vector<unsigned int> > id_map;
+    for (auto var : q_var)
+    {
+      id_map[var].resize(n_dofs);
+      if (dof_indices_var[var].size() == 1)
+        fill(id_map[var].begin(), id_map[var].end(), 0);
+      else
+        iota(id_map[var].begin(), id_map[var].end(), 0);
+    }
+
+    for (auto&& scalar : _conservation)
+    {
+      unsigned int dof = scalar.first;
+      dof_map.dof_indices(elem, dof_indices_var[dof], dof);
+      dof_indices.insert(dof_indices.end(),
+          dof_indices_var[dof].begin(), dof_indices_var[dof].end());
+    }
+
+    // dof_indices now contains all DOFs, also scalar ones
+
+    unsigned int n_dofs_tot = dof_indices.size();
+
+    fe->reinit(elem);
+
+    X.resize(n_dofs_tot);
+    //oldX.resize(n_dofs_tot);
+    local_scaling.resize(n_dofs_tot);
+
+    // extract local solution, accounting for constraints
+    dof_map.extract_local_vector(solution, dof_indices, X);
+    //dof_map.extract_local_vector(oldx, dof_indices, oldX);
+    //dof_map.extract_local_vector(loc_scaling, dof_indices, local_scaling);
+
+    //define submatrices
+    map<unsigned int, DenseSubVector<Number>> Xv, scalev;
+
+    // Reposition the submatrices according to this scheme:
+    //
+    //        | K11 K12 ... K1u |        | F1 |
+    //   Ke = | K21 K22 ... ... |;  Fe = | F2 |
+    //        | ... ... ... ... |        | .. |
+    //        | Ku1 Ku2 ... Kuu |        | Fu |
+    //
+    // Note: conservation variables are added at the end
+
+    unsigned int n_var = 0;
+    for (auto&& var : q_var)
+    {
+
+      Xv.insert(make_pair(var, DenseSubVector<Real>(X)));
+      //oldXv.insert(make_pair(var, DenseSubVector<Real>(oldX)));
+      scalev.insert(make_pair(var, DenseSubVector<Real>(local_scaling)));
+
+      unsigned int var_dofs = dof_indices_var[var].size();
+
+      Xv.at(var).reposition(n_var, var_dofs);
+      //oldXv.at(var).reposition(n_var, var_dofs);
+      scalev.at(var).reposition(n_var, var_dofs);
+
+      n_var += var_dofs;
+    }
+
+    unsigned int c_var = 0;
+    for (auto&& cons : _conservation)
+    {
+      unsigned int var = cons.first;
+
+      Xv.insert(make_pair(var, DenseSubVector<Real>(X)));
+      //oldXv.insert(make_pair(var, DenseSubVector<Real>(oldX)));
+      //scalev.insert(make_pair(var, DenseSubVector<Real>(local_scaling)));
+
+      Xv.at(var).reposition(n_var + c_var, 1);
+      //oldXv.at(var).reposition(n_var + c_var, 1);
+      //scalev.at(var).reposition(n_var*n_dofs, 1);
+
+      c_var++;
+
+    }
+
+
+    // Get the temperature given the element
+    vector<double> T_nodes = sc->get_temperature_at_nodes();
+
+
+    //
+    // prepare geometric quantities associated to the edges and the nodes
+    //
+    double length_scaling = get_scaling().get_calc_mesh_units() / x0;
+
+    vector<double> edge_lengths(elem->n_edges());
+    vector<double> edge_areas(elem->n_edges());
+    vector<double> node_volumes(elem->n_nodes());
+
+    unsigned int dim = elem->dim();
+    if (dim == 1)
+    {
+      edge_lengths.resize(1);
+      edge_areas.resize(1);
+      edge_lengths[0] = elem->volume() * length_scaling;
+      edge_areas[0] = 1.0;
+
+      node_volumes[0] = length_scaling * elem->volume() / 2.0;
+      node_volumes[1] = node_volumes[0];
+    }
+    else if (dim == 2)
+    {
+
+    }
+    else if (dim == 3)
+    {
+
+    }
+
+    unsigned int n_edges = edge_lengths.size();
+    unsigned int n_nodes = elem->n_nodes();
+
+
+
+    map<unsigned int, vector<Real>> u;
+    //map<unsigned int, vector<Real>> oldu;
+    map<unsigned int, vector<RealGradient>> grad_u;
+    // densities at nodes
+    map<unsigned int, vector<Real>> density;
+    // derivate of densities w.r.t. quasi Fermi level at nodes
+    map<unsigned int, vector<Real>> dn_dEf;
+    map<unsigned int, vector<Real>> diffusivity;
+    map<unsigned int, vector<Real>> sigma;
+    map<unsigned int, vector<Real>> dsigma_dEf;
+    map<unsigned int, vector<RealGradient>> dsigma_dgradEf;
+    map<unsigned int, vector<RealGradient>> dsigma_dgradu;
+    //map<unsigned int, vector<RealTensor>> diffusivity;
+    vector<RealTensor> permittivity;
+    vector<RealVectorValue> polarization;
+
+    for (auto&& var : q_var)
+    {
+      u[var].resize(n_nodes);
+      //oldu[var].resize(n_nodes);
+      grad_u[var].resize(n_nodes);
+      density[var].resize(n_nodes);
+      dn_dEf[var].resize(n_nodes);
+      diffusivity[var].resize(n_nodes);
+      sigma[var].resize(n_nodes);
+      dsigma_dEf[var].resize(n_nodes);
+      dsigma_dgradEf[var].resize(n_nodes);
+      dsigma_dgradu[var].resize(n_nodes);
+
+      permittivity.resize(n_nodes);
+      polarization.resize(n_nodes);
+    }
+
+    // loop over the element's nodes and store potentials and densities
+    // at the nodes
+    for (unsigned int qp = 0; qp < n_nodes; qp++)
+    {
+
+      // get the solution values at the nodes
+      // phi[i][qp] = delta_{i,qp}
+      for (auto&& var : q_var)
+      {
+        unsigned int ii = id_map[var][qp];
+        u[var][qp] = Xv.at(var)(ii);
+        //oldu[var][qp] = oldXv.at(var)(ii);
+
+        for (unsigned int j = 0; j < elem->n_nodes(); ++j)
+          grad_u[var][qp] += dphi[j][qp] * Xv.at(var)(id_map[var][j]);
+      }
+
+
+      // add the constant electrochemical potential
+      for (auto&& cons : _conservation)
+      {
+        for (auto&& var : cons.second.carrier_vars)
+        {
+          // we need this only if the carrier exists in this element
+          if (q_var.count(var))
+          {
+            u[var][qp] += Xv.at(cons.first)(0);
+            //oldu[var][qp] += oldXv.at(cons.first)(0);
+          }
+        }
+      }
+
+      // prepare for calculating local properties
+      sc->set_coordinates(elem->point(qp));
+
+      double grad_fac = phi0 / x0;
+      for (auto&& var : q_var)
+      {
+        if (var == u_var)
+        {
+          sc->set_el_potential(phi0 * u[var][qp]);
+          //sc->set_old_el_potential(phi0 * oldu[var][qp]);
+          sc->set_electric_field(-grad_fac * grad_u[var][qp]);
+        }
+        else
+        {
+          sc->set_fermi_potential(var, phi0 * u[var][qp]);
+          //sc->set_old_fermi_potential(var, phi0 * oldu[var][qp]);
+          sc->set_grad_fermi(var, grad_fac * grad_u[var][qp]);
+        }
+      }
+
+      // calculate all local properties
+      sc->calculate_densities();
+      sc->calculate_traps();
+      sc->calculate_ionized_dopants();
+      sc->calculate_mobilities();
+      sc->calculate_net_recombination_rates();
+
+      map<unsigned int, long double> R;
+
+      for (auto&& var : q_var)
+      {
+        if (var != u_var)
+        {
+          density[var][qp] = sc->get_q_density(var);
+          dn_dEf[var][qp] = sc->get_q_density_derivative(var);
+          R.insert( make_pair(var, sc->get_net_q_recombination_rate(var)) );
+          diffusivity[var][qp] = Constants::k_B * T_nodes[qp] * sc->get_q_mobility(var);
+
+          CarrierProperties* cp = sc->get_carrier_properties(var);
+
+          double cond;
+          double der_qFermi;
+          libMesh::RealGradient der_grad_u(0);
+          libMesh::RealGradient der_grad_f(0);
+          cond = sc->get_carrier_properties(var)->
+              get_conductivity_and_derivatives(der_qFermi, der_grad_f, der_grad_u);
+          sigma[var][qp] = cond;
+          dsigma_dEf[var][qp] = der_qFermi;
+          dsigma_dgradEf[var][qp] = der_grad_f;
+          dsigma_dgradu[var][qp] = der_grad_u;
+          //tep.insert( make_pair(var, cp->get_thermoelectric_power() / phi0) );
+        }
+      }
+      //double Nd = sc->get_ionized_donor_density();
+      //double Na = sc->get_ionized_acceptor_density();
+
+      permittivity[qp] = sc->get_relative_permittivity();
+      polarization[qp] = sc->get_total_polarization();
+
+
+      map<unsigned int, double> drho;
+      drho[u_var] = 0.0;
+
+      for (auto&& vari : q_var)
+      {
+        if (vari != u_var)
+        {
+          unsigned int ii = id_map[vari][qp];
+          drho[vari] = sc->get_charge_density_derivative(vari) * phi0;
+          drho[u_var] -= drho[vari];
+
+          double sign = sc->get_carrier_properties(vari)->get_charge_sign();
+          long double dR = sign * sc->get_net_q_recombination_rate_derivatives(vari)[vari];
+          scalev.at(vari)(ii) += node_volumes[qp] * dR * phi0 / R0;
+        }
+      }
+
+
+      for (auto&& var : _conservation)
+      {
+        drho[var.first] = 0.0;
+
+        for (auto&& vari : var.second.carrier_vars)
+        {
+          // we need this only if the carrier exists in this element!
+          if (q_var.count(vari))
+          {
+            drho[var.first] += sc->get_charge_density_derivative(vari) * phi0 / C0;
+
+            double ddens = sc->get_q_density_derivative(vari);
+            // diagonal part
+            scalev.at(var.first)(0) += node_volumes[qp] * ddens * phi0 / C0;
+          }
+        }
+      }
+
+
+      scalev.at(u_var)(qp) -= node_volumes[qp] * drho[u_var] / C0;
+
+
+    } // end loop over vertices (= control volume centroids)
+
+
+
+    // now we loop on the edges, to add the flux contributions
+    for (unsigned int e = 0; e < n_edges; ++e)
+    {
+      vector<unsigned int> nodes;
+      nodes.reserve(2);
+
+      for (unsigned int n = 0; n < n_nodes; ++n)
+        if (elem->is_node_on_edge(n, e))
+          nodes.push_back(n);
+
+      assert(nodes.size() == 2);
+
+      unsigned int n1 = nodes[0];
+      unsigned int n2 = nodes[1];
+
+      // now we have the two nodes
+
+      double perm = 0;
+      for (auto&& n : nodes)
+      {
+        // TODO for now take trace
+        // 1/3 for the trace, 1/2 for the mean of two nodes
+        perm += 1/6.0 * permittivity[n].tr();
+      }
+
+      double coeff = l2 * perm * edge_areas[e] / edge_lengths[e];
+      scalev.at(u_var)(n1) += coeff;
+      scalev.at(u_var)(n2) += coeff;
+
+
+      for (auto&& var : q_var)
+      {
+
+        if (var != u_var)
+        {
+          unsigned int i = id_map[var][n1];
+          unsigned int j = id_map[var][n2];
+
+          //double D = 0.5 * (diffusivity[var][n1] + diffusivity[var][n2]);
+          //double dn_i = dn_dEf[var][n1];
+          //double dn_j = dn_dEf[var][n2];
+
+          //double sgn = dn_i < 0 ? -1 : 1;
+          //double arg = 0.5 * (log(sgn * dn_i) + log(sgn * dn_j));
+          //double sigma_ij = D * exp(arg) / (mu0 * C0);
+
+          double sigma_i = sigma[var][n1];
+          double sigma_j = sigma[var][n2];
+          //double sigma_ij = sqrt(sigma_i) * sqrt(sigma_j) / (mu0 * C0);
+          double sigma_ij = 0.5 * (sigma_i + sigma_j) / (mu0 * C0);
+
+
+          double coeff = edge_areas[e] / edge_lengths[e];
+          scalev.at(var)(i) += coeff * sigma_ij;
+          scalev.at(var)(j) += coeff * sigma_ij;
+
+          double dsigma_i = dsigma_dEf[var][n1];
+          double dsigma_j = dsigma_dEf[var][n2];
+
+          coeff *= phi0 * (u[var][n1] - u[var][n2]);
+          //double sigma_ji = sigma_ij / sigma_j;
+          //sigma_ij /= sigma_i;
+
+          sigma_ij = 0.5 / (mu0 * C0);
+          double sigma_ji = sigma_ij;
+
+          scalev.at(var)(i) -= coeff * sigma_ij * dsigma_i;
+          scalev.at(var)(j) += coeff * sigma_ji * dsigma_j;
+
+        }
+
+      }
+    }
+
+
+
+    // now loop over the element sides to find boundary elements
+    // and to include von Neumann and mixed type boundary conditions
+    //
+    // NOTE 1:
+    // we dont apply BC for nabla(Ef) but for the particle
+    // flux sigma * nabla(Ef)
+    //
+
+    for (unsigned int s = 0; s < elem->n_sides(); s++)
+    {
+
+      Material* mat = get_material(elem);
+      DDInterfaceModel* sm = get_interface_model<DDInterfaceModel>(elem, s);
+
+      bool true_boundary = environment.is_outer_boundary(ElementSide(elem, s));
+
+      if (sm != NULL)
+      {
+        // for getting geometrical quantities
+        UniquePtr<Elem> side = elem->side(s);
+
+        vector<double> side_areas(side->n_nodes(), 1);
+
+        unsigned int dim = elem->dim();
+        if (dim == 2)
+        {
+
+        }
+        else if (dim == 3)
+        {
+
+        }
+
+        vector<unsigned int> node_map(side->n_nodes());
+        // associate side nodes to elem local node ids
+        for (unsigned int qp = 0; qp < side->n_nodes(); qp++)
+        {
+          for (unsigned int i = 0; i < elem->n_nodes(); i++)
+            if (side->node_id(qp) == elem->node_id(i))
+              node_map[qp] = i;
+        }
+
+        // from fe_face we get the normal
+        fe_face->reinit(elem, s);
+
+        sm->reinit(elem, s);
+
+        // loop on the side nodes
+        for (unsigned int qp = 0; qp < side->n_nodes(); qp++)
+        {
+
+          // prepare for calculating local properties
+          sc->set_coordinates(side->point(qp));
+
+          double grad_fac = phi0 / x0;
+          for (auto var : q_var)
+          {
+            if (var == u_var)
+            {
+              sc->set_el_potential(phi0 * u[var][node_map[qp]]);
+              sc->set_electric_field(-grad_fac * grad_u[var][node_map[qp]]);
+            }
+            else
+            {
+              sc->set_fermi_potential(var, phi0 * u[var][node_map[qp]]);
+              sc->set_grad_fermi(var, grad_fac * grad_u[var][node_map[qp]]);
+            }
+          }
+
+          sc->calculate_densities();
+          sc->calculate_mobilities();
+
+
+          sm->set_face_normal(face_normals[qp]);
+          sm->set_coordinates(side->point(qp));
+
+          for (auto var : q_var)
+          {
+            if (var == u_var)
+            {
+              sm->set_el_potential(phi0 * u[var][node_map[qp]]);
+              sm->set_electric_field(-grad_fac * grad_u[var][node_map[qp]]);
+            }
+            else
+            {
+              sm->set_fermi_potential(var, phi0 * u[var][node_map[qp]]);
+              sm->set_grad_fermi(var, grad_fac * grad_u[var][node_map[qp]]);
+            }
+          }
+
+          sm->compute();
+
+
+          // for Dirichlet DOFs we do not add anything
+          vector<double> scale_v(_carriers.size() + 1, 0.0);
+          vector<vector<double>> deriv_v(_carriers.size() + 1, vector<double>(_carriers.size() + 1, 0));
+          for (auto&& var : q_var)
+          {
+            double val = phi0 * side_areas[qp] / x0;
+            scale_v[var] = (var == u_var) ?  val / C0 : val / R0;
+
+            if (var != u_var)
+            {
+              double sign = -sc->get_carrier_properties(var)->get_charge_sign();
+              scale_v[var] *= sign;
+            }
+
+            vector<double> deriv_tmp = sm->get_jacobian_row(var);
+            deriv_v[var] = deriv_tmp;
+
+
+            // copy dirichlet values to global container
+            for (auto&& vari : q_var)
+            {
+              unsigned int ii = id_map[vari][node_map[qp]];
+              numeric_index_type i = dof_indices_var[vari][ii];
+
+
+
+              if (sm->get_type(vari) == DDInterfaceModel::DIRICHLET)
+              {
+                scalev.at(vari)(ii) -= deriv_v[vari][vari];
+              }
+              else
+              {
+                scalev.at(vari)(ii) -= scale_v[vari] * deriv_v[vari][vari];
+              }
+
+            }
+
+            // contribution to -Fe_i
+          }
+        }
+      }
+    }
+
+    //for (unsigned int i = 0; i < n_dofs_tot; ++i)
+    //  local_scaling(i) = sqrt(local_scaling(i));
+
+    loc_scaling.add_vector(local_scaling, dof_indices);
+  } // end loop over elements
+  loc_scaling.close();
+
+  /*
+  set<unsigned int>::iterator dirit(dirichlet_dofs.begin());
+  const set<unsigned int>::iterator dirend(dirichlet_dofs.end());
+  for ( ; dirit != dirend; ++dirit)
+  {
+    double val = loc_scaling.el(*dirit) * _penalty_value;
+    loc_scaling.set(*dirit, val);
+  }
+   */
+
+  loc_scaling.close();
+  loc_scaling.localize(loc_scaling, system.get_dof_map().get_send_list());
+  //loc_scaling.print_matlab("scaling.m");
+
+}
+
+
 
 
 
@@ -4673,8 +5340,7 @@ DriftDiffusion::do_assembly_fem(const libMesh::NumericVector<Number>& x,
   //SparseMatrix<double>& sysmat = system.get_matrix("Preconditioner");
   //if (residual != NULL)
   if (jacobian != NULL)
-    build_local_scaling();
-  //  sysmat.zero();
+    build_local_scaling_fem();
 
   //
   // some scaling stuff...
@@ -5812,7 +6478,6 @@ DriftDiffusion::do_assembly_fem(const libMesh::NumericVector<Number>& x,
       system.exclude_dofs(Fe, dof_indices, elem);
 
       residual->add_vector(Fe, dof_indices);
-      //sysmat.add_matrix(Ke, dof_indices);
     }
     else
     {
@@ -5975,11 +6640,9 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
 
   libMesh::NumericVector<Number>& oldx = system.get_vector("old_sol");
   libMesh::NumericVector<Number>& loc_scaling = system.get_vector("scaling");
-  //SparseMatrix<double>& sysmat = system.get_matrix("Preconditioner");
   //if (residual != NULL)
   if (jacobian != NULL)
-    build_local_scaling();
-  //  sysmat.zero();
+    build_local_scaling_bim();
 
   //
   // some scaling stuff...
@@ -5999,9 +6662,6 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
   const double mu0 = scaling.get_mobility_scaling();
   // x 1e4 because we calculate in cm, but P comes in C/m^2
   const double P0 = (Constants::e * x0 * C0) * 1e4;
-
-  //double C0_q = C0;
-  //C0_q = 1.0;
 
   // scaling for recombination rates
   double R0 = C0 / scaling.get_time_scaling();
@@ -6464,7 +7124,7 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
           if (var == u_var)
           {
             if (coupling & POISSON)
-              Fv.at(var)(qp) -= node_volumes[qp] * sc->get_charge_density() / C0;
+              Fv.at(var)(qp) -= node_volumes[qp] * sc->get_charge_density() / C0 / scalev.at(var)(qp);
             else
               Fv.at(var)(qp) -= Xv.at(var)(qp);
           }
@@ -6476,7 +7136,7 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
 
             if (coupling & CURRENTS)
             {
-              Fv.at(var)(ii) += sign * net_recomb;
+              Fv.at(var)(ii) += sign * net_recomb / scalev.at(var)(ii);
             }
             else
               Fv.at(var)(ii) -= Xv.at(var)(ii);
@@ -6518,7 +7178,7 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
             drho[u_var] -= drho[vari];
 
             if (coupling & FULLYCOUPLED)
-              Kvv[u_var].at(vari)(qp,ii) -= node_volumes[qp] * drho[vari] / C0;
+              Kvv[u_var].at(vari)(qp,ii) -= node_volumes[qp] * drho[vari] / C0 / scalev.at(u_var)(qp);
 
             if (coupling & CURRENTS)
             {
@@ -6527,7 +7187,7 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
                 double sign = sc->get_carrier_properties(vari)->get_charge_sign();
                 unsigned int jj = id_map[varj][qp];
                 long double dR = sign * sc->get_net_q_recombination_rate_derivatives(vari)[varj];
-                Kvv[vari].at(varj)(ii,jj) += node_volumes[qp] * dR * phi0 / R0;
+                Kvv[vari].at(varj)(ii,jj) += node_volumes[qp] * dR * phi0 / R0 / scalev.at(vari)(ii);
               }
             }
             else
@@ -6567,7 +7227,7 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
                       double sign = sc->get_carrier_properties(varj)->get_charge_sign();
                       long double dR =
                           sign * sc->get_net_q_recombination_rate_derivatives(varj)[vari];
-                      Kvv[varj].at(var.first)(jj,0) += node_volumes[qp] * phi0 / R0;
+                      Kvv[varj].at(var.first)(jj,0) += node_volumes[qp] * phi0 / R0 / scalev.at(varj)(jj);
                     }
                   }
               }
@@ -6575,14 +7235,14 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
           }
 
           if (coupling & POISSON)
-            Kvv[u_var].at(var.first)(qp, 0) -= node_volumes[qp] * drho[var.first];
+            Kvv[u_var].at(var.first)(qp, 0) -= node_volumes[qp] * drho[var.first] / scalev.at(u_var)(qp);
 
         }
 
 
 
         if (coupling & POISSON)
-          Kvv[u_var].at(u_var)(qp,qp) -= node_volumes[qp] * drho[u_var] / C0;
+          Kvv[u_var].at(u_var)(qp,qp) -= node_volumes[qp] * drho[u_var] / C0 / scalev.at(u_var)(qp);
         else
           Kvv[u_var].at(u_var)(qp,qp) += 1;
 
@@ -6633,10 +7293,10 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
         }
 
         double coeff = l2 * perm * edge_areas[e] / edge_lengths[e];
-        Kvv[u_var].at(u_var)(n1, n1) += coeff;
-        Kvv[u_var].at(u_var)(n1, n2) -= coeff;
-        Kvv[u_var].at(u_var)(n2, n2) += coeff;
-        Kvv[u_var].at(u_var)(n2, n1) -= coeff;
+        Kvv[u_var].at(u_var)(n1, n1) += coeff / scalev.at(u_var)(n1);
+        Kvv[u_var].at(u_var)(n1, n2) -= coeff / scalev.at(u_var)(n1);
+        Kvv[u_var].at(u_var)(n2, n2) += coeff / scalev.at(u_var)(n2);
+        Kvv[u_var].at(u_var)(n2, n1) -= coeff / scalev.at(u_var)(n2);
       }
 
 
@@ -6665,10 +7325,10 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
 
 
             double coeff = edge_areas[e] / edge_lengths[e];
-            Kvv[var].at(var)(i, i) += coeff * sigma_ij;
-            Kvv[var].at(var)(i, j) -= coeff * sigma_ij;
-            Kvv[var].at(var)(j, j) += coeff * sigma_ij;
-            Kvv[var].at(var)(j, i) -= coeff * sigma_ij;
+            Kvv[var].at(var)(i, i) += coeff * sigma_ij / scalev.at(var)(i);
+            Kvv[var].at(var)(i, j) -= coeff * sigma_ij / scalev.at(var)(i);
+            Kvv[var].at(var)(j, j) += coeff * sigma_ij / scalev.at(var)(j);
+            Kvv[var].at(var)(j, i) -= coeff * sigma_ij / scalev.at(var)(j);
 
             if (jacobian != NULL)
             {
@@ -6682,17 +7342,17 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
               sigma_ij = 0.5 / (mu0 * C0);
               double sigma_ji = sigma_ij;
 
-              Kvv[var].at(var)(i, i) -= coeff * sigma_ij * dsigma_i;
-              Kvv[var].at(var)(i, j) -= coeff * sigma_ji * dsigma_j;
-              Kvv[var].at(var)(j, j) += coeff * sigma_ji * dsigma_j;
-              Kvv[var].at(var)(j, i) += coeff * sigma_ij * dsigma_i;
+              Kvv[var].at(var)(i, i) -= coeff * sigma_ij * dsigma_i / scalev.at(var)(i);
+              Kvv[var].at(var)(i, j) -= coeff * sigma_ji * dsigma_j / scalev.at(var)(i);
+              Kvv[var].at(var)(j, j) += coeff * sigma_ji * dsigma_j / scalev.at(var)(j);
+              Kvv[var].at(var)(j, i) += coeff * sigma_ij * dsigma_i / scalev.at(var)(j);
 
               if (coupling & POISSON)
               {
-                Kvv[var].at(u_var)(i, n1) += coeff * sigma_ij * dsigma_i;
-                Kvv[var].at(u_var)(i, n2) += coeff * sigma_ji * dsigma_j;
-                Kvv[var].at(u_var)(j, n2) -= coeff * sigma_ji * dsigma_j;
-                Kvv[var].at(u_var)(j, n1) -= coeff * sigma_ij * dsigma_i;
+                Kvv[var].at(u_var)(i, n1) += coeff * sigma_ij * dsigma_i / scalev.at(var)(i);
+                Kvv[var].at(u_var)(i, n2) += coeff * sigma_ji * dsigma_j / scalev.at(var)(i);
+                Kvv[var].at(u_var)(j, n2) -= coeff * sigma_ji * dsigma_j / scalev.at(var)(j);
+                Kvv[var].at(u_var)(j, n1) -= coeff * sigma_ij * dsigma_i / scalev.at(var)(j);
               }
             }
           }
@@ -6843,7 +7503,7 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
                       }
                       else
                       {
-                        Kvv.at(vari).at(varj)(ii,jj) -= scale_v[vari] * deriv_v[vari][varj];
+                        Kvv.at(vari).at(varj)(ii,jj) -= scale_v[vari] * deriv_v[vari][varj] / scalev.at(vari)(ii);
                       }
                     }
                   }
@@ -6877,7 +7537,6 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
                   value_v[var] *= bc_val;
                 else
                   value_v[var] = bc_val / phi0;
-
               }
 
 
@@ -6893,11 +7552,11 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
                 else
                 {
                   if ((vari == u_var) && (coupling & POISSON))
-                    Fv.at(vari)(ii) -= value_v[vari];
+                    Fv.at(vari)(ii) -= value_v[vari] / scalev.at(vari)(ii);
                   else if ((vari != u_var) && (coupling & CURRENTS))
                   {
                     double sign = -sc->get_carrier_properties(vari)->get_charge_sign();
-                    Fv.at(vari)(ii) -= sign * value_v[vari];
+                    Fv.at(vari)(ii) -= sign * value_v[vari] / scalev.at(vari)(ii);
                   }
                 }
               }
@@ -6924,7 +7583,7 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
 
               double Pn = (polarization[node_map[qp]] * face_normals[qp]) / P0;
 
-              Fv.at(u_var)(node_map[qp]) -= side_areas[qp] * Pn;
+              Fv.at(u_var)(node_map[qp]) -= side_areas[qp] * Pn / scalev.at(u_var)(node_map[qp]);
             }
           }
         }  // end true boundary && residual
@@ -7040,27 +7699,6 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
     //residual->print_matlab("r.m");
     //exit(0);
 
-    //sysmat.close();
-    //sysmat.print_matlab("sysmat.m");
-    /*
-    if (coupling & ELECTRONS)
-    {
-      //if (__private_counter > 0)
-      //  oldx -= x;
-      ostringstream os;
-      os << "_" << __private_counter;
-      write_nodal_vector("residual" + os.str(), *residual);
-      ostringstream ms;
-      ms << "writing " << "residual" << os.str() << " (norm = " << residual->l2_norm() << ")\n";
-      Messages::info(ms.str());
-      //residual->print_matlab("F" + os.str() + ".m");
-      //write_nodal_vector("x" + os.str(), oldx);
-      //NumericVector<Number>& weight = system.get_vector("scaling");
-      //write_nodal_vector("scaling" + os.str(), weight);
-      __private_counter++;
-      //oldx = x;
-    }
-    */
   }
 
 
@@ -7094,7 +7732,7 @@ DriftDiffusion::do_load_data(istream& is)
 
   compute_scaling(get_my_options().scaling_type);
 
-  build_local_scaling();
+  //build_local_scaling();
 }
 
 

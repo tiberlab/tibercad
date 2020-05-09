@@ -619,8 +619,11 @@ virtual void do_check_nonlinear_step(
     //! If true, local density scaling should be applied
     bool _do_local_scaling;
 
-    //! Calculate the local density scaling on each node
-    void build_local_scaling(void);
+    //! Calculate the local density scaling on each node for FEM
+    void build_local_scaling_fem(void);
+
+    //! Calculate the local density scaling on each node for BIM
+    void build_local_scaling_bim(void);
 
     /**
      * The number of nonlinear iterations needed
