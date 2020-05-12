@@ -1088,7 +1088,7 @@ void EnvelopFunctionApprox::do_solve()
     redeclare_solutions();
   }
    RealVectorValue k_vec(0.0);
-   _calculate_density = true;
+   //_calculate_density = true;
    if (has_option("k_vector"))
    {
      get_parameter("k_vector", k_vec);
@@ -3075,10 +3075,10 @@ void EnvelopFunctionApprox::solve_bulk(void)
   }
 
   // reorder according to energy
-  for (unsigned int i = 0; i <= max_hl ; i++)
+  for (unsigned int i = 0; i < n ; i++)
   {
     unsigned int max_id = i;
-    for (unsigned int j = i+1; j <= max_hl; j++)
+    for (unsigned int j = i+1; j < n; j++)
       if (_solution[j].eigen_energy > _solution[max_id].eigen_energy)
         max_id = j;
 
