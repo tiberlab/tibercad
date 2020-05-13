@@ -255,6 +255,36 @@ Material::preinit(void)
 
   }
 
+  // read or set default growth directions for rhombohedral
+  if (_structure == "rh")
+  {
+    if (use_defaults)
+    {
+      switch (dim)
+      {
+        case 3:
+          get_options()["x-growth-direction"] = "( 1,0,-1,0)";
+          get_options()["y-growth-direction"] = "(-1,2,-1,0)";
+          get_options()["z-growth-direction"] = "( 0,0, 0,1)";
+          break;
+
+        case 2:
+          get_options()["z-growth-direction"] = "( 1,0,-1,0)";
+          get_options()["x-growth-direction"] = "(-1,2,-1,0)";
+          get_options()["y-growth-direction"] = "( 0,0, 0,1)";
+          break;
+
+        case 1:
+        default:
+          get_options()["y-growth-direction"] = "( 1,0,-1,0)";
+          get_options()["z-growth-direction"] = "(-1,2,-1,0)";
+          get_options()["x-growth-direction"] = "( 0,0, 0,1)";
+          break;
+      }
+    }
+
+  }
+
 
   do_preinit();
 

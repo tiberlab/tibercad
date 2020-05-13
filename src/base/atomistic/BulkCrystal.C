@@ -318,7 +318,7 @@ BulkCrystal::set_prim_vec(void)
 
   }
 
-  if (_lattice_type.compare("tetragonal") == 0) {
+  else if (_lattice_type.compare("tetragonal") == 0) {
  
     assert((_lattice_constant[0] == _lattice_constant[1]));
 
@@ -332,7 +332,7 @@ BulkCrystal::set_prim_vec(void)
 
   }
 
-  if (_lattice_type.compare("cubic") == 0) {
+  else if (_lattice_type.compare("cubic") == 0) {
 
     assert((_lattice_constant[0] == _lattice_constant[1]) && (_lattice_constant[1] == _lattice_constant[2]));
 
