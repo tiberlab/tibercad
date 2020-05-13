@@ -9,7 +9,7 @@ Origin : (x,y,z)=(       0,        0,        0)
 Memory leak detected!
 Compile in DEBUG mode with --enable-reference-counting
 for more information
-gions preparation time: 0h 0m 2.2e-05s
+gions preparation time: 0h 0m 2.1e-05s
 
     mesh units          : 1e-09 m
     mesh dimension      :       1
@@ -54,7 +54,7 @@ Building Atomistic Structure tb
 (debug) conv_latt size: 2
 (debug) super_basis size: 64
 
-  Setup of grid mapper: 0h 0m 5.8e-05s, memory usage: 0 MB 104
+  Setup of grid mapper: 0h 0m 4.9e-05s, memory usage: 0 MB 104
   Assign elements progress   0% ... 25% ... 50% ... 75% ...100% ... done.
   Assign Species progress   0% ... 25% ... 50% ... 75% ...100% ... done.
   Check periodicity ... 
@@ -66,7 +66,7 @@ Building Atomistic Structure tb
   BondMap progress   0% ... 25% ... 50% ... 75% ...100% ... done.
   Build final Bond Map...
   BondMap progress   0% ... 25% ... 50% ... 75% ...100% ... done.
-  Atomistic structure build time: 0h 0m 0.022s
+  Atomistic structure build time: 0h 0m 0.018s
 
   Atomistic Structure containing 64 atoms has been built. 
   Size not counting passivation hydrogens: 64
@@ -105,9 +105,9 @@ Setting up bulk models ...
 Setting up lower dimensional (boundary) models ...
 Initializing VFF module
 
-Creating UPTIGHT instance... 0x10736e0
+Creating UPTIGHT instance... 0xb90900
 
-UPTIGHT version: 2.320    2020-03-18
+UPTIGHT version: 2.320    2020-05-12
  
 Symmetry of k space: orthorhombic
 k-space initialized
@@ -1550,7 +1550,7 @@ write_SC_mesh and write_PC_mesh options in the Dispersion block.
   78 el 6.51479 Fermi          0 3.602e-110
   79 el 6.52775 Fermi          0 2.18138e-110
 
-  time for projection : 0h 0m 0.004s
+  time for projection : 0h 0m 0.0039s
         CB min = 2.79967  VB max = -0.71033
   Assign Virtual Species
   Printing upg file
@@ -1853,7 +1853,7 @@ write_SC_mesh and write_PC_mesh options in the Dispersion block.
   78 el 6.51479 Fermi          0 3.60186e-110
   79 el 6.52775 Fermi          0 2.18123e-110
 
-  time for projection : 0h 0m 0.0038s
+  time for projection : 0h 0m 0.0039s
         CB min = 2.79967  VB max = -0.71033
   Assign Virtual Species
   Printing upg file
@@ -2358,7 +2358,7 @@ write_SC_mesh and write_PC_mesh options in the Dispersion block.
   78 el 6.40555 Fermi          0 2.46425e-108
   79 el 6.51247 Fermi          0 3.93928e-110
 
-  time for projection : 0h 0m 0.0039s
+  time for projection : 0h 0m 0.0038s
         CB min = 2.79967  VB max = -0.71033
   Assign Virtual Species
   Printing upg file
@@ -2459,7 +2459,7 @@ write_SC_mesh and write_PC_mesh options in the Dispersion block.
   78 el 6.41485 Fermi          0 1.71973e-108
   79 el 6.45705 Fermi          0 3.36051e-109
 
-  time for projection : 0h 0m 0.0039s
+  time for projection : 0h 0m 0.0038s
         CB min = 2.79967  VB max = -0.71033
   Assign Virtual Species
   Printing upg file
@@ -3570,7 +3570,7 @@ write_SC_mesh and write_PC_mesh options in the Dispersion block.
   78 el 6.41101 Fermi          0 1.99507e-108
   79 el 6.41101 Fermi          0 1.99507e-108
 
-  time for projection : 0h 0m 0.0039s
+  time for projection : 0h 0m 0.0038s
         CB min = 2.79967  VB max = -0.71033
   Assign Virtual Species
   Printing upg file
@@ -3671,7 +3671,7 @@ write_SC_mesh and write_PC_mesh options in the Dispersion block.
   78 el 6.40374 Fermi          0 2.64271e-108
   79 el 6.40374 Fermi          0 2.64269e-108
 
-  time for projection : 0h 0m 0.004s
+  time for projection : 0h 0m 0.0039s
         CB min = 2.79967  VB max = -0.71033
   Assign Virtual Species
   Printing upg file

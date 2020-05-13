@@ -178,7 +178,7 @@ Module efaschroedinger
 {
   name = quantum_el
   regions = (1,2)
-  plot = (ProbabilityDensity, EigenEnergy)
+  plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)
 
   poisson_model_name = dd
   strain_model_name = str
