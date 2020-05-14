@@ -1194,6 +1194,10 @@ Kspace::get_symmetry_point(const std::string& name) const
 {
   Point p(0, 0, 0);
 
+  // TODO it would be nicer to have the known points in some
+  // static map, so that for example all known points can be
+  // easily obtained, whithout duplicating code.
+
   if (name != "G")
   {
     switch (k_space_symmetry)
@@ -1366,6 +1370,14 @@ void Kspace::define_k_path(void)
   vector<unsigned int> n_elems(segments.size());
 
   os << "# points   : (";
+
+  // we allow a special option number_of_nodes_per_segment
+  if (mod_opt.find_option("number_of_nodes_per_segment") &&
+      (num_nodes.size() < 2))
+  {
+    num_nodes.resize(0);
+    num_nodes.resize(segments.size(), mod_opt.get_option("number_of_nodes_per_segment", 2));
+  }
 
   if (num_nodes.size() > 1)
   {
