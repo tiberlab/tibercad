@@ -4503,7 +4503,6 @@ void
 DriftDiffusion::do_check_nonlinear_step(
         libMesh::NumericVector<Number>& dx)
 {
-  //if (!get_option("limit_step", false)) return;
 
   if (_options.coupling == POISSON) return;
 
@@ -4595,11 +4594,11 @@ DriftDiffusion::do_check_nonlinear_step(
         ID var = cp.first;
         sc->set_fermi_potential(var, phi0 * solution(dof_indices_var[var][i]));
       }
+
       sc->calculate_densities();
 
       tmp.set(dof_indices_var[u_var][i], dx.el(dof_indices_var[u_var][i]));
 
-      double dmax = 0;
       for (auto& cp : sc->get_carrier_properties())
       {
         ID var = cp.first;
@@ -4607,8 +4606,8 @@ DriftDiffusion::do_check_nonlinear_step(
         double chrg = sc->get_carrier_properties(var)->get_charge();
         double sign = sc->get_carrier_properties(var)->get_charge_sign();
 
-        double n0 = sc->get_q_density(var) / C0;
-        double n1 = n0 - dx.el(dof_indices_var[var][i]);
+        double n0 = sc->get_q_density(var) / C0 + 1e-60;
+        double n1 = n0 + dx.el(dof_indices_var[var][i]) + 1e-60;
 
         double value = sign * (log(n1) - log(n0)) + dx.el(dof_indices_var[u_var][i]);
 
@@ -4998,10 +4997,10 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
       density[var].resize(n_nodes);
       dn_dEf[var].resize(n_nodes);
       diffusivity[var].resize(n_nodes);
-
-      permittivity.resize(n_nodes);
-      polarization.resize(n_nodes);
     }
+
+    permittivity.resize(n_nodes);
+    polarization.resize(n_nodes);
 
     // loop over the element's nodes and store potentials and densities
     // at the nodes
@@ -5071,9 +5070,13 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
           density[var][qp] = sc->get_q_density(var);
           dn_dEf[var][qp] = sc->get_q_density_derivative(var);
           R.insert( make_pair(var, sc->get_net_q_recombination_rate(var)) );
-          diffusivity[var][qp] = Constants::k_B * T_nodes[qp] * sc->get_q_mobility(var);
+          //double g = abs(dn_dEf[var][qp] / density[var][qp]);
+          //diffusivity[var][qp] = sc->get_q_mobility(var) / g;
 
-          //CarrierProperties* cp = sc->get_carrier_properties(var);
+          CarrierProperties* cp = sc->get_carrier_properties(var);
+          diffusivity[var][qp] = Constants::k_B * T_nodes[qp] *
+              cp->get_conductivity() / density[var][qp];
+
           //sigma.insert( make_pair(var, cp->get_conductivity() / (mu0 * C0_q)) );
           //tep.insert( make_pair(var, cp->get_thermoelectric_power() / phi0) );
         }
@@ -5125,7 +5128,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 
             if (coupling & CURRENTS)
             {
-              Fv.at(var)(ii) -= net_recomb;
+              Fv.at(var)(ii) += net_recomb;
             }
             else
               Fv.at(var)(ii) -= Xv.at(var)(ii);
@@ -5266,19 +5269,25 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 
           if (var != u_var)
           {
+            // g is scaled by phi0, which is compensated after by not scaling back
+            // the electrostatic potential, u[var]
+            double g = -0.5 * phi0 * (dn_dEf[var][n1] / density[var][n1] + dn_dEf[var][n2] / density[var][n2]);
 
-            double D = 0.5 * (diffusivity[var][n1] + diffusivity[var][n2]);
+            // diffusivity is obtained as conductivity / density
+            // this could maybe be improved, since this leads to a strange mean value here
+            double D = 0.5 * (diffusivity[var][n1] + diffusivity[var][n2]) / abs(g);
+
             // change sign to get deriv. w.r.t q. Fermi potential
-            double g = -0.5 * (dn_dEf[var][n1] / density[var][n1] + dn_dEf[var][n2] / density[var][n2]);
             unsigned int i = id_map[var][n1];
             unsigned int j = id_map[var][n2];
 
-            double arg = g * phi0 * (u[u_var][n2] - u[u_var][n1]);
+            double arg = g * (u[u_var][n1] - u[u_var][n2]);
             auto ber = bernoulli(arg);
             double Bp = ber.first;
             double dBp = ber.second;
             double Bn = arg + Bp;
             double dBn = 1 + dBp;
+
 
             double coeff = D * edge_areas[e] / edge_lengths[e] / mu0;
             double dens1 = density[var][n1] / C0;
@@ -5286,22 +5295,23 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 
             if (residual != NULL)
             {
-              double value = coeff * (Bp * dens1 - Bn * dens2);
+              double value = coeff * (Bn * dens1 - Bp * dens2);
               Fv.at(var)(i) += value;
               Fv.at(var)(j) -= value;
             }
 
             if (jacobian != NULL)
             {
-              Kvv[var].at(var)(i, i) += coeff * Bp;
-              Kvv[var].at(var)(i, j) -= coeff * Bn;
-              Kvv[var].at(var)(j, j) += coeff * Bn;
-              Kvv[var].at(var)(j, i) -= coeff * Bp;
+              Kvv[var].at(var)(i, i) += coeff * Bn;
+              Kvv[var].at(var)(i, j) -= coeff * Bp;
+              Kvv[var].at(var)(j, j) += coeff * Bp;
+              Kvv[var].at(var)(j, i) -= coeff * Bn;
 
-              Kvv[var].at(u_var)(i, i) -= coeff * g * (dBp * dens1 + dBn * dens2);
-              Kvv[var].at(u_var)(i, j) += coeff * g * (dBp * dens1 + dBn * dens2);
-              Kvv[var].at(u_var)(j, j) -= coeff * g * (dBn * dens1 + dBp * dens2);
-              Kvv[var].at(u_var)(j, i) += coeff * g * (dBn * dens1 + dBp * dens2);
+              double value = coeff * g * (-dBn * dens1 + dBp * dens2);
+              Kvv[var].at(u_var)(i, i) -= value;
+              Kvv[var].at(u_var)(i, j) += value;
+              Kvv[var].at(u_var)(j, j) -= value;
+              Kvv[var].at(u_var)(j, i) += value;
             }
           }
         }
