@@ -82,7 +82,7 @@ TiberNonlinLS::do_solve(void)
   double eps_res = get_nonlinear_atol();
 
 
-  int max_ls_step = 10;
+  int max_ls_step = 1;
 
   // the (final) residual norm
   double norm_res, norm_rhs = 0;
@@ -115,6 +115,9 @@ TiberNonlinLS::do_solve(void)
                             ->residual_and_jacobian(u, rhs, NULL, *this);
     }
 
+    // change sign in rhs, because J*du = -r
+    *rhs *= -1.0;
+
     get_linear_solver()->set_linear_rtol(tol);
 
     du.zero();
@@ -138,9 +141,15 @@ TiberNonlinLS::do_solve(void)
 
 
     du.close();
+
     //du_t = du;
 
+    //if (i == 3)
+    //  exit(0);
+
+
     sim->check_nonlinear_step(du);
+
 
     // the l2 norm of the current residual
     //norm_rhs = rhs->l2_norm();
@@ -196,7 +205,8 @@ TiberNonlinLS::do_solve(void)
       }
       */
 
-      u_tmp.add(-alpha, du);
+      u_tmp.add(alpha, du);
+
       u_tmp.localize(u, get_dof_map().get_send_list());
 
       // evaluate the residual
@@ -234,7 +244,7 @@ TiberNonlinLS::do_solve(void)
       {
         if (ls_step == max_ls_step - 1)
         {
-          //u.add(-1.0, du);
+          //u.add(1.0, du);
           break;
         }
 
@@ -255,8 +265,8 @@ TiberNonlinLS::do_solve(void)
         u_tmp = u_old;
 
         // if the norm decreases sufficiently, we don't increase the counter
-        if (norm_res < 0.9 * old_norm)
-          ls_step--;
+        //if (norm_res < 0.9 * old_norm)
+        //  ls_step--;
       }
     }
 
@@ -280,9 +290,8 @@ TiberNonlinLS::do_solve(void)
     }
 
 
-    // check for divergence
-    if ((norm_res > norm_rhs) || std::isnan(norm_res))
-    //if (std::isnan(norm_res))
+    // check for divergence or NaN
+    if (std::isnan(norm_res))
     {
       // reset the old linear tolerance
       get_linear_solver()->set_linear_rtol(tol_orig);
@@ -290,6 +299,17 @@ TiberNonlinLS::do_solve(void)
       //cout << endl;
       throw (SNESDivergedError(-4, i, norm_rhs));
     }
+    /*
+    else if (norm_res > norm_rhs)
+    {
+      // reset the old linear tolerance
+      get_linear_solver()->set_linear_rtol(tol_orig);
+
+      //cout << endl;
+      throw (SNESDivergedError(0, i, norm_rhs));
+    }
+    */
+
 
 
     //if ((min_alpha <= 1.0) && (min_alpha > 0))
@@ -297,7 +317,7 @@ TiberNonlinLS::do_solve(void)
     {
       // check for one more smaller step
       u_tmp = u_old;
-      u_tmp.add(-0.5 * alpha, du);
+      u_tmp.add(0.5 * alpha, du);
       //u_tmp.add(-min_alpha, du);
       u_tmp.localize(u, get_dof_map().get_send_list());
 
@@ -321,7 +341,7 @@ TiberNonlinLS::do_solve(void)
       {
         // keep the former step
         u_tmp = u_old;
-        u_tmp.add(-alpha, du);
+        u_tmp.add(alpha, du);
         u_tmp.localize(u, get_dof_map().get_send_list());
         norm_res = norm_res_old;
       }
