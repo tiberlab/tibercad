@@ -4608,6 +4608,7 @@ DriftDiffusion::do_check_nonlinear_step(
 
         double n0 = sc->get_q_density(var) / C0 + 1e-60;
         double n1 = n0 + dx.el(dof_indices_var[var][i]) + 1e-60;
+        if (n1 <= 0) n1 = 0.9*n0;
 
         double value = sign * (log(n1) - log(n0)) + dx.el(dof_indices_var[u_var][i]);
 
@@ -5197,7 +5198,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
               {
                  unsigned int jj = id_map[varj][qp];
                  long double dR = sc->get_net_q_recombination_rate_derivatives(vari)[varj];
-                 Kvv[vari].at(varj)(ii,jj) += node_volumes[qp] * dR / R0;
+                 Kvv[vari].at(varj)(ii,jj) += node_volumes[qp] * dR / R0 * C0;
               }
             }
           }
@@ -5275,6 +5276,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 
             // diffusivity is obtained as conductivity / density
             // this could maybe be improved, since this leads to a strange mean value here
+
             double D = 0.5 * (diffusivity[var][n1] + diffusivity[var][n2]) / abs(g);
 
             // change sign to get deriv. w.r.t q. Fermi potential
