@@ -82,7 +82,7 @@ TiberNonlinLS::do_solve(void)
   double eps_res = get_nonlinear_atol();
 
 
-  int max_ls_step = 1;
+  int max_ls_step = 10;
 
   // the (final) residual norm
   double norm_res, norm_rhs = 0;
@@ -143,9 +143,6 @@ TiberNonlinLS::do_solve(void)
     du.close();
 
     //du_t = du;
-
-    //if (i == 3)
-    //  exit(0);
 
 
     sim->check_nonlinear_step(du);
