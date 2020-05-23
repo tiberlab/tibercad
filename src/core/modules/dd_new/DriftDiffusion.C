@@ -5075,7 +5075,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
           //diffusivity[var][qp] = sc->get_q_mobility(var) / g;
 
           CarrierProperties* cp = sc->get_carrier_properties(var);
-          diffusivity[var][qp] = Constants::k_B * T_nodes[qp] *
+          diffusivity[var][qp] = Constants::k_B * T_nodes[qp] / phi0 *
               cp->get_conductivity() / density[var][qp];
 
           //sigma.insert( make_pair(var, cp->get_conductivity() / (mu0 * C0_q)) );
