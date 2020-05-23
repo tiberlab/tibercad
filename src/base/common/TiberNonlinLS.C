@@ -83,6 +83,8 @@ TiberNonlinLS::do_solve(void)
 
 
   int max_ls_step = 10;
+  if (get_options().get_option("skip_linesearch", false))
+    max_ls_step = 1;
 
   // the (final) residual norm
   double norm_res, norm_rhs = 0;
