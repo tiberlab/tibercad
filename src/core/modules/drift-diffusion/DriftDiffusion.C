@@ -5292,11 +5292,14 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
     }
 
 
-    // constrain the jacobian and the rhs to account for constrained
+    // constrain the jacobian to account for constrained
     // DOFs
     // NOTE: this changes dof_indices that's why the application of
     //       Dirichlet type BCs needs special care
-    dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
+    // NOTE: the residual must not be constrained. It is handling
+    //       constraints by using the correct values
+    if (jacobian != NULL)
+      dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
 
     system.exclude_dofs(Ke, dof_indices, elem);
 
@@ -5309,14 +5312,6 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
         for (unsigned int j = 0; j < n_dofs_tot; j++)
           Fe(i) += Ke(i,j) * x(dof_indices[j]);
 
-      if (coupling & ELECTRONS)
-      {
-        //cerr << Ke << endl;
-        //TiberMath::svd(Ke, Fe);
-        //elem->centroid().write_unformatted(cerr, false);
-        //cerr << " " << Fe(0) <<  "  " << Fe(Fe.size()-1) << endl;
-      }
-
       system.exclude_dofs(Fe, dof_indices, elem);
 
       residual->add_vector(Fe, dof_indices);
@@ -5324,29 +5319,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
     }
     else
     {
-
       jacobian->add_matrix(Ke, dof_indices);
-      /*
-      for (unsigned int i = 0; i < n_dofs; i++)
-      {
-        unsigned int i2 = i + n_dofs;
-        unsigned int i3 = i2 + n_dofs;
-        for (unsigned int j = 0; j < n_dofs; j++)
-        {
-          if (j != i)
-          {
-            Ke(i, j) = Ke(i, j + n_dofs) = Ke(i, j + 2*n_dofs) = 0.0;
-            Ke(i2, j) = Ke(i2, j + n_dofs) = Ke(i2, j + 2*n_dofs) = 0.0;
-            Ke(i3, j) = Ke(i3, j + n_dofs) = Ke(i3, j + 2*n_dofs) = 0.0;
-          }
-        }
-      }
-      sysmat.add_matrix(Ke, dof_indices);
-      */
-      //cerr << Ke << endl;
-      //TiberMath::svd(Ke, Fe);
-      //elem->centroid().write_unformatted(cerr, false);
-      //cerr << " " << Fe(0) <<  "  " << Fe(Fe.size()-1) << endl;
     }
 
 
@@ -5356,94 +5329,11 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
   {
     jacobian->close();
     //jacobian->print_matlab("J_ref.m");
-    //exit(0);
-
-    /*
-    DenseMatrix<Number> Pe(3, 3);
-    Pe.zero();
-
-    unsigned int sysnum = system.get_libmesh_system()->number();
-    MeshBase::const_node_iterator nit(this->active_nodes_begin());
-    const MeshBase::const_node_iterator nend(this->active_nodes_end());
-    for ( ; nit != nend; ++nit)
-    {
-      if ((*nit)->has_dofs(sysnum))
-      {
-        unsigned int dof_1 = (*nit)->dof_number(sysnum, 0, 0);
-        unsigned int dof_2 = (*nit)->dof_number(sysnum, 1, 0);
-        unsigned int dof_3 = (*nit)->dof_number(sysnum, 2, 0);
-
-        double a11 = (*jacobian)(dof_1, dof_1);
-        double a12 = (*jacobian)(dof_1, dof_2);
-        double a13 = (*jacobian)(dof_1, dof_3);
-        double a21 = (*jacobian)(dof_2, dof_1);
-        double a22 = (*jacobian)(dof_2, dof_2);
-        double a23 = (*jacobian)(dof_2, dof_3);
-        double a31 = (*jacobian)(dof_3, dof_1);
-        double a32 = (*jacobian)(dof_3, dof_2);
-        double a33 = (*jacobian)(dof_3, dof_3);
-
-        Pe(0, 0) = a22*a33 - a32*a23;
-        Pe(0, 1) = a13*a32 - a33*a12;
-        Pe(0, 2) = a12*a23 - a22*a13;
-        Pe(1, 0) = a23*a31 - a33*a21;
-        Pe(1, 1) = a11*a33 - a31*a13;
-        Pe(1, 2) = a13*a21 - a23*a11;
-        Pe(2, 0) = a21*a32 - a31*a22;
-        Pe(2, 1) = a12*a31 - a32*a11;
-        Pe(2, 2) = a11*a22 - a21*a12;
-        double det = a11 * Pe(0, 0) + a21 * Pe(0, 1) + a31 * Pe(0, 2);
-        Pe.scale(1.0 / det);
-
-        sysmat.add_matrix(Pe, {dof_1, dof_2, dof_3});
-
-
-
-      }
-    }
-    sysmat.close();
-    */
-    /*
-    if (coupling & ELECTRONS)
-    {
-      ostringstream os;
-      os << "_" << __private_counter << ".m";
-      ostringstream ms;
-      ms << "writing " << "J" << os.str() << "\n";
-      Messages::info(ms.str());
-      jacobian->print_matlab("J" + os.str());
-      sysmat.print_matlab("precond" + os.str());
-    }
-    if (coupling & ELECTRONS) __private_counter++;
-    //if (__private_counter == 2) exit(0);
-    */
   }
   else
   {
     residual->close();
     //write_nodal_vector("residual", *residual);
-
-    //sysmat.close();
-    //sysmat.print_matlab("sysmat.m");
-    /*
-    if (coupling & ELECTRONS)
-    {
-      //if (__private_counter > 0)
-      //  oldx -= x;
-      ostringstream os;
-      os << "_" << __private_counter;
-      write_nodal_vector("residual" + os.str(), *residual);
-      ostringstream ms;
-      ms << "writing " << "residual" << os.str() << " (norm = " << residual->l2_norm() << ")\n";
-      Messages::info(ms.str());
-      //residual->print_matlab("F" + os.str() + ".m");
-      //write_nodal_vector("x" + os.str(), oldx);
-      //NumericVector<Number>& weight = system.get_vector("scaling");
-      //write_nodal_vector("scaling" + os.str(), weight);
-      __private_counter++;
-      //oldx = x;
-    }
-    */
   }
 
 

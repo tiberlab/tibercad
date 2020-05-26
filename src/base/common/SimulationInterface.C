@@ -42,6 +42,7 @@
 #include "libmesh/system.h"
 #include "libmesh/elem.h"
 #include "libmesh/fe_interface.h"
+#include "periodic_boundary.h"
 //#include "libmesh/elem.h"
 
 #include <sstream>
@@ -1014,6 +1015,43 @@ SimulationInterface::create_equation_system(const std::string& type,
   TiberEqSystem* sys = TiberEqSystem::create(get_equation_systems(),
       os.str(), type, opts);
 
+  ModelOptions::submodel_iterator pbit(
+      get_options().submodels_begin("PeriodicBoundary"));
+
+  for ( ; pbit != get_options().submodels_end("PeriodicBoundary"); ++pbit)
+  {
+    ModelOptions& pb_opts = pbit->second;
+
+    libMesh::RealVectorValue period;
+    pb_opts.get_option("periodicity", period);
+
+    vector<string> bdpair(2, "");
+    pb_opts.get_option("boundary_pair", bdpair);
+
+    vector<ID> bdids;
+    const Device& dev = get_environment().get_device();
+    dev.get_boundary_region_ids(bdpair[0], bdids);
+    ID tmp = bdids[0];
+    dev.get_boundary_region_ids(bdpair[1], bdids);
+    bdids.resize(2);
+    bdids[1] = bdids[0];
+    bdids[0] = tmp;
+
+    libMesh::PeriodicBoundary pb(period);
+    pb.myboundary = bdids[0];
+    pb.pairedboundary = bdids[1];
+    libMesh::DofMap& dof_map = sys->get_libmesh_system()->get_dof_map();
+    dof_map.add_periodic_boundary(pb);
+    ostringstream os;
+    os << "set up periodic boundary: " << endl
+        << "    periodicity: (" << period(0) << ", " << period(1) << ", "
+        << period(2) << ")" << endl
+        << "    pair       : " << bdids[0] << ", " << bdids[2];
+    Messages::info(os.str());
+  }
+
+
+
   _systems.push_back(sys);
 
   return newid;
@@ -1539,7 +1577,7 @@ SimulationInterface::plot_meshdata(void)
   get_output_format(formats);
   for (unsigned int i = 0; i < formats.size(); i++)
   {
-    auto_ptr<DataOutput> writer(DataOutput::create(formats[i]));
+    unique_ptr<DataOutput> writer(DataOutput::create(formats[i]));
     if ((writer.get() != NULL) && (data.size() > 0))
     {
       writer->set_output_directory(get_output_directory());
