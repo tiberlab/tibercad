@@ -94,6 +94,9 @@ class MeshRegionInfo
     //! Get the name for a given id
     const std::string& get_name(ID id) const;
 
+    //! Get the associated mesh object
+    libMesh::MeshBase& get_mesh(void);
+
 
     //! Do the actual broadcast
     virtual void do_broadcast(void) {};
@@ -210,6 +213,14 @@ MeshRegionInfo::get_mesh(void) const
 {
   return _mesh;
 }
+
+inline
+libMesh::MeshBase&
+MeshRegionInfo::get_mesh(void)
+{
+  return _mesh;
+}
+
 
 
 #endif // _REGIONINFO_H_

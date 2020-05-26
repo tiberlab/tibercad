@@ -45,6 +45,8 @@ BoundaryRegions::prepare_for_use(void)
   IDToKnownPairs pairs;
   Pairs pairvec;
 
+  libMesh::BoundaryInfo& bi = get_mesh().get_boundary_info();
+
   // We have to start from an empty _contiguous_regions structure
   _contiguous_regions.clear();
 
@@ -55,6 +57,8 @@ BoundaryRegions::prepare_for_use(void)
     ID id = it->second;
     const Elem* elem = it->first.elem();
     unsigned int side = it->first.side();
+
+    bi.add_side(elem, side, id);
 
     IDSet cont_ids;
     cont_ids.insert(elem->subdomain_id());
