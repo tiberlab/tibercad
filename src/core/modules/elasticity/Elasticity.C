@@ -312,6 +312,7 @@ Elasticity::accumulate_strain(void)
     dof_map.dof_indices(elem, dof_indices_vec[2], uvar[2]);
     const unsigned int n_dofs = dof_indices_vec[0].size();
 
+
     libMesh::RealTensor strain(0);
     for (int i = 0; i < 3; i++)
       for (int j = 0; j < 3; j++)
@@ -844,6 +845,8 @@ Elasticity::do_assemble(libMesh::EquationSystems& es, const std::string& system_
           }
       }
     }
+
+    dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
 
     //-------------------------
     system.matrix->add_matrix (Ke, dof_indices);
