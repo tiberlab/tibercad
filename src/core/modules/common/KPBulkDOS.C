@@ -3,6 +3,7 @@
 #include "KPBulkDOS.h"
 #include "Constants.h"
 #include "Material.h"
+#include "RotatedCrystal.h"
 #include "TiberMath.h"
 #include "Database.h"
 #include "InitFailedException.h"
@@ -78,15 +79,16 @@ KPBulkDOS::do_init(void)
 
   string strain_simul = get_option("strain_simulation", "");
   strain_simul = get_option("strain", strain_simul);
-  _strain_if.set_simulation(strain_simul);
+  _strain_if = SimulationInterface::find_solution_provider(strain_simul, "Strain");
 
-  // TODO temperature interface !!
+  string thermal_simul = get_option("thermal_simulation", "");
+  _thermal_if = SimulationInterface::find_solution_provider(thermal_simul, "T");
 
   _bulk_model->set_strain(Tensor2Sym(0.0));
   _bulk_model->set_temperature(SimulationOptions::T);
   _solve_kp();
 
-  if (_strain_if.has_simulation())
+  if (_strain_if.is_valid() || _thermal_if.is_valid())
     _recompute = true;
 
 }
@@ -101,7 +103,7 @@ KPBulkDOS::do_reinit(const Elem* elem)
 
   Cache::Data data;
   if (_cache.get_data(elem,
-      _strain_if.get_simulation()->get_solve_sequence_number(),
+      _strain_if.simulation()->get_solve_sequence_number(),
       data))
   {
     effective_dos() = data.eff_dos;
@@ -113,7 +115,27 @@ KPBulkDOS::do_reinit(const Elem* elem)
   else
   {
     Tensor2Sym strain(0);
-    _strain_if.get_crystal_strain(elem, elem->centroid(), strain);
+
+    vector<Point> p(1);
+    p[0] = elem->centroid();
+    vector<double> values(6);
+
+    if (_strain_if.simulation()->get_solution(elem,
+        _strain_if.id(), values, p))
+    {
+      strain(1,1) = values[0];
+      strain(2,2) = values[1];
+      strain(3,3) = values[2];
+      strain(2,1) = values[3];
+      strain(3,2) = values[4];
+      strain(3,1) = values[5];
+    }
+
+    const Material* mat = get_material();
+    const RotatedCrystal& cr = mat->get_rotated_crystal();
+    const Tensor2Gen& rotate = cr.RotMatrix;
+    strain = multAtSA(rotate, strain);
+
     _bulk_model->set_strain(strain);
 
     // it wants temperature in K
@@ -121,7 +143,7 @@ KPBulkDOS::do_reinit(const Elem* elem)
 
     _solve_kp();
 
-    data.strain_seq_num = _strain_if.get_simulation()->get_solve_sequence_number();
+    data.strain_seq_num = _strain_if.simulation()->get_solve_sequence_number();
     data.eff_dos = effective_dos();
     data.ref_energy = reference_energy();
     data.dos_mass = effective_mass();

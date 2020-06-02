@@ -3,7 +3,7 @@
 #ifndef _EXTERNALPROFILE_H_
 #define _EXTERNALPROFILE_H_
 
-#include "SimulationInterface.h"
+#include "SolutionProvider.h"
 
 #include "TiberModelObject.h"
 #include "libMeshDefs.h"
@@ -45,7 +45,7 @@ class ExternalProfile : protected TiberModelObject
     void setup(void);
 
     //! The data provider
-    SimulationInterface::SolutionProvider _data_source;
+    SolutionProvider _data_source;
 
 };
 

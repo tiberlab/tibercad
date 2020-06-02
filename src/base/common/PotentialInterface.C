@@ -32,7 +32,7 @@ PotentialInterface::set_simulation(const std::string& name, const std::string& v
   bool answer = false;
   if (name != "")
   {
-    SimulationInterface::SolutionProvider prov =
+    SolutionProvider prov =
         SimulationInterface::find_solution_provider(name, variable);
 
     _simulation = prov.first;

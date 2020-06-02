@@ -19,6 +19,7 @@
 #include "Atom.h"
 #include "libMeshDefs.h"
 #include "DataCache.h"
+#include "SolutionProvider.h"
 
 
 // LibMesh includes
@@ -71,8 +72,6 @@ class SimulationInterface : public TiberModelObject
   public:
 
     typedef std::vector< std::vector<unsigned int> > ElemAtomsMap;
-
-    typedef std::pair<SimulationInterface*, ID> SolutionProvider;
 
 
     //! An iterator to iterate over all simulations

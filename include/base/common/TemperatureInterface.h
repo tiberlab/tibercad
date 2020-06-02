@@ -35,6 +35,10 @@ class TemperatureInterface
     TemperatureInterface(void);
 
 
+    //! Copy constructor
+    TemperatureInterface(const TemperatureInterface& rhs);
+
+
     //! Assignment operator
     TemperatureInterface& operator=(const TemperatureInterface& rhs);
 
@@ -81,7 +85,7 @@ class TemperatureInterface
 
 
     //! The name of the temperature variable
-    static std::string _variable_name;
+    std::string _variable_name;
 
 
     //! The ID as returned from the simulation
@@ -108,15 +112,6 @@ SimulationInterface*
 TemperatureInterface::get_simulation(void)
 {
   return _simulation;
-}
-
-inline
-TemperatureInterface&
-TemperatureInterface::operator=(const TemperatureInterface& rhs)
-{
-  _simulation = rhs._simulation;
-  _variable_name = rhs._variable_name;
-  _id = rhs._id;
 }
 
 #endif // _TEMPERATUREINTERFACE_H_

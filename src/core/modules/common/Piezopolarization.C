@@ -19,7 +19,7 @@ Piezopolarization::do_init(void)
 
   std::string sim_name = "";
   get_parameter("strain_simulation", sim_name);
-  _strain.set_simulation(sim_name);
+  _strain = SimulationInterface::find_solution_provider(sim_name, "Strain");
 
 }
 
@@ -50,7 +50,27 @@ Piezopolarization::do_calculate(const Elem* elem, const Point& point)
   RealVectorValue polarization(0);
 
   Tensor2Sym& strain = get_strain();
-  _strain.get_crystal_strain(elem, point, strain);
+  if (_strain.is_valid())
+  {
+    std::vector<Point> p(1);
+    p[0] = point;
+    std::vector<double> values(6);
+
+    if (_strain.simulation()->get_solution(elem, _strain.id(), values, p))
+    {
+      strain(1,1) = values[0];
+      strain(2,2) = values[1];
+      strain(3,3) = values[2];
+      strain(2,1) = values[3];
+      strain(3,2) = values[4];
+      strain(3,1) = values[5];
+    }
+
+    const Material* mat = get_material();
+    const RotatedCrystal& cr = mat->get_rotated_crystal();
+    const Tensor2Gen& rotate = cr.RotMatrix;
+    strain = multAtSA(rotate, strain);
+  }
   
 
   // compute polarization

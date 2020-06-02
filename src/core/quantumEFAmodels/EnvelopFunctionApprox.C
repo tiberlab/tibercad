@@ -5,6 +5,7 @@
 #include "ModelOptions.h"
 #include "EFAbulkModel.h"
 #include "Material.h"
+#include "RotatedCrystal.h"
 #include "Boundary.h"
 #include "TiberMath.h"
 #include "TiberLinearSystem.h"
@@ -709,7 +710,7 @@ void EnvelopFunctionApprox::parse_options()
   //Strain model
   std::string strain_model_name = get_option("strain_model_name","");
   strain_model_name = get_option("strain_simulation", strain_model_name);
-  _strain_interface.set_simulation(strain_model_name);
+  _strain_interface = find_solution_provider(strain_model_name, "Strain");
 
 
   //-------------------------------------------------------------------------------------------//
@@ -736,7 +737,7 @@ void EnvelopFunctionApprox::parse_options()
       throw InitFailedException( "Unknown poisson model " + poisson_model_name);
 
     potential_ID = poisson_equation->get_solution_id("ElPotential");
-    _el_pot = make_pair(poisson_equation, potential_ID);
+    _el_pot = SolutionProvider(poisson_equation, potential_ID);
 
 
     if (potential_ID ==  INVALID_ID)
@@ -744,16 +745,16 @@ void EnvelopFunctionApprox::parse_options()
 
 
     el_electro_chem_pot_ID = poisson_equation->get_solution_id("eQFermi");
-    _el_elchem = make_pair(poisson_equation, el_electro_chem_pot_ID);
+    _el_elchem = SolutionProvider(poisson_equation, el_electro_chem_pot_ID);
 
     cb_band_edge_ID = poisson_equation->get_solution_id("Ec");
-    _cb_edge = make_pair(poisson_equation, cb_band_edge_ID);
+    _cb_edge = SolutionProvider(poisson_equation, cb_band_edge_ID);
 
     hl_electro_chem_pot_ID = poisson_equation->get_solution_id("hQFermi");
-    _hl_elchem = make_pair(poisson_equation, hl_electro_chem_pot_ID);
+    _hl_elchem = SolutionProvider(poisson_equation, hl_electro_chem_pot_ID);
 
     vb_band_edge_ID = poisson_equation->get_solution_id("Ev");
-    _vb_edge = make_pair(poisson_equation, vb_band_edge_ID);
+    _vb_edge = SolutionProvider(poisson_equation, vb_band_edge_ID);
 
 
   }
@@ -1184,6 +1185,38 @@ void EnvelopFunctionApprox::do_solve_for_kpoint(const Point& k_point)
   }
 }
 
+
+void
+EnvelopFunctionApprox::get_crystal_strain(
+    const libMesh::Elem* elem, const libMesh::Point& point, Tensor2Sym& strain)
+{
+
+  if (_strain_interface.is_valid())
+  {
+    std::vector<Point> p(1);
+    p[0] = point;
+    std::vector<double> values(6);
+
+    if (_strain_interface.simulation()->get_solution(elem,
+        _strain_interface.id(), values, p))
+    {
+      strain(1,1) = values[0];
+      strain(2,2) = values[1];
+      strain(3,3) = values[2];
+      strain(2,1) = values[3];
+      strain(3,2) = values[4];
+      strain(3,1) = values[5];
+    }
+
+    const Material* mat = get_material(elem);
+    const RotatedCrystal& cr = mat->get_rotated_crystal();
+    const Tensor2Gen& rotate = cr.RotMatrix;
+    strain = multAtSA(rotate, strain);
+  }
+}
+
+
+
 //===========================================================//
 void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 {
@@ -1345,7 +1378,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 	    It is done for a sake of a multiscale generalization
          */
         Tensor2Sym strain_crystal_system(0);
-        _strain_interface.get_crystal_strain(elem, q_point[qp], strain_crystal_system);
+        get_crystal_strain(elem, q_point[qp], strain_crystal_system);
 
 
         if (opt.consider_potential)
@@ -2980,7 +3013,7 @@ void EnvelopFunctionApprox::solve_bulk(void)
   element_hamiltonian->calculate_Hamiltonian_k_par();
 
   Tensor2Sym strain_crystal_system(0);
-  _strain_interface.get_crystal_strain(_bulk_mat_element, qp, strain_crystal_system);
+  get_crystal_strain(_bulk_mat_element, qp, strain_crystal_system);
 
   //std::cout<<"strain"<<std::endl;
   //std::cout<<"(EP) strain exx "<<strain_crystal_system(1,1)<<std::endl;

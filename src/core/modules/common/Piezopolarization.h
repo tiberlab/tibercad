@@ -4,7 +4,7 @@
 #define _PIEZOPOLARIZATION_H_
 
 #include "PolarizationModel.h"
-#include "StrainInterface.h"
+#include "SolutionProvider.h"
 #include "tiber_dll.h"
 
 
@@ -32,7 +32,7 @@ class TBDLLOCAL Piezopolarization: public PolarizationModel
   private:
 
     //! The strain simulation
-    StrainInterface _strain;
+    SolutionProvider _strain;
 
     //! Piezoelectric modulus \f$e_{33}\f$ (wurtzite)
     double _e33;

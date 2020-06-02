@@ -7,6 +7,7 @@
 #include "ExponentialProfile.h"
 #include "GaussianProfile.h"
 #include "CompositeProfile.h"
+#include "SimulationInterface.h"
 
 using namespace std;
 

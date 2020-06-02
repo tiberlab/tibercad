@@ -174,7 +174,7 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   TemperatureInterface _temp_interface;
  
   //! Interface to strain simulation
-  StrainInterface _strain_interface;
+  SolutionProvider _strain_interface;
 
   options opt;
 
@@ -313,6 +313,11 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
 
   //!Calculate number of bands in the Hamiltonian 
   short calculate_number_of_bands(void) const;
+
+
+  //! Get strain in crystal coordinates
+  void get_crystal_strain(const libMesh::Elem* elem,
+      const libMesh::Point& point, Tensor2Sym& strain);
 
 
 

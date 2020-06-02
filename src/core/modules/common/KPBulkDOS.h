@@ -5,7 +5,7 @@
 
 
 #include "DensityOfStates.h"
-#include "StrainInterface.h"
+#include "SolutionProvider.h"
 #include "HashMap.h"
 
 class DDsemiconductor;
@@ -97,7 +97,10 @@ class TBDLEXPORT KPBulkDOS : public DensityOfStates
     DDsemiconductor* _bulk_model;
 
     //! The interface to the strain simulation
-    StrainInterface _strain_if;
+    SolutionProvider _strain_if;
+
+    //! The interface to the thermal simulation
+    SolutionProvider _thermal_if;
 
     //! We allow for several subbands
     std::vector<double> _ref_energies;

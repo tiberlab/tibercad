@@ -4,7 +4,7 @@
 #define _POLARIZATIONMODEL_H_
 
 #include "PhysicalModel.h"
-#include "SimulationInterface.h"
+#include "SolutionProvider.h"
 #include "RotatedCrystal.h"
 #include "Material.h"
 #include "tensor.h"
@@ -81,7 +81,7 @@ class PolarizationModel : public PhysicalModel
    Tensor2Sym _strain;
 
    //! We may take it from some other module
-   SimulationInterface::SolutionProvider _polarization_source;
+   SolutionProvider _polarization_source;
 
    //! \c true if polarization is given from input or from other module
    bool _fixed_or_external;

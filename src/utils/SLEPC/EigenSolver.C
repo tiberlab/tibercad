@@ -683,7 +683,7 @@ int EigenSolver::do_solve(const SLEPCoptions& opt)
     (SLEPC_VERSION_SUBMINOR <= 2))
   if (opt.monitor) EPSSetMonitor(eps, EPSDefaultMonitor, PETSC_NULL);
 //#else
-  //if (opt.monitor) EPSMonitorSet(eps, EPSMonitorDefault, PETSC_NULL, PETSC_NULL);
+//  if (opt.monitor) EPSMonitorSet(eps, EPSMonitorDefault, PETSC_NULL, PETSC_NULL);
 #endif
 
 

@@ -913,7 +913,7 @@ SimulationInterface::find_simulation(const string& name)
 
 
 
-SimulationInterface::SolutionProvider
+SolutionProvider
 SimulationInterface::find_solution_provider(const string& simulation,
     const string& solution)
 {
@@ -1046,7 +1046,8 @@ SimulationInterface::create_equation_system(const std::string& type,
     os << "set up periodic boundary: " << endl
         << "    periodicity: (" << period(0) << ", " << period(1) << ", "
         << period(2) << ")" << endl
-        << "    pair       : " << bdids[0] << ", " << bdids[2];
+        << "    pair       : " << bdpair[0] << " (" << bdids[0] << "), "
+                               << bdpair[1] << " (" << bdids[1] << ")";
     Messages::info(os.str());
   }
 

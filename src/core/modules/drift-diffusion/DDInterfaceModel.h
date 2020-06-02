@@ -4,7 +4,7 @@
 #define _DDINTERFACEMODEL_H_
 
 #include "DriftDiffusionProperties.h"
-#include "SimulationInterface.h"
+#include "SolutionProvider.h"
 
 #include "point.h"
 
@@ -14,6 +14,7 @@
 
 class DDBulkModel;
 class MaterialBoundary;
+class SimulationInterface;
 class RecombinationModelInterface;
 class Trap;
 class FowlerNordheim;
@@ -249,10 +250,10 @@ class DDInterfaceModel : public DriftDiffusionProperties
     double _hflux;
 
     //! Solution provider for eflux
-    SimulationInterface::SolutionProvider _eflux_sim;
+    SolutionProvider _eflux_sim;
 
     //! Solution provider for hflux
-    SimulationInterface::SolutionProvider _hflux_sim;
+    SolutionProvider _hflux_sim;
     
     //! True if flux controlled for electrons
     bool _eflux_controlled;
@@ -489,14 +490,14 @@ inline
 SimulationInterface*
 DDInterfaceModel::get_eflux_simulation(void) const
 {
-  return(_eflux_sim.first);
+  return(_eflux_sim.simulation());
 }
 
 inline
 SimulationInterface*
 DDInterfaceModel::get_hflux_simulation(void) const
 {
-  return(_hflux_sim.first);
+  return(_hflux_sim.simulation());
 }
 
 

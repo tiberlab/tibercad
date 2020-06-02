@@ -7,15 +7,29 @@
 
 #include "elem.h"
 
-std::string
-TemperatureInterface::_variable_name = "LatticeTemp";
-
 
 
 TemperatureInterface::TemperatureInterface(void)
   : _simulation(NULL),
+    _variable_name("LatticeTemp"),
     _id(INVALID_ID)
 {
+}
+
+
+TemperatureInterface::TemperatureInterface(const TemperatureInterface& rhs)
+  : _simulation(rhs._simulation),
+    _variable_name(rhs._variable_name),
+    _id(rhs._id)
+{
+}
+
+TemperatureInterface&
+TemperatureInterface::operator=(const TemperatureInterface& rhs)
+{
+  _simulation = rhs._simulation;
+  _variable_name = rhs._variable_name;
+  _id = rhs._id;
 }
 
 
