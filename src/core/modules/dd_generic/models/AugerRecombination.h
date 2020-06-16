@@ -44,7 +44,8 @@ class TBDLLOCAL AugerRecombination : public RecombinationModelInterface
     virtual void do_init(void) override;
 
     //! \copydoc RecombinationModelInterface::calculate_rate_and_derivatives()
-    virtual double calculate_rate_and_derivatives(std::vector<double>& dPotentials) override;
+    virtual void calculate_rate_and_derivatives(std::vector<double>& R,
+        std::vector<std::vector<double>>& dPotentials) override;
 
     
   private:

@@ -117,7 +117,6 @@ DirectRecombination::calculate_rate_and_derivatives(std::vector<double>& R, std:
 
     R[id1] = g * stat_fac;
     R[id2] = g * stat_fac;
-    //cerr << "n1 = " << n1 << " n2 = " << n2 << " -> " << R[id1] << endl;
 
     long double dR0 = stat_fac * C_ * (n2 * dn1 + n1 * dn2);
     long double dR1 = -C_ * n2 * (dn1 * stat_fac + beta * n1 * exponential);

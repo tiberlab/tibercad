@@ -41,7 +41,8 @@ class TBDLLOCAL SchottkyTunneling : public RecombinationModelInterface
     virtual void do_init(void) override;
 
     //! Calculate the recombination rate and its derivatives
-    virtual double calculate_rate_and_derivatives(std::vector<double>& dPotentials) override;
+    virtual void calculate_rate_and_derivatives(std::vector<double>& R,
+        std::vector<std::vector<double>>& dPotentials) override;
 
 
   private:

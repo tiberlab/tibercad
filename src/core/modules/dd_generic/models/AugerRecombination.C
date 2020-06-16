@@ -97,104 +97,65 @@ AugerRecombination::get_Cp(void)
 }
 
 
-double
-AugerRecombination::calculate_rate_and_derivatives(std::vector<double>& dPotentials)
+void
+AugerRecombination::calculate_rate_and_derivatives(std::vector<double>& R,
+        std::vector<std::vector<double>>& dPotentials)
 {
-  const ID id1 = this->get_carrier_ids()[0];
-  const ID id2 = this->get_carrier_ids()[1];
+  ID id1 = this->get_carrier_ids()[0];
+  ID id2 = this->get_carrier_ids()[1];
 
   const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
-  double Efn = -dd.get_q_fermi_potential(id1);
-  double Efp = -dd.get_q_fermi_potential(id2);
-  double kT = dd.get_lattice_temperature();
-
-  double n  = dd.get_q_density(id1);
-  double p  = dd.get_q_density(id2);
-  double dn  = dd.get_q_density_derivative(id1);
-  double dp  = dd.get_q_density_derivative(id2);
-  double qn = dd.get_carrier_properties(id1)->get_charge();
-  double qp = dd.get_carrier_properties(id2)->get_charge();
 
   //double E01 = dd.get_carrier_properties(id1)->get_band_edge();
   //double E02 = dd.get_carrier_properties(id2)->get_band_edge();
 
-  double exponential = exp((Efp - Efn) / kT);
-  double stat_fac = 1.0 - exponential;
-  /*
-  double g = C_ * n1 * n2;
+  const char ct1 = dd.get_carrier_properties(id1)->get_carrier_type();
+  const char ct2 = dd.get_carrier_properties(id2)->get_carrier_type();
 
-  double R = g * stat_fac;
+  if (ct1 != ct2)
+  {
+    // this is the standard direct recombination for electrons hole pairs
+    if (ct1 != 'e')
+      std::swap(id1, id2);
 
-  double dR1 = -C_ * n2 * (-dn1 * stat_fac + 1/kT * n1 * exponential);
-  double dR2 = -C_ * n1 * (-dn2 * stat_fac - 1/kT * n2 * exponential);
+    double Efn = -dd.get_q_fermi_potential(id1);
+    double Efp = -dd.get_q_fermi_potential(id2);
+    double kT = dd.get_lattice_temperature();
 
-  dPotentials[id1] = dR1;
-  dPotentials[id2] = dR2;
-  dPotentials[dd.n_known_carriers()] = stat_fac * C_ * (n2 * dn1 + n1 * dn2);
-  */
-  double R = 0;
-  return R;
+    double n  = dd.get_q_density(id1);
+    double p  = dd.get_q_density(id2);
+    double dn  = dd.get_q_density_derivative(id1);
+    double dp  = dd.get_q_density_derivative(id2);
+    double qn = dd.get_carrier_properties(id1)->get_charge();
+    double qp = dd.get_carrier_properties(id2)->get_charge();
+
+    double exponential = exp((Efp - Efn) / kT);
+    double stat_fac = 1.0 - exponential;
+
+    double Cn = get_Cn();
+    double Cp = get_Cp();
+
+    double A = Cn * n;
+    double B = Cp * p;
+    double Rec = (A + B) * n * p * stat_fac;
+
+    R[id1] = R[id2] = Rec;
+
+    double dRedn = (2*A + B) * p * stat_fac;
+    double dRedp = (2*B + A) * n * stat_fac;
+    double dRedEfn = -(A + B) * n * p * exponential / kT;
+    double dRedEfp = -dRedEfn;
+    double dR0 = -dRedn - dRedp;
+    double dR1 = dRedn * dn + dRedEfn;
+    double dR2 = dRedp * dp + dRedEfp;
+
+    dPotentials[id1][id1] = dR1;
+    dPotentials[id1][id2] = dR2;
+    dPotentials[id2][id1] = dR1;
+    dPotentials[id2][id2] = dR2;
+    dPotentials[id1][dd.n_known_carriers()] = dR0;
+    dPotentials[id2][dd.n_known_carriers()] = dR0;
+  }
+
 }
-
-/*
-void
-AugerRecombination::get_net_recombination_rates(double& recomb_e,
-    double& recomb_h)
-{
-  const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
-
-  double T = dd.get_lattice_temperature();
-  double Efn  = -dd.get_electron_electro_chemical_potential();
-  double Efp  = -dd.get_hole_electro_chemical_potential();
-  long double n  = dd.get_electron_density();
-  long double p  = dd.get_hole_density();
-  long double np = n * p;
-
-  long double g = 1.0 - exp((Efp - Efn) / T);
-
-  double Cn = get_Cn();
-  double Cp = get_Cp();
-
-  long double A = Cn * n;
-  long double B = Cp * p;
-  recomb_e = recomb_h = (A + B) * np * g;
-}
-
-
-
-void
-AugerRecombination::get_net_recombination_rate_derivatives(
-    std::vector<double>& recomb_e, std::vector<double>& recomb_h)
-{
-  const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
-
-  double T = dd.get_lattice_temperature();
-  double Efn  = -dd.get_electron_electro_chemical_potential();
-  double Efp  = -dd.get_hole_electro_chemical_potential();
-  long double n  = dd.get_electron_density();
-  long double p  = dd.get_hole_density();
-  long double np = n * p;
-
-  long double e = exp((Efp - Efn) / T);
-  long double g = 1 - e;
-
-  double Cn = get_Cn();
-  double Cp = get_Cp();
-
-  long double A = Cn * n;
-  long double B = Cp * p;
-
-  long double dRedn = (2*A + B) * p * g;
-  long double dRedp = (2*B + A) * n * g;
-  long double dRedEfn = -(A + B) * np * e / T;
-  long double dRedEfp = -dRedEfn;
-
-  recomb_e[0] = recomb_h[0] = dRedn;
-  recomb_e[1] = recomb_h[1] = dRedp;
-  recomb_e[2] = recomb_h[2] = dRedEfn;
-  recomb_e[3] = recomb_h[3] = dRedEfp;
-}
-*/
-
-
 

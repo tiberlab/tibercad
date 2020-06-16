@@ -50,6 +50,8 @@ SchottkyTunneling::read_database(void)
 void
 SchottkyTunneling::do_init(void)
 {
+  RecombinationModelInterface::do_init();
+
   _max_tunnel_length = get_option("maximum_tunnel_length", _max_tunnel_length);
   _contact_name = get_option("contact", _contact_name);
   get_parameter("effective_mass", _mass);
@@ -57,6 +59,10 @@ SchottkyTunneling::do_init(void)
   if (_contact_name.empty())
     throw ModelErrorException("Need a contact name for Schottky "
         "contact tunneling model.");
+
+  if (get_carrier_names().size() != 1)
+    throw InitFailedException("Schottky tunneling model needs exactly "
+        "one carrier specified");
 
   // calculate distance from contact and put it into
   // _elem_map if it is below the maximum tunnel length
@@ -216,21 +222,22 @@ SchottkyTunneling::do_init(void)
 
 
 
-double
-SchottkyTunneling::calculate_rate_and_derivatives(std::vector<double>& dPotentials)
-{
-  double Gtun = 0.0;
-  return(Gtun);
-}
-
-/*
 void
-SchottkyTunneling::get_net_recombination_rates(double& recomb_e,
-    double& recomb_h)
+SchottkyTunneling::calculate_rate_and_derivatives(std::vector<double>& R,
+    std::vector<std::vector<double>>& dPotentials)
 {
-  const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
+  const ID id = this->get_carrier_ids()[0];
 
-  recomb_e = recomb_h = 0.0;
+  const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
+  double Ec  = dd.get_carrier_properties(id)->get_band_edge();
+  double Ef = -dd.get_q_fermi_potential(id);
+  double kT = dd.get_lattice_temperature();
+  //kT = dd.get_point_data().carrier_vt[0];
+
+  double n  = dd.get_q_density(id);
+  double dn  = dd.get_q_density_derivative(id);
+  double qn = dd.get_carrier_properties(id)->get_charge();
+
 
   HashMap<const libMesh::Elem*, libMesh::Point>::Type::iterator it(
       _elem_map.find(dd.get_element()->top_parent()));
@@ -239,19 +246,14 @@ SchottkyTunneling::get_net_recombination_rates(double& recomb_e,
   if (it == _elem_map.end()) return;
 
   double Gtun = 0.0;
+  double band_edge = Ec - dd.get_electric_potential();;
   double pot_diff = 0.0;
-  double band_edge;
-  double kT;
-  if (_band == 'c')
+  if (qn <= 0)
   {
-    kT = dd.get_point_data().carrier_vt[0];
-    band_edge = dd.get_conduction_band_edge() - dd.get_electric_potential();
     pot_diff = -_contact_voltage + _barrier - band_edge;
   }
   else
   {
-    kT = dd.get_point_data().carrier_vt[1];
-    band_edge = dd.get_valence_band_edge() - dd.get_electric_potential();
     pot_diff =  _barrier + band_edge + _contact_voltage;
   }
 
@@ -265,14 +267,14 @@ SchottkyTunneling::get_net_recombination_rates(double& recomb_e,
         Constants::e * Constants::e * kT / hcube;
 
     double exp1, exp2;
-    if (_band == 'c')
+    if (qn <= 0)
     {
-      exp1 = exp(-(band_edge + dd.get_electron_electro_chemical_potential()) / kT);
+      exp1 = exp(-(band_edge - Ef) / kT);
       exp2 = exp(-(band_edge + _contact_voltage) / kT);
     }
     else
     {
-      exp1 = exp((band_edge + dd.get_hole_electro_chemical_potential()) / kT);
+      exp1 = exp((band_edge - Ef) / kT);
       exp2 = exp((band_edge + _contact_voltage) / kT);
 
       E *= -1;
@@ -288,102 +290,8 @@ SchottkyTunneling::get_net_recombination_rates(double& recomb_e,
 
   }
 
-  if (_band == 'c')
-    recomb_e = Gtun;
-  else
-    recomb_h = Gtun;
+  R[id] = Gtun;
 
 }
 
 
-
-void
-SchottkyTunneling::get_net_recombination_rate_derivatives(
-    std::vector<double>& recomb_e, std::vector<double>& recomb_h)
-{
-  const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
-
-  recomb_e[0] = recomb_h[0] =  0;
-  recomb_e[1] = recomb_h[1] =  0;
-
-  HashMap<const libMesh::Elem*, libMesh::Point>::Type::iterator it(
-      _elem_map.find(dd.get_element()->top_parent()));
-
-  // if the current element is not in our list, we can return immediately
-  if (it == _elem_map.end()) return;
-
-  double dGtun_dn = 0.0;
-  double dGtun_dp = 0.0;
-  double pot_diff = 0.0;
-  double band_edge;
-  double kT;
-  if (_band == 'c')
-  {
-    kT = dd.get_point_data().carrier_vt[0];
-    band_edge = dd.get_conduction_band_edge() - dd.get_electric_potential();
-    pot_diff = -_contact_voltage + _barrier - band_edge;
-  }
-  else
-  {
-    kT = dd.get_point_data().carrier_vt[1];
-    band_edge = dd.get_valence_band_edge() - dd.get_electric_potential();
-    pot_diff =  _barrier + band_edge + _contact_voltage;
-  }
-
-  double E = dd.get_electric_field() * it->second / it->second.size();
-  E = 100 * E;
-
-  if (pot_diff > 0.0)
-  {
-    double hcube = Constants::h * Constants::h * Constants::h;
-    double A = 4 * M_PI * Constants::electron_mass * _mass *
-        Constants::e * Constants::e * kT / hcube;
-
-    double exp1, exp2;
-    if (_band == 'c')
-    {
-      exp1 = exp(-(band_edge + dd.get_electron_electro_chemical_potential()) / kT);
-      exp2 = exp(-(band_edge + _contact_voltage) / kT);
-    }
-    else
-    {
-      exp1 = exp((band_edge + dd.get_hole_electro_chemical_potential()) / kT);
-      exp2 = exp((band_edge + _contact_voltage) / kT);
-
-      E *= -1;
-    }
-
-    if (E >= 0) E = -1e-6;
-
-    // E is negative !!
-    double tmp = sqrt(2 * Constants::e * _mass * Constants::electron_mass *
-        pot_diff * pot_diff * pot_diff) / E;
-    double gamma = exp(4 / 3 / Constants::hbar * tmp);
-
-    // TODO for holes
-    tmp = sqrt(2 * Constants::e * _mass * Constants::electron_mass * pot_diff) / E;
-    double dgamma_dphi = 2 / Constants::hbar * tmp * gamma;
-    dgamma_dphi *= -A * log((1 + exp1) / (1 + exp2)) * E / 1e6;
-
-    dGtun_dn = dgamma_dphi / dd.get_electron_density_derivative();
-    dGtun_dp = dgamma_dphi / dd.get_hole_density_derivative();
-
-    tmp = exp1 / (1 + exp1);
-    double dB_dphi = tmp - exp2 / (1 + exp2);
-    dGtun_dn += A * gamma / kT * (tmp + dB_dphi) * E / (1e6 * dd.get_electron_density_derivative());
-    dGtun_dp -= A * gamma / kT * dB_dphi * E / (1e6 * dd.get_hole_density_derivative());
-
-  }
-
-  if (_band == 'c')
-  {
-    recomb_e[0] = dGtun_dn;
-    recomb_e[1] = dGtun_dp;
-  }
-  else
-  {
-    recomb_h[0] = dGtun_dp;
-    recomb_h[1] = dGtun_dn;
-  }
-}
-*/
