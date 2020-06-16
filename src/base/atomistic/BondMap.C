@@ -100,7 +100,7 @@ BondMap::do_solve(const std::vector<Atom>& basis,
   }
  
   _period = period;
-  std::cerr << "Origin : " << origin << std::endl;
+  
   //define the minimum spacing of the grid. the smaller it is, the faster is bonds calculations
   //cannot be smaller than the higher bond lenght. (in amstrong)
   GridCells cells(basis, period, origin, 8.0);
