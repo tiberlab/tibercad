@@ -3012,7 +3012,7 @@ DriftDiffusion::calculate_currents_rstf_global(void)
       sc->calculate_mobilities();
       sc->calculate_net_recombination_rates();
 
-      double net_rate = 0.0;
+      vector<double> net_rate(n_vars, 0.0);
       vector<double> sigma(n_vars, 0.0);
       for (auto& var : qf_vars)
       {
@@ -3020,18 +3020,14 @@ DriftDiffusion::calculate_currents_rstf_global(void)
         sigma[var] = Constants::e * chrg * sc->get_q_conductivity(var);
 
         double Rn = sc->get_net_q_recombination_rate(var);
-        net_rate -= chrg * Rn;
+        net_rate[var] = -JxW[qp] * Constants::e * chrg * Rn;
       }
 
-      net_rate *= JxW[qp] * Constants::e;
 
       // loop over all recombination models and add the ones that model
       // tunneling for the current contact
       // this is needed, because the current calculated afterwards does not
       // include direct tunneling.
-      /*
-       * TODO: this has to be adjusted
-
       DriftDiffusionProperties::RecombinationModelIterator recit(
           sc->recombination_models_begin());
       DriftDiffusionProperties::RecombinationModelIterator recend(
@@ -3041,12 +3037,18 @@ DriftDiffusion::calculate_currents_rstf_global(void)
         const Boundary* bd = (*recit)->get_tunneling_contact();
         if (bd != NULL)
         {
-          double elrate, hlrate;
-          (*recit)->get_net_recombination_rates(elrate, hlrate);
-          _boundary_currents[bd] -= JxW[qp] * Constants::e * (elrate - hlrate);
+          vector<double> R;
+          std::vector<std::vector<double>> dR;
+          (*recit)->get_net_rate_and_derivatives(R, dR);
+          double rec = 0;
+          for (auto& var : qf_vars)
+          {
+            double charge = sc->get_carrier_properties(var)->get_charge();
+            rec += charge * R[var];
+          }
+          _boundary_currents[bd->get_name()] -= JxW[qp] * Constants::e * rec;
         }
       }
-      */
 
       vector<RealGradient> curr(n_vars);
       for (auto& var : qf_vars)
@@ -3067,7 +3069,7 @@ DriftDiffusion::calculate_currents_rstf_global(void)
           for (auto& var : qf_vars)
           {
             double value = (curr[var] * dphi[n][qp] +
-                net_rate * phi[n][qp]) * sol(dof_indices_rstf[n]);
+                net_rate[var] * phi[n][qp]) * sol(dof_indices_rstf[n]);
             _boundary_currents[rstf_it->first] -= value;
           }
 
