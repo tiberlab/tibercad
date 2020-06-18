@@ -1328,11 +1328,10 @@ DriftDiffusion::do_print_info(void)
   ostringstream os;
   os << "solving for : ";
   if (myopts.coupling & POISSON)
-    os << "poisson ";
-  if (myopts.coupling & ELECTRONS)
-    os << "electrons ";
-  if (myopts.coupling & HOLES)
-    os << "holes ";
+    os << "poisson";
+  if (myopts.coupling & CURRENTS)
+    os << ", quasi Fermi levels ";
+
 
   os << endl;
 
@@ -1426,14 +1425,6 @@ DriftDiffusion::parse_options(void)
     myopts.coupling = FULLYCOUPLED;
   else if (coupling == "poisson")
     myopts.coupling = POISSON;
-  else if (coupling == "electrons")
-  {
-    myopts.coupling = ECURRENT | POISSON;
-  }
-  else if (coupling == "holes")
-  {
-    myopts.coupling = HCURRENT | POISSON;
-  }
   else if (coupling == "current")
     myopts.coupling = CURRENTS;
 
@@ -6469,13 +6460,6 @@ DriftDiffusion::do_assembly_fem(const libMesh::NumericVector<Number>& x,
         for (unsigned int j = 0; j < n_dofs_tot; j++)
           Fe(i) += Ke(i,j) * x(dof_indices[j]);
 
-      if (coupling & ELECTRONS)
-      {
-        //cerr << Ke << endl;
-        //TiberMath::svd(Ke, Fe);
-        //elem->centroid().write_unformatted(cerr, false);
-        //cerr << " " << Fe(0) <<  "  " << Fe(Fe.size()-1) << endl;
-      }
 
       system.exclude_dofs(Fe, dof_indices, elem);
 

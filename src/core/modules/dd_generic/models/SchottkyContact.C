@@ -60,6 +60,7 @@ SchottkyContact::do_init(void)
   if (has_option("barrier") || has_option("barrier_height") || _fixed_barrier)
   {
     _band = get_options().get_option("band", "");
+    _band = get_options().get_option("carrier", _band);
 
     if (_band == "")
       throw InitFailedException("Schottky Contact: in order to fix the barrier a "
@@ -109,7 +110,7 @@ SchottkyContact::do_init(void)
 
      // use the Scott and Malliaras formula for recombination velocities;
     _scott_malliaras = get_option("scott_malliaras", false);
-    //_barrier_lowering = get_option("barrier_lowering", false);
+    _barrier_lowering = get_option("barrier_lowering", false);
    }
    else
    {
@@ -136,27 +137,29 @@ SchottkyContact::do_compute(void)
   if (_thermionic_emission)
   {
     const double fac = 0.23032943;
+    const double pi = 3.14159265358979323846;
+    double epsilon = Constants::e0 / (Constants::e * 100);
+    libMesh::RealGradient e_field = dd->get_electric_field();
 
     if (_scott_malliaras )
     {
-      const libMesh::RealGradient& e_field = dd->get_electric_field();
-      const double pi = 3.14159265358979323846;
       const libMesh::RealTensor& permittivity  = dd->get_relative_permittivity();
-      const libMesh::RealGradient& eps_e_field = permittivity * e_field;
-      double epsilon = Constants::e0 / (Constants::e * 100);
+      libMesh::RealGradient eps_e_field = permittivity * e_field;
 
-      if (e_field.size() != 0 && !std::isnan(e_field.size()) )
+      if (e_field.norm() != 0 && !std::isnan(e_field.norm()) )
       {
-        epsilon = (Constants::e0 / (Constants::e * 100)) * eps_e_field.size() /  e_field.size();   //this MUST be changed, it works only for homogeneous materials
+        epsilon = (Constants::e0 / (Constants::e * 100)) * eps_e_field.norm() /  e_field.norm();   //this MUST be changed, it works only for homogeneous materials
       }
 
-      for ( auto&& it : get_bulk_dd_properties()->get_carrier_properties())
+      for ( auto&& it : get_carrier_properties())
       {
-        double temp = pd.carrier_vt[it.first];
+
+        //double temp = pd.carrier_vt[it.first];
+        double temp = it.second->get_temperature();
         double v0 = 16 * pi * epsilon * temp * temp * dd->get_q_mobility(it.first); 
 
         double rC = 1 / (4 * pi * epsilon * temp);
-        double f = rC * e_field.size() / temp;
+        double f = rC * e_field.norm() / temp;
         double psi = (1 + sqrt(f) - sqrt(1 + 2*sqrt(f))) / f;
         double vE = v0 * (1/(psi * psi) - f) / 4;
         set_recombination_velocities(it.first, vE);
@@ -164,35 +167,31 @@ SchottkyContact::do_compute(void)
     }
     else
     {
-      for ( auto&& it : get_bulk_dd_properties()->get_carrier_properties())
+      for ( auto&& it : get_carrier_properties())
       {
-        double temp = pd.carrier_vt[it.first];
+        //double temp = pd.carrier_vt[it.first];
+        double temp = it.second->get_temperature();
         double v_rec = it.second->get_thermal_velocity(temp);
         set_recombination_velocities(it.first, fac*v_rec);
       }
     }
 
-    
-    /* barrier lowering not used for now
-    if (_barrier_lowering )
+
+    if (_barrier_lowering)
     {
-      if (_band == 'c')
+      if (get_carrier_properties(band_id)->get_charge() <= 0)
       {
-        double delta = sqrt(e_field.size() / (4 * pi * epsilon));
-        val += delta;
-        //std::cout<<"efield="<<e_field.size()<<" epsilon="<<epsilon<<std::endl;
-        //std::cout<<sqrt(e_field.size() / (4 * pi * epsilon))<<std::endl;
+        double delta = sqrt(e_field.norm() / (4 * pi * epsilon));
+        val -= delta;
       }
       else
       {
-        double delta = sqrt(e_field.size() / (4 * pi * epsilon));
-        val -= delta;
+        double delta = sqrt(e_field.norm() / (4 * pi * epsilon));
+        val += delta;
       }
     }
-    */
-  }
 
-  //std::cout<<"Val = "<<val<<std::endl;
+  }
 
   set_contact_fermilevel(val); 
   ElectricalContact::do_compute();

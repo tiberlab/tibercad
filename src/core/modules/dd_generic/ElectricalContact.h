@@ -43,18 +43,6 @@ class TBDLEXPORT ElectricalContact : public DDInterfaceModel
     double get_inner_voltage(void) const;
 
 
-    //! Set a BC to homogeneous von Neumann type
-    /*!
-     * This is only useful if one has a Dirichlet type boundary condition
-     * and wants to change it into homogeneous von Neumann.
-     * It can be used to have different BCs for electron and hole
-     * electro-chemical potentials in small devices, or to change to zero
-     * electric field BC
-     */
-    //void set_zero_derivative_bc(DriftDiffusionDefs::DDVariable variable);
-
-
-
   protected:
 
     //! This class is not intended for direct use
@@ -70,14 +58,6 @@ class TBDLEXPORT ElectricalContact : public DDInterfaceModel
      * if the barrier has been set before.
      */
     virtual void do_compute(void);
-
-
-    //! Get the contact voltage drop
-    /*!
-     * A positive value means: the inner voltage is lower than
-     * the outer contact voltage
-     */
-    //double get_contact_voltage_drop() const;
 
 
     /*!

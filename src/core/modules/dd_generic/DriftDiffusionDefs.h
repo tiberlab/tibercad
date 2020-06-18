@@ -19,25 +19,9 @@ namespace DriftDiffusionDefs
   enum Coupling
   {
     POISSON = 0x01,
-    ECURRENT = 0x02,
-    HCURRENT = 0x04,
     FULLYCOUPLED = 0x07,
     CURRENTS = 0x06,
-    ELECTRONS = 0x02,
-    HOLES = 0x04,
-    BOTH = 0x06,
     EQUILIBRIUM = 0x10
-  };
-
-
-  //! The variables used in Drift-Diffusion
-  enum DDVariable
-  {
-    POTENTIAL = 0, //< electrical potential
-    FERMIE    = 1, //< electron electro-chemical potential
-    FERMIH    = 2, //< hole electro-chemical potential
-    DENSE     = 3, //< electron density
-    DENSH     = 4, //< hole density
   };
 
 }

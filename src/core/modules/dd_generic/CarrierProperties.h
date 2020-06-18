@@ -136,17 +136,17 @@ class CarrierProperties : public DriftDiffusionModelInterface
     //! Should we use quantum?
     void use_quantum(bool use_quantum = true);
 
-
-  protected:
-
-    //! Constructor
-    CarrierProperties(const ModelOptions& options);
-
     //! Get the temperature in eV
     double get_temperature(void) const { return _temperature; }
 
     //! Get the lattice temperature in eV
     double get_lattice_temperature(void) const;
+
+
+  protected:
+
+    //! Constructor
+    CarrierProperties(const ModelOptions& options);
 
     //! Prepare submodels
     virtual void prepare_submodels(void) override;
