@@ -25,6 +25,9 @@ SchottkyContact::do_init(void)
 
   set_type(n_known_carriers(), DIRICHLET);
 
+  _band = get_option("band", "");
+  _band = get_option("carrier", _band);
+
   if (!has_option("metal_fermilevel") &&
       !has_option("work_function") &&
       !has_option("barrier") &&
@@ -59,8 +62,6 @@ SchottkyContact::do_init(void)
   //we set the barrier
   if (has_option("barrier") || has_option("barrier_height") || _fixed_barrier)
   {
-    _band = get_options().get_option("band", "");
-    _band = get_options().get_option("carrier", _band);
 
     if (_band == "")
       throw InitFailedException("Schottky Contact: in order to fix the barrier a "
@@ -141,15 +142,19 @@ SchottkyContact::do_compute(void)
     double epsilon = Constants::e0 / (Constants::e * 100);
     libMesh::RealGradient e_field = dd->get_electric_field();
 
+    const libMesh::RealTensor& permittivity  = dd->get_relative_permittivity();
+    const libMesh::RealGradient& eps_e_field = permittivity * e_field;
+
+    if (e_field.norm() != 0) // && !std::isnan(e_field.norm()) )
+    {
+      epsilon = (Constants::e0 / (Constants::e * 100)) * eps_e_field.norm() /  e_field.norm();   //this MUST be changed, it works only for homogeneous materials
+    }
+
+
     if (_scott_malliaras )
     {
       const libMesh::RealTensor& permittivity  = dd->get_relative_permittivity();
       libMesh::RealGradient eps_e_field = permittivity * e_field;
-
-      if (e_field.norm() != 0 && !std::isnan(e_field.norm()) )
-      {
-        epsilon = (Constants::e0 / (Constants::e * 100)) * eps_e_field.norm() /  e_field.norm();   //this MUST be changed, it works only for homogeneous materials
-      }
 
       for ( auto&& it : get_carrier_properties())
       {
@@ -179,15 +184,22 @@ SchottkyContact::do_compute(void)
 
     if (_barrier_lowering)
     {
-      if (get_carrier_properties(band_id)->get_charge() <= 0)
+      double F = e_field * this->get_face_normal();
+      if (dd->get_carrier_properties(band_id)->get_charge() <= 0)
       {
-        double delta = sqrt(e_field.norm() / (4 * pi * epsilon));
-        val -= delta;
+        if (F > 0)
+        {
+          double delta = sqrt(F / (4 * pi * epsilon));
+          val += delta;
+        }
       }
       else
       {
-        double delta = sqrt(e_field.norm() / (4 * pi * epsilon));
-        val += delta;
+        if (F < 0)
+        {
+          double delta = sqrt(-F / (4 * pi * epsilon));
+          val -= delta;
+        }
       }
     }
 
