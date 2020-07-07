@@ -2384,23 +2384,56 @@ SimulationInterface::get_solution(const libMesh::Elem* elem,
 
       if (el != NULL)
       {
-        get_solution_secure(elem, new_values, req_points);
+        get_solution_secure(el, new_values, req_points);
       }
       else
       {
-        // no active parent, so look for children
-        // TODO This part is not tested at all !!!
-        // Alex: indeed it does crash with selfcons negf/dd
-        // commented out temporarily
+        //MeshUtils::GridMapper& mapper = MeshUtils::GridMapper::get_mapper(get_mesh(), get_region_ids());
 
-        // for now, we do not do mesh refinement, so we use this in the case of
-        // different meshes:
-        //const Elem* meshel =
-        //    MeshUtils::GridMapper::get_mapper(this->get_mesh()).get_element(p);
-        flag = false;
-        /*vector<const Elem*> tree;
-      elem->family_tree(tree, false);
+        vector<Point> req_points_r;
+        req_points_r.reserve(points.size());
+        for (auto mit(req_points_id.begin()); mit != req_points_id.end(); ++mit)
+          req_points_r.push_back(p[*mit]);
 
+        vector<const Elem*> elems;
+        for (unsigned int np = 0; np < req_points.size(); ++np)
+        {
+          const Elem* my_el = MeshUtils::search_element(&get_mesh(), req_points_r[np]);
+          elems.push_back(my_el);
+        }
+
+        for (unsigned int nel = 0; nel < elems.size(); ++nel)
+        {
+          map<ID, vector<double>> elem_values(new_values);
+
+          for (auto nit(elem_values.begin()); nit != elem_values.end(); ++nit)
+          {
+            int ncomp = nit->second.size() / req_points.size();
+            nit->second.resize(0);
+            nit->second.resize(ncomp, 0);
+          }
+
+          if (elems[nel] != nullptr)
+          {
+            vector<Point> my_p(1, req_points_r[nel]);
+
+            get_solution(elems[nel], elem_values, my_p);
+          }
+
+          for (auto it(new_values.begin()); it != new_values.end(); ++it)
+          {
+            int ncomp = it->second.size() / req_points.size();
+
+            for (unsigned int nc = 0; nc < ncomp; ++nc)
+            {
+              it->second[nel * ncomp + nc] = elem_values[it->first][nc];
+            }
+
+          }
+
+        }
+
+/*
       set<const Elem*> elem_list;
       unsigned int len = tree.size();
       for (unsigned int i = 0; i < len; i++)

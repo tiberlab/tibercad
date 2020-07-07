@@ -8,10 +8,12 @@
 #include "vector_value.h"
 #include "SimulationInterface.h"
 #include "point.h"
+#include "ExtProfile1D.h"
+#include "ExternalProfile.h"
 
 // forward declarations
 class Elem;
-
+class ExternalProfile;
 
 
 //! Implementation of optical generation
@@ -71,6 +73,7 @@ class TBDLLOCAL OpticalGeneration : public RecombinationModelInterface
     //! The solution ID of the generation models variable
     std::vector<ID> _gen_id;
 
+    ExternalProfile* _profile;
 
 };
 
@@ -85,7 +88,8 @@ OpticalGeneration::OpticalGeneration(const ModelOptions& options)
   : RecombinationModelInterface(options),
     _generation(0.0),
     _multiplier(1.0),
-    _use_occupation(false)
+    _use_occupation(false),
+    _profile(nullptr)
 {
 }
 
