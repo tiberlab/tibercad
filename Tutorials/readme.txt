@@ -46,3 +46,6 @@ Example 22: 1D InGaN QW LED with indium concentration profile and doping profile
 
 Example 23: MoS2 monolayer dispersion
 
+Example 24: MoS2 monolayer embedded in a MOS structure
+
+Example 25: Test of band structure unfolding for a GaN supercell 
