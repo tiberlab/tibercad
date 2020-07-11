@@ -114,7 +114,7 @@ DataImporter::get_solution_secure(const Elem* elem,
   vector<unsigned int> varids;
   system->get_all_variable_numbers(varids);
 
-  // This section maps 3d equidistat data to the fem grid
+  // This section maps 3d equidistant data to the fem grid
   FEType fe_type = system->variable_type(varids[0]);
   UniquePtr<FEBase> fe(build_finite_element(dim, fe_type));
   vector<vector<unsigned int>> dof_indices(varids.size());

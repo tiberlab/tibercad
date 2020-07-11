@@ -8,6 +8,7 @@
 #include "MeshRegionInfo.h"
 #include "BoundaryRegions.h"
 #include "Utils.h"
+#include "Messages.h"
 #include "InitFailedException.h"
 
 
@@ -30,16 +31,7 @@ using namespace std;
 namespace
 {
 
-  /**
-   * Defines a structure to hold boundary element information.
-   *
-   * We use a set because it keeps the nodes unique and ordered, and can be
-   * easily compared to another set of nodes (the ones on the element side)
-   */
-  struct boundaryElementInfo {
-      set<unsigned int> nodes;
-      unsigned int id;
-  };
+
 
   /**
    * Defines mapping from libMesh element types to Gmsh element types.
@@ -310,6 +302,119 @@ void ReadGMSH::read(const string& name)
 }
 
 
+void ReadGMSH::add_element(MeshBase& mesh , int type, int physical,
+    map<unsigned int, unsigned int>& nodetrans,
+    vector<boundaryElementInfo>& boundary_elem,
+    vector<boundaryElementInfo>& edge_elem,
+    size_t& elem_id_counter, istream& in)
+{
+
+  unsigned int dim = mesh.mesh_dimension();
+
+            // consult the import element table which element to build
+            const elementDefinition& eletype = eletypes_imp[type];
+            int nnodes = eletype.nnodes;
+
+            // only elements that match the mesh dimension are added
+            // if the element dimension is less than dim, the nodes and
+            // sides are added to the BoundaryRegions
+            if (eletype.dim == dim)
+            {
+              // add the elements to the mesh
+              libMesh::Elem* elem = libMesh::Elem::build(eletype.type).release();
+              elem->set_id(elem_id_counter);
+              mesh.add_elem(elem);
+
+              // this is different from iel: lower dimensional elems aren't added
+              elem_id_counter++;
+
+
+              // add node pointers to the elements
+              int nod = 0;
+              // if there is a node translation table, use it
+              if (eletype.nodes.size() > 0)
+                for (unsigned int i=0; i<nnodes; i++)
+                {
+                  in >> nod;
+                  elem->set_node(eletype.nodes[i]) = mesh.node_ptr(nodetrans[nod]);
+                }
+              else
+              {
+                for (unsigned int i = 0; i < nnodes; i++)
+                {
+                  in >> nod;
+                  elem->set_node(i) = mesh.node_ptr(nodetrans[nod]);
+                }
+              }
+
+              // Finally, set the subdomain ID to physical
+              elem->subdomain_id() = static_cast<libMesh::subdomain_id_type>(physical);
+
+              // add the subdomain id to the MeshRegionInfo
+              _reg_info.add_id(elem->subdomain_id());
+
+            } // if element.dim == dim
+
+            else if (eletype.dim == dim-1)
+            {
+              // this is a boundary
+              /**
+               * add the boundary element nodes to the set of nodes
+               */
+
+              boundaryElementInfo binfo;
+              set<unsigned int>::iterator iter = binfo.nodes.begin();
+              int nod = 0;
+              for (unsigned int i = 0; i < nnodes; i++)
+              {
+                in >> nod;
+                binfo.nodes.insert(iter, nodetrans[nod]);
+              }
+              binfo.id = physical;
+              boundary_elem.push_back(binfo);
+            }
+
+            else if (eletype.dim == dim-2)
+            {
+              // this is an edge
+              boundaryElementInfo binfo;
+              set<unsigned int>::iterator iter = binfo.nodes.begin();
+              int nod = 0;
+              for (unsigned int i = 0; i < nnodes; i++)
+              {
+                in >> nod;
+                binfo.nodes.insert(iter, nodetrans[nod]);
+              }
+              binfo.id = physical;
+              edge_elem.push_back(binfo);
+            }
+
+            else if (eletype.dim == dim-3)
+            {
+              // this is a node (we get here only in 3D)
+
+              int nod = 0;
+              for (unsigned int i = 0; i < nnodes; i++)
+              {
+                in >> nod;
+                _bd_regions.add_node(mesh.node_ptr(nodetrans[nod]), physical);
+              }
+            }
+
+            else
+            {
+              // this means eletype.dim > dim and is an error
+              ostringstream os;
+              os << "Trying to add a " << eletype.dim << "D element "
+                  << "into a " << dim << "D mesh! " << endl
+                  << "Hint: check the option \'dimension\' in the "
+                  << "device options block.";
+              throw InitFailedException(os.str());
+            }
+          }//element loop
+
+
+
 void ReadGMSH::read_mesh(istream& in)
 {
   // This is a serial-only process for now;
@@ -336,7 +441,7 @@ void ReadGMSH::read_mesh(istream& in)
   const int  bufLen = 256;
   char       buf[bufLen+1];
   int        format=0, size=0;
-  double       version = 1.0;
+  double     version = 1.0;
 
   // map to hold the node numbers for translation
   // note the the nodes can be non-consecutive
@@ -344,6 +449,12 @@ void ReadGMSH::read_mesh(istream& in)
 
   // map to hold the physical names and dimensions (if found)
   map<unsigned int, string> phys_names;
+
+  // translation from entity tags to physical tags
+  map<int, int> point_tags;
+  map<int, int> curve_tags;
+  map<int, int> surface_tags;
+  map<int, int> volume_tags;
 
   {
     while (!in.eof())
@@ -354,7 +465,7 @@ void ReadGMSH::read_mesh(istream& in)
       {
         in >> version >> format >> size;
 
-        if (version > 2.2)
+        if (version > 4.1)
           throw InitFailedException("Unsupported msh file version.");
 
         if (format)
@@ -419,23 +530,162 @@ void ReadGMSH::read_mesh(istream& in)
           throw InitFailedException(os.str());
         }
 
-        unsigned int numNodes = 0;
-        in >> numNodes;
-        mesh.reserve_nodes (numNodes);
-
-        // read in the nodal coordinates and form points.
-        double x, y, z;
-        unsigned int id;
-
-        // add the nodal coordinates to the mesh
-        for (unsigned int i = 0; i < numNodes; ++i)
+        if (version >= 4)
         {
-          in >> id >> x >> y >> z;
-          mesh.add_point (Point(x, y, z), i);
-          nodetrans[id] = i;
+          size_t numBlocks = 0;
+          size_t numNodes  = 0;
+          size_t minTag = 1;
+          size_t maxTag = 1;
+
+          in >> numBlocks >> numNodes >> minTag >> maxTag;
+
+          mesh.reserve_nodes(numNodes);
+
+          size_t node_id = 0;
+
+          for (size_t n = 0; n < numBlocks; ++n)
+          {
+            int entityDim;
+            int entityTag;
+            int parametric;
+            size_t numNodesInBlock;
+            in >> entityDim >> entityTag >> parametric >> numNodesInBlock;
+
+            vector<size_t> ids(numNodesInBlock);
+
+            // add the nodal coordinates to the mesh
+            for (unsigned int i = 0; i < numNodesInBlock; ++i)
+            {
+              in >> ids[i];
+            }
+
+            double x, y, z;
+            for (unsigned int i = 0; i < numNodesInBlock; ++i, ++node_id)
+            {
+              in >> x >> y >> z;
+              mesh.add_point(Point(x, y, z), node_id);
+              nodetrans[ids[i]] = node_id;
+            }
+          }
+
+        }
+        else
+        {
+
+          unsigned int numNodes = 0;
+          in >> numNodes;
+          mesh.reserve_nodes (numNodes);
+
+          // read in the nodal coordinates and form points.
+          double x, y, z;
+          unsigned int id;
+
+          // add the nodal coordinates to the mesh
+          for (unsigned int i = 0; i < numNodes; ++i)
+          {
+            in >> id >> x >> y >> z;
+            mesh.add_point (Point(x, y, z), i);
+            nodetrans[id] = i;
+          }
+
         }
         // read the $ENDNOD delimiter
         in >> buf;
+      }
+
+      /*
+       * Read Entities block
+       *
+       * This exists starting from format 4.0, and provides the translation table
+       * from entity tags to physical tags
+       */
+      else if (!strncmp(buf,"$Entities",9))
+      {
+        size_t numPoints, numCurves, numSurfaces, numVolumes;
+        in >> numPoints >> numCurves >> numSurfaces >> numVolumes;
+
+        for (size_t i = 0; i < numPoints; ++i)
+        {
+          int pointTag, physicalTag;
+          double dummy;
+          size_t numPhysicalTags;
+
+          in >> pointTag >> dummy >> dummy >> dummy >> numPhysicalTags;
+
+          if (numPhysicalTags > 1)
+            Messages::warning("Some entities in the mesh have more than one physical tag associated.");
+
+          for (size_t j = 0; j < numPhysicalTags; ++j)
+            in >> physicalTag;
+
+          point_tags.insert(make_pair(pointTag, physicalTag));
+        }
+
+        for (size_t i = 0; i < numCurves; ++i)
+        {
+          int pointTag, curveTag, physicalTag;
+          double dummy;
+          size_t numPhysicalTags, numBoundingPoints;
+
+          in >> curveTag >> dummy >> dummy >> dummy
+                         >> dummy >> dummy >> dummy >> numPhysicalTags;
+
+          if (numPhysicalTags > 1)
+            Messages::warning("Some entities in the mesh have more than one physical tag associated.");
+
+          for (size_t j = 0; j < numPhysicalTags; ++j)
+            in >> physicalTag;
+
+          in >> numBoundingPoints;
+          for (size_t j = 0; j < numBoundingPoints; ++j)
+            in >> pointTag;
+
+          curve_tags.insert(make_pair(curveTag, physicalTag));
+        }
+
+        for (size_t i = 0; i < numSurfaces; ++i)
+        {
+          int curveTag, surfaceTag, physicalTag;
+          double dummy;
+          size_t numPhysicalTags, numBoundingCurves;
+
+          in >> surfaceTag >> dummy >> dummy >> dummy
+                           >> dummy >> dummy >> dummy >> numPhysicalTags;
+
+          if (numPhysicalTags > 1)
+            Messages::warning("Some entities in the mesh have more than one physical tag associated.");
+
+          for (size_t j = 0; j < numPhysicalTags; ++j)
+            in >> physicalTag;
+
+          in >> numBoundingCurves;
+          for (size_t j = 0; j < numBoundingCurves; ++j)
+            in >> curveTag;
+
+          surface_tags.insert(make_pair(surfaceTag, physicalTag));
+        }
+
+        for (size_t i = 0; i < numVolumes; ++i)
+        {
+          int surfaceTag, volumeTag, physicalTag;
+          double dummy;
+          size_t numPhysicalTags, numBoundingSurfaces;
+
+          in >> volumeTag >> dummy >> dummy >> dummy
+                           >> dummy >> dummy >> dummy >> numPhysicalTags;
+
+          if (numPhysicalTags > 1)
+            Messages::warning("Some entities in the mesh have more than one physical tag associated.");
+
+          for (size_t j = 0; j < numPhysicalTags; ++j)
+            in >> physicalTag;
+
+          in >> numBoundingSurfaces;
+          for (size_t j = 0; j < numBoundingSurfaces; ++j)
+            in >> surfaceTag;
+
+          volume_tags.insert(make_pair(volumeTag, physicalTag));
+        }
       }
 
       /**
@@ -455,154 +705,97 @@ void ReadGMSH::read_mesh(istream& in)
         vector< boundaryElementInfo > boundary_elem;
         vector< boundaryElementInfo > edge_elem;
 
-        // read how many elements are there, and reserve space in the mesh
-        in >> numElem;
-        mesh.reserve_elem(numElem);
+        size_t elem_id_counter = 0;
 
-        // read the elements
-        unsigned int elem_id_counter = 0;
-        for (unsigned int iel = 0; iel < numElem; ++iel)
+        if (version >= 4)
         {
-          unsigned int id, type, physical, elementary,
-          /* partition = 1,*/ nnodes, ntags;
-          // note - partition was assigned but never used - BSK
-          if(version <= 1.0)
+          size_t numBlocks = 0;
+          size_t numElem  = 0;
+          size_t minTag = 1;
+          size_t maxTag = 1;
+
+          in >> numBlocks >> numElem >> minTag >> maxTag;
+
+          mesh.reserve_elem(numElem);
+
+
+          for (size_t n = 0; n < numBlocks; ++n)
           {
-            in >> id >> type >> physical >> elementary >> nnodes;
-          }
-          else
-          {
-            in >> id >> type >> ntags;
-            elementary = physical = /* partition = */ 1;
-            for(unsigned int j = 0; j < ntags; j++)
+            int entityDim;
+            int entityTag, physicalTag;
+            int elementType;
+            size_t numElementsInBlock;
+
+            in >> entityDim >> entityTag >> elementType >> numElementsInBlock;
+
+            switch (entityDim)
             {
-              int tag;
-              in >> tag;
-              if(j == 0)
-                physical = tag;
-              else if(j == 1)
-                elementary = tag;
-              // else if(j == 2)
-              //  partition = tag;
-              // ignore any other tags for now
-            }
-          }
+              case 0:
+                physicalTag = point_tags[entityTag];
+                break;
 
-          // consult the import element table which element to build
-          const elementDefinition& eletype = eletypes_imp[type];
-          nnodes = eletype.nnodes;
+              case 1:
+                physicalTag = curve_tags[entityTag];
+                break;
 
-          // only elements that match the mesh dimension are added
-          // if the element dimension is less than dim, the nodes and
-          // sides are added to the BoundaryRegions
-          if (eletype.dim == dim)
-          {
-            // add the elements to the mesh
-            libMesh::Elem* elem = libMesh::Elem::build(eletype.type).release();
-            elem->set_id(elem_id_counter);
-            mesh.add_elem(elem);
+              case 2:
+                physicalTag = surface_tags[entityTag];
+                break;
 
-            // this is different from iel: lower dimensional elems aren't added
-            elem_id_counter++;
+              default: // case 3:
+                physicalTag = volume_tags[entityTag];
+                break;
 
-            // check number of nodes. We cannot do that for version 2.0
-            if (version <= 1.0)
-            {
-              if (elem->n_nodes() != nnodes)
-              {
-                cerr << "Number of nodes for element " << id
-                << " of type " << eletypes_imp[type].type
-                << " (Gmsh type " << type
-                << ") does not match Libmesh definition. "
-                << "I expected " << elem->n_nodes()
-                << " nodes, but got " << nnodes << "\n";
-                libmesh_error();
-              }
             }
 
-            // add node pointers to the elements
-            int nod = 0;
-            // if there is a node translation table, use it
-            if (eletype.nodes.size() > 0)
-              for (unsigned int i=0; i<nnodes; i++)
-              {
-                in >> nod;
-                elem->set_node(eletype.nodes[i]) = mesh.node_ptr(nodetrans[nod]);
-              }
+            for (size_t i = 0; i < numElementsInBlock; ++i)
+            {
+              size_t id;
+              in >> id;
+              add_element(mesh, elementType, physicalTag, nodetrans, boundary_elem, edge_elem, elem_id_counter, in);
+
+            }
+          }
+        }
+        else
+        {
+          // read how many elements are there, and reserve space in the mesh
+          in >> numElem;
+          mesh.reserve_elem(numElem);
+
+          // read the elements
+          for (unsigned int iel = 0; iel < numElem; ++iel)
+          {
+            unsigned int id, type, physical, elementary,
+            /* partition = 1,*/ nnodes, ntags;
+            // note - partition was assigned but never used - BSK
+            if(version <= 1.0)
+            {
+              in >> id >> type >> physical >> elementary >> nnodes;
+            }
             else
             {
-              for (unsigned int i = 0; i < nnodes; i++)
+              in >> id >> type >> ntags;
+              elementary = physical = /* partition = */ 1;
+              for(unsigned int j = 0; j < ntags; j++)
               {
-                in >> nod;
-                elem->set_node(i) = mesh.node_ptr(nodetrans[nod]);
+                int tag;
+                in >> tag;
+                if(j == 0)
+                  physical = tag;
+                else if(j == 1)
+                  elementary = tag;
+                // else if(j == 2)
+                //  partition = tag;
+                // ignore any other tags for now
               }
             }
 
-            // Finally, set the subdomain ID to physical
-            elem->subdomain_id() = static_cast<libMesh::subdomain_id_type>(physical);
-
-            // add the subdomain id to the MeshRegionInfo
-            _reg_info.add_id(elem->subdomain_id());
-
-          } // if element.dim == dim
-
-          else if (eletype.dim == dim-1)
-          {
-            // this is a boundary
-            /**
-             * add the boundary element nodes to the set of nodes
-             */
-
-            boundaryElementInfo binfo;
-            set<unsigned int>::iterator iter = binfo.nodes.begin();
-            int nod = 0;
-            for (unsigned int i = 0; i < nnodes; i++)
-            {
-              in >> nod;
-              binfo.nodes.insert(iter, nodetrans[nod]);
-            }
-            binfo.id = physical;
-            boundary_elem.push_back(binfo);
+            add_element(mesh, type, physical, nodetrans, boundary_elem, edge_elem, elem_id_counter, in);
           }
 
-          else if (eletype.dim == dim-2)
-          {
-            // this is an edge
-            boundaryElementInfo binfo;
-            set<unsigned int>::iterator iter = binfo.nodes.begin();
-            int nod = 0;
-            for (unsigned int i = 0; i < nnodes; i++)
-            {
-              in >> nod;
-              binfo.nodes.insert(iter, nodetrans[nod]);
-            }
-            binfo.id = physical;
-            edge_elem.push_back(binfo);
-          }
+        }
 
-          else if (eletype.dim == dim-3)
-          {
-            // this is a node (we get here only in 3D)
-
-            int nod = 0;
-            for (unsigned int i = 0; i < nnodes; i++)
-            {
-              in >> nod;
-              _bd_regions.add_node(mesh.node_ptr(nodetrans[nod]), physical);
-            }
-          }
-
-          else
-          {
-            // this means eletype.dim > dim and is an error
-            ostringstream os;
-            os << "Trying to add a " << eletype.dim << "D element "
-              << "into a " << dim << "D mesh! " << endl
-              << "Hint: check the option \'dimension\' in the "
-              << "device options block.";
-            throw InitFailedException(os.str());
-          }
-        }//element loop
 
         // read the $ENDELM delimiter
         in >> buf;

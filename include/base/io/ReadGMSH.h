@@ -18,7 +18,6 @@ namespace libMesh
 class MeshBase;
 }
 
-
 /*!
  * This class implements reading of meshes in the Gmsh format.
  * For a full description of the Gmsh format and to obtain the
@@ -45,12 +44,31 @@ class TBDLLOCAL ReadGMSH : public libMesh::MeshInput<libMesh::MeshBase>
   private:
 
     /*!
+     * Structure to hold boundary element information.
+     *
+     * We use a set because it keeps the nodes unique and ordered, and can be
+     * easily compared to another set of nodes
+     */
+    struct boundaryElementInfo {
+      std::set<unsigned int> nodes;
+      unsigned int id;
+    };
+
+    /*!
      * Implementation of the read() function.  This function
      * is called by the public interface function and implements
      * reading the file.
      */
     void read_mesh(std::istream& in);
 
+    /*!
+     * \brief Add an element to the mesh and to the right boundary condition map
+     */
+    void add_element(libMesh::MeshBase& mesh, int type, int physical,
+        std::map<unsigned int, unsigned int>& nodetrans,
+        std::vector<boundaryElementInfo>& boundary_elem,
+        std::vector<boundaryElementInfo>& edge_elem,
+        size_t& elem_id_counter, std::istream& in);
 
     //! Mesh region info
     MeshRegionInfo& _reg_info;
