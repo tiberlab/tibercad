@@ -2391,9 +2391,14 @@ SimulationInterface::get_solution(const libMesh::Elem* elem,
         MeshUtils::GridMapper& mapper = MeshUtils::GridMapper::get_mapper(get_mesh(), get_region_ids());
 
         vector<Point> req_points_r;
+        vector<Point> req_points_r_loc;
         req_points_r.reserve(points.size());
         for (auto mit(req_points_id.begin()); mit != req_points_id.end(); ++mit)
+        {
           req_points_r.push_back(p[*mit]);
+          req_points_r_loc.push_back(points[*mit]);
+        }
+
 
         vector<const Elem*> elems;
         for (unsigned int np = 0; np < req_points_r.size(); ++np)
@@ -2416,9 +2421,9 @@ SimulationInterface::get_solution(const libMesh::Elem* elem,
 
           if (elems[nel] != nullptr)
           {
-            vector<Point> my_p(1, req_points_r[nel]);
+            vector<Point> my_p(1, req_points_r_loc[nel]);
 
-            get_solution(elems[nel], elem_values, my_p);
+            get_solution_secure(elems[nel], elem_values, my_p);
           }
 
           for (auto it(new_values.begin()); it != new_values.end(); ++it)
