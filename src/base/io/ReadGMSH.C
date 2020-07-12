@@ -311,116 +311,113 @@ void ReadGMSH::add_element(MeshBase& mesh , int type, int physical,
 
   unsigned int dim = mesh.mesh_dimension();
 
-            // consult the import element table which element to build
-            const elementDefinition& eletype = eletypes_imp[type];
-            int nnodes = eletype.nnodes;
+  // consult the import element table which element to build
+  const elementDefinition& eletype = eletypes_imp[type];
+  int nnodes = eletype.nnodes;
 
-            // only elements that match the mesh dimension are added
-            // if the element dimension is less than dim, the nodes and
-            // sides are added to the BoundaryRegions
-            if (eletype.dim == dim)
-            {
-              // add the elements to the mesh
-              libMesh::Elem* elem = libMesh::Elem::build(eletype.type).release();
-              elem->set_id(elem_id_counter);
-              mesh.add_elem(elem);
+  // only elements that match the mesh dimension are added
+  // if the element dimension is less than dim, the nodes and
+  // sides are added to the BoundaryRegions
+  if (eletype.dim == dim)
+  {
+    // add the elements to the mesh
+    libMesh::Elem* elem = libMesh::Elem::build(eletype.type).release();
+    elem->set_id(elem_id_counter);
+    mesh.add_elem(elem);
 
-              // this is different from iel: lower dimensional elems aren't added
-              elem_id_counter++;
+    // this is different from iel: lower dimensional elems aren't added
+    elem_id_counter++;
 
 
-              // add node pointers to the elements
-              int nod = 0;
-              // if there is a node translation table, use it
-              if (eletype.nodes.size() > 0)
-                for (unsigned int i=0; i<nnodes; i++)
-                {
-                  in >> nod;
-                  elem->set_node(eletype.nodes[i]) = mesh.node_ptr(nodetrans[nod]);
-                }
-              else
-              {
-                for (unsigned int i = 0; i < nnodes; i++)
-                {
-                  in >> nod;
-                  elem->set_node(i) = mesh.node_ptr(nodetrans[nod]);
-                }
-              }
+    // add node pointers to the elements
+    int nod = 0;
+    // if there is a node translation table, use it
+    if (eletype.nodes.size() > 0)
+      for (unsigned int i=0; i<nnodes; i++)
+      {
+        in >> nod;
+        elem->set_node(eletype.nodes[i]) = mesh.node_ptr(nodetrans[nod]);
+      }
+    else
+    {
+      for (unsigned int i = 0; i < nnodes; i++)
+      {
+        in >> nod;
+        elem->set_node(i) = mesh.node_ptr(nodetrans[nod]);
+      }
+    }
 
-              // Finally, set the subdomain ID to physical
-              elem->subdomain_id() = static_cast<libMesh::subdomain_id_type>(physical);
+    // Finally, set the subdomain ID to physical
+    elem->subdomain_id() = static_cast<libMesh::subdomain_id_type>(physical);
 
-              // add the subdomain id to the MeshRegionInfo
-              _reg_info.add_id(elem->subdomain_id());
+    // add the subdomain id to the MeshRegionInfo
+    _reg_info.add_id(elem->subdomain_id());
 
-            } // if element.dim == dim
+  } // if element.dim == dim
 
-            else if (eletype.dim == dim-1)
-            {
-              // this is a boundary
-              /**
-               * add the boundary element nodes to the set of nodes
-               */
+  else if (eletype.dim == dim-1)
+  {
+    // this is a boundary
+    /**
+     * add the boundary element nodes to the set of nodes
+     */
 
-              boundaryElementInfo binfo;
-              set<unsigned int>::iterator iter = binfo.nodes.begin();
-              int nod = 0;
-              for (unsigned int i = 0; i < nnodes; i++)
-              {
-                in >> nod;
-                binfo.nodes.insert(iter, nodetrans[nod]);
-              }
-              binfo.id = physical;
-              boundary_elem.push_back(binfo);
-            }
+    boundaryElementInfo binfo;
+    set<unsigned int>::iterator iter = binfo.nodes.begin();
+    int nod = 0;
+    for (unsigned int i = 0; i < nnodes; i++)
+    {
+      in >> nod;
+      binfo.nodes.insert(iter, nodetrans[nod]);
+    }
+    binfo.id = physical;
+    boundary_elem.push_back(binfo);
+  }
 
-            else if (eletype.dim == dim-2)
-            {
-              // this is an edge
-              boundaryElementInfo binfo;
-              set<unsigned int>::iterator iter = binfo.nodes.begin();
-              int nod = 0;
-              for (unsigned int i = 0; i < nnodes; i++)
-              {
-                in >> nod;
-                binfo.nodes.insert(iter, nodetrans[nod]);
-              }
-              binfo.id = physical;
-              edge_elem.push_back(binfo);
-            }
+  else if (eletype.dim == dim-2)
+  {
+    // this is an edge
+    boundaryElementInfo binfo;
+    set<unsigned int>::iterator iter = binfo.nodes.begin();
+    int nod = 0;
+    for (unsigned int i = 0; i < nnodes; i++)
+    {
+      in >> nod;
+      binfo.nodes.insert(iter, nodetrans[nod]);
+    }
+    binfo.id = physical;
+    edge_elem.push_back(binfo);
+  }
 
-            else if (eletype.dim == dim-3)
-            {
-              // this is a node (we get here only in 3D)
+  else if (eletype.dim == dim-3)
+  {
+    // this is a node (we get here only in 3D)
 
-              int nod = 0;
-              for (unsigned int i = 0; i < nnodes; i++)
-              {
-                in >> nod;
-                _bd_regions.add_node(mesh.node_ptr(nodetrans[nod]), physical);
-              }
-            }
+    int nod = 0;
+    for (unsigned int i = 0; i < nnodes; i++)
+    {
+      in >> nod;
+      _bd_regions.add_node(mesh.node_ptr(nodetrans[nod]), physical);
+    }
+  }
 
-            else
-            {
-              // this means eletype.dim > dim and is an error
-              ostringstream os;
-              os << "Trying to add a " << eletype.dim << "D element "
-                  << "into a " << dim << "D mesh! " << endl
-                  << "Hint: check the option \'dimension\' in the "
-                  << "device options block.";
-              throw InitFailedException(os.str());
-            }
-          }//element loop
+  else
+  {
+    // this means eletype.dim > dim and is an error
+    ostringstream os;
+    os << "Trying to add a " << eletype.dim << "D element "
+        << "into a " << dim << "D mesh! " << endl
+        << "Hint: check the option \'dimension\' in the "
+        << "device options block.";
+    throw InitFailedException(os.str());
+  }
+}
+
 
 
 
 void ReadGMSH::read_mesh(istream& in)
 {
-  // This is a serial-only process for now;
-  // the Mesh should be read on processor 0 and
-  // broadcast later
-  //libmesh_assert(libMesh::processor_id() == 0);
 
   libmesh_assert(in.good());
 
@@ -431,7 +428,10 @@ void ReadGMSH::read_mesh(istream& in)
   libMesh::MeshBase& mesh = MeshInput<libMesh::MeshBase>::mesh();
   // we will try to get the mesh dimension from the file
   unsigned int dim = mesh.mesh_dimension();
+
   mesh.clear();
+  mesh.set_mesh_dimension(dim);
+
   _reg_info.clear();
   _bd_regions.clear();
 
