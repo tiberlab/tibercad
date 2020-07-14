@@ -2382,7 +2382,7 @@ SimulationInterface::get_solution(const libMesh::Elem* elem,
 
       el = parent; // is NULL if no parent
 
-      if (el != NULL)
+      if (el != nullptr)
       {
         get_solution_secure(el, new_values, req_points);
       }
@@ -2421,7 +2421,8 @@ SimulationInterface::get_solution(const libMesh::Elem* elem,
 
           if (elems[nel] != nullptr)
           {
-            vector<Point> my_p(1, req_points_r_loc[nel]);
+            vector<Point> my_p(1, libMesh::FEInterface::inverse_map(
+                get_mesh().mesh_dimension(), libMesh::FEType(), elems[nel], req_points_r[nel]));
 
             get_solution_secure(elems[nel], elem_values, my_p);
           }
