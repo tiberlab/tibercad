@@ -36,14 +36,14 @@ PotentialInterface::set_simulation(const std::string& name, const std::string& v
         SimulationInterface::find_solution_provider(name, variable);
 
     _simulation = prov.first;
-    if (_simulation == NULL)
-      throw InitFailedException("No such simulation found: " + name);
+    //if (_simulation == NULL)
+    //  throw InitFailedException("No such simulation found: " + name);
 
     _id = prov.second;
 
-    if (_id == INVALID_ID)
-      throw InitFailedException("Simulation " + name +
-          " has no variable '"+variable+"'");
+    //if (_id == INVALID_ID)
+    //  throw InitFailedException("Simulation " + name +
+    //      " has no variable '"+variable+"'");
 
     answer = true;
   }
