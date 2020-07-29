@@ -639,7 +639,7 @@ DDBulkModel::calculate_equilibrium_properties(void)
 
     x = y;
 
-    if ((error < eps) && (residual_dens < dens_max))
+    if ((error < eps) || (residual_dens < dens_max))
     {
       success = true;
       break;
