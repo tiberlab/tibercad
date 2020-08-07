@@ -486,19 +486,20 @@ void ReadGMSH::read_mesh(istream& in)
           vector<string> tokens;
           Utils::tokenize(linebuf, tokens, " ");
 
-          int id, d = -1;
+          unsigned int id, d = 0;
           string name;
 
           if (tokens.size() == 3)
           {
-            d = Utils::convert<int>(tokens[0]);
-            id = Utils::convert<int>(tokens[1]);
+            d = Utils::convert<unsigned int>(tokens[0]);
+            id = Utils::convert<unsigned int>(tokens[1]);
             name = tokens[2];
+
             dim = (d > dim) ? d : dim;
           }
           else if (tokens.size() == 2)
           {
-            id = Utils::convert<int>(tokens[0]);
+            id = Utils::convert<unsigned int>(tokens[0]);
             name = tokens[1];
           }
 
@@ -512,85 +513,6 @@ void ReadGMSH::read_mesh(istream& in)
         // we might have read it from the file
         mesh.set_mesh_dimension(dim);
 
-      }
-
-      // read the node block
-      else if (!strncmp(buf,"$NOD",4) ||
-          !strncmp(buf,"$NOE",4) ||
-          !strncmp(buf,"$Nodes",6))
-      {
-
-        // check the dimension for reasonable value
-        if ((dim < 1) || (dim > 3))
-        {
-          ostringstream os;
-          os << "mesh dimension of " << dim << " is invalid." << endl
-            << "Hint: check the option \'dimension\' in the "
-            << "device options block.";
-          throw InitFailedException(os.str());
-        }
-
-        if (version >= 4)
-        {
-          size_t numBlocks = 0;
-          size_t numNodes  = 0;
-          size_t minTag = 1;
-          size_t maxTag = 1;
-
-          in >> numBlocks >> numNodes >> minTag >> maxTag;
-
-          mesh.reserve_nodes(numNodes);
-
-          size_t node_id = 0;
-
-          for (size_t n = 0; n < numBlocks; ++n)
-          {
-            int entityDim;
-            int entityTag;
-            int parametric;
-            size_t numNodesInBlock;
-            in >> entityDim >> entityTag >> parametric >> numNodesInBlock;
-
-            vector<size_t> ids(numNodesInBlock);
-
-            // add the nodal coordinates to the mesh
-            for (unsigned int i = 0; i < numNodesInBlock; ++i)
-            {
-              in >> ids[i];
-            }
-
-            double x, y, z;
-            for (unsigned int i = 0; i < numNodesInBlock; ++i, ++node_id)
-            {
-              in >> x >> y >> z;
-              mesh.add_point(Point(x, y, z), node_id);
-              nodetrans[ids[i]] = node_id;
-            }
-          }
-
-        }
-        else
-        {
-
-          unsigned int numNodes = 0;
-          in >> numNodes;
-          mesh.reserve_nodes (numNodes);
-
-          // read in the nodal coordinates and form points.
-          double x, y, z;
-          unsigned int id;
-
-          // add the nodal coordinates to the mesh
-          for (unsigned int i = 0; i < numNodes; ++i)
-          {
-            in >> id >> x >> y >> z;
-            mesh.add_point (Point(x, y, z), i);
-            nodetrans[id] = i;
-          }
-
-        }
-        // read the $ENDNOD delimiter
-        in >> buf;
       }
 
       /*
@@ -686,6 +608,85 @@ void ReadGMSH::read_mesh(istream& in)
 
           volume_tags.insert(make_pair(volumeTag, physicalTag));
         }
+      }
+
+      // read the node block
+      else if (!strncmp(buf,"$NOD",4) ||
+          !strncmp(buf,"$NOE",4) ||
+          !strncmp(buf,"$Nodes",6))
+      {
+
+        // check the dimension for reasonable value
+        if ((dim < 1) || (dim > 3))
+        {
+          ostringstream os;
+          os << "mesh dimension of " << dim << " is invalid." << endl
+            << "Hint: check the option \'dimension\' in the "
+            << "device options block.";
+          throw InitFailedException(os.str());
+        }
+
+        if (version >= 4)
+        {
+          size_t numBlocks = 0;
+          size_t numNodes  = 0;
+          size_t minTag = 1;
+          size_t maxTag = 1;
+
+          in >> numBlocks >> numNodes >> minTag >> maxTag;
+
+          mesh.reserve_nodes(numNodes);
+
+          size_t node_id = 0;
+
+          for (size_t n = 0; n < numBlocks; ++n)
+          {
+            int entityDim;
+            int entityTag;
+            int parametric;
+            size_t numNodesInBlock;
+            in >> entityDim >> entityTag >> parametric >> numNodesInBlock;
+
+            vector<size_t> ids(numNodesInBlock);
+
+            // add the nodal coordinates to the mesh
+            for (unsigned int i = 0; i < numNodesInBlock; ++i)
+            {
+              in >> ids[i];
+            }
+
+            double x, y, z;
+            for (unsigned int i = 0; i < numNodesInBlock; ++i, ++node_id)
+            {
+              in >> x >> y >> z;
+              mesh.add_point(Point(x, y, z), node_id);
+              nodetrans[ids[i]] = node_id;
+            }
+          }
+
+        }
+        else
+        {
+
+          unsigned int numNodes = 0;
+          in >> numNodes;
+          mesh.reserve_nodes (numNodes);
+
+          // read in the nodal coordinates and form points.
+          double x, y, z;
+          unsigned int id;
+
+          // add the nodal coordinates to the mesh
+          for (unsigned int i = 0; i < numNodes; ++i)
+          {
+            in >> id >> x >> y >> z;
+            mesh.add_point (Point(x, y, z), i);
+            nodetrans[id] = i;
+          }
+
+        }
+        // read the $ENDNOD delimiter
+        in >> buf;
       }
 
       /**
