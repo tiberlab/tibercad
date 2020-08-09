@@ -450,7 +450,7 @@ void KspaceIntegration::do_init(void)
     throw InitFailedException("K-integration internal error: k_space_dimension must be initialized");
 
   if ( !kopts.find_option("number_of_nodes"))
-    throw InitFailedException("K-integration internal error: number_of_nodes must be initialized");  
+    throw InitFailedException("K-integration internal error: number_of_nodes must be initialized");
 
   // Create a parallel communicator by splitting the Device communicator (larger than mesh_comm)
   // All nodes with same id (color) of the mesh_communicator have to compute the same k-point

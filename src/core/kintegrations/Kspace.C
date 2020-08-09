@@ -617,8 +617,8 @@ void Kspace::build_k_grid()
 
     libMesh::MeshRefinement mr(*kmesh);
 
-    unsigned int n = 1;
-    if (num_nodes[0] > 1)
+    unsigned int n = 0;
+    if (num_nodes[0] > 2)
       n = floor(log(num_nodes[0] - 1) / log(2));
     mr.uniformly_refine(n);
 

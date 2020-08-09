@@ -79,6 +79,8 @@ class KspaceIntegration : public TiberModelObject
  
   void get_solution(DofField& density) const;
 
+  const Kspace* get_k_space(void) const;
+
   unsigned int get_k_space_dimension(void) const;
 
 
@@ -248,6 +250,12 @@ KspaceIntegration::solve(void)
   do_solve();
 }
 
+inline
+const Kspace*
+KspaceIntegration::get_k_space(void) const
+{
+  return(_kspace);
+}
 
 
 inline

@@ -112,8 +112,10 @@ void Optics::parse_options()
     throw InitFailedException( "OpticsKP: Incorrect job: " + job_name);
 
 
-  if (!plot_solution("optical_spectrum") && !plot_solution("optical_spectrum_k_0"))
-      throw InitFailedException("(optics) requires a correct plot option");    
+  if (!plot_solution("optical_spectrum") &&
+      !plot_solution("optical_spectrum_k_0") &&
+      !plot_solution("matrix_elements"))
+    throw InitFailedException("(optics) requires a correct plot option");
 
   if (plot_solution("optical_spectrum"))
     if (!get_options().has_submodel("k_integration")) 
@@ -275,8 +277,6 @@ void Optics::init_k_space_integration(void)
 
    kopts.set_option("k_space_dimension", k_dim);
 
-
-   kopts.set_option("k_space_dimension", k_dim);
 
    kopts.set_option("verbose", SimulationOptions::verbose() );
 
@@ -592,9 +592,7 @@ void Optics::do_solve()
       _spectrum_z.assign(spectra.begin() + 2*n, spectra.begin() + 3*n);
     }
   }
-  //---------------------------------------------------------------------------------
-  
-  if (plot_solution("optical_spectrum_k_0"))
+  else if (plot_solution("optical_spectrum_k_0"))
   {
 
     double dummy;
@@ -609,6 +607,27 @@ void Optics::do_solve()
       _spectrum_y.assign(_spectrum_x.begin() + n, _spectrum_x.begin() + 2*n);
       _spectrum_z.assign(_spectrum_x.begin() + 2*n, _spectrum_x.begin() + 3*n);
       _spectrum_x.resize(n);
+    }
+  }
+  else if (plot_solution("matrix_elements"))
+  {
+    const Kspace* kspace = _k_integration->get_k_space();
+    const MeshBase& kmesh = *kspace->get_k_mesh();
+
+    for (unsigned int i = 0; i < kmesh.n_nodes(); ++i)
+    {
+      double dummy;
+
+      calculate_for_k_point(kmesh.point(i), _spectrum_x, dummy);
+
+      if (norm(_opt.polariz) == 0.0)
+      {
+        unsigned int n = 3*_energy_mesh->n_nodes();
+        _spectrum_y.assign(_spectrum_x.begin() + n, _spectrum_x.begin() + 2*n);
+        _spectrum_z.assign(_spectrum_x.begin() + 2*n, _spectrum_x.begin() + 3*n);
+        _spectrum_x.resize(n);
+      }
+
     }
   }
 
