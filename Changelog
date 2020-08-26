@@ -1,16 +1,9 @@
-Version 3.2.0
--------------
-
-New features:
-	- new data import module, can read 1/2/3D ASCII data
-	- solution transfer between differnent meshes operational
-	- can now read GMSH msh format version 4.1
-
-
 Version 3.1.0
 -------------
 
 New features:
+	- can now read GMSH msh format version 4.1
+	- new data import module, can read 1/2/3D ASCII data
 	- can now handle 2D materials for atomistic simulations
 	- improvements for k space generation (dispersion and integration)
 	- implemented unfolding of supercell dispersions (for wurtzite and
