@@ -460,6 +460,14 @@ void Kspace::build_k_grid()
 
   //bool full = mod_opt.get_option("full_zone", false);
 
+  /*
+   * NOTE: elements are ordered specifically, and the obtained
+   * symmetry points due to axis orientation might change order.
+   * In this case, which manifests as negative volumes, the node
+   * order must be changed. This is implemented in some of the
+   * BZ elements.
+   */
+
   if (k_space_dim > 0)
   {
 
@@ -564,6 +572,14 @@ void Kspace::build_k_grid()
         elem->set_node(6) = kmesh->node_ptr(6);
         elem->set_node(7) = kmesh->node_ptr(7);
 
+        if (elem->volume() < 0)
+        {
+          elem->set_node(1) = kmesh->node_ptr(3);
+          elem->set_node(3) = kmesh->node_ptr(1);
+          elem->set_node(5) = kmesh->node_ptr(7);
+          elem->set_node(7) = kmesh->node_ptr(5);
+        }
+
         break;
       }
 
@@ -596,6 +612,14 @@ void Kspace::build_k_grid()
           elem->set_node(3) = kmesh->node_ptr(3);
           elem->set_node(4) = kmesh->node_ptr(4);
           elem->set_node(5) = kmesh->node_ptr(5);
+
+          if (elem->volume() < 0)
+          {
+            elem->set_node(1) = kmesh->node_ptr(2);
+            elem->set_node(2) = kmesh->node_ptr(1);
+            elem->set_node(4) = kmesh->node_ptr(5);
+            elem->set_node(5) = kmesh->node_ptr(4);
+          }
         }
 
         break;
@@ -1369,7 +1393,7 @@ void Kspace::define_k_path(void)
 
   vector<unsigned int> n_elems(segments.size());
 
-  os << "# points   : (";
+  os << "# segments : (";
 
   // we allow a special option number_of_nodes_per_segment
   if (mod_opt.find_option("number_of_nodes_per_segment") &&
