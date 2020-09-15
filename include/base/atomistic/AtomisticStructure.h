@@ -94,8 +94,16 @@ public:
   //! Initialize a structure (to be read from input file)
   void init(const std::string& name, const Device* const device, const ModelOptions& options);
 
-  // ! Initialize a structure (to be read from file)
+  //! Initialize a structure (to be read from file)
   void init(const std::string& filename);
+
+  //! Combine structures
+  void combine_structures(const std::string& name, const ModelOptions& options);
+
+  //! Remove close atoms 
+  void remove_bad_atoms(void );
+
+
 
   //! Print structure to file (format depends on extension used)
   void print_structure(const std::string& path);
@@ -249,6 +257,9 @@ private:
   
   //!Override lattice vectors from structure generation
   void parse_lattice_vectors(void); 
+  
+  //! Initialize the structure using mesh infos
+  void init_periodicity(void);
   
   //! Initialize the structure using mesh infos
   void init_mesh_structure(void);

@@ -1,0 +1,123 @@
+Device qdot
+{
+  meshfile = cube_in_box.msh 
+  mesh_units = 1e-9
+  dimension = 3
+
+  Region cube 
+  {
+    material = MAPbI_tet  
+  }
+
+  Region box
+  {
+    material = MAPbI_ort  
+  }
+
+  Cluster atomistic
+  {
+    regions=(box, cube)
+  }
+
+
+  Atomistic tb1
+  {
+    regions = cube 
+    reference_region = cube
+    translation = (0, 1.0, 0) 
+    passivation = no 
+    print = (gen, xyz, tgn)
+  }
+  
+  Atomistic tb2
+  {
+    regions = box
+    reference_region = box
+    passivation = no 
+    #lattice_vectors = (35.4224, 35.4224, 50.64)
+    lattice_vectors = (70.8448, 70.8448, 75.960)
+    periodicity = (true, true, true)
+    print = (gen, xyz, tgn)
+  }
+
+  Atomistic tb_all
+  {
+    regions = (box,cube)
+    combine_structures = (tb1, tb2)
+    min_distance = 0.80
+    #lattice_vectors = (35.4224, 35.4224, 50.64)
+    lattice_vectors = (70.8448, 70.8448, 75.960)
+    periodicity = (true, true, true)
+    print = (gen, xyz, tgn)
+  } 
+
+  Atomistic tb_0
+  {
+    regions = atomistic
+    reference_region = cube 
+    #load_structure = tb_0.xyz
+    periodicity = (true, true, true)
+    print = (gen, xyz, tgn)
+  }
+}
+
+
+
+
+Fodule empirical_tb
+{
+  regions = atomistic 
+  name = tb
+
+  atomistic_structure = tb1
+  potential_simulation = dd
+  add_band_shifts = false
+  plot = (tbstates)
+
+  Solver
+  {
+    #solver_type = gpu
+    num_valence_eigenvalues = 1 
+    num_conduction_eigenvalues = 1
+    long_tolerance = 1e-4  
+  }
+
+}
+
+Fodule empirical_tb
+{
+  regions = atomistic 
+  name = tb2
+
+  atomistic_structure = tb1
+  potential_simulation = dd
+  add_band_shifts = false
+
+  projection_length = 2.0
+  
+
+  plot = (tbstates, MeshStatesNodes)
+
+  Solver
+  {
+    load_states = true
+    load_path = output    
+    num_valence_eigenvalues = 2 
+    num_conduction_eigenvalues = 2 
+    long_tolerance = 1e-4  
+  }
+
+}
+
+
+Simulation
+{
+  temperature = 300
+
+  #solve = (str, dd, tb, tb2, opt)
+  solve = ()
+
+  searchpath = .
+  resultpath = output 
+  output_format = vtk 
+}

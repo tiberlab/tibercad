@@ -205,7 +205,7 @@ AtomisticGenerator::init_commons()
   //_bulk->print_xyb("Ref.xyb");
   //-----------------------------------------------------------------------
   
-  //A translation vector can be specified to modify supercell alignment
+  //conventional cell shift (atoms can be rotated within the cell)
   if ( _as->get_options().find_option("conventional_cell_shift") )
   {
     std::vector<double> translation(3, 0.0);
@@ -219,6 +219,7 @@ AtomisticGenerator::init_commons()
       throw InitFailedException("cell_translation in relative coordinates must be < 1.0");
   }
 
+  //A translation vector can be specified to modify supercell alignment
   if ( _as->get_options().find_option("translation") )
   {
     std::vector<double> translation(3, 0.0);
@@ -270,12 +271,8 @@ AtomisticGenerator::do_init()
       fold_in_cell(*basis_iterator, origin, a1, a2, a3);
     }
   }
- 
-  //os<<"Initial structure with "<<_super_basis.size()<<" atoms"<<std::endl;
-  //Messages::info(os.str());
 
   std::string preserve="none";
-  //preserve = _as->get_options().get_option("preserve", "none");
  
   // associate the right element to each atom
   associate_elements(_as->get_IDset());
@@ -1102,15 +1099,6 @@ void AtomisticGenerator::make_conv_basis()
 
       // fold atom within the conventional cell
       fold_in_cell(basis_atom, origP, a1, a2, a3);
-      //if (atm_coords(1)<0.0)             atm_coords(1) += _conv_vect(1,1);
-      //if (atm_coords(1)>_conv_vect(1,1)) atm_coords(1) -= _conv_vect(1,1);
-
-      //if (atm_coords(2)<0.0)             atm_coords(2) += _conv_vect(2,2);
-      //if (atm_coords(2)>_conv_vect(2,2)) atm_coords(2) -= _conv_vect(2,2);
-
-      //if (atm_coords(3)<0.0)             atm_coords(3) += _conv_vect(3,3);
-      //if (atm_coords(3)>_conv_vect(3,3)) atm_coords(3) -= _conv_vect(3,3);
-      // --------------------------------------
       
       _conv_basis.push_back(basis_atom);
       ++basis_iterator;
@@ -1199,30 +1187,30 @@ void AtomisticGenerator::check_periodic(void)
     msg.info(os.str());
   }
 
-  Tensor2Gen periods(0);
-  periods(1,1) = 1;
-  periods(2,2) = 1;
-  periods(3,3) = 1;
+  Tensor2Gen double_non_periodic(0);
+  double_non_periodic(1,1) = 1;
+  double_non_periodic(2,2) = 1;
+  double_non_periodic(3,3) = 1;
 
   switch (_dim)
   {
     case 3:
       if (!_as->is_periodic(2))
-        periods(3,3) *= 2;
+        double_non_periodic(3,3) *= 2;
 
     case 2:
       if (!_as->is_periodic(1))
-        periods(2,2) *= 2;
+        double_non_periodic(2,2) *= 2;
 
     case 1:
       if (!_as->is_periodic(0))
-        periods(1,1) *= 2;
+        double_non_periodic(1,1) *= 2;
 
     default:
       break;
   }
 
-  _period = _period * periods;
+  _period = _period * double_non_periodic;
   _as->set_ttype_lattice_vectors(_period);
   if (_bondmap == NULL) bond_map_gen(_super_basis);
 

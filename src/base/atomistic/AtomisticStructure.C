@@ -57,6 +57,7 @@ AtomisticStructure::AtomisticStructure(const std::string& name)
 AtomisticStructure::AtomisticStructure(const AtomisticStructure& other) :
   AtomisticBasis(other),
   _options(other._options),
+  _atomistic_structure_options(other._atomistic_structure_options),
   _name(other._name),
   _scale(other._scale),
   _IDset(other._IDset),
@@ -110,7 +111,7 @@ AtomisticStructure::init(const std::string& name,
   _name = name;
   _device = device;
   set_options(options);
-
+   
   //Setting scale factor
   _scale = ( ( _device->get_mesh_units() ) / 1e-10 );
 
@@ -160,6 +161,11 @@ AtomisticStructure::init(const std::string& name,
     //---------------------------------------------------------------
     read_structure(filename);
 
+    //Recomputing origin needed for correct bondmap (works for xyz files)
+    const auto& bbox = get_bounding_box();
+    Point origin = bbox.first;
+    set_origin(origin);
+
     Messages::info("Parse regions");
     parse_regions();
 
@@ -181,102 +187,13 @@ AtomisticStructure::init(const std::string& name,
 
     set_labels();
 
-    dorestrict(_IDset);
+    // Cut away atomistic structure outside the specified regions
+    //dorestrict(_IDset);
 
   }
   else if (_options.find_option("combine_structures"))
   {
-
-    // combine two structures into a single one
-
-    vector<string> pieces;
-    _options.get_option("combine_structures", pieces);
-
-    ostringstream os;
-    os << "Combining atomistic structures : ";
-    for (auto&& i : pieces)
-      os << i << ", ";
-
-    Messages::info(os.str());
-    Messages::warning("Currently combined structures will share "
-        "their atoms with the original structures!");
-
-    const MeshBase& mesh = get_device()->get_mesh();
-
-    // we need to recalculate the lattice vectors
-    libMesh::RealVectorValue a;
-    libMesh::RealVectorValue b;
-    libMesh::RealVectorValue c;
-
-    // the sum of sizes
-    Point size(0);
-
-    // the combined bbox
-    Point bb_min(0);
-    Point bb_max(0);
-
-    bool first = true;
-    for (auto&& i : pieces)
-    {
-      const AtomisticStructure* const as = _device->get_atomistic_structure(i);
-
-      if (first)
-      {
-        *this = *as;
-        _name = name;
-        set_options(options);
-        as->get_lattice_vectors(a, b, c);
-        const auto& bbox = as->get_bounding_box();
-        bb_min = bbox.first;
-        bb_max = bbox.second;
-        size = bb_max - bb_min;
-
-        first = false;
-      }
-      else
-      {
-
-        _IDset.insert(as->_IDset.begin(), as->_IDset.end());
-        _virtual_atom_types.insert(_virtual_atom_types.end(),
-            as->_virtual_atom_types.begin(), as->_virtual_atom_types.end());
-
-        _atoms.insert(_atoms.end(), as->_atoms.begin(), as->_atoms.end());
-
-        libMesh::RealVectorValue ai, bi, ci;
-        as->get_lattice_vectors(ai, bi, ci);
-        switch (mesh.mesh_dimension())
-        {
-          case 3:
-            c += ci;
-          case 2:
-            b += bi;
-          case 1:
-            a += ai;
-          default:
-            break;
-        }
-
-        const auto& bbox = as->get_bounding_box();
-        size += bbox.second - bbox.first;
-        for (unsigned int i = 0; i < 3; ++i)
-        {
-          if (bbox.first(i) < bb_min(i))
-            bb_min(i) = bbox.first(i);
-
-          if (bbox.second(i) > bb_max(i))
-            bb_max(i) = bbox.second(i);
-        }
-
-      }
-    }
-    cerr << size << endl;
-    cerr << bb_min << endl;
-    cerr << bb_max << endl;
-
-    set_lattice_vectors(a, b, c);
-
-    refresh();
-
+    combine_structures(name, options);
   }
   else
   {
@@ -338,7 +255,170 @@ AtomisticStructure::init(const std::string& name,
    }
 }
 
+    
+// combine two structures into a single one
+void
+AtomisticStructure::combine_structures(const std::string& name,
+                                       const ModelOptions& options)
+{
+   vector<string> pieces;
+   _options.get_option("combine_structures", pieces);
 
+   ostringstream os;
+   os << "Combining atomistic structures : ";
+   for (auto&& i : pieces)
+     os << i << ", ";
+
+   Messages::info(os.str());
+   Messages::warning("Currently combined structures will share "
+       "their atoms with the original structures!");
+
+   const MeshBase& mesh = get_device()->get_mesh();
+
+   // we need to recalculate the lattice vectors
+   libMesh::RealVectorValue a;
+   libMesh::RealVectorValue b;
+   libMesh::RealVectorValue c;
+
+   // the sum of sizes
+   Point size(0);
+
+   // the combined bbox
+   Point bb_min(0);
+   Point bb_max(0);
+
+   bool first = true;
+   for (auto&& i : pieces)
+   {
+     const AtomisticStructure* const as = _device->get_atomistic_structure(i);
+
+     if (first)
+     {
+       *this = *as;
+       _name = name;
+       _options = options;
+       //_options.print_all();
+       as->get_lattice_vectors(a, b, c);
+       init_periodicity();
+       const auto& bbox = as->get_bounding_box();
+       bb_min = bbox.first;
+       bb_max = bbox.second;
+       size = bb_max - bb_min;
+
+       first = false;
+     }
+     else
+     {
+
+       _IDset.insert(as->_IDset.begin(), as->_IDset.end());
+       _virtual_atom_types.insert(_virtual_atom_types.end(),
+           as->_virtual_atom_types.begin(), as->_virtual_atom_types.end());
+
+       _atoms.insert(_atoms.end(), as->_atoms.begin(), as->_atoms.end());
+
+       libMesh::RealVectorValue ai, bi, ci;
+       as->get_lattice_vectors(ai, bi, ci);
+       switch (mesh.mesh_dimension())
+       {
+         case 3:
+           c += ci;
+         case 2:
+           b += bi;
+         case 1:
+           a += ai;
+         default:
+           break;
+       }
+
+       const auto& bbox = as->get_bounding_box();
+       size += bbox.second - bbox.first;
+       for (unsigned int i = 0; i < 3; ++i)
+       {
+         if (bbox.first(i) < bb_min(i))
+           bb_min(i) = bbox.first(i);
+
+         if (bbox.second(i) > bb_max(i))
+           bb_max(i) = bbox.second(i);
+       }
+
+     }
+   }
+
+   //set correct origin needed for bondmap
+   set_origin(bb_min);
+
+   // set internal
+   set_lattice_vectors(a, b, c);
+
+   // TODO could add some logic to construct right lattice vectors in
+   // special cases
+
+   // This overrides with user definition if any
+   if (_options.find_option("lattice_vectors"))
+   {
+      Messages::info("Override with user-defined lattice vectors");
+      parse_lattice_vectors();
+   }
+
+   // recompute Bond Map 
+   Messages::info("Build Bond Map...");
+   refresh();
+
+   Messages::info("Check structure for close atoms ...");
+   remove_bad_atoms();
+   
+   Messages::info("Build Final Bond Map...");
+   build_bond_map();
+}
+
+// This routine removes atoms too close after combine
+void
+AtomisticStructure::remove_bad_atoms(void)
+{
+
+   double min_dist = _options.get_option("min_distance", 0.20);
+
+   std::vector<bool> remove(_atoms.size(), false);
+
+   unsigned int count = 0;
+   for (unsigned int i = 0; i < _atoms.size(); i++)
+   {
+      if (_atoms[i].get_label() == 0) 
+        continue;
+
+      // check distances with all neighbours
+      // if too small remove one atom
+      for (unsigned int j = 0; j < (*_bondmap)[i].size(); j++)
+      {
+         if (_atoms[(*_bondmap)[i][j]].get_label() == 0)
+           continue;
+
+         Point dist(_atoms[i].get_position() - _atoms[(*_bondmap)[i][j]].get_position());
+         if (dist.norm() < min_dist)
+         { 
+            remove[j] = true;
+            count++;
+         }
+      }
+   }
+ 
+   std::ostringstream os;
+   os << "Atoms to remove: " << count << std::endl; 
+   Messages::info(os.str());
+
+   unsigned int j=0;
+   for (unsigned int i = 0; i < _atoms.size(); i++)
+   {
+     if (!remove[i]) 
+     {
+       _atoms[j] = _atoms[i];
+       j++;
+     }
+   }
+   _atoms.resize(_atoms.size()-count);
+   _N_without_H -= count; 
+
+}
 
 void
 AtomisticStructure::parse_lattice_vectors(void)
@@ -350,7 +430,6 @@ AtomisticStructure::parse_lattice_vectors(void)
  
     if (lattice_vectors.size() == 3)
     {  
-       //set_periodicity( true, true, true);
        _lattice_vectors[0] = lattice_vectors[0];
        _lattice_vectors[4] = lattice_vectors[1];
        _lattice_vectors[8] = lattice_vectors[2];
@@ -360,7 +439,6 @@ AtomisticStructure::parse_lattice_vectors(void)
     {
        for (int i = 0; i < 9; i++)
        {
-         //set_periodicity( true, true, true);
          _lattice_vectors[i] = lattice_vectors[i]; 
        }
     }
@@ -386,8 +464,8 @@ AtomisticStructure::print_driver(void)
   
     for (int i = 0; i < extensions.size(); i++)
     {
-
        std::string name(_name + "." + extensions[i]);
+       Messages::info("print structure file "+name);
        print_structure(name);
     }
     
@@ -416,6 +494,32 @@ AtomisticStructure::parse_regions(void)
   _device->extract_physical_regions(physreg, _IDset);
 }
 
+void
+AtomisticStructure::init_periodicity()
+{
+
+  if (!_options.find_option("periodicity"))
+  {
+    switch (this->get_device()->get_mesh().mesh_dimension())
+    {
+      case 1:
+        _options.set_option("periodicity", 0);
+        break;
+      case 2:
+        _options.set_option("periodicity", "(0,0)");
+        break;
+     case 3:
+        _options.set_option("periodicity", "(0,0,0)");
+        break;
+    }
+  }
+  
+  vector<bool> periodicity;
+  _options.get_option("periodicity",periodicity);
+
+  periodicity.resize(3,true);
+  this->set_periodicity(periodicity);
+}
 
 void
 AtomisticStructure::init_mesh_structure()
@@ -429,33 +533,8 @@ AtomisticStructure::init_mesh_structure()
   Messages::debug(os.str());
   os.str(std::string());
   //--------------------------------------------------------------
-
-  if (!get_options().find_option("periodicity"))
-  {
-    switch (this->get_device()->get_mesh().mesh_dimension())
-    {
-      case 1:
-        get_options().set_option("periodicity", 0);
-        break;
-      case 2:
-        get_options().set_option("periodicity", "(0,0)");
-        break;
-     case 3:
-        get_options().set_option("periodicity", "(0,0,0)");
-        break;
-    }
-  }
-  
-  vector<bool> periodicity;
-  get_options().get_option("periodicity",periodicity);
-
-  //if (periodicity.size() != this->get_device()->get_mesh().mesh_dimension())
-  //{
-  //   throw RuntimeException("periodicity must have the same dimension of mesh");
-  //}
-
-  periodicity.resize(3,true);
-  this->set_periodicity(periodicity);
+  // Sets a boolean vector about periodic directions (x, y, z)
+  init_periodicity();
   
   //---------------------------------------------------------------
   // Extend mesh for contacts 
@@ -983,9 +1062,17 @@ AtomisticStructure::read_gen(const std::string& path, const Tensor1& transl)
     _atoms.push_back(tmp_atom);
   }
 
-  // An additional line is present in GEN files. It's the coordinates origin and it's
-  // not needed
+  // Read coordinates origin (Needed ??)
   getline(file, line);
+  line_string.clear();
+  line_string.str(line);
+  Point origin_p(0,0,0);
+  for (unsigned int j = 0; j < 3; j++)
+    { 
+       line_string >> record;
+       origin_p(j) = atof(record.c_str());
+    }
+  this->set_origin(origin_p);
 
   // Read periodicity vectors anyway, if system is not periodical they will be ignored
   unsigned int count = 0;
@@ -1120,9 +1207,17 @@ AtomisticStructure::read_tgn(const std::string& path, const Tensor1& transl)
 
     }
 
-  // An additional line is present in GEN files. It's the coordinates origin and it's
-  // not needed
+  // Read coordinates origin (Needed ??)
   getline(file, line);
+  line_string.clear();
+  line_string.str(line);
+  Point origin_p(0,0,0);
+  for (unsigned int j = 0; j < 3; j++)
+    { 
+       line_string >> record;
+       origin_p(j) = atof(record.c_str());
+    }
+  this->set_origin(origin_p);
 
   // Read periodicity vectors anyway, if system is not periodical they will be ignored
   unsigned int count = 0;
@@ -1242,10 +1337,12 @@ AtomisticStructure::print_tgn(const std::string& path) const
 
 
 
-      //A line of zeros is put here (coordinates origin)
-      file <<  std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0)
-        << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0)
-        << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) << "\n";
+      //(coordinates origin)
+      libMesh::Point origin_p(0);
+      origin_p = this->get_origin();
+      file <<  std::setw(20) << std::setprecision(10)<< std::fixed  << origin_p(0) 
+        << std::setw(20) << std::setprecision(10)<< std::fixed  << origin_p(1)
+        << std::setw(20) << std::setprecision(10)<< std::fixed  << origin_p(2) << "\n";
 
       // Periodicity vectors at the bottom
       unsigned int count = 0;
@@ -1547,7 +1644,6 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
       const Material* matA = (static_cast<const Alloy*>(mat))->get_component_A();	  
       const Material* matB = (static_cast<const Alloy*>(mat))->get_component_B();	
       double x =  (static_cast<const Alloy*>(mat))->get_molar_fraction();
-      //  double x = mat->get_options().get_option("x",1.0);
 
       if (alloy_type == "binary" || alloy_type == "ternary")
       {
@@ -1936,10 +2032,6 @@ AtomisticStructure::print_structure(const std::string& path, double const* const
     }
 
   file.close();
-
-  //#ifdef DEBUG
-  //  std::cerr << "AtomisticStructure::print_structure(path) end. \n";
-  //#endif
 
 }
 
@@ -2475,7 +2567,6 @@ AtomisticStructure::find_nearest_atom(const Elem* elem, const Point& point, doub
         atom = atoms[i];
       }
     }
-    //cerr << " found in elem: " << get_structure_atom(atom).get_position();
   }
   else
   {
