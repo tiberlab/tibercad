@@ -1,8 +1,10 @@
+// $Id$
+
 #include "AtomisticBasis.h"
 #include "Device.h"
 #include "ModelOptions.h"
 
-#include "vector_value.h"
+#include "libmesh/vector_value.h"
 
 
 //STD library includes
@@ -23,7 +25,7 @@ AtomisticBasis::~AtomisticBasis(void)
 
 AtomisticBasis::AtomisticBasis(void)
 :_bondmap(nullptr),
- _lattice_vectors(9,0.0),
+ _lattice_vectors(3,0.0),
  _periodicity({0, 0, 0}),
  _origin(0)
 {
@@ -39,6 +41,8 @@ AtomisticBasis::AtomisticBasis(const AtomisticBasis& other) :
   _periodicity(other._periodicity),
   _origin(other._origin)
 {
+  _bondmap = new BondMap(_atoms.size());
+  *_bondmap = *(other._bondmap);
 }
 
 
@@ -47,9 +51,9 @@ AtomisticBasis::get_lattice_vectors(libMesh::RealVectorValue& a,
                                     libMesh::RealVectorValue& b,
                                     libMesh::RealVectorValue& c) const
 {
-  a = libMesh::RealVectorValue(_lattice_vectors[0], _lattice_vectors[1], _lattice_vectors[2]);
-  b = libMesh::RealVectorValue(_lattice_vectors[3], _lattice_vectors[4], _lattice_vectors[5]);
-  c = libMesh::RealVectorValue(_lattice_vectors[6], _lattice_vectors[7], _lattice_vectors[8]);
+  a = _lattice_vectors[0];
+  b = _lattice_vectors[1];
+  c = _lattice_vectors[2];
 }
 
 
@@ -58,17 +62,14 @@ AtomisticBasis::set_lattice_vectors(const libMesh::RealVectorValue& a,
                                     const libMesh::RealVectorValue& b,
                                     const libMesh::RealVectorValue& c)
 {
-  _lattice_vectors[0] = a(0);
-  _lattice_vectors[1] = a(1);
-  _lattice_vectors[2] = a(2);
+  _lattice_vectors[0] = a;
+  _lattice_vectors[1] = b;
+  _lattice_vectors[2] = c;
 
-  _lattice_vectors[3] = b(0);
-  _lattice_vectors[4] = b(1);
-  _lattice_vectors[5] = b(2);
-
-  _lattice_vectors[6] = c(0);
-  _lattice_vectors[7] = c(1);
-  _lattice_vectors[8] = c(2);
+  if (_bondmap != nullptr)
+  {
+    _bondmap->set_periodicity(a, b, c);
+  }
 }
 
 
@@ -76,32 +77,25 @@ AtomisticBasis::set_lattice_vectors(const libMesh::RealVectorValue& a,
 void
 AtomisticBasis::set_ttype_lattice_vectors(const Tensor2Gen& T)
 {
-  unsigned int count = 0;
-  for (int i = 0; i < 3 ; i++)
-    {
-      for (int j = 0; j < 3 ; j++)
-        {
-          _lattice_vectors[count] = T(j+1,i+1);
-          count++;
-        }
-    }
+  libMesh::RealVectorValue a(T(1,1), T(2,1), T(3,1));
+  libMesh::RealVectorValue b(T(1,2), T(2,2), T(3,2));
+  libMesh::RealVectorValue c(T(1,3), T(2,3), T(3,3));
+
+  set_lattice_vectors(a, b, c);
 }
 
 Tensor2Gen 
 AtomisticBasis::get_ttype_lattice_vectors(void)
 {
   Tensor2Gen T;
-  unsigned int count = 0;
-  for (int i = 0; i < 3 ; i++)
+  for (int j = 0; j < 3 ; j++)
   {
-      for (int j = 0; j < 3 ; j++)
-      {
-          T(j+1,i+1) = _lattice_vectors[count];
-          count++;
-      }
+    T(j+1,1) = _lattice_vectors[0](j);
+    T(j+1,2) = _lattice_vectors[1](j);
+    T(j+1,3) = _lattice_vectors[2](j);
   }
-  return T;
 
+  return T;
 }
 
 int
@@ -139,7 +133,7 @@ AtomisticBasis::build_bond_map(bool periodicity[3]) const
     double scale = periodicity[i] ? 1 : 10;
     for (unsigned int j = 0; j < 3; j++)
     {
-      period(j + 1, i + 1) = scale * _lattice_vectors[i*3 + j];
+      period(j + 1, i + 1) = scale * _lattice_vectors[i](j);
     }
   }
   bm->do_solve(_atoms, period, _origin);
@@ -162,11 +156,22 @@ AtomisticBasis::build_bond_map(void)
     {
       for (unsigned int j = 0; j < 3; j++)
         {
-          period(j + 1, i + 1) = _lattice_vectors[i*3 + j];
+          period(j + 1, i + 1) = _lattice_vectors[i](j);
         }
     }
   _bondmap->do_solve(_atoms, period, _origin);
 
+}
+
+
+
+void
+AtomisticBasis::set_bond_map(const BondMap& bondmap)
+{
+  if (_bondmap == nullptr)
+    _bondmap = new BondMap(_atoms.size());
+
+  *_bondmap = bondmap;
 }
 
 
@@ -216,7 +221,7 @@ AtomisticBasis::refresh(void)
   clear_atom_types();
   set_atom_types(types);
 
-  build_bond_map();
+  //build_bond_map();
 }
 
 //-------------------------------------------------------------------
@@ -324,14 +329,12 @@ AtomisticBasis::print_gen(const std::string& path) const
         << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) << "\n";
 
       // Periodicity vectors at the bottom
-      unsigned int count = 0;
       for (unsigned int i = 0; i < 3; i++)
         {
           for (unsigned int j = 0; j < 3; j++)
             {
               file << std::setw(20) << std::setprecision(10) << std::fixed <<
-                  _lattice_vectors[count];
-              count++;
+                  _lattice_vectors[i](j);
             }
           file << "\n";
         }
@@ -446,9 +449,9 @@ AtomisticBasis::neighbor_iterator::neighbor_iterator(const AtomisticBasis& struc
   {
     _visited.insert(make_pair(_start, Point(0)));
     const std::vector<unsigned int>& curr = _structure.get_bond_map()[_current];
-    const BondMap::Translation& nt = _structure.get_neighbor_translation();
     for (unsigned int i = 0; i < curr.size(); i++)
-      _setA.insert(make_pair(curr[i], nt[_current][i]));
+      _setA.insert(make_pair(curr[i],
+          _structure.get_bond_map().get_translation(_current, i)));
 
     _itA = _setA.begin();
     //cerr << _start << endl;
@@ -515,10 +518,10 @@ AtomisticBasis::neighbor_iterator::operator++(void)
       {
         auto range(_visited.equal_range(nn[i]));
 
-        const BondMap::Translation& nt = _structure.get_neighbor_translation();
 
         // this neighbour would be shifted by this amount, if periodic copy
-        Point new_shift(nt[_current][i] + _image);
+        Point new_shift(
+            _structure.get_bond_map().get_translation(_current, i) + _image);
 
         Point dist(_structure.get_structure_atom(_start).get_position()
                     - _structure.get_structure_atom(nn[i]).get_position()

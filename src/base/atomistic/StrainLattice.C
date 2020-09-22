@@ -211,8 +211,6 @@ StrainLattice::build_tetraedron(const AtomisticBasis* as, unsigned int atm, Stra
   //Bulid bonds and tetraedron
   const BondMap& bondmap = as->get_bond_map();
 
-  const BondMap::Translation& translation = as->get_neighbor_translation();
-
   unsigned int n_bonds = bondmap[atm].size();
   if (n_bonds != 4)
     Messages::error("Bulk badly defined in StrainLattice. An atom has not 4 bonds.");
@@ -230,8 +228,9 @@ StrainLattice::build_tetraedron(const AtomisticBasis* as, unsigned int atm, Stra
   for (unsigned int i = 0; i < n_bonds; i++)
   {
    //calculate bonds and put in tet.bonds R01 = R1 - R0
-   tet.bonds[i] = atoms[bondmap[atm][i]].get_ttype_position() + Tensor1(translation[atm][i])
-                  - atoms[atm].get_ttype_position();
+   tet.bonds[i] = atoms[bondmap[atm][i]].get_ttype_position() +
+                    Tensor1(bondmap.get_translation(atm, i)) -
+                    atoms[atm].get_ttype_position();
   }  
   //do similar job with edges R12, R23, R34 and store them by column
   //Note that R12 = R02 - R01, we can just use the bonds

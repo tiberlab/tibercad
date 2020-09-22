@@ -11,7 +11,7 @@
 #include "Atom.h"
 #include "BulkCrystal.h"
 
-#include <plane.h>
+#include <libmesh/plane.h>
 
 #include <stdio.h>
 #include <cmath>
@@ -282,15 +282,17 @@ AtomisticGenerator::do_init()
 
   // iterates on _super_basis and assign species
   assign_species();
+  //print_basis(_super_basis, "superbasis.xyz");
 
   //eventually enlarge along dummy supercell directions
   //(build bondmap if not present)
   check_periodic();
+  //_bondmap->print();
 
   //rebuild bondmap with new periodicity
-  Messages::info("Rebuild bondmap");
-  delete _bondmap; _bondmap = NULL;
-  bond_map_gen(_super_basis);
+  //Messages::info("Rebuild bondmap");
+  //delete _bondmap; _bondmap = NULL;
+  //bond_map_gen(_super_basis);
 
   //Passivate structure (build bondmap if not present)
   if (_as->get_options().get_option("passivation", false))
@@ -298,14 +300,12 @@ AtomisticGenerator::do_init()
 
   // remove unflagged atoms
   remove_atoms();
+  //_bondmap->print();
 
   // assign random-alloy species
   if (_as->is_random_alloy())
     build_random_alloy();
 
-  // delete generator bondmap
-  delete _bondmap;
-  _bondmap = NULL;
 
 }
 
@@ -318,13 +318,19 @@ AtomisticGenerator::remove_atoms(void)
   _structure_basis.clear();
   _structure_basis.reserve(_super_basis.size());
 
+  set<unsigned int> to_remove;
+
   for (unsigned int i = 0; i < _super_basis.size(); i++)
   {
     if ( _belong_to_structure[i] )
     {
       _structure_basis.push_back(_super_basis[i]);
     }
+    else
+      to_remove.insert(i);
   }
+
+  _bondmap->remove_atoms(to_remove);
 
   // We destroy the array that is now inconsistent with new structure. 
   // NOTE: if any use is needed later it must be properly defined here
@@ -339,15 +345,12 @@ AtomisticGenerator::finalize(void)
   //Pass data to AtomisticStructure
   //--------------------------------------------------------------------------------------------------
 
-  Atom tmp_atom;
-  
   _as->set_structure_atoms(_structure_basis);
+  _as->set_bond_map(*_bondmap);
   
   // origin has already been set
 
   _as->set_ttype_lattice_vectors(_period);
- 
-  //_as->set_periodicity(_periodicity);
 
 }
 
@@ -658,8 +661,6 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3)
   lmat(2,2) = (n2);
   lmat(3,3) = (n3);
 
-  _period = _conv_vect * lmat;
-
   if (!_as->is_periodic(0))
   {
     if (((_dim == 1) && (fabs(_conv_vect(1,1)) > 1e-9)) ||
@@ -669,6 +670,7 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3)
     {
       start_i = -2;
       n1 = n1 + 2;
+      lmat(1,1) += 4;
     }
   }
   if (!_as->is_periodic(1))
@@ -680,6 +682,7 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3)
     {
       start_j = -2;
       n2 = n2 + 2;
+      lmat(2,2) += 4;
     }
   }
   if (!_as->is_periodic(2))
@@ -691,8 +694,12 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3)
     {
       start_l = -2;
       n3 = n3 + 2;
+      lmat(3,3) += 4;
     }
   }
+
+  // The periodicity along non-periodic sirections is now 4 layers larger than the actual structure
+  _period = _conv_vect * lmat;
 
   //Definition of number of conventional cells, useful for reserving arrays
   unsigned int max_number_of_cells = n1*n2*n3;
@@ -1187,6 +1194,11 @@ void AtomisticGenerator::check_periodic(void)
     msg.info(os.str());
   }
 
+  // 2020-09-20, Matthias: before period at this point was referring
+  // to the part of the structure inside the device, but now it contains
+  // the add two layers on both sides in case of non-periodic directions.
+  // This should be enough to exclude spurious periodic bondings.
+  /*
   Tensor2Gen double_non_periodic(0);
   double_non_periodic(1,1) = 1;
   double_non_periodic(2,2) = 1;
@@ -1212,14 +1224,17 @@ void AtomisticGenerator::check_periodic(void)
 
   _period = _period * double_non_periodic;
   _as->set_ttype_lattice_vectors(_period);
+  */
+
   if (_bondmap == NULL) bond_map_gen(_super_basis);
 
   BondMap& bond_map = *_bondmap;
 
-  Messages::info("Adding needed atoms for correct passivation");
-
   // maybe need map pair<i,j>
   std::vector<std::set<unsigned int>> added(3);
+
+  // flag unneeded atoms
+  // add periodic atoms for passivation if needed
 
   //Warning: cycle end must be defined before as size will change dynamically during cycle
   //and we need acting only on already defined structure
@@ -1230,18 +1245,19 @@ void AtomisticGenerator::check_periodic(void)
     if (_belong_to_structure[i])
     {
 
-      for (unsigned int j = 0; j < bond_map[i].size(); j++)
+      unsigned int num_bonds = bond_map[i].size();
+      for (unsigned int j = 0; j < num_bonds; j++)
       {
 
         if (( _belong_to_structure[bond_map[i][j]]) )
         {
           Atom* bonded_atom = &(_super_basis[bond_map[i][j]]);
           // is it a periodic one?
-          Point trnsl(_bondmap->get_translation()[i][j]);
+          Point trnsl(bond_map.get_translation(i, j));
           Tensor1 shift;
           shift(1) = trnsl(0); shift(2) = trnsl(1); shift(3) = trnsl(2);
-          double norm = shift(1)*shift(1) + shift(2)*shift(2) + shift(3)*shift(3);
-          if (norm > 1e-9)
+
+          if (trnsl.norm() > 1e-9)
           {
             // check periodicity
             for (int d = 0; d < 3; ++d)
@@ -1253,15 +1269,26 @@ void AtomisticGenerator::check_periodic(void)
                   Atom tmp(*bonded_atom);
                   _belong_to_structure[bond_map[i][j]] = false;
 
+
                   Tensor1 position(bonded_atom->get_ttype_position() + shift);
                   tmp.set_position(position);
                   //std::cerr << "adding atom at " << position << "\n";
                   _super_basis.push_back(tmp);
+                  size_t new_i = _super_basis.size() - 1;
+
                   added[d].insert(bond_map[i][j]);
 
+                  bond_map[i].push_back(new_i);
+                  bond_map.reserve(bond_map.size() + 10);
+                  //bond_map.get_translation().reserve(bond_map.size() + 10);
+
+                  bond_map.push_back(vector<unsigned int>(1, i));
+
+                  bond_map.get_translation()[i][j] = Point(0.0);
+                  bond_map.get_translation().push_back(
+                      vector<Point>(1, Point(0.0)));
                 }
 
-                // adjust bond map
               }
             }
           }
@@ -1269,6 +1296,16 @@ void AtomisticGenerator::check_periodic(void)
       }
     }
 
+  }
+
+  unsigned int num_added = added[0].size() + added[1].size() +
+                           added[2].size();
+
+  if (num_added > 0)
+  {
+    ostringstream os;
+    os << "added " << num_added << " atoms for correct passivation";
+    msg.info(os.str());
   }
 
 
@@ -1306,13 +1343,12 @@ void  AtomisticGenerator::bond_map_gen(const std::vector<Atom>& basis){
 void AtomisticGenerator::passivate(void)
 {
   double hydrogen_distance = _as->get_options().get_option("hydrogen_distance", 1.2);
-  Atom* bonded_atom;
 
   Messages::info("Starting passivation...");
 
   if (_bondmap == NULL) bond_map_gen(_super_basis);
 
-  const BondMap& bond_map = *_bondmap;
+  BondMap& bond_map = *_bondmap;
   //_bondmap->print(_super_basis);
 
 
@@ -1335,7 +1371,7 @@ void AtomisticGenerator::passivate(void)
           //Position must be modified in order to put Hydrogen atom near,
           //and also as we cannot have hydrogen bonded to more than one atom,
           //so in some cases we cannot keep crystal positions
-          bonded_atom = &(_super_basis[bond_map[i][j]]);
+          Atom* bonded_atom = &(_super_basis[bond_map[i][j]]);
           Atom tmp(*bonded_atom);
           tmp.set_specie("H");
           // Assign the element of the atom that belong to structure 
@@ -1355,6 +1391,18 @@ void AtomisticGenerator::passivate(void)
 
           // Passivation atoms are added to structure (not substituted).
           _super_basis.push_back(tmp);
+
+          // the new size of the basis
+          unsigned int new_i = _super_basis.size() - 1;
+
+          bond_map[i].push_back(new_i);
+          bond_map.reserve(bond_map.size() + 10);
+          bond_map.get_translation().reserve(bond_map.size() + 10);
+
+          bond_map.push_back(vector<unsigned int>(1, i));
+
+          bond_map.get_translation().push_back(
+                      vector<Point>(1, Point(0.0)));
 
           _belong_to_structure.push_back(true); 
 

@@ -868,7 +868,7 @@ Elasticity::apply_shape_deformation()
   vector<AtomisticStructure*> atom_structures;
 
   Device& device = get_environment().get_device();
-  device.get_atomistic_structures(myopt.structure_to_be_strained,atom_structures);
+  device.get_atomistic_structures(myopt.structure_to_be_strained, atom_structures);
    
   TiberLinearSystem* system = &get_equation_system<TiberLinearSystem>();
   const unsigned int system_number = system->number();
@@ -1011,7 +1011,6 @@ Elasticity::apply_shape_deformation()
     b *= xmax_n(1) / xmax(1);
     c *= xmax_n(2) / xmax(2);
     atom_structures[ns]->set_lattice_vectors(a, b, c);
-    atom_structures[ns]->build_bond_map();
 
 
     ostringstream os;

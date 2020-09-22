@@ -144,9 +144,6 @@ public:
       const std::set<ID>& regions, double cutoff) const;
 
 
-  // Get element->atoms map
-  //std::map<const Elem*, std::vector<unsigned int> >& get_elem_to_atoms(void);
-  
   //! Get number of non hydrogen atoms
   unsigned int get_N_without_H(void) const;
 
@@ -215,9 +212,6 @@ public:
   static void register_callback(std::string& name,
       boost::function<void(void)> callback);
 
-  //void interface_interactions(const Material* mat1,
-  //                            const Material* mat2,
-  //                            std::set<std::string>& str);
 
   void interface_interactions(const Material* mat1, 
                               const Material* mat2, 

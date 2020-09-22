@@ -143,8 +143,11 @@ public:
 
        ~NeighborIterator(){};
 
+       //! Get the shift in real coordinates
+       Tensor1 get_shift(void);
+
        //! Iteration operator 
-       NeighborIterator& operator ++(void);
+       NeighborIterator& operator++(void);
        
        //! = operator 
        NeighborIterator& operator=(const NeighborIterator& it)

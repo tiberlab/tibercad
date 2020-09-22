@@ -294,10 +294,11 @@ AtomisticStructure::combine_structures(const std::string& name,
 
      if (first)
      {
+       // copy the structure
        *this = *as;
        _name = name;
        _options = options;
-       //_options.print_all();
+
        as->get_lattice_vectors(a, b, c);
        init_periodicity();
        const auto& bbox = as->get_bounding_box();
@@ -313,6 +314,22 @@ AtomisticStructure::combine_structures(const std::string& name,
        _IDset.insert(as->_IDset.begin(), as->_IDset.end());
        _virtual_atom_types.insert(_virtual_atom_types.end(),
            as->_virtual_atom_types.begin(), as->_virtual_atom_types.end());
+
+       /*
+       const size_t n_at = _atoms.size();
+
+       BondMap& bm = *_bondmap;
+       BondMap::Translation& tr = _bondmap->get_translation();
+       const BondMap& bo = as->get_bond_map();
+
+       bm.resize(bm.size() + bo.size());
+       tr.resize(bm.size() + bo.size());
+       for (size_t i = 0; i < bo.size(); ++i)
+       {
+         bm.push_back(bo[i]);
+         tr.push_back(bo.get_translation()[i]);
+       }
+       */
 
        _atoms.insert(_atoms.end(), as->_atoms.begin(), as->_atoms.end());
 
@@ -341,6 +358,7 @@ AtomisticStructure::combine_structures(const std::string& name,
            bb_max(i) = bbox.second(i);
        }
 
+
      }
    }
 
@@ -360,15 +378,17 @@ AtomisticStructure::combine_structures(const std::string& name,
       parse_lattice_vectors();
    }
 
-   // recompute Bond Map 
-   Messages::info("Build Bond Map...");
    refresh();
+
+   // for now we recalculate the bond map, although maybe it would be
+   // possible to combine them and calculate only missing pieces
+   build_bond_map();
 
    Messages::info("Check structure for close atoms ...");
    remove_bad_atoms();
    
-   Messages::info("Build Final Bond Map...");
-   build_bond_map();
+   // Messages::info("Build Final Bond Map...");
+   //build_bond_map();
 }
 
 // This routine removes atoms too close after combine
@@ -430,16 +450,17 @@ AtomisticStructure::parse_lattice_vectors(void)
  
     if (lattice_vectors.size() == 3)
     {  
-       _lattice_vectors[0] = lattice_vectors[0];
-       _lattice_vectors[4] = lattice_vectors[1];
-       _lattice_vectors[8] = lattice_vectors[2];
+       get_lattice_vectors()[0](0) = lattice_vectors[0];
+       get_lattice_vectors()[1](1) = lattice_vectors[1];
+       get_lattice_vectors()[2](2) = lattice_vectors[2];
     }
  
     else if (lattice_vectors.size() == 9)
     {
-       for (int i = 0; i < 9; i++)
+       for (int i = 0; i < 3; i++)
        {
-         _lattice_vectors[i] = lattice_vectors[i]; 
+         for (int j = 0; j < 3; j++)
+           get_lattice_vectors()[i](j) = lattice_vectors[i*3 + j];
        }
     }
  
@@ -565,9 +586,7 @@ AtomisticStructure::init_mesh_structure()
  
   parse_lattice_vectors();
 
-  Messages::info("Build final Bond Map...");
-
-  // extract atom types and create final bondmap
+  // extract atom types
   refresh();
 
   delete generator;
@@ -587,9 +606,6 @@ AtomisticStructure::dorestrict(const std::set<ID>& rgn_ids)
 
   generator->finalize();
 
-  Messages::info("Build final Bond Map...");
-  build_bond_map();
-  
   compute_N_without_H();
 
   delete generator;
@@ -1075,7 +1091,6 @@ AtomisticStructure::read_gen(const std::string& path, const Tensor1& transl)
   this->set_origin(origin_p);
 
   // Read periodicity vectors anyway, if system is not periodical they will be ignored
-  unsigned int count = 0;
   for (unsigned int i = 0; i < 3; i++)
   {
     getline(file, line);
@@ -1083,8 +1098,7 @@ AtomisticStructure::read_gen(const std::string& path, const Tensor1& transl)
     for (unsigned int j = 0; j < 3; j++)
     {
       line_string >> record;
-      _lattice_vectors[count] = atof(record.c_str());
-      count++;
+      get_lattice_vectors()[i](j) = atof(record.c_str());
     }
   }
 } // end read_gen
@@ -1220,7 +1234,6 @@ AtomisticStructure::read_tgn(const std::string& path, const Tensor1& transl)
   this->set_origin(origin_p);
 
   // Read periodicity vectors anyway, if system is not periodical they will be ignored
-  unsigned int count = 0;
   for (unsigned int i = 0; i < 3; i++)
     {
       getline(file, line);
@@ -1230,8 +1243,7 @@ AtomisticStructure::read_tgn(const std::string& path, const Tensor1& transl)
       for (unsigned int j = 0; j < 3; j++)
         {
           line_string >> record;
-          _lattice_vectors[count] = atof(record.c_str());
-          count++;
+          get_lattice_vectors()[i](j) = atof(record.c_str());
         }
     }
 
@@ -1351,7 +1363,7 @@ AtomisticStructure::print_tgn(const std::string& path) const
           for (unsigned int j = 0; j < 3; j++)
             { 
               file << std::setw(20) << std::setprecision(10) << std::fixed <<
-                  _lattice_vectors[count];
+                  get_lattice_vectors()[i](j);
               count++;
             }
           file << "\n";
@@ -1562,14 +1574,12 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
          << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0)
          << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) << "\n";
     
-    unsigned int count = 0;
     for (unsigned int i = 0; i < 3; i++)
     {
       for (unsigned int j = 0; j < 3; j++)
       {
         file << std::setw(20) << std::setprecision(10) << std::fixed <<
-          _lattice_vectors[count];
-        count++;
+          get_lattice_vectors()[i](j);
       }
       file << std::endl;
     }
@@ -2011,14 +2021,12 @@ AtomisticStructure::print_structure(const std::string& path, double const* const
       // Periodicity vectors at the bottom
       if (is_periodic())
         {
-          unsigned int count = 0;
           for (unsigned int i = 0; i < 3; i++)
             {
               for (unsigned int j = 0; j < 3; j++)
                 {
                   file << std::setw(20) << std::setprecision(10) << std::fixed <<
-                      _lattice_vectors[count];
-                  count++;
+                      get_lattice_vectors()[i](j);
                 }
               file << "\n";
             }

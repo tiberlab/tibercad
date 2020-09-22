@@ -45,6 +45,7 @@ BulkCrystal::init(void)
   set_ttype_lattice_vectors(_rotated_prim_vec);
   _atoms = _rotated_basis;
 
+  build_bond_map();
   refresh();
    
   

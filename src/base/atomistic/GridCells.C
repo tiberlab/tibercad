@@ -272,8 +272,34 @@ GridCells::print_statistics(void)
   
 }
 
+
+
+
+Tensor1
+GridCells::NeighborIterator::get_shift(void)
+{
+  Tensor1 period_x(0.0), period_y(0.0), period_z(0.0);
+  // Initialize _shift to 0.
+  Tensor1 shift(0.0);
+
+  period_x(1) = _container->_period(1,1);
+  period_x(2) = _container->_period(2,1);
+  period_x(3) = _container->_period(3,1);
+  period_y(1) = _container->_period(1,2);
+  period_y(2) = _container->_period(2,2);
+  period_y(3) = _container->_period(3,2);
+  period_z(1) = _container->_period(1,3);
+  period_z(2) = _container->_period(2,3);
+  period_z(3) = _container->_period(3,3);
+
+  shift = _shift(1) * period_x + _shift(2) * period_y + _shift(3) * period_z;
+
+  return(shift);
+}
+
+
 GridCells::NeighborIterator&
-GridCells::NeighborIterator::operator ++(void)
+GridCells::NeighborIterator::operator++(void)
 {
   //-1 +1 +1
   if (_dz < 1 ){ _dz += 1;}
@@ -296,45 +322,39 @@ GridCells::NeighborIterator::operator ++(void)
   unsigned int z2 = static_cast<unsigned int>(z1);
 
 
-  Tensor1 period_x(0.0), period_y(0.0), period_z(0.0);
   // Initialize _shift to 0.
-  _shift=period_x;
+  _shift = Tensor1(0.0);
 
-  period_x(1) = _container->_period(1,1); 
-  period_x(2) = _container->_period(2,1); 
-  period_x(3) = _container->_period(3,1);
-  period_y(1) = _container->_period(1,2); 
-  period_y(2) = _container->_period(2,2); 
-  period_y(3) = _container->_period(3,2);
-  period_z(1) = _container->_period(1,3); 
-  period_z(2) = _container->_period(2,3); 
-  period_z(3) = _container->_period(3,3);
+  Tensor1 tx(libMesh::Point(1, 0, 0));
+  Tensor1 ty(libMesh::Point(0, 1, 0));
+  Tensor1 tz(libMesh::Point(0, 0, 1));
+
  
   if (x1 == -1)
   {
-    x2 = (_container->n_x) - 1; _shift = _shift - period_x;
+    x2 = (_container->n_x) - 1; _shift = _shift - tx;
   }
   else if (x1 == static_cast<int>(_container->n_x))
   {
-    x2 = 0; _shift = _shift + period_x;
+    x2 = 0; _shift = _shift + tx;
   }
   
   if (y1 == -1)
   {
-    y2 = (_container->n_y) - 1; _shift = _shift - period_y;
+    y2 = (_container->n_y) - 1; _shift = _shift - ty;
   }
   else if (y1 == static_cast<int>(_container->n_y))
   {
-    y2 = 0; _shift = _shift + period_y;
+    y2 = 0; _shift = _shift + ty;
   }
 
   if (z1 == -1)
   {
-    z2 = (_container->n_z) - 1; _shift = _shift - period_z;
+    z2 = (_container->n_z) - 1; _shift = _shift - tz;
   }
   else if (z1 == static_cast<int>(_container->n_z))
   {
-    z2 = 0; _shift = _shift + period_z;
+    z2 = 0; _shift = _shift + tz;
   }
   //------------------------------------------
 

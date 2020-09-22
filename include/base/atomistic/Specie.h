@@ -209,7 +209,7 @@ bool operator!= (const Specie::Type& type, const Specie& specie)
 //  return !(type == string_to_specie[type_string]);
 //}
 //
-////!Override comparison operator, allows:
+////Override comparison operator, allows:
 //    //! 'H' == s.get_type()
 //bool operator!= (std::string& type_string, Type& type)
 //{

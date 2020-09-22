@@ -9,7 +9,6 @@
 #include "Specie.h"
 #include "InitFailedException.h"
 
-#include "HashSet.h"
 #include "HashMap.h"
 
 //STD library includes
@@ -49,12 +48,6 @@ class AtomisticBasis
   std::pair<libMesh::Point, libMesh::Point> get_bounding_box(void) const;
 
     
-  //! Get neighbor periodic image translation
-  /*!
-   * (same indexing as bondmap)
-   */
-  const BondMap::Translation& get_neighbor_translation(void) const;
-
   //! Return a const reference to structure atoms
   const std::vector<Atom>& get_structure_atoms(void) const;
   
@@ -68,10 +61,8 @@ class AtomisticBasis
   void set_structure_atoms(const std::vector<Atom>& atoms);
 
   //! Get periodicity vectors for the structure:
-  /*!
-   * [x1, y1, z1, x2, y2, z2, x3, y3, z3]
-   */
-  const std::vector<double>& get_lattice_vectors(void) const;
+  const std::vector<libMesh::RealVectorValue>&
+    get_lattice_vectors(void) const;
 
   //! Get the three lattice vectors
   void get_lattice_vectors(libMesh::RealVectorValue& a,
@@ -97,6 +88,9 @@ class AtomisticBasis
 
   //! Build or re-build bond map
   void build_bond_map(void);
+
+  //! Set the bond map
+  void set_bond_map(const BondMap& bondmap);
 
   //! Build and return a BondMap object
   /*!
@@ -197,19 +191,17 @@ class AtomisticBasis
 
   //! Copy constructor
   AtomisticBasis(const AtomisticBasis& other);
+
+  //! Get periodicity vectors for the structure:
+  std::vector<libMesh::RealVectorValue>&
+    get_lattice_vectors(void);
+
     
   //! Bond Map object pointer
   BondMap* _bondmap;
 
   //! Vector containing structure atoms 
   std::vector<Atom>  _atoms;
-  
-  //TODO: this should be changed back in Tensor2Gen 
-  //or all the other Tensor2Gen should be changed.
-  //There's no reason why we should use two different 
-  //representations
-  //! Periodicity vectors in canonical basis
-  std::vector<double> _lattice_vectors;
   
   //! Set of all atom types in structure
   std::vector<std::string> _atom_types;
@@ -218,6 +210,9 @@ class AtomisticBasis
 
   //! Periodicity for each direction
   std::vector<bool> _periodicity;
+
+  //! Periodicity vectors in canonical basis
+  std::vector<libMesh::RealVectorValue> _lattice_vectors;
 
   //! The origin for the structure
   libMesh::Point _origin;
@@ -364,14 +359,6 @@ AtomisticBasis::get_bond_map() const
 
 
 inline
-const BondMap::Translation&
-AtomisticBasis::get_neighbor_translation(void) const
-{
-  return _bondmap->get_translation();
-}
-
-
-inline
 const std::vector<Atom>& 
 AtomisticBasis::get_structure_atoms(void) const
 {
@@ -411,8 +398,16 @@ AtomisticBasis::set_structure_atoms(const std::vector<Atom>& atoms)
 
 
 inline
-const std::vector<double>& 
+const std::vector<libMesh::RealVectorValue>&
 AtomisticBasis::get_lattice_vectors(void) const
+{
+  return _lattice_vectors;
+}
+
+
+inline
+std::vector<libMesh::RealVectorValue>&
+AtomisticBasis::get_lattice_vectors(void)
 {
   return _lattice_vectors;
 }
