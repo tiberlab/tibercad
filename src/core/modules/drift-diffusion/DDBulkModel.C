@@ -560,8 +560,8 @@ DDBulkModel::calculate_equilibrium_properties(void)
    */
 
   double x = guess;
-  // 1e-4 V error seems to be good enough...
-  double eps = 1e-4, dens_max = 1e10;
+  // in some rare cases it might not reach eps, but hopefully dens_max
+  double eps = 1e-12, dens_max = 1e10;
   double error, residual_dens, y;
 
   //set_carrier_temperatures(kT, kT);
