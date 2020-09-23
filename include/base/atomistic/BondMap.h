@@ -71,6 +71,7 @@ public:
 
   //! print
   void print(void) const;
+  void print(const std::vector<Atom>& basis) const;
   
   //! Remove a set of atoms from the bond map
   void remove_atoms(const std::set<unsigned int> ids);

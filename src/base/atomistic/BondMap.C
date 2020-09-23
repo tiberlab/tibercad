@@ -463,9 +463,38 @@ BondMap::print(void) const
       std::cout<<" ";
     }
 
+
     std::cout<<std::endl;
   }
 }
+
+
+void
+BondMap::print(const std::vector<Atom>& basis) const
+{
+  std::cout << std::endl;
+  for (unsigned int i = 0; i < this->size(); i++)
+  {
+    std::cout<<"BondMap["<<i<<"]= ";
+    for (unsigned int j = 0; j < (*this)[i].size(); j++)
+    {
+      std::cout<<(*this)[i][j];
+      if (_translation[i][j].norm() > 1e-6)
+        std::cout << "'";
+      std::cout<<" ";
+    }
+    std::cout << "  :  ";
+    for (unsigned int j = 0; j < (*this)[i].size(); j++)
+    {
+      libMesh::Point dist(basis[(*this)[i][j]].get_position());
+      dist = dist + get_translation(i, j) - basis[i].get_position();
+      std::cout << dist.norm() << " ";
+    }
+
+    std::cout<<std::endl;
+  }
+}
+
 
 
 

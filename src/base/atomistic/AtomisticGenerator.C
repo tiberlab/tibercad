@@ -287,7 +287,7 @@ AtomisticGenerator::do_init()
   //eventually enlarge along dummy supercell directions
   //(build bondmap if not present)
   check_periodic();
-  //_bondmap->print();
+  //_bondmap->print(_super_basis);
 
   //rebuild bondmap with new periodicity
   //Messages::info("Rebuild bondmap");
@@ -1380,7 +1380,7 @@ void AtomisticGenerator::passivate(void)
           tmp.set_label(0);
 
           Point bonded_rel_position = bonded_atom->get_position() +
-              _bondmap->get_translation()[i][j] - _super_basis[i].get_position();
+              _bondmap->get_translation(i, j) - _super_basis[i].get_position();
 
           Point position = _super_basis[i].get_position() +
                          ( ( bonded_rel_position) /
@@ -1397,7 +1397,6 @@ void AtomisticGenerator::passivate(void)
 
           bond_map[i].push_back(new_i);
           bond_map.reserve(bond_map.size() + 10);
-          bond_map.get_translation().reserve(bond_map.size() + 10);
 
           bond_map.push_back(vector<unsigned int>(1, i));
 
