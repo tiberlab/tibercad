@@ -37,7 +37,17 @@ NonlinearPolarization::read_database(void)
     _e31 = db.get("e31", 0.0);
     _e15 = db.get("e15", 0.0);
 
+    _2nd_order_coeff.resize(8, 0.0);
     db.get("2nd_order_coefficients", _2nd_order_coeff);
+
+    _2nd_order_coeff[0] = db.get("B115", _2nd_order_coeff[0]);
+    _2nd_order_coeff[1] = db.get("B125", _2nd_order_coeff[1]);
+    _2nd_order_coeff[2] = db.get("B135", _2nd_order_coeff[2]);
+    _2nd_order_coeff[3] = db.get("B311", _2nd_order_coeff[3]);
+    _2nd_order_coeff[4] = db.get("B312", _2nd_order_coeff[4]);
+    _2nd_order_coeff[5] = db.get("B313", _2nd_order_coeff[5]);
+    _2nd_order_coeff[6] = db.get("B333", _2nd_order_coeff[6]);
+    _2nd_order_coeff[7] = db.get("B344", _2nd_order_coeff[7]);
 
     _Psp = db.get("Pz", _Psp);
   } 
@@ -45,6 +55,13 @@ NonlinearPolarization::read_database(void)
   {
     db.set_section("piezoelectricity");
     _e14 = db.get("e14", 0.0);
+
+    _2nd_order_coeff.resize(3, 0.0);
+    db.get("2nd_order_coefficients", _2nd_order_coeff);
+
+    _2nd_order_coeff[0] = db.get("B114", _2nd_order_coeff[0]);
+    _2nd_order_coeff[1] = db.get("B124", _2nd_order_coeff[1]);
+    _2nd_order_coeff[2] = db.get("B156", _2nd_order_coeff[2]);
   }
 
 }
@@ -58,18 +75,18 @@ NonlinearPolarization::do_calculate(const Elem* elem, const Point& point)
 
   Tensor2Sym& strain = get_strain();
   _strain.get_crystal_strain(elem, point, strain);
-  
+
+  // strain in Voigt notation
+  double e1 = strain(1,1);
+  double e2 = strain(2,2);
+  double e3 = strain(3,3);
+  double e4 = 2*strain(3,2);
+  double e5 = 2*strain(3,1);
+  double e6 = 2*strain(2,1);
 
   // compute polarization
   if (get_material()->get_structure() == "wz")
   {
-    // strain in Voigt notation
-    double e1 = strain(1,1);
-    double e2 = strain(2,2);
-    double e3 = strain(3,3);
-    double e4 = 2*strain(3,2);
-    double e5 = 2*strain(3,1);
-    double e6 = 2*strain(2,1);
 
     // a = 0, b = 1, .. h = 7
     double B125 = _2nd_order_coeff[1];
@@ -107,10 +124,19 @@ NonlinearPolarization::do_calculate(const Elem* elem, const Point& point)
   }
   else
   {
-    polarization(0) = 2.0 * _e14 * strain(3,2);
-    polarization(1) = 2.0 * _e14 * strain(3,1);
-    polarization(2) = 2.0 * _e14 * strain(2,1);
+    double B114 = _2nd_order_coeff[0];
+    double B124 = _2nd_order_coeff[1];
+    double B156 = _2nd_order_coeff[2];
+
+    polarization(0) = _e14 * e4;
+    polarization(1) = _e14 * e5;
+    polarization(2) = _e14 * e6;
+
+    polarization(0) += B114 * e1 * e4 + B124 * e4 * (e2 + e3) + B156 * e5 * e6;
+    polarization(1) += B114 * e2 * e5 + B124 * e5 * (e3 + e1) + B156 * e4 * e6;
+    polarization(2) += B114 * e3 * e6 + B124 * e6 * (e1 + e2) + B156 * e4 * e5;
   }
+
   set_polarization(polarization);
 
   // rotate polarization to calculation system

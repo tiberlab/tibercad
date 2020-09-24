@@ -15,6 +15,7 @@ New features:
 	- alloy statistics extraction can now include APT detection efficiencies
 	  and use binning based on counting atoms
 	- mp-DD functional and mostly complete
+	- nonlinear piezoelectricity implemented for zb and wz (PRB 84 and 88)
 
 
 Version 3.0.2
