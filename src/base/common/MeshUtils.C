@@ -257,8 +257,8 @@ MeshUtils::GridMapper::setup(void)
 
   _elem_list.resize(_tensor_grid.num_elements());
 
-  libMesh::MeshBase::const_element_iterator it = _mesh->local_elements_begin();
-  const libMesh::MeshBase::const_element_iterator end = _mesh->local_elements_end();
+  libMesh::MeshBase::const_element_iterator it = _mesh->elements_begin();
+  const libMesh::MeshBase::const_element_iterator end = _mesh->elements_end();
 
   Messages::newline();
   Messages::info("Setup of grid mapper: ", false);
@@ -321,7 +321,7 @@ MeshUtils::GridMapper::setup(void)
 
   ostringstream os;
   os << timer.elapsed_string() << ", memory usage: "
-      << mem / (1024*1024) << " MB " << mem;
+      << mem / (1024*1024) << " MB ";
   Messages::info(os.str());
 }
 
@@ -386,6 +386,8 @@ MeshUtils::GridMapper::get_element(const libMesh::Point& point) const
       }
     }
   }
+
+
 
   return(el);
 }

@@ -411,6 +411,12 @@ DataImporter::_read_csv(void)
 
   system.init();
 
+  if (get_mesh().n_nodes() != data[0].size())
+  {
+    Messages::warning("Automatically generated data import mesh has"
+        " different number of nodes than provided in file.");
+  }
+
   for (size_t n = 0; n < get_mesh().n_nodes(); ++n)
   {
 
@@ -464,7 +470,6 @@ DataImporter::_create_mesh_from_points(const vector<double>* x,
 
   m /= length_units;
   //cerr << "multiplier = " << m << endl;
-
 
   UnstructuredMesh* mesh = new Mesh(get_solver_communicator(), dim);
 
@@ -555,6 +560,11 @@ DataImporter::_create_mesh_from_points(const vector<double>* x,
   mesh->allow_renumbering(false);
   mesh->prepare_for_use();
   set_mesh(mesh);
+  //cerr << "created mesh with " << mesh->n_elem()
+  //    << " elements (local " << mesh->n_local_elem() << ")\n";
+  //cerr << "mesh comm size = " << mesh->comm().size() << "\n";
+  //cerr << "# part = " << mesh->n_partitions() << "\n";
+  //mesh->print_info();
 }
 
 
