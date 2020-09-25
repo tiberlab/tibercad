@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# extracts the main solar cell parameters from a JV curve
+
+f=$1
+
+a=1
+
+if [ $# -gt 1 ]
+then
+  a=$2
+fi
+
+Voc=$(awk 'BEGIN { I = -1; V = 0; } { if ($1 != "#") { Vn = $1; In = -$2; if (In >= 0) { a = (In - I)/(Vn-V); Voc = V - I/a; print Voc; exit;} else { V = Vn; I = In; } }}' $f)
+
+#Isc=$(awk 'BEGIN { I = -1; V = 0; } { if ($1 != "#") { Vn = $1; In = $3; if (In >= 0) { a = (In - I)/(Vn-V); Voc = V - I/a; print Voc; exit;} else { V = Vn; I = In; } }}' $f)
+Isc=$(awk -v a=$a '{ if ($1 != "#") { print 1000*$2/a; exit; } }' $f)
+
+FF=$(awk -v Isc=$Isc -v Voc=$Voc -v a=$a 'BEGIN { Pmax = 0; Pideal = Isc*Voc; } { if ($1 != "#") { P = 1000*$1*$2/a; if (P > Pmax) { Pmax = P; } } } END { print(100*Pmax/Pideal); }' $f)
+
+echo "Isc = $Isc mA/cm^2"
+echo "Voc = $Voc V"
+echo "FF  = $FF%"
+echo "Eff = $(echo "$FF * $Isc * $Voc / 100" | bc -l)%"
