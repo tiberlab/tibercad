@@ -16,29 +16,29 @@
 #include "TiberModule.h"
 
 // Basic include files needed for the mesh functionality.
-#include "fe.h"
-#include "fe_interface.h"
+#include "libmesh/fe.h"
+#include "libmesh/fe_interface.h"
 // Define generic quadrature rules.
-#include "quadrature.h"
-#include "quadrature_gauss.h"
-#include "quadrature_trap.h"
-#include "mesh.h"
+#include "libmesh/quadrature.h"
+#include "libmesh/quadrature_gauss.h"
+#include "libmesh/quadrature_trap.h"
+#include "libmesh/mesh.h"
 
 // Define useful datatypes for finite element
 // matrix and vector components.
-#include "sparse_matrix.h"
-#include "numeric_vector.h"
-#include "dense_matrix.h"
-#include "dense_vector.h"
-#include "linear_implicit_system.h"
-#include "equation_systems.h"
-#include "tensor_value.h"
+#include "libmesh/sparse_matrix.h"
+#include "libmesh/numeric_vector.h"
+#include "libmesh/dense_matrix.h"
+#include "libmesh/dense_vector.h"
+#include "libmesh/linear_implicit_system.h"
+#include "libmesh/equation_systems.h"
+#include "libmesh/tensor_value.h"
 
 // Define the DofMap, which handles degree of freedom
 // indexing.
-#include "dof_map.h"
-#include "dense_submatrix.h"
-#include "dense_subvector.h"
+#include "libmesh/dof_map.h"
+#include "libmesh/dense_submatrix.h"
+#include "libmesh/dense_subvector.h"
 
 
 // C++ includes
@@ -50,6 +50,7 @@
 #include <cmath>
 
 using namespace Constants;
+using namespace libMesh;
 using namespace std;
 
 
@@ -616,7 +617,9 @@ Negf::init_k_space_integration(void)
 
     init_k_space(kopts); 
 
-    _k_int_density = KspaceIntegration::create(this, &Negf::calculate_for_k_point, kopts);
+    _k_int_density = KspaceIntegration::create(this, &Negf::calculate_for_k_point, kopts,
+                                               get_communicator(),
+                                               get_solver_communicator());
 
     if (_k_int_density == NULL)
       throw InitFailedException("Could not create k-integration");
@@ -638,7 +641,9 @@ Negf::init_k_space_integration(void)
 
     init_k_space(kopts); 
     
-    _k_int_current = KspaceIntegration::create(this, &Negf::calculate_for_k_point, kopts);
+    _k_int_current = KspaceIntegration::create(this, &Negf::calculate_for_k_point, kopts,
+                                               get_communicator(),
+                                               get_solver_communicator());
 
     if (_k_int_current == NULL)
       throw InitFailedException("Could not create k-integration");

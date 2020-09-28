@@ -220,10 +220,10 @@ class TBDLLOCAL Negf : public SimulationInterface
     TiberLinearSystem* _sys_S;
     TiberLinearSystem* _qdens_sys;
 
-    std::vector<ID> _perm;      //permutation vector
-    std::vector<ID> _inv_perm;     //inverse permutation
+    std::vector<unsigned int> _perm;      //permutation vector
+    std::vector<unsigned int> _inv_perm;     //inverse permutation
 
-    std::vector<ID> _end_blocks;
+    std::vector<unsigned int> _end_blocks;
 
     unsigned int _device_n_dofs;
 
