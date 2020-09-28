@@ -197,9 +197,6 @@ SRHRecombination::do_init(void)
     get_parameter("sigma_p", _sigma_p);
     get_parameter("Nt", _density);
 
-    get_parameter("trap_to_cb_rate", _gen_TC);
-    get_parameter("vb_to_trap_rate", _gen_VT);
-
     _trap = true;
   }
 
@@ -315,6 +312,39 @@ SRHRecombination::calculate_rate_and_derivatives(std::vector<double>& R, std::ve
     tau_n *= std::pow(kT / T0, _Talpha_e) * std::exp(_Tcoeff_e * (kT / T0 - 1));
     tau_p *= std::pow(kT / T0, _Talpha_h) * std::exp(_Tcoeff_h * (kT / T0 - 1));
   }
+
+  if (_tat != NULL)
+  {
+    // definition of integration limit
+    double Ec = dd.get_carrier_properties(id1)->get_band_edge();
+    double mu_n = Efn + dd.get_electric_potential();
+    double dE_n = 0;
+    if (mu_n <= Ec)
+    {
+      if (mu_n >= Et)
+        dE_n = Ec - mu_n;
+      else
+        dE_n = Ec - Et;
+    }
+    double gamman = _tat->get_gamma(dd.get_electric_field().size() * 100, kT, dE_n);
+    gamman = 1.0 / (gamman + 1);
+    tau_n *= gamman;
+
+    double Ev = dd.get_carrier_properties(id2)->get_band_edge();
+    double mu_p = Efp + dd.get_electric_potential();
+    double dE_p = 0;
+    if (mu_p >= Ev)
+    {
+      if (mu_p <= Et)
+        dE_p = mu_p - Ev;
+      else
+        dE_p = Et- Ev;
+    }
+    double gammap = _tat->get_gamma(dd.get_electric_field().size() * 100, kT, dE_p);
+    gammap = 1.0 / (gammap + 1);
+    tau_p *= gammap;
+  }
+
 
   double kT_e = kT;
   double kT_h = kT;

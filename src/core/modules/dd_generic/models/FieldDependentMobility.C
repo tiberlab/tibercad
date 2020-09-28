@@ -63,7 +63,15 @@ FieldDependentMobility::prepare_submodels(void)
 
   ModelOptions opts;
   std::string low_field_model = get_option("low_field_model", "doping_dependent");
+  if (get_options().has_submodel("low_field_model"))
+  {
+    opts = get_options().submodels_begin("low_field_model")->second;
+    low_field_model = opts.get_name();
+  }
+
   opts.set_option("type", low_field_model);
+
+
   opts.set_option("particle", get_option("particle", "electron"));
 
   create_submodel(_low_field_mob, "mobility", opts);
