@@ -626,8 +626,16 @@ void Kspace::build_k_grid()
       }
 
       case FCC:
-      case BCC:
+      {
+
         break;
+      }
+
+      case BCC:
+      {
+
+        break;
+      }
 
       default:
         kmesh->add_point(Point(0,0,0), 0, 0);
@@ -1054,113 +1062,138 @@ void Kspace::find_k_space_symmetry()
     double norm2 = k_basis_vector2.norm();
     double norm3 = k_basis_vector3.norm();
 
-    double angle12 = acos(scalar12/(norm1 * norm2)) * 180.0 / M_PI;
-    double angle13 = acos(scalar13/(norm1 * norm3)) * 180.0 / M_PI;
-    double angle23 = acos(scalar23/(norm2 * norm3)) * 180.0 / M_PI;
+    double sp12 = scalar12/(norm1 * norm2);
+    double sp13 = scalar13/(norm1 * norm3);
+    double sp23 = scalar23/(norm2 * norm3);
+
+    double angle12 = acos(sp12) * 180.0 / M_PI;
+    double angle13 = acos(sp13) * 180.0 / M_PI;
+    double angle23 = acos(sp23) * 180.0 / M_PI;
 
     // to define the symmetry of the structure angle between basis vectors are evaluated
-    if ((Utils::almost_equal::compare(angle12, 90, 1e-6)) &&
-        (Utils::almost_equal::compare(angle13, 90, 1e-6)) &&
-        (Utils::almost_equal::compare(angle23, 90, 1e-6)))
+    if (Utils::almost_equal::compare(angle12, angle13, 1e-6) &&
+        Utils::almost_equal::compare(angle12, angle23, 1e-6))
     {
-      if (k_space_dim == 2)
+      //
+      // all angles are the same
+      //
+
+      if (Utils::almost_equal::compare(angle12, 90, 1e-6))
       {
-        // NOTE this is not generic, assumes 2D k space on yz plane
-        if (Utils::almost_equal::compare(norm2, norm3, 1e-6))
+        //
+        // orthogonal basis of BZ
+        //
+        if (k_space_dim == 2)
         {
-          k_space_symmetry = QUADRATIC;
-          b1 = 1;
-          b2 = 2;
-          b3 = 0;
+          // NOTE this is not generic, assumes 2D k space on yz plane
+          if (Utils::almost_equal::compare(norm2, norm3, 1e-6))
+          {
+            k_space_symmetry = QUADRATIC;
+            b1 = 1;
+            b2 = 2;
+            b3 = 0;
+          }
+          else
+          {
+            k_space_symmetry = RECTANGULAR;
+            b1 = 1;
+            b2 = 2;
+            b3 = 0;
+          }
         }
         else
         {
-          k_space_symmetry = RECTANGULAR;
-          b1 = 1;
-          b2 = 2;
-          b3 = 0;
+          // Convention for tetragonal:
+          //   b1,b2 -> a
+          //   b3    -> c
+          if (Utils::almost_equal::compare(norm1, norm2, 1e-6))
+          {
+            if (Utils::almost_equal::compare(norm1, norm3, 1e-6))
+              k_space_symmetry = CUBIC;
+            else
+              k_space_symmetry = TETRAGONAL;
+          }
+          else if (Utils::almost_equal::compare(norm1, norm3, 1e-6))
+          {
+            k_space_symmetry = TETRAGONAL;
+            b2 = 2;
+            b3 = 1;
+          }
+          else if (Utils::almost_equal::compare(norm2, norm3, 1e-6))
+          {
+            k_space_symmetry = TETRAGONAL;
+            b1 = 1;
+            b2 = 2;
+            b3 = 0;
+          }
+          else
+          {
+            // Convention for orthorhombic:
+            //   a < b < c with a||b1, b||b2, c||b3
+            k_space_symmetry = ORTHORHOMBIC;
+            vector<double> len = {norm1, norm2, norm3};
+            if (len[1] > len[0])
+            {
+              b1 = 1;
+              b2 = 0;
+              len[0] = norm2;
+              len[1] = norm1;
+            }
+            if (len[2] > len[1])
+            {
+              b3 = b2;
+              b2 = 2;
+              len[2] = len[1];
+              len[1] = norm3;
+              len[2] = len[1];
+            }
+            if (len[1] > len[0])
+            {
+              unsigned int tmpi = b1;
+              b1 = b2;
+              b2 = tmpi;
+              double tmpd = len[0];
+              len[0] = len[1];
+              len[1] = tmpd;
+            }
+
+          }
         }
+      }
+      else if (Utils::almost_equal::compare(sp12, -1.0/3.0, 1e-6))
+      {
+        k_space_symmetry = FCC;
+      }
+      else if (Utils::almost_equal::compare(sp12, 0.5, 1e-6))
+      {
+        k_space_symmetry = BCC;
       }
       else
-      {
-        // Convention for tetragonal:
-        //   b1,b2 -> a
-        //   b3    -> c
-        if (Utils::almost_equal::compare(norm1, norm2, 1e-6))
-        {
-          if (Utils::almost_equal::compare(norm1, norm3, 1e-6))
-            k_space_symmetry = CUBIC;
-          else
-            k_space_symmetry = TETRAGONAL;
-        }
-        else if (Utils::almost_equal::compare(norm1, norm3, 1e-6))
-        {
-          k_space_symmetry = TETRAGONAL;
-          b2 = 2;
-          b3 = 1;
-        }
-        else if (Utils::almost_equal::compare(norm2, norm3, 1e-6))
-        {
-          k_space_symmetry = TETRAGONAL;
-          b1 = 1;
-          b2 = 2;
-          b3 = 0;
-        }
-        else
-        {
-          // Convention for orthorhombic:
-          //   a < b < c with a||b1, b||b2, c||b3
-          k_space_symmetry = ORTHORHOMBIC;
-          vector<double> len = {norm1, norm2, norm3};
-          if (len[1] > len[0])
-          {
-            b1 = 1;
-            b2 = 0;
-            len[0] = norm2;
-            len[1] = norm1;
-          }
-          if (len[2] > len[1])
-          {
-            b3 = b2;
-            b2 = 2;
-            len[2] = len[1];
-            len[1] = norm3;
-            len[2] = len[1];
-          }
-          if (len[1] > len[0])
-          {
-            unsigned int tmpi = b1;
-            b1 = b2;
-            b2 = tmpi;
-            double tmpd = len[0];
-            len[0] = len[1];
-            len[1] = tmpd;
-          }
+        std::cout << "The Brillouin zone is not defined for a structure with"
+        " one of the given angles between the basis vectors: "
+        << angle12 << ", " << angle13 << " and " << angle23 << std::endl;
 
-        }
-      }
     }
-    else if (Utils::almost_equal::compare(angle12, 60, 1e-5) ||
-        Utils::almost_equal::compare(angle12, 120, 1e-5))
+    else if (Utils::almost_equal::compare(fabs(sp12), 0.5, 1e-6) &&
+        Utils::almost_equal::compare(angle13, 90, 1e-5))
     {
       k_space_symmetry = HEXAGONAL;
     }
-    else if (Utils::almost_equal::compare(angle13, 60, 1e-5) ||
-        Utils::almost_equal::compare(angle13, 120, 1e-5))
+    else if (Utils::almost_equal::compare(fabs(sp13), 0.5, 1e-6) &&
+        Utils::almost_equal::compare(angle12, 90, 1e-5))
     {
       b2 = 2;
       b3 = 1;
       k_space_symmetry = HEXAGONAL;
     }
-    else if (Utils::almost_equal::compare(angle23, 60, 1e-5) ||
-        Utils::almost_equal::compare(angle23, 120, 1e-5))
+    else if (Utils::almost_equal::compare(fabs(sp23), 0.5, 1e-6) &&
+        Utils::almost_equal::compare(angle13, 90, 1e-5))
     {
       b1 = 1;
       b2 = 2;
       b3 = 0;
       k_space_symmetry = HEXAGONAL;
     }
-
     else
       std::cout << "The Brillouin zone is not defined for a structure with"
       " one of the given angles between the basis vectors: "
@@ -1331,7 +1364,51 @@ Kspace::get_symmetry_point(const std::string& name) const
         break;
 
       case FCC:
+        if (name == "L")
+        {
+          p(b1) = 0.5;
+          p(b2) = 0.5;
+          p(b3) = 0.5;
+        }
+        else if (name == "K")
+        {
+          p(b1) = 0.375;
+          p(b2) = 0.75;
+          p(b3) = 0.375;
+        }
+        else if (name == "U")
+        {
+          p(b1) = 0.25;
+          p(b2) = 0.625;
+          p(b3) = 0.625;
+        }
+        else if (name == "W")
+        {
+          p(b1) = 0.25;
+          p(b2) = 0.75;
+          p(b3) = 0.5;
+        }
+        else if (name == "X")
+          p(b2) = p(b3) = 0.5;
+        break;
+
       case BCC:
+        if (name == "P")
+        {
+          p(b1) = 0.25;
+          p(b2) = 0.25;
+          p(b3) = 0.25;
+        }
+        else if (name == "N")
+        {
+          p(b2) = 0.5;
+        }
+        else if (name == "H")
+        {
+          p(b1) = -0.5;
+          p(b2) = 0.5;
+          p(b3) = -0.5;
+        }
         break;
 
       default:
