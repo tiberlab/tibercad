@@ -16,6 +16,8 @@
 #include "libmesh/cell_prism6.h"
 #include "libmesh/cell_hex8.h"
 
+#include "libmesh/mesh_tetgen_interface.h"
+
 
 #include <cmath>
 
@@ -362,6 +364,11 @@ Kspace::equivalent_points(const libMesh::Point& p,
     }
 
     case FCC:
+    {
+
+      break;
+    }
+
     case BCC:
       throw InitFailedException("Necessary BZ not implemented yet for unfolding");
       break;
@@ -627,12 +634,34 @@ void Kspace::build_k_grid()
 
       case FCC:
       {
+        kmesh->add_point(Point(0,0,0), 0, 0);
+        kmesh->add_point(get_symmetry_point("K"), 1, 0);
+        kmesh->add_point(get_symmetry_point("W"), 2, 0);
+        kmesh->add_point(get_symmetry_point("X"), 3, 0);
+        kmesh->add_point(get_symmetry_point("L"), 4, 0);
+        kmesh->add_point(get_symmetry_point("U"), 5, 0);
+
+        libMesh::TetGenMeshInterface tetgenif(*kmesh);
+        tetgenif.triangulate_pointset();
 
         break;
       }
 
       case BCC:
       {
+        kmesh->add_point(Point(0,0,0), 0, 0);
+        kmesh->add_point(get_symmetry_point("P"), 1, 0);
+        kmesh->add_point(get_symmetry_point("N"), 2, 0);
+        kmesh->add_point(get_symmetry_point("H"), 3, 0);
+
+        Elem* elem = kmesh->add_elem(new libMesh::Tet4);
+        elem->set_node(0) = kmesh->node_ptr(0);
+        elem->set_node(1) = kmesh->node_ptr(1);
+        elem->set_node(2) = kmesh->node_ptr(2);
+        elem->set_node(3) = kmesh->node_ptr(3);
+
+        libMesh::TetGenMeshInterface tetgenif(*kmesh);
+        tetgenif.triangulate_pointset();
 
         break;
       }
@@ -650,7 +679,7 @@ void Kspace::build_k_grid()
     libMesh::MeshRefinement mr(*kmesh);
 
     unsigned int n = 0;
-    if (num_nodes[0] > 2)
+    if ((num_nodes[0] > 2) && !is_k_path())
       n = floor(log(num_nodes[0] - 1) / log(2));
     mr.uniformly_refine(n);
 
