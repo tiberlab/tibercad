@@ -5,6 +5,7 @@
 #include "Constants.h"
 #include "Messages.h"
 #include "Utils.h"
+#include "SpaceTransformation.h"
 
 #include "libmesh/mesh_modification.h"
 #include "libmesh/mesh_refinement.h"
@@ -24,6 +25,7 @@
 
 
 using namespace std;
+using namespace libMesh;
 
 
 namespace
@@ -365,6 +367,25 @@ Kspace::equivalent_points(const libMesh::Point& p,
 
     case FCC:
     {
+      // symmetry operations:
+      // rotation by 120° around \Gamma->L
+      // rotation by 90° around z
+      // mirror at plane \Gamma-K-L
+      // mirror at plane xy
+      // => 3 * 4 * 2 * 2 = 48
+
+      Point np(c);
+      eq_points.push_back(np);
+
+      // first rotation by 120
+      // \Gamma->L = b1+b2+b3
+      RealVectorValue gl = k_basis_vector1 +
+                           k_basis_vector2 +
+                           k_basis_vector3;
+
+      SpaceTransformation::rotate(gl, 2*M_PI/3.0, np);
+      eq_points.push_back(np);
+
 
       break;
     }
