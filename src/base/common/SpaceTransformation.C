@@ -33,3 +33,12 @@ SpaceTransformation::rotate(const libMesh::RealVectorValue& axis,
 
   point = R*point;
 }
+
+
+void
+SpaceTransformation::create_star(const std::string& symmetry,
+                         const libMesh::Point& point,
+                         std::vector<libMesh::Point>& star)
+{
+
+}
