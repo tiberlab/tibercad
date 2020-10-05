@@ -375,17 +375,33 @@ Kspace::equivalent_points(const libMesh::Point& p,
       // => 3 * 4 * 2 * 2 = 48
 
       Point np(c);
-      eq_points.push_back(np);
 
-      // first rotation by 120
-      // \Gamma->L = b1+b2+b3
-      RealVectorValue gl = k_basis_vector1 +
-                           k_basis_vector2 +
-                           k_basis_vector3;
+      // transform back to orthogonal coordinates
+      transform_point(np);
 
-      SpaceTransformation::rotate(gl, 2*M_PI/3.0, np);
-      eq_points.push_back(np);
+      // transform to reference x,y,z
+      RealTensor map(0);
+      map(b1, b1) = 1; map(b1, b3) = 1;
+      map(b2, b1) = 1; map(b2, b2) = 1;
+      map(b3, b2) = 1; map(b3, b3) = 1;
 
+      RealVectorValue a = map * k_basis_vector1;
+      RealVectorValue b = map * k_basis_vector2;
+      RealVectorValue c = map * k_basis_vector3;
+      a /= a.norm();
+      b /= b.norm();
+      c /= c.norm();
+
+      RealTensor Ri(a, b, c);
+      RealTensor R(Ri.transpose());
+
+      SpaceTransformation::create_star("Oh", R*np, eq_points);
+
+      for (auto&& a : eq_points)
+      {
+        a = Ri*a;
+        inverse_transform(a);
+      }
 
       break;
     }

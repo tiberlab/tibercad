@@ -7,6 +7,7 @@
 #include "libMeshDefs.h"
 
 #include "libmesh/vector_value.h"
+#include "libmesh/tensor_value.h"
 
 #include <vector>
 
@@ -16,7 +17,8 @@
  *
  * This class implements all necessary space transformations.
  * In particular, rotations around arbitrary axes, mirroring at
- * arbitrary planes, and all elements of the point groups
+ * arbitrary planes, and all elements of the point groups. The
+ * latter are defined in canonical space coordinates x, y, z
  */
 class SpaceTransformation
 {
@@ -64,7 +66,7 @@ class SpaceTransformation
      * for the provided input point. The resulting vector does not contain
      * duplicate points. Operations are done in reference coordinates.
      *
-     * \param symmetry the space group
+     * \param symmetry the space group (in Schoenflies notation)
      * \param point original point
      * \param star the vector containing all equivalent points
      */
@@ -74,6 +76,12 @@ class SpaceTransformation
 
 
   private:
+
+    /*! \brief Generate all transformation matrices for given symmetry
+     *
+     */
+    static void generate_transformations(const std::string& symmetry);
+
 
 };
 
