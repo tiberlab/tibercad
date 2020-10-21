@@ -59,6 +59,14 @@ ModelOptions EigenvalueProblem::parse_kspace_options(const ModelOptions& opts)
 
   //kopts.set_option("mesh_units", get_mesh_units());
   unsigned int mesh_dim = get_mesh().mesh_dimension();
+
+  if (get_atomistic_structure() != NULL)
+  {
+    get_options().set_option("x-periodicity", get_atomistic_structure()->is_periodic(0));
+    get_options().set_option("y-periodicity", get_atomistic_structure()->is_periodic(1));
+    get_options().set_option("z-periodicity", get_atomistic_structure()->is_periodic(2));
+  }
+
   
   bool x_periodic = get_option("x-periodicity", false);
   bool y_periodic = get_option("y-periodicity", (mesh_dim < 2));
@@ -98,10 +106,6 @@ ModelOptions EigenvalueProblem::parse_kspace_options(const ModelOptions& opts)
     a *= 0.1;
     b *= 0.1;
     c *= 0.1;
-
-    x_periodic = get_atomistic_structure()->is_periodic(0);
-    y_periodic = get_atomistic_structure()->is_periodic(1);
-    z_periodic = get_atomistic_structure()->is_periodic(2);
   }
 
   // find k-space dimension, considering real space periodicities

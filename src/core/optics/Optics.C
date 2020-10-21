@@ -244,15 +244,20 @@ void Optics::init_k_space_integration(void)
 
   // maybe this stuff should be taken from the intial/final state models?
 
-  bool x_per = _initial_state_model->get_options().get_option("x-periodicity", false);
-  bool y_per = _initial_state_model->get_options().get_option("y-periodicity", false);
-  bool z_per = _initial_state_model->get_options().get_option("z-periodicity", false);
+  unsigned int space_dim = _initial_state_model->get_mesh().mesh_dimension();
+
+  bool x_per = _initial_state_model->get_options().get_option(
+                                       "x-periodicity", false);
+  bool y_per = _initial_state_model->get_options().get_option(
+                                       "y-periodicity", (space_dim < 2));
+  bool z_per = _initial_state_model->get_options().get_option(
+                                       "z-periodicity", (space_dim < 3));
 
    ModelOptions kopts;
 
    if (get_options().has_submodel("k_integration"))
    {
-     ModelOptions::submodel_iterator it(get_options().submodels_begin("k_integration"));
+     auto it = get_options().submodels_begin("k_integration");
      kopts = it->second;
    }
    else
