@@ -60,7 +60,7 @@ ModelOptions EigenvalueProblem::parse_kspace_options(const ModelOptions& opts)
   //kopts.set_option("mesh_units", get_mesh_units());
   unsigned int mesh_dim = get_mesh().mesh_dimension();
 
-  if (get_atomistic_structure() != NULL)
+  if (get_atomistic_structure() != nullptr)
   {
     get_options().set_option("x-periodicity", get_atomistic_structure()->is_periodic(0));
     get_options().set_option("y-periodicity", get_atomistic_structure()->is_periodic(1));
@@ -1401,6 +1401,8 @@ EigenvalueProblem::integrate_density(DofField& density)
   }
   else
     kopts.set_option("gamma_point_calculation", true);
+
+  // TODO should call parse_kspace_options() here
 
   kopts.set_option("mesh_units", get_mesh_units());
 

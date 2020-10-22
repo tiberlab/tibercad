@@ -243,7 +243,7 @@ void Optics::init_k_space_integration(void)
 {
 
   // maybe this stuff should be taken from the intial/final state models?
-
+/*
   unsigned int space_dim = _initial_state_model->get_mesh().mesh_dimension();
 
   bool x_per = _initial_state_model->get_options().get_option(
@@ -252,7 +252,7 @@ void Optics::init_k_space_integration(void)
                                        "y-periodicity", (space_dim < 2));
   bool z_per = _initial_state_model->get_options().get_option(
                                        "z-periodicity", (space_dim < 3));
-
+*/
    ModelOptions kopts;
 
    if (get_options().has_submodel("k_integration"))
@@ -263,6 +263,8 @@ void Optics::init_k_space_integration(void)
    else
      kopts.set_option("gamma_point_calculation", true);
    
+   kopts = _initial_state_model->parse_kspace_options(kopts);
+/*
    kopts.set_option("mesh_units", get_mesh_units());
    unsigned int mesh_dim = get_mesh().mesh_dimension();
    unsigned int k_dim = 3 - mesh_dim;
@@ -327,7 +329,7 @@ void Optics::init_k_space_integration(void)
      default:
        break;
    }
-
+*/
 
    Messages m;
    m.info("Setting up k-space integration");

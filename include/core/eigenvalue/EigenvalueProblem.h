@@ -80,7 +80,16 @@ class EigenvalueProblem : public SimulationInterface
 
     //! public member to invoke matrix assembly from other modules
     void assemble(const ModelOptions& options = ModelOptions());
+
+
+    //! Parse e model options for k-space specific stuff
+    /*!
+     * This method is public, because it is useful for both derived classes
+     * and for modules working on top of EigenvalueProblem, like Optics.
+     */
+    ModelOptions parse_kspace_options(const ModelOptions&);
  
+    //! Solve the eigenvalue problem for a certain k-point
     void solve_for_kpoint(const Point& k_point);
     
     //! computes matrix elements between state i of particle_i and state j of particle_j
@@ -114,10 +123,7 @@ class EigenvalueProblem : public SimulationInterface
     std::vector<ID> get_state_indices(const std::string& particle) const;
 
 
-    /* Note: for the moment calculate_matrix_element relays on the fact that the first
-     *  n_vb states are for valence, then there are all the electron states.
-    */
-
+    //! Write the states to screen
     void write_states(void) const;
 
 
@@ -223,8 +229,6 @@ class EigenvalueProblem : public SimulationInterface
 
     //!put spectrum shift energy to be almost equal to the 1st eigenvalue
     virtual double get_new_spectrum_shift(void) { return 0; }
-
-    ModelOptions parse_kspace_options(const ModelOptions&);
 
     //! method used to compute quantum dispersion
     virtual void compute_dispersion(const ModelOptions& opts);
