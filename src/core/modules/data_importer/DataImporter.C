@@ -497,8 +497,9 @@ DataImporter::_create_mesh_from_points(const vector<double>* x,
   }
   else if (dim == 2)
   {
-    TriangleInterface triangleif(*mesh);
-    triangleif.triangulate();
+    //TriangleInterface triangleif(*mesh);
+    //triangleif.triangulate();
+    MeshUtils::triangulate_point_set(*mesh);
   }
   else if (dim == 3)
   {
@@ -555,6 +556,7 @@ DataImporter::_create_mesh_from_points(const vector<double>* x,
     throw InitFailedException("Data import results in empty mesh: "
         "check units or geometry.");
 
+  //mesh->print_info();
   //libMesh::GmshIO(*mesh).write("mesh.msh");
 
   mesh->allow_renumbering(false);

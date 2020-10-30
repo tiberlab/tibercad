@@ -5,9 +5,7 @@
 #define _MESHUTILS_H_
 
 #include "TypeDefs.h"
-//#include "libMeshDefs.h"
 #include "TensorGrid.h"
-//#include "libMeshDefs.h"
 #include "tiber_dll.h"
 
 #include "auto_ptr.h"
@@ -63,6 +61,16 @@ class MeshUtils
     //! Create the boundary mesh for a given volume mesh
     static libMesh::UniquePtr<libMesh::MeshBase> create_boundary_mesh(const libMesh::MeshBase& mesh);
 
+
+    //! Triangulate a given point set
+    /*!
+     * This creates a mesh containing a triangulation of a given point set in 2D,
+     * without adding additional points. It follows the description in
+     * http://paulbourke.net/papers/triangulate/
+     *
+     * \param mesh a mesh object containing only the points
+     */
+    static void triangulate_point_set(libMesh::MeshBase& mesh);
 
   private:
 

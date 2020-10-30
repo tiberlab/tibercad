@@ -9,23 +9,109 @@
 #include "RuntimeException.h"
 #include "TiberCad.h"
 
-#include "mesh.h"
-#include "elem.h"
-#include "mesh_tools.h"
-#include "mesh_base.h"
+#include "libmesh/mesh.h"
+#include "libmesh/elem.h"
+#include "libmesh/mesh_tools.h"
+#include "libmesh/mesh_base.h"
+#include "libmesh/face_tri3.h"
 
 
 #include <cassert>
 #include <list>
 #include <algorithm>
+#include <numeric>
 
 #include "libMeshDefs.h"
 
 using namespace std;
+using namespace libMesh;
 
 USELIBMESHTYPE(UniquePtr);
 USELIBMESHTYPE(DofObject);
 
+
+namespace
+{
+  // trinagle in terms of node indices
+  struct triangle_t
+  {
+    size_t v1, v2, v3;
+  };
+
+  // edge in terms of node indices
+  struct edge_t
+  {
+    size_t v1, v2;
+
+    bool operator==(const edge_t& e) const
+    {
+      return(((v1 == e.v1) && (v2 == e.v2)) ||
+             ((v1 == e.v2) && (v2 == e.v1)));
+    }
+
+    bool operator!=(const edge_t& e) const
+    {
+      return(!(*this == e));
+    }
+  };
+
+  double cross(const Point& O, const Point& A, const Point& B)
+  {
+    double cr = ((A(0) - O(0)) * (B(1) - O(1)) - (A(1) - O(1)) * (B(0) - O(0)));
+    return(cr);
+  }
+
+  class Circle
+  {
+    public:
+      Circle(const Point& p1, const Point& p2, const Point& p3)
+        : _center(p1), _radius(0)
+      {
+        // we assume that z coordinate of p1-3 is zero (or the same at least)
+
+        // shift p1 to origin
+        Point p2s = p2 - p1;
+        Point p3s = p3 - p1;
+
+        double d = 2 * (p2s(0)*p3s(1) - p2s(1)*p3s(0));
+
+        double p2sq = p2s.norm_sq();
+        double p3sq = p3s.norm_sq();
+        double cx = (p3s(1) * p2sq - p2s(1) * p3sq) / d;
+        double cy = (p2s(0) * p3sq - p3s(0) * p2sq) / d;
+
+        _center(0) += cx;
+        _center(1) += cy;
+
+        _radius = sqrt(cx*cx + cy*cy);
+      }
+
+      const Point& center(void) const
+      {
+        return(_center);
+      }
+
+      double radius(void) const
+      {
+        return(_radius);
+      }
+
+      // returns true if p is inside or on boundary
+      bool is_inside(const Point& p)
+      {
+        Point d = p - _center;
+
+        return((d.norm() - _radius) < 1e-12);
+      }
+
+
+    private:
+
+      Point _center;
+
+      double _radius;
+  };
+}
 
 
 void
@@ -208,6 +294,235 @@ const libMesh::Elem*
 MeshUtils::search_element(const libMesh::MeshBase* mesh, const libMesh::Point& point)
 {
   return GridMapper::get_mapper(mesh).get_element(point);
+}
+
+
+
+void
+MeshUtils::triangulate_point_set(libMesh::MeshBase& mesh)
+{
+  size_t n = mesh.n_nodes();
+
+  if (n < 3)
+    return;
+
+  if (mesh.mesh_dimension() != 2)
+    throw InitFailedException("Can create triangulation only for 2D point sets.");
+
+  // first sort points (we do this on an index vector)
+  vector<size_t> node_ids(n);
+  iota(node_ids.begin(), node_ids.end(), 0);
+
+  auto compare = [&](size_t i, size_t j)
+  {
+    const Point& pi = mesh.point(i);
+    const Point& pj = mesh.point(j);
+
+    return ((pi(0) < pj(0)) ||
+            ((pi(0) == pj(0)) && (pi(1) < pj(1))));
+
+  };
+
+  sort(node_ids.begin(), node_ids.end(), compare);
+
+
+  // now construct the supertriangle
+  auto bb = libMesh::MeshTools::bounding_box(mesh);
+  Point diag = bb.max() - bb.min();
+  double dmax = (diag(0) > diag(1)) ? diag(0) : diag(1);
+  Point mid = 0.5 * (bb.max() + bb.min());
+
+  Point t1(mid);
+  t1(0) -= 20*dmax;
+  t1(1) -= dmax;
+
+  Point t2(mid);
+  t2(1) += 20*dmax;
+
+  Point t3(mid);
+  t3(0) += 20*dmax;
+  t3(1) -= dmax;
+
+  mesh.add_point(t1);
+  mesh.add_point(t3);
+  mesh.add_point(t2);
+
+  // now the last 3 points make the supertriangle
+
+  // the list of elements
+  vector<triangle_t> elems;
+  // a pessimistic guess, since we do not calculate the convex hull
+  elems.reserve(2*mesh.n_nodes());
+
+  vector<bool> complete;
+  complete.reserve(elems.size());
+
+
+  elems.push_back({mesh.n_nodes() - 3,
+                   mesh.n_nodes() - 2,
+                   mesh.n_nodes() - 1});
+
+  complete.push_back(false);
+
+
+  // we add one point at a time, looping on the ordered id list
+  for (size_t i = 0; i < node_ids.size(); ++i)
+  {
+    dof_id_type node_id = node_ids[i];
+    const Point& pi = mesh.point(node_id);
+
+    // the edges that will form the hull around the new point
+    vector<edge_t> edges;
+    edges.reserve(100);
+
+    size_t ctr = elems.size();
+
+    for (size_t j = 0; j < ctr; ++j)
+    {
+      if (complete[j])
+        continue;
+
+      const Point& p1 = mesh.point(elems[j].v1);
+      const Point& p2 = mesh.point(elems[j].v2);
+      const Point& p3 = mesh.point(elems[j].v3);
+      Circle c(p1, p2, p3);
+      double dist = pi(0) - c.center()(0);
+      if (dist > c.radius())
+        complete[j] = true;
+
+      if (c.is_inside(pi))
+      {
+        if (edges.size() + 3 > edges.capacity())
+          edges.reserve(edges.capacity() + 100);
+
+        const triangle_t& t = elems[j];
+        edges.push_back({t.v1, t.v2});
+        edges.push_back({t.v2, t.v3});
+        edges.push_back({t.v3, t.v1});
+
+        elems[j] = elems[ctr-1];
+        elems.pop_back();
+        complete[j] = complete[ctr-1];
+        complete.pop_back();
+        --ctr;
+        --j;
+      }
+    }
+
+    // look for edges multiple times appearing
+    // (they are internal, single edges define the hull)
+    vector<edge_t> hull;
+    set<size_t> skip;
+    for (size_t i = 0; i < edges.size(); ++i)
+    {
+      if (skip.count(i))
+        continue;
+
+      bool once = true;
+
+      for (size_t j = i+1; j < edges.size(); ++j)
+      {
+        if (edges[i] == edges[j])
+        {
+          skip.insert(j);
+          once = false;
+          break;
+          // because an edge is at most shared by two triangles
+        }
+      }
+
+      if (once)
+        hull.push_back(edges[i]);
+    }
+
+    // now add edges from point to hull points
+    for (auto&& e : hull)
+    {
+      elems.push_back({node_id, e.v1, e.v2});
+      complete.push_back(false);
+    }
+
+  }
+
+  // now add all elements beside the ones with supertriangle
+  // vertices
+
+  for (auto&& el : elems)
+  {
+    if ((el.v1 < node_ids.size()) &&
+        (el.v2 < node_ids.size()) &&
+        (el.v3 < node_ids.size()))
+    {
+      Elem* elem = mesh.add_elem(new libMesh::Tri3);
+      elem->set_node(0) = mesh.node_ptr(el.v1);
+      elem->set_node(1) = mesh.node_ptr(el.v2);
+      elem->set_node(2) = mesh.node_ptr(el.v3);
+    }
+  }
+
+  //mesh.delete_node(mesh.node_ptr(mesh.n_nodes() - 1));
+  //mesh.delete_node(mesh.node_ptr(mesh.n_nodes() - 2));
+  //mesh.delete_node(mesh.node_ptr(mesh.n_nodes() - 3));
+
+  mesh.allow_renumbering(false);
+  mesh.prepare_for_use();
+
+
+/*
+
+  // upper and lower part of hull
+  vector<size_t> U(mesh.n_nodes());
+  vector<size_t> L(mesh.n_nodes());
+  vector<size_t> T;
+
+  size_t k = 0;
+
+  for (size_t i = 0; i < mesh.n_nodes(); ++i)
+  {
+    size_t nid = node_ids[i];
+    while (k >= 2 && cross(mesh.point(L[k-2]),
+                           mesh.point(L[k-1]),
+                           mesh.point(nid)) <= 1e-6)
+    {
+      T.push_back(L[k-2]);
+      T.push_back(L[k-1]);
+      T.push_back(nid);
+      k--;
+    }
+
+    L[k++] = nid;
+  }
+  L.resize(k-1);
+
+  k = 0;
+
+  // note on the check: i >= 0 does not work because it underflows at the next --i
+  for (size_t i = mesh.n_nodes()-1; i != static_cast<size_t>(-1); --i)
+  {
+    size_t nid = node_ids[i];
+    while (k >= 2 && cross(mesh.point(U[k-2]),
+                           mesh.point(U[k-1]),
+                           mesh.point(nid)) <= 0)
+    {
+      T.push_back(U[k-2]);
+      T.push_back(U[k-1]);
+      T.push_back(nid);
+      k--;
+    }
+    U[k++] = nid;
+  }
+  U.resize(k-1);
+
+
+  for (size_t i = 0; i < T.size(); i += 3)
+  {
+    Elem* elem = mesh.add_elem(new libMesh::Tri3);
+    elem->set_node(0) = mesh.node_ptr(T[i]);
+    elem->set_node(1) = mesh.node_ptr(T[i+1]);
+    elem->set_node(2) = mesh.node_ptr(T[i+2]);
+  }
+  //cerr << "# elem : " << mesh.n_elem() << endl;
+  */
 }
 
 
