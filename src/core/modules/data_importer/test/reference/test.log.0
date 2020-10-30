@@ -1,8 +1,8 @@
 
-Log start: Fri Oct 18 21:12:20 2019
+Log start: Fri Oct 30 15:31:33 2020
 
 
-tiberCAD release 3.1.0 (rev. 4857, x86_64-linux)
+tiberCAD release 3.1.0 (rev. 5044, x86_64-linux)
 
 Input file: test.tib
 
@@ -13,8 +13,8 @@ Initialize global simulation options
 
 Setup mesh
   Reading mesh file 'test.msh ...
-    mesh reading time: 0h 0m 0.0004s
-    mesh preparation time: 0h 0m 0.00047s
+    mesh reading time: 0h 0m 0.00076s
+    mesh preparation time: 0h 0m 0.00069s
     bd_regions preparation time: 0h 0m 4.1e-06s
 
     mesh units          : 1e-06 m
@@ -39,7 +39,9 @@ Setting up simulation of type 'data_import' ...
   Reading csv file...
   Read 3 datasets of size 919
 
-  Setup of grid mapper: 0h 0m 0.00042s, memory usage: 0 MB 58488
+  Setup of grid mapper: 0h 0m 0.00054s, memory usage: 0 MB 
+
+*** Warning: Automatically generated data import mesh has different number of nodes than provided in file.
 Creating bulk models... 
   Region: bulk
 
@@ -74,13 +76,13 @@ We solve: data_import
 Solve time: 0h 0m 7.2e-06s
 <<<<----------------------------------------------------------------------------
 
-Total solve time: 0h 0m 0.0087s
+Total solve time: 0h 0m 0.012s
 Simulation finished.
 
 2 warnings during run
 0 errors detected
 
 
-Log end: Fri Oct 18 21:12:20 2019
+Log end: Fri Oct 30 15:31:33 2020
 
 
