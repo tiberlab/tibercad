@@ -592,6 +592,14 @@ void Kspace::build_k_grid()
         elem->set_node(4) = kmesh->node_ptr(4);
         elem->set_node(5) = kmesh->node_ptr(5);
 
+        if (elem->volume() < 0)
+        {
+          elem->set_node(1) = kmesh->node_ptr(2);
+          elem->set_node(2) = kmesh->node_ptr(1);
+          elem->set_node(4) = kmesh->node_ptr(5);
+          elem->set_node(5) = kmesh->node_ptr(4);
+        }
+
         break;
       }
 
