@@ -1,9 +1,7 @@
 #ifndef _NEGFWRAPPER_H_
 #define _NEGFWRAPPER_H_
 
-#include "libnegf.h"
-#include <iostream>
-#include <assert.h>
+#include "libnegf.hpp"
 #include <complex>
 #include <vector>
 

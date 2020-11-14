@@ -1,5 +1,6 @@
 #include "NegfWrapper.h"
 #include <cstring>
+#include <iostream>
 
 //---------------------------------------------------------------------
 NegfWrapper* NegfWrapper::create()

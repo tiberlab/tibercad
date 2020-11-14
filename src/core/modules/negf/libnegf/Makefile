@@ -4,6 +4,8 @@ topdir := ../../../../..
 include $(topdir)/Make.defs
 ARCH = $(shell uname -m)
 
+CMAKE = cmake-3.18
+
 CXXFLAGS = -fPIC -I . 
 
 
@@ -24,17 +26,18 @@ libnegf_$(ARCH).a: update
 	@echo "Updating libNEGF ..."  
 	cd libnegf; git status; \
 	echo "Compiling libNEGF ...";\
-	$(MAKE) -C src/api ; cd .. ; 
-	mv libnegf/src/api/libnegf_$(ARCH).a .	
+	FC=$(FC) $(CMAKE) . ; \
+	$(MAKE) ; cd .. ; \
+	cp libnegf/src/libnegf.a .	
 	cp libnegf/src/api/fortran.h .
-	cp libnegf/src/api/libnegf.h . 
+	cp libnegf/src/api/libnegf.hpp . 
 
 update: checkout
 	#cd libnegf; git pull origin; cd ..;
 
 checkout:
 	@echo "Checkout libNEGF..."
-	@if [ ! -e libnegf ]; then git clone https://pecchia@bitbucket.org/pecchia/libnegf.git; fi
+	@if [ ! -e libnegf ]; then git clone https://github.com/libnegf/libnegf.git; fi
 
 clean:
 	@echo "Clean libnegf..."
