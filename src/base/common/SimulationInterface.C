@@ -2425,6 +2425,13 @@ SimulationInterface::get_solution(const libMesh::Elem* elem,
 
             get_solution_secure(elems[nel], elem_values, my_p);
           }
+          else
+          {
+            // TODO we have foreseen only one flag for the whole element
+            // to indicate whether data is available. For now, we invalidate
+            // all data on the element, if not all points can be obtained
+            flag = false;
+          }
 
           for (auto it(new_values.begin()); it != new_values.end(); ++it)
           {
