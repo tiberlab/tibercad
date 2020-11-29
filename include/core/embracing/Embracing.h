@@ -168,6 +168,10 @@ class Embracing
     };
 
 
+    //! A pair of a boundary point and a distance vector
+    typedef std::pair<libMesh::Point, libMesh::Point> Interval;
+
+
     //! The 'outer' (classical) simulation
     SimulationInterface* _outer;
 
@@ -221,6 +225,10 @@ class Embracing
     LaplaceEq* _laplace;
 
 
+    //! Ordered list of intervals, for 1D case
+    std::vector<Interval> _segments;
+
+
     //! A counter that counts the instances of this class
     static unsigned int _counter;
 
@@ -242,17 +250,6 @@ class Embracing
      * region are activated.}
      */
     void find_inner_boundary(void);
-
-
-    //! Prepare for solving
-    /*!
-     * Mark all elements of the embracing region as active
-     */
-    void prepare_for_solve(void);
-
-
-    //! Flag all elements as active
-    void reactivate_all_elements(void);
 
 
     //! The matrix and rhs assembly

@@ -78,10 +78,8 @@ Embracing::init(const ModelOptions& options)
     generate_embracing_region();
     if (_do_plot || _need_mixing)
     {
-      prepare_for_solve();
       calculate_mixing();
       plot();
-      reactivate_all_elements();
     }
     _is_empty = false;
   }
@@ -127,7 +125,7 @@ Embracing::generate_embracing_region(void)
           if ((find_elem(neighbour) == list_end) &&
               (in.contains_element(neighbour)))
           {
-            double w = (neighbour->centroid() - elem->centroid()).size();
+            double w = (neighbour->centroid() - elem->centroid()).norm();
             if (w < _lambda)
             {
               _elem_list[neighbour] = w;
@@ -159,7 +157,7 @@ Embracing::generate_embracing_region(void)
             (find_elem(neighbour) == list_end) &&
             (in.contains_element(neighbour)))
         {
-          double w = (neighbour->centroid() - elem->centroid()).size();
+          double w = (neighbour->centroid() - elem->centroid()).norm();
           w += _elem_list[elem];
           if (w < _lambda)
           {
@@ -216,11 +214,12 @@ Embracing::find_inner_boundary(void)
 
 
   // loop over the elements of the embracing region
-  MeshBase::const_element_iterator el(mesh.active_elements_begin());
-  const MeshBase::const_element_iterator end(mesh.active_elements_end());
-  for ( ; el != end; ++el)
+  //MeshBase::const_element_iterator el(mesh.active_elements_begin());
+  //const MeshBase::const_element_iterator end(mesh.active_elements_end());
+  //for ( ; el != end; ++el)
+  for (auto&& el : _elem_list)
   {
-    const Elem* elem = *el;
+    const Elem* elem = el.first;
 
     for (unsigned int s = 0; s < elem->n_sides(); s++)
     {
@@ -237,45 +236,6 @@ Embracing::find_inner_boundary(void)
 }
 
 
-
-void
-Embracing::prepare_for_solve(void)
-{
-  MeshBase& mesh = _inner->get_mesh();
-
-  elem_iterator list_end(elem_end());
-
-  MeshBase::element_iterator el(mesh.elements_begin());
-  const MeshBase::element_iterator end(mesh.elements_end());
-  for ( ; el != end; ++el)
-  {
-    Elem* elem = *el;
-
-    if (find_elem(elem) != list_end)
-    {
-      elem->set_refinement_flag(Elem::DO_NOTHING);
-    }
-    else
-      elem->set_refinement_flag(Elem::INACTIVE);
-  }
-}
-
-
-void
-Embracing::reactivate_all_elements(void)
-{
-  MeshBase& mesh = _inner->get_mesh();
-
-  const map<const Elem*, double>::iterator list_end(_elem_list.end());
-
-  MeshBase::element_iterator el(mesh.elements_begin());
-  const MeshBase::element_iterator end(mesh.elements_end());
-  for ( ; el != end; ++el)
-  {
-    Elem* elem = *el;
-    elem->set_refinement_flag(Elem::DO_NOTHING);
-  }
-}
 
 
 
@@ -332,7 +292,38 @@ Embracing::calculate_mixing(void)
   // we return immediately if mixing coeffs are not required
   if (!_need_mixing) return;
 
-  if (_laplace == NULL)
+  find_inner_boundary();
+
+  if (_inner->get_mesh().mesh_dimension() == 1)
+  {
+    // ordered list of boundary points
+    set<Point> bd_points;
+
+    // ordered list of inner boundary points
+    set<Point> inner_points;
+
+    for (auto&& s : _sides)
+    {
+      bd_points.insert(s.elem()->point(s.side()));
+    }
+
+    for (auto&& s : _inner_sides)
+    {
+      inner_points.insert(s.elem()->point(s.side()));
+    }
+
+    // now the embracing regions are necessarily formed by the pairs
+    // bd_points(i), inner_points(i)
+    _segments.reserve(bd_points.size());
+
+    auto it = bd_points.begin();
+    auto it2 = inner_points.begin();
+    for ( ; it != bd_points.end(); ++it, ++it2)
+    {
+      _segments.push_back(Interval(*it, Point(*it2 - *it)));
+    }
+  }
+  else if (_laplace == NULL)
   {
     // find the inner bopundary for boundary conditions
     find_inner_boundary();
@@ -356,9 +347,9 @@ Embracing::calculate_mixing(void)
     // our variable
     _laplace->add_variable("u");
     _laplace->init();
-  }
 
-  _laplace->solve();
+    _laplace->solve();
+  }
 }
 
 
@@ -505,38 +496,58 @@ Embracing::get_mixing_coefficient(const Elem* elem, const Point& p)
 
   if (!_is_empty)
   {
-    while ((elem != NULL) && (!_elem_list.count(elem)))
-      elem = elem->parent(); // perhaps the parent is in region?
-
-    // elem is now NULL if no parent
-    // if non NULL, it is for sure in the embracing region
-    if (elem != NULL)
+    if (_inner->get_mesh().mesh_dimension() == 1)
     {
-      mixing = 0.0;
+      // find the interval p is in
+      for (auto&& s : _segments)
+      {
+        const Point& p1 = s.first;
+        Point d = s.second;
+        double t = (p - p1) * d / d.norm_sq();
+        if ((t >= 0) && (t < 1))
+        {
+          mixing = t;
+          break;
+        }
+      }
 
-      LaplaceEq& system = *_laplace;
+    }
+    else
+    {
 
-      const unsigned int var = system.variable_number("u");
-      libMesh::DofMap& dof_map = system.get_dof_map();
-      libMesh::FEType fe_type = dof_map.variable_type(var);
+      while ((elem != NULL) && (!_elem_list.count(elem)))
+        elem = elem->parent(); // perhaps the parent is in region?
 
-      const MeshBase& mesh = system.get_mesh();
-      unsigned int dim = mesh.mesh_dimension();
+      // elem is now NULL if no parent
+      // if non NULL, it is for sure in the embracing region
+      if (elem != NULL)
+      {
+        mixing = 0.0;
 
-      vector<unsigned int> dof_indices;
-      dof_map.dof_indices(elem, dof_indices);
+        LaplaceEq& system = *_laplace;
 
-      libMesh::UniquePtr<libMesh::FEBase> fe(libMesh::FEBase::build(dim, fe_type));
-      const vector<vector<double> >& phi = fe->get_phi();
+        const unsigned int var = system.variable_number("u");
+        libMesh::DofMap& dof_map = system.get_dof_map();
+        libMesh::FEType fe_type = dof_map.variable_type(var);
 
-      vector<Point> points(1, p);
-      libMesh::FEInterface::inverse_map(dim, fe_type, elem,
-          vector<Point>(1, p), points);
-      fe->reinit(elem, &points);
+        const MeshBase& mesh = system.get_mesh();
+        unsigned int dim = mesh.mesh_dimension();
 
-      for (unsigned int n = 0; n < elem->n_nodes(); n++)
-        mixing += (*(system.solution))(dof_indices[n]) * phi[n][0];
+        vector<unsigned int> dof_indices;
+        dof_map.dof_indices(elem, dof_indices);
 
+        libMesh::UniquePtr<libMesh::FEBase> fe(libMesh::FEBase::build(dim, fe_type));
+        const vector<vector<double> >& phi = fe->get_phi();
+
+        vector<Point> points(1, p);
+        libMesh::FEInterface::inverse_map(dim, fe_type, elem,
+            vector<Point>(1, p), points);
+        fe->reinit(elem, &points);
+
+        for (unsigned int n = 0; n < elem->n_nodes(); n++)
+          mixing += (*(system.solution))(dof_indices[n]) * phi[n][0];
+
+      }
     }
   }
 

@@ -3,6 +3,7 @@
 #include "QuantumDOS.h"
 #include "SimulationInterface.h"
 #include "SimulationEnvironment.h"
+#include "Embracing.h"
 #include "Device.h"
 #include "Messages.h"
 
@@ -15,7 +16,9 @@ using namespace std;
 
 QuantumDOS::QuantumDOS(const ModelOptions& options) :
   DensityOfStates(options),
-  _add_continuum(false)
+  _add_continuum(false),
+  _embracing(nullptr),
+  _classical(nullptr)
 {
 }
 
@@ -51,6 +54,9 @@ QuantumDOS::do_init(void)
 
   if (get_quantum_simulation() != NULL)
   {
+    // let the base class know we are quantum
+    is_quantum_density() = true;
+
     SimulationInterface* owner =
         SimulationInterface::get_simulation(get_simulator_id());
 
@@ -220,6 +226,18 @@ QuantumDOS::calculate_density_and_derivative(std::vector<double>& result, double
         derivative2 += result[2];
 
     }
+    else if (_embracing != nullptr)
+    {
+      double m = _embracing->get_mixing_coefficient(elem, p);
+
+      _classical->get_occupied_density_and_derivative(result, Ef, Epot, kT, elem, p, kTlattice);
+      density = m * density + (1.0 - m) * result[0];
+      if (result.size() > 1)
+        derivative = m * derivative + (1.0 - m) * result[1];
+      if (result.size() > 2)
+        derivative2 = m *  derivative2 + (1.0 - m) * result[2];
+
+    }
     else if (continuum > -999.0)
     {
       // in the well (or everywhere, if no barrier has been specified)
@@ -292,8 +310,7 @@ QuantumDOS::calculate_density_and_derivative(std::vector<double>& result,
 void
 QuantumDOS::set_embracing(Embracing* embracing)
 {
-  if (is_quantum_density())
-    _embracing = embracing;
+  _embracing = embracing;
 }
 
 
