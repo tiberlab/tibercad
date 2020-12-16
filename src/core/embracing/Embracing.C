@@ -490,7 +490,7 @@ Embracing::LaplaceEq::build_nodal_results(vector<double>& results,
 double
 Embracing::get_mixing_coefficient(const Elem* elem, const Point& p)
 {
-  double mixing = 1.0;
+  double mixing = 0.0;
 
   assert(_need_mixing == true);
 
@@ -504,7 +504,7 @@ Embracing::get_mixing_coefficient(const Elem* elem, const Point& p)
         const Point& p1 = s.first;
         Point d = s.second;
         double t = (p - p1) * d / d.norm_sq();
-        if ((t >= 0) && (t < 1))
+        if ((t > 0) && (t <= 1))
         {
           mixing = t;
           break;

@@ -126,7 +126,7 @@ class Embracing
      * The mixing coefficient is 0 on the outer boundary,
      * 1 on the inner boundary.
      * If \c elem is not contained in the embracing region,
-     * 1.0 is returned
+     * 0 is returned
      */
     double get_mixing_coefficient(const libMesh::Elem* elem, const libMesh::Point& p);
 
