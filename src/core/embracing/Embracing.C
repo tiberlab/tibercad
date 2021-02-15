@@ -326,7 +326,7 @@ Embracing::calculate_mixing(void)
   else if (_laplace == NULL)
   {
     // find the inner bopundary for boundary conditions
-    find_inner_boundary();
+    //find_inner_boundary();
 
     // create a probably unique name
     ostringstream os;
@@ -504,9 +504,10 @@ Embracing::get_mixing_coefficient(const Elem* elem, const Point& p)
         const Point& p1 = s.first;
         Point d = s.second;
         double t = (p - p1) * d / d.norm_sq();
-        if ((t > 0) && (t <= 1))
+        mixing = max(0.0, min(t, 1.0));
+
+        if (t < 1)
         {
-          mixing = t;
           break;
         }
       }
