@@ -888,6 +888,13 @@ class SimulationInterface : public TiberModelObject
     virtual void setup_mesh(void);
 
 
+    //! Set the symmetry of the structure
+    void set_symmetry(TiberCad::Symmetry symmetry);
+
+    //! Get the symmetry of the structure
+    TiberCad::Symmetry get_symmetry(void) const;
+
+
     //! Setup the MPI communicator
     virtual void setup_mpi_comm(void);
 
@@ -1484,6 +1491,10 @@ class SimulationInterface : public TiberModelObject
 
     //! The scaling parameters
     Scaling _scaling;
+
+
+    //! The symmetry of the structure
+    TiberCad::Symmetry _symmetry;
 
 
     //! A map with all embracing regions

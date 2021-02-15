@@ -75,6 +75,7 @@ SimulationInterface::SimulationInterface(const ModelOptions& options)
     _is_task(false),
     _equilibrium_is_solved(false),
     _has_solution_vector(true),
+    _symmetry(TiberCad::NONE),
     _use_cache(false),
     _verbosity(1),
     _mesh(0),
@@ -225,6 +226,21 @@ SimulationInterface::setup_solution_variables(void)
 
   do_setup_solution_variables();
 }
+
+
+void
+SimulationInterface::set_symmetry(TiberCad::Symmetry symmetry)
+{
+  _symmetry = symmetry;
+}
+
+
+TiberCad::Symmetry
+SimulationInterface::get_symmetry(void) const
+{
+  return(_symmetry);
+}
+
 
 
 void
@@ -611,6 +627,7 @@ SimulationInterface::setup_environment(Device& device, const set<ID>& region_num
     setup_mesh();
     if (_mesh == NULL)
       throw InitFailedException("No simulation mesh provided for \'" + get_name() + "\'");
+
   }
 }
 
@@ -711,6 +728,17 @@ SimulationInterface::init(void)
 
     m.info(os.str());
     m.indent();
+  }
+
+  if (this->has_environment())
+  {
+    if (!get_option("ignore_symmetry", false))
+      set_symmetry(get_environment().get_device().get_symmetry());
+    else
+    {
+      Messages::warning("'ignore_symmetry' is specified, so any spatial"
+          " symmetry is ignored in this module.");
+    }
   }
 
 
@@ -2157,7 +2185,7 @@ SimulationInterface::build_finite_element(unsigned int dim, libMesh::FEType type
 
   double x0 = scale ? get_scaling().get_length_scaling() : 1.0;
   double mu = get_scaling().get_calc_mesh_units();
-  TiberCad::Symmetry sym = get_environment().get_device().get_symmetry();
+  TiberCad::Symmetry sym = get_symmetry();
 
   libMesh:: FEBase* fe;
 

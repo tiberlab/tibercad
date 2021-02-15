@@ -296,6 +296,8 @@ Elasticity::accumulate_strain(void)
 
   const vector<Point>& ref_points = qrule.get_points();
   const vector<Real>& JxW = fe->get_JxW();
+  const vector<vector<Real>>&  phi = fe->get_phi();
+  const vector<Point>& q_point = fe->get_xyz();
   const vector<vector<libMesh::RealGradient> >& dphi = fe->get_dphi();
 
 
