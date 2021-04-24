@@ -41,6 +41,7 @@ Optics::Optics(const ModelOptions& options)
 void
 Optics::do_setup_solution_variables(void)
 {
+  // These are only guesses, at this point
   int dim = get_mesh().mesh_dimension();
   string unit("");
   if (dim == 0)
@@ -235,6 +236,31 @@ void Optics::do_init()
 
   init_k_space_integration();
 
+
+  // update the units of the solution variables, according to the k-space dimension
+  int dim = _k_integration->get_k_space_dimension();
+  string unit("");
+  switch (dim)
+  {
+    case 3:
+      unit = "/cm^3";
+      break;
+
+    case 2:
+      unit = "/cm^2";
+      break;
+
+    case 1:
+      unit = "/cm";
+      break;
+
+    default:
+      break;
+  }
+
+  get_solution_descriptor(OpticalPower).units() = "W" + unit;
+  get_solution_descriptor(Recombination).units() = "1/s" + unit;
+
 }
 
 //=================================================================================
@@ -243,16 +269,7 @@ void Optics::init_k_space_integration(void)
 {
 
   // maybe this stuff should be taken from the intial/final state models?
-/*
-  unsigned int space_dim = _initial_state_model->get_mesh().mesh_dimension();
 
-  bool x_per = _initial_state_model->get_options().get_option(
-                                       "x-periodicity", false);
-  bool y_per = _initial_state_model->get_options().get_option(
-                                       "y-periodicity", (space_dim < 2));
-  bool z_per = _initial_state_model->get_options().get_option(
-                                       "z-periodicity", (space_dim < 3));
-*/
    ModelOptions kopts;
 
    if (get_options().has_submodel("k_integration"))
@@ -264,72 +281,6 @@ void Optics::init_k_space_integration(void)
      kopts.set_option("gamma_point_calculation", true);
    
    kopts = _initial_state_model->parse_kspace_options(kopts);
-/*
-   kopts.set_option("mesh_units", get_mesh_units());
-   unsigned int mesh_dim = get_mesh().mesh_dimension();
-   unsigned int k_dim = 3 - mesh_dim;
-   if (x_per)
-     k_dim++;
-   if (y_per)
-     k_dim++;
-   if (z_per)
-     k_dim++;
-
-   k_dim = min(k_dim, 3u);
-   if (job == BULKMATREL)
-     k_dim = 3;
-
-   if (kopts.find_option("k_space_dimension"))
-     k_dim = kopts.get_option("k_space_dimension", k_dim);
-
-   kopts.set_option("k_space_dimension", k_dim);
-
-
-   kopts.set_option("verbose", SimulationOptions::verbose() );
-
-   // these are the real space lattice vectors, in nm
-   // why pi? Because then the default max k becomes 1 ( = 2*pi/(2*a) ), and
-   // k_max can be interpreted in nm^-1
-   libMesh::RealVectorValue a(M_PI, 0.0, 0.0), b(0.0, 1.01*M_PI, 0.0), c(0.0, 0.0, 1.005*M_PI);
-   auto bbox = _initial_state_model->get_environment().get_bounding_box();
-   if (x_per && (mesh_dim > 0))
-     a(0) = (bbox.second(0) - bbox.first(0)) * get_mesh_units() * 1e9;
-   if (y_per && (mesh_dim > 1))
-     b(1) = (bbox.second(1) - bbox.first(1)) * get_mesh_units() * 1e9;
-   if (z_per && (mesh_dim > 2))
-     c(2) = (bbox.second(2) - bbox.first(2)) * get_mesh_units() * 1e9;
-
-   // if there is an atomistic structure, we can take the lattice vectors from it
-   // (they come in Angstrom!)
-   if (_initial_state_model->get_atomistic_structure() != NULL)
-   {
-     _initial_state_model->get_atomistic_structure()->get_lattice_vectors(a, b, c);
-     a *= 0.1;
-     b *= 0.1;
-     c *= 0.1;
-   }
-
-   switch (k_dim)
-   {
-     case 1:
-       kopts.set_option("r1", c);
-       break;
-
-     case 2:
-       kopts.set_option("r1", b);
-       kopts.set_option("r2", c);
-       break;
-
-     case 3:
-       kopts.set_option("r1", a);
-       kopts.set_option("r2", b);
-       kopts.set_option("r3", c);
-       break;
-
-     default:
-       break;
-   }
-*/
 
    Messages m;
    m.info("Setting up k-space integration");

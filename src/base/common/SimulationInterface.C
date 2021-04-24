@@ -977,7 +977,7 @@ SimulationInterface::check_nonlinear_step(libMesh::NumericVector<Number>& dx)
 void
 SimulationInterface::do_check_nonlinear_step(libMesh::NumericVector<Number>& dx)
 {
-
+  static_cast<void>(dx);
 }
 
 void
@@ -1276,6 +1276,7 @@ SimulationInterface::analyze_errors(void)
 void
 SimulationInterface::do_analyze_errors(const ModelOptions& options)
 {
+  static_cast<void>(options);
   Messages::info("Not implemented yet");
 }
 
@@ -2772,6 +2773,14 @@ SimulationInterface::get_solution_id(const std::string& variable_name) const
 }
 
 
+SolutionDescriptor&
+SimulationInterface::get_solution_descriptor(ID id)
+{
+  return(const_cast<SolutionDescriptor&>(
+      static_cast<const SimulationInterface&>(*this).get_solution_descriptor(id)));
+}
+
+
 const SolutionDescriptor&
 SimulationInterface::get_solution_descriptor(ID id) const
 {
@@ -2784,6 +2793,12 @@ SimulationInterface::get_solution_descriptor(ID id) const
 }
 
 
+SolutionDescriptor&
+SimulationInterface::get_solution_descriptor(const std::string& solution_name)
+{
+  return(const_cast<SolutionDescriptor&>(
+      static_cast<const SimulationInterface&>(*this).get_solution_descriptor(solution_name)));
+}
 
 const SolutionDescriptor&
 SimulationInterface::get_solution_descriptor(const std::string& solution_name) const

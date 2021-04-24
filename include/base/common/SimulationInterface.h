@@ -510,6 +510,24 @@ class SimulationInterface : public TiberModelObject
      */
     const SolutionDescriptor& get_solution_descriptor(const std::string& solution_name) const;
 
+    //! Get the descriptor of a solution variable ID
+    /*!
+     *
+     * \param id the id of the solution variable
+     * \return the descriptor (which can have the ID \c INVALID_ID if
+     *   \c id does not exist)
+     */
+    SolutionDescriptor& get_solution_descriptor(ID id);
+
+
+    //! Get the descriptor of a solution variable
+    /*!
+     *
+     * \param solution_name the name of the solution variable
+     * \return the descriptor (which can have the ID \c INVALID_ID if
+     *   \c solution_name does not exist)
+     */
+    SolutionDescriptor& get_solution_descriptor(const std::string& solution_name);
 
     //! Get solutions at specified points in an element
     /*!

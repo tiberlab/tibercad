@@ -50,7 +50,7 @@ struct SolutionDescriptor
      * \param id the ID to be assigned
      * \param type the numeric type
      * \param location the spatial association
-     * \param units the physical units (optional)
+     * \param units the physical units 
      * \param n_components the number of components (needed for type NTUPLE)
      */
     SolutionDescriptor(const std::string& name, ID id,
@@ -76,8 +76,14 @@ struct SolutionDescriptor
     //! Get the units
     const std::string& units(void) const { return _units; }
 
+    //! Set/get the units
+    std::string& units(void) { return _units; }
+
     //! Get the number of components
     unsigned int n_components(void) const { return _n_comp; }
+
+    //! Set/get the number of components
+    unsigned int& n_components(void) { return _n_comp; }
 
     //! Extract component indices from a variable name or string
     /*!
