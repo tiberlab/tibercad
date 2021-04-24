@@ -412,6 +412,7 @@ Material::is_specie(Specie sp, unsigned int label) const
   {
     Messages::error("Error in is_specie(): specie " +
                     sp.get_string() + "not found in material " + get_name());
+    return(false);
   }
   else
   {
@@ -423,12 +424,7 @@ Material::is_specie(Specie sp, unsigned int label) const
 unsigned int
 Material::get_label(Specie sp) const
 {
-  if (!has_specie(sp))
-  {
-    // TODO no magic numbers, please...
-    return 255;
-  }
-  else
+  if (has_specie(sp))
   {
     std::map<unsigned int, std::set<Specie>>::const_iterator
       it = _crystal_type_map.begin();
@@ -437,6 +433,9 @@ Material::get_label(Specie sp) const
       if ( (it->second).count(sp) > 0 ) return it->first; 
     
   }
+
+  // TODO no magic numbers, please...
+  return 255;
 }
 
 void
