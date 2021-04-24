@@ -1454,7 +1454,9 @@ EigenvalueProblem::integrate_density(DofField& density)
       normalization_volume *= c(2);
   }
 
-  kopts.set_option("normalization_volume", normalization_volume);
+  // 2021-04-24, Matthias: I do not remember what the idea of this number is,
+  // it does not seem to make any sense??
+  //kopts.set_option("normalization_volume", normalization_volume);
 
 
   unsigned int k_dim = 0;
