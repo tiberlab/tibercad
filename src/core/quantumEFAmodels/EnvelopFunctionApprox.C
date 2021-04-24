@@ -761,58 +761,58 @@ void EnvelopFunctionApprox::parse_options()
   else
   {
 
-  _el_pot = find_solution_provider(
-      get_option("electrostatic_potential", ""), "ElPotential");
+    _el_pot = find_solution_provider(
+        get_option("electrostatic_potential", ""), "ElPotential");
 
-  if (_el_pot.second != INVALID_ID)
-  {
-    opt.consider_potential = true;
-    opt.consider_potential_bulk = get_option("potential_in_bulk",true);
-    opt.consider_strain_bulk = get_option("strain_in_bulk",true);
-  }
-  else if (_el_pot.first != NULL)
-  {
-    throw InitFailedException( "Could not find electrostatic potential source "
-        + get_option("electrostatic_potential", ""));
-  }
+    if (_el_pot.second != INVALID_ID)
+    {
+      opt.consider_potential = true;
+      opt.consider_potential_bulk = get_option("potential_in_bulk",true);
+      opt.consider_strain_bulk = get_option("strain_in_bulk",true);
+    }
+    else if (_el_pot.first != NULL)
+    {
+      throw InitFailedException( "Could not find electrostatic potential source "
+          + get_option("electrostatic_potential", ""));
+    }
 
-  _el_elchem = find_solution_provider(
-      get_option("el_electrochemical_potential", ""), "eQFermi");
+    _el_elchem = find_solution_provider(
+        get_option("el_electrochemical_potential", ""), "eQFermi");
 
-  if ((_el_elchem.second == INVALID_ID) && (_el_elchem.first != NULL))
-  {
-    throw InitFailedException( "Could not find electrochemical potential source "
-        + get_option("el_electrochemical_potential", ""));
-  }
-
-
-  _hl_elchem = find_solution_provider(
-      get_option("hl_electrochemical_potential", ""), "hQFermi");
-
-  if ((_hl_elchem.second == INVALID_ID) && (_hl_elchem.first != NULL))
-  {
-    throw InitFailedException( "Could not find electrochemical potential source "
-        + get_option("hl_electrochemical_potential", ""));
-  }
+    if ((_el_elchem.second == INVALID_ID) && (_el_elchem.first != NULL))
+    {
+      throw InitFailedException( "Could not find electrochemical potential source "
+          + get_option("el_electrochemical_potential", ""));
+    }
 
 
-  _cb_edge = find_solution_provider(
-      get_option("cb_edge", ""), "Ec");
+    _hl_elchem = find_solution_provider(
+        get_option("hl_electrochemical_potential", ""), "hQFermi");
 
-  if ((_cb_edge.second == INVALID_ID) && (_cb_edge.first != NULL))
-  {
-    throw InitFailedException( "Could not find conduction band edge source "
-        + get_option("cb_edge", ""));
-  }
+    if ((_hl_elchem.second == INVALID_ID) && (_hl_elchem.first != NULL))
+    {
+      throw InitFailedException( "Could not find electrochemical potential source "
+          + get_option("hl_electrochemical_potential", ""));
+    }
 
-  _vb_edge = find_solution_provider(
-      get_option("vb_edge", ""), "Ev");
 
-  if ((_vb_edge.second == INVALID_ID) && (_vb_edge.first != NULL))
-  {
-    throw InitFailedException( "Could not find valence band edge source "
-        + get_option("vb_edge", ""));
-  }
+    _cb_edge = find_solution_provider(
+        get_option("cb_edge", ""), "Ec");
+
+    if ((_cb_edge.second == INVALID_ID) && (_cb_edge.first != NULL))
+    {
+      throw InitFailedException( "Could not find conduction band edge source "
+          + get_option("cb_edge", ""));
+    }
+
+    _vb_edge = find_solution_provider(
+        get_option("vb_edge", ""), "Ev");
+
+    if ((_vb_edge.second == INVALID_ID) && (_vb_edge.first != NULL))
+    {
+      throw InitFailedException( "Could not find valence band edge source "
+          + get_option("vb_edge", ""));
+    }
   }
 
   //---------------------------------------------------------------------------------//
@@ -1495,7 +1495,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
         }
       }
 
-      double penalty = 1e6;
+      double penalty = get_options().get_option("dirichlet_penalty", 1e6);
 
       // penalty method for Dirichlet nodes
       for (unsigned int i = 0; i < n_dofs; i++)

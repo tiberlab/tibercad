@@ -420,21 +420,17 @@ inline double EnvelopFunctionApprox::Fermi_statistics_probability(double Energy,
   double T_EV = Temperature * Constants::k_Boltzmann;
   double exp_arg =  (Energy - Fermi_energy)/T_EV;
   
+  if (particle != "el")
+    exp_arg *= -1.0;
+
   double el_fermi;
 
-  //if (exp_arg > 20)
-  //  el_fermi = 0.0;
-  //else
-    el_fermi = 1.0/(  1 +  std::exp(exp_arg)  );
-
-
- 
-  if (particle == "el")
-    return(el_fermi);
+  if (exp_arg > 20)
+    el_fermi = std::exp(-exp_arg);
   else
-    return(1.0 - el_fermi);
+    el_fermi = 1.0/(  1.0 +  std::exp(exp_arg)  );
 
-
+  return(el_fermi);
 }
 
 //-------------------------------------------------------------------

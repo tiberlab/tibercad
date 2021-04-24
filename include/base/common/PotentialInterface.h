@@ -27,7 +27,7 @@ namespace libMesh
  * When initialized with a valid simulation name, it will be able
  * to provide a simulated electrostatic potential.
  * The current implementation will return 0 whenever no data can be
- * obtained from the Poisson simulation or if there is no Poisson
+ * obtained from the Potential simulation or if there is no
  * simulation at all.
  */
 class PotentialInterface
