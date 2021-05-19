@@ -1401,7 +1401,10 @@ DriftDiffusion::parse_const_options(void)
       myopts.discretization = FEM;
     }
     else
+    {
       myopts.discretization = BIM;
+      _do_local_scaling = false;
+    }
   }
   else
     throw InitFailedException("Unknown discretization method: " + method);

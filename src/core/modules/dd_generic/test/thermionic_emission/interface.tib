@@ -31,7 +31,7 @@ Module dd_generic
 
   Solver
   {
-    step_tolerance = 1e-6 
+    step_tolerance = 1e-4 
     
   }
 
