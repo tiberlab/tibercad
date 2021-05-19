@@ -472,6 +472,21 @@ Device::setup_regions(void)
 }
 
 
+const std::string&
+Device::get_region_name(ID id) const
+{
+  std::map<ID, std::string>::const_iterator it(_region_names.find(id));
+
+  if (it == _region_names.end())
+  {
+    std::ostringstream s;
+    s << "Tried to access unknown region with id " << id;
+    throw (DeviceException(s.str()));
+  }
+  return it->second;
+}
+
+
 
 
 void
@@ -1205,6 +1220,10 @@ Device::get_boundary_region_ids(const string& name, vector<ID>& ids) const
         Elem* elem = *el;
         const ID id = elem->subdomain_id();
 
+        // if id is not used, skip to next element
+        if (!get_active_region_ids().count(id))
+          continue;
+
         // the material of this element
         const Material* mat = get_material(id);
 
@@ -1234,9 +1253,10 @@ Device::get_boundary_region_ids(const string& name, vector<ID>& ids) const
           const Elem* neighbour = elem->neighbor(s);
           ID neighbour_id = INVALID_ID;
 
-          // subdomain IDs have to be different
-          if ((neighbour == NULL) ||
-              ((neighbour_id = neighbour->subdomain_id()) != id))
+          // subdomain IDs have to be different, and be part of the simulation
+          if ((neighbour == nullptr) ||
+              ((neighbour_id = neighbour->subdomain_id()) != id) &&
+               get_active_region_ids().count(neighbour_id))
           {
             map<IDPair, ID>::iterator it(known_ids.find(IDPair(id, neighbour_id)));
             // if the ID pair already exists, we can just add the elem side
@@ -1252,8 +1272,10 @@ Device::get_boundary_region_ids(const string& name, vector<ID>& ids) const
               if (neighbour_id == INVALID_ID)
                 add = !comp[other].compare("-");
               else
+              {
                 add = ((comp[other] == get_material(neighbour_id)->get_name()) ||
                     (comp[other] == get_region_name(neighbour_id)));
+              }
 
               if (add)
               {

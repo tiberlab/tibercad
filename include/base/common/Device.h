@@ -639,22 +639,6 @@ Device::get_active_region_ids(void) const
 
 
 
-inline
-const std::string&
-Device::get_region_name(ID id) const
-{
-  std::map<ID, std::string>::const_iterator it(_region_names.find(id));
-
-  if (it == _region_names.end())
-  {
-    std::ostringstream s;
-    s << "Tried to access unknown region with id " << id;
-    throw (DeviceException(s.str()));
-  }
-  return it->second;
-}
-
-
 
 inline
 TiberCad::Symmetry
