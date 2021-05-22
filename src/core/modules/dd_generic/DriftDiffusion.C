@@ -7261,18 +7261,6 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
       if (coupling & POISSON)
       {
 
-        if (residual != NULL)
-        {
-          // treat the polarization
-          RealVectorValue dir(elem->point(n2) - elem->point(n1));
-          RealVectorValue pol(polarization[n1]);
-          pol += polarization[n2];
-          double P = (pol * dir) * 0.5 / dir.norm();
-          double value = edge_areas[e] * P / P0;
-          Fv.at(u_var)(n1) += value;
-          Fv.at(u_var)(n2) -= value;
-        }
-
         double perm = 0;
         for (auto&& n : nodes)
         {
@@ -7282,10 +7270,28 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
         }
 
         double coeff = l2 * perm * edge_areas[e] / edge_lengths[e];
-        Kvv[u_var].at(u_var)(n1, n1) += coeff / scalev.at(u_var)(n1);
-        Kvv[u_var].at(u_var)(n1, n2) -= coeff / scalev.at(u_var)(n1);
-        Kvv[u_var].at(u_var)(n2, n2) += coeff / scalev.at(u_var)(n2);
-        Kvv[u_var].at(u_var)(n2, n1) -= coeff / scalev.at(u_var)(n2);
+
+        if (residual != NULL)
+        {
+          // treat the polarization
+          RealVectorValue dir(elem->point(n2) - elem->point(n1));
+          RealVectorValue pol(polarization[n1]);
+          pol += polarization[n2];
+          double P = (pol * dir) * 0.5 / dir.norm();
+          double value = edge_areas[e] * P / P0;
+          value += coeff * (u[u_var][n1] - u[u_var][n2]);
+
+          Fv.at(u_var)(n1) += value;
+          Fv.at(u_var)(n2) -= value;
+        }
+
+        if (jacobian != NULL)
+        {
+          Kvv[u_var].at(u_var)(n1, n1) += coeff / scalev.at(u_var)(n1);
+          Kvv[u_var].at(u_var)(n1, n2) -= coeff / scalev.at(u_var)(n1);
+          Kvv[u_var].at(u_var)(n2, n2) += coeff / scalev.at(u_var)(n2);
+          Kvv[u_var].at(u_var)(n2, n1) -= coeff / scalev.at(u_var)(n2);
+        }
       }
 
 
@@ -7314,13 +7320,18 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
 
 
             double coeff = edge_areas[e] / edge_lengths[e];
-            Kvv[var].at(var)(i, i) += coeff * sigma_ij / scalev.at(var)(i);
-            Kvv[var].at(var)(i, j) -= coeff * sigma_ij / scalev.at(var)(i);
-            Kvv[var].at(var)(j, j) += coeff * sigma_ij / scalev.at(var)(j);
-            Kvv[var].at(var)(j, i) -= coeff * sigma_ij / scalev.at(var)(j);
+
+            double value = coeff * sigma_ij * (u[var][n1] - u[var][n2]);
+            Fv.at(var)(n1) += value;
+            Fv.at(var)(n2) -= value;
 
             if (jacobian != NULL)
             {
+              Kvv[var].at(var)(i, i) += coeff * sigma_ij / scalev.at(var)(i);
+              Kvv[var].at(var)(i, j) -= coeff * sigma_ij / scalev.at(var)(i);
+              Kvv[var].at(var)(j, j) += coeff * sigma_ij / scalev.at(var)(j);
+              Kvv[var].at(var)(j, i) -= coeff * sigma_ij / scalev.at(var)(j);
+
               double dsigma_i = dsigma_dEf[var][n1];
               double dsigma_j = dsigma_dEf[var][n2];
 
@@ -7587,25 +7598,19 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
     //       Dirichlet type BCs needs special care
     dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
 
-    system.exclude_dofs(Ke, dof_indices, elem);
-
-
 
     //perf_log.start_event("add");
 
     if (residual != NULL)
     {
-
-      for (unsigned int i = 0; i < n_dofs_tot; i++)
-        for (unsigned int j = 0; j < n_dofs_tot; j++)
-          Fe(i) += Ke(i,j) * x(dof_indices[j]);
-
       system.exclude_dofs(Fe, dof_indices, elem);
 
       residual->add_vector(Fe, dof_indices);
     }
     else
     {
+      system.exclude_dofs(Ke, dof_indices, elem);
+
       jacobian->add_matrix(Ke, dof_indices);
     }
 
