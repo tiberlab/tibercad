@@ -37,6 +37,7 @@ Module dd_generic
 
   plot = (QFermi, Density, RefEnergy, CurrentDensity,
           Conductivity, Mobility, NetRecombination, ContactCurrents)
+discretization = BIM_SG
 
   Solver
   {

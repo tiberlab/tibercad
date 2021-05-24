@@ -7314,7 +7314,7 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
 
             if (params.discretization == BIMSG)
             {
-              double sign = sc->get_carrier_properties(var)->get_charge_sign();
+              double sign = -sc->get_carrier_properties(var)->get_charge_sign();
 
               double D = 0.5 * (diffusivity[var][n1] + diffusivity[var][n2]);
               double mu = 0.5 * sign * (mobility[var][n1] + mobility[var][n2]);
@@ -7336,7 +7336,6 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
 
               if (residual != nullptr)
               {
-
                 double val1 =  coeff * dens1 * Bp * f1;
                 double val2 =  coeff * dens2 * Bn * f2;
                 double value = 0.5 * (val1 + val2);
@@ -7368,10 +7367,10 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
                   val21 = -0.5 * coeff * f2 * dens2 * dBn;
                   val22 = 0.5 * coeff * f2 * (dBn * dens2 - Bn * dn2);
 
-                  Kvv[var].at(u_var)(i, n1) -= val11 + val21;
-                  Kvv[var].at(u_var)(i, n2) -= val12 + val22;
-                  Kvv[var].at(u_var)(j, n1) += val11 + val21;
-                  Kvv[var].at(u_var)(j, n2) += val12 + val22;
+                  Kvv[var].at(u_var)(i, n1) += val11 + val21;
+                  Kvv[var].at(u_var)(i, n2) += val12 + val22;
+                  Kvv[var].at(u_var)(j, n1) -= val11 + val21;
+                  Kvv[var].at(u_var)(j, n2) -= val12 + val22;
                 }
               }
             }
