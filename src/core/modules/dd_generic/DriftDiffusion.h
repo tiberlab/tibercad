@@ -140,7 +140,11 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
       FEM,
 
       //! Box integration w/o Scharfetter-Gummel, using potentials
-      BIM
+      BIM,
+
+      //! Box integration with Scharfetter-Gummel, using potentials
+      BIMSG,
+
     };
 
 
@@ -813,6 +817,17 @@ virtual void do_check_nonlinear_step(
     void write_nodal_vector(const std::string& filename,
         const libMesh::NumericVector<double>& vec);
 
+
+
+    //! The Bernoulli function and it's derivative
+    /*!
+     * B(x) = x / (exp(x) - 1)
+     * dB(x)/dx = 1/(exp) - 1) - (x*exp))/(exp(x) - 1)^2
+     *
+     * B(-x) = x + B(x)
+     *
+     */
+    std::pair<double, double> bernoulli(double x) const;
 
  
 

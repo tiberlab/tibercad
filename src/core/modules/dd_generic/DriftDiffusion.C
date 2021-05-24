@@ -1392,7 +1392,7 @@ DriftDiffusion::parse_const_options(void)
   method = opts.get_option("discretization", method);
   if (method == "FEM")
     myopts.discretization = FEM;
-  else if (method == "BIM")
+  else if ((method == "BIM") || (method == "BIM_SG"))
   {
     if (get_mesh().mesh_dimension() > 1)
     {
@@ -1402,7 +1402,11 @@ DriftDiffusion::parse_const_options(void)
     }
     else
     {
-      myopts.discretization = BIM;
+      if (method == "BIM_SG")
+        myopts.discretization = BIMSG;
+      else
+        myopts.discretization = BIM;
+
       _do_local_scaling = false;
     }
   }
@@ -5159,6 +5163,7 @@ DriftDiffusion::JacobianAndResidual::residual_and_jacobian(
   switch (_dd->_options.discretization)
   {
     case (BIM):
+    case (BIMSG):
     {
       switch (_dd->_options.coupling)
       {
@@ -6967,6 +6972,7 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
     // derivate of densities w.r.t. quasi Fermi level at nodes
     map<unsigned int, vector<Real>> dn_dEf;
     map<unsigned int, vector<Real>> diffusivity;
+    map<unsigned int, vector<Real>> mobility;
     map<unsigned int, vector<Real>> sigma;
     map<unsigned int, vector<Real>> dsigma_dEf;
     map<unsigned int, vector<RealGradient>> dsigma_dgradEf;
@@ -6983,6 +6989,7 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
       density[var].resize(n_nodes);
       dn_dEf[var].resize(n_nodes);
       diffusivity[var].resize(n_nodes);
+      mobility[var].resize(n_nodes);
       sigma[var].resize(n_nodes);
       dsigma_dEf[var].resize(n_nodes);
       dsigma_dgradEf[var].resize(n_nodes);
@@ -7061,6 +7068,7 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
           dn_dEf[var][qp] = sc->get_q_density_derivative(var);
           R.insert( make_pair(var, sc->get_net_q_recombination_rate(var)) );
           diffusivity[var][qp] = Constants::k_B * T_nodes[qp] * sc->get_q_mobility(var);
+          mobility[var][qp] = sc->get_q_mobility(var);
 
           CarrierProperties* cp = sc->get_carrier_properties(var);
 
@@ -7305,54 +7313,119 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
             unsigned int i = id_map[var][n1];
             unsigned int j = id_map[var][n2];
 
-            //double D = 0.5 * (diffusivity[var][n1] + diffusivity[var][n2]);
-            //double dn_i = dn_dEf[var][n1];
-            //double dn_j = dn_dEf[var][n2];
-
-            //double sgn = dn_i < 0 ? -1 : 1;
-            //double arg = 0.5 * (log(sgn * dn_i) + log(sgn * dn_j));
-            //double sigma_ij = D * exp(arg) / (mu0 * C0);
-
-            double sigma_i = sigma[var][n1];
-            double sigma_j = sigma[var][n2];
-            //double sigma_ij = sqrt(sigma_i) * sqrt(sigma_j) / (mu0 * C0);
-            double sigma_ij = 0.5 * (sigma_i + sigma_j) / (mu0 * C0);
-
-
-            double coeff = edge_areas[e] / edge_lengths[e];
-
-            double value = coeff * sigma_ij * (u[var][n1] - u[var][n2]);
-            Fv.at(var)(n1) += value;
-            Fv.at(var)(n2) -= value;
-
-            if (jacobian != NULL)
+            if (params.discretization == BIMSG)
             {
-              Kvv[var].at(var)(i, i) += coeff * sigma_ij / scalev.at(var)(i);
-              Kvv[var].at(var)(i, j) -= coeff * sigma_ij / scalev.at(var)(i);
-              Kvv[var].at(var)(j, j) += coeff * sigma_ij / scalev.at(var)(j);
-              Kvv[var].at(var)(j, i) -= coeff * sigma_ij / scalev.at(var)(j);
 
-              double dsigma_i = dsigma_dEf[var][n1];
-              double dsigma_j = dsigma_dEf[var][n2];
+              double D = 0.5 * (diffusivity[var][n1] + diffusivity[var][n2]);
 
-              coeff *= phi0 * (u[var][n1] - u[var][n2]);
-              //double sigma_ji = sigma_ij / sigma_j;
-              //sigma_ij /= sigma_i;
+              double arg = (u[u_var][n1] - u[u_var][n2]);
+              auto ber = bernoulli(arg);
+              double Bp = ber.first;
+              double dBp = ber.second;
+              double Bn = arg + Bp;
+              double dBn = 1 + dBp;
 
-              sigma_ij = 0.5 / (mu0 * C0);
-              double sigma_ji = sigma_ij;
 
-              Kvv[var].at(var)(i, i) -= coeff * sigma_ij * dsigma_i / scalev.at(var)(i);
-              Kvv[var].at(var)(i, j) -= coeff * sigma_ji * dsigma_j / scalev.at(var)(i);
-              Kvv[var].at(var)(j, j) += coeff * sigma_ji * dsigma_j / scalev.at(var)(j);
-              Kvv[var].at(var)(j, i) += coeff * sigma_ij * dsigma_i / scalev.at(var)(j);
+              double coeff = D * edge_areas[e] / edge_lengths[e] / mu0;
+              double dens1 = density[var][n1] / C0;
+              double dens2 = density[var][n2] / C0;
 
-              if (coupling & POISSON)
+              double f1 = 1.0 - exp(u[var][n1] - u[var][n2]);
+              double f2 = 1.0 - exp(u[var][n2] - u[var][n1]);
+
+              if (residual != nullptr)
               {
-                Kvv[var].at(u_var)(i, n1) += coeff * sigma_ij * dsigma_i / scalev.at(var)(i);
-                Kvv[var].at(u_var)(i, n2) += coeff * sigma_ji * dsigma_j / scalev.at(var)(i);
-                Kvv[var].at(u_var)(j, n2) -= coeff * sigma_ji * dsigma_j / scalev.at(var)(j);
-                Kvv[var].at(u_var)(j, n1) -= coeff * sigma_ij * dsigma_i / scalev.at(var)(j);
+
+                double val1 =  coeff * dens1 * Bp * f1;
+                double val2 = -coeff * dens2 * Bn * f2;
+                double value = -0.5 * (val1 + val2);
+
+                Fv.at(var)(n1) += value;
+                Fv.at(var)(n2) -= value;
+              }
+
+              if (jacobian != nullptr)
+              {
+                double dn1 = -dn_dEf[var][n1] * phi0 / C0;
+                double dn2 = -dn_dEf[var][n2] * phi0 / C0;
+
+                // w.r.t. u[var] = phi_n
+                double val11 = 0.5 * coeff * Bp * ((dn1 + dens1) * f1 - dens1);
+                double val12 = 0.5 * coeff * Bp * dens1 * (1.0 - f1);
+                double val21 = -0.5 * coeff * Bn * dens2 * (1.0 - f2);
+                double val22 = -0.5 * coeff * Bn * ((dn2 + dens2) * f2 - dens2);
+
+                Kvv[var].at(var)(i, i) -= val11 + val21;
+                Kvv[var].at(var)(i, j) -= val12 + val22;
+                Kvv[var].at(var)(j, i) += val11 + val21;
+                Kvv[var].at(var)(j, j) += val12 + val22;
+
+                if (coupling & POISSON)
+                {
+                  val11 = 0.5 * coeff * f1 * (dBp * dens1 - Bp * dn1);
+                  val12 = -0.5 * coeff * f1 * dens1 * dBp;
+                  val21 = -0.5 * coeff * f2 * dens2 * dBn;
+                  val22 = 0.5 * coeff * f2 * (dBn * dens2 - Bn * dn2);
+
+                  Kvv[var].at(u_var)(i, n1) -= val11 + val21;
+                  Kvv[var].at(u_var)(i, n2) -= val12 + val22;
+                  Kvv[var].at(u_var)(j, n1) += val11 + val21;
+                  Kvv[var].at(u_var)(j, n2) += val12 + val22;
+                }
+              }
+            }
+            else
+            {
+
+              //double D = 0.5 * (diffusivity[var][n1] + diffusivity[var][n2]);
+              //double dn_i = dn_dEf[var][n1];
+              //double dn_j = dn_dEf[var][n2];
+
+              //double sgn = dn_i < 0 ? -1 : 1;
+              //double arg = 0.5 * (log(sgn * dn_i) + log(sgn * dn_j));
+              //double sigma_ij = D * exp(arg) / (mu0 * C0);
+
+              double sigma_i = sigma[var][n1];
+              double sigma_j = sigma[var][n2];
+              //double sigma_ij = sqrt(sigma_i) * sqrt(sigma_j) / (mu0 * C0);
+              double sigma_ij = 0.5 * (sigma_i + sigma_j) / (mu0 * C0);
+
+
+              double coeff = edge_areas[e] / edge_lengths[e];
+
+              double value = coeff * sigma_ij * (u[var][n1] - u[var][n2]);
+              Fv.at(var)(n1) += value;
+              Fv.at(var)(n2) -= value;
+
+              if (jacobian != NULL)
+              {
+                Kvv[var].at(var)(i, i) += coeff * sigma_ij / scalev.at(var)(i);
+                Kvv[var].at(var)(i, j) -= coeff * sigma_ij / scalev.at(var)(i);
+                Kvv[var].at(var)(j, j) += coeff * sigma_ij / scalev.at(var)(j);
+                Kvv[var].at(var)(j, i) -= coeff * sigma_ij / scalev.at(var)(j);
+
+                double dsigma_i = dsigma_dEf[var][n1];
+                double dsigma_j = dsigma_dEf[var][n2];
+
+                coeff *= phi0 * (u[var][n1] - u[var][n2]);
+                //double sigma_ji = sigma_ij / sigma_j;
+                //sigma_ij /= sigma_i;
+
+                sigma_ij = 0.5 / (mu0 * C0);
+                double sigma_ji = sigma_ij;
+
+                Kvv[var].at(var)(i, i) -= coeff * sigma_ij * dsigma_i / scalev.at(var)(i);
+                Kvv[var].at(var)(i, j) -= coeff * sigma_ji * dsigma_j / scalev.at(var)(i);
+                Kvv[var].at(var)(j, j) += coeff * sigma_ji * dsigma_j / scalev.at(var)(j);
+                Kvv[var].at(var)(j, i) += coeff * sigma_ij * dsigma_i / scalev.at(var)(j);
+
+                if (coupling & POISSON)
+                {
+                  Kvv[var].at(u_var)(i, n1) += coeff * sigma_ij * dsigma_i / scalev.at(var)(i);
+                  Kvv[var].at(u_var)(i, n2) += coeff * sigma_ji * dsigma_j / scalev.at(var)(i);
+                  Kvv[var].at(u_var)(j, n2) -= coeff * sigma_ji * dsigma_j / scalev.at(var)(j);
+                  Kvv[var].at(u_var)(j, n1) -= coeff * sigma_ij * dsigma_i / scalev.at(var)(j);
+                }
               }
             }
           }
@@ -7702,7 +7775,7 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
 
 
 
-/*
+
 std::pair<double, double>
 DriftDiffusion::bernoulli(double x) const
 {
@@ -7716,7 +7789,7 @@ DriftDiffusion::bernoulli(double x) const
   }
   return(make_pair(b, db));
 }
-*/
+
 
 
 void
