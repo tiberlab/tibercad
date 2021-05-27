@@ -90,6 +90,16 @@ class TBDLLOCAL Tmm : public SimulationInterface
      */
     Tmm(const ModelOptions& options);
 
+    /*!
+     * \brief The wavelengths
+     */
+    std::vector<double> _wavelengths;
+
+    /*!
+     * \brief The incident angle
+     */
+    std::vector<double> _incident_angle;
+
 };
 
 

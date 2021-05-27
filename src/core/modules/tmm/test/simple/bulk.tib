@@ -1,0 +1,45 @@
+Device
+{
+  meshfile = bulk.msh 
+  material = GaAs
+
+  Region bulk 
+  {
+  }
+}
+
+
+Module tmm
+{ 
+
+  plot = (EField)
+
+  wavelengths = 450
+
+  Physics
+  {
+
+  }
+
+
+
+  
+}
+
+
+
+
+Simulation
+{
+  verbose = 2
+
+  solve = tmm
+
+  resultpath = output
+
+}
+
+
+
+
+

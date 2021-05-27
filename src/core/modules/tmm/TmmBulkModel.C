@@ -4,6 +4,7 @@
 //#include "PermittivityModel.h"
 
 using std::string;
+using namespace libMesh;
 
 
 TiberModelObject*
@@ -49,6 +50,15 @@ TmmBulkModel::create(const Material* mat, const ModelOptions& options)
   return(pm);
 }
 
+
+
+libMesh::Complex
+TmmBulkModel::get_permittivity(double lambda) const
+{
+  Complex eps = 1;
+
+  return(eps);
+}
 
 
 void

@@ -5,12 +5,14 @@
 #include "TmmBulkModel.h"
 #include "Messages.h"
 
+
 #include "libmesh/dof_map.h"
 
 
 // This is needed in order to create the shared module library
 #include "TiberModule.h"
 
+#include "function.h"
 
 using namespace libMesh;
 using std::vector;
@@ -47,7 +49,7 @@ Tmm::do_init(void)
   TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
 
   // add variables and attach the assemble function
-  system.add_variable("E", FIRST);
+  system.add_variable("E", libMeshEnums::CONSTANT, MONOMIAL, &get_region_ids());
   system.init();
 }
 
@@ -55,6 +57,17 @@ Tmm::do_init(void)
 void
 Tmm::parse_options(void)
 {
+  // read wavelengths from input
+  get_option("wavelengths", _wavelengths);
+  if (_wavelengths.empty())
+  {
+    Messages::warning("You did not provide any wavelengths for TMM.");
+  }
+  get_option("incident_angle", _incident_angle);
+  if (_incident_angle.empty())
+  {
+    Messages::warning("You did not provide any incident_angle for TMM.");
+  }
 }
 
 
@@ -62,7 +75,7 @@ void
 Tmm::do_setup_solution_variables(void)
 {
   // we declare our solution variables
-  declare_solution(EField, VECTOR, CELL, "V/cm");
+  declare_solution(EField, REAL, CELL, "V/cm");
   declare_solution(HField, VECTOR, CELL, "A/cm");
   //declare_solution(Displacement, VECTOR, CELL, "C/cm^2");
 
@@ -76,6 +89,10 @@ void
 Tmm::do_solve(void)
 {
   TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
+
+  NumericVector<libMesh::Number>& solution = system.get_local_solution_vector();
+  solution.close();
+  solution.zero();
 
   const MeshBase& mesh = get_mesh();
   const unsigned int dim = mesh.mesh_dimension();
@@ -102,22 +119,149 @@ Tmm::do_solve(void)
   DofMap& dof_map =  system.get_dof_map();
   vector<unsigned int> dof_indices;
 
-
-  const unsigned int uvar = system.variable_number("E");
-
-  MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
-
-  for ( ; el != end_el ; ++el)
+  for (unsigned int i = 0; i < _wavelengths.size(); ++i)
   {
-    const Elem* elem = *el;
 
-    dof_map.dof_indices(elem, dof_indices);
-    const unsigned int n_dofs = dof_indices.size();
+  for (unsigned int j = 0; j < _incident_angle.size(); ++j)
+  {
 
-    TmmBulkModel& mod = *get_bulk_model<TmmBulkModel>(elem);
+    double lambda = _wavelengths[i];
+
+
+    const unsigned int uvar = system.variable_number("E");
+
+    MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
+    const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
+
+    double E = 1.0;
+    double incoming_angle=_incident_angle[j];
+
+    vector<double> n_real;
+    vector<double> n_imag;
+    vector<double> l_length;
+
+    vector<complex<double>> refractive_index;
+
+
+
+
+    for ( ; el != end_el ; ++el)
+    {
+      const Elem* elem = *el;
+
+      dof_map.dof_indices(elem, dof_indices, uvar);
+      const unsigned int n_dofs = dof_indices.size();
+
+      TmmBulkModel& mod = *get_bulk_model<TmmBulkModel>(elem);
+
+      mod.reinit(elem);
+
+      Complex eps = mod.get_permittivity(lambda);
+
+      n_imag.push_back(sqrt((abs(mod.get_permittivity(lambda))-real(mod.get_permittivity(lambda)))/2));
+      n_real.push_back(sqrt((abs(mod.get_permittivity(lambda))+real(mod.get_permittivity(lambda)))/2));
+      l_length.push_back(dof_indices[0]);    //******************************************************************//
+      refractive_index.push_back(mod.get_permittivity(lambda));
+      std::cout<<mod.get_permittivity(lambda)<<endl;
+
+      //E=dof_indices[0];
+      //solution.add(dof_indices[0], E);
+
+
+
+    }
+
+    vector<double> theta(n_real.size());
+    theta=theta_cal(n_real,incoming_angle);
+ //   for(int nm=0;nm<n_real.size();nm++)
+   //    std::cout<<n_real[nm]<<endl;
+
+    vector<vector<complex<double>>> I {{0,0},{0,0}};
+    vector<vector<complex<double>>> M {{0,0},{0,0}};
+    vector<vector<complex<double>>> T_load {{0,0},{0,0}};
+    vector<vector<complex<double>>> T {{1,0},{0,1}};
+
+    vector<vector<complex<double>>> E_N {{1,0},{0,0}};
+    vector<vector<complex<double>>> E_I {{0,0},{0,0}};
+
+    vector<complex<double>> E_F(n_real.size());
+    vector<complex<double>> E_B(n_real.size());
+    E_F[n_real.size()-1]=E_N[0][0];
+    E_B[n_real.size()-1]=E_N[1][0];
+
+    vector<complex<double>> E_F_NORM(n_real.size());
+    vector<complex<double>> E_B_NORM(n_real.size());
+
+
+    for (int k=n_real.size()-2 ; k>=0 ; k--){
+
+      I=get_D(n_real[k],n_imag[k],n_real[k+1],n_imag[k+1],theta[k],theta[k+1]);
+      M=get_M(n_real[k],n_imag[k],l_length[k+1]-l_length[k],lambda,theta[k]);
+      T_load=matrix_product(I,M);
+      T=matrix_product(T,T_load);
+      E_I=matrix_product(T,E_N);
+      E_F[k]+=E_I[0][0];
+      E_B[k]+=E_I[1][0];
+    }
+
+    show_matrix(T);
+  
+
+
+    std::cout<<"*********************salam***********************"<<endl;
+    
+
+    for(double nm=0; nm < E_F.size() ; nm++){
+		
+	E_F_NORM[nm]=E_F[nm]/E_F[0];			
+	E_B_NORM[nm]=E_B[nm]/E_F[0];	
+    } 
+    complex<double> Reflection,Transmission;
+
+    Reflection=pow(abs(T[1][0]/T[0][0]),2);
+    complex<double> nc_first (n_real[0],n_imag[0]);
+    complex<double> nc_last (n_real[n_real.size()-1],n_imag[n_imag.size()-1]);
+    complex<double> ratio_complex;
+    ratio_complex=nc_last/nc_first;
+    Transmission=ratio_complex*pow(abs(1.0/T[0][0]),2);
+
+   cout<<"trasmision is :"<< Transmission << "reflection is :"<<Reflection<<endl;
+
+/*
+    for(double nm=0; nm < E_F.size() ; nm++){
+		
+	std::cout<<E_F_NORM[nm] <<endl;				
+    } 
+    std::cout<<"*********************salam***********************"<<endl;
+    for(double nm=0; nm < E_F.size() ; nm++){
+		
+	std::cout<<E_B_NORM[nm] <<endl;				
+    } 
+*/
+    for(double nm=0; nm <= l_length.size() ; nm++){
+		
+	E=l_length[nm];
+	solution.add(l_length[nm], E);
+    } 
+
+
+
+
+
+
+
+
+
+
 
   }
+
+  }
+
+  solution.close();
+  system.update();
+  //solution.print_matlab("sol.m");
+
 }
 
 
@@ -196,15 +340,14 @@ Tmm::get_solution_secure(const Elem* elem,
     //if (values.count(EField))
     //  values[EField][n] = efield;
 
- }
+  }
 
 
-  //if (values.count(EField))
-  //{
-  //  values[EField][0] = field(0) / np;
+  if (values.count(EField))
+  {
+    values[EField][0] = solution(dof_indices[0]);
   //  values[EField][1] = field(1) / np;
   //  values[EField][2] = field(2) / np;
-  //}
+  }
 }
-
 
