@@ -7317,22 +7317,25 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
               double sign = -sc->get_carrier_properties(var)->get_charge_sign();
 
               double D = 0.5 * (diffusivity[var][n1] + diffusivity[var][n2]);
-              double mu = 0.5 * sign * (mobility[var][n1] + mobility[var][n2]);
+              double mu = 0.5 * (mobility[var][n1] + mobility[var][n2]);
 
-              double arg = (u[u_var][n1] - u[u_var][n2]);
+              double arg = sign * (u[u_var][n1] - u[u_var][n2]);
               auto ber = bernoulli(arg);
               double Bp = ber.first;
-              double dBp = ber.second;
+              double dBp = sign * ber.second;
               double Bn = arg + Bp;
-              double dBn = 1 + dBp;
+              double dBn = sign + dBp;
 
 
               double coeff = mu * edge_areas[e] / edge_lengths[e] / mu0;
               double dens1 = density[var][n1] / C0;
               double dens2 = density[var][n2] / C0;
 
-              double f1 = 1.0 - exp(u[var][n1] - u[var][n2]);
-              double f2 = exp(u[var][n2] - u[var][n1]) - 1.0;
+              double arg2 = sign * (u[var][n1] - u[var][n2]);
+              double f1 = 1.0 - exp(arg2);
+              double f2 = exp(-arg2) - 1.0;
+              double df1 = -sign * exp(arg2);
+              double df2 = -sign * exp(-arg2);
 
               if (residual != nullptr)
               {
@@ -7350,10 +7353,14 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
                 double dn2 = -dn_dEf[var][n2] * phi0 / C0;
 
                 // w.r.t. u[var] = phi_n
-                double val11 =  0.5 * coeff * Bp * ((dn1 + dens1) * f1 - dens1);
-                double val12 =  0.5 * coeff * Bp * dens1 * (1.0 - f1);
-                double val21 = -0.5 * coeff * Bn * dens2 * (1.0 + f2);
-                double val22 =  0.5 * coeff * Bn * ((dn2 + dens2) * f2 + dens2);
+                //double val11 =  0.5 * coeff * Bp * ((dn1 + dens1) * f1 - dens1);
+                //double val12 =  0.5 * coeff * Bp * dens1 * (1.0 - f1);
+                //double val21 = -0.5 * coeff * Bn * dens2 * (1.0 + f2);
+                //double val22 =  0.5 * coeff * Bn * ((dn2 + dens2) * f2 + dens2);
+                double val11 =  0.5 * coeff * Bp * (dn1 * f1 + dens1 * df1);
+                double val12 = -0.5 * coeff * Bp * dens1 * df1;
+                double val21 =  0.5 * coeff * Bn * dens2 * df2;
+                double val22 =  0.5 * coeff * Bn * (dn2 * f2 - dens2 * df2);
 
                 Kvv[var].at(var)(i, i) += val11 + val21;
                 Kvv[var].at(var)(i, j) += val12 + val22;
@@ -7364,8 +7371,8 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
                 {
                   val11 = 0.5 * coeff * f1 * (dBp * dens1 - Bp * dn1);
                   val12 = -0.5 * coeff * f1 * dens1 * dBp;
-                  val21 = -0.5 * coeff * f2 * dens2 * dBn;
-                  val22 = 0.5 * coeff * f2 * (dBn * dens2 - Bn * dn2);
+                  val21 = 0.5 * coeff * f2 * dens2 * dBn;
+                  val22 = 0.5 * coeff * f2 * (-dBn * dens2 - Bn * dn2);
 
                   Kvv[var].at(u_var)(i, n1) += val11 + val21;
                   Kvv[var].at(u_var)(i, n2) += val12 + val22;
