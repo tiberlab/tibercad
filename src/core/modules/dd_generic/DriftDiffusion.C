@@ -7317,7 +7317,7 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
               double sign = -sc->get_carrier_properties(var)->get_charge_sign();
 
               double D = 0.5 * (diffusivity[var][n1] + diffusivity[var][n2]);
-              double mu = 0.5 * (mobility[var][n1] + mobility[var][n2]);
+              double mu = -0.5 * sign * (mobility[var][n1] + mobility[var][n2]);
 
               double arg = sign * (u[u_var][n1] - u[u_var][n2]);
               auto ber = bernoulli(arg);
@@ -7337,14 +7337,15 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
               double df1 = -sign * exp(arg2);
               double df2 = -sign * exp(-arg2);
 
+
               if (residual != nullptr)
               {
                 double val1 =  coeff * dens1 * Bp * f1;
                 double val2 =  coeff * dens2 * Bn * f2;
                 double value = 0.5 * (val1 + val2);
 
-                Fv.at(var)(n1) += value;
-                Fv.at(var)(n2) -= value;
+                Fv.at(var)(i) += value;
+                Fv.at(var)(j) -= value;
               }
 
               if (jacobian != nullptr)
@@ -7401,8 +7402,8 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
               double coeff = edge_areas[e] / edge_lengths[e];
 
               double value = coeff * sigma_ij * (u[var][n1] - u[var][n2]);
-              Fv.at(var)(n1) += value;
-              Fv.at(var)(n2) -= value;
+              Fv.at(var)(i) += value;
+              Fv.at(var)(j) -= value;
 
               if (jacobian != NULL)
               {
@@ -7726,8 +7727,12 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
 
     jacobian->close();
 
-    //jacobian->print_matlab("J.m");
-    //exit(0);
+//    if (coupling & CURRENTS)
+//    {
+//      ostringstream os;
+//      os << "J_" << __private_counter << ".m";
+//      jacobian->print_matlab(os.str());
+//    }
 
   }
   else
@@ -7770,8 +7775,13 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
     }
 
     residual->close();
-    //residual->print_matlab("r.m");
-    //exit(0);
+//    if (coupling & CURRENTS)
+//    {
+//      ostringstream os;
+//      os << "r_" << __private_counter << ".m";
+//      residual->print_matlab(os.str());
+//      __private_counter++;
+//    }
 
   }
 
@@ -7832,8 +7842,8 @@ DriftDiffusion::write_nodal_vector(const string& filename, const libMesh::Numeri
   vector<double> results(3 * nn, 0.0);
 
   const unsigned int u_var = system->variable_number("potential");
-  unsigned int en_var = system->variable_number("el_qw");
-  unsigned int ep_var = system->variable_number("hl_qw");
+  unsigned int en_var = system->variable_number("electron");
+  unsigned int ep_var = system->variable_number("hole");
 
   vector<unsigned int> dof_indices_u;
   vector<unsigned int> dof_indices_en;
