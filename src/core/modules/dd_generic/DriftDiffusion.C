@@ -7331,11 +7331,21 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
               double dens1 = density[var][n1] / C0;
               double dens2 = density[var][n2] / C0;
 
+              // For small difference, we make a linear approximation
+              // the limit is hard coded and has been tested on a pn junction
               double arg2 = sign * (u[var][n1] - u[var][n2]);
-              double f1 = 1.0 - exp(arg2);
-              double f2 = exp(-arg2) - 1.0;
-              double df1 = -sign * exp(arg2);
-              double df2 = -sign * exp(-arg2);
+              double f1 = -arg2;
+              double f2 = -arg2;
+              double df1 = -sign;
+              double df2 = -sign;
+              if (fabs(arg2) > 0.1)
+              {
+                f1 = 1.0 - exp(arg2);
+                df1 = -sign * exp(arg2);
+                f2 = exp(-arg2) - 1.0;
+                df2 = -sign * exp(-arg2);
+              }
+
 
 
               if (residual != nullptr)
