@@ -3,6 +3,7 @@
 // module includes
 #include "DriftDiffusion.h"
 #include "SimulationEnvironment.h"
+#include "VoronoiCell.h"
 #include "Scaling.h"
 #include "Material.h"
 #include "MaterialBoundary.h"
@@ -4585,7 +4586,7 @@ DriftDiffusion::build_local_scaling_bim(void)
     //dof_map.extract_local_vector(loc_scaling, dof_indices, local_scaling);
 
     //define submatrices
-    map<unsigned int, DenseSubVector<Number>> Xv, scalev;
+    map<unsigned int, DenseSubVector<Number>> Xv;
 
     // Reposition the submatrices according to this scheme:
     //
@@ -4602,13 +4603,11 @@ DriftDiffusion::build_local_scaling_bim(void)
 
       Xv.insert(make_pair(var, DenseSubVector<Real>(X)));
       //oldXv.insert(make_pair(var, DenseSubVector<Real>(oldX)));
-      scalev.insert(make_pair(var, DenseSubVector<Real>(local_scaling)));
 
       unsigned int var_dofs = dof_indices_var[var].size();
 
       Xv.at(var).reposition(n_var, var_dofs);
       //oldXv.at(var).reposition(n_var, var_dofs);
-      scalev.at(var).reposition(n_var, var_dofs);
 
       n_var += var_dofs;
     }
@@ -4620,11 +4619,9 @@ DriftDiffusion::build_local_scaling_bim(void)
 
       Xv.insert(make_pair(var, DenseSubVector<Real>(X)));
       //oldXv.insert(make_pair(var, DenseSubVector<Real>(oldX)));
-      //scalev.insert(make_pair(var, DenseSubVector<Real>(local_scaling)));
 
       Xv.at(var).reposition(n_var + c_var, 1);
       //oldXv.at(var).reposition(n_var + c_var, 1);
-      //scalev.at(var).reposition(n_var*n_dofs, 1);
 
       c_var++;
 
@@ -4807,7 +4804,6 @@ DriftDiffusion::build_local_scaling_bim(void)
 
           double sign = sc->get_carrier_properties(vari)->get_charge_sign();
           long double dR = sign * sc->get_net_q_recombination_rate_derivatives(vari)[vari];
-          scalev.at(vari)(ii) += node_volumes[qp] * dR * phi0 / R0;
         }
       }
 
@@ -4825,13 +4821,11 @@ DriftDiffusion::build_local_scaling_bim(void)
 
             double ddens = sc->get_q_density_derivative(vari);
             // diagonal part
-            scalev.at(var.first)(0) += node_volumes[qp] * ddens * phi0 / C0;
           }
         }
       }
 
 
-      scalev.at(u_var)(qp) -= node_volumes[qp] * drho[u_var] / C0;
 
 
     } // end loop over vertices (= control volume centroids)
@@ -4864,8 +4858,6 @@ DriftDiffusion::build_local_scaling_bim(void)
       }
 
       double coeff = l2 * perm * edge_areas[e] / edge_lengths[e];
-      scalev.at(u_var)(n1) += coeff;
-      scalev.at(u_var)(n2) += coeff;
 
 
       for (auto&& var : q_var)
@@ -4891,8 +4883,6 @@ DriftDiffusion::build_local_scaling_bim(void)
 
 
           double coeff = edge_areas[e] / edge_lengths[e];
-          scalev.at(var)(i) += coeff * sigma_ij;
-          scalev.at(var)(j) += coeff * sigma_ij;
 
           double dsigma_i = dsigma_dEf[var][n1];
           double dsigma_j = dsigma_dEf[var][n2];
@@ -4903,9 +4893,6 @@ DriftDiffusion::build_local_scaling_bim(void)
 
           sigma_ij = 0.5 / (mu0 * C0);
           double sigma_ji = sigma_ij;
-
-          scalev.at(var)(i) -= coeff * sigma_ij * dsigma_i;
-          scalev.at(var)(j) += coeff * sigma_ji * dsigma_j;
 
         }
 
@@ -5030,18 +5017,6 @@ DriftDiffusion::build_local_scaling_bim(void)
             {
               unsigned int ii = id_map[vari][node_map[qp]];
               numeric_index_type i = dof_indices_var[vari][ii];
-
-
-
-              if (sm->get_type(vari) == DDInterfaceModel::DIRICHLET)
-              {
-                scalev.at(vari)(ii) -= deriv_v[vari][vari];
-              }
-              else
-              {
-                scalev.at(vari)(ii) -= scale_v[vari] * deriv_v[vari][vari];
-              }
-
             }
 
             // contribution to -Fe_i
@@ -6632,10 +6607,7 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
 
 
   libMesh::NumericVector<Number>& oldx = system.get_vector("old_sol");
-  libMesh::NumericVector<Number>& loc_scaling = system.get_vector("scaling");
-  //if (residual != NULL)
-  if (jacobian != NULL)
-    build_local_scaling_bim();
+
 
   //
   // some scaling stuff...
@@ -6736,8 +6708,6 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
   DenseVector<Number> X;
   // the local old step
   DenseVector<Number> oldX;
-  // the local scaling
-  DenseVector<Number> local_scaling;
 
 
   vector<unsigned int> dof_indices;
@@ -6830,19 +6800,16 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
     Fe.resize(n_dofs_tot);
     X.resize(n_dofs_tot);
     oldX.resize(n_dofs_tot);
-    local_scaling.resize(n_dofs_tot);
 
     // extract local solution, accounting for constraints
     dof_map.extract_local_vector(x, dof_indices, X);
     dof_map.extract_local_vector(oldx, dof_indices, oldX);
-    dof_map.extract_local_vector(loc_scaling, dof_indices, local_scaling);
 
     //define submatrices
     map<unsigned int, map<unsigned int, DenseSubMatrix<Number>>> Kvv;
     map<unsigned int, DenseSubVector<Number>> Fv,
                                               Xv,
-                                              oldXv,
-                                              scalev;
+                                              oldXv;
 
     // Reposition the submatrices according to this scheme:
     //
@@ -6860,14 +6827,12 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
       Fv.insert(make_pair(var, DenseSubVector<Real>(Fe)));
       Xv.insert(make_pair(var, DenseSubVector<Real>(X)));
       oldXv.insert(make_pair(var, DenseSubVector<Real>(oldX)));
-      scalev.insert(make_pair(var, DenseSubVector<Real>(local_scaling)));
 
       unsigned int var_dofs = dof_indices_var[var].size();
 
       Fv.at(var).reposition(n_var, var_dofs);
       Xv.at(var).reposition(n_var, var_dofs);
       oldXv.at(var).reposition(n_var, var_dofs);
-      scalev.at(var).reposition(n_var, var_dofs);
 
       unsigned int n_varj = 0;
       for (auto&& varj : q_var)
@@ -6889,12 +6854,10 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
       Fv.insert(make_pair(var, DenseSubVector<Real>(Fe)));
       Xv.insert(make_pair(var, DenseSubVector<Real>(X)));
       oldXv.insert(make_pair(var, DenseSubVector<Real>(oldX)));
-      //scalev.insert(make_pair(var, DenseSubVector<Real>(local_scaling)));
 
       Fv.at(var).reposition(n_var + c_var, 1);
       Xv.at(var).reposition(n_var + c_var, 1);
       oldXv.at(var).reposition(n_var + c_var, 1);
-      //scalev.at(var).reposition(n_var*n_dofs, 1);
 
       unsigned int n_varj = 0;
       for (auto&& varj : q_var)
@@ -6934,31 +6897,11 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
     //
     double length_scaling = get_scaling().get_calc_mesh_units() / x0;
 
-    vector<double> edge_lengths(elem->n_edges());
-    vector<double> edge_areas(elem->n_edges());
-    vector<double> node_volumes(elem->n_nodes());
+    VoronoiCell vcell(elem, length_scaling);
+    vcell.calculate();
 
-    unsigned int dim = elem->dim();
-    if (dim == 1)
-    {
-      edge_lengths.resize(1);
-      edge_areas.resize(1);
-      edge_lengths[0] = elem->volume() * length_scaling;
-      edge_areas[0] = 1.0;
+    const vector<double>& node_volumes = vcell.get_volumes();
 
-      node_volumes[0] = length_scaling * elem->volume() / 2.0;
-      node_volumes[1] = node_volumes[0];
-    }
-    else if (dim == 2)
-    {
-
-    }
-    else if (dim == 3)
-    {
-
-    }
-
-    unsigned int n_edges = edge_lengths.size();
     unsigned int n_nodes = elem->n_nodes();
 
 
@@ -7120,7 +7063,7 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
           if (var == u_var)
           {
             if (coupling & POISSON)
-              Fv.at(var)(qp) -= node_volumes[qp] * sc->get_charge_density() / C0 / scalev.at(var)(qp);
+              Fv.at(var)(qp) -= node_volumes[qp] * sc->get_charge_density() / C0;
             else
               Fv.at(var)(qp) -= Xv.at(var)(qp);
           }
@@ -7132,7 +7075,7 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
 
             if (coupling & CURRENTS)
             {
-              Fv.at(var)(ii) += sign * net_recomb / scalev.at(var)(ii);
+              Fv.at(var)(ii) += sign * net_recomb;
             }
             else
               Fv.at(var)(ii) -= Xv.at(var)(ii);
@@ -7174,7 +7117,7 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
             drho[u_var] -= drho[vari];
 
             if (coupling & FULLYCOUPLED)
-              Kvv[u_var].at(vari)(qp,ii) -= node_volumes[qp] * drho[vari] / C0 / scalev.at(u_var)(qp);
+              Kvv[u_var].at(vari)(qp,ii) -= node_volumes[qp] * drho[vari] / C0;
 
             if (coupling & CURRENTS)
             {
@@ -7183,7 +7126,7 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
                 double sign = sc->get_carrier_properties(vari)->get_charge_sign();
                 unsigned int jj = id_map[varj][qp];
                 long double dR = sign * sc->get_net_q_recombination_rate_derivatives(vari)[varj];
-                Kvv[vari].at(varj)(ii,jj) += node_volumes[qp] * dR * phi0 / R0 / scalev.at(vari)(ii);
+                Kvv[vari].at(varj)(ii,jj) += node_volumes[qp] * dR * phi0 / R0;
               }
             }
             else
@@ -7223,7 +7166,7 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
                       double sign = sc->get_carrier_properties(varj)->get_charge_sign();
                       long double dR =
                           sign * sc->get_net_q_recombination_rate_derivatives(varj)[vari];
-                      Kvv[varj].at(var.first)(jj,0) += node_volumes[qp] * phi0 / R0 / scalev.at(varj)(jj);
+                      Kvv[varj].at(var.first)(jj,0) += node_volumes[qp] * phi0 / R0;
                     }
                   }
               }
@@ -7231,14 +7174,14 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
           }
 
           if (coupling & POISSON)
-            Kvv[u_var].at(var.first)(qp, 0) -= node_volumes[qp] * drho[var.first] / scalev.at(u_var)(qp);
+            Kvv[u_var].at(var.first)(qp, 0) -= node_volumes[qp] * drho[var.first];
 
         }
 
 
 
         if (coupling & POISSON)
-          Kvv[u_var].at(u_var)(qp,qp) -= node_volumes[qp] * drho[u_var] / C0 / scalev.at(u_var)(qp);
+          Kvv[u_var].at(u_var)(qp,qp) -= node_volumes[qp] * drho[u_var] / C0;
         else
           Kvv[u_var].at(u_var)(qp,qp) += 1;
 
@@ -7248,35 +7191,32 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
 
 
 
+    //
     // now we loop on the edges, to add the flux contributions
+    //
+
+    unsigned int n_edges = vcell.n_edges();
+
     for (unsigned int e = 0; e < n_edges; ++e)
     {
-      vector<unsigned int> nodes;
-      nodes.reserve(2);
+      auto& nodes = vcell.get_nodes(e);
 
-      for (unsigned int n = 0; n < n_nodes; ++n)
-        if (elem->is_node_on_edge(n, e))
-          nodes.push_back(n);
+      unsigned int n1 = nodes.first;
+      unsigned int n2 = nodes.second;
 
-      assert(nodes.size() == 2);
-
-      unsigned int n1 = nodes[0];
-      unsigned int n2 = nodes[1];
+      double edge_len  = vcell.get_edge_length(e);
+      double face_area = vcell.get_cell_face_area(e);
 
       // now we have the two nodes
 
       if (coupling & POISSON)
       {
 
-        double perm = 0;
-        for (auto&& n : nodes)
-        {
-          // TODO for now take trace
-          // 1/3 for the trace, 1/2 for the mean of two nodes
-          perm += 1/6.0 * permittivity[n].tr();
-        }
+        // TODO for now take trace
+        // 1/3 for the trace, 1/2 for the mean of two nodes
+        double perm = 1/6.0 * (permittivity[n1].tr() + permittivity[n2].tr());
 
-        double coeff = l2 * perm * edge_areas[e] / edge_lengths[e];
+        double coeff = l2 * perm * face_area / edge_len;
 
         if (residual != NULL)
         {
@@ -7285,7 +7225,7 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
           RealVectorValue pol(polarization[n1]);
           pol += polarization[n2];
           double P = (pol * dir) * 0.5 / dir.norm();
-          double value = edge_areas[e] * P / P0;
+          double value = face_area * P / P0;
           value += coeff * (u[u_var][n1] - u[u_var][n2]);
 
           Fv.at(u_var)(n1) += value;
@@ -7294,10 +7234,10 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
 
         if (jacobian != NULL)
         {
-          Kvv[u_var].at(u_var)(n1, n1) += coeff / scalev.at(u_var)(n1);
-          Kvv[u_var].at(u_var)(n1, n2) -= coeff / scalev.at(u_var)(n1);
-          Kvv[u_var].at(u_var)(n2, n2) += coeff / scalev.at(u_var)(n2);
-          Kvv[u_var].at(u_var)(n2, n1) -= coeff / scalev.at(u_var)(n2);
+          Kvv[u_var].at(u_var)(n1, n1) += coeff;
+          Kvv[u_var].at(u_var)(n1, n2) -= coeff;
+          Kvv[u_var].at(u_var)(n2, n2) += coeff;
+          Kvv[u_var].at(u_var)(n2, n1) -= coeff;
         }
       }
 
@@ -7327,7 +7267,7 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
               double dBn = sign + dBp;
 
 
-              double coeff = mu * edge_areas[e] / edge_lengths[e] / mu0;
+              double coeff = mu * face_area / edge_len / mu0;
               double dens1 = density[var][n1] / C0;
               double dens2 = density[var][n2] / C0;
 
@@ -7409,7 +7349,7 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
               double sigma_ij = 0.5 * (sigma_i + sigma_j) / (mu0 * C0);
 
 
-              double coeff = edge_areas[e] / edge_lengths[e];
+              double coeff = face_area / edge_len;
 
               double value = coeff * sigma_ij * (u[var][n1] - u[var][n2]);
               Fv.at(var)(i) += value;
@@ -7417,10 +7357,10 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
 
               if (jacobian != NULL)
               {
-                Kvv[var].at(var)(i, i) += coeff * sigma_ij / scalev.at(var)(i);
-                Kvv[var].at(var)(i, j) -= coeff * sigma_ij / scalev.at(var)(i);
-                Kvv[var].at(var)(j, j) += coeff * sigma_ij / scalev.at(var)(j);
-                Kvv[var].at(var)(j, i) -= coeff * sigma_ij / scalev.at(var)(j);
+                Kvv[var].at(var)(i, i) += coeff * sigma_ij;
+                Kvv[var].at(var)(i, j) -= coeff * sigma_ij;
+                Kvv[var].at(var)(j, j) += coeff * sigma_ij;
+                Kvv[var].at(var)(j, i) -= coeff * sigma_ij;
 
                 double dsigma_i = dsigma_dEf[var][n1];
                 double dsigma_j = dsigma_dEf[var][n2];
@@ -7432,17 +7372,17 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
                 sigma_ij = 0.5 / (mu0 * C0);
                 double sigma_ji = sigma_ij;
 
-                Kvv[var].at(var)(i, i) -= coeff * sigma_ij * dsigma_i / scalev.at(var)(i);
-                Kvv[var].at(var)(i, j) -= coeff * sigma_ji * dsigma_j / scalev.at(var)(i);
-                Kvv[var].at(var)(j, j) += coeff * sigma_ji * dsigma_j / scalev.at(var)(j);
-                Kvv[var].at(var)(j, i) += coeff * sigma_ij * dsigma_i / scalev.at(var)(j);
+                Kvv[var].at(var)(i, i) -= coeff * sigma_ij * dsigma_i;
+                Kvv[var].at(var)(i, j) -= coeff * sigma_ji * dsigma_j;
+                Kvv[var].at(var)(j, j) += coeff * sigma_ji * dsigma_j;
+                Kvv[var].at(var)(j, i) += coeff * sigma_ij * dsigma_i;
 
                 if (coupling & POISSON)
                 {
-                  Kvv[var].at(u_var)(i, n1) += coeff * sigma_ij * dsigma_i / scalev.at(var)(i);
-                  Kvv[var].at(u_var)(i, n2) += coeff * sigma_ji * dsigma_j / scalev.at(var)(i);
-                  Kvv[var].at(u_var)(j, n2) -= coeff * sigma_ji * dsigma_j / scalev.at(var)(j);
-                  Kvv[var].at(u_var)(j, n1) -= coeff * sigma_ij * dsigma_i / scalev.at(var)(j);
+                  Kvv[var].at(u_var)(i, n1) += coeff * sigma_ij * dsigma_i;
+                  Kvv[var].at(u_var)(i, n2) += coeff * sigma_ji * dsigma_j;
+                  Kvv[var].at(u_var)(j, n2) -= coeff * sigma_ji * dsigma_j;
+                  Kvv[var].at(u_var)(j, n1) -= coeff * sigma_ij * dsigma_i;
                 }
               }
             }
@@ -7594,7 +7534,7 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
                       }
                       else
                       {
-                        Kvv.at(vari).at(varj)(ii,jj) -= scale_v[vari] * deriv_v[vari][varj] / scalev.at(vari)(ii);
+                        Kvv.at(vari).at(varj)(ii,jj) -= scale_v[vari] * deriv_v[vari][varj];
                       }
                     }
                   }
@@ -7643,11 +7583,11 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
                 else
                 {
                   if ((vari == u_var) && (coupling & POISSON))
-                    Fv.at(vari)(ii) -= value_v[vari] / scalev.at(vari)(ii);
+                    Fv.at(vari)(ii) -= value_v[vari];
                   else if ((vari != u_var) && (coupling & CURRENTS))
                   {
                     double sign = -sc->get_carrier_properties(vari)->get_charge_sign();
-                    Fv.at(vari)(ii) -= sign * value_v[vari] / scalev.at(vari)(ii);
+                    Fv.at(vari)(ii) -= sign * value_v[vari];
                   }
                 }
               }
@@ -7674,7 +7614,7 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
 
               double Pn = (polarization[node_map[qp]] * face_normals[qp]) / P0;
 
-              Fv.at(u_var)(node_map[qp]) -= side_areas[qp] * Pn / scalev.at(u_var)(node_map[qp]);
+              Fv.at(u_var)(node_map[qp]) -= side_areas[qp] * Pn;
             }
           }
         }  // end true boundary && residual

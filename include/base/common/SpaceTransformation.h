@@ -18,7 +18,11 @@
  * This class implements all necessary space transformations.
  * In particular, rotations around arbitrary axes, mirroring at
  * arbitrary planes, and all elements of the point groups. The
- * latter are defined in canonical space coordinates x, y, z
+ * latter are defined in canonical space coordinates x, y, z.
+ *
+ * Specific information has been taken from
+ * http://lampx.tugraz.at/~hadley/ss2/crystalphysics/crystalclasses/crystalclasses.html
+ *
  */
 class SpaceTransformation
 {
