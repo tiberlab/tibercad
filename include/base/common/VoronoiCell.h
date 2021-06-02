@@ -26,6 +26,9 @@ class VoronoiCell
     //! Constructor
     explicit VoronoiCell(const libMesh::Elem* elem, double scaling = 1.0);
 
+    //! Constructor
+    explicit VoronoiCell(const libMesh::Elem& elem, double scaling = 1.0);
+
     //! Destructor
     ~VoronoiCell(void);
 

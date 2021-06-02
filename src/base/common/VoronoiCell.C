@@ -16,6 +16,15 @@ VoronoiCell::VoronoiCell(const libMesh::Elem* elem, double scaling)
 }
 
 
+VoronoiCell::VoronoiCell(const libMesh::Elem& elem, double scaling)
+  : _elem(&elem),
+    _scaling(scaling)
+{
+  if (_elem == nullptr)
+    throw InitFailedException("Cannot pass nullptr to VoronoiCell.");
+}
+
+
 VoronoiCell::~VoronoiCell(void)
 {
 
@@ -29,6 +38,12 @@ VoronoiCell::calculate(void)
 
   switch (_elem->type())
   {
+    case libMesh::NODEELEM:
+    {
+      _volumes.resize(1, 1.0);
+      break;
+    }
+
     case libMesh::EDGE2:
     {
       _edges.push_back(std::make_pair(0, 1));
