@@ -57,29 +57,51 @@ VoronoiCell::calculate(void)
 
     case libMesh::TRI3:
     {
-      _edges.push_back(std::make_pair(0, 1));
-      _edges.push_back(std::make_pair(1, 2));
-      _edges.push_back(std::make_pair(2, 0));
+      _edges.reserve(3);
+      _edge_lengths.reserve(3);
+      _edge_areas.resize(3);
+      _volumes.resize(3);
 
-      libMesh::Point d(_elem->point(1) - _elem->point(0));
-      double dx12 = d(0);
-      double dy12 = d(1);
-      _edge_lengths.push_back(d.norm() * _scaling);
-      d = _elem->point(2) - _elem->point(1);
-      double dx23 = d(0);
-      double dy23 = d(1);
-      _edge_lengths.push_back(d.norm() * _scaling);
-      d = _elem->point(0) - _elem->point(2);
-      double dx31 = d(0);
-      double dy31 = d(1);
-      _edge_lengths.push_back(d.norm() * _scaling);
+      // check orientation
+      libMesh::Point d12(_elem->point(1) - _elem->point(0));
+      libMesh::Point d31(_elem->point(2) - _elem->point(0));
+      if ((d12(0)*d31(1) - d12(1)*d31(0)) < 0.0)
+      {
+        std::swap(d12, d31);
+        _edges.push_back(std::make_pair(0, 2));
+        _edges.push_back(std::make_pair(2, 1));
+        _edges.push_back(std::make_pair(1, 0));
+      }
+      else
+      {
+        _edges.push_back(std::make_pair(0, 1));
+        _edges.push_back(std::make_pair(1, 2));
+        _edges.push_back(std::make_pair(2, 0));
+      }
+
+      d31 *= -1;
+
+      libMesh::Point d23(_elem->point(_edges[1].second) - _elem->point(_edges[1].first));
+
+      // now it's counter clockwise
 
 
-      // node 0:
+      double dx12 = d12(0);
+      double dy12 = d12(1);
+      _edge_lengths.push_back(d12.norm() * _scaling);
+      double dx23 = d23(0);
+      double dy23 = d23(1);
+      _edge_lengths.push_back(d23.norm() * _scaling);
+      double dx31 = d31(0);
+      double dy31 = d31(1);
+      _edge_lengths.push_back(d31.norm() * _scaling);
+
+
+      // E.g. node 0:
       //
-      // | -dy12  -dy13 | |a|    1|dx23|
+      // | -dy12   dy13 | |a|    1|dx23|
       // |              | | | =  -|    |
-      // | dx12    dx13 | |b|    2|dy23|
+      // |  dx12  -dx13 | |b|    2|dy23|
       //
       // Voronoi face length:
       //  A12 = a*sqrt(dy12^2 + dx12^2)
@@ -94,21 +116,20 @@ VoronoiCell::calculate(void)
       double b = p.first;
 
       // node 2:
-      p = solve_2x2(-dy31, -dy23, dx31, dx23, 0.5*dx12, 0.5*dy12);
+      p = solve_2x2(-dy31, dy23, dx31, -dx23, 0.5*dx12, 0.5*dy12);
       c = 0.5 * (c + p.first);
       b = 0.5 * (b + p.second);
 
-      _edge_areas.push_back(a * _edge_lengths[0]);
-      _edge_areas.push_back(b * _edge_lengths[1]);
-      _edge_areas.push_back(c * _edge_lengths[2]);
+      _edge_areas[0] = a * _edge_lengths[0];
+      _edge_areas[1] = b * _edge_lengths[1];
+      _edge_areas[2] = c * _edge_lengths[2];
 
-      _volumes.resize(3);
-      _volumes[0] = 0.25 * (_edge_areas[0] * _edge_lengths[0] +
-                            _edge_areas[2] * _edge_lengths[2]);
-      _volumes[1] = 0.25 * (_edge_areas[0] * _edge_lengths[0] +
-                            _edge_areas[1] * _edge_lengths[1]);
-      _volumes[2] = 0.25 * (_edge_areas[1] * _edge_lengths[1] +
-                            _edge_areas[2] * _edge_lengths[2]);
+      double V1 = _edge_areas[0] * _edge_lengths[0];
+      double V2 = _edge_areas[1] * _edge_lengths[1];
+      double V3 = _edge_areas[2] * _edge_lengths[2];
+      _volumes[0] = 0.25 * (V1 + V3);
+      _volumes[1] = 0.25 * (V1 + V2);
+      _volumes[2] = 0.25 * (V2 + V3);
 
       break;
     }

@@ -1394,10 +1394,10 @@ DriftDiffusion::parse_const_options(void)
     myopts.discretization = FEM;
   else if ((method == "BIM") || (method == "BIM_SG"))
   {
-    if (get_mesh().mesh_dimension() > 1)
+    if (get_mesh().mesh_dimension() > 2)
     {
       Messages::warning("BIM is currently not implemented for mesh "
-           "dimensions > 1. Falling back to FEM.");
+           "dimensions > 2. Falling back to FEM.");
       myopts.discretization = FEM;
     }
     else
