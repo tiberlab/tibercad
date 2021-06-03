@@ -93,6 +93,11 @@ class VoronoiCell
     //! Clear all data structures
     void clear(void);
 
+    //! Solve a 2x2 system
+    std::pair<double, double> solve_2x2(double a11, double a12,
+                                        double a21, double a22,
+                                        double b1, double b2) const;
+
 };
 
 
