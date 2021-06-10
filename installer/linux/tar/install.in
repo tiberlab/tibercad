@@ -255,6 +255,7 @@ case \$prog in
   tibercad*)
     progname="tibercad"
     executable="\${TIBERCADROOT}/\${ARCH}/bin/mpiexec.hydra"
+    export LD_LIBRARY_PATH=\${TIBERCADROOT}/\${ARCH}/lib
     args=(-n \${n_mpi_procs} "\${TIBERCADROOT}/\${ARCH}/bin/\$progname")
     ;;
 
