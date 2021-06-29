@@ -530,7 +530,7 @@ Utils::extract_vector(const string& input, vector<double>& vec)
           double b = convert<double>(tok[2]);
           if (step * (b - a) < 0)
             throw RuntimeException("'" + vs[i] + "' is invalid double range");
-          for (double x = a; x < (b - 1e-3*step); x += step)
+          for (double x = a; fabs(x) < fabs(b - 1e-3*step); x += step)
             vec.push_back(x);
           vec.push_back(b);
         }
