@@ -2,6 +2,8 @@
 
 topdir := ../../../../..
 include $(topdir)/Make.defs
+include $(topdir)/Make.common
+
 ARCH = $(shell uname -m)
 
 CMAKE = cmake-3.18
@@ -23,10 +25,9 @@ libnegf$(shared_libext) :  .$(ARCH)/NegfWrapper$(obj-suffix) libnegf_$(ARCH).a
 .$(ARCH)/NegfWrapper$(obj-suffix) : libnegf_$(ARCH).a 
 
 libnegf_$(ARCH).a: update
-	@echo "Updating libNEGF ..."  
-	cd libnegf; git status; \
-	echo "Compiling libNEGF ...";\
-	FC=$(FC) $(CMAKE) . ; \
+	@echo "Compiling libNEGF ...";
+	cd libnegf; \
+	MKLROOT=$(MKLROOT) FC=$(FC) $(CMAKE) . ; \
 	$(MAKE) ; cd .. ; \
 	cp libnegf/src/libnegf.a .	
 	cp libnegf/src/api/fortran.h .

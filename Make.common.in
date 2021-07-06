@@ -65,6 +65,7 @@ INCLUDE  := $(shell export METHOD=$(LIBMESHMETHOD) && $(libmesh_config) --includ
 NON_TIBER_INCLUDES := @BOOST_CPPFLAGS@ @TAO_INCLUDES@ $(INCLUDE) 
 
 ifeq ($(have_mkl),yes)
+ MKLROOT = @MKL_DIR@
  BLASLAPACK_LDFLAGS = @MKL_LIBS@
  BLASLAPACK_INCLUDE += -I@MKL_INCLUDEDIR@
 endif
