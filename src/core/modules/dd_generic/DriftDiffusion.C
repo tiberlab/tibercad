@@ -6614,8 +6614,8 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
             {
               double sign = -sc->get_carrier_properties(var)->get_charge_sign();
 
-              double D = 0.5 * (diffusivity[var][n1] + diffusivity[var][n2]);
-              double mu = -0.5 * sign * (mobility[var][n1] + mobility[var][n2]);
+              double cond1 = sigma[var][n1];
+              double cond2 = sigma[var][n2];
 
               double arg = sign * (u[u_var][n1] - u[u_var][n2]);
               auto ber = bernoulli(arg);
@@ -6625,9 +6625,7 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
               double dBn = sign + dBp;
 
 
-              double coeff = mu * face_area / edge_len / mu0;
-              double dens1 = density[var][n1] / C0;
-              double dens2 = density[var][n2] / C0;
+              double coeff = -sign * face_area / edge_len / (mu0 * C0);
 
               // For small difference, we make a linear approximation
               // the limit is hard coded and has been tested on a pn junction
@@ -6648,8 +6646,8 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
 
               if (residual != nullptr)
               {
-                double val1 =  coeff * dens1 * Bp * f1;
-                double val2 =  coeff * dens2 * Bn * f2;
+                double val1 =  coeff * cond1 * Bp * f1;
+                double val2 =  coeff * cond2 * Bn * f2;
                 double value = 0.5 * (val1 + val2);
 
                 Fv.at(var)(i) += value;
@@ -6658,18 +6656,19 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
 
               if (jacobian != nullptr)
               {
-                double dn1 = -dn_dEf[var][n1] * phi0 / C0;
-                double dn2 = -dn_dEf[var][n2] * phi0 / C0;
+                double dc1 = -dsigma_dEf[var][n1] * phi0;
+                double dc2 = -dsigma_dEf[var][n2] * phi0;
+dsigma_dgradu
 
                 // w.r.t. u[var] = phi_n
                 //double val11 =  0.5 * coeff * Bp * ((dn1 + dens1) * f1 - dens1);
                 //double val12 =  0.5 * coeff * Bp * dens1 * (1.0 - f1);
                 //double val21 = -0.5 * coeff * Bn * dens2 * (1.0 + f2);
                 //double val22 =  0.5 * coeff * Bn * ((dn2 + dens2) * f2 + dens2);
-                double val11 =  0.5 * coeff * Bp * (dn1 * f1 + dens1 * df1);
-                double val12 = -0.5 * coeff * Bp * dens1 * df1;
-                double val21 =  0.5 * coeff * Bn * dens2 * df2;
-                double val22 =  0.5 * coeff * Bn * (dn2 * f2 - dens2 * df2);
+                double val11 =  0.5 * coeff * Bp * (dc1 * f1 + cond1 * df1);
+                double val12 = -0.5 * coeff * Bp * cond1 * df1;
+                double val21 =  0.5 * coeff * Bn * cond2 * df2;
+                double val22 =  0.5 * coeff * Bn * (dc2 * f2 - cond2 * df2);
 
                 Kvv[var].at(var)(i, i) += val11 + val21;
                 Kvv[var].at(var)(i, j) += val12 + val22;
@@ -6678,10 +6677,10 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
 
                 if (coupling & POISSON)
                 {
-                  val11 = 0.5 * coeff * f1 * (dBp * dens1 - Bp * dn1);
-                  val12 = -0.5 * coeff * f1 * dens1 * dBp;
-                  val21 = 0.5 * coeff * f2 * dens2 * dBn;
-                  val22 = 0.5 * coeff * f2 * (-dBn * dens2 - Bn * dn2);
+                  val11 = 0.5 * coeff * f1 * (dBp * cond1 - Bp * dc1);
+                  val12 = -0.5 * coeff * f1 * cond1 * dBp;
+                  val21 = 0.5 * coeff * f2 * cond2 * dBn;
+                  val22 = 0.5 * coeff * f2 * (-dBn * cond2 - Bn * dc2);
 
                   Kvv[var].at(u_var)(i, n1) += val11 + val21;
                   Kvv[var].at(u_var)(i, n2) += val12 + val22;
@@ -6705,6 +6704,7 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
               double sigma_j = sigma[var][n2];
               //double sigma_ij = sqrt(sigma_i) * sqrt(sigma_j) / (mu0 * C0);
               double sigma_ij = 0.5 * (sigma_i + sigma_j) / (mu0 * C0);
+              //double sigma_ij = 1.0 / (mu0 * C0 * (1.0 / sigma_i + 1.0 / sigma_j));
 
 
               double coeff = face_area / edge_len;
