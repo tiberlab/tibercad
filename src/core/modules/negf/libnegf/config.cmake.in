@@ -1,0 +1,73 @@
+# Selecting toolchain specific settings via environment variable, so that multiple shells with
+#  different toolchains are possible in parallel.
+
+#
+# Overriding (pre-populating) options in config.cmake
+#
+set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build type (Release|Debug)")
+
+option(WITH_MPI "Whether MPI should be used" TRUE)
+option(WITH_OMP "Whether OMP should be used" TRUE)
+
+set(GNU_VERSION "7.3.0"  CACHE STRING "gnu version")
+
+set(MKL_LIBDIR "@MKL_DIR@/lib/intel64" CACHE STRING
+	"Directory where to look for mkl libraries"	)
+set(INTEL_DIR "@MKL_DIR@/../lib/intel64" CACHE STRING
+	"Directory where to look for intel libraries"	)
+#set(GNU_DIR "/usr/pack/gcc-${GNU_VERSION}-ma/lib64" CACHE STRING
+#	"Directory where to look for gnu libraries"	)
+#set(IFORT_DIR "/usr/pack/intel_ifort-13.0-ma/lib/intel64" CACHE STRING
+#	"Directory where to look for ifort libraries"	)
+set(ENV{MKLROOT} ${MKL_LIBDIR})
+
+if (WITH_MPI)
+   set(MPI_DIR "@abs_top_builddir@/SDK/x86_64-linux/lib" CACHE STRING
+	   "Directory where to look for MPI libs"	)
+endif()
+#
+# Overriding (pre-populating) options of the toolchain file
+#
+
+  set(TEST_OMP_THREADS "2" CACHE STRING "Number of threads to use for each test")
+  set(TEST_MPI_PROCS "2" CACHE STRING "Number of mpi processes to use for each test")
+
+  if(WITH_MPI)
+
+	  set(CMAKE_C_COMPILER "@CC@" CACHE STRING "C compiler")
+	  set(CMAKE_Fortran_COMPILER "@FC@"
+       CACHE STRING "Fortran compiler")
+  
+ set(CMAKE_Fortran_FLAGS "-fmax-errors=5 -fallow-argument-mismatch -I@abs_top_builddir@/SDK/include" 
+       CACHE STRING "General Fortran flags")
+
+    #set(CMAKE_C_COMPILER "mpicc" CACHE STRING "C compiler")
+
+    #set(CMAKE_C_FLAGS "-cc=gcc-${GNU_VERSION} -fmax-errors=5 -I$ENV{HOME}/include/gnu-${GNU_VERSION}" 
+    #   CACHE STRING "General Fortran flags")
+
+    set(SCALAPACK_LIBRARY_DIR "${MKL_LIBDIR}"
+    	   CACHE STRING "Directories where Scalapack libraries can be found")
+
+    set(SCALAPACK_LIBRARY "mkl_scalapack_lp64;mkl_blacs_intelmpi_lp64" CACHE STRING 
+    	   "Scalapack libraries to link")
+
+    set(TEST_RUNNER_TEMPLATE
+    	   "env OMP_NUM_THREADS=\${TEST_OMP_THREADS} mpiexec --bind-to none -n \${TEST_MPI_PROCS}"
+    	   CACHE STRING "How to run the tests")
+
+    set(OTHER_LIBRARY_DIRS ""
+    		CACHE STRING "Directories where the other libraries can be found")
+    set(OTHER_INCLUDE_DIRS "" CACHE STRING "Other include directories to consider")
+
+  else()
+	  set(CMAKE_Fortran_COMPILER "@FC@" CACHE STRING "Fortran compiler")
+	  set(CMAKE_C_COMPILER "@CC@" CACHE STRING "C compiler")
+  endif()
+
+  set(LAPACK_LIBRARY_DIR "${MKL_LIBDIR};/usr/lib/x86_64-linux-gnu"
+      CACHE STRING "Paths to scan when looking for the LAPACK/BLAS libraries")
+      
+  set(LAPACK_LIBRARY "mkl_intel_lp64;mkl_gnu_thread;mkl_core;-lgomp" CACHE STRING 
+    	    "LAPACK and BLAS libraries to link")
+

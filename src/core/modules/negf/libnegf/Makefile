@@ -26,12 +26,12 @@ libnegf$(shared_libext) :  .$(ARCH)/NegfWrapper$(obj-suffix) libnegf_$(ARCH).a
 
 libnegf_$(ARCH).a: update
 	@echo "Compiling libNEGF ...";
-	cd libnegf; \
-	MKLROOT=$(MKLROOT) FC=$(FC) $(CMAKE) . ; \
+	mkdir -p build; cd build; \
+	$(CMAKE) -C ../config.cmake -S ../libnegf -B .; \
 	$(MAKE) ; cd .. ; \
-	cp libnegf/src/libnegf.a .	
+	cp build/src/libnegf.a .	
+	cp build/src/api/libnegf.hpp . 
 	cp libnegf/src/api/fortran.h .
-	cp libnegf/src/api/libnegf.hpp . 
 
 update: checkout
 	#cd libnegf; git pull origin; cd ..;
@@ -43,7 +43,7 @@ checkout:
 clean:
 	@echo "Clean libnegf..."
 	rm -f libnegf_$(ARCH).a libnegf.so
-	if test -d libnegf/src/api ; then make -C libnegf/src/api clean; fi	
+	if test -d build/src/api ; then make -C build/src/api clean; fi	
 
 
 include $(topdir)/Make.rules
