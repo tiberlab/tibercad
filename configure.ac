@@ -281,6 +281,7 @@ AC_CONFIG_FILES([Make.common
                  src/tibercad/Makefile
                  src/utils/SLEPC/Makefile
                  src/core/modules/etb/libuptight/Makefile
+                 src/core/modules/negf/libnegf/config.cmake
                  contrib/crypto++/make.defs
                  installer/Makefile
 		 installer/windows/tibercad.bim

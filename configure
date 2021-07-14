@@ -712,6 +712,7 @@ infodir
 docdir
 oldincludedir
 includedir
+runstatedir
 localstatedir
 sharedstatedir
 sysconfdir
@@ -809,6 +810,7 @@ datadir='${datarootdir}'
 sysconfdir='${prefix}/etc'
 sharedstatedir='${prefix}/com'
 localstatedir='${prefix}/var'
+runstatedir='${localstatedir}/run'
 includedir='${prefix}/include'
 oldincludedir='/usr/include'
 docdir='${datarootdir}/doc/${PACKAGE_TARNAME}'
@@ -1061,6 +1063,15 @@ do
   | -silent | --silent | --silen | --sile | --sil)
     silent=yes ;;
 
+  -runstatedir | --runstatedir | --runstatedi | --runstated \
+  | --runstate | --runstat | --runsta | --runst | --runs \
+  | --run | --ru | --r)
+    ac_prev=runstatedir ;;
+  -runstatedir=* | --runstatedir=* | --runstatedi=* | --runstated=* \
+  | --runstate=* | --runstat=* | --runsta=* | --runst=* | --runs=* \
+  | --run=* | --ru=* | --r=*)
+    runstatedir=$ac_optarg ;;
+
   -sbindir | --sbindir | --sbindi | --sbind | --sbin | --sbi | --sb)
     ac_prev=sbindir ;;
   -sbindir=* | --sbindir=* | --sbindi=* | --sbind=* | --sbin=* \
@@ -1198,7 +1209,7 @@ fi
 for ac_var in	exec_prefix prefix bindir sbindir libexecdir datarootdir \
 		datadir sysconfdir sharedstatedir localstatedir includedir \
 		oldincludedir docdir infodir htmldir dvidir pdfdir psdir \
-		libdir localedir mandir
+		libdir localedir mandir runstatedir
 do
   eval ac_val=\$$ac_var
   # Remove trailing slashes.
@@ -1351,6 +1362,7 @@ Fine tuning of the installation directories:
   --sysconfdir=DIR        read-only single-machine data [PREFIX/etc]
   --sharedstatedir=DIR    modifiable architecture-independent data [PREFIX/com]
   --localstatedir=DIR     modifiable single-machine data [PREFIX/var]
+  --runstatedir=DIR       modifiable per-process data [LOCALSTATEDIR/run]
   --libdir=DIR            object code libraries [EPREFIX/lib]
   --includedir=DIR        C header files [PREFIX/include]
   --oldincludedir=DIR     C header files for non-gcc [/usr/include]
@@ -4585,7 +4597,13 @@ fi
     MKL_INCLUDEDIR="$tc_cv_mkl_dir/include"
     HAVE_MKL="yes"
     case $host in
-      x86_64-*-*) MKL_LIBS="-L$tc_cv_mkl_dir/lib/intel64 -Wl,-rpath,$tc_cv_mkl_dir/lib/intel64 -Wl,--no-as-needed -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5  -lm -lpthread" ;;
+      x86_64-*-*)
+        if test "$THREAD_MODEL" == intel
+        then
+          MKL_LIBS="-L$tc_cv_mkl_dir/lib/intel64 -Wl,-rpath,$tc_cv_mkl_dir/lib/intel64 -Wl,--no-as-needed -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5  -lm -lpthread"
+        else
+          MKL_LIBS="-L$tc_cv_mkl_dir/lib/intel64 -Wl,-rpath,$tc_cv_mkl_dir/lib/intel64 -Wl,--no-as-needed -lmkl_intel_lp64 -lmkl_gnu_thread -lmkl_core -lgomp  -lm -lpthread"
+        fi ;;
       i?86-*-*) MKL_LIBS="-L$tc_cv_mkl_dir/lib/32 -Wl,-rpath,$tc_cv_mkl_dir/lib/32 -lmkl_intel -lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread" ;;
       *) tc_cv_mkl_dir="no"; HAVE_MKL="no"; MKL_LIBDIR= ; MKL_INCLUDEDIR= ;;
     esac
@@ -6712,7 +6730,7 @@ fi
 
 ac_config_files="$ac_config_files stamp-h"
 
-ac_config_files="$ac_config_files Make.common Make.defs doc/Doxyfile Makefile doc/Makefile src/tibercad/Makefile src/utils/SLEPC/Makefile src/core/modules/etb/libuptight/Makefile contrib/crypto++/make.defs installer/Makefile installer/windows/tibercad.bim installer/linux/deb/control installer/linux/tar/install share/coremodules.conf share/Doxyfile_SDK"
+ac_config_files="$ac_config_files Make.common Make.defs doc/Doxyfile Makefile doc/Makefile src/tibercad/Makefile src/utils/SLEPC/Makefile src/core/modules/etb/libuptight/Makefile src/core/modules/negf/libnegf/config.cmake contrib/crypto++/make.defs installer/Makefile installer/windows/tibercad.bim installer/linux/deb/control installer/linux/tar/install share/coremodules.conf share/Doxyfile_SDK"
 
 ac_config_files="$ac_config_files installer/prepare_files.sh"
 
@@ -7421,6 +7439,7 @@ do
     "src/tibercad/Makefile") CONFIG_FILES="$CONFIG_FILES src/tibercad/Makefile" ;;
     "src/utils/SLEPC/Makefile") CONFIG_FILES="$CONFIG_FILES src/utils/SLEPC/Makefile" ;;
     "src/core/modules/etb/libuptight/Makefile") CONFIG_FILES="$CONFIG_FILES src/core/modules/etb/libuptight/Makefile" ;;
+    "src/core/modules/negf/libnegf/config.cmake") CONFIG_FILES="$CONFIG_FILES src/core/modules/negf/libnegf/config.cmake" ;;
     "contrib/crypto++/make.defs") CONFIG_FILES="$CONFIG_FILES contrib/crypto++/make.defs" ;;
     "installer/Makefile") CONFIG_FILES="$CONFIG_FILES installer/Makefile" ;;
     "installer/windows/tibercad.bim") CONFIG_FILES="$CONFIG_FILES installer/windows/tibercad.bim" ;;

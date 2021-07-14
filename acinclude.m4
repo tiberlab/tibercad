@@ -194,6 +194,16 @@ AC_DEFUN([TC_CUDA],
  ])dnl
 ])dnl
 
+dnl decide thread model
+dnl
+AC_DEFUN([TC_THREAD_MODEL],
+[AC_CACHE_CHECK([thread model to be used (intel or gnu)], tc_cv_thread_model,
+ [AC_ARG_WITH([thread_model], AS_HELP_STRING([--with-thread-model=intel|gnu],
+   [specify thread model to be used]),
+   [tc_cv_thread_model="$with-thread-model"])
+ THREAD_MODEL="${tc_cv_thread_model:-gnu}"
+ ])dnl
+])dnl
 
 
 dnl check for MKL
@@ -210,9 +220,13 @@ AC_DEFUN([TC_MKL],
     MKL_INCLUDEDIR="$tc_cv_mkl_dir/include"
     HAVE_MKL="yes"
     case $host in
-dnl      x86_64-*-*) MKL_LIBS="-L$tc_cv_mkl_dir/mkl/lib/intel64 -Wl,-rpath,$tc_cv_mkl_dir/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread" ;;
-dnl      x86_64-*-*) MKL_LIBS="-L$tc_cv_mkl_dir/mkl/lib/intel64 -Wl,-rpath,$tc_cv_mkl_dir/mkl/lib/intel64 -lmkl_rt -lm -lpthread" ;;
-      x86_64-*-*) MKL_LIBS="-L$tc_cv_mkl_dir/lib/intel64 -Wl,-rpath,$tc_cv_mkl_dir/lib/intel64 -Wl,--no-as-needed -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5  -lm -lpthread" ;;
+      x86_64-*-*)
+        if test "$THREAD_MODEL" == intel
+        then
+          MKL_LIBS="-L$tc_cv_mkl_dir/lib/intel64 -Wl,-rpath,$tc_cv_mkl_dir/lib/intel64 -Wl,--no-as-needed -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5  -lm -lpthread"
+        else
+          MKL_LIBS="-L$tc_cv_mkl_dir/lib/intel64 -Wl,-rpath,$tc_cv_mkl_dir/lib/intel64 -Wl,--no-as-needed -lmkl_intel_lp64 -lmkl_gnu_thread -lmkl_core -lgomp  -lm -lpthread"
+        fi ;;
       i?86-*-*) MKL_LIBS="-L$tc_cv_mkl_dir/lib/32 -Wl,-rpath,$tc_cv_mkl_dir/lib/32 -lmkl_intel -lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread" ;;
       *) tc_cv_mkl_dir="no"; HAVE_MKL="no"; MKL_LIBDIR= ; MKL_INCLUDEDIR= ;;
     esac
