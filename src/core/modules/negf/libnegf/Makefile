@@ -6,7 +6,7 @@ include $(topdir)/Make.common
 
 ARCH = $(shell uname -m)
 
-CMAKE = cmake-3.18
+CMAKE = cmake
 
 CXXFLAGS = -fPIC -I . 
 
