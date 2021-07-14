@@ -6658,7 +6658,7 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
               {
                 double dc1 = -dsigma_dEf[var][n1] * phi0;
                 double dc2 = -dsigma_dEf[var][n2] * phi0;
-dsigma_dgradu
+                //dsigma_dgradu
 
                 // w.r.t. u[var] = phi_n
                 //double val11 =  0.5 * coeff * Bp * ((dn1 + dens1) * f1 - dens1);
