@@ -3,11 +3,10 @@
 
 #include "SimulationInterface.h"
 #include "TensorGrid.h"
-#include <tr1/random>
+#include <random>
 #include "mesh.h"
 #include "elem.h"
 
-using namespace std;
 
 class TBDLLOCAL PolarizationGrid : public SimulationInterface
 {
@@ -26,7 +25,7 @@ class TBDLLOCAL PolarizationGrid : public SimulationInterface
   void set_steps(unsigned int);
 
   //! set dipole moment in units defined by str
-  void set_dipole(double p, string str); 
+  void set_dipole(double p, std::string str); 
 
   void set_kT(double);
  
@@ -40,7 +39,7 @@ class TBDLLOCAL PolarizationGrid : public SimulationInterface
 
   void setup_grid(const Point& p0, const Point& p1, int, int, int);
 
-  void set_efield(const vector<double> &Efield);  
+  void set_efield(const std::vector<double> &Efield);  
 
   void rnd_orientation(Point &p);
   
@@ -76,8 +75,8 @@ class TBDLLOCAL PolarizationGrid : public SimulationInterface
   void parse_options(void);
 
   void get_solution_secure(const Elem* elem,
-                           map<ID, std::vector<double> >& values,
-                           const vector<Point>& p);
+                           std::map<ID, std::vector<double> >& values,
+                           const std::vector<Point>& p);
   
   //NumericVector<double>& do_get_solution_vector(void);
     
@@ -85,7 +84,7 @@ class TBDLLOCAL PolarizationGrid : public SimulationInterface
  
   void dot_product(unsigned int i, std::vector<double>& bins, double dr);
 
-  void autocorrelation(int dir, unsigned int l1, unsigned int l2, vector<double>& c);
+  void autocorrelation(int dir, unsigned int l1, unsigned int l2, std::vector<double>& c);
 
   void plot_globaldata(void);
 
@@ -112,11 +111,11 @@ class TBDLLOCAL PolarizationGrid : public SimulationInterface
 
   TensorGrid grid;
   
-  vector<Point> pp;
+  std::vector<Point> pp;
 
-  vector<Point> efield;
+  std::vector<Point> efield;
 
-  mt19937 generator;
+  std::mt19937 generator;
 
   unsigned int _nx[3];
 

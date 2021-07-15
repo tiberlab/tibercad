@@ -10,6 +10,14 @@
 #include "TiberModule.h"
 #include "gmsh_io.h"
 
+using std::string;
+using std::vector;
+using std::map;
+using std::endl;
+using std::cout;
+using std::uniform_int_distribution;
+using std::uniform_real_distribution;
+
 PolarizationGrid::PolarizationGrid(const ModelOptions& options) :
  SimulationInterface(options),
   eps_r(1.0),
@@ -173,7 +181,7 @@ PolarizationGrid::parse_options(void)
   double dip = get_option("dipole", 2.29);
   set_dipole(dip,units);
 
-  ostringstream ostr;
+  std::ostringstream ostr;
   ostr<<"dipole= "<<dipole<<" e*nm "<<endl;
   Messages::info(ostr.str());  
 
@@ -184,7 +192,7 @@ PolarizationGrid::parse_options(void)
   kbT = get_option("kbT", 0.0);
   
   seed = get_option("seed",
-      static_cast<int>(time(NULL) * random_device()()));
+      static_cast<int>(time(NULL) * std::random_device()()));
 
   // faster (I think) to use array than std::vector;
   vector<bool> periodic;
@@ -212,7 +220,7 @@ PolarizationGrid::set_cutoff(void)
   // cutoff in nm to get 0.1 meV energy difference
   cutoff = pow(tmp/0.0001,1.0/3.0);
   
-  ostringstream os;
+  std::ostringstream os;
   os<<"Computed Cutoff= "<<cutoff<<endl;
   Messages::info(os.str());
 
@@ -357,7 +365,7 @@ PolarizationGrid::write_dipoles()
 {
    string out_path = get_output_directory();
    string file_name = out_path+"/"+get_option("filename","polarization.dat");
-   ofstream file; 
+   std::ofstream file; 
 
    file.open(file_name.c_str());
    for (unsigned int i=0; i<pp.size(); i++)
@@ -372,7 +380,7 @@ PolarizationGrid::read_dipoles()
 {
    string file_name = get_option("read_file","polarization.dat");
   
-   ifstream file; 
+   std::ifstream file; 
 
    file.open(file_name.c_str());
    for (unsigned int i=0; i<pp.size(); i++)
@@ -389,7 +397,7 @@ PolarizationGrid::write_antiferro()
 {
    string out_path = get_output_directory();
    string file_name = out_path+"/"+get_option("filename","antiferro.dat");
-   ofstream file; 
+   std::ofstream file; 
 
    unsigned int nx = grid.num_elements(0);
    unsigned int ny = grid.num_elements(1);
@@ -448,7 +456,7 @@ PolarizationGrid::write_dipoles_man()
 
    string out_path = get_output_directory();
    string file_name = out_path+"/"+get_option("filename","polarization_man.dat");
-   ofstream file; 
+   std::ofstream file; 
 
    file.open(file_name.c_str());
    for (unsigned int i=0; i<pp2.size(); i++)
@@ -677,8 +685,8 @@ PolarizationGrid::kmc(void)
   uniform_int_distribution<int> random1(0, grid.num_elements()-1);
   uniform_int_distribution<int> random2(0, 1);
   uniform_real_distribution<double> rrand(0.0, 1.0);    
-  ostringstream ostr;
-  ofstream file;
+  std::ostringstream ostr;
+  std::ofstream file;
   string filename = get_output_directory()+"/energy.dat";
   file.open(filename.c_str());
   file<<"#iteration  Energy"<<endl;
@@ -777,7 +785,7 @@ PolarizationGrid::average_dipole()
 
    p = p / grid.num_elements();
 
-   ostringstream os;
+   std::ostringstream os;
    os<<"Average Dipole P= "<<p(0)<<" "<<p(1)<<" "<<p(2)<<endl;
    Messages::info(os.str());
 
@@ -821,7 +829,7 @@ PolarizationGrid::plot_globaldata(void)
         }    
      }
       
-     ofstream of(TiberCad::get_output_dir() + "/" + get_name() +
+     std::ofstream of(TiberCad::get_output_dir() + "/" + get_name() +
           "_radial.dat");
 
      of << "# r  radial_distribution"<<endl; 
@@ -847,7 +855,7 @@ PolarizationGrid::plot_globaldata(void)
          autocorrelation(0, l1, l2, cx);
        }
      }
-     ofstream ofx(TiberCad::get_output_dir() + "/" + get_name() +
+     std::ofstream ofx(TiberCad::get_output_dir() + "/" + get_name() +
           "_autocorr_x.dat");
      ofx << "# x autocorrelation_x"<<endl; 
      for (unsigned int k=0; k < _nx[0]; k++)
@@ -864,7 +872,7 @@ PolarizationGrid::plot_globaldata(void)
          autocorrelation(1, l1, l2, cy);
        }
      }
-     ofstream ofy(TiberCad::get_output_dir() + "/" + get_name() +
+     std::ofstream ofy(TiberCad::get_output_dir() + "/" + get_name() +
           "_autocorr_y.dat");
      ofy << "# y autocorrelation_y"<<endl; 
      for (unsigned int k=0; k < _nx[1]; k++)
@@ -880,7 +888,7 @@ PolarizationGrid::plot_globaldata(void)
          autocorrelation(2, l1, l2, cz);
        }
      }
-     ofstream ofz(TiberCad::get_output_dir() + "/" + get_name() +
+     std::ofstream ofz(TiberCad::get_output_dir() + "/" + get_name() +
           "_autocorr_z.dat");
      ofz << "# z autocorrelation_z"<<endl; 
      for (unsigned int k=0; k < _nx[2]; k++)
