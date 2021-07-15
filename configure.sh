@@ -49,6 +49,7 @@ SVN=svn-1.9.5
   --with-slepc-prefix=${SLEPC_DIR} \
   --with-mpiexec=mpiexec-3.1.1 \
   --with-mkl=/usr/pack/intel_mkl-11.2-ma/mkl \
+  --with-thread-library=intel \
   --with-subversion=${SVN} \
   --disable-license-check \
   --enable-uptight\

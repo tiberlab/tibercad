@@ -656,6 +656,7 @@ HAVE_MKL
 MKL_INCLUDEDIR
 MKL_LIBS
 MKL_DIR
+THREAD_LIBRARY
 SVN
 GMSH
 GENERATE_LATEX
@@ -737,6 +738,7 @@ ac_user_opts='
 enable_option_checking
 with_mpiexec
 with_subversion
+with_thread_library
 with_mkl
 enable_pardiso
 with_cuda
@@ -1409,6 +1411,8 @@ Optional Packages:
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-mpiexec=PROG     specify the mpi launcher
   --with-subversion=PROG  specify the subversion executable
+  --with-thread-library=intel|gnu
+                          specify thread runtime library to be used
   --with-mkl=DIR          specify the MKL installation path
   --with-cuda=DIR         specify the CUDA toolkit path
   --with-libmesh-prefix=DIR
@@ -4579,7 +4583,24 @@ fi
 #
 
 # PARDISO
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether MKL is available" >&5
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking thread runtime library to be used (intel or gnu)" >&5
+$as_echo_n "checking thread runtime library to be used (intel or gnu)... " >&6; }
+if ${tc_cv_thread_library+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+# Check whether --with-thread-library was given.
+if test "${with_thread_library+set}" = set; then :
+  withval=$with_thread_library; tc_cv_thread_library="$with_thread_library"
+fi
+
+ THREAD_LIBRARY="${tc_cv_thread_library:-gnu}"
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $tc_cv_thread_library" >&5
+$as_echo "$tc_cv_thread_library" >&6; }
+
+ { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether MKL is available" >&5
 $as_echo_n "checking whether MKL is available... " >&6; }
 if ${tc_cv_mkl_dir+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -4598,7 +4619,7 @@ fi
     HAVE_MKL="yes"
     case $host in
       x86_64-*-*)
-        if test "$THREAD_MODEL" == intel
+        if test "$THREAD_LIBRARY" == intel
         then
           MKL_LIBS="-L$tc_cv_mkl_dir/lib/intel64 -Wl,-rpath,$tc_cv_mkl_dir/lib/intel64 -Wl,--no-as-needed -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5  -lm -lpthread"
         else
@@ -4607,15 +4628,15 @@ fi
       i?86-*-*) MKL_LIBS="-L$tc_cv_mkl_dir/lib/32 -Wl,-rpath,$tc_cv_mkl_dir/lib/32 -lmkl_intel -lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread" ;;
       *) tc_cv_mkl_dir="no"; HAVE_MKL="no"; MKL_LIBDIR= ; MKL_INCLUDEDIR= ;;
     esac
-
-
-
-
   fi
 
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $tc_cv_mkl_dir" >&5
 $as_echo "$tc_cv_mkl_dir" >&6; }
+
+
+
+
  # Check whether --enable-pardiso was given.
 if test "${enable_pardiso+set}" = set; then :
   enableval=$enable_pardiso; if test $enableval != "no"; then
@@ -4658,15 +4679,15 @@ fi
       i?86-*-*) CUDA_LIBS="-L$tc_cv_cuda_dir/lib32 -Wl,-rpath,$tc_cv_cuda_dir/lib32 -lcublas -lcusparse -lcurand -lcudart -lrt" ;;
       *) tc_cv_cuda_dir="no"; HAVE_CUDA="no"; CUDA_LIBDIR= ; CUDA_INCLUDEDIR= ;;
     esac
-
-
-
-
   fi
 
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $tc_cv_cuda_dir" >&5
 $as_echo "$tc_cv_cuda_dir" >&6; }
+
+
+
+
 
 # DFTB+
 # Check whether --enable-dftb was given.

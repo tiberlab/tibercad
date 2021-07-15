@@ -111,8 +111,8 @@ AC_CACHE_CHECK([wether Boost::regex is available], tc_cv_boost_regex_lib,
  for lib in $tc_boost_lib; do
    LDFLAGS="$tc_boost_libdir"
    LIBS="-l$lib"
-   AC_LINK_IFELSE(AC_LANG_PROGRAM([[#include <boost/regex.hpp>]],
-			          [[boost::regex r("s/*//"); return 0;]]),
+   AC_LINK_IFELSE([AC_LANG_PROGRAM([#include <boost/regex.hpp>],
+			          [boost::regex r("s/*//"); return 0;])],
 			          [tc_cv_boost_regex_lib="$LDFLAGS $LIBS"; break])
  done
  AC_LANG_POP()
@@ -152,9 +152,9 @@ AC_CACHE_CHECK([wether Boost::filesystem is available], tc_cv_boost_filesystem_l
  for lib in $tc_boost_lib; do
    LDFLAGS="$tc_boost_libdir"
    LIBS="-l$lib -l`echo $lib | sed 's/boost_filesystem/boost_system/'`"
-   AC_LINK_IFELSE(AC_LANG_PROGRAM([[#include <boost/filesystem/operations.hpp>]],
-			          [[boost::filesystem::path p("configure");
-				    boost::filesystem::exists(p); return 0;]]),
+   AC_LINK_IFELSE([AC_LANG_PROGRAM([#include <boost/filesystem/operations.hpp>],
+			          [boost::filesystem::path p("configure");
+				    boost::filesystem::exists(p); return 0;])],
 			          [tc_cv_boost_filesystem_lib="$LDFLAGS $LIBS"; break])
  done
  AC_LANG_POP()
@@ -186,30 +186,32 @@ AC_DEFUN([TC_CUDA],
       i?86-*-*) CUDA_LIBS="-L$tc_cv_cuda_dir/lib32 -Wl,-rpath,$tc_cv_cuda_dir/lib32 -lcublas -lcusparse -lcurand -lcudart -lrt" ;;
       *) tc_cv_cuda_dir="no"; HAVE_CUDA="no"; CUDA_LIBDIR= ; CUDA_INCLUDEDIR= ;;
     esac
+  fi
+ ])dnl
     AC_SUBST([CUDA_DIR])
     AC_SUBST([CUDA_LIBS])
     AC_SUBST([CUDA_INCLUDEDIR])
     AC_SUBST([HAVE_CUDA])
-  fi
- ])dnl
 ])dnl
 
 dnl decide thread model
 dnl
-AC_DEFUN([TC_THREAD_MODEL],
-[AC_CACHE_CHECK([thread model to be used (intel or gnu)], tc_cv_thread_model,
- [AC_ARG_WITH([thread_model], AS_HELP_STRING([--with-thread-model=intel|gnu],
-   [specify thread model to be used]),
-   [tc_cv_thread_model="$with-thread-model"])
- THREAD_MODEL="${tc_cv_thread_model:-gnu}"
+AC_DEFUN([TC_THREAD_LIBRARY],
+[AC_CACHE_CHECK([thread runtime library to be used (intel or gnu)], tc_cv_thread_library,
+ [AC_ARG_WITH([thread-library], AS_HELP_STRING([--with-thread-library=intel|gnu],
+   [specify thread runtime library to be used]),
+   [tc_cv_thread_library="$with_thread_library"])
+ THREAD_LIBRARY="${tc_cv_thread_library:-gnu}"
  ])dnl
+ AC_SUBST([THREAD_LIBRARY])
 ])dnl
 
 
 dnl check for MKL
 dnl
 AC_DEFUN([TC_MKL],
-[AC_CACHE_CHECK([whether MKL is available], tc_cv_mkl_dir,
+[AC_REQUIRE([TC_THREAD_LIBRARY])dnl
+ AC_CACHE_CHECK([whether MKL is available], tc_cv_mkl_dir,
  [AC_ARG_WITH([mkl], AS_HELP_STRING([--with-mkl=DIR],
  	[specify the MKL installation path]),
 	[tc_cv_mkl_dir="$with_mkl"])
@@ -221,7 +223,7 @@ AC_DEFUN([TC_MKL],
     HAVE_MKL="yes"
     case $host in
       x86_64-*-*)
-        if test "$THREAD_MODEL" == intel
+        if test "$THREAD_LIBRARY" == intel
         then
           MKL_LIBS="-L$tc_cv_mkl_dir/lib/intel64 -Wl,-rpath,$tc_cv_mkl_dir/lib/intel64 -Wl,--no-as-needed -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5  -lm -lpthread"
         else
@@ -230,12 +232,12 @@ AC_DEFUN([TC_MKL],
       i?86-*-*) MKL_LIBS="-L$tc_cv_mkl_dir/lib/32 -Wl,-rpath,$tc_cv_mkl_dir/lib/32 -lmkl_intel -lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread" ;;
       *) tc_cv_mkl_dir="no"; HAVE_MKL="no"; MKL_LIBDIR= ; MKL_INCLUDEDIR= ;;
     esac
+  fi
+ ])dnl
     AC_SUBST([MKL_DIR])
     AC_SUBST([MKL_LIBS])
     AC_SUBST([MKL_INCLUDEDIR])
     AC_SUBST([HAVE_MKL])
-  fi
- ])dnl
 ])dnl
 
 
@@ -415,36 +417,36 @@ dnl fi
 dnl LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real -L${MKL_LIBDIR} -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread"
  tc_LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real"
  LDFLAGS="${tc_LDFLAGS} `${LIBMESH_CONFIG} --ldflags`"
- AC_LINK_IFELSE(AC_LANG_PROGRAM([], []),
+ AC_LINK_IFELSE([AC_LANG_PROGRAM([], [])],
  			        [tc_cv_have_sharedlibs="yes"])
  if test "${tc_cv_have_sharedlibs:+set}" != "set"; then
   tc_LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real -ldl"
   LDFLAGS="${tc_LDFLAGS}"
-  AC_LINK_IFELSE(AC_LANG_PROGRAM([], []),
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([], [])],
   			         [tc_cv_have_sharedlibs="yes"])
  fi
  if test "${tc_cv_have_sharedlibs:+set}" != "set"; then
   tc_LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real"
   LDFLAGS="${tc_LDFLAGS}"
-  AC_LINK_IFELSE(AC_LANG_PROGRAM([], []),
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([], [])],
   			         [tc_cv_have_sharedlibs="yes"])
  fi
  if test "${tc_cv_have_sharedlibs:+set}" != "set"; then
   tc_LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real"
   LDFLAGS="${tc_LDFLAGS} `${LIBMESH_CONFIG} --ldflags` ${FCLIBS}"
-  AC_LINK_IFELSE(AC_LANG_PROGRAM([], []),
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([], [])],
   			         [tc_cv_have_sharedlibs="yes"])
  fi
  if test "${tc_cv_have_sharedlibs:+set}" != "set"; then
   tc_LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real -ldl"
   LDFLAGS="${tc_LDFLAGS} `${LIBMESH_CONFIG} --ldflags`"
-  AC_LINK_IFELSE(AC_LANG_PROGRAM([], []),
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([], [])],
   			         [tc_cv_have_sharedlibs="yes"])
  fi
  if test "${tc_cv_have_sharedlibs:+set}" != "set"; then
   tc_LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real -ldl"
   LDFLAGS="${tc_LDFLAGS} `${LIBMESH_CONFIG} --ldflags` ${FCLIBS}"
-  AC_LINK_IFELSE(AC_LANG_PROGRAM([], []),
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([], [])],
   			         [tc_cv_have_sharedlibs="yes"])
  fi
  AC_LANG_POP()
@@ -512,9 +514,9 @@ AC_DEFUN([TC_SLEPC],
  CXXFLAGS="-I${tc_slepc_prefix}/include"
  LDFLAGS="-L${tc_slepc_prefix}/lib/${tc_petsc_arch_cmplx} -lslepc \
   	 -L${tc_petsc_prefix}/lib/${tc_petsc_arch_cmplx} -lpetscksp"
- AC_LINK_IFELSE(AC_LANG_PROGRAM([[#include "slepceps.h"]],
- 			        [[SlepcInitialize(0,0,0,0);
- 				  SlepcFinalize();]]),
+ AC_LINK_IFELSE([AC_LANG_PROGRAM([#include "slepceps.h"],
+ 			        [SlepcInitialize(0,0,0,0);
+ 				  SlepcFinalize();])],
  			        [tc_cv_have_slepc="yes"])
   AC_LANG_POP()
   CXXFLAGS=$CXXFLAGS_save
