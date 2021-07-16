@@ -1,4 +1,5 @@
 #include "NegfWrapper.h"
+
 #include <cstring>
 #include <iostream>
 
@@ -105,7 +106,8 @@ NegfWrapper::ldos(std::vector<double>& ldos, int& esteps, int& npoints)
 void
 NegfWrapper::set_iteration(int iter)
 {
-  f77_negf_set_iteration(_handler, iter);
+  // TODO this is missing in current API
+  //f77_negf_set_iteration(_handler, iter);
 }
 
 void

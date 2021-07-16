@@ -2,6 +2,7 @@
 #define _NEGFWRAPPER_H_
 
 #include "libnegf.hpp"
+
 #include <complex>
 #include <vector>
 
