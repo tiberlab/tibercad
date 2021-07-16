@@ -42,10 +42,10 @@ public:
   double current(std::string unitsOfH, std::string unitsOfJ);
 
   //!Compute charge density
-  int density(std::vector<double>& density, std::string particle);
+  void density(std::vector<double>& density, std::string particle);
 
   //! Return the LDOS in matrix form
-  void ldos(std::vector<double>& ldos, int esteps, int npoints);
+  void ldos(std::vector<double>& ldos, int& esteps, int& npoints);
 
   //!Set SC iteration
   void set_iteration(int iter);

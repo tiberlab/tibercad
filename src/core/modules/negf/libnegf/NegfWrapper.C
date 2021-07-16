@@ -42,7 +42,8 @@ NegfWrapper::init()
 int
 NegfWrapper::read_HS()
 {
-  f77_negf_read_hs(_handler);
+  // TODO new api needs file name
+  //f77_negf_read_hs(_handler);
 
   return 0;
 }
@@ -72,12 +73,12 @@ NegfWrapper::current(std::string unitsOfH, std::string unitsOfJ)
   unitsOfH.copy(unitH,unitsOfH.size());
   unitsOfJ.copy(unitJ,unitsOfJ.size());
 
-  f77_negf_current(_handler, current, unitH, unitJ);
+  f77_negf_current(_handler, current, *unitH, *unitJ);
 
   return current;
 }
 
-int
+void
 NegfWrapper::density(std::vector<double>& density, std::string particle)
 {
    int size = density.size();
@@ -91,9 +92,13 @@ NegfWrapper::density(std::vector<double>& density, std::string particle)
 
 
 void
-NegfWrapper::ldos(std::vector<double>& ldos, int esteps, int npoints)
+NegfWrapper::ldos(std::vector<double>& ldos, int& esteps, int& npoints)
 {
-  f77_negf_get_ldos(_handler, esteps, npoints, &ldos.front());
+  int shape[2];
+  double *d = ldos.data();
+  f77_negf_associate_ldos(_handler, shape, &d);
+  esteps = shape[0];
+  npoints = shape[1];
 }
 
 
