@@ -50,6 +50,7 @@ Tmm::do_init(void)
 
   // add variables and attach the assemble function
   system.add_variable("E", libMeshEnums::CONSTANT, MONOMIAL, &get_region_ids());
+ 
   system.init();
 }
 
@@ -68,6 +69,8 @@ Tmm::parse_options(void)
   {
     Messages::warning("You did not provide any incident_angle for TMM.");
   }
+
+
 }
 
 
@@ -119,10 +122,10 @@ Tmm::do_solve(void)
   DofMap& dof_map =  system.get_dof_map();
   vector<unsigned int> dof_indices;
 
-  for (unsigned int i = 0; i < _wavelengths.size(); ++i)
+  for (unsigned int i = 0; i < _wavelengths.size(); ++i)   //loop over wavelength
   {
 
-  for (unsigned int j = 0; j < _incident_angle.size(); ++j)
+  for (unsigned int j = 0; j < _incident_angle.size(); ++j)  //loop over incident angle
   {
 
     double lambda = _wavelengths[i];
@@ -139,10 +142,7 @@ Tmm::do_solve(void)
     vector<double> n_real;
     vector<double> n_imag;
     vector<double> l_length;
-
-    vector<complex<double>> refractive_index;
-
-
+    vector<double> l;
 
 
     for ( ; el != end_el ; ++el)
@@ -156,27 +156,59 @@ Tmm::do_solve(void)
 
       mod.reinit(elem);
 
-      Complex eps = mod.get_permittivity(lambda);
 
+      
+      /*      getting refractive index and length of layers from model
       n_imag.push_back(sqrt((abs(mod.get_permittivity(lambda))-real(mod.get_permittivity(lambda)))/2));
       n_real.push_back(sqrt((abs(mod.get_permittivity(lambda))+real(mod.get_permittivity(lambda)))/2));
-      l_length.push_back(dof_indices[0]);    //******************************************************************//
-      refractive_index.push_back(mod.get_permittivity(lambda));
-      std::cout<<mod.get_permittivity(lambda)<<endl;
-
-      //E=dof_indices[0];
-      //solution.add(dof_indices[0], E);
-
-
+      l.push_back(elem->volume()); 
+      */
 
     }
+    //******************************************************
+    // manully defining and printing refractive index and length of layers 
+    for(int nm=0;nm<1;nm++)
+       n_real.push_back(1);
+    for(int nm=1;nm<2;nm++)
+       n_real.push_back(1.3);
+    for(int nm=2;nm<3;nm++)
+       n_real.push_back(1.8);
+    for(int nm=3;nm<4;nm++)
+       n_real.push_back(1.9);
+    
+    for(int nm=0;nm<n_real.size();nm++)
+       std::cout<<n_real[nm]<<" n "<<endl;
+    //****
+    for(int nm=0;nm<1;nm++)
+       l.push_back(1e-6);
+    for(int nm=1;nm<2;nm++)
+       l.push_back(1e-6);
+    for(int nm=2;nm<3;nm++)
+       l.push_back(1e-6);
+    for(int nm=3;nm<4;nm++)
+       l.push_back(1e-6);
 
+    for(int nm=0;nm<l.size();nm++)
+       std::cout<<l[nm]<<" l "<<endl;
+    //****
+    for(int nm=0;nm<1;nm++)
+       n_imag.push_back(0.0);
+    for(int nm=1;nm<2;nm++)
+       n_imag.push_back(0.0);
+    for(int nm=2;nm<3;nm++)
+       n_imag.push_back(0.0);
+    for(int nm=3;nm<4;nm++)
+       n_imag.push_back(0.0);
+
+    for(int nm=0;nm<n_imag.size();nm++)
+       std::cout<<n_imag[nm]<<" k "<<endl;
+    //***************************************************
+    // snell's law
     vector<double> theta(n_real.size());
     theta=theta_cal(n_real,incoming_angle);
- //   for(int nm=0;nm<n_real.size();nm++)
-   //    std::cout<<n_real[nm]<<endl;
 
-    vector<vector<complex<double>>> I {{0,0},{0,0}};
+    // defining Vectors 
+    vector<vector<complex<double>>> I {{1,0},{0,1}};
     vector<vector<complex<double>>> M {{0,0},{0,0}};
     vector<vector<complex<double>>> T_load {{0,0},{0,0}};
     vector<vector<complex<double>>> T {{1,0},{0,1}};
@@ -192,67 +224,57 @@ Tmm::do_solve(void)
     vector<complex<double>> E_F_NORM(n_real.size());
     vector<complex<double>> E_B_NORM(n_real.size());
 
+    // main loop over layer, calculating matrixs
+    for (int k=n_real.size()-1 ; k>=0 ; k--){
 
-    for (int k=n_real.size()-2 ; k>=0 ; k--){
-
-      I=get_D(n_real[k],n_imag[k],n_real[k+1],n_imag[k+1],theta[k],theta[k+1]);
-      M=get_M(n_real[k],n_imag[k],l_length[k+1]-l_length[k],lambda,theta[k]);
+      if(k<(n_real.size()-1)){      
+         I=get_D(n_real[k],n_imag[k],n_real[k+1],n_imag[k+1],theta[k],theta[k+1]);
+         cout<<"D matrix "<<k+1<<"&"<<k+2<<endl;
+         show_matrix(I);
+      }
+      M=get_M(n_real[k],n_imag[k],l[k],lambda,theta[k]);  
+      cout<<"M matrix "<<k+1<<endl;
+      show_matrix(M);  
       T_load=matrix_product(I,M);
       T=matrix_product(T,T_load);
+
       E_I=matrix_product(T,E_N);
       E_F[k]+=E_I[0][0];
       E_B[k]+=E_I[1][0];
     }
-
+    cout<<"T matrix "<<endl;
     show_matrix(T);
-  
 
 
-    std::cout<<"*********************salam***********************"<<endl;
-    
-
-    for(double nm=0; nm < E_F.size() ; nm++){
-		
-	E_F_NORM[nm]=E_F[nm]/E_F[0];			
-	E_B_NORM[nm]=E_B[nm]/E_F[0];	
-    } 
+    // reflection and transmission calculation     
     complex<double> Reflection,Transmission;
 
     Reflection=pow(abs(T[1][0]/T[0][0]),2);
     complex<double> nc_first (n_real[0],n_imag[0]);
     complex<double> nc_last (n_real[n_real.size()-1],n_imag[n_imag.size()-1]);
     complex<double> ratio_complex;
-    ratio_complex=nc_last/nc_first;
+    ratio_complex=((nc_last)*cosd(theta[theta.size()-1]))/(nc_first*cosd(theta[0]));
     Transmission=ratio_complex*pow(abs(1.0/T[0][0]),2);
+    
+    // printing tansmission adnd reflection
+    cout<<"trasmision is :"<< Transmission << "reflection is :"<<Reflection<<endl;  
 
-   cout<<"trasmision is :"<< Transmission << "reflection is :"<<Reflection<<endl;
+    
+    // normalizing electric field matrix
+    for(double nm=0; nm < E_F.size() ; nm++){	
+	E_F_NORM[nm]=E_F[nm]/E_F[0];			
+	E_B_NORM[nm]=E_B[nm]/E_F[0];	
+    } 
 
-/*
-    for(double nm=0; nm < E_F.size() ; nm++){
-		
-	std::cout<<E_F_NORM[nm] <<endl;				
-    } 
-    std::cout<<"*********************salam***********************"<<endl;
-    for(double nm=0; nm < E_F.size() ; nm++){
-		
-	std::cout<<E_B_NORM[nm] <<endl;				
-    } 
-*/
+    for(int mm=0;mm<E_F_NORM.size();mm++)
+        cout<<"E is "<< E_F_NORM[mm]<<endl;
+
+   // printing electric field
     for(double nm=0; nm <= l_length.size() ; nm++){
-		
-	E=l_length[nm];
+	//E=E_F_NORM[nm]+E_B_NORM[nm];	
+	E=l_length[nm];                   //just for test
 	solution.add(l_length[nm], E);
     } 
-
-
-
-
-
-
-
-
-
-
 
   }
 
