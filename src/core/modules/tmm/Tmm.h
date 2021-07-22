@@ -5,6 +5,9 @@
 
 #include "SimulationInterface.h"
 
+using namespace std;
+
+
 
 /*!
  * \brief Implementation of Transfer Matrix Method for electromagnetic fields
@@ -15,6 +18,7 @@
  * Author:
  * Contributors:
  */
+
 class TBDLLOCAL Tmm : public SimulationInterface
 {
 
@@ -32,7 +36,27 @@ class TBDLLOCAL Tmm : public SimulationInterface
 
 
 
+
+
   protected:
+
+    // a function to print matrix
+
+    void show_matrix(vector<vector<complex<double>>>);
+
+    // a function to calculate angle in each layer
+    vector<double> theta_cal(vector<double> , double);
+
+    // a function to calculate M matrix
+    vector<vector<complex<double>>> get_M(double,double,double,double, double);
+
+
+    // a function to calculate D matrix
+    vector<vector<complex<double>>> get_D(double ,double ,double ,double ,double , double);
+
+    // a function to calculate matrixs product
+    vector<vector<complex<double>>> matrix_product(vector<vector<complex<double>>> ,vector<vector<complex<double>>>);
+
 
     //! The initialization
     virtual void do_init(void);
@@ -71,6 +95,7 @@ class TBDLLOCAL Tmm : public SimulationInterface
 
 
   private:
+
 
     /*!
      * \brief The known solution variables

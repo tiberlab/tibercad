@@ -9,10 +9,16 @@
 #include "libmesh/dof_map.h"
 
 
+
+
 // This is needed in order to create the shared module library
 #include "TiberModule.h"
 
-#include "function.h"
+
+#define cosd(x) cos((x)*M_PI/180)
+#define sind(x) sin((x)*M_PI/180)
+#define asind(x) asin((x))*180/M_PI
+
 
 using namespace libMesh;
 using std::vector;
@@ -21,6 +27,64 @@ using std::vector;
 Tmm::Tmm(const ModelOptions& options) :
   SimulationInterface(options)
 {
+}
+
+void Tmm::show_matrix(vector<vector<complex<double>>> matrix)
+{
+  for (int i=0; i<2; i++){
+      for (int j=0; j<2; j++){
+        std::cout<<matrix[i][j]<<"|";
+      }
+      std::cout<<endl;
+  }std::cout<<endl;
+}
+
+vector<double> Tmm::theta_cal(vector<double> n , double incident_angle){
+    vector<double> theta(n.size());
+    theta[0]=incident_angle;
+    for (int k=1; k<n.size();k++){
+        theta[k]=asind((n[k-1]/n[k])*sind(theta[k-1]));
+    }
+    return theta;
+}
+
+vector<vector<complex<double>>> Tmm::get_M(double n,double a,double l,double landa, double theta){
+        complex<double> bi ((2*M_PI*a*l)/landa , (2*M_PI*n*l)/landa);
+        bi=bi* cosd(theta);
+        vector<vector<complex<double>>>  M_matrix {{0,0},{0,0}};
+        M_matrix[0][0]=exp(bi);
+        M_matrix[1][1]=exp(-bi);
+        return M_matrix;
+}
+
+vector<vector<complex<double>>> Tmm::get_D(double n1,double a1,double n2,double a2,double theta1, double theta2){
+        vector<vector<complex<double>>>  D_matrix {{0,0},{0,0}};
+        complex<double> n1_complex (n1,a1);
+        complex<double> n2_complex (n2,a2);
+        n1_complex=n1_complex*cosd(theta1);
+        n2_complex=n2_complex*cosd(theta2);
+        complex<double> r12,r21,t12,t21;
+
+        r12=(n1_complex-n2_complex)/(n1_complex+n2_complex);
+        r21=(n2_complex-n1_complex)/(n1_complex+n2_complex);
+        t12=(2.0*n1_complex)/(n1_complex+n2_complex);
+        t21=(2.0*n2_complex)/(n1_complex+n2_complex);
+
+        D_matrix[0][0]=1.0/(t12);
+        D_matrix[0][1]=(-r21)/(t12);
+        D_matrix[1][0]=(r12)/(t12);
+        D_matrix[1][1]=(t12*t21-r12*r21)/(t12);
+        return D_matrix;
+
+    }
+
+vector<vector<complex<double>>> Tmm::matrix_product(vector<vector<complex<double>>> A,vector<vector<complex<double>>> B){
+    vector<vector<complex<double>>>  C {{0,0},{0,0}};
+            for(int i = 0; i < 2; ++i)
+                for(int j = 0; j < 2; ++j)
+                    for(int k = 0; k < 2; ++k)
+                        C[i][j] += A[i][k] * B[k][j];
+                return C;
 }
 
 
@@ -50,6 +114,7 @@ Tmm::do_init(void)
 
   // add variables and attach the assemble function
   system.add_variable("E", libMeshEnums::CONSTANT, MONOMIAL, &get_region_ids());
+
  
   system.init();
 }
@@ -80,6 +145,7 @@ Tmm::do_setup_solution_variables(void)
   // we declare our solution variables
   declare_solution(EField, REAL, CELL, "V/cm");
   declare_solution(HField, VECTOR, CELL, "A/cm");
+  //declare_solution(Displacement, VECTOR, CELL, "C/cm^2");
   //declare_solution(Displacement, VECTOR, CELL, "C/cm^2");
 
   // we can define aliases but the same name cannot refer to
@@ -133,6 +199,7 @@ Tmm::do_solve(void)
 
     const unsigned int uvar = system.variable_number("E");
 
+
     MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
     const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
 
@@ -143,7 +210,7 @@ Tmm::do_solve(void)
     vector<double> n_imag;
     vector<double> l_length;
     vector<double> l;
-
+    
 
     for ( ; el != end_el ; ++el)
     {
@@ -156,15 +223,15 @@ Tmm::do_solve(void)
 
       mod.reinit(elem);
 
-
+      l_length.push_back(dof_indices[0]);
       
       /*      getting refractive index and length of layers from model
       n_imag.push_back(sqrt((abs(mod.get_permittivity(lambda))-real(mod.get_permittivity(lambda)))/2));
       n_real.push_back(sqrt((abs(mod.get_permittivity(lambda))+real(mod.get_permittivity(lambda)))/2));
       l.push_back(elem->volume()); 
       */
-
     }
+    
     //******************************************************
     // manully defining and printing refractive index and length of layers 
     for(int nm=0;nm<1;nm++)
@@ -230,6 +297,7 @@ Tmm::do_solve(void)
       if(k<(n_real.size()-1)){      
          I=get_D(n_real[k],n_imag[k],n_real[k+1],n_imag[k+1],theta[k],theta[k+1]);
          cout<<"D matrix "<<k+1<<"&"<<k+2<<endl;
+         //show_matrix(I);
          show_matrix(I);
       }
       M=get_M(n_real[k],n_imag[k],l[k],lambda,theta[k]);  
@@ -272,8 +340,10 @@ Tmm::do_solve(void)
    // printing electric field
     for(double nm=0; nm <= l_length.size() ; nm++){
 	//E=E_F_NORM[nm]+E_B_NORM[nm];	
-	E=l_length[nm];                   //just for test
-	solution.add(l_length[nm], E);
+	E=1.0;                   //just for test
+	solution.add(l_length[nm], E );
+ 
+
     } 
 
   }
@@ -371,5 +441,6 @@ Tmm::get_solution_secure(const Elem* elem,
   //  values[EField][1] = field(1) / np;
   //  values[EField][2] = field(2) / np;
   }
+
 }
 
