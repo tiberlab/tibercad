@@ -78,12 +78,6 @@ public:
   //! Get library version
   void get_version(void);
 
-  //! used to set if print tunneling.dat 
-  void set_write_tunn(bool flag);
-
-  //! used to set if print LDOS.dat
-  void set_write_ldos(bool flag);
-
   //! write partition info 
   void partition_info(void);
   

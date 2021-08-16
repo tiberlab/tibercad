@@ -29,7 +29,7 @@ libnegf_$(ARCH).a: update
 	mkdir -p build; cd build; \
 	$(CMAKE) -C ../config.cmake -S ../libnegf -B .; \
 	$(MAKE) ; cd .. ; \
-	cp build/src/libnegf.a .	
+	cp build/src/libnegf.a libnegf_$(ARCH).a	
 	cp build/src/api/libnegf.hpp . 
 	cp libnegf/src/api/fortran.h .
 

@@ -481,17 +481,18 @@ Negf::init_k_space(ModelOptions& kopts)
     unsigned int mesh_dim = get_mesh().mesh_dimension();
 
     if ( _hamil_type == "etb" ) 
-    {       
+    {
+      const AtomisticStructure* as = _ext_module->get_atomistic_structure();
       // Define k-space from cartesian lattice vectors
-      double cf = 0.1;  //conversion factor from Angstrom to nm 
-      std::vector<double> vectors = _ext_module->get_atomistic_structure()->get_lattice_vectors();
+      double cf = 0.1;  //conversion factor from Angstrom to nm
+      const std::vector<libMesh::RealVectorValue>& vectors = as->get_lattice_vectors();
       std::vector<double> r1(3,0.0);
       std::vector<double> r2(3,0.0);
       switch (dim)
       {
          case 2:
-           r1[0] = cf*vectors[3]; r1[1] = cf*vectors[4]; r1[2] = cf*vectors[5];
-           r2[0] = cf*vectors[6]; r2[1] = cf*vectors[7]; r2[2] = cf*vectors[8];
+           r1[0] = cf*vectors[1](0); r1[1] = cf*vectors[1](1); r1[2] = cf*vectors[1](2);
+           r2[0] = cf*vectors[2](0); r2[1] = cf*vectors[2](1); r2[2] = cf*vectors[2](2);
            std::cout<<"(Negf) lattice vec:"<<r1[0]<<" "<<r1[1]<<" "<<r1[2]<<std::endl;
            std::cout<<"(Negf) lattice vec:"<<r2[0]<<" "<<r2[1]<<" "<<r2[2]<<std::endl;
            kopts.set_option("r1",r1);  
@@ -499,7 +500,7 @@ Negf::init_k_space(ModelOptions& kopts)
            break;
 
          case 1:
-           r1[0] = cf*vectors[6]; r1[1] = cf*vectors[7]; r1[2] = cf*vectors[8];
+           r1[0] = cf*vectors[2](0); r2[1] = cf*vectors[2](1); r2[2] = cf*vectors[2](2);
            kopts.set_option("r1",r1);  
            break;
 
