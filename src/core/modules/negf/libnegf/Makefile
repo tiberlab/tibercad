@@ -16,10 +16,11 @@ target := libnegf$(shared_libext)
 
 libnegf$(shared_libext) :  .$(ARCH)/NegfWrapper$(obj-suffix) libnegf_$(ARCH).a
 	@echo "Linking libnegf$(shared_libext) ..."
+	dep=$$(find . -name libmpifx.a); \
 	$(CXX) -shared -o $@ $< \
 		-Wl,--version-script,export.map \
 		-Wl,-Bsymbolic -Wl,-Bstatic \
-		-L. libnegf_$(ARCH).a \
+		-L. libnegf_$(ARCH).a $$dep \
 		-Wl,-Bdynamic
 
 .$(ARCH)/NegfWrapper$(obj-suffix) : libnegf_$(ARCH).a 
@@ -28,7 +29,7 @@ libnegf_$(ARCH).a: update
 	@echo "Compiling libNEGF ...";
 	mkdir -p build; cd build; \
 	$(CMAKE) -C ../config.cmake -S ../libnegf -B .; \
-	$(MAKE) ; cd .. ; \
+	$(MAKE) ; cd .. ;
 	cp build/src/libnegf.a libnegf_$(ARCH).a	
 	cp build/src/api/libnegf.hpp . 
 	cp libnegf/src/api/fortran.h .
