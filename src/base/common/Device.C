@@ -675,11 +675,14 @@ Device::setup_quantum_contacts(void)
   if (_options.has_submodel("Quantum_contact") )
   {
 
-    const string& meshfile = _options["meshfile"];
+    string meshfile = _options["meshfile"];
+    meshfile = "new_" + meshfile;
 
-    std::cout<<"write meshfile new_"+meshfile<<std::endl;
+    ostringstream os;
+    os << "Writing mesh with quantum contacts: " << meshfile;
+    Messages::info(os.str());
 
-    libMesh::GmshIO(*_mesh).write("new_" + meshfile);
+    //libMesh::GmshIO(*_mesh).write(meshfile);
 
    }
 

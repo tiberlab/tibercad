@@ -781,9 +781,8 @@ Negf::setup_negf(void)
 
   _libnegf->set_verbose(opt.verbosity);
 
-  _libnegf->set_write_ldos(opt.writeLDOS);
-
-  _libnegf->set_write_tunn(true);
+  // TODO in API now there is write_tunneling_and_dos, to be adapted
+  //_libnegf->set_write_ldos(opt.writeLDOS);
 
   _libnegf->set_iteration(1);
 
