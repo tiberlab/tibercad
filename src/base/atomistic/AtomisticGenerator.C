@@ -97,7 +97,14 @@ AtomisticGenerator::build(void)
 
   if (_as->get_options().get_option("minimal_cell",false))
   {
-    minimal_conv_cell();
+    if (_as->get_options().get_option("use_primitive_cell",false))
+    {
+      _conv_vect = _bulk->get_rotated_prim_vec();
+      _conv_prim = 0;
+      _conv_prim(1,1) = _conv_prim(2,2) = _conv_prim(3,3) = 1;
+    }
+    else
+      minimal_conv_cell();
   }
   make_conv_lattice();
   move_origin();
@@ -698,7 +705,7 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3)
     }
   }
 
-  // The periodicity along non-periodic sirections is now 4 layers larger than the actual structure
+  // The periodicity along non-periodic directions is now 4 layers larger than the actual structure
   _period = _conv_vect * lmat;
 
   //Definition of number of conventional cells, useful for reserving arrays
@@ -764,7 +771,7 @@ void AtomisticGenerator::make_conv_cell()
   // (e1 e2 e3)(n21 n22 n23)=(0  b  0) 
   // (|  |  | )(n31 n32 n33) (0  0  c)
   // 
-  // the matrik nij is computed first by computing  U = e^-1  
+  // the matrix nij is computed first by computing  U = e^-1
   // then the columns of U are scaled to integers 
   //
   _conv_prim = inv(rotated_prim_vec);
@@ -844,9 +851,9 @@ void AtomisticGenerator::minimal_conv_cell()
   int i,j, k,l, ilow,jlow,klow,llow, lower_2, lower_3, upper_2, upper_3;
   Tensor2Gen rotated_prim_vec = _bulk->get_rotated_prim_vec();
 
-  // the calculations seem to assume a certain ordering of the vectors
-  // therefore we reorder according to this
-  // we do not reorder back afterwards the results, which seems to not work
+  // the following calculations assume a certain ordering of the vectors
+  // with rotated_prim_vec(1,1) != 0, therefore we reorder according to this
+  // we do not reorder back afterwards the results, only _conv_vect will be needed
   unsigned int id1 = 1;
   unsigned int id2 = 2;
   unsigned int id3 = 3;
@@ -854,12 +861,15 @@ void AtomisticGenerator::minimal_conv_cell()
   double proj = 0;
   for (i = 1; i <= 3; ++i)
   {
-    if ((fabs(rotated_prim_vec(2, i)) < 1e-12) && 
-        (fabs(rotated_prim_vec(3, i)) < 1e-12))
+    // this version lead to c[1] = 0, e.g. for zincblende
+    //if ((fabs(rotated_prim_vec(2, i)) < 1e-12) &&
+    //    (fabs(rotated_prim_vec(3, i)) < 1e-12))
+    if (fabs(rotated_prim_vec(1, i)) > 1e-6)
     {
       id1 = i;
       id2 = (i % 3) + 1;
       id3 = ((i + 1) % 3) + 1;
+      break;
     }
   }
   //cerr << id1 << " " << id2 << " " << id3 << endl;
@@ -883,11 +893,13 @@ void AtomisticGenerator::minimal_conv_cell()
   Point p(_conv_vect(1,1), _conv_vect(2,2), _conv_vect(3,3));
   Tensor1 vect(p);  
   Tensor1 indxs = inv(rotated_prim_vec) * vect;
+  //cerr << indxs << endl;
   
-  lower_2 = int(min(indxs(2), min(_conv_prim(2,1), min(_conv_prim(2,2),_conv_prim(2,3)))));
-  upper_2 = int(max(indxs(2), max(_conv_prim(2,1), max(_conv_prim(2,2),_conv_prim(2,3)))));
-  lower_3 = int(min(indxs(3), min(_conv_prim(3,1), min(_conv_prim(3,2),_conv_prim(3,3)))));
-  upper_3 = int(max(indxs(3), max(_conv_prim(3,1), max(_conv_prim(3,2),_conv_prim(3,3)))));
+  lower_2 = int(min(indxs(2), min(_conv_prim(id2,1), min(_conv_prim(id2,2),_conv_prim(id2,3)))));
+  upper_2 = int(max(indxs(2), max(_conv_prim(id2,1), max(_conv_prim(id2,2),_conv_prim(id2,3)))));
+  lower_3 = int(min(indxs(3), min(_conv_prim(id3,1), min(_conv_prim(id3,2),_conv_prim(id3,3)))));
+  upper_3 = int(max(indxs(3), max(_conv_prim(id3,1), max(_conv_prim(id3,2),_conv_prim(id3,3)))));
+  //cerr << lower_2 << " " << upper_2 << ", " << lower_3 << " " << upper_3 << endl;
  
   lower_2 = int(min(0, lower_2));
   upper_2 = int(max(0, upper_2));
@@ -955,16 +967,6 @@ void AtomisticGenerator::minimal_conv_cell()
   _conv_vect(1,2) = v1(1); _conv_vect(2,2) = v1(2); _conv_vect(3,2) = v1(3); 
   _conv_vect(1,3) = v2(1); _conv_vect(2,3) = v2(2); _conv_vect(3,3) = v2(3); 
 
-  //tmp = _conv_vect;
-  //for (i = 1; i <= 3; ++i)
-  //{
-  //  _conv_vect(i, id1) = tmp(i, 1);
-  //  _conv_vect(i, id2) = tmp(i, 2);
-  //  _conv_vect(i, id3) = tmp(i, 3);
-  //}
-
-  //cerr<<"conv_vect"<<endl;
-  //cerr<<_conv_vect<<endl;
 }
 
 void AtomisticGenerator::make_conv_lattice()
