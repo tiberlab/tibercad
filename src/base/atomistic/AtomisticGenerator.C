@@ -95,17 +95,18 @@ AtomisticGenerator::build(void)
   //Common building operations
   make_conv_cell();
 
-  if (_as->get_options().get_option("minimal_cell",false))
+  if (_as->get_options().get_option("minimal_cell", false))
   {
-    if (_as->get_options().get_option("use_primitive_cell",false))
-    {
-      _conv_vect = _bulk->get_rotated_prim_vec();
-      _conv_prim = 0;
-      _conv_prim(1,1) = _conv_prim(2,2) = _conv_prim(3,3) = 1;
-    }
-    else
-      minimal_conv_cell();
+    minimal_conv_cell();
   }
+
+  if (_as->get_options().get_option("use_primitive_cell", false))
+  {
+    _conv_vect = _bulk->get_rotated_prim_vec();
+    _conv_prim = 0;
+    _conv_prim(1,1) = _conv_prim(2,2) = _conv_prim(3,3) = 1;
+  }
+
   make_conv_lattice();
   move_origin();
   make_conv_basis();
@@ -637,7 +638,7 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3)
   std::vector<Tensor1>::iterator conv_iterator;
   
   Messages::debug("Running make_supercell...");
-
+  //print_basis(_conv_basis, "conv_basis.xyz");
 
   //Check values. l1,l2,l3 cannot be unwisely large (no more than (1um)^3)
   assert((l1*l2*l3) < 1e+12);
@@ -664,9 +665,9 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3)
 
   //Set supercell periodical vectors
   Tensor2Gen lmat(0);
-  lmat(1,1) = (n1);
-  lmat(2,2) = (n2);
-  lmat(3,3) = (n3);
+  lmat(1,1) = n1;
+  lmat(2,2) = n2;
+  lmat(3,3) = n3;
 
   if (!_as->is_periodic(0))
   {
@@ -717,8 +718,9 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3)
   libMesh::Point origin_p(origin(1), origin(2), origin(3));
   _as->set_origin(origin_p);
 
-   cout<<"(debug) basis size: "<<basis.size()<<endl;
-   cout<<"(debug) conv_latt size: "<<_conv_lattice.size()<<endl;
+   //cout<<"(debug) basis size: "<<basis.size()<<endl;
+   //cout<<"(debug) conv_latt size: "<<_conv_lattice.size()<<endl;
+   //cout << _period << endl;
 
   //Need to construct a redundant supercell (for passivation purposes)
   //Note that it must be redundant only in non periodic directions
@@ -749,7 +751,7 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3)
       }
     }
   }
-  cout<<"(debug) super_basis size: "<<_super_basis.size()<<endl;
+  //cout<<"(debug) super_basis size: "<<_super_basis.size()<<endl;
 
 }
 
@@ -1085,29 +1087,28 @@ void AtomisticGenerator::make_conv_basis()
 {
   Tensor1 atm_coords;
   std::vector<Atom> basis = _bulk->get_rotated_basis();
-  std::vector<Tensor1>::iterator conv_iterator(_conv_lattice.begin());
-  std::vector<Atom>::iterator basis_iterator;
-  _conv_basis.reserve(_conv_lattice.size() * basis.size() );
-  Atom basis_atom;
-  Point a1, a2, a3, origP(0.0);
+  _conv_basis.reserve(_conv_lattice.size() * basis.size());
+
+  Point a1, a2, a3;
   a1(0) = _conv_vect(1,1); a1(1) = _conv_vect(2,1); a1(2) = _conv_vect(3,1);
   a2(0) = _conv_vect(1,2); a2(1) = _conv_vect(2,2); a2(2) = _conv_vect(3,2);
   a3(0) = _conv_vect(1,3); a3(1) = _conv_vect(2,3); a3(2) = _conv_vect(3,3);
 
+  auto conv_iterator = _conv_lattice.begin();
   do
   {
 
     // add the basis to lattice point
-    basis_iterator = basis.begin();
+    auto basis_iterator = basis.begin();
     do
     {
-      basis_atom = (*basis_iterator);
+      Atom basis_atom = (*basis_iterator);
       atm_coords = _local_origin + *conv_iterator +
                  basis_atom.get_ttype_position();
       basis_atom.set_position(atm_coords);
 
       // fold atom within the conventional cell
-      fold_in_cell(basis_atom, origP, a1, a2, a3);
+      fold_in_cell(basis_atom, Point(0.0), a1, a2, a3);
       
       _conv_basis.push_back(basis_atom);
       ++basis_iterator;

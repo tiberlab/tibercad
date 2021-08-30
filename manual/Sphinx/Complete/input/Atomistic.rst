@@ -42,9 +42,15 @@ The internal atomistic generator has the following features
 * It supports any crystal structure with fcc, bcc, cubic and hexagonal Bravais lattice.
   Information about basis and primitive vectors is taken from the material database.
 
+* orthogonal conventional cells or primitive cells can be used to set up the structure.
+
+* atoms in alloys can be randomly distributed.
+
 * It performs hydrogen passivation for any crystal structure supported. 
 
 * For the  generation  of heterostructures  a pseudomorphic growth is assumed, with the same lattice constants of the  defined reference region.
+
+* to a limited extent, atomic structures can be combined into a single structure, which allows for example to create polymorphic structures or multi-layered 2D materials with specific relative orientation
 
 
 
@@ -91,6 +97,20 @@ The  following keywords may  be  defined in **Atomistic**  block
 
  ``supercell_size_z`` : real
     defines a lateral supercell size on *z-axis* (in Angstrom) in 1D and 2D structures.
+
+ ``supercell_size_x`` : real
+    defines a lateral supercell size on *x-axis* (in Angstrom) in 3D structures.
+
+ ``cells_along_x`` : integer
+    number of conventional cells along *x-axis*, or along the first primitive cell vector. Alternative to ``supercell_size_x``
+
+ ``cells_along_y`` : integer
+    number of conventional cells along *y-axis*, or along the first primitive cell vector. Alternative to ``supercell_size_y``
+ 
+
+ ``cells_along_z`` : integer
+    number of conventional cells along *z-axis*, or along the first primitive cell vector.  Alternative to ``supercell_size_z``
+
  
  ``load_structure`` : string
     specifies a (relative) path/file for the loading of an external structure. Valid formats are *tgn, xyz, gen*.
@@ -129,6 +149,11 @@ The  following keywords may  be  defined in **Atomistic**  block
  ``print`` : string
     print the  generated atomic  structure with  one  of  the  following formats: *xyz*:  xyz file  format; *gen*: gen file  format; *tgn*: tibercad format which combines informations on the mesh and the atoms.
 
+ ``minimal_cell`` : boolean
+    if *true*, in case of a 1D structure the in-plane cell vectors are allowed to be non-orthogonal, which can reduce the number of atoms, and may change the Brillouin zone to the same of the underlying crystal.
+
+ ``use_primitive_cell`` : boolean
+    if *true*, the atomistic region will be filled directly with the primitive cells instead of the convention cells. This can be useful to create bulk structures.
 
 
 Optional Blocks
@@ -236,7 +261,7 @@ Default  treatment of  periodicity is  different  for  each  mesh dimension,  to
 
 
 For a  1D mesh, a  periodicity is  always applied in *y* and  *z*  directions. 
-As  a  default, a  minimal cell  is  built in  *yz* plane (*x* being  the predefined growth direction). This   refers to  the case  of  a  quantum well structure. The periodicity  vectors are  by  default those of the  minimal  cell  for  the  given material. It is  possible  to build   a  supercell in  the  *yz* plane,  by  defining the supercell  size through the **supercell_size_y** and **supercell_size_z**  keywords. In  this  case, appropriate  periodicity vectors will be  obtained and applied. It  is  possible to  add  a  periodicity along the *x* (growth) direction  with the  keyword  *periodicity = true*,   to design a superlattice structure.
+As  a  default, the smallest conventional cell  is  built in  *yz* plane (*x* being  the predefined growth direction). This   refers to  the case  of  a  quantum well structure. The periodicity  vectors are  by  default those of the  conventional  cell  for  the  given material. It is  possible  to build   a  supercell in  the  *yz* plane,  by  defining the supercell  size through the **supercell_size_x,y,z** ore (better) the **cells_along_x,y,z**  keywords. In  this  case, appropriate  periodicity vectors will be  obtained and applied. In 1D, it  is  possible to  add  a  periodicity along the *x* (growth) direction  with the  keyword  *periodicity = true*,   to design a superlattice structure. In 1D, one can additionally use a possibly non-orthogonal minimal in-plane cell instead of the conventional one by using the option **minimal_cell**.
 
 For a  2D mesh, the  generated structure is periodical  along  *z* axis. It  is  possible to  add  a  periodicity in *x* and *y* directions  with  the  keyword *periodicity = (<x-per>,<y-per>)*, where <x-per> and/or <y-per>  may  be  *true* or  *false*.
 
