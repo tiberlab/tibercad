@@ -1,0 +1,188 @@
+Device
+{
+  meshfile = bulk.msh 
+  mesh_units = 1e-10
+
+  y-growth-direction = (1,0,-1,0)
+  z-growth-direction = (-1,2,-1,0)
+  x-growth-direction = (0,0,0,1)
+
+  material = GaN
+
+
+	Region bulk
+	{
+	}
+
+
+	Atomistic tb
+	{
+	  #reference_region = barrier_left
+	  reference_region = bulk
+	  regions = bulk
+	  passivation = no #yes
+          periodicity = true
+          cells_along_y = 1
+          cells_along_z = 1
+          cells_along_x = 1
+          #minimal_cell = true  # if projection is not rectangular
+          use_primitive_cell = true
+	  print = (xyb, xyz, gen, tgn)
+	}
+
+}
+
+
+Module elasticity
+{
+ plot = (Strain,Stress,Displacement)
+
+ non_linear_strain = true
+
+ Physics
+ {
+   body_force lattice_mismatch
+   {
+    reference_material = GaN
+
+     y-growth-direction = (1,0,-1,0)
+     z-growth-direction = (-1,2,-1,0)
+     x-growth-direction = (0,0,0,1)
+   }
+ }
+
+
+}
+
+
+Module vff
+{
+
+ regions = bulk
+ atomistic_structure = tb
+ boundary_conditions = substrate
+ substrate_plane = x
+ substrate_tol = 0.519
+
+ plot = StrainCells
+
+ Physics
+ {
+
+  keating automatic
+  {
+  }
+
+ }
+}
+
+
+
+Module driftdiffusion
+{ 
+
+  name = driftdiffusion
+  coupling = poisson
+
+  #save_state = true
+  #load_state = dd.tsv
+
+  plot = (Ec, Ev, eQFermi, hQFermi, ElField , eDensity, hDensity, Polarization)
+
+  Solver linesearch
+  {
+    relative_tolerance = 1e-14  
+    absolute_tolerance =  1e-50  
+    step_tolerance = 1e-3
+    max_step = 1.0 
+    max_iterations = 30
+  }
+
+  Physics
+  {
+    particle_density
+    {
+      statistics = fermidirac
+    }
+  }   
+
+} 
+
+
+ 
+Module empirical_tb
+{
+  regions = bulk
+  name = tb
+  atomistic_structure = tb
+  Harrison_scaling = true
+  potential_simulation = driftdiffusion
+  relativistic = true
+  #add_band_shifts = false	
+  
+  plot = (tbstates)
+
+#  sparse_format = full 
+
+  Solver
+  {
+#    guess_valence = -0.5
+#    guess_conduction = 0.0
+    num_valence_eigenvalues = 6
+    num_conduction_eigenvalues = 4
+  }
+
+  Dispersion
+  {
+    k-path = A-L-M-G-A-H-K-G
+    #k-path = G-X
+    number_of_nodes = 80
+  }	
+}
+
+
+Module efaschroedinger
+{
+  name = kp_efa
+  regions = (bulk)
+
+  job = bulk
+  bulk_point = (0, 0, 0)
+
+  poisson_model_name = driftdiffusion
+  strain_simulation = elasticity
+  num_electron_states = 0
+  num_hole_states = 6
+
+  plot = (EigenFunctions, EigenEnergy)
+
+  Solver
+  {
+    guess = 0
+  }
+
+  Physics
+  {
+    model = 8x8
+  }
+
+  Dispersion
+  {
+    k-path = G-X
+    k_max = 0.5
+    number_of_nodes = 20	
+  }	
+}
+
+
+
+
+
+Simulation
+{
+  temperature = 1
+  #solve = (elasticity, vff, driftdiffusion, kp_efa, tb)
+  solve = (driftdiffusion, kp_efa, tb)
+  resultpath =  output_GaN_pure
+
+}
