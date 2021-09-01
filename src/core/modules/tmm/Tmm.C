@@ -20,7 +20,8 @@ using namespace libMesh;
 
 
 Tmm::Tmm(const ModelOptions& options) :
-  SimulationInterface(options)
+  SimulationInterface(options),
+  _incident_angle({0.0})
 {
 }
 
@@ -200,12 +201,15 @@ Tmm::do_solve(void)
     const unsigned int uvar = system.variable_number("E");
 
 
-    MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
-    const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
+    // TODO this will not work if the 1D mesh is distributed. In that case, MPI calls could be used
+    // to gather pieces from all processes
+    MeshBase::const_element_iterator       el     = this->active_local_elements_begin();
+    const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
 
     double E = 1.0;
     double incoming_angle=_incident_angle[j];
 
+    // TODO reserve space
     vector<double> n_real;
     vector<double> n_imag;
     vector<double> l_length;
@@ -244,55 +248,16 @@ Tmm::do_solve(void)
 
       l_length.push_back(dof_indices[0]);
       
-      /****************getting refractive index and length of layers from model*************************
-      n_imag.push_back(sqrt((abs(mod.get_permittivity(lambda))-real(mod.get_permittivity(lambda)))/2));
-      n_real.push_back(sqrt((abs(mod.get_permittivity(lambda))+real(mod.get_permittivity(lambda)))/2));
+      // getting refractive index and length of layers from model
+      libMesh::Complex nk = mod.get_refractive_index(lambda);
+      n_real.push_back(real(nk));
+      n_imag.push_back(imag(nk));
+
+      //n_imag.push_back(sqrt((abs(mod.get_permittivity(lambda))-real(mod.get_permittivity(lambda)))/2));
+      //n_real.push_back(sqrt((abs(mod.get_permittivity(lambda))+real(mod.get_permittivity(lambda)))/2));
       l.push_back(elem->volume()); 
-      */
+
     }
-    
-    //******************************************************
-    // manually defining and printing refractive index and length of layers
-    for(int nm=0;nm<1;nm++)
-       n_real.push_back(1);
-    for(int nm=1;nm<2;nm++)
-       n_real.push_back(1.3);
-    for(int nm=2;nm<3;nm++)
-       n_real.push_back(1.8);
-    for(int nm=3;nm<4;nm++)
-       n_real.push_back(1.9);
-    
-    for(int nm=0;nm<n_real.size();nm++)
-       std::cout<<n_real[nm]<<" n "<<endl;
-    //****
-    for(int nm=0;nm<1;nm++)
-       l.push_back(1e-6);
-    for(int nm=1;nm<2;nm++)
-       l.push_back(1e-6);
-    for(int nm=2;nm<3;nm++)
-       l.push_back(1e-6);
-    for(int nm=3;nm<4;nm++)
-       l.push_back(1e-6);
-
-    for(int nm=0;nm<l.size();nm++)
-       std::cout<<l[nm]<<" l "<<endl;
-    //****
-    for(int nm=0;nm<1;nm++)
-       n_imag.push_back(0.0);
-    for(int nm=1;nm<2;nm++)
-       n_imag.push_back(0.0);
-    for(int nm=2;nm<3;nm++)
-       n_imag.push_back(0.0);
-    for(int nm=3;nm<4;nm++)
-       n_imag.push_back(0.0);
-
-    for(int nm=0;nm<n_imag.size();nm++)
-       std::cout<<n_imag[nm]<<" k "<<endl;
-
-
-
-
-    //***************************************************
     //********************snell's law********************
     vector<double> theta(n_real.size());
     theta=Tmm::theta_cal(n_real,incoming_angle);
