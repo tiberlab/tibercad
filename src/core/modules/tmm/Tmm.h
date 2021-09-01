@@ -40,23 +40,46 @@ class TBDLLOCAL Tmm : public SimulationInterface
 
   protected:
 
-    // a function to print matrix
+    //***********************function to print a matrix**********************************
+    void show_matrix(vector<vector<complex<double>>> matrix);
 
-    void show_matrix(vector<vector<complex<double>>>);
+    //***This function print the matrix
+    //***"matrix" is input matrix
 
-    // a function to calculate angle in each layer
-    vector<double> theta_cal(vector<double> , double);
+    //********************function to calculate angle in all layers*************************************
+    vector<double> theta_cal(vector<double> n_real , double incident_angle);
 
-    // a function to calculate M matrix
-    vector<vector<complex<double>>> get_M(double,double,double,double, double);
+    //***This function calculate propagating angle of the light using snell's law in all layers
+    //***"n_real" is a Refractive index vector
+    //***"incident_angle" is angle of light in the first layer
 
 
-    // a function to calculate D matrix
-    vector<vector<complex<double>>> get_D(double ,double ,double ,double ,double , double);
+    //**************************function to calculate M matrix********************************************
+    vector<vector<complex<double>>> get_M(double n_real,double n_imag,double length,double lambda, double theta);
 
-    // a function to calculate matrixs product
-    vector<vector<complex<double>>> matrix_product(vector<vector<complex<double>>> ,vector<vector<complex<double>>>);
+    //***This function calculate the M matrix (propagation matrix)
+    //***"n_real" and "n_imag" are refractive index of the layer
+    //***"length" is the length of the layer
+    //***"lambda" is the wavelength of light
+    //***"theta" is the light's angle
 
+
+    //******************************function to calculate D matrix******************************************
+    vector<vector<complex<double>>> get_D(double n1_real,double n1_imag,double n2_real,double n2_imag,double theta_layer1, double theta_layer2);
+
+    //***This function calculate the D or I matrix (transition matrix)
+    //***"n1_real" and "n1_imag" are refractive index of the first layer
+    //***"n2_real" and "n2_imag" are refractive index of the second layer
+    //***"theta_layer1" is the light's angle in first layer
+    //***"theta_layer2" is the light's angle in second layer
+
+
+    //*******************************function to calculate matrixs product*******************************
+    vector<vector<complex<double>>> matrix_product(vector<vector<complex<double>>> A,vector<vector<complex<double>>> B);
+
+    //***This function calculate multiplication of two inputs
+    //***"A" is first matrix
+    //***"A" is second matrix
 
     //! The initialization
     virtual void do_init(void);
