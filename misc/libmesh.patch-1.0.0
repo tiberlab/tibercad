@@ -183,3 +183,208 @@
  
    //  print the perflog to individual processor's file.
    libMesh::perflog.print_log();
+--- src/numerics/dense_matrix.C.orig	2021-09-01 19:07:05.203656046 +0200
++++ src/numerics/dense_matrix.C	2021-09-01 21:11:29.650547831 +0200
+@@ -931,7 +931,7 @@
+           if (i == j)
+             {
+ #ifndef LIBMESH_USE_COMPLEX_NUMBERS
+-              if (A(i,j) <= 0.0)
++              if (std::real(A(i,j)) <= 0.0)
+                 libmesh_error_msg("Error! Can only use Cholesky decomposition with symmetric positive definite matrices.");
+ #endif
+ 
+@@ -1064,10 +1064,10 @@
+ LIBMESH_VMA_INSTANTIATE(Real,double,Real);
+ #endif
+ 
+-#ifdef LIBMESH_USE_COMPLEX_NUMBERS
++//#ifdef LIBMESH_USE_COMPLEX_NUMBERS
+ template class DenseMatrix<Complex>;
+-template void DenseMatrix<Complex>::cholesky_solve(const DenseVector<Complex> &,DenseVector<Complex> &);
+-template void DenseMatrix<Complex>::_cholesky_back_substitute(const DenseVector<Complex> &, DenseVector<Complex> &) const;
++//template void DenseMatrix<Complex>::cholesky_solve(const DenseVector<Complex> &,DenseVector<Complex> &);
++//template void DenseMatrix<Complex>::_cholesky_back_substitute(const DenseVector<Complex> &, DenseVector<Complex> &) const;
+ template void DenseMatrix<Real>::vector_mult (DenseVector<CompareTypes<Real,Complex>::supertype> & dest,
+                                               const DenseVector<Complex> & arg) const;
+ template void DenseMatrix<Real>::vector_mult_transpose (DenseVector<CompareTypes<Real,Complex>::supertype> & dest,
+@@ -1098,6 +1098,6 @@
+ LIBMESH_VMA_INSTANTIATE(Complex,std::complex<double>,Complex);
+ #endif
+ LIBMESH_VMA_INSTANTIATE(Complex,std::complex<double>,Real);
+-#endif
++//#endif
+ 
+ } // namespace libMesh
+--- src/numerics/dense_matrix_base.C.orig	2021-09-01 20:03:21.993380349 +0200
++++ src/numerics/dense_matrix_base.C	2021-09-01 20:03:34.553386762 +0200
+@@ -151,8 +151,8 @@
+ // Explicit instantiations
+ template class DenseMatrixBase<Real>;
+ 
+-#ifdef LIBMESH_USE_COMPLEX_NUMBERS
++//#ifdef LIBMESH_USE_COMPLEX_NUMBERS
+ template class DenseMatrixBase<Complex>;
+-#endif
++//#endif
+ 
+ } // namespace libMesh
+--- src/numerics/dense_matrix_blas_lapack.C.orig	2021-09-01 21:07:07.150413795 +0200
++++ src/numerics/dense_matrix_blas_lapack.C	2021-09-01 21:29:04.287088096 +0200
+@@ -182,6 +182,13 @@
+   this->_val.swap(result);
+ }
+ 
++template<>
++void DenseMatrix<Complex>::_multiply_blas(const DenseMatrixBase<Complex> &,
++                                    _BLAS_Multiply_Flag)
++{
++  libmesh_error_msg("No PETSc-provided BLAS/LAPACK available!");
++}
++
+ #else
+ 
+ template<typename T>
+@@ -257,8 +264,15 @@
+   this->_decomposition_type = LU_BLAS_LAPACK;
+ }
+ 
++template<>
++void DenseMatrix<Complex>::_lu_decompose_lapack ()
++{
++  libmesh_error_msg("No PETSc-provided BLAS/LAPACK available!");
++}
++
+ #else
+ 
++template<>
+ template<typename T>
+ void DenseMatrix<T>::_lu_decompose_lapack ()
+ {
+@@ -492,6 +506,16 @@
+     libmesh_error_msg("INFO=" << INFO << ", Error during Lapack SVD calculation!");
+ }
+ 
++template<>
++void DenseMatrix<Complex>::_svd_helper (char,
++                                  char,
++                                  std::vector<Complex> &,
++                                  std::vector<Complex> &,
++                                  std::vector<Complex> &)
++{
++  libmesh_error_msg("No PETSc-provided BLAS/LAPACK available!");
++}
++
+ 
+ #else
+ 
+@@ -663,6 +687,14 @@
+   x.get_values().resize(this->n());
+ }
+ 
++template<>
++void DenseMatrix<Complex>::_svd_solve_lapack(const DenseVector<Complex> & /*rhs*/,
++                                       DenseVector<Complex> & /*x*/,
++                                       Real /*rcond*/) const
++{
++  libmesh_error_msg("svd_solve() requires PETSc >= 3.1!");
++}
++
+ #else
+ 
+ template<typename T>
+@@ -825,6 +857,13 @@
+     libmesh_error_msg("INFO=" << INFO << ", Error during Lapack eigenvalue calculation!");
+ }
+ 
++template<>
++void DenseMatrix<Complex>::_evd_lapack (DenseVector<Complex> &,
++                                  DenseVector<Complex> &)
++{
++  libmesh_error_msg("No PETSc-provided BLAS/LAPACK available!");
++}
++
+ #else
+ 
+ template<typename T>
+@@ -915,6 +954,13 @@
+   // b.swap(x);
+ }
+ 
++template<>
++void DenseMatrix<Complex>::_lu_back_substitute_lapack (const DenseVector<Complex> &,
++                                                 DenseVector<Complex> &)
++{
++  libmesh_error_msg("No PETSc-provided BLAS/LAPACK available!");
++}
++
+ #else
+ 
+ template<typename T>
+@@ -1038,6 +1084,17 @@
+ }
+ 
+ 
++template<>
++void DenseMatrix<Complex>::_matvec_blas(Complex,
++                                  Complex,
++                                  DenseVector<Complex> &,
++                                  const DenseVector<Complex> &,
++                                  bool) const
++{
++  libmesh_error_msg("No PETSc-provided BLAS/LAPACK available!");
++}
++
++
+ #else
+ 
+ 
+@@ -1078,28 +1135,28 @@
+ template void DenseMatrix<Real>::_svd_solve_lapack (const DenseVector<Real> &, DenseVector<Real> &, Real) const;
+ template void DenseMatrix<Real>::_evd_lapack(DenseVector<Real> &, DenseVector<Real> &);
+ 
+-#if !(LIBMESH_USE_REAL_NUMBERS)
+-template void DenseMatrix<Number>::_multiply_blas(const DenseMatrixBase<Number> &, _BLAS_Multiply_Flag);
+-template void DenseMatrix<Number>::_lu_decompose_lapack();
+-template void DenseMatrix<Number>::_lu_back_substitute_lapack(const DenseVector<Number> &,
+-                                                              DenseVector<Number> &);
+-template void DenseMatrix<Number>::_matvec_blas(Number,
+-                                                Number,
+-                                                DenseVector<Number> &,
+-                                                const DenseVector<Number> &,
++//#if !(LIBMESH_USE_REAL_NUMBERS)
++template void DenseMatrix<Complex>::_multiply_blas(const DenseMatrixBase<Complex> &, _BLAS_Multiply_Flag);
++template void DenseMatrix<Complex>::_lu_decompose_lapack();
++template void DenseMatrix<Complex>::_lu_back_substitute_lapack(const DenseVector<Complex> &,
++                                                              DenseVector<Complex> &);
++template void DenseMatrix<Complex>::_matvec_blas(Complex,
++                                                Complex,
++                                                DenseVector<Complex> &,
++                                                const DenseVector<Complex> &,
+                                                 bool) const;
+-template void DenseMatrix<Number>::_svd_lapack(DenseVector<Number> &);
+-template void DenseMatrix<Number>::_svd_lapack(DenseVector<Number> &,
+-                                               DenseMatrix<Number> &,
+-                                               DenseMatrix<Number> &);
+-template void DenseMatrix<Number>::_svd_helper (char,
++template void DenseMatrix<Complex>::_svd_lapack(DenseVector<Complex> &);
++template void DenseMatrix<Complex>::_svd_lapack(DenseVector<Complex> &,
++                                               DenseMatrix<Complex> &,
++                                               DenseMatrix<Complex> &);
++template void DenseMatrix<Complex>::_svd_helper (char,
+                                                 char,
+-                                                std::vector<Number> &,
+-                                                std::vector<Number> &,
+-                                                std::vector<Number> &);
+-template void DenseMatrix<Number>::_svd_solve_lapack (const DenseVector<Number> &, DenseVector<Number> &, Real) const;
+-template void DenseMatrix<Number>::_evd_lapack(DenseVector<Number> &, DenseVector<Number> &);
++                                                std::vector<Complex> &,
++                                                std::vector<Complex> &,
++                                                std::vector<Complex> &);
++template void DenseMatrix<Complex>::_svd_solve_lapack (const DenseVector<Complex> &, DenseVector<Complex> &, Real) const;
++template void DenseMatrix<Complex>::_evd_lapack(DenseVector<Complex> &, DenseVector<Complex> &);
+ 
+-#endif
++//#endif
+ 
+ } // namespace libMesh
