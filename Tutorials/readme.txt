@@ -49,3 +49,5 @@ Example 23: MoS2 monolayer dispersion
 Example 24: MoS2 monolayer embedded in a MOS structure
 
 Example 25: Test of band structure unfolding for a GaN supercell 
+
+Example 36: Bulk band structures of GaAs and GaN, using ETB
