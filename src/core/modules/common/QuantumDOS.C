@@ -191,8 +191,12 @@ QuantumDOS::calculate_density_and_derivative(std::vector<double>& result, double
       vector<Point> pt(1, p);
       vector<double> values(1, 0.0);
 
-      if (_quantum_density[i]->is_solved())
+      // we ask only for a quantum density if the element is in its domain
+      if ((_quantum_density[i]->is_solved()) &&
+          (_quantum_density[i]->includes_region(elem->subdomain_id())))
+      {
         flag |= _quantum_density[i]->get_solution(elem, _density_ids[i], values, pt);
+      }
 
       qdens += values[0];
 

@@ -2416,7 +2416,8 @@ SimulationInterface::get_solution(const libMesh::Elem* elem,
       }
       else
       {
-        MeshUtils::GridMapper& mapper = MeshUtils::GridMapper::get_mapper(get_mesh(), get_region_ids());
+        MeshUtils::GridMapper& mapper =
+            MeshUtils::GridMapper::get_mapper(get_mesh(), get_region_ids());
 
         vector<Point> req_points_r;
         vector<Point> req_points_r_loc;
