@@ -30,6 +30,7 @@ TemperatureInterface::operator=(const TemperatureInterface& rhs)
   _simulation = rhs._simulation;
   _variable_name = rhs._variable_name;
   _id = rhs._id;
+  return(*this);
 }
 
 
