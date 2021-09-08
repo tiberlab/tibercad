@@ -110,6 +110,7 @@ class TBDLLOCAL Elasticity : public SimulationInterface
         _val[3] += t(0,1);
         _val[4] += t(1,2);
         _val[5] += t(0,2);
+        return(*this);
       }
 
       private:
