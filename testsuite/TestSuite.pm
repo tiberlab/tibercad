@@ -351,7 +351,7 @@ sub check_compilation($) {
   print("\nchdir to ", getcwd(), "\n") if verbose();
   print(pad_to_textwidth("Check compilation", $padchar)) if verbose();
 
-  $fail = system("$make $to_dev_null") if -e $makefile;
+  $fail = system("$make METHOD=opt $to_dev_null") if -e $makefile;
   
   print_result($fail) if verbose();
   
