@@ -25,16 +25,68 @@ Tmm::Tmm(const ModelOptions& options) :
 {
 }
 
-void
-Tmm::show_matrix(vector<vector<complex<double>>> matrix)
+Tmm::sqr::sqr()
 {
-  for (int i=0; i<2; i++){
-      for (int j=0; j<2; j++){
-        std::cout<<matrix[i][j]<<"|";
-      }
-      std::cout<<endl;
-  }std::cout<<endl;
+    m00 = 0.0;
+    m01 = 0.0;
+    m10 = 0.0;
+    m11 = 0.0;
 }
+
+Tmm::sqr::sqr(double a00, double a01, double a10, double a11)
+{
+    m00 = a00;
+    m01 = a01;
+    m10 = a10;
+    m11 = a11;
+}
+
+void Tmm::sqr::print()
+{
+    std::cout << "m00 = " << m00 << "  " << "m01 = "<< m01 << "\r\n";
+    std::cout << "m10 = " << m10 << "  " << "m11 = "<< m11 << "\r\n";
+
+}
+
+Tmm::sqr Tmm::sqr::operator*(Tmm::sqr old_sqr)
+{
+	Tmm::sqr new_sqr;
+    new_sqr.m00 = (m00 * old_sqr.m00) + (m01 * old_sqr.m10);
+    new_sqr.m01 = (m00 * old_sqr.m01) + (m01 * old_sqr.m11);
+    new_sqr.m10 = (m10 * old_sqr.m00) + (m11 * old_sqr.m10);
+    new_sqr.m11 = (m10 * old_sqr.m01) + (m11 * old_sqr.m11);
+    return(new_sqr);
+}
+
+void Tmm::sqr::get_M(double n_real,double n_imag,double lenght,double lambda, double theta){
+    complex<double> bi ((2*M_PI*n_imag*lenght)/lambda , (2*M_PI*n_real*lenght)/lambda);
+    bi=bi* cos(theta*M_PI/180);
+    m00 = exp(bi);
+    m01 = 0;
+    m10 = 0;
+    m11 = exp(-bi);
+}
+
+void Tmm::sqr::get_D(double n1_real,double n1_imag,double n2_real,double n2_imag,double theta_layer1, double theta_layer2){
+	  complex<double> n1_complex (n1_real,n1_imag);
+	  complex<double> n2_complex (n2_real,n2_imag);
+	  n1_complex=n1_complex*cos(theta_layer1*M_PI/180);
+	  n2_complex=n2_complex*cos(theta_layer2*M_PI/180);
+	  complex<double> r12,r21,t12,t21;
+
+	  r12=(n1_complex-n2_complex)/(n1_complex+n2_complex);
+	  r21=(n2_complex-n1_complex)/(n1_complex+n2_complex);
+	  t12=(2.0*n1_complex)/(n1_complex+n2_complex);
+	  t21=(2.0*n2_complex)/(n1_complex+n2_complex);
+
+	  m00 = 1.0/(t12);
+	  m01 = (-r21)/(t12);
+	  m10 = (r12)/(t12);
+	  m11 = (t12*t21-r12*r21)/(t12);
+}
+
+
+
 
 vector<double>
 Tmm::theta_cal(vector<double> n_real , double incident_angle){
@@ -46,47 +98,11 @@ Tmm::theta_cal(vector<double> n_real , double incident_angle){
     return theta;
 }
 
-vector<vector<complex<double>>>
-Tmm::get_M(double n_real,double n_imag,double lenght,double lambda, double theta){
-        complex<double> bi ((2*M_PI*n_imag*lenght)/lambda , (2*M_PI*n_real*lenght)/lambda);
-        bi=bi* cos(theta*M_PI/180);
-        vector<vector<complex<double>>>  M_matrix {{0,0},{0,0}};
-        M_matrix[0][0]=exp(bi);
-        M_matrix[1][1]=exp(-bi);
-        return M_matrix;
-}
 
-vector<vector<complex<double>>>
-Tmm::get_D(double n1_real,double n1_imag,double n2_real,double n2_imag,double theta_layer1, double theta_layer2){
-        vector<vector<complex<double>>>  D_matrix {{0,0},{0,0}};
-        complex<double> n1_complex (n1_real,n1_imag);
-        complex<double> n2_complex (n2_real,n2_imag);
-        n1_complex=n1_complex*cos(theta_layer1*M_PI/180);
-        n2_complex=n2_complex*cos(theta_layer2*M_PI/180);
-        complex<double> r12,r21,t12,t21;
 
-        r12=(n1_complex-n2_complex)/(n1_complex+n2_complex);
-        r21=(n2_complex-n1_complex)/(n1_complex+n2_complex);
-        t12=(2.0*n1_complex)/(n1_complex+n2_complex);
-        t21=(2.0*n2_complex)/(n1_complex+n2_complex);
 
-        D_matrix[0][0]=1.0/(t12);
-        D_matrix[0][1]=(-r21)/(t12);
-        D_matrix[1][0]=(r12)/(t12);
-        D_matrix[1][1]=(t12*t21-r12*r21)/(t12);
-        return D_matrix;
 
-    }
 
-vector<vector<complex<double>>>
-Tmm::matrix_product(vector<vector<complex<double>>> A,vector<vector<complex<double>>> B){
-    vector<vector<complex<double>>>  C {{0,0},{0,0}};
-            for(int i = 0; i < 2; ++i)
-                for(int j = 0; j < 2; ++j)
-                    for(int k = 0; k < 2; ++k)
-                        C[i][j] += A[i][k] * B[k][j];
-                return C;
-}
 
 
 Tmm::~Tmm(void)
@@ -215,25 +231,6 @@ Tmm::do_solve(void)
     vector<double> l_length;
     vector<double> l;
 
-    //********************************************************************************************
-    //********************************libMesh::DenseMatrix***************************************
-
-/*
-    vector<vector<complex<double>>> A_val {{1,0},{0,1}};
-    libMesh::DenseMatrix<Complex> A;
-    vector<vector<complex<double>>> B_val {{1,1},{1,1}};
-    libMesh::DenseMatrix<Complex> B;
-    libMesh::DenseMatrix<Complex> C;
-    A.resize(2,2);
-    B.resize(2,2);
-    C.resize(2,2);
-    for (int k1=0; k1<2; k1++)
-      for (int k2=0; k2<2;k2++){
-        A(k1,k2) = A_val[k1][k2];
-        B(k1,k2) = B_val[k1][k2];
-      }
-    libMesh::out<< "salam";
-    */
     //**********************************************************************************************
     for ( ; el != end_el ; ++el)
     {
@@ -253,6 +250,7 @@ Tmm::do_solve(void)
       n_real.push_back(real(nk));
       n_imag.push_back(imag(nk));
 
+
       //n_imag.push_back(sqrt((abs(mod.get_permittivity(lambda))-real(mod.get_permittivity(lambda)))/2));
       //n_real.push_back(sqrt((abs(mod.get_permittivity(lambda))+real(mod.get_permittivity(lambda)))/2));
       l.push_back(elem->volume()); 
@@ -261,93 +259,76 @@ Tmm::do_solve(void)
     //********************snell's law********************
     vector<double> theta(n_real.size());
     theta=Tmm::theta_cal(n_real,incoming_angle);
+
     //****************************************************
 
 
 
     //*****************************************************
     //************** defining Vectors**********************
-    vector<vector<complex<double>>> D {{1,0},{0,1}};
-    vector<vector<complex<double>>> M {{0,0},{0,0}};
-    vector<vector<complex<double>>> T_load {{0,0},{0,0}};
-    vector<vector<complex<double>>> T {{1,0},{0,1}};
+    
+    Tmm::sqr D(1,0,0,1);
+    Tmm::sqr M(0,0,0,0);
+    Tmm::sqr T_load(0,0,0,0);
+    Tmm::sqr T(1,0,0,1);
+    
+    Tmm::sqr E_N(1,0,0,1);
+    Tmm::sqr E_I(1,0,0,1);
 
-    vector<vector<complex<double>>> E_N {{1,0},{0,0}};
-    vector<vector<complex<double>>> E_I {{0,0},{0,0}};
 
     vector<complex<double>> E_F(n_real.size());
     vector<complex<double>> E_B(n_real.size());
-    E_F[n_real.size()-1]=E_N[0][0];
-    E_B[n_real.size()-1]=E_N[1][0];
+    
+    E_F[n_real.size()-1]=E_N.m00;
+    E_B[n_real.size()-1]=E_N.m10;
 
     vector<complex<double>> E_F_NORM(n_real.size());
     vector<complex<double>> E_B_NORM(n_real.size());
 
-
-
-
     //******************************************************
     //******main loop over layer, calculating matrixs*******
     for (int k=n_real.size()-1 ; k>=0 ; k--){
-
-      if(k<(n_real.size()-1)){      
-         D=Tmm::get_D(n_real[k],n_imag[k],n_real[k+1],n_imag[k+1],theta[k],theta[k+1]);
-         cout<<"D matrix "<<k+1<<"&"<<k+2<<endl;
-         Tmm::show_matrix(D);
-      }
-      M=Tmm::get_M(n_real[k],n_imag[k],l[k],lambda,theta[k]);
-      cout<<"M matrix "<<k+1<<endl;
-      Tmm::show_matrix(M);
-      T_load=Tmm::matrix_product(D,M);
-      T=Tmm::matrix_product(T,T_load);
-
-      E_I=Tmm::matrix_product(T,E_N);
-      E_F[k]+=E_I[0][0];
-      E_B[k]+=E_I[1][0];
+      if(k<(n_real.size()-1))     
+         D.get_D(n_real[k],n_imag[k],n_real[k+1],n_imag[k+1],theta[k],theta[k+1]);     
+      M.get_M(n_real[k],n_imag[k],l[k],lambda,theta[k]);     
+      T_load = D * M;
+      T = T * T_load;     
+      E_I = T * E_N;
+      E_F[k]+= E_I.m00;
+      E_B[k]+= E_I.m10;
     }
-    cout<<"T matrix "<<endl;
-    Tmm::show_matrix(T);
-
-
+    T.print();
 
     //***********************************************************************
     //**********reflection and transmission calculation**********************
     complex<double> Reflection,Transmission;
-
-    Reflection=pow(abs(T[1][0]/T[0][0]),2);
+    Reflection = pow(abs(T.m10/T.m00),2);
     complex<double> nc_first (n_real[0],n_imag[0]);
     complex<double> nc_last (n_real[n_real.size()-1],n_imag[n_imag.size()-1]);
     complex<double> ratio_complex;
-    ratio_complex=((nc_last)*cos(theta[theta.size()-1]*M_PI/180))/(nc_first*cos(theta[0]*M_PI/180));
-    Transmission=ratio_complex*pow(abs(1.0/T[0][0]),2);
-    
-
-
+    ratio_complex = ((nc_last)*cos(theta[theta.size()-1]*M_PI/180))/(nc_first*cos(theta[0]*M_PI/180));
+    Transmission = ratio_complex*pow(abs(1.0/T.m00),2);
 
     //***************************************************************************
     //**************printing tansmission adnd reflection**************************
     cout<<"trasmision is :"<< Transmission << "reflection is :"<<Reflection<<endl;  
 
-    
-
-
     //****************************************************************************
     //***************normalizing electric field matrix******************************
     for(double nm=0; nm < E_F.size() ; nm++){	
-	E_F_NORM[nm]=E_F[nm]/E_F[0];			
-	E_B_NORM[nm]=E_B[nm]/E_F[0];	
+    	E_F_NORM[nm] = E_F[nm]/E_F[0];
+    	E_B_NORM[nm] = E_B[nm]/E_F[0];
     } 
 
-    for(int mm=0;mm<E_F_NORM.size();mm++)
-        cout<<"E is "<< E_F_NORM[mm]<<endl;
-
+  //  for(int mm=0;mm<E_F_NORM.size();mm++)
+   //     cout<<"E is "<< E_F_NORM[mm]<<endl;
 
     //*******************************************************************************
     //************************printing electric field********************************
     for(double nm=0; nm <= l_length.size() ; nm++){
-	//E=E_F_NORM[nm]+E_B_NORM[nm];	
-	E=1.0;                   //just for test
-	solution.add(l_length[nm], E );
+    	//E=E_F_NORM[nm]+E_B_NORM[nm];	
+    	E = 1.0;                   //just for test
+    	solution.add(l_length[nm], E );
     } 
 
   }
