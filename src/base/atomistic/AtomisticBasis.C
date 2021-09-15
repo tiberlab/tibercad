@@ -101,8 +101,9 @@ AtomisticBasis::get_ttype_lattice_vectors(void)
 int
 AtomisticBasis::get_type_index(const std::string& type) const
 {
+  // TODO maybe this should be changed to unsigned int
   int result = 0;
-  for (int i = 0; i < _atom_types.size(); i++){
+  for (unsigned int i = 0; i < _atom_types.size(); i++){
       if ( (type.compare( _atom_types[i] ) == 0) ) result = i + 1;
   }
 

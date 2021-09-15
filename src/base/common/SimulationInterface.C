@@ -3174,7 +3174,7 @@ SimulationInterface::project_on_tensor_grid(void)
   //   data1(x1y1) data1(x2y1) ...
   //   data1(x1y2) data1(x2y2) ...
   int ascii_form = 1;
-  if (opts.get_option("ascii_format", "list") != "list")
+  if (opts.get_option("ascii_format", "list") != string("list"))
     ascii_form = 0;
 
 

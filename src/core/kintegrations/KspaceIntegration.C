@@ -415,7 +415,7 @@ void KspaceIntegration::do_init(void)
   {
     std::vector<unsigned int>  num_nodes;
     get_option("number_of_elements",num_nodes);
-    for(int i=0; i< num_nodes.size(); i++)
+    for(unsigned int i = 0; i < num_nodes.size(); i++)
       if(num_nodes[i]>0) ++num_nodes[i];
     kopts.set_option("number_of_nodes", num_nodes); 
   }

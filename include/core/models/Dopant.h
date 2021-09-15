@@ -47,7 +47,7 @@ class TBDLEXPORT Dopant
 
 
     // Destructor
-    ~Dopant(void) {};
+    virtual ~Dopant(void) {};
 
 
     //! Create a doping with given profile and options

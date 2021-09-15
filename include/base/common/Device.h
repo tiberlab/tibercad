@@ -707,7 +707,7 @@ Device::get_quantum_contact(ID region_id) const
   QuantumContactMap::const_iterator it(_quantum_contact_map.begin());
   QuantumContactMap::const_iterator end(_quantum_contact_map.end());
 
-  for( it; it != end; ++it)
+  for( ; it != end; ++it)
   {
     if (it->second->get_id() == region_id) 
       return it->second;
