@@ -33,11 +33,73 @@ class TBDLLOCAL Tmm : public SimulationInterface
 
     //! We need a public static creator function
     static Tmm* create(const ModelOptions& options);
-    
 
 
+  class Matrix_2by2 {
+    public:
+
+    Matrix_2by2();
+    Matrix_2by2(double, double, double, double);
+
+    //! defining operator  for two matrics product
+    Matrix_2by2 operator*(Matrix_2by2 const & old_Matrix_2by2);
 
 
+    //! defining a function to print matrix elements
+    void print();
+
+    //! defining a functions to Set matrix elements
+    /*!
+     * elm = 0 is corresponding to element m00
+     * elm = 1 is corresponding to element m01
+     * elm = 2 is corresponding to element m10
+     * elm = 3 is corresponding to element m11
+     */
+    //!
+    void set(int elm, std::complex<double> a);
+
+    //! defining a functions to Get matrix elements
+    /*!
+     * elm = 0 is corresponding to element m00
+     * elm = 1 is corresponding to element m01
+     * elm = 2 is corresponding to element m10
+     * elm = 3 is corresponding to element m11
+     */
+    //!
+    std::complex<double> get(int elm);
+
+
+  private :
+
+    //! variables corresponding to elements of the matrix
+    std::complex<double> _m00;
+    std::complex<double> _m01;
+    std::complex<double> _m10;
+    std::complex<double> _m11;
+};
+
+
+  //! defining a function to return M matrix
+  /*!
+  * "n_real" is real part of refractive index
+  * "n_imag" is imaginary part of refractive index
+  * "length" is the lenth of the layer
+  * "lambda" is the light's wavelength
+  * "theta" is the light's traveling angle(normal incident is equal to '0')
+  */
+  Tmm::Matrix_2by2 get_M(double n_real,double n_imag,double length,double lambda, double theta);
+
+
+  //! defining a function to return D matrix
+  /*!
+  * "n1_real" is first layer real part of the refractive index
+  * "n1_imag" is first layer imaginary part of the refractive index
+  * "n2_real" is second layer real part of the refractive index
+  * "n2_imag" is second layer imaginary part of the refractive index
+  * "theta_layer1" is the first layer light's traveling angle(normal incident is equal to '0')
+  * "theta_layer2" is the second layer light's traveling angle(normal incident is equal to '0')
+  */
+  Tmm::Matrix_2by2 get_D(double n1_real,double n1_imag,double n2_real,double n2_imag,double theta_layer1, double theta_layer2);
 
 
 
@@ -98,47 +160,7 @@ class TBDLLOCAL Tmm : public SimulationInterface
 
 
     //! defining a class to work with 2*2 matrics 
-    class sqr {
-    	public:
-    	
-        sqr();
-        sqr(double a00, double a01, double a10, double a11);
-        
-        //! defining operator  for two matrics product
-        sqr operator*(sqr);
-        
-        //! definig a function to print matrix elements
-        void print();
-        
-        //! defining a function to return M matrix
-        /*!
-         * "n_real" is real part of refractive index
-         * "n_imag" is imaginary part of refractive index
-         * "length" is the lenth of the layer
-         * "lambda" is the light's wavelength
-         * "theta" is the light's traveling angle(normal incident is equal to '0')
-         */           
-        void get_M(double n_real,double n_imag,double length,double lambda, double theta);
-        
-        
-        //! defining a function to return D matrix
-        /*!
-         * "n1_real" is first layer real part of the refractive index
-         * "n1_imag" is first layer imaginary part of the refractive index
-         * "n2_real" is second layer real part of the refractive index
-         * "n2_imag" is second layer imaginary part of the refractive index
-         * "theta_layer1" is the first layer light's traveling angle(normal incident is equal to '0')
-         * "theta_layer2" is the second layer light's traveling angle(normal incident is equal to '0')
-         */  
-        void get_D(double n1_real,double n1_imag,double n2_real,double n2_imag,double theta_layer1, double theta_layer2);
-       
-        //! variables corresponding to elements of the matrix
-        std::complex<double> m00;
-        std::complex<double> m01;
-        std::complex<double> m10;
-        std::complex<double> m11;
-        
-    };
+
 
 
     /*!
