@@ -3,6 +3,7 @@
 #include "Tmm.h"
 #include "TiberLinearSystem.h"
 #include "TmmBulkModel.h"
+#include "TmmBoundaryModel.h"
 #include "Messages.h"
 
 
@@ -404,9 +405,7 @@ PhysicalModel*
 Tmm::create_boundary_model(const ModelOptions& options,
     const MaterialBoundary* boundary) const
 {
-  // for now there is no boundary model 
-  return(nullptr);
-  //return(TmmBoundaryModel::create(boundary, options));
+  return(TmmBoundaryModel::create(boundary, options));
 }
 
 
