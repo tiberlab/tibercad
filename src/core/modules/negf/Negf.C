@@ -471,7 +471,7 @@ Negf::do_reinit(void)
 {
   static_this = this;
   //std::cout<<"(negf) clean up libnegf"<<std::endl;
-  _libnegf->clean_libnegf();
+  //_libnegf->clean_libnegf();
 }
 
 void
