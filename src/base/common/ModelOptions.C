@@ -18,7 +18,8 @@ using namespace std;
 
 
 ModelOptions::ModelOptions(map<const string, string> options)
-  : _options(options)
+  : _options(options),
+    _index(-1)
 {
 }
 
@@ -30,6 +31,7 @@ ModelOptions::ModelOptions(const ModelOptions& other)
   _key = other._key;
   _name = other._name;
   _used = other._used;
+  _index = other._index;
 }
 
 
