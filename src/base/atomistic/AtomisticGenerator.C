@@ -92,7 +92,7 @@ void
 AtomisticGenerator::build(void)
 {
 
-  //Common building operations
+  // make the conventional cell, which has orthogonal lattice vectors
   make_conv_cell();
 
   if (_as->get_options().get_option("minimal_cell", false))
@@ -100,6 +100,9 @@ AtomisticGenerator::build(void)
     minimal_conv_cell();
   }
 
+  // Alternatively, we can use directly the primitive cell to fill up the structure,
+  // allowing for non-orthogonal supercell basis.
+  // This "abuses" the _conv_vect and _conv_prim structures
   if (_as->get_options().get_option("use_primitive_cell", false))
   {
     _conv_vect = _bulk->get_rotated_prim_vec();

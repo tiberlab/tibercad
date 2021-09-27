@@ -154,6 +154,7 @@ protected:
   //! Setting the conventional lattice
   void make_conv_lattice();
 
+  //! For 1D, make a minimal cell which is not necessarily orthogonal in y-z plane
   void minimal_conv_cell();
 
   //! Setting the conventional lattice + basis
