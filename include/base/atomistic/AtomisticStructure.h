@@ -11,7 +11,7 @@
 #include "InitFailedException.h"
 #include "AtomisticBasis.h"
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/function.hpp>
 
 class Material;

@@ -27,7 +27,7 @@
 #include "libmesh/numeric_vector.h"
 #include "libmesh/parallel.h"
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/function.hpp>
 
 #include <cassert>
