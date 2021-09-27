@@ -1531,6 +1531,7 @@ ETB::do_project_to_primitive_cell(const vector<eigen_problem_solution>& a,
 
         for (int k = 0; k < n_k; ++k)
         {
+          // 0.1 is for conversion from Angstrom to nm
           Complex arg = 0.1*Complex(0.0, kpoints[k]*d);
           Complex phase = std::exp(-arg);
 
