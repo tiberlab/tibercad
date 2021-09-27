@@ -167,7 +167,7 @@ Elasticity::do_solve(void)
   double tot_norm = 0.0;
   double energy = 0.0;
 
-  if ((SimulationOptions::verbose() > 1) &&  myopt.shape_iterations>1)
+  if ((verbose() > 1) &&  myopt.shape_iterations>1)
   {
     Messages::newline();
     ostringstream os;
