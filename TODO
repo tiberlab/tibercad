@@ -5,17 +5,17 @@
 	( ) get rid of read_database(), put database access into get_option()
 		and get_parameter()
 	( ) throw exception if get_option() gets a string with "$"
-	( ) add something like @define, @if etc. in InputParser
+	(DONE) add something like @define, @if etc. in InputParser
 
 2010-09-21 Romano
-	( ) Complete the Elasticity module
+	(DONE) Complete the Elasticity module
 
 2010-09-20 Auf der Maur
 	(DONE) add possibility to read RealGradient type from input file
-    (DONE) add the *operator between tensor.h and tensor_value.h related types.
+        (DONE) add the *operator between tensor.h and tensor_value.h related types.
 
 2010-07-20 Auf der Maur
-	( ) add possibility to have independent meshes
+	(PARTLY) add possibility to have independent meshes
 
 2009-11-24 Auf der Maur
 	( ) in 1D/2D check if mesh is along x or in x/y
@@ -39,14 +39,14 @@
 2009-02-25 Auf der Maur
 	( ) improve/document tunneling current (analytical model)
 	( ) implement inspect output
-	( ) implement doping profile/external doping
+	(DONE) implement doping profile/external doping
 
 2008-10-13 Auf der Maur
 	( ) in DriftDiffusion, put calculated currents into contacts
 	(DONE) implement Fowler-Nordheim for contacts
 
 2008-07-18 Auf der Maur
-	(PARTLY DONE) improve Sweep to make 'logarithmic' scale sweeps, change meaning of 
+	(DONE) improve Sweep to make 'logarithmic' scale sweeps, change meaning of 
 	min/max steps
 
 2008-07-18 Auf der Maur
@@ -60,10 +60,10 @@
 	(DONE) improve drift-diffusion for electron-only calculations
 
 2008-06-03 Povolotskyi
-	( ) immplement quantum Hamiltonian model for X and L valleys
+	(DONE) immplement quantum Hamiltonian model for X and L valleys
 
 2008-05-30 Auf der Maur
-	(PARTLY DONE) put field dependent mobility into jacobian
+	(DONE) put field dependent mobility into jacobian
 
 2008-05-28 Povolotskyi
 	( ) implement model for Zb valence band mass at small strain
