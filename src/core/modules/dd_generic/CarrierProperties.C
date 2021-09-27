@@ -322,7 +322,7 @@ CarrierProperties::get_density_and_derivative(double Ef, double Epot)
   }
 
 
-  // reset consuctivity
+  // reset conductivity
   _conductivity = 0.0;
 
   double mobility = _mobility_model->get_mobility();
@@ -353,6 +353,7 @@ CarrierProperties::get_density_and_derivative(double Ef, double Epot)
       break;
 
     default:
+      //in this case it is a constant
       break;
   }
 

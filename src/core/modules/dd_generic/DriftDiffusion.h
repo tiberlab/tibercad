@@ -810,11 +810,6 @@ virtual void do_check_nonlinear_step(
         libMesh::SparseMatrix<Number>* jacobian);
 
 
-    //! Write out a vector (e.g. residual)
-    void write_nodal_vector(const std::string& filename,
-        const libMesh::NumericVector<double>& vec);
-
-
 
     //! The Bernoulli function and it's derivative
     /*!

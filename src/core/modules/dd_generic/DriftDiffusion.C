@@ -6382,6 +6382,7 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
           dsigma_dEf[var][qp] = der_qFermi;
           dsigma_dgradEf[var][qp] = der_grad_f;
           dsigma_dgradu[var][qp] = der_grad_u;
+          //cerr << der_qFermi << " " << der_grad_f << " " << der_grad_u << endl;
           //tep.insert( make_pair(var, cp->get_thermoelectric_power() / phi0) );
         }
       }
@@ -6565,6 +6566,9 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
       double edge_len  = vcell.get_edge_length(e);
       double face_area = vcell.get_cell_face_area(e);
 
+      RealVectorValue dij(elem->point(n2) - elem->point(n1));
+      RealVectorValue nij(dij / dij.norm());
+
       // now we have the two nodes
 
       if (coupling & POISSON)
@@ -6579,10 +6583,9 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
         if (residual != NULL)
         {
           // treat the polarization
-          RealVectorValue dir(elem->point(n2) - elem->point(n1));
           RealVectorValue pol(polarization[n1]);
           pol += polarization[n2];
-          double P = (pol * dir) * 0.5 / dir.norm();
+          double P = (pol * dij) * 0.5 / dij.norm();
           double value = face_area * P / P0;
           value += coeff * (u[u_var][n1] - u[u_var][n2]);
 
@@ -6658,7 +6661,6 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
               {
                 double dc1 = -dsigma_dEf[var][n1] * phi0;
                 double dc2 = -dsigma_dEf[var][n2] * phi0;
-                //dsigma_dgradu
 
                 // w.r.t. u[var] = phi_n
                 //double val11 =  0.5 * coeff * Bp * ((dn1 + dens1) * f1 - dens1);
@@ -6677,15 +6679,20 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
 
                 if (coupling & POISSON)
                 {
+                  double dgradu1 = (dsigma_dgradu[var][n1] * nij) * phi0 / x0;
+                  double dgradu2 = (dsigma_dgradu[var][n2] * nij) * phi0 / x0;
+
                   val11 = 0.5 * coeff * f1 * (dBp * cond1 - Bp * dc1);
                   val12 = -0.5 * coeff * f1 * cond1 * dBp;
                   val21 = 0.5 * coeff * f2 * cond2 * dBn;
                   val22 = 0.5 * coeff * f2 * (-dBn * cond2 - Bn * dc2);
 
-                  Kvv[var].at(u_var)(i, n1) += val11 + val21;
-                  Kvv[var].at(u_var)(i, n2) += val12 + val22;
-                  Kvv[var].at(u_var)(j, n1) -= val11 + val21;
-                  Kvv[var].at(u_var)(j, n2) -= val12 + val22;
+                  double tmp = 0.5 * coeff * (Bp * f1 * dgradu1 + Bn * f2 * dgradu2 ) / edge_len;
+
+                  Kvv[var].at(u_var)(i, n1) += val11 + val21 - tmp;
+                  Kvv[var].at(u_var)(i, n2) += val12 + val22 + tmp;
+                  Kvv[var].at(u_var)(j, n1) -= val11 + val21 - tmp;
+                  Kvv[var].at(u_var)(j, n2) -= val12 + val22 + tmp;
                 }
               }
             }
@@ -7125,69 +7132,4 @@ DriftDiffusion::do_load_data(istream& is)
 }
 
 
-
-
-void
-DriftDiffusion::write_nodal_vector(const string& filename, const libMesh::NumericVector<double>& vec)
-{
-
-  TiberNonlinearSystem* system = &get_equation_system<TiberNonlinearSystem>();
-
-  // aliases for nicer code
-  const Device& device = *(_device);
-  const MeshBase& mesh = get_mesh();
-
-  const libMesh::DofMap& dof_map = system->get_dof_map();
-
-  const unsigned int nn  = mesh.n_nodes();
-
-  vector<double> results(3 * nn, 0.0);
-
-  const unsigned int u_var = system->variable_number("potential");
-  unsigned int en_var = system->variable_number("electron");
-  unsigned int ep_var = system->variable_number("hole");
-
-  vector<unsigned int> dof_indices_u;
-  vector<unsigned int> dof_indices_en;
-  vector<unsigned int> dof_indices_ep;
-
-
-  MeshBase::const_element_iterator it =
-    this->active_local_elements_begin();
-  const MeshBase::const_element_iterator end =
-    this->active_local_elements_end();
-
-  for ( ; it != end; ++it)
-  {
-    const Elem* elem = *it;
-
-    ID subdomain = elem->subdomain_id();
-
-    dof_map.dof_indices(elem, dof_indices_u, u_var);
-    dof_map.dof_indices(elem, dof_indices_en, en_var);
-    dof_map.dof_indices(elem, dof_indices_ep, ep_var);
-
-    for (unsigned int n = 0; n < elem->n_nodes(); n++)
-    {
-      unsigned int id = 3 * elem->node(n);
-      results[id] = vec(dof_indices_u[n]);
-      if (dof_indices_en.size() > 0)
-        results[id + 1] = vec(dof_indices_en[n]);
-      if (dof_indices_ep.size() > 0)
-        results[id + 2] = vec(dof_indices_ep[n]);
-    }
-
-  }
-
-  vector<string> format;
-  get_output_format(format);
-  DataOutput data_output(get_mesh(), format[0]);
-  data_output.set_output_directory(get_output_directory());
-  vector<string> names(3);
-  names[0] = "u";
-  names[1] = "v";
-  names[2] = "w";
-  data_output.write_nodal_data(filename, results, names);
-
-}
 

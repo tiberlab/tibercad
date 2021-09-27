@@ -127,10 +127,6 @@ FieldDependentMobility::get_mobility(void)
   libMesh::RealGradient grad_fermi;
   get_driftdiffusionproperties().get_grad_fermi(id, grad_fermi);
 
-  //E = grad_fermi.size();
-
-  //if ((_force == EFIELD) && (E > 1))
-    //E = grad_fermi * get_driftdiffusionproperties().get_electric_field() / E;
   if (_force == GRADFERMI)
     E = grad_fermi.norm();
   else if (_force == EFIELD)
@@ -311,7 +307,7 @@ FieldDependentMobility::get_derivative_grad_fermi(libMesh::RealGradient& dm)
 
     //if (F > 1e-6)
     {
-      double tmp = 1.0 + std::pow(mu_lowfield * F / vsat, _beta);
+      double tmp = 1.0 + std::pow(mu_lowfield * F / vsat, beta);
       double dmu = -mu_lowfield * std::pow(tmp, -1.0 / beta - 1);
       dmu *= std::pow(mu_lowfield * F / vsat, beta) / F;
 
