@@ -349,18 +349,6 @@ void FEMEigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, dou
 
   while (!foundall)
   {
-    /*
-    if (slep_opt.use_deflation_space)
-    {
-      vector<const vector<Complex>*> sols;
-      for (int i = 0; i < _solution.size(); ++i)
-      {
-        if (_solution[i].eigen_vector.size() > 0)
-          sols.push_back(&_solution[i].eigen_vector);
-      }
-      EigenSolver::set_deflation_space(sols);
-    }
-    */
 
     int result;
     if (_haveS) 
