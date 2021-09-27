@@ -8,8 +8,8 @@ fi
 
 . common.sh
 
-TIBEROPTS=${TIBEROPTS:-"--enable-uptight --enable-license-check --disable-hetero"}
-#TIBEROPTS=${TIBEROPTS:-"--enable-uptight --disable-license-check --disable-hetero"}
+#TIBEROPTS=${TIBEROPTS:-"--enable-uptight --enable-license-check --disable-hetero"}
+TIBEROPTS=${TIBEROPTS:-"--enable-uptight --disable-license-check --disable-hetero"}
 
 if [ "$MKL" = y ]; then
 TIBEROPTS="${TIBEROPTS} --with-mkl=${MKLDIR}"

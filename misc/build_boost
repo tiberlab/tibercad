@@ -7,7 +7,7 @@ fi
 
 . common.sh
 
-VERSION=1_54_0
+VERSION=1_77_0
 ARCHIVE=boost_${VERSION}.tar.bz2
 
 echo "Compiling boost libraries"
@@ -38,7 +38,7 @@ if [ ! -d boost_${VERSION} ]; then
   tar jxf ${ARCHIVE}
   cd boost_${VERSION}
   [ -e ${TOPDIR}/misc/boost.patch ] && patch -p0 < ${TOPDIR}/misc/boost.patch
-  cp tools/build/v2/user-config.jam tools/build/v2/user-config.jam.orig
+  #cp tools/build/v2/user-config.jam tools/build/v2/user-config.jam.orig
   cd ..
 fi
 
@@ -53,7 +53,8 @@ if [ "$target_os" = win32 ]; then
   echo "using gcc : : $CXX : <cxxflags>-std=gnu++11 <src>$(echo $CC | sed 's/gcc/windres/') <archiver>$AR ;" > tools/build/v2/user-config.jam
 else
   #echo "using $toolset : : $CXX : <cxxflags>-std=gnu++11 <linkflags>-Wl,-rpath,'\$ORIGIN' ;" > tools/build/v2/user-config.jam
-  echo "using $toolset : : $CXX : <cxxflags>-std=gnu++11 <linkflags>-Wl,-rpath,'\$ORIGIN' ;" > tools/build/v2/user-config.jam
+  echo "using $toolset : : $CXX : <cxxflags>-std=gnu++11 <linkflags>-Wl,-rpath,'\$ORIGIN' ;" > tools/build/src/user-config.jam
+  echo "using mpi ;" >> tools/build/src/user-config.jam
 #  if [ "$MPI" = y ]; then
 #    echo "using mpi ;" >> tools/build/v2/user-config.jam
 #  fi
@@ -65,9 +66,9 @@ if [ "$target_os" = win32 ]; then
   bits=32
   [ "x$(echo $HOST | grep x86_64)" != "x" ] && bits=64
 
-  ./bjam toolset=gcc variant=release threading=single link=shared runtime-link=shared target-os=windows --with-regex --with-filesystem --with-system --layout=tagged --prefix=${SDKDIR} --libdir=${SDKDIR}/${TCHOST}/lib address-model=$bits install
+  ./b2 toolset=gcc variant=release threading=single link=shared runtime-link=shared target-os=windows --with-regex --with-filesystem --with-system --layout=tagged --prefix=${SDKDIR} --libdir=${SDKDIR}/${TCHOST}/lib address-model=$bits install
 else
-  ./bjam toolset=$toolset variant=release threading=multi link=shared runtime-link=shared --with-regex --with-filesystem --with-system --layout=tagged --prefix=${SDKDIR} --libdir=${SDKDIR}/${TCHOST}/lib install
+  ./b2 toolset=$toolset variant=release threading=multi link=shared runtime-link=shared --with-regex --with-filesystem --with-system --layout=tagged --prefix=${SDKDIR} --libdir=${SDKDIR}/${TCHOST}/lib install
   cp ${SDKDIR}/${TCHOST}/lib/libboost* ${TOPDIR}/${TCHOST}/lib
 fi
 
@@ -88,6 +89,6 @@ fi
 # when cross compiling we need also the build system boost libraries
 if [ "$TCHOST" != "$TCBUILD" ]
 then
-  rm tools/build/v2/user-config.jam
-  ./bjam toolset=$toolset variant=release threading=single link=shared runtime-link=shared --with-regex --with-filesystem --with-system --layout=tagged --prefix=${BUILDDIR}/$TCBUILD install
+  rm user-config.jam
+  ./b2 toolset=$toolset variant=release threading=single link=shared runtime-link=shared --with-regex --with-filesystem --with-system --layout=tagged --prefix=${BUILDDIR}/$TCBUILD install
 fi
