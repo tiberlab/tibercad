@@ -1,9 +1,3 @@
+On OLAB system, use configure.sh for configuration, then run make
 
-License file creation
----------------------
-
-1) compile in src/utils/license
-2) run bin/create_license [-f filename] holder expiry
-   e.g.:
-     create_license "University of Rome" 2008-08-31
-
+On other systems, use configure providing all necessary options, or use scripts in misc directory
