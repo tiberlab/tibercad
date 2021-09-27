@@ -193,17 +193,6 @@ TiberNonlinLS::do_solve(void)
     {
       // apply step and look at the new residual
 
-      /* This could be useful in some cases, but we have to assure that
-       * it does not limit the step size in other cases.
-      norm_du = du.linfty_norm();
-      if (norm_du > get_max_abs_step())
-      {
-        double fac = get_max_abs_step() / norm_du;
-        du.scale(fac);
-        norm_du *= fac;
-      }
-      */
-
       u_tmp.add(alpha, du);
 
       u_tmp.localize(u, get_dof_map().get_send_list());
@@ -233,7 +222,7 @@ TiberNonlinLS::do_solve(void)
       //if (norm_du > get_divergence_tol() * norm_du_old)
       //  throw (SolveFailedException("Line search diverged"));
 
-      //cerr << "       ||r(x)|| = " << norm_rhs << ", ||r(x + " <<
+      //cout << "       ||r(x)|| = " << norm_rhs << ", ||r(x + " <<
       //  alpha << "*dx)|| = " << norm_res << endl;
 
 
@@ -258,7 +247,12 @@ TiberNonlinLS::do_solve(void)
             alpha = min_alpha;
         }
         else
-          alpha *= 0.5;
+        {
+          if (norm_res > 1e-12)
+            alpha *= 0.5;
+          else
+            break;
+        }
 
         // don't accept step
         u_tmp = u_old;
