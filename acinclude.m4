@@ -103,7 +103,7 @@ AC_CACHE_CHECK([wether Boost::regex is available], tc_cv_boost_regex_lib,
  elif test "x$tc_cv_boost_prefix" != "x"; then
    tc_boost_libdir="-Wl,-rpath,${tc_cv_boost_prefix}/lib -L${tc_cv_boost_prefix}/lib"
  fi
- [tc_boost_lib="boost_regex-`$CC --version | awk '{ print $1; exit}'` boost_regex-mt boost_regex"]
+ [tc_boost_lib="boost_regex-`$CC --version | awk '{ print $1; exit}'` boost_regex-mt boost_regex-mt-x64 boost_regex"]
  if test "${tc_cv_boost_regex_lib:+set}" == "set"; then
    tc_boost_lib="boost_regex-$tc_cv_boost_regex_lib $tc_cv_boost_regex_lib $tc_boost_lib"
  fi
@@ -144,7 +144,7 @@ AC_CACHE_CHECK([wether Boost::filesystem is available], tc_cv_boost_filesystem_l
  elif test "x$tc_cv_boost_prefix" != "x"; then
    tc_boost_libdir="-Wl,-rpath,${tc_cv_boost_prefix}/lib -L${tc_cv_boost_prefix}/lib"
  fi
- [tc_boost_lib="boost_filesystem-`$CC --version | awk '{ print $1; exit}'` boost_filesystem-mt boost_filesystem"]
+ [tc_boost_lib="boost_filesystem-`$CC --version | awk '{ print $1; exit}'` boost_filesystem-mt boost_filesystem-mt-x64 boost_filesystem"]
  if test "${tc_cv_boost_filesystem_lib:+set}" == "set"; then
    tc_boost_lib="boost_filesystem-$tc_cv_boost_filesystem_lib $tc_cv_boost_filesystem_lib $tc_boost_lib"
  fi
