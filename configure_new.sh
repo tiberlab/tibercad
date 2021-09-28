@@ -15,6 +15,7 @@ LIBMESHDIR=${BUILDDIR}/libmesh-1.0.0-${ARCH}-linux
 export CXX=${SDKDIR}/${ARCH}-linux/bin/mpicxx
 export CC=${SDKDIR}/${ARCH}-linux/bin/mpicc
 export FC=${SDKDIR}/${ARCH}-linux/bin/mpifort
+export MPIEXEC=${SDKDIR}/${ARCH}-linux/bin/mpiexec.hydra
 #export FCFLAGS="${FCFLAGS} -fexceptions -gcc-name=${CC} -gxx-name=${CXX} -nofor-main"
 #export LDFLAGS="${LDFLAGS} `/usr/pack/tibercad_dev-2.2-ma/${ARCH}-linux/bin/mpicxx -showme:link`"
 #export LDFLAGS="${LDFLAGS} `${PETSC_DIR}/externalpackages/mpich2-1.0.8/bin/mpicxx -showme:link`"
@@ -43,9 +44,9 @@ SVN=svn-1.9.5
   --with-petsc-prefix=${PETSC_DIR} \
   --with-petsc-arch=${ARCH}-linux \
   --with-slepc-prefix=${SLEPC_DIR} \
-  --with-mpiexec=mpiexec-3.1.1 \
+  --with-mpiexec=${MPIEXEC} \
   --with-mkl=/usr/pack/intel_oneapi-2021-ma/mkl/latest \
-  --with-thread-library=intel \
+  --with-thread-library=gnu \
   --with-subversion=${SVN} \
   --disable-license-check \
   --enable-uptight\
