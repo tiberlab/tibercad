@@ -679,8 +679,9 @@ MeshUtils::GridMapper::get_element(const libMesh::Point& point) const
     libMesh::Point p(point);
     switch (_mesh->mesh_dimension())
     {
-      [[fallthrough]] case 1:
+      case 1:
         p(1) = 0;
+        [[fallthrough]];
 
       case 2:
         p(2) = 0;
