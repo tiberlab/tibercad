@@ -30,7 +30,6 @@ class BoundaryRegions;
  *          this is not good in case we extrude from different material regions. 
  *
  */
-
 class QuantumContact
 {
   public:

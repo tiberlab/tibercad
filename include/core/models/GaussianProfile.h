@@ -11,7 +11,7 @@
 
 #include <vector>
 
-//! Class to create a linear profile
+//! Class to create a Gaussian profile
 class GaussianProfile : public ExternalProfile
 {
   public:

@@ -11,7 +11,7 @@
 
 #include <vector>
 
-//! Class to create a linear profile
+//! Class to create an exponential profile
 class ExponentialProfile : public ExternalProfile
 {
   public:
