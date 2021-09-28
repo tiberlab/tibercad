@@ -125,19 +125,19 @@ void WzRotatedCrystal::calculate_rot_matrix_miller(std::vector<int> vec_x_mil, s
   {
     Messages m;
     m.error("These crystal directions are inconsistent "
-        "(they do not build right-handed orthogonal system):");
+        "(they do not build right-handed system):");
     m.indent();
     std::ostringstream os;
-    os << "x = [" << x_miller[0] << " " << x_miller[1] << " " << x_miller[2] <<
-        " " << x_miller[3] << "]";
+    os << "x = (" << x_miller[0] << " " << x_miller[1] << " " << x_miller[2] <<
+        " " << x_miller[3] << ")";
     m.error(os.str());
     os.str("");
-    os << "y = [" << y_miller[0] << " " << y_miller[1] << " " << y_miller[2] <<
-        " " << y_miller[3] << "]";
+    os << "y = (" << y_miller[0] << " " << y_miller[1] << " " << y_miller[2] <<
+        " " << y_miller[3] << ")";
     m.error(os.str());
     os.str("");
-    os << "z = [" << z_miller[0] << " " << z_miller[1] << " " << z_miller[2] <<
-        " " << z_miller[3] << "]";
+    os << "z = (" << z_miller[0] << " " << z_miller[1] << " " << z_miller[2] <<
+        " " << z_miller[3] << ")";
     m.error(os.str());
     os.str("");
     throw InitFailedException("Inconsistent crystal directions");

@@ -782,8 +782,9 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
       // ---------------- --------------- --- = ----------------------
       // pi^2 hbar c^2     nr c m^2 e0 w   V    4 pi e0 hbar (m^2 c^4)
       //
-      // Extracting the prefactor m/hbar from the P-matrix, and multipling by a factor (hbar w) to get power emitted
-      // we get the following prefactor (in which V has been removed to get total power emitted):
+      // Extracting the prefactor m/hbar from the P-matrix, and multipling by a factor (hbar w)
+      // to get power emitted we get the following prefactor (in which V has been removed
+      // to get total power emitted):
       //
       //     8 nr (hbar w)^2 e^2/(4 pi e0)
       //  = ------------------------------
@@ -791,8 +792,9 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
       //
       //  Expressed in atomic units, hbar=1, e=1, 4 pi e0=1, c=1/fine_struct.
       //
-      //  So the formula above, multiplied by 4*Pi for angle integration, and a factor of 4 for spin/pol deg
-      //  agrees to Chuang's only if the factor is nr/(2*PI) rather than 1/(2*PI*PI).
+      //  So the formula above, multiplied by 4*Pi for angle integration, and a factor of 4
+      //  for spin/pol deg agrees to Chuang's only if the factor is nr/(2*PI) rather
+      //  than 1/(2*PI*PI).
       //
       //  note that  nr is  still missing !
       //
