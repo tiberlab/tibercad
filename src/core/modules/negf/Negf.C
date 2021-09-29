@@ -197,7 +197,6 @@ Negf::do_init(void)
 
     }
   }
-  //std::cout<<"this & "<<static_this<<std::endl;
 
   unsigned int id = 0;
   std::map<ID, QuantumContact*>::iterator it = _quantum_contacts.begin();
@@ -264,19 +263,20 @@ void
 Negf::init_efa_hamil(void)
 {
 
-  std::cout<<"this & "<<static_this<<std::endl;
-
   // get the number of subbands.
-   const MeshBase& mesh = get_mesh();
-   MeshBase::const_element_iterator el = this->active_local_elements_begin();
-   const Elem* elem = *el;
+  //const MeshBase& mesh = get_mesh();
+  //MeshBase::const_element_iterator el = this->active_local_elements_begin();
+  //const Elem* elem = *el;
 
   unsigned int n_bands;
 
   if (_ext_module == NULL)
   {
-    NegfModel* negfmod = get_bulk_model<NegfModel>(elem);
-    n_bands = negfmod->get_n_bands();
+    throw InitFailedException("NEGF module needs an external"
+        " provider of the Hmailtonian.");
+    // TODO I think this shouldn't happen anymore?
+    //NegfModel* negfmod = get_bulk_model<NegfModel>(elem);
+    //n_bands = negfmod->get_n_bands();
   }
   else
   {
@@ -344,8 +344,8 @@ Negf::init_efa_hamil(void)
   std::cout<<"(negf) init k-integration"<<std::endl;
   init_k_space_integration();
 
-  std::cout<<"(negf) activate quantum contacts"<<std::endl;
-  activate_quantum_contacts();
+  //std::cout<<"(negf) activate quantum contacts"<<std::endl;
+  //activate_quantum_contacts();
 
   std::cout<<"(negf) reorder dofs"<<std::endl;
   reorder(); // dof indices reorder
@@ -832,8 +832,6 @@ Negf::do_solve(void)
 {
   static_this = this;
 
-  activate_quantum_contacts();
-
   //reorder(); // dof indices reorder
 
   if (plot_solution(elDensity) || plot_solution(hlDensity) ||
@@ -1043,10 +1041,10 @@ Negf::plot_LDOS(const std::vector<double>& ldos, const string& mod)
 
   //set<double> coordinates;
   vector<double> coordinates(_device_n_dofs);
-  const MeshBase& mesh = get_mesh();
 
-  MeshBase::const_element_iterator       nd     = mesh.active_elements_begin();
-  const MeshBase::const_element_iterator nd_end = mesh.active_elements_end();
+  // TODO what to do if mesh is distributed?
+  MeshBase::const_element_iterator       nd     = this->active_local_elements_begin();
+  const MeshBase::const_element_iterator nd_end = this->active_local_elements_end();
   for ( ; nd != nd_end; ++nd)
   {
     const Elem* elem = *nd;
@@ -1163,8 +1161,8 @@ Negf::occupy_LDOS(const std::vector<double>& ldos)
 
   std::vector<int> connectivity(qdens.size(), 0);
   {
-    MeshBase::const_element_iterator el = get_mesh().active_elements_begin();
-    const MeshBase::const_element_iterator end_el = get_mesh().active_elements_end();
+    MeshBase::const_element_iterator el = this->active_local_elements_begin();
+    const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
     for ( ; el != end_el; ++el)
     {
       const Elem* elem = *el;
@@ -1185,8 +1183,8 @@ Negf::occupy_LDOS(const std::vector<double>& ldos)
   DofMap& dof_map = _sys_H->get_dof_map();
   std::vector<unsigned int> dof_indices;
 
-  MeshBase::const_element_iterator el = get_mesh().active_elements_begin();
-  const MeshBase::const_element_iterator end_el = get_mesh().active_elements_end();
+  MeshBase::const_element_iterator el = this->active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
 
   NegfModel* negfmod = get_bulk_model<NegfModel>(*el);
   double deg = _ext_module->get_degeneracy();
@@ -1376,8 +1374,8 @@ Negf::transfer_density(const std::vector<double>& density, const std::string& pa
 
   std::vector<int> connectivity(qdens.size(), 0);
   {
-    MeshBase::const_element_iterator el = get_mesh().active_elements_begin();
-    const MeshBase::const_element_iterator end_el = get_mesh().active_elements_end();
+    MeshBase::const_element_iterator el = this->active_local_elements_begin();
+    const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
     for ( ; el != end_el; ++el)
     {
       const Elem* elem = *el;
@@ -1393,8 +1391,8 @@ Negf::transfer_density(const std::vector<double>& density, const std::string& pa
   DofMap& dof_map = _sys_H->get_dof_map();
   std::vector<unsigned int> dof_indices;
 
-  MeshBase::const_element_iterator el = get_mesh().active_elements_begin();
-  const MeshBase::const_element_iterator end_el = get_mesh().active_elements_end();
+  MeshBase::const_element_iterator el = this->active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
 
   NegfModel* negfmod = get_bulk_model<NegfModel>(*el);
 
@@ -2094,19 +2092,19 @@ Negf::get_solution_secure(std::map<ID, std::vector<double> >& values)
 void
 Negf::activate_quantum_contacts(void)
 {
-  std::map<ID, QuantumContact*>::iterator it = _quantum_contacts.begin();
-  const std::map<ID, QuantumContact*>::iterator end = _quantum_contacts.end();
-  for (;it != end;++it)
-    it->second->activate_elements();
+  //std::map<ID, QuantumContact*>::iterator it = _quantum_contacts.begin();
+  //const std::map<ID, QuantumContact*>::iterator end = _quantum_contacts.end();
+  //for (;it != end;++it)
+  //  it->second->activate_elements();
 }
 // DEACTIVATE TEMPORARILY ALL ELEMENTS IN QUANTUM CONTACTS
 void
 Negf::deactivate_quantum_contacts(void)
 {
-  std::map<ID, QuantumContact*>::iterator it = _quantum_contacts.begin();
-  std::map<ID, QuantumContact*>::iterator end = _quantum_contacts.end();
-  for (;it != end;++it)
-    it->second->inactivate_elements();
+  //std::map<ID, QuantumContact*>::iterator it = _quantum_contacts.begin();
+  //std::map<ID, QuantumContact*>::iterator end = _quantum_contacts.end();
+  //for (;it != end;++it)
+  //  it->second->inactivate_elements();
 }
 // -----------------------------------------------------------------------
 // Assemble a Laplace problem in active regions and use solution to
@@ -2114,22 +2112,27 @@ Negf::deactivate_quantum_contacts(void)
 void
 Negf::reorder(void)
 {
-  //std::cout<<"Reorder dofs"<<std::endl;
-
-  MeshBase& mesh = get_mesh();
+  //std::cerr<<"Reorder dofs"<<std::endl;
 
   unsigned int n_vars = _sys_H->n_vars();
   unsigned int n_var_reord = 1;
-  //std::<<"n vars "<<n_vars<<std::endl;
+  //std::cerr<<"n vars "<<n_vars<<std::endl;
 
   std::vector<ID> u_vars(n_var_reord,0);
+  set<ID> qc_ids;
+  for (auto&& id : _quantum_contacts)
+    qc_ids.insert(id.first);
+
+  qc_ids.insert(get_region_ids().begin(), get_region_ids().end());
+
+  // now qc_ids contains region ids of device and quantum contacts
 
   for (unsigned int n=0; n< n_var_reord; n++)
   {
     std::ostringstream var_str;
     var_str << "u" << n;
     std::string name = var_str.str();
-    _sys->add_variable(name, FIRST, LAGRANGE);
+    _sys->add_variable(name, FIRST, LAGRANGE, &qc_ids);
     u_vars[n] = _sys->variable_number(name);
   }
 
@@ -2139,7 +2142,7 @@ Negf::reorder(void)
 
   _sys->solve();
 
-  //std::cout<<"Laplace solved"<<std::endl;
+  std::cerr<<"Laplace solved"<<std::endl;
 
   const libMesh::NumericVector<Number>& solution = _sys->get_solution_vector();
 
@@ -2148,20 +2151,21 @@ Negf::reorder(void)
   std::vector<unsigned int> dof_indices_u;
 
   unsigned int sol_size = solution.size();
+  cerr << "solution size = " << sol_size << endl;
 
   // setup initial permutation vector as identitiy
   // the vector runs only on the device region where the
   // dof reordering is performed
   _perm.resize(_device_n_dofs, 0);
   for (unsigned int i = 0; i < _device_n_dofs; i++)
-    _perm[i]=i;
+    _perm[i] = i;
 
   // Number of dofs of the first band
   unsigned int n_dofs = _qc_n_dofs[_quantum_contacts.size()-1];
 
-  //std::cout<<"Sorting"<<std::endl;
-  //std::cerr<<"n_dofs: "<<n_dofs<<std::endl;
-  //std::cerr<<"dev: "<<_device_n_dofs<<std::endl;
+  std::cerr<<"Sorting"<<std::endl;
+  std::cerr<<"n_dofs: "<<n_dofs<<std::endl;
+  std::cerr<<"dev: "<<_device_n_dofs<<std::endl;
 
   std::sort(_perm.begin(), _perm.end(), compare);
 
@@ -2208,8 +2212,8 @@ Negf::reorder(void)
   ID assign = 0;
   std::vector<unsigned int> temp(sol_size,sol_size);
 
-  MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
+  MeshBase::const_element_iterator       el     = this->active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
 
   for ( ; el != end_el; ++el)
   {
@@ -2281,12 +2285,10 @@ Negf::do_reorder_assemble(libMesh::EquationSystems& es, const std::string& syste
   std::vector<unsigned int> dof_indices;
   const double penalty = 1.e10;
 
-  // DEACTIVATE TEMPORARILY ALL ELEMENTS IN QUANTUM CONTACTS
-  deactivate_quantum_contacts();
   for (unsigned int k=0; k < n_vars; k++)
   {
-    MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
-    const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
+    MeshBase::const_element_iterator       el     = this->active_local_elements_begin();
+    const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
 
     _dev.resize(1);
 
@@ -2347,59 +2349,64 @@ Negf::do_reorder_assemble(libMesh::EquationSystems& es, const std::string& syste
     }
   }
 
-  // Iterates over INACTIVE QuantumContact regions
+  // Iterates over QuantumContact regions by their subdomain ids
+  set<ID> qc_ids;
+  for (auto&& id : _quantum_contacts)
   {
-    for (unsigned int k=0; k < n_vars; k++)
+    qc_ids.insert(id.first);
+  }
+
+
+  for (unsigned int k=0; k < n_vars; k++)
+  {
+    auto       el     = mesh.active_subdomains_elements_begin(qc_ids);
+    const auto end_el = mesh.active_subdomains_elements_end(qc_ids);
+
+    for ( ; el != end_el; ++el)
     {
-      MeshBase::const_element_iterator       el     = mesh.not_active_elements_begin();
-      const MeshBase::const_element_iterator end_el = mesh.not_active_elements_end();
+      const Elem* elem = *el;
 
-      //_qc.resize(1);
-      for ( ; el != end_el; ++el)
+      ID sub_id = elem->subdomain_id();
+
+      // Checks whether the element is within a QuantumContact
+      if (_quantum_contacts.count(sub_id))
       {
-        const Elem* elem = *el;
 
-        ID sub_id = elem->subdomain_id();
-        // Checks whether the element is within a QuantumContact
-        if (_quantum_contacts.count(sub_id))
+        dof_map.dof_indices(elem, dof_indices, k);
+        const unsigned int n_dofs= dof_indices.size();
+
+        fe->reinit(elem);
+        Ke.resize(n_dofs, n_dofs);
+        Fe.resize(n_dofs);
+        Ke.zero();
+        Fe.zero();
+
+        std::string qc_name = _device->get_region_name(sub_id);
+
+        unsigned int cc = _bd_num[_env->get_boundary(qc_name)];  // cc = 0 or 1
+        for(unsigned int n = 0; n< n_dofs; ++n)
         {
+          Ke(n,n) = penalty;
+          Fe(n) = penalty * cc;
 
-          dof_map.dof_indices(elem, dof_indices, k);
-          const unsigned int n_dofs= dof_indices.size();
-
-          fe->reinit(elem);
-          Ke.resize(n_dofs, n_dofs);
-          Fe.resize(n_dofs);
-          Ke.zero();
-          Fe.zero();
-
-          std::string qc_name = _device->get_region_name(sub_id);
-
-          unsigned int cc = _bd_num[_env->get_boundary(qc_name)];  // cc = 0 or 1
-
-          for(unsigned int n = 0; n< n_dofs; ++n)
-          {
-            Ke(n,n) = penalty;
-            Fe(n) = penalty * cc;
-
-            // Update number of dofs in quantum contact. It begin from number of dofs in device region
-            if (_qc_n_dofs[cc] <= dof_indices[n]+1) _qc_n_dofs[cc] = dof_indices[n]+1;
-          }
-
-          _sys->matrix->add_matrix(Ke, dof_indices);
-          _sys->rhs->add_vector(Fe, dof_indices);
-
+          // Update number of dofs in quantum contact. It begin from number of dofs in device region
+          if (_qc_n_dofs[cc] <= dof_indices[n]+1) _qc_n_dofs[cc] = dof_indices[n]+1;
         }
+
+        _sys->matrix->add_matrix(Ke, dof_indices);
+        _sys->rhs->add_vector(Fe, dof_indices);
 
       }
 
-      // Reorder the qc_n_dofs such that they are with increasing order
-      for (unsigned int i = 0; i <(_quantum_contacts.size()-1); i++)
-        if (_qc_n_dofs[i]>_qc_n_dofs[i+1])
-          std::swap(_qc_n_dofs[i],_qc_n_dofs[i+1]);
-
     }
+
+    // Reorder the qc_n_dofs such that they are with increasing order
+    for (unsigned int i = 0; i <(_quantum_contacts.size()-1); i++)
+      if (_qc_n_dofs[i]>_qc_n_dofs[i+1])
+        std::swap(_qc_n_dofs[i],_qc_n_dofs[i+1]);
+
   }
+  
 }
 
 //Need to compare two solution to reorder dof indices
@@ -2568,92 +2575,6 @@ inline double Negf::get_band_edge(SimulationInterface* model, const std::string&
 
 
 
-/*
-void
-Negf::apply_dirichlet_bc(void)
-{
-  const MeshBase* mesh = &get_mesh();
-
-  unsigned int dim = mesh->mesh_dimension();
-
-  MeshBase::const_element_iterator it = mesh->active_local_elements_begin();
-  const MeshBase::const_element_iterator end =  mesh->active_local_elements_end();
-
-  //activate_contacts(); // dirichelet must go on contacts as well.
-
-  dirichlet_dofs.clear();
-
-  libMesh::DofMap& dof_map = _sys_H->get_dof_map();
-
-  unsigned int n_var = dof_map.n_variables();
-
-  std::vector<unsigned int> dof_indices;
-
-
-  // iterates over all elements and mark the external sides
-  for ( ; it != end; ++it)
-  {
-    const Elem* elem = *it;
-    unsigned int n_sides;
-
-    if ( dim > 1 )
-      n_sides = elem->n_sides();
-    else
-      n_sides = elem->n_nodes();
-
-
-    for (short side = 0; side < n_sides; side++)
-    {
-
-      Elem* el1 = elem->neighbor(side);
-      bool side_is_external = false;
-
-      // mesh refinements are not handled
-      if (el1 == NULL)
-      {
-         side_is_external = true;
-      }
-      else  if ( !(el1->active()) )
-      {
-         side_is_external = true;
-      }
-
-      if (side_is_external)
-      {
-
-        if (dim > 1)
-        {//2D/3D
-          for (unsigned int nd = 0; nd < elem->n_nodes(); nd++)
-          {
-            if (elem->is_node_on_side(nd, side))
-            {
-              const Point& node = elem->point(nd);
-              for (short band = 0 ; band <  n_var; band++)
-              {
-                dof_map.dof_indices(elem, dof_indices, band);
-                dirichlet_dofs.insert(dof_indices[nd]);
-              }
-            }
-          }
-
-        }
-        else
-        {//1D
-          for (short band = 0 ; band < n_var; band++)
-          {
-            dof_map.dof_indices (elem, dof_indices, band);
-            dirichlet_dofs.insert(dof_indices[side]);
-          }
-        }
-
-      }
-
-    }// close side loop
-
-  }// close element loop
-}
-*/
-
 const Boundary*
 Negf::get_boundary(const QuantumContact* qc)
 {
@@ -2661,220 +2582,4 @@ Negf::get_boundary(const QuantumContact* qc)
   return it->second;
 }
 
-/*
-void
-Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
-{
-  SimulationInterface* potmodel = NULL;
-  ID sol_id;
 
-  if (opt.pot_module != "none")
-  {
-    potmodel = SimulationInterface::find_simulation(opt.pot_module);
-    if (!potmodel->is_solved() )
-      throw SolveFailedException("Simulation "+opt.pot_module+" must be solved first");
-  }
-
-  const double newconst = 0.5 * Hartree * bohr_radius/get_mesh_units() * bohr_radius/get_mesh_units();
-
-  TensorValue<double> invMass(0.0);
-
-  std::vector<double> V;
-
-  const MeshBase& mesh = get_mesh();
-
-  const unsigned int dim = mesh.mesh_dimension();
-
-  DofMap& dof_map = _sys_H->get_dof_map();
-
-
-  FEType fe_type = dof_map.variable_type(0);
-
-  UniquePtr<FEBase> fe(FEBase::build(dim, fe_type));
-  UniquePtr<FEBase> fe_face(FEBase::build(dim,fe_type));
-
-  QGauss qrule(dim, THIRD);
-  QGauss qrule_face(dim-1,CONSTANT);
-  //QTrap qrule(dim);
-
-  fe->attach_quadrature_rule(&qrule);
-  fe_face->attach_quadrature_rule(&qrule_face);
-
-  const std::vector<Real>& JxW = fe->get_JxW();
-
-  const std::vector<Point>& q_point = fe->get_xyz();
-
-  const std::vector<std::vector<Real> >& phi = fe->get_phi();
-
-  const std::vector<std::vector<RealGradient> >& dphi = fe->get_dphi();
-  const std::vector<Point>& face_normals = fe_face->get_normals();
-
-  DenseMatrix<Number> Hr; // Interaction hamiltonian matrix real part
-  DenseMatrix<Number> Sr; // Overlap matrix real part
-  DenseMatrix<Number> Hi; // Interaction hamiltonian matrix immaginary part
-  DenseMatrix<Number> Si; // Overlap matrix immaginary part
-
-  std::vector<unsigned int> dof_indices,new_dof_indices;
-
-  std::map<ID, QuantumContact*>::iterator qc_end = _quantum_contacts.end();
-
-  //ACTIVATE QC
-  activate_quantum_contacts();
-
-  // Zero H and S
-  _sys_H->matrix->zero();
-  _sys_H->get_matrix("Hi").zero();
-  _sys_S->matrix->zero();
-  _sys_S->get_matrix("Si").zero();
-
-
-  //ITERATION OVER ACTIVE DEVICE REGION
-  MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
-
-  for ( ; el != end_el; ++el)
-  {
-    const Elem* elem = *el;
-
-    //-------------------------------------------------------
-    //get effective mass tensor for elem
-    NegfModel* negfmod = get_bulk_model<NegfModel>(elem);
-    
-
-    for (unsigned int band=0; band < negfmod->get_n_bands(); band++)
-    {
-
-
-
-      dof_map.dof_indices(elem, dof_indices, band);
-      const unsigned int n_dofs = dof_indices.size();
-
-      invMass = negfmod->get_inv_mass(band);
-
-
-      // we must reinit here cause later we reinit on sideelem
-
-      fe->reinit(elem);
-      
-
-      //get potential from dd model----------------------------------------
-      V.resize(q_point.size());
-      V.assign(q_point.size(), 0.0);
-
-      if (potmodel != NULL)
-      {
-        // gets from potmodel which band ("Ec" or "Ev")
-        
-        sol_id = potmodel->get_solution_id(negfmod->get_band(band));
-
-        potmodel->get_solution(elem, sol_id, V, q_point);
-
-      }
-
-      //-------------------------------------------------------------------
-      // What about strain ??
-
-      //-------------------------------------------------------------------
-
-      Hr.resize(n_dofs, n_dofs);
-      Sr.resize(n_dofs, n_dofs);
-      //Hr.zero(); // is done by resize()
-      //Sr.zero();
-      Hi.resize(n_dofs, n_dofs);
-      Si.resize(n_dofs, n_dofs);
-      //Hi.zero();
-      //Si.zero();
-
-      for (unsigned int qp=0; qp<q_point.size(); qp++)
-        for (unsigned int i=0; i<phi.size(); i++)
-          for (unsigned int j=0; j<phi.size(); j++)
-          {
-            Sr(i,j) += JxW[qp]* phi[i][qp] * phi[j][qp];
-            Hr(i,j) += JxW[qp]* newconst * dphi[i][qp] * (invMass*dphi[j][qp]);
-            Hr(i,j) += JxW[qp] * V[qp] * phi[i][qp] * phi[j][qp];
-            Hr(i,j) += JxW[qp] * newconst * (_k_vec * (invMass * _k_vec)) * phi[i][qp] * phi[j][qp];
-
-          }
- 
-     
-      // DIRICHLET BC (Make sense only in 2D and 3D)---------------------------------
-      if (dim>1)
-      {
-        unsigned int n_sides = elem->n_sides();
-
-
-        for (short side = 0; side < n_sides; side++)
-        {
-
-          const ElementSide elside(elem->top_parent(), side);
-          bool set_dirichlet = false;
-
-          std::map<ID, QuantumContact*>::iterator it;
-         
-          if ( (it = _quantum_contacts.find(elem->subdomain_id())) != _quantum_contacts.end() ) 
-          {
-
-            if (elem->neighbor(side)==NULL)
-            {
-              set_dirichlet = opt.set_dirichlet_bc; //set to default value
-              fe_face->reinit(elem, side);
-              const Boundary* bd = get_boundary(it->second);
-              std::string bc = bd->get_options().get_option("dirichlet","");
-              if (bc!="")
-              {
-                int sign = (bc[0]=='-' ? -1: 1);
-                int dir;
-                if (bc[1]=='x') dir = 0;
-                if (bc[1]=='y') dir = 1;
-                if (bc[1]=='z') dir = 2;
-                if  (sign*face_normals[0](dir) > 0) set_dirichlet = true;
-              }
-            }
-            
-          }
-          else if(_env->is_outer_boundary(elside))  //in device region
-          {
-            Boundary* bd = _env->get_boundary(elside);
-            // bd==NULL => not defined in input (!quantum_contact)
-            if ((bd == NULL && opt.set_dirichlet_bc) || _dirichlet_boundaries.count(bd) )
-            {
-              set_dirichlet = true;
-            }
-          }
-
-          if (set_dirichlet)
-          {
-            //std::cout<<elem->id()<<"  ";
-            //if (elem->neighbor(side) !=NULL) std::cout<<(elem->neighbor(side))->id()<<std::endl;
-            //else std::cout<<std::endl;
-            for (unsigned int nd = 0; nd < elem->n_nodes(); nd++)
-            {
-              if (elem->is_node_on_side(nd, side))
-              {
-                Hr(nd,nd) = newconst/0.01;
-              }
-            }
-          }
-
-        }
-
-      }
-      // -----------------------------------------------------------------------------------
-      new_dof_indices.resize(n_dofs);
-      for (unsigned int i=0; i< n_dofs; i++)
-        new_dof_indices[i] = _inv_perm[dof_indices[i]];
-
-
-      _sys_S->matrix->add_matrix(Sr, new_dof_indices);
-
-      _sys_H->matrix->add_matrix(Hr, new_dof_indices);
-
-      _sys_S->get_matrix("Si").add_matrix(Si, new_dof_indices);
-
-      _sys_H->get_matrix("Hi").add_matrix(Hi, new_dof_indices);
-
-    }//BAND LOOP
-  }//ELEM LOOP
-
-}
-*/
