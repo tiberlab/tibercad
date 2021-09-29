@@ -95,14 +95,11 @@ class QuantumContact
               const std::string& name,
               Device* device,
               BoundaryRegions* bd_regions,
-              const std::vector<ID>& rg_ids,
-              const std::vector<ID>& bd_ids,
+              const std::set<ID>& rg_ids,
+              const std::set<ID>& bd_ids,
               double length)  TBDLLOCAL;
 
     void plot(const std::string& name);
-
-    void activate_elements(void);
-    void inactivate_elements(void);
 
     //! this function must be called explicitly before use of qc
     //! since apparently the correct neighbor map gets broken

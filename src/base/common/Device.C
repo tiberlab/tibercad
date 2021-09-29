@@ -622,24 +622,18 @@ Device::setup_quantum_contacts(void)
     Messages::info(" ");
     Messages::info("Creating quantum contact " + name);
 
-    std::vector<ID> rg_ids, bd_ids;
-    std::set<ID> ids;
+    std::set<ID> rg_ids, bd_ids;
 
     // We get mesh regions (not active regions).
 
-    extract_physical_regions(regions, ids);
-
-    rg_ids = QuantumContact::set2vec(ids);
-
-    //for (int n=0; n<rg_ids.size();n++)
-    //std::cout << "rg_ids: "<< rg_ids[n]<<std::endl;
+    extract_physical_regions(regions, rg_ids);
 
     if (rg_ids.size()==0)
       throw InitFailedException("In Quantum_contact user must define a valid mesh region");
 
-    get_boundary_region_ids(name, bd_ids);
-    //for (int n=0; n<bd_ids.size();n++)
-    //std::cout << "bd_ids: "<< bd_ids[n]<<std::endl;
+    std::vector<ID> bd_ids_v;
+    get_boundary_region_ids(name, bd_ids_v);
+    bd_ids.insert(bd_ids_v.begin(), bd_ids_v.end());
 
     ID  newid = _mesh_region_info->next_id();
 
@@ -657,7 +651,7 @@ Device::setup_quantum_contacts(void)
 
     // Only one material/region can be created (for now) !!
 
-    const Material* refmat = get_material(rg_ids[0]);
+    const Material* refmat = get_material(*rg_ids.begin());
     const ModelOptions& refopts = refmat->get_options();
     // here we can be sure that material is given
     string material = refopts.get_option("material", "");
@@ -1196,11 +1190,21 @@ Device::get_mesh_region_ids(const string& name, vector<ID>& ids) const
 void
 Device::get_boundary_region_ids(const string& name, vector<ID>& ids) const
 {
-  IDSet idset(_bd_regions->get_ids(name));
+  IDSet idset;
+  get_boundary_region_ids(name, idset);
+
+  ids.resize(idset.size());
+  std::copy(idset.begin(), idset.end(), ids.begin());
+}
+
+void
+Device::get_boundary_region_ids(const string& name, IDSet& ids) const
+{
+  ids = _bd_regions->get_ids(name);
 
   // if the set is empty, we try to interpret the string as a specification
   // of the boundary between two materials
-  if (idset.empty())
+  if (ids.empty())
   {
     vector<string> comp;
     Utils::tokenize(name, comp, "/");
@@ -1292,7 +1296,7 @@ Device::get_boundary_region_ids(const string& name, vector<ID>& ids) const
                 }
                 _bd_regions->set_name(newid, name);
                 known_ids[IDPair(id, neighbour_id)] = newid;
-                idset.insert(newid);
+                ids.insert(newid);
               }
             }
           }
@@ -1300,14 +1304,6 @@ Device::get_boundary_region_ids(const string& name, vector<ID>& ids) const
       }
     }
   }
-
-  ids.clear();
-  ids.reserve(idset.size());
-
-  IDSet::iterator it(idset.begin());
-  const IDSet::iterator end(idset.end());
-  for ( ; it != end; ++it)
-    ids.push_back(*it);
 }
 
 

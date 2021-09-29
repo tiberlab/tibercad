@@ -273,8 +273,13 @@ class Device
      * is ignored.
      */
     void get_boundary_region_ids(const std::string& name,
-        std::vector<ID>& ids) const;
+        IDSet& ids) const;
 
+    /*!
+     * \copydoc Device::get_boundary_region_ids(const std::string&, IDSet&)
+     */
+    void get_boundary_region_ids(const std::string& name,
+        std::vector<ID>& ids) const;
 
     //! Define a cluster
     void set_cluster(const std::string& name, const std::vector<ID>& ids) TBDLLOCAL;

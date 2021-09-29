@@ -58,8 +58,8 @@ QuantumContact::init(const ID id,
     const std::string& name,
     Device* device,
     BoundaryRegions* bd_regions,
-    const std::vector<ID>& rg_ids_v,
-    const std::vector<ID>& bd_ids_v,
+    const std::set<ID>& rg_ids,
+    const std::set<ID>& bd_ids,
     double length)
 {
   _device = device;
@@ -68,9 +68,9 @@ QuantumContact::init(const ID id,
   _id = id;
   _name = name;
 
-  _bd_ids = vec2set(bd_ids_v);
+  _bd_ids = bd_ids;
 
-  _rg_ids = vec2set(rg_ids_v);
+  _rg_ids = rg_ids;
 
   _length = length;
 
@@ -718,45 +718,6 @@ QuantumContact::project_on_boundary(const Elem* elem, const std::vector<Point>& 
 
 
 
-void
-QuantumContact::activate_elements(void)
-{
-  /*
-  MeshBase::element_iterator it = _mesh->level_elements_begin(0);
-  const MeshBase::element_iterator end = _mesh->level_elements_end(0);
-
-  for ( ; it != end; ++it)
-  {
-    Elem* elem = *it;
-    ID elid = elem->subdomain_id();
-
-    if(elid==_id)
-    {
-      elem->set_refinement_flag(Elem::DO_NOTHING);
-    }
-  }
-  */
-}
-
-void
-QuantumContact::inactivate_elements(void)
-{
-  /*
-  MeshBase::element_iterator it = _mesh->level_elements_begin(0);
-  const MeshBase::element_iterator end = _mesh->level_elements_end(0);
-
-  for ( ; it != end; ++it)
-  {
-    Elem* elem = *it;
-    ID elid = elem->subdomain_id();
-
-    if(elid==_id)
-    {
-     elem->set_refinement_flag(Elem::INACTIVE);
-    }
-  }
-  */
-}
 
 double
 QuantumContact::Deter (const Point& P1, const Point& P2, const Point& P3) //computation of a 3X3 matrix's determinant

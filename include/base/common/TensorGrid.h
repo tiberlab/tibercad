@@ -181,6 +181,7 @@ TensorGrid::num_elements(int dir) const
   if (dir==0) return _nk;
   if (dir==1) return _nl;
   if (dir==2) return _nm;
+  return(0);
 }
 
 inline
@@ -190,6 +191,7 @@ TensorGrid::grid_step(int dir) const
   if (dir==0) return _dx;
   if (dir==1) return _dy;
   if (dir==2) return _dz;
+  return(0);
 }
 
 
