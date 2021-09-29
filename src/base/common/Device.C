@@ -678,9 +678,9 @@ Device::setup_quantum_contacts(void)
     string meshfile = _options["meshfile"];
     meshfile = "new_" + meshfile;
 
-    ostringstream os;
-    os << "Writing mesh with quantum contacts: " << meshfile;
-    Messages::info(os.str());
+    //ostringstream os;
+    //os << "Writing mesh with quantum contacts: " << meshfile;
+    //Messages::info(os.str());
 
     //libMesh::GmshIO(*_mesh).write(meshfile);
 
@@ -1421,6 +1421,7 @@ Device::reassign_alloy_regions(const string& source,
     {
       case 3:
         control_vol *= 4.0/3.0 * cutoff * scale;
+        [[fallthrough]];
       case 2:
         control_vol *= M_PI * cutoff * scale;
         break;

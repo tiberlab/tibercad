@@ -721,6 +721,7 @@ QuantumContact::project_on_boundary(const Elem* elem, const std::vector<Point>& 
 void
 QuantumContact::activate_elements(void)
 {
+  /*
   MeshBase::element_iterator it = _mesh->level_elements_begin(0);
   const MeshBase::element_iterator end = _mesh->level_elements_end(0);
 
@@ -734,11 +735,13 @@ QuantumContact::activate_elements(void)
       elem->set_refinement_flag(Elem::DO_NOTHING);
     }
   }
+  */
 }
 
 void
 QuantumContact::inactivate_elements(void)
 {
+  /*
   MeshBase::element_iterator it = _mesh->level_elements_begin(0);
   const MeshBase::element_iterator end = _mesh->level_elements_end(0);
 
@@ -752,6 +755,7 @@ QuantumContact::inactivate_elements(void)
      elem->set_refinement_flag(Elem::INACTIVE);
     }
   }
+  */
 }
 
 double

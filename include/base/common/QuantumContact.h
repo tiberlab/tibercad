@@ -80,6 +80,17 @@ class QuantumContact
     static QuantumContact* create(void) TBDLLOCAL;
 
 
+    /*!
+     * \brief Initialize a new QuantumContact object
+     *
+     * \param id e new unique region ID
+     * \param name a unique name (read from input file)
+     * \param device the device it is associated with
+     * \param bd_regions the boundary regions container
+     * \param rg_ids the IDs of the regions touched
+     * \param bd_ids the IDs of the boundaries it touches
+     * \param length the extrusion length
+     */
     void init(const ID id,
               const std::string& name,
               Device* device,
