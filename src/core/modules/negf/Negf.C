@@ -182,8 +182,6 @@ Negf::do_init(void)
         _bd_map[qc] = *it;
 
         //std::cerr<<"(negf) _quantum_contact "<<qc->get_id()<<" "<<(*it)->get_name()<<std::endl;
-        // Quantum Contacts are activated here: so dof_map come out correctly
-        qc->activate_elements();
         qc->set_neighbor_map();
 
       }
@@ -343,9 +341,6 @@ Negf::init_efa_hamil(void)
 
   std::cout<<"(negf) init k-integration"<<std::endl;
   init_k_space_integration();
-
-  //std::cout<<"(negf) activate quantum contacts"<<std::endl;
-  //activate_quantum_contacts();
 
   std::cout<<"(negf) reorder dofs"<<std::endl;
   reorder(); // dof indices reorder
@@ -1003,7 +998,6 @@ Negf::do_solve(void)
 
   }
 
-  deactivate_quantum_contacts();
 
   if (opt.writeLDOS)
   {
@@ -1332,8 +1326,6 @@ void
 Negf::transfer_density(const std::vector<double>& density, const std::string& particle)
 {
 
-  deactivate_quantum_contacts();
-
   // compute total number of n_vars n_dofs
   unsigned int n_vars = _sys_H->n_vars();
   unsigned int n_dofs = _qc_n_dofs[_quantum_contacts.size()-1];
@@ -1427,7 +1419,6 @@ Negf::transfer_density(const std::vector<double>& density, const std::string& pa
   }
 
   qdens.close();
-  activate_quantum_contacts();
 }
 
 
@@ -1445,7 +1436,6 @@ Negf::calculate_density(const std::string& particle)
 
   unsigned int dim = get_mesh().mesh_dimension();
 
-  deactivate_quantum_contacts();
 
   // compute total number of n_vars n_dofs
   unsigned int n_vars = _sys_H->n_vars();
@@ -1555,7 +1545,6 @@ Negf::calculate_density(const std::string& particle)
   }
 
   qdens.close();
-  activate_quantum_contacts();
 }
 */
 
@@ -2088,24 +2077,7 @@ Negf::get_solution_secure(std::map<ID, std::vector<double> >& values)
 
 }
 
-// ACTIVATE TEMPORARILY ALL ELEMENTS IN QUANTUM CONTACTS
-void
-Negf::activate_quantum_contacts(void)
-{
-  //std::map<ID, QuantumContact*>::iterator it = _quantum_contacts.begin();
-  //const std::map<ID, QuantumContact*>::iterator end = _quantum_contacts.end();
-  //for (;it != end;++it)
-  //  it->second->activate_elements();
-}
-// DEACTIVATE TEMPORARILY ALL ELEMENTS IN QUANTUM CONTACTS
-void
-Negf::deactivate_quantum_contacts(void)
-{
-  //std::map<ID, QuantumContact*>::iterator it = _quantum_contacts.begin();
-  //std::map<ID, QuantumContact*>::iterator end = _quantum_contacts.end();
-  //for (;it != end;++it)
-  //  it->second->inactivate_elements();
-}
+
 // -----------------------------------------------------------------------
 // Assemble a Laplace problem in active regions and use solution to
 // reorder dofs
@@ -2142,7 +2114,7 @@ Negf::reorder(void)
 
   _sys->solve();
 
-  std::cerr<<"Laplace solved"<<std::endl;
+  //std::cerr<<"Laplace solved"<<std::endl;
 
   const libMesh::NumericVector<Number>& solution = _sys->get_solution_vector();
 
@@ -2151,7 +2123,7 @@ Negf::reorder(void)
   std::vector<unsigned int> dof_indices_u;
 
   unsigned int sol_size = solution.size();
-  cerr << "solution size = " << sol_size << endl;
+  //cerr << "solution size = " << sol_size << endl;
 
   // setup initial permutation vector as identitiy
   // the vector runs only on the device region where the
@@ -2163,9 +2135,9 @@ Negf::reorder(void)
   // Number of dofs of the first band
   unsigned int n_dofs = _qc_n_dofs[_quantum_contacts.size()-1];
 
-  std::cerr<<"Sorting"<<std::endl;
-  std::cerr<<"n_dofs: "<<n_dofs<<std::endl;
-  std::cerr<<"dev: "<<_device_n_dofs<<std::endl;
+  //std::cerr<<"Sorting"<<std::endl;
+  //std::cerr<<"n_dofs: "<<n_dofs<<std::endl;
+  //std::cerr<<"dev: "<<_device_n_dofs<<std::endl;
 
   std::sort(_perm.begin(), _perm.end(), compare);
 
@@ -2207,11 +2179,15 @@ Negf::reorder(void)
     for (unsigned int k = 0; k < n_vars; k++)
       _inv_perm[_device_n_dofs+i+k*n_dofs] = _device_n_dofs*n_vars + i*n_vars + k;
 
+  for (size_t i = 0; i < _inv_perm.size(); ++i)
+    cerr << _inv_perm[i] << " ";
+  cerr << endl;
+  /*
   // Print permutation data
-  activate_quantum_contacts();
   ID assign = 0;
   std::vector<unsigned int> temp(sol_size,sol_size);
 
+  // WARNING change loop to _subdomain_ type
   MeshBase::const_element_iterator       el     = this->active_local_elements_begin();
   const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
 
@@ -2232,6 +2208,7 @@ Negf::reorder(void)
       }
     }
   }
+  */
 }
 
 void

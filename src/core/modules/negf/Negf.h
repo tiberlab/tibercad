@@ -169,8 +169,6 @@ class TBDLLOCAL Negf : public SimulationInterface
 
   private:
 
-    void activate_quantum_contacts(void);
-    void deactivate_quantum_contacts(void);
 
     double get_band_edge(const std::string& band) const;
     double get_band_edge(SimulationInterface* model, const std::string& band, const Elem* elem) const;
