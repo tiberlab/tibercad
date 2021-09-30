@@ -2140,6 +2140,9 @@ Negf::reorder(void)
   //std::cerr<<"dev: "<<_device_n_dofs<<std::endl;
 
   std::sort(_perm.begin(), _perm.end(), compare);
+  //for (auto&& p : _perm)
+  //  cerr << p << " ";
+  //cerr << "\n";
 
   // ========================================================================
   // Initial Dofs:
@@ -2170,18 +2173,22 @@ Negf::reorder(void)
   _inv_perm.clear();
   _inv_perm.resize(n_dofs*n_vars, 0);
 
+  // NOTE 2021-09-30 since libmesh 1.0 DOFs are organized in node-major order
   for (unsigned int i = 0; i < _device_n_dofs ; i++)
     for (unsigned int k = 0; k < n_vars; k++)
-      _inv_perm[_perm[i]+k*n_dofs]= i*n_vars+k;
+      _inv_perm[_perm[i]*n_vars+k]= i*n_vars+k;
 
   // Reset dofs in QC as an identity
   for (unsigned int i = 0; i < n_dofs - _device_n_dofs ; i++)
     for (unsigned int k = 0; k < n_vars; k++)
-      _inv_perm[_device_n_dofs+i+k*n_dofs] = _device_n_dofs*n_vars + i*n_vars + k;
+    {
+      size_t index = (_device_n_dofs + i)*n_vars + k;
+      _inv_perm[index] = index;
+    }
 
-  for (size_t i = 0; i < _inv_perm.size(); ++i)
-    cerr << _inv_perm[i] << " ";
-  cerr << endl;
+  //for (size_t i = 0; i < _inv_perm.size(); ++i)
+  //  cerr << _inv_perm[i] << " ";
+  //cerr << endl;
   /*
   // Print permutation data
   ID assign = 0;
