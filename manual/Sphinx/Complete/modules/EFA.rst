@@ -424,6 +424,9 @@ The available output variables for  *Module efaschroedinger* , to be specified i
  ``QuantumDensity``:  
     if  present, quantum  density is  calculated 
 
+ ``EnvelopeFunctions``:
+    plot the complex envelopes for each basis function. Real part precedes complex part
+
  ``k-space_dispersion`` :
     output of  the quantum dispersion
 
