@@ -765,6 +765,10 @@ Negf::setup_negf(void)
   if (get_option("print_matrices",false))
     _libnegf->print_mat();
 
+  // initialize the contacts
+  cerr << "init contacts: " << _quantum_contacts.size() << endl;
+  _libnegf->init_contacts(_quantum_contacts.size());
+
   _libnegf->read_input();
 
   if (opt.verbosity > 60) _libnegf->partition_info();
@@ -1786,10 +1790,11 @@ Negf::print_Lib()
   std::fstream ff(out_file.c_str(),std::fstream::out);
 
   // we pass matrices by memory
-  ff << "'memory'" << endl;
-  ff << "'memory'" << endl;
-  ff << "'memory'" << endl;
-  ff << "'memory'" << endl;
+  // TODO libnegf reads two strings, first is discarded: what is it for?
+  ff << "Hr 'memory'" << endl;
+  ff << "Hi 'memory'" << endl;
+  ff << "Sr 'memory'" << endl;
+  ff << "Si 'memory'" << endl;
   /*
   ff<<"'"+outpath+"/Hr.m'"<<std::endl;
   ff<<"'"+outpath+"/Hi.m'"<<std::endl;

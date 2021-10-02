@@ -75,6 +75,9 @@ public:
   //! Set what to do with outer parts 0=none; 1=upper block; 2=full
   void device_contact_dm(int outer);
 
+  //! Initialized the contacts
+  void init_contacts(int n_cont);
+
   //! Get library version
   void get_version(void);
 

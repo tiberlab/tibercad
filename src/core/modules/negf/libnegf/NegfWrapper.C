@@ -144,6 +144,14 @@ NegfWrapper::device_contact_dm(int outer)
 
 
 void
+NegfWrapper::init_contacts(int n_cont)
+{
+  std::cerr << n_cont << std::endl;
+  f77_negf_init_contacts(_handler, n_cont);
+}
+
+
+void
 NegfWrapper::partition_info(void)
 {
    f77_negf_write_partition(_handler);
