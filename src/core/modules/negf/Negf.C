@@ -271,7 +271,7 @@ Negf::init_efa_hamil(void)
   if (_ext_module == NULL)
   {
     throw InitFailedException("NEGF module needs an external"
-        " provider of the Hmailtonian.");
+        " provider of the Hamiltonian.");
     // TODO I think this shouldn't happen anymore?
     //NegfModel* negfmod = get_bulk_model<NegfModel>(elem);
     //n_bands = negfmod->get_n_bands();
@@ -716,59 +716,54 @@ Negf::setup_etb_hamil(void)
   setup_negf();
 }
 
+
+
 void
 Negf::setup_negf(void)
 {
   _libnegf->init();
 
-  if (_ext_module == NULL)
+
+  //std::cout<<"(negf) print H in "<<get_scratch_directory()<<std::endl;
+  //_ext_module->print_H(get_scratch_directory());
+
+  int nrow = _ext_module->get_H_dim();
+  int nnz = _ext_module->get_H_nnz();
+
+  std::vector<int> IA(nrow+1,0);
+  std::vector<int> JA(nnz,0);
+  std::vector<Complex> A(nnz);
+
+  //std::cout<<"(negf) Get H csr "<<nrow<<"  "<<nnz<<std::endl;
+  _ext_module->get_H_csr(A,JA,IA);
+
+  //std::cout<<"(negf) Set H in libNEGF; nnz="<<IA[nrow]<<std::endl;
+  _libnegf->set_H_csr(nrow,A,JA,IA);
+
+  if (_ext_module->is_generalized())
   {
-    throw InitFailedException("Negf requires and external module");
+
+    std::vector<Complex> S(nnz);
+
+    //std::cout<<"(negf) Get S csr "<<std::endl;
+    _ext_module->get_S_csr(A,JA,IA);
+
+    //std::cout<<"(negf) Set S in libNEGF; nnz="<<IA[nrow]<<std::endl;
+    _libnegf->set_S_csr(nrow,A,JA,IA);
+
   }
   else
   {
-    //std::cout<<"(negf) print H in "<<get_scratch_directory()<<std::endl;
-    //_ext_module->print_H(get_scratch_directory());
-    
-    int nrow = _ext_module->get_H_dim();
-    int nnz = _ext_module->get_H_nnz();
- 
-    std::vector<int> IA(nrow+1,0);
-    std::vector<int> JA(nnz,0);
-    std::vector<Complex> A(nnz);
-
-    //std::cout<<"(negf) Get H csr "<<nrow<<"  "<<nnz<<std::endl;
-    _ext_module->get_H_csr(A,JA,IA);
-
-    //std::cout<<"(negf) Set H in libNEGF; nnz="<<IA[nrow]<<std::endl;
-    _libnegf->set_H_csr(nrow,A,JA,IA);
-
-    if (_ext_module->is_generalized())
-    {
-
-      std::vector<Complex> S(nnz);
-     
-      //std::cout<<"(negf) Get S csr "<<std::endl;
-      _ext_module->get_S_csr(A,JA,IA);
- 
-      //std::cout<<"(negf) Set S in libNEGF; nnz="<<IA[nrow]<<std::endl;
-      _libnegf->set_S_csr(nrow,A,JA,IA);
-
-    }
-    else
-    {
-      //std::cout<<"(negf) Set S id "<<std::endl;
-      _libnegf->set_S_id(nrow);
-    }
-
+    //std::cout<<"(negf) Set S id "<<std::endl;
+    _libnegf->set_S_id(nrow);
   }
-  //Messages::info("setting scratch path to: "+get_scratch_directory());
+
   _libnegf->set_scratch_path(get_scratch_directory());
-  
+
   _libnegf->set_output_path(get_output_directory());
 
   if (get_option("print_matrices",false))
-     _libnegf->print_mat();  
+    _libnegf->print_mat();
 
   _libnegf->read_input();
 
@@ -1790,6 +1785,12 @@ Negf::print_Lib()
   std::string out_file = outpath + "/negf.in";
   std::fstream ff(out_file.c_str(),std::fstream::out);
 
+  // we pass matrices by memory
+  ff << "'memory'" << endl;
+  ff << "'memory'" << endl;
+  ff << "'memory'" << endl;
+  ff << "'memory'" << endl;
+  /*
   ff<<"'"+outpath+"/Hr.m'"<<std::endl;
   ff<<"'"+outpath+"/Hi.m'"<<std::endl;
   
@@ -1803,6 +1804,7 @@ Negf::print_Lib()
     ff<<"'identity'"<<std::endl;
     ff<<"'identity'"<<std::endl;
   }
+  */
   
   ff<<"N.conts  "<<_quantum_contacts.size()<<std::endl;
   
@@ -2189,33 +2191,7 @@ Negf::reorder(void)
   //for (size_t i = 0; i < _inv_perm.size(); ++i)
   //  cerr << _inv_perm[i] << " ";
   //cerr << endl;
-  /*
-  // Print permutation data
-  ID assign = 0;
-  std::vector<unsigned int> temp(sol_size,sol_size);
 
-  // WARNING change loop to _subdomain_ type
-  MeshBase::const_element_iterator       el     = this->active_local_elements_begin();
-  const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
-
-  for ( ; el != end_el; ++el)
-  {
-    const Elem* elem = *el;
-
-    dof_map.dof_indices(elem, dof_indices_u);
-
-    const unsigned int n_dofs = dof_indices_u.size();
-
-    for (unsigned int i = 0; i < n_dofs; i++)
-    {
-      if (temp[dof_indices_u[i]] == sol_size)
-      {
-        temp[dof_indices_u[i]] = assign;
-        assign++;
-      }
-    }
-  }
-  */
 }
 
 void

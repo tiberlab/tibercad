@@ -68,13 +68,8 @@ double
 NegfWrapper::current(std::string unitsOfH, std::string unitsOfJ)
 {
   double current;
-  char *unitH = new char[NEGF_SC];
-  char *unitJ = new char[NEGF_SC];
-  memset(unitH,NEGF_PADCHAR,NEGF_SC);
-  unitsOfH.copy(unitH,unitsOfH.size());
-  unitsOfJ.copy(unitJ,unitsOfJ.size());
 
-  f77_negf_current(_handler, current, *unitH, *unitJ);
+  f77_negf_current(_handler, current, unitsOfH.c_str(), unitsOfJ.c_str());
 
   return current;
 }
@@ -119,21 +114,13 @@ NegfWrapper::set_kpoint(int kpoint)
 void
 NegfWrapper::set_scratch_path(std::string path)
 {
-  char *cpath = new char[NEGF_LC];
-  memset(cpath,NEGF_PADCHAR,NEGF_LC);
-  path.copy(cpath,path.size());
-
-  f77_negf_set_scratch(_handler, cpath);
+  f77_negf_set_scratch(_handler, path.c_str());
 }
 
 void
 NegfWrapper::set_output_path(std::string path)
 {
-  char *cpath = new char[NEGF_LC];
-  memset(cpath,NEGF_PADCHAR,NEGF_LC);
-  path.copy(cpath,path.size());
-
-  f77_negf_set_output(_handler, cpath);
+  f77_negf_set_output(_handler, path.c_str());
 }
 
 void
