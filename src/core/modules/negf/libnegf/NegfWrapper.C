@@ -150,6 +150,13 @@ NegfWrapper::init_contacts(int n_cont)
 }
 
 void
+NegfWrapper::init_structure(int ncont, int* surfstart, 
+    int* surfend, int* contend, int npl, int* plend, int* cblk)
+{
+  f77_negf_init_structure(_handler, ncont, surfstart, surfend, contend, npl, plend, cblk);
+}
+
+void
 NegfWrapper::get_parameters(NegfWrapper::Parameters& params)
 {
   f77_negf_get_params(_handler, params);

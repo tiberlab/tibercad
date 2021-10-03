@@ -684,7 +684,7 @@ Negf::setup_efa_hamil(void)
  
   //std::cout<<"(negf) Ec= "<<Ec<<" Ev= "<<Ev<<std::endl;
 
-  print_Lib();
+  //print_Lib();
 
   //std::cout<<"(negf) setup negf ..." << std::endl;
   setup_negf();
@@ -711,7 +711,7 @@ Negf::setup_etb_hamil(void)
 
   //_ext_module->print_H(get_scratch_directory());
 
-  print_Lib();
+  //print_Lib();
 
   setup_negf();
 }
@@ -766,7 +766,6 @@ Negf::setup_negf(void)
     _libnegf->print_mat();
 
   // initialize the contacts
-  cerr << "init contacts: " << _quantum_contacts.size() << endl;
   _libnegf->init_contacts(_quantum_contacts.size());
   
   // old way via input file
@@ -778,13 +777,101 @@ Negf::setup_negf(void)
   _libnegf->get_parameters(params);
 
   // now set values
+  params.verbose = opt.verbosity;
+  //params.readOldDM_SGFs = ;
+  //params.readOldT_SGFs = ;
+  params.g_spin = _ext_module->get_degeneracy();
+  params.delta = opt.delta;
+  //params.deltaModel = ;
+  //params.wmax = ;
+  //params.dos_delta = ;
+
+  //std::vector <double> phi(_quantum_contacts.size(), 0.0);
+  //std::vector <double> mu_n(_quantum_contacts.size(), 0.0);
+  //std::vector <double> mu_p(_quantum_contacts.size(), 0.0);
+
+  double kbT = SimulationOptions::temperature * Constants::kb;
+  ModelOptions& sol_opt = get_solver_options();
+
+  mumin=10000;
+  mumax=-10000;
+  ID id = 0;
+  std::map<ID, QuantumContact*>::iterator it = _quantum_contacts.begin();
+  const std::map<ID, QuantumContact*>::iterator end = _quantum_contacts.end();
+  for (; it != end; ++it)
+  {
+    
+    if (id >= MAXNCONT)
+    {
+      ostringstream os;
+      os << "Maximum number of contacts in NEGF is limited to "
+        << MAXNCONT;
+      throw InitFailedException(os.str());
+    }
+
+    double phi, mu_n, mu_p;
+    get_boundary_potentials(it->second, phi, mu_n, mu_p);
+
+    params.mu_n[id] = mu_n;
+    params.mu_p[id] = mu_p;
+    //params.mu[id] = ; // not needed, for DFTB
+
+    // for now T is the same everywhere
+    params.kbt_dm[id] = kbT;
+    params.kbt_t[id]  = kbT;
+
+    if (mu_n > mumax) mumax = mu_n;
+    if (mu_n < mumin) mumin = mu_n;
+    _contact_potential[it->second] = mu_n;
+
+    id++;
+  }
+
+  double Ec = _ext_module->get_band_edge("Ec");
+  double Ev = _ext_module->get_band_edge("Ev");
+  params.ec = Ec;
+  params.ev = Ev;
+
+  params.emin = sol_opt.get_option("Emin", -mumax-opt.n_kT*kbT);
+  params.emax = sol_opt.get_option("Emax", -mumin+opt.n_kT*kbT);
+  params.estep = opt.Estep;
+
+  for (unsigned int i = 0; i < 2; ++i)
+  {
+    params.np_n[i] = opt.Np_n[i];
+    params.np_p[i] = opt.Np_n[i];
+  }
+
+  int Np_real = 0;
+  Np_real = sol_opt.get_option("Np_real", Np_real);
+  if (Np_real = 0)
+  {
+    Np_real = (params.emax - params.emin) / opt.deltaE;
+    ostringstream os;
+    os << "Setting real line integartion points to " << Np_real;
+    Messages::info(os.str());
+  }
+  params.np_real[0] = Np_real;
+
+  params.n_kt = opt.n_kT;
+  params.n_poles = opt.n_poles;
+
+  params.min_or_max = 1;
+
 
   // now hand parameters to library
   _libnegf->set_parameters(params);
 
+
+  // setup the structure
+  
+  //_libnegf->init_structure(_quantum_contacts.size(),
+  //    _qc_n_dofs.data(), 
+
+
   if (opt.verbosity > 60) _libnegf->partition_info();
 
-  _libnegf->set_verbose(opt.verbosity);
+  //_libnegf->set_verbose(opt.verbosity);
 
   // TODO in API now there is write_tunneling_and_dos, to be adapted
   //_libnegf->set_write_ldos(opt.writeLDOS);
@@ -795,7 +882,7 @@ Negf::setup_negf(void)
   _libnegf->device_contact_dm(0);
 
   // set reference contact at maximum electrochem pot.
-  _libnegf->set_reference(1);
+  //_libnegf->set_reference(1);
 
   //Messages::info("(negf) Setup done");
 

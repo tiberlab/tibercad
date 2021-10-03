@@ -86,6 +86,10 @@ public:
   //! Initialized the contacts
   void init_contacts(int n_cont);
 
+  //! Initialize structure
+  void init_structure(int ncont, int* surfstart, 
+    int* surfend, int* contend, int npl, int* plend, int* cblk);
+
   //! Get library version
   void get_version(void);
 
