@@ -768,8 +768,19 @@ Negf::setup_negf(void)
   // initialize the contacts
   cerr << "init contacts: " << _quantum_contacts.size() << endl;
   _libnegf->init_contacts(_quantum_contacts.size());
+  
+  // old way via input file
+  //_libnegf->read_input();
 
-  _libnegf->read_input();
+  // new way via memory
+  // first get the parameter strcture with defaults
+  NegfWrapper::Parameters params;
+  _libnegf->get_parameters(params);
+
+  // now set values
+
+  // now hand parameters to library
+  _libnegf->set_parameters(params);
 
   if (opt.verbosity > 60) _libnegf->partition_info();
 

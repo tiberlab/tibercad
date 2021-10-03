@@ -33,6 +33,7 @@ libnegf_$(ARCH).a: update
 	cp build/src/libnegf.a libnegf_$(ARCH).a	
 	cp build/src/api/libnegf.hpp . 
 	cp libnegf/src/api/fortran.h .
+	cp libnegf/src/api/lnParams.h .
 
 update: checkout
 	#cd libnegf; git pull origin; cd ..;

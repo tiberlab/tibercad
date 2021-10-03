@@ -146,9 +146,21 @@ NegfWrapper::device_contact_dm(int outer)
 void
 NegfWrapper::init_contacts(int n_cont)
 {
-  std::cerr << n_cont << std::endl;
   f77_negf_init_contacts(_handler, n_cont);
 }
+
+void
+NegfWrapper::get_parameters(NegfWrapper::Parameters& params)
+{
+  f77_negf_get_params(_handler, params);
+}
+
+void
+NegfWrapper::set_parameters(const NegfWrapper::Parameters& params)
+{
+  f77_negf_set_params(_handler, params);
+}
+
 
 
 void

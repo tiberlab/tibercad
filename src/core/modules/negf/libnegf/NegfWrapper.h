@@ -2,6 +2,7 @@
 #define _NEGFWRAPPER_H_
 
 #include "libnegf.hpp"
+#include "lnParams.h"
 
 #include <complex>
 #include <vector>
@@ -9,12 +10,13 @@
 //-----------------------------------------------------------------------
 typedef std::complex<double> Complex; 
 
+//!Wrapper class for callings to libNEGF library (libnegf.so)
 class NegfWrapper
 {
 
 public:
 
-  //!Wrapper class for callings to libNEGF library (libnegf.so)
+  typedef struct lnparams Parameters;
 
   //!Constructor
   /*!Assign an handler to libNEGF instance, transparent to programmer
@@ -36,6 +38,12 @@ public:
 
   //!read 'negf.in'
   int read_input();
+
+  //! Get the parameters
+  void get_parameters(NegfWrapper::Parameters& params);
+
+  //! Set the parameters
+  void set_parameters(const NegfWrapper::Parameters& params);
 
   //!Compute current
   //! unitsOfH is a string like "H", "eV", "cm^-1"
