@@ -728,29 +728,42 @@ Negf::setup_negf(void)
   //_ext_module->print_H(get_scratch_directory());
 
   int nrow = _ext_module->get_H_dim();
-  int nnz = _ext_module->get_H_nnz();
 
-  std::vector<int> IA(nrow+1,0);
-  std::vector<int> JA(nnz,0);
-  std::vector<Complex> A(nnz);
+  {
+    int nnz = _ext_module->get_H_nnz();
 
-  //std::cout<<"(negf) Get H csr "<<nrow<<"  "<<nnz<<std::endl;
-  _ext_module->get_H_csr(A,JA,IA);
+    std::vector<int> IA(nrow+1,0);
+    std::vector<int> JA(nnz,0);
+    std::vector<Complex> A(nnz);
 
-  //std::cout<<"(negf) Set H in libNEGF; nnz="<<IA[nrow]<<std::endl;
-  _libnegf->set_H_csr(nrow,A,JA,IA);
+    Messages::info("Passing Hamiltonian ... ", 0);
+    //std::cout<<"(negf) Get H csr "<<nrow<<"  "<<nnz<<std::endl;
+    _ext_module->get_H_csr(A, JA, IA);
+
+    //std::cout<<"(negf) Set H in libNEGF; nnz="<<IA[nrow]<<std::endl;
+    _libnegf->set_H_csr(nrow, A, JA, IA);
+
+    Messages::info("done.");
+  }
 
   if (_ext_module->is_generalized())
   {
 
-    std::vector<Complex> S(nnz);
+    // here we do not have a method to obtain nnz exactly,
+    // but it will be adjusted inside get_S_csr() anyway
+    std::vector<Complex> S(nrow);
+    std::vector<int> IS(nrow+1,0);
+    std::vector<int> JS(nrow,0);
 
     //std::cout<<"(negf) Get S csr "<<std::endl;
-    _ext_module->get_S_csr(A,JA,IA);
+    Messages::info("Passing overlap ... ", 0);
+    _ext_module->get_S_csr(S, JS, IS);
+
 
     //std::cout<<"(negf) Set S in libNEGF; nnz="<<IA[nrow]<<std::endl;
-    _libnegf->set_S_csr(nrow,A,JA,IA);
+    _libnegf->set_S_csr(nrow, S, JS, IS);
 
+    Messages::info("done.");
   }
   else
   {
@@ -848,7 +861,7 @@ Negf::setup_negf(void)
   {
     Np_real = (params.emax - params.emin) / opt.deltaE;
     ostringstream os;
-    os << "Setting real line integartion points to " << Np_real;
+    os << "Setting real line integration points to " << Np_real;
     Messages::info(os.str());
   }
   params.np_real[0] = Np_real;
@@ -859,14 +872,83 @@ Negf::setup_negf(void)
   params.min_or_max = 1;
 
 
+
   // now hand parameters to library
   _libnegf->set_parameters(params);
 
+  _libnegf->set_iteration(1);
+
+  // set not to compute Device-Contact blocks
+  _libnegf->device_contact_dm(0);
 
   // setup the structure
-  
-  //_libnegf->init_structure(_quantum_contacts.size(),
-  //    _qc_n_dofs.data(), 
+  /* calls negf_init_structure(handler, ncont,
+   *                surfstart, surfend, contend, npl, plend, cblk)
+   *
+   * ncont = number of contacts
+   * surfstart = indices of start of surface blocks
+   * surfend  = indices of end of surface blocks (for first contact last device index)
+   * contend = indices of last contact index
+   * npl = number of principal layers
+   * plend = last index of each PL
+   */
+  int n_vars = _ext_module->get_number_of_bands();
+  vector<int> contend(_qc_n_dofs.size());
+  for (unsigned int i = 0; i < contend.size(); ++i)
+    contend[i] = _qc_n_dofs[i]*n_vars;
+
+  vector<int> surfstart(_quantum_contacts.size());
+  surfstart[0] = _device_n_dofs*n_vars + 1;
+  for (unsigned int i = 1; i < surfstart.size(); ++i)
+    surfstart[i] = contend[i-1] + 1;
+
+  vector<int> surfend(surfstart);
+  for (auto&& s : surfend)
+    s -= 1;
+
+  /*
+  cerr << "surfstart = ";
+  for (auto&& s : surfstart)
+    cerr << s << " ";
+  cerr << endl;
+
+  cerr << "surfend = ";
+  for (auto&& s : surfend)
+    cerr << s << " ";
+  cerr << endl;
+
+  cerr << "contend = ";
+  for (auto&& s : contend)
+    cerr << s << " ";
+  cerr << endl;
+  */
+
+  int nPL = sol_opt.get_option("number_of_PL", 0);
+  unsigned int sizePL = sol_opt.get_option("size_of_PL", 1);
+  if ((nPL == 0) && (sizePL > 0))
+  {
+    ostringstream os;
+    os << "Calculating number of principal layers (PL): \n"
+       << "  # device DOFs = " << _device_n_dofs * n_vars << "\n"
+       << "  PL size       = " << sizePL*n_vars;
+    Messages::info(os.str());
+
+    // try to calculate nPL
+    if (_device_n_dofs % sizePL > 0)
+      throw InitFailedException("Given PL size is not commensurate with number of DOFs");
+
+    nPL = _device_n_dofs / sizePL;
+  }
+
+  vector<int> plend(nPL);
+  for (unsigned int i = 0; i < nPL; i++)
+  {
+    plend[i] = (i+1)*sizePL*n_vars;
+  }
+
+  _libnegf->init_structure(_quantum_contacts.size(),
+                           surfstart, surfend, contend,
+                           nPL, plend);
 
 
   if (opt.verbosity > 60) _libnegf->partition_info();
@@ -876,10 +958,6 @@ Negf::setup_negf(void)
   // TODO in API now there is write_tunneling_and_dos, to be adapted
   //_libnegf->set_write_ldos(opt.writeLDOS);
 
-  _libnegf->set_iteration(1);
-
-  // set not to compute Device-Contact blocks
-  _libnegf->device_contact_dm(0);
 
   // set reference contact at maximum electrochem pot.
   //_libnegf->set_reference(1);
@@ -929,8 +1007,6 @@ Negf::do_solve(void)
   if (plot_solution(elDensity) || plot_solution(hlDensity) ||
       plot_solution("LDOS"))
   {
-    _qdens_sys->init();
-
     (_qdens_sys->solution)->zero();
   }
 

@@ -83,7 +83,7 @@ NegfWrapper::density(std::vector<double>& density, std::string particle)
    if (particle == "el"){ p = +1;}
    if (particle == "hl"){ p = -1;}
    
-   f77_negf_density_efa(_handler, size, &density.front(), p);
+   f77_negf_density_efa(_handler, size, density.data(), p);
 }
 
 
@@ -150,10 +150,12 @@ NegfWrapper::init_contacts(int n_cont)
 }
 
 void
-NegfWrapper::init_structure(int ncont, int* surfstart, 
-    int* surfend, int* contend, int npl, int* plend, int* cblk)
+NegfWrapper::init_structure(int ncont, const std::vector<int>& surfstart,
+    const std::vector<int>& surfend, const std::vector<int>& contend, int npl,
+    const std::vector<int>& plend)
 {
-  f77_negf_init_structure(_handler, ncont, surfstart, surfend, contend, npl, plend, cblk);
+  f77_negf_init_structure(_handler, ncont, surfstart.data(),
+      surfend.data(), contend.data(), npl, plend.data());
 }
 
 void
@@ -177,17 +179,17 @@ NegfWrapper::partition_info(void)
 }
 
 void 
-NegfWrapper::set_H_csr(int nrow, std::vector<Complex >& A, 
+NegfWrapper::set_H_csr(int nrow, std::vector<Complex>& A,
                            std::vector<int>& JA, std::vector<int>& IA)
 {
-  f77_negf_set_h(_handler,nrow,&A.front(),&JA.front(),&IA.front());
+  f77_negf_set_h(_handler,nrow,A.data(),JA.data(),IA.data());
 }
 
 void 
 NegfWrapper::set_S_csr(int nrow, std::vector<Complex >& A, 
                            std::vector<int>& JA, std::vector<int>& IA)
 {
-  f77_negf_set_s(_handler,nrow,&A.front(),&JA.front(),&IA.front());
+  f77_negf_set_s(_handler,nrow,A.data(),JA.data(),IA.data());
 }
 
 

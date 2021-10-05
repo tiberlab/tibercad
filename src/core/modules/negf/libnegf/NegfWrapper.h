@@ -87,8 +87,9 @@ public:
   void init_contacts(int n_cont);
 
   //! Initialize structure
-  void init_structure(int ncont, int* surfstart, 
-    int* surfend, int* contend, int npl, int* plend, int* cblk);
+  void init_structure(int ncont, const std::vector<int>& surfstart,
+    const std::vector<int>& surfend, const std::vector<int>& contend,
+    int npl, const std::vector<int>& plend);
 
   //! Get library version
   void get_version(void);
