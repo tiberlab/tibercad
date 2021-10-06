@@ -857,7 +857,7 @@ Negf::setup_negf(void)
 
   int Np_real = 0;
   Np_real = sol_opt.get_option("Np_real", Np_real);
-  if (Np_real = 0)
+  if (Np_real == 0)
   {
     Np_real = (params.emax - params.emin) / opt.deltaE;
     ostringstream os;
