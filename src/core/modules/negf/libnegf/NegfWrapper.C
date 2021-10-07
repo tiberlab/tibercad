@@ -74,6 +74,42 @@ NegfWrapper::current(std::string unitsOfH, std::string unitsOfJ)
   return current;
 }
 
+
+void
+NegfWrapper::get_energies(std::vector<double>& energies)
+{
+  int n_erg;
+  std::vector<double> dummy;
+
+  f77_negf_get_energies(_handler, n_erg, energies.data(), dummy.data(), 0);
+
+  energies.resize(n_erg);
+  dummy.resize(n_erg);
+
+  f77_negf_get_energies(_handler, n_erg, energies.data(), dummy.data(), 1);
+}
+
+
+void
+NegfWrapper::get_transmission(std::vector<std::vector<double>>& transmission)
+{
+  // # erg points, # T
+  int shape[2];
+  double *data;
+
+  f77_negf_associate_transmission(_handler, shape, &data);
+
+  transmission.resize(shape[1]);
+
+  for (size_t i = 0; i< shape[1]; ++i)
+  {
+    transmission[i].resize(shape[0]);
+    for (size_t j = 0; j < shape[0]; ++j)
+      transmission[i][j] = data[i*shape[0] + j];
+  }
+}
+
+
 void
 NegfWrapper::density(std::vector<double>& density, std::string particle)
 {

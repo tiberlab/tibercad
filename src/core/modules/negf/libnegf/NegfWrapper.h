@@ -50,6 +50,16 @@ public:
   //! unitsOfJ is a string like "A"
   double current(std::string unitsOfH, std::string unitsOfJ);
 
+  //! Get the energy points
+  /*!
+   * Only real part of energies is given back. These can be used e.g.
+   * to print transmission or LDOS
+   */
+  void get_energies(std::vector<double>& energies);
+
+  //! Return transmission
+  void get_transmission(std::vector<std::vector<double>>& transmission);
+
   //!Compute charge density
   void density(std::vector<double>& density, std::string particle);
 

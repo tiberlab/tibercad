@@ -408,7 +408,6 @@ void KspaceIntegration::do_solve( )
 void KspaceIntegration::do_init(void)
 {
   
-  //std::cout<<"(KSI) k-int: "<<std::endl;
   ModelOptions kopts(get_options());
   
   if (has_option("number_of_elements"))
@@ -422,14 +421,15 @@ void KspaceIntegration::do_init(void)
   
   if (get_option("gamma_point_calculation",false))
   { 
-    kopts.set_option("wedge","all");
     unsigned int dim = get_option("k_space_dimension",0);
     std::vector<unsigned int>  n_nodes(dim,0);
-    for (unsigned int i = 0; i<dim; i++) n_nodes[i] = 2;
+    for (unsigned int i = 0; i<dim; i++) n_nodes[i] = 1;
+    //ModelOptions new_opts;
     kopts.set_option("number_of_nodes",n_nodes);
-    ModelOptions new_opts;
-    new_opts.set_option("quadrature_order","first");
-    set_options(new_opts);
+    kopts.set_option("wedge","all");
+    kopts.set_option("quadrature_order", "first");
+    kopts.set_option("k_space_dimension", 0);
+    //set_options(new_opts);
 
     Messages::info("Doing Gamma point calculation");
   }

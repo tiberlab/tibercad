@@ -955,9 +955,6 @@ Negf::setup_negf(void)
 
   //_libnegf->set_verbose(opt.verbosity);
 
-  // TODO in API now there is write_tunneling_and_dos, to be adapted
-  //_libnegf->set_write_ldos(opt.writeLDOS);
-
 
   // set reference contact at maximum electrochem pot.
   //_libnegf->set_reference(1);
@@ -1480,6 +1477,24 @@ Negf::calculate_for_k_point(const Point& k_point,
    {
        field.clear();
        compute_current();
+
+       // get_energies
+       vector<double> erg;
+       _libnegf->get_energies(erg);
+
+       vector<vector<double>> transmission;
+       // get transmission
+       _libnegf->get_transmission(transmission);
+
+       ostringstream os;
+       os << "transmission";
+       //if (k_point.norm() > 1e-6)
+       os << "_k=(" << k_point(0) << ","
+          << k_point(1) << "," << k_point(2) << ")";
+       os << ".dat";
+
+       print_energy_resolved(os.str(), erg, transmission);
+
        //double curr = _libnegf->current();
        //_contact_potential[]
        //field.push_back(curr);
@@ -1492,6 +1507,38 @@ Negf::calculate_for_k_point(const Point& k_point,
       
    finalize();
 
+}
+
+
+void
+Negf::print_energy_resolved(const string& file, const vector<double>& energy,
+    const vector<vector<double>>& data) const
+{
+  if (get_communicator().rank() != 0)
+    return;
+
+  ofstream out(get_output_directory() + "/" +
+      get_output_filename_prefix() + "_" + file);
+
+  if (!out.good())
+      throw std::runtime_error("Could not open " + file + " for writing.");
+
+  size_t N = energy.size();
+
+  // sanity check on data
+  for (size_t j = 0; j < data.size(); j++)
+  {
+    if (data[j].size() != N)
+      throw std::runtime_error("Data is inconsistent with energy vector.");
+  }
+
+  for (size_t i = 0; i < N; ++i)
+  {
+    out << energy[i];
+    for (size_t j = 0; j < data.size(); j++)
+      out << " " << data[j][i];
+    out << endl;
+  }
 }
 
 

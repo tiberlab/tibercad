@@ -196,6 +196,11 @@ class TBDLLOCAL Negf : public SimulationInterface
     void transfer_density(const std::vector<double>& density,
         const std::string& particle);
 
+    //! Print energy resolved data to file
+    void print_energy_resolved(const std::string& file,
+        const std::vector<double>& energy,
+        const std::vector<std::vector<double>>& data) const;
+
     Device* _device;
 
     SimulationEnvironment* _env;
