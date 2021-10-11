@@ -22,22 +22,25 @@ public:
   /*!Assign an handler to libNEGF instance, transparent to programmer
    *
    */
-  NegfWrapper();
+  NegfWrapper(void);
 
   //! Destructor  
-  ~NegfWrapper();
+  ~NegfWrapper(void);
 
   //!Static method to create a Negf wrapper instance
-  static NegfWrapper* create(); 
+  static NegfWrapper* create(void);
 
   //!Initialize the Negf instance
-  void init();
+  void init(void);
+
+  //! Destroy and reinitialize
+  void force_reinit(void);
 
   //!read H and S hamiltonians 
-  int read_HS();
+  int read_HS(void);
 
   //!read 'negf.in'
-  int read_input();
+  int read_input(void);
 
   //! Get the parameters
   void get_parameters(NegfWrapper::Parameters& params);
@@ -76,7 +79,7 @@ public:
   void set_output_path(std::string path);
 
   //!Clean the Negf instance variable space
-  void clean_libnegf();
+  void clean_libnegf(void);
 
   //!Get UPTIGHT instance handler
   inline const int* get_handler(void){ return _handler; };
@@ -121,6 +124,8 @@ public:
 
 private:
   int _handler[NEGF_HSIZE];
+
+  bool _is_initialized;
 
 };
 

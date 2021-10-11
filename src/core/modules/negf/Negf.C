@@ -721,6 +721,8 @@ Negf::setup_etb_hamil(void)
 void
 Negf::setup_negf(void)
 {
+
+  // first time it will init
   _libnegf->init();
 
 
@@ -781,8 +783,6 @@ Negf::setup_negf(void)
   // initialize the contacts
   _libnegf->init_contacts(_quantum_contacts.size());
   
-  // old way via input file
-  //_libnegf->read_input();
 
   // new way via memory
   // first get the parameter strcture with defaults
@@ -825,8 +825,8 @@ Negf::setup_negf(void)
     double phi, mu_n, mu_p;
     get_boundary_potentials(it->second, phi, mu_n, mu_p);
 
-    params.mu_n[id] = mu_n;
-    params.mu_p[id] = mu_p;
+    params.mu_n[id] =  mu_n;
+    params.mu_p[id] = -mu_p;
     //params.mu[id] = ; // not needed, for DFTB
 
     // for now T is the same everywhere
@@ -845,19 +845,25 @@ Negf::setup_negf(void)
   params.ec = Ec;
   params.ev = Ev;
 
+  params.deltaec = opt.DEc;
+  params.deltaev = opt.DEv;
+
   params.emin = sol_opt.get_option("Emin", -mumax-opt.n_kT*kbT);
   params.emax = sol_opt.get_option("Emax", -mumin+opt.n_kT*kbT);
   params.estep = opt.Estep;
 
+  // contour integration parameters
   for (unsigned int i = 0; i < 2; ++i)
   {
     params.np_n[i] = opt.Np_n[i];
     params.np_p[i] = opt.Np_n[i];
   }
+  params.n_poles = opt.n_poles;
 
+  // real axis integration parameters
   int Np_real = 0;
   Np_real = sol_opt.get_option("Np_real", Np_real);
-  if (Np_real == 0)
+  if (Np_real < 0)
   {
     Np_real = (params.emax - params.emin) / opt.deltaE;
     ostringstream os;
@@ -866,10 +872,21 @@ Negf::setup_negf(void)
   }
   params.np_real[0] = Np_real;
 
-  params.n_kt = opt.n_kT;
-  params.n_poles = opt.n_poles;
+  // probably it does not make sense to have both?
+  int contour_points = params.n_poles + opt.Np_n[0] + opt.Np_n[1];
+  if ((params.np_real[0] > 0) && (contour_points > 0))
+    Messages::warning("Are you sure you want both contour and real axis integration?");
 
+  // 0 -> min(mu)
+  // 1 -> max(mu)
+  // x -> use all contacts (for real axis integration)
   params.min_or_max = 1;
+  // TODO this is set internally in libnegf
+  //if (Np_real > 0)
+  //  params.min_or_max = 2;
+
+  params.n_kt = opt.n_kT;
+
 
 
 

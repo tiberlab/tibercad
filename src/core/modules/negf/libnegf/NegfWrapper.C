@@ -4,14 +4,15 @@
 #include <iostream>
 
 //---------------------------------------------------------------------
-NegfWrapper* NegfWrapper::create()
+NegfWrapper* NegfWrapper::create(void)
 {
   return new NegfWrapper();
 }
 
 
 
-NegfWrapper::NegfWrapper()
+NegfWrapper::NegfWrapper(void)
+ : _is_initialized(false)
 {
 
     std::cout << "\nCreating libNEGF instance... ";
@@ -27,21 +28,35 @@ NegfWrapper::NegfWrapper()
 }
 
 
-NegfWrapper::~NegfWrapper()
+NegfWrapper::~NegfWrapper(void)
 {
     f77_negf_destruct_libnegf(_handler);
     f77_negf_destruct_session(_handler);
 }
 
 void
-NegfWrapper::init()
+NegfWrapper::init(void)
 {
-  f77_negf_init(_handler);
+  if (!_is_initialized)
+  {
+    f77_negf_init(_handler);
+    _is_initialized = true;
+  }
+}
+
+void
+NegfWrapper::force_reinit(void)
+{
+  if (_is_initialized)
+    f77_negf_destruct_libnegf(_handler);
+
+  init();
 }
 
 
+
 int
-NegfWrapper::read_HS()
+NegfWrapper::read_HS(void)
 {
   // TODO new api needs file name
   //f77_negf_read_hs(_handler);
