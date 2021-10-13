@@ -4,6 +4,7 @@
 #define _TMMBOUNDARYMODEL_H_
 
 #include "PhysicalModel.h"
+#include "Tmm.h"
 
 
 namespace libMesh
@@ -25,6 +26,14 @@ class TmmBoundaryModel : public PhysicalModel
     static TmmBoundaryModel* create(const MaterialBoundary* boundary,
         const ModelOptions& options);
 
+    virtual void Calculate_M_Matrix (void) = 0;
+    void set_elements(double, double, double, double);
+    double get_element(int);
+    std::string read_type(void);
+
+
+
+
 
 
 
@@ -33,10 +42,19 @@ class TmmBoundaryModel : public PhysicalModel
 
     //! Constructor
     TmmBoundaryModel(const ModelOptions& options);
+    void write_type(std::string);
+
+
 
 
 
   private:
+    std::string typer;
+    double _mmm00;
+    double _mmm01;
+    double _mmm10;
+    double _mmm11;
+
 
 
 };

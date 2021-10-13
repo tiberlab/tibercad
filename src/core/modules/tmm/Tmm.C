@@ -40,6 +40,7 @@ void Tmm::Matrix_2by2::print()
 {
   std::cout << "m00 = " << _m00 << "  " << "m01 = "<< _m01 << "\r\n";
   std::cout << "m10 = " << _m10 << "  " << "m11 = "<< _m11 << "\r\n";
+  std:cout << "                       " << "\r\n";
 
 }
 
@@ -191,6 +192,11 @@ Tmm::parse_options(void)
   {
     Messages::warning("You did not provide any incident_angle for TMM.");
   }
+  get_option("radiation", _radiation);
+  if (_radiation.empty())
+  {
+    Messages::warning("You did not provide any radiation for TMM.");
+  }
 
 
 }
@@ -250,6 +256,9 @@ Tmm::do_solve(void)
 
   for (unsigned int j = 0; j < _incident_angle.size(); ++j)  //loop over incident angle
   {
+  for (unsigned int ij = 0; ij < _radiation.size(); ++ij)
+  {
+
 
     double lambda = _wavelengths[i];
 
@@ -265,15 +274,36 @@ Tmm::do_solve(void)
     double E = 1.0;
     double incoming_angle=_incident_angle[j];
 
+    double c0 = 2.998e8 * 1e9;              // Speed of light [nm/s]
+    double e0 = 8.85e-12;                   // Vacuum permittivity  [F/m]
+    double radiation = _radiation[ij];                   //[W/(m^2*nm)]
+    double Esun2 = 2 * radiation / (c0 * 1e-9 * e0); // E^2 Electric Field [V^2 / (m^2 * nm)]
+    double w = 2 * M_PI * c0 / lambda;                               // Frequency [1/s]
+
     // TODO reserve space
     vector<double> n_real;
     vector<double> n_imag;
     vector<double> l_length;
     vector<double> l;
 
+
+    vector<double> n_real_init;
+    vector<double> n_imag_init;
+    vector<double> l_length_init;
+    vector<double> l_init;
+
+
+    vector<int> BC_check;
+    vector<int> BC_check_init;
+    Tmm::Matrix_2by2 Boundry_condition(1,0,0,1);
+
+    std::string direction;
+
     //**********************************************************************************************
     for ( ; el != end_el ; ++el)
     {
+
+
       const Elem* elem = *el;
 
       dof_map.dof_indices(elem, dof_indices, uvar);
@@ -287,21 +317,88 @@ Tmm::do_solve(void)
       
       // getting refractive index and length of layers from model
       libMesh::Complex nk = mod.get_refractive_index(lambda);
-      n_real.push_back(real(nk));
-      n_imag.push_back(imag(nk));
+      // n_real.push_back(real(nk));
+      // n_imag.push_back(imag(nk));
+
+      n_real_init.push_back(real(nk));
+      n_imag_init.push_back(imag(nk));
 
 
       //n_imag.push_back(sqrt((abs(mod.get_permittivity(lambda))-real(mod.get_permittivity(lambda)))/2));
       //n_real.push_back(sqrt((abs(mod.get_permittivity(lambda))+real(mod.get_permittivity(lambda)))/2));
-      l.push_back(elem->volume()); 
+      //l.push_back(elem->volume());
+      l_init.push_back(elem->volume());
+     // std::cout<<"elem n_sides is :" << elem->n_sides() << std::endl;
 
+      // the sides
+
+       for (unsigned int s = 0; s < elem->n_sides(); s++)
+       {
+         TmmBoundaryModel* mod_int =
+           get_interface_model<TmmBoundaryModel>(elem, s);
+
+        // std::cout<<"elements  "<<s<<"   "<<elem->n_sides()<<std::endl;
+         if (mod_int != NULL)
+         {
+           if (mod_int->read_type() == "Mirror"){
+             mod_int->Calculate_M_Matrix();
+             BC_check_init.push_back(1);
+             Boundry_condition.set(0,mod_int->get_element(0));
+             Boundry_condition.set(1,mod_int->get_element(1));
+             Boundry_condition.set(2,mod_int->get_element(2));
+             Boundry_condition.set(3,mod_int->get_element(3));
+             Boundry_condition.print();
+           }
+
+           if (mod_int->read_type() == "Incident Wave"){
+             BC_check_init.push_back(0);
+             if ( s % 2 == 0)
+             {direction = "left to right propagation";std::cout<<direction<<std::endl;}
+             else
+             {direction = "right to left propagation";std::cout<<direction<<std::endl;}
+           }
+
+         }
+           if (mod_int == NULL)
+           {
+             BC_check_init.push_back(0);
+           }
+       }
     }
+
+
+    if (direction == "left to right propagation")
+    {
+      for (int uu=1; uu<BC_check_init.size();uu += 2)
+        BC_check.push_back(BC_check_init[uu]);
+      for (int uu=0; uu<n_real_init.size();++uu)
+      {
+        n_real.push_back(n_real_init[uu]);
+        n_imag.push_back(n_imag_init[uu]);
+        l.push_back(l_init[uu]);
+      }
+
+    }else if (direction == "right to left propagation")
+    {
+      for (int uu=BC_check_init.size()-2; uu>=0;uu -= 2)
+        BC_check.push_back(BC_check_init[uu]);
+      for (int uu=n_real_init.size()-1; uu>=0;--uu)
+      {
+        n_real.push_back(n_real_init[uu]);
+        n_imag.push_back(n_imag_init[uu]);
+        l.push_back(l_init[uu]);
+      }
+    }
+
+
+  //   for (int uu=1; uu<n_real.size();++uu)
+   //    std::cout<<n_real[uu]<<"     "<<n_imag[uu]<<std::endl;
+
     //********************snell's law********************
     vector<double> theta(n_real.size());
     theta=Tmm::theta_cal(n_real,incoming_angle);
 
     //****************************************************
-
 
 
     //*****************************************************
@@ -312,31 +409,53 @@ Tmm::do_solve(void)
     Tmm::Matrix_2by2 T_load(0,0,0,0);
     Tmm::Matrix_2by2 T(1,0,0,1);
     
-    Tmm::Matrix_2by2 E_N(1,0,0,1);
-    Tmm::Matrix_2by2 E_I(1,0,0,1);
+    double r =0;
+    Tmm::Matrix_2by2 E_N(1,0,r,0);
+    Tmm::Matrix_2by2 E_I(0,0,0,0);
 
 
     vector<complex<double>> E_F(n_real.size());
     vector<complex<double>> E_B(n_real.size());
     
+   // E_N.print();
+
     E_F[n_real.size()-1]=E_N.get(0);
     E_B[n_real.size()-1]=E_N.get(2);
 
-    vector<complex<double>> E_F_NORM(n_real.size());
-    vector<complex<double>> E_B_NORM(n_real.size());
+
 
     //******************************************************
     //******main loop over layer, calculating matrixs*******
     for (int k=n_real.size()-1 ; k>=0 ; --k){
-      if(k<(n_real.size()-1)){
-        D = get_D(n_real[k],n_imag[k],n_real[k+1],n_imag[k+1],theta[k],theta[k+1]);
+      if (BC_check[k] == 0) {
+        if (k<n_real.size()-1){
+         D = get_D(n_real[k],n_imag[k],n_real[k+1],n_imag[k+1],theta[k],theta[k+1]);
+         //std::cout<<"BC_check[k] == 0"<< std::endl;
+        }
+
+      }else {
+        D.set(0,Boundry_condition.get(0));
+        D.set(1,Boundry_condition.get(1));
+        D.set(2,Boundry_condition.get(2));
+        D.set(3,Boundry_condition.get(3));
+        //std::cout<<"BC_check[k] == 1"<< std::endl;
       }
+     // std::cout<<"D matrix is :" <<k<<"   "<< std::endl;
+     // D.print();
       M = get_M(n_real[k],n_imag[k],l[k],lambda,theta[k]);
+
       T_load = D * M;
-      T = T * T_load;     
-      E_I = T * E_N;
+      T = T * T_load;
+
+      if (k<n_real.size()-1){
+      E_I = T * E_N ;
+
+      //std::cout<<"E_I is "<<k <<std::endl;
+      //E_I.print();
       E_F[k]+= E_I.get(0);
       E_B[k]+= E_I.get(2);
+      }
+     // std::cout<<"E_F is "<<k<<"    "<<abs(E_F[k]) <<std::endl;
     }
     T.print();
 
@@ -357,13 +476,37 @@ Tmm::do_solve(void)
 
     //****************************************************************************
     //***************normalizing electric field matrix******************************
-    for(double nm=0; nm < E_F.size() ; ++nm){
+
+    vector<complex<double>> E_F_NORM(n_real.size());
+    vector<complex<double>> E_B_NORM(n_real.size());
+
+    for(double nm=0; nm < n_real.size() ; ++nm)
+    {
       E_F_NORM[nm] = E_F[nm]/E_F[0];
       E_B_NORM[nm] = E_B[nm]/E_F[0];
     } 
 
-  //  for(int mm=0;mm<E_F_NORM.size();mm++)
-   //     cout<<"E is "<< E_F_NORM[mm]<<endl;
+    complex<double> Etot; // Electric Field, Magnetic Field
+    vector<complex<double>> Intensity;// Intensity, forward, backward
+    vector<complex<double>> Generation_rate;        // Generation Rate
+
+
+    for (int nm=0 ; nm < n_real.size() ; ++nm)
+    {
+      complex<double> n_complex = (2 * M_PI / lambda * n_real[nm]- 1i * n_imag[nm] / 2.0);
+      Etot = E_F_NORM[nm] + E_B_NORM[nm];
+      Intensity.push_back(0.5 * c0 * 1e-9 * e0 * n_real[nm] * Esun2* pow(abs(Etot), 2)); // Intensity [W/(m^2 * nm)]
+      Generation_rate.push_back(1 / (1.055e-34 * w) * n_imag[nm] * 1e7 * Intensity[nm]/ 1e4);        // Generation rate [ cm^-3 s^-1 nm^-1]
+    }
+
+    for(int nm=0; nm<Intensity.size();++nm){
+      std::cout<<"intensity is " << nm << "   " << Intensity[nm] << std::endl;
+    }
+    for(int nm=0; nm<Generation_rate.size();++nm){
+      std::cout<<"Generation_rate is " << nm << "   " << Generation_rate[nm] << std::endl;
+    }
+
+
 
     //*******************************************************************************
     //************************printing electric field********************************
@@ -375,6 +518,7 @@ Tmm::do_solve(void)
 
   }
 
+  }
   }
 
   solution.close();
