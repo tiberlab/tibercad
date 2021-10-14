@@ -40,7 +40,11 @@ update: checkout
 
 checkout:
 	@echo "Checkout libNEGF..."
-	@if [ ! -e libnegf ]; then git clone https://github.com/libnegf/libnegf.git; fi
+	@if [ ! -e libnegf ]; then \
+		git clone https://github.com/libnegf/libnegf.git; \
+		cd libnegf; \
+		patch -p1 < ../libnegf.patch; \
+	fi
 
 clean:
 	@echo "Clean libnegf..."

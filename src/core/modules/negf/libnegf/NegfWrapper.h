@@ -114,6 +114,14 @@ public:
    */
   void init_ldos(unsigned int nldos);
 
+  //! Initialize structure to hold LDOS
+  /*!
+   * Here the DOF indices for a certain LDOS projection are given.
+   * init_ldos(int) needs to be called first
+   */
+  void set_ldos_indices(unsigned int dos_index,
+                        const std::vector<int>& indices);
+
   //! Initialized the contacts
   void init_contacts(int n_cont);
 

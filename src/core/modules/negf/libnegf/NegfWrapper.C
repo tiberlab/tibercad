@@ -189,8 +189,27 @@ NegfWrapper::init_ldos(const std::vector<int>& start,
     throw std::runtime_error("trying to initialize ldos in libnegf "
         "with incompatible index arrays");
 
+  std::vector<int> fstart(start);
+  std::vector<int> fend(end);
+  for (size_t i = 0; i < nldos; ++i)
+  {
+    ++fstart[i];
+    ++fend[i];
+  }
+
   f77_negf_init_ldos(_handler, nldos);
   f77_negf_set_ldos_intervals(_handler, nldos, start.data(), end.data());
+}
+
+void
+NegfWrapper::set_ldos_indices(unsigned int dos_index,
+                              const std::vector<int>& indices)
+{
+  // adjust to Fortran indices
+  std::vector<int> ids(indices);
+  for (auto&& id : ids) ++id;
+
+  f77_negf_set_ldos_indexes(_handler, dos_index+1, ids.size(), ids.data());
 }
 
 

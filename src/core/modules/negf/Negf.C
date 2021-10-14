@@ -980,6 +980,9 @@ Negf::setup_negf(void)
   if (plot_solution("LDOS"))
   {
     _libnegf->init_ldos(_device_n_dofs*n_vars);
+    // this will have libnegf give the whole LDOS back,
+    // without any projection
+    _libnegf->set_ldos_indices(0, vector<int>(1, -1));
   }
 
   if (opt.verbosity > 60) _libnegf->partition_info();
@@ -1440,8 +1443,8 @@ Negf::occupy_LDOS(const std::vector<double>& ldos)
 
 void
 Negf::calculate_for_k_point(const Point& k_point,
-                                   DofField& field,
-                                   double& error)
+                                  DofField& field,
+                                  double& error)
 {
 
    for(short i=0;i<3;i++) _k_vec(i) = k_point(i);
