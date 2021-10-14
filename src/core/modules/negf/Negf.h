@@ -10,17 +10,11 @@
 #include "QuantumContact.h"
 #include "TiberLinearSystem.h"
 #include "Boundary.h"
-#include "libnegf/NegfWrapper.h"
 #include "KspaceIntegration.h"
 
 #include <string>
 
-struct sortclass{
-  sortclass(const std::vector<Atom>& atoms) : _atoms(atoms) {}
-  ~sortclass(){};
-  bool operator() (int i, int j) { return (_atoms[i].get_position()(0)<_atoms[j].get_position()(0)); }
-  const std::vector<Atom>& _atoms;
-};
+class NegfWrapper;
 
 /*!
  *
@@ -189,8 +183,10 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     bool is_generalized(void);
 
-    void plot_LDOS(const std::vector<double>& ldos,
-        const std::string& mod = "LDOS");
+    void plot_LDOS(const std::vector<double>& energies,
+        const std::vector<std::vector<double>>& ldos,
+        const std::string& name_suffix);
+
     void occupy_LDOS(const std::vector<double>& ldos);
 
     void transfer_density(const std::vector<double>& density,

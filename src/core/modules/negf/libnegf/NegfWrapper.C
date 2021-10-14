@@ -124,6 +124,24 @@ NegfWrapper::get_transmission(std::vector<std::vector<double>>& transmission)
   }
 }
 
+void
+NegfWrapper::get_energy_current(std::vector<std::vector<double>>& current)
+{
+  // # erg points, # J
+   int shape[2];
+   double *data;
+
+   f77_negf_associate_energy_current(_handler, shape, &data);
+
+   current.resize(shape[1]);
+
+   for (size_t i = 0; i< shape[1]; ++i)
+   {
+     current[i].resize(shape[0]);
+     for (size_t j = 0; j < shape[0]; ++j)
+       current[i][j] = data[i*shape[0] + j];
+   }
+}
 
 void
 NegfWrapper::density(std::vector<double>& density, std::string particle)
@@ -139,13 +157,40 @@ NegfWrapper::density(std::vector<double>& density, std::string particle)
 
 
 void
-NegfWrapper::ldos(std::vector<double>& ldos, int& esteps, int& npoints)
+NegfWrapper::get_ldos(std::vector<std::vector<double>>& ldos)
 {
   int shape[2];
-  double *d = ldos.data();
-  f77_negf_associate_ldos(_handler, shape, &d);
-  esteps = shape[0];
-  npoints = shape[1];
+  double *data;
+  f77_negf_associate_ldos(_handler, shape, &data);
+
+  ldos.resize(shape[0]);
+
+   for (size_t i = 0; i< shape[0]; ++i)
+   {
+     ldos[i].resize(shape[1]);
+     for (size_t j = 0; j < shape[1]; ++j)
+       ldos[i][j] = data[j*shape[0] + i];
+   }
+}
+
+void
+NegfWrapper::init_ldos(unsigned int nldos)
+{
+  f77_negf_init_ldos(_handler, nldos);
+}
+
+
+void
+NegfWrapper::init_ldos(const std::vector<int>& start,
+                       const std::vector<int>& end)
+{
+  int nldos = start.size();
+  if (end.size() != nldos)
+    throw std::runtime_error("trying to initialize ldos in libnegf "
+        "with incompatible index arrays");
+
+  f77_negf_init_ldos(_handler, nldos);
+  f77_negf_set_ldos_intervals(_handler, nldos, start.data(), end.data());
 }
 
 

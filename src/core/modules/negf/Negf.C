@@ -12,6 +12,8 @@
 #include "PotentialInterface.h"
 #include "KspaceIntegration.h"
 
+#include "libnegf/NegfWrapper.h"
+
 // To be able to compile as module
 #include "TiberModule.h"
 
@@ -53,6 +55,14 @@ using namespace Constants;
 using namespace libMesh;
 using namespace std;
 
+namespace {
+  struct sortclass{
+      sortclass(const std::vector<Atom>& atoms) : _atoms(atoms) {}
+      ~sortclass(){};
+      bool operator() (int i, int j) { return (_atoms[i].get_position()(0)<_atoms[j].get_position()(0)); }
+      const std::vector<Atom>& _atoms;
+  };
+}
 
 /* -----------------------------------------------------------------
  *  do_init
@@ -967,6 +977,10 @@ Negf::setup_negf(void)
                            surfstart, surfend, contend,
                            nPL, plend);
 
+  if (plot_solution("LDOS"))
+  {
+    _libnegf->init_ldos(_device_n_dofs*n_vars);
+  }
 
   if (opt.verbosity > 60) _libnegf->partition_info();
 
@@ -1184,36 +1198,32 @@ Negf::do_solve(void)
     plot_globaldata();
 
   }
-
-
-  if (opt.writeLDOS)
-  {
-    int esteps = (opt.Emax - opt.Emin) / opt.Estep + 1;
-    int npoints = _device_n_dofs * _ext_module->get_number_of_bands();
-    std::vector<double> ldos(esteps * npoints);
-    _libnegf->ldos(ldos, esteps, npoints);
-    plot_LDOS(ldos);
-    //occupy_LDOS(ldos);
-  }
-
 }
 
 
 
 void
-Negf::plot_LDOS(const std::vector<double>& ldos, const string& mod)
+Negf::plot_LDOS(const std::vector<double>& energies,
+    const std::vector<std::vector<double>>& ldos,
+    const string& name_suffix)
 {
+  if (ldos.empty())
+    return;
+
+  string mod(name_suffix);
+  if (!mod.empty()) mod = "_" + mod;
+
   string file = get_output_directory() + "/" + get_output_filename_prefix()
-      + "_" + mod + TiberCad::get_filename_suffix() + ".m";
+      + "_LDOS" + mod + TiberCad::get_filename_suffix() + ".m";
   ofstream of(file);
 
-  int esteps = (opt.Emax - opt.Emin) / opt.Estep + 1;
+  size_t esteps = energies.size();
+
   unsigned int bands = _ext_module->get_number_of_bands();
   int npoints = _device_n_dofs * bands;
 
   of << "energy = [";
-  for (double erg = opt.Emin; erg < (opt.Emax + 0.5*opt.Estep); erg += opt.Estep)
-    of << erg << " ";
+  for (auto&& erg : energies) of << erg << " ";
   of << "];\n";
 
 
@@ -1236,15 +1246,10 @@ Negf::plot_LDOS(const std::vector<double>& ldos, const string& mod)
       unsigned int id = _inv_perm[dof_indices[n]];
       coordinates[id / bands] = elem->point(n)(0);
     }
-    //  coordinates.insert(elem->point(n)(0));
   }
 
 
   of << "x = [";
-  //set<double>::iterator cit(coordinates.begin());
-  //const set<double>::iterator cend(coordinates.end());
-  //for ( ; cit != cend; ++cit)
-  //  of << *cit << " ";
   for (size_t i = 0; i < _device_n_dofs; ++i)
     of << coordinates[i] << " ";
   of << "];\n";
@@ -1256,7 +1261,7 @@ Negf::plot_LDOS(const std::vector<double>& ldos, const string& mod)
     {
       double node_dos = 0.0;
       for (int b = 0; b < bands; ++b)
-        node_dos += ldos[i + (j + b)*esteps];
+        node_dos += ldos[i][j + b];
       of << node_dos << " ";
     }
     of << "\n";
@@ -1264,7 +1269,8 @@ Negf::plot_LDOS(const std::vector<double>& ldos, const string& mod)
   of << "];\n";
 
   //of << "x=1:" << _device_n_dofs << ";\n";
-  of << "pcolor(x, energy, log(abs(LDOS))), shading flat\n";
+  //of << "pcolor(x, energy, log(abs(LDOS))), shading flat\n";
+  of << "pcolor(x, energy, abs(LDOS)), shading flat\n";
   of << "ylabel('Energy')\n";
   of << "xlabel('x')\n";
 }
@@ -1425,7 +1431,7 @@ Negf::occupy_LDOS(const std::vector<double>& ldos)
 
   qdens.close();
 
-  plot_LDOS(occupied_states, "OCC");
+  //plot_LDOS(occupied_states, "OCC");
 
 }
 
@@ -1447,51 +1453,53 @@ Negf::calculate_for_k_point(const Point& k_point,
    unsigned int n_vars = _ext_module->get_H_dim();
    field.resize(n_vars);
 
-   if (_which_integration == INTDENSITYEL)
+   switch (_which_integration)
    {
-
-     _libnegf->density(field, "el");
-
-     //std::string out_file = "density_new.dat";
-     //std::fstream ff(out_file.c_str(),std::fstream::out);
-     //for (unsigned int i = 0; i < field.size(); i++)
-     //      ff<< field[i] <<std::endl;
-     //ff.close();
-
-     error = 0.0;
-
-     for (unsigned int i=0; i < field.size(); i++)
+     case INTDENSITYEL:
      {
-       error += field[i];
+
+       _libnegf->density(field, "el");
+
+       //std::string out_file = "density_new.dat";
+       //std::fstream ff(out_file.c_str(),std::fstream::out);
+       //for (unsigned int i = 0; i < field.size(); i++)
+       //      ff<< field[i] <<std::endl;
+       //ff.close();
+
+       error = 0.0;
+
+       for (unsigned int i=0; i < field.size(); i++)
+       {
+         error += field[i];
+       }
+
+       error /= _device_n_dofs;
+
+       //cout<<"(negf) density error: "<<error<<endl;
+
+       break;
      }
 
-     error /= _device_n_dofs;
-
-     //cout<<"(negf) density error: "<<error<<endl;
-
-     return;
-   }
-
-   if (_which_integration == INTDENSITYHL)
-   {
-
-     _libnegf->density(field, "hl");
-
-     error = 0.0;
-
-     for (unsigned int i=0; i < field.size(); i++)
+     case INTDENSITYHL:
      {
-       error += field[i];
+
+       _libnegf->density(field, "hl");
+
+       error = 0.0;
+
+       for (unsigned int i=0; i < field.size(); i++)
+       {
+         error += field[i];
+       }
+
+       error /= _device_n_dofs;
+
+       break;
      }
 
-     error /= _device_n_dofs;
 
-     return;
-   }
-
-
-   if (_which_integration == INTCURRENT)
-   {
+     case INTCURRENT:
+     {
        field.clear();
        compute_current();
 
@@ -1507,7 +1515,7 @@ Negf::calculate_for_k_point(const Point& k_point,
        os << "transmission";
        //if (k_point.norm() > 1e-6)
        os << "_k=(" << k_point(0) << ","
-          << k_point(1) << "," << k_point(2) << ")";
+           << k_point(1) << "," << k_point(2) << ")";
        os << ".dat";
 
        print_energy_resolved(os.str(), erg, transmission);
@@ -1519,7 +1527,27 @@ Negf::calculate_for_k_point(const Point& k_point,
        field = current;
 
        error = current[0];
-       return;
+       break;
+     }
+   }
+
+
+   if (plot_solution("LDOS"))
+   {
+     Messages::info("Plot LDOS");
+
+     // get_energies
+     vector<double> erg;
+     _libnegf->get_energies(erg);
+
+     vector<vector<double>> ldos;
+     _libnegf->get_ldos(ldos);
+
+     ostringstream os;
+     os << "k=(" << k_point(0) << ","
+        << k_point(1) << "," << k_point(2) << ")";
+
+     plot_LDOS(erg, ldos, os.str());
    }
       
    finalize();

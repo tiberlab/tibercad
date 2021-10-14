@@ -63,11 +63,14 @@ public:
   //! Return transmission
   void get_transmission(std::vector<std::vector<double>>& transmission);
 
+  //! Return transmission
+  void get_energy_current(std::vector<std::vector<double>>& current);
+
   //!Compute charge density
   void density(std::vector<double>& density, std::string particle);
 
   //! Return the LDOS in matrix form
-  void ldos(std::vector<double>& ldos, int& esteps, int& npoints);
+  void get_ldos(std::vector<std::vector<double>>& ldos);
 
   //!Set SC iteration
   void set_iteration(int iter);
@@ -95,6 +98,21 @@ public:
 
   //! Set what to do with outer parts 0=none; 1=upper block; 2=full
   void device_contact_dm(int outer);
+
+  //! Initialize structure to hold LDOS
+  /*!
+   * The two arrays specify the start and end indices for the
+   * LDOS projection.
+   */
+  void init_ldos(const std::vector<int>& start,
+                 const std::vector<int>& end);
+
+  //! Initialize structure to hold LDOS
+  /*!
+   * In this version the number of DOFs has to be passed, so that
+   * the entire LDOS matrix will be passed back.
+   */
+  void init_ldos(unsigned int nldos);
 
   //! Initialized the contacts
   void init_contacts(int n_cont);
