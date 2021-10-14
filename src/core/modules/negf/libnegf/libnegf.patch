@@ -487,7 +487,7 @@ index 6bbba1c..5e2f2f6 100644
  
      allocate(pnts(Ntot))
 diff --git a/src/iterative.F90 b/src/iterative.F90
-index 58b0999..812d5ee 100644
+index 58b0999..877377c 100644
 --- a/src/iterative.F90
 +++ b/src/iterative.F90
 @@ -3692,14 +3692,18 @@ CONTAINS
@@ -500,7 +500,9 @@ index 58b0999..812d5ee 100644
 -          if (i2 .le. str%central_dim) then
 -            LEDOS(iLDOS) = LEDOS(iLDOS) + diag(i2)
 -          end if
-+      if (size(dos_proj) < size(diag)) then
++      if (size(dos_proj) == size(diag) .and. dos_proj(1)%indexes(1) == 0) then
++          LEDOS(:) = LEDOS(:) + diag(:)
++       else
 +        do iLDOS=1,size(dos_proj)
 +          do i = 1, size(dos_proj(iLDOS)%indexes)
 +            i2 = dos_proj(iLDOS)%indexes(i)
@@ -510,8 +512,6 @@ index 58b0999..812d5ee 100644
 +          end do
          end do
 -      end do
-+      else
-+        LEDOS(:) = LEDOS(:) + diag(:)
 +      endif
        call log_deallocate(diag)
      endif
