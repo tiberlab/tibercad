@@ -27,7 +27,12 @@ class BoundaryRegions;
  *
  * Problem: currently we assign a unique id to a QuantumContact and to all its elem.
  *          
- *          this is not good in case we extrude from different material regions. 
+ *          this is not good in case we extrude from different material regions.
+ *
+ * Extrusion length for each of the two layers can be provided from the input. If it
+ * is not specified, it will be calculated internally based on the mean height of the
+ * elements at the surface. Thei height is obtained by normal projection of the points
+ * not on the surface.
  *
  */
 class QuantumContact
@@ -90,6 +95,9 @@ class QuantumContact
      * \param rg_ids the IDs of the regions touched
      * \param bd_ids the IDs of the boundaries it touches
      * \param length the extrusion length
+     *
+     * If length = 0, it will be calculated internally as
+     * the mean radius of the elements touching the contact.
      */
     void init(const ID id,
               const std::string& name,
@@ -97,7 +105,7 @@ class QuantumContact
               BoundaryRegions* bd_regions,
               const std::set<ID>& rg_ids,
               const std::set<ID>& bd_ids,
-              double length)  TBDLLOCAL;
+              double length = 0.0)  TBDLLOCAL;
 
     void plot(const std::string& name);
 

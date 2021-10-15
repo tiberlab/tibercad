@@ -77,6 +77,11 @@ QuantumContact::init(const ID id,
   _normal = get_normal(_area);
 
   extend_mesh();
+
+  ostringstream os;
+  os << "Extended mesh for quantum contact by "
+      << _length << " (mesh units).";
+  Messages::info(os.str());
 }
 
 void
@@ -175,7 +180,13 @@ QuantumContact::extend_mesh(void)
       
       const Elem* elem = elemside.elem();
       
-      if (!_rg_ids.count(elem->subdomain_id())) continue;   
+      if (!_rg_ids.count(elem->subdomain_id())) continue;
+
+      if (_length == 0.0)
+      {
+        // use the same length as elem
+        _length = elem->volume();
+      }
       
       Elem* newelem = _mesh->add_elem(new libMesh::Edge2);
       
@@ -256,7 +267,78 @@ QuantumContact::extend_mesh(void)
         }
       }
     }
+  }
+  else if (_length == 0.0)
+  {
+    // for 2D and 3D we calculate the extrusion length, if not given
+    // Idea: get the elemnt height normal to surface, and take mean of these
 
+    size_t ctr = 0;
+
+    for ( ; it != end; ++it)
+    {
+      const ElementSide& elemside = *it;
+
+      ID side = elemside.side();
+
+      const Elem* elem = elemside.elem();
+
+      if (!_rg_ids.count(elem->subdomain_id())) continue;
+
+      vector<Point> bd_pts;
+      for(ID nde = 0; nde < elem->n_nodes(); nde++)
+        if (!elem->is_node_on_side(nde, side))
+          bd_pts.push_back(elem->point(nde));
+
+      // the determinant of the matrix for calculating projection
+      double det;
+
+      // calculate 1 or 2 differences
+      // (note: 2D elems always corner points first, so
+      // collinear point should never be taken accidentally)
+      Point d01 = bd_pts[1] - bd_pts[0];
+      Point d02(0);
+      if (bd_pts.size() > 2)
+      {
+        d02 = bd_pts[2] - bd_pts[0];
+        det = -_normal(0)*(d01(1)*d02(2) - d01(2)*d02(1))
+              +_normal(1)*(d01(0)*d02(2) - d01(2)*d02(0))
+              -_normal(2)*(d01(0)*d02(1) - d01(1)*d02(0));
+      }
+      else
+      {
+        det = _normal(1)*d01(0) - _normal(0)*d01(1);
+      }
+
+
+      //iterates on nodes of element
+      for(ID nde = 0; nde < elem->n_nodes(); nde++)
+      {
+        //check whether node is on the boundary
+        if (!elem->is_node_on_side(nde, side))
+        {
+          ctr++;
+
+          Point dp = elem->point(nde) - bd_pts[0];
+
+          // calculate distance from side
+          if(_mesh->mesh_dimension() == 2)
+          {
+            _length += (d01(1)*dp(0) - d01(0)*dp(1)) / det;
+          }
+          else
+          {
+            // can only be dim = 3
+            double a = d01(1)*d02(2) - d01(2)*d02(1);
+            double b = d01(2)*d02(0) - d01(0)*d02(2);
+            double c = d01(0)*d02(1) - d01(1)*d02(0);
+            _length += (a*dp(0) + b*dp(1) + c*dp(2)) / det;
+          }
+
+        }
+      }
+    }
+    _length /= ctr;
   }
 
   // 2D CASE -------------------------------------------------------

@@ -617,7 +617,7 @@ Device::setup_quantum_contacts(void)
     string regions("");
     regions = data.get_option("regions",regions);
 
-    double length = data.get_option("length", 0.5);
+    double length = data.get_option("length", 0.0);
 
     Messages::info(" ");
     Messages::info("Creating quantum contact " + name);
