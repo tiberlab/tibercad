@@ -287,7 +287,7 @@ QuantumContact::extend_mesh(void)
 
       vector<Point> bd_pts;
       for(ID nde = 0; nde < elem->n_nodes(); nde++)
-        if (!elem->is_node_on_side(nde, side))
+        if (elem->is_node_on_side(nde, side))
           bd_pts.push_back(elem->point(nde));
 
       // the determinant of the matrix for calculating projection
@@ -339,6 +339,7 @@ QuantumContact::extend_mesh(void)
       }
     }
     _length /= ctr;
+    it =  _bd_regions->sides_begin(_bd_ids);
   }
 
   // 2D CASE -------------------------------------------------------
@@ -364,7 +365,8 @@ QuantumContact::extend_mesh(void)
 
       _elemsidemap[newelem] = &elemside;
 
-      ID id = 0; ID inc = 1;
+      ID id = 0;
+      int inc = 1;
 
       //iterates on nodes of element
       for(ID nde = 0; nde < elem->n_nodes(); nde++)
@@ -385,7 +387,8 @@ QuantumContact::extend_mesh(void)
           ID num = nodeit->second;
           newelem->set_node(id) = _mesh->node_ptr(nodeid);
           newelem->set_node(id+inc) = _mesh->node_ptr(num);
-          id+=3; inc=-1; // for this increment we look the id node disposition in Libmesh class Quad4
+          id += 3;
+          inc =- 1; // for this increment we look the id node disposition in Libmesh class Quad4
         }
       }
     }
@@ -412,7 +415,8 @@ QuantumContact::extend_mesh(void)
 
           newelem->subdomain_id()=_id;
 
-          ID id = 0; ID inc = 1;
+          ID id = 0;
+          int inc = 1;
 
           for(ID nde = 0; nde < elem->n_nodes(); nde++)
           {
@@ -432,7 +436,8 @@ QuantumContact::extend_mesh(void)
             ID num = nodeit->second;
             newelem->set_node(id) = _mesh->node_ptr(nodeid);
             newelem->set_node(id+inc) = _mesh->node_ptr(num);
-            id+=3; inc=-1;
+            id += 3;
+            inc = -1;
            }
          }
         }
@@ -560,7 +565,7 @@ QuantumContact::extend_mesh(void)
 
           _elemsidemap[newelem] = &elemside;
 
-          newelem->subdomain_id()=_id;
+          newelem->subdomain_id() = _id;
 
           ID id = 0;
 
@@ -594,7 +599,8 @@ QuantumContact::extend_mesh(void)
 
 
   // Prepare for use (1D, 2D, 3D)
-  _mesh->prepare_for_use(true);
+  _mesh->allow_renumbering(false);
+  _mesh->prepare_for_use();
 
 }
 
@@ -786,7 +792,7 @@ QuantumContact::project_on_boundary(const Elem* elem, const std::vector<Point>& 
   std::vector<Point> out(point.size());
   const Elem* sideel = NULL;
 
-  for (unsigned int qp=0; qp<point.size(); qp++)
+  for (unsigned int qp = 0; qp < point.size(); qp++)
   {
     std::pair<const Elem*, Point> pp( project_on_boundary(elem, point[qp]) );
  
