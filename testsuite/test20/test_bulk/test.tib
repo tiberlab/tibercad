@@ -2,34 +2,25 @@
 # Description of  the  device physical regions
 Device
 {
-  meshfile = bulk.msh  
+  meshfile = bulk2D.msh  
   mesh_units = 1e-9
 
   material = GaAs
-#  y-growth-direction = (1,0,-1,0)
-#  z-growth-direction = (-1,2,-1,0)
-#  x-growth-direction = (0,0,0,1)
 
-   Doping { Nd = 1e17  type = acceptor  level = 0.025  g=2} 
+   Doping { Nd = 1e17  type = donor  level = 0.025  g=2} 
 
    Region bulk 
    {
    }
 
-   Region ndop 
-   {
-   }
-
    Quantum_contact anode
    {
-    regions = ndop
-    length = 0.01
+    regions = bulk
    }
 
    Quantum_contact cathode
    {
-    regions = ndop
-    length = 0.01
+    regions = bulk
    }
 
 }
@@ -60,18 +51,18 @@ Module driftdiffusion
 
   Physics
   {
-    band_properties simple
-    {
-       m_dos_e = 0.0422 #known issue of factor 2^(2/3)
-       m_dos_h = 0.0422
-    }
+#    band_properties simple
+#    {
+#       m_dos_e = 0.0422 #known issue of factor 2^(2/3)
+#       m_dos_h = 0.0422
+#    }
   }
 }
 
 Module efaschroedinger
 {
   name = quantum_el
-  regions = (anode, cathode, bulk, ndop)
+  regions = (anode, cathode, bulk)
   poisson_model_name = driftdiffusion
 
   plot = (ProbabilityDensity, EigenEnergy, QuantumDensity,k_dispersion)
@@ -84,7 +75,7 @@ Module efaschroedinger
 
   Physics
   {
-    model = 2x2 #conduction_band #8x8
+    model = conduction_band #8x8
     spurious = none #  Foreman
     cb_vb_coupling = false
     #kpVVtermSymmetric = true
@@ -117,9 +108,9 @@ Module sweep
 
 Module negf
 {
-  plot = (hlDensity)
-  #plot = (elDensity)
-  regions = (bulk, ndop)
+  #plot = (hlDensity)
+  plot = (elDensity, ReorderPotential)
+  regions = (bulk)
 
   potential_simulation = driftdiffusion
   Boundary anode{}
@@ -133,7 +124,7 @@ Module negf
     Np_contour = (50,100)
     Np_real = 0
     Npoles = 1 
-    delta = 1e-12
+    delta = 1e-6
     n_kT = 30
     deltaEc = 0.1
     deltaEv = 0.1
@@ -177,7 +168,6 @@ Simulation
   #solve = (sweep_drain)
   resultpath = output
   #scratchpath = /scratch/maufder/scratch_NEGF
-  output_format = grace 
 }
 
 
