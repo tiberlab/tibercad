@@ -85,25 +85,28 @@ class FEMEigenvalueProblem : public  EigenvalueProblem
 
   FEMEigenvalueProblem(const ModelOptions& options);
 
-  virtual ~FEMEigenvalueProblem() {};
+  virtual ~FEMEigenvalueProblem() override {};
 
   //! get H and S
-  virtual int get_H_dim() const; 
+  virtual int get_H_dim() const override;
   
-  virtual int get_H_nnz() const;
+  virtual int get_H_nnz() const override;
 
-  virtual void get_H_csr(std::vector<libMesh::Complex>& A,std::vector<int>& JA,std::vector<int>& IA) const;
+  virtual void get_H_csr(std::vector<libMesh::Complex>& A,
+                         std::vector<int>& JA,
+                         std::vector<int>& IA) const override;
 
-  virtual void get_S_csr(std::vector<libMesh::Complex>& A, std::vector<int>& JA,std::vector<int>& IA) const;
+  virtual void get_S_csr(std::vector<libMesh::Complex>& A,
+                         std::vector<int>& JA,
+                         std::vector<int>& IA) const override;
 
-  virtual void print_H(const std::string& outpath) const;
+  virtual void print_H(const std::string& outpath) const override;
  
 
  protected:
 
-  virtual void do_init();
+  virtual void do_init() override;
 
-  virtual void do_solve() {};
 
   virtual void parse_options();
 
@@ -113,9 +116,9 @@ class FEMEigenvalueProblem : public  EigenvalueProblem
    */
   void copy_matrix_to_solver(const char matrix);
 
-  virtual void do_copy_H_to_solver();
+  virtual void do_copy_H_to_solver() override;
   
-  virtual void do_copy_S_to_solver();
+  virtual void do_copy_S_to_solver() override;
 
   //!options of any eigensolver problem
   options solver_opt;

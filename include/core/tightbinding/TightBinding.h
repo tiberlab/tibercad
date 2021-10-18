@@ -41,8 +41,8 @@ public:
   //! Destructor
   ~TightBinding();
 
-  //! Create TightBinding object
-  static TightBinding* create(const ModelOptions& options);
+  // Create TightBinding object
+  //static TightBinding* create(const ModelOptions& options);
 
 
   virtual void get_solution_secure(const Elem* elem,
@@ -109,11 +109,11 @@ protected:
 };
 
 
-inline
-TightBinding* TightBinding::create(const ModelOptions& options)
-{
-  return new  TightBinding(options);
-}
+//inline
+//TightBinding* TightBinding::create(const ModelOptions& options)
+//{
+//  return new  TightBinding(options);
+//}
 
 
 

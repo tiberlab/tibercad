@@ -134,16 +134,25 @@ class EigenvalueProblem : public SimulationInterface
     void copy_S_to_solver(void);    
    
     //! get H and S
-    virtual int get_H_dim() const { return 0; }
+    virtual int get_H_dim() const = 0;
     
-    virtual int get_H_nnz() const { return 0; }
+    virtual int get_H_nnz() const = 0;
 
     //! The Hamiltonian is returned in eV
-    virtual void get_H_csr(std::vector<libMesh::Complex>& A, std::vector<int>& JA,
-        std::vector<int>& IA) const;
+    virtual void get_H_csr(std::vector<libMesh::Complex>& A,
+                           std::vector<int>& JA,
+                           std::vector<int>& IA) const = 0;
 
-    virtual void get_S_csr(std::vector<libMesh::Complex>& A, std::vector<int>& JA,
-        std::vector<int>& IA) const;
+    //! The overlap matrix
+    /*!
+     * Contrary to the Hamiltonian, this must not necessarily
+     * be implemented if the problem formulation uses an orthogonal
+     * basis. is_generalized() should be used to obtain this
+     * information.
+     */
+    virtual void get_S_csr(std::vector<libMesh::Complex>& A,
+                           std::vector<int>& JA,
+                           std::vector<int>& IA) const {};
 
     virtual void print_H(const std::string& outpath) const;
 
@@ -294,7 +303,7 @@ class EigenvalueProblem : public SimulationInterface
     std::vector< std::vector<double> > _projection_weights;
 
 
-    //int disp_range[2];
+    //! Indicates whether this is a generalized eigenvalue problem
     bool _haveS;
     
     JobKind _job; //!< a job to do
@@ -413,19 +422,7 @@ void EigenvalueProblem::k_is_old(void)
   _new_k=false;
 }
 
-//inline
-//bool EigenvalueProblem::compare_eigen_energy_holes(const eigen_state& state1, const eigen_state& state2)
-//{
-//  return(state1.energy> state2.energy);
-//}
 
-//=======================================================================//
-
-//inline
-//bool EigenvalueProblem::compare_eigen_energy_electrons(const eigen_state& state1, const eigen_state& state2)
-//{
-//  return(state1.energy< state2.energy);
-//}
 
 inline
 bool EigenvalueProblem::is_generalized(void) const

@@ -227,16 +227,6 @@ void EigenvalueProblem::do_assemble(const ModelOptions&)
 }
 
 
-void EigenvalueProblem::get_H_csr(std::vector<libMesh::Complex>&, std::vector<int>&,
-        std::vector<int>&) const
-{
-}
-
-
-void EigenvalueProblem::get_S_csr(std::vector<libMesh::Complex>&, std::vector<int>&,
-        std::vector<int>&) const
-{
-}
 
 void EigenvalueProblem::print_H(const std::string&) const
 {
