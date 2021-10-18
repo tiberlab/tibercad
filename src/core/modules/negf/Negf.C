@@ -304,7 +304,7 @@ Negf::init_efa_hamil(void)
   {
     std::stringstream out;
     out<<"phi"<<band;
-    _sys_H->add_variable(out.str(), FIRST, LAGRANGE);
+    _sys_H->add_variable(out.str(), FIRST, LAGRANGE, &get_region_ids());
   }
 
   _sys_H->add_matrix("Hi");
@@ -319,7 +319,7 @@ Negf::init_efa_hamil(void)
   {
     std::stringstream out;
     out<<"phi"<<band;
-    _sys_S->add_variable(out.str(), FIRST, LAGRANGE);
+    _sys_S->add_variable(out.str(), FIRST, LAGRANGE, &get_region_ids());
   }
 
   _sys_S->add_matrix("Si");
@@ -337,8 +337,8 @@ Negf::init_efa_hamil(void)
     std::cout<<"(negf) create eq sys for elDensity"<<std::endl;
     id = create_equation_system("linear","");
     _qdens_sys = &get_equation_system<TiberLinearSystem>(id);
-    _qdens_sys->add_variable("edens", libMeshEnums::FIRST);
-    _qdens_sys->add_variable("hdens", libMeshEnums::FIRST);
+    _qdens_sys->add_variable("edens", libMeshEnums::FIRST, LAGRANGE, &get_region_ids());
+    _qdens_sys->add_variable("hdens", libMeshEnums::FIRST, LAGRANGE, &get_region_ids());
     _qdens_sys->init();
   }
 
@@ -2416,9 +2416,9 @@ Negf::reorder(void)
   //std::cerr<<"dev: "<<_device_n_dofs<<std::endl;
 
   std::sort(_perm.begin(), _perm.end(), compare);
-  //for (auto&& p : _perm)
-  //  cerr << p << " ";
-  //cerr << "\n";
+  for (size_t p = 0; p < _perm.size(); ++p)
+    cerr << _perm[p] + 1 << " ";
+  cerr << "\n";
 
   // ========================================================================
   // Initial Dofs:
@@ -2462,9 +2462,9 @@ Negf::reorder(void)
       _inv_perm[index] = index;
     }
 
-  //for (size_t i = 0; i < _inv_perm.size(); ++i)
-  //  cerr << _inv_perm[i] << " ";
-  //cerr << endl;
+  for (size_t i = 0; i < _inv_perm.size(); ++i)
+    cerr << _inv_perm[i] + 1 << " ";
+  cerr << endl;
 
 }
 
@@ -2608,6 +2608,9 @@ Negf::do_reorder_assemble(libMesh::EquationSystems& es, const std::string& syste
 
         dof_map.dof_indices(elem, dof_indices, k);
         const unsigned int n_dofs= dof_indices.size();
+        for (size_t i = 0; i < n_dofs; ++i)
+          cerr << elem->node(i)+1 << " -> " << dof_indices[i]+1 << ", ";
+        cerr << "\n";
 
         fe->reinit(elem);
         Ke.resize(n_dofs, n_dofs);
@@ -2645,13 +2648,13 @@ Negf::do_reorder_assemble(libMesh::EquationSystems& es, const std::string& syste
 
 //Need to compare two solution to reorder dof indices
 bool
-Negf::compare(ID i, ID j)
+Negf::compare(size_t i, size_t j)
 {
   return static_this->do_compare(i, j);
 }
 
 bool
-Negf::do_compare(ID i, ID j)
+Negf::do_compare(size_t i, size_t j)
 {
   const libMesh::NumericVector<Number>& solution = _sys->get_solution_vector();
   return (solution(j) < solution(i));
