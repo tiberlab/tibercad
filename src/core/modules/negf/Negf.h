@@ -112,11 +112,7 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     static Negf* static_this;
 
-    static bool compare(size_t i, size_t j);
-
     void do_reorder_assemble(libMesh::EquationSystems& es, const std::string& system_name);
-
-    bool do_compare(size_t i, size_t j);
 
     void get_boundary_potentials(QuantumContact* qc, double& av_V, double& av_mu_n, double& av_mu_p);
 

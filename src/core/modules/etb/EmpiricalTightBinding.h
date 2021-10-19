@@ -130,11 +130,6 @@ class ETB : public TightBinding
   //! print out H in matlab format 
   void print_H(const std::string& outpath) const;
 
-  //! Provide solution values
-  virtual void
-    get_solution_secure(const Elem* elem, std::map<ID, std::vector<double>>& values,
-        const std::vector<Point>& p);
-
   unsigned int get_number_of_bands(void) const;
 
  protected:
@@ -148,33 +143,42 @@ class ETB : public TightBinding
 
   double build_average_rho1d(const std::vector<double>& tb_density, const Elem* elem);
 
-  virtual void do_init(void);
+  virtual void do_init(void) override;
 
   //! initialize or reinitialize the library container's with structure data
-  virtual void do_reinit(void);
+  virtual void do_reinit(void) override;
 
-  virtual void do_solve(void);
+  virtual void do_solve(void) override;
 
-  virtual void do_solve_for_kpoint(const Point& k_point);
+  virtual void do_solve_for_kpoint(const Point& k_point) override;
 
-  virtual void plot_atomisticdata (void);
+  virtual void plot_atomisticdata (void) override;
 
-  virtual void parse_options(void);
+  virtual void parse_options(void) override;
 
-  virtual void do_assemble(const ModelOptions& options);
+  //! Provide solution values
+  virtual void
+    get_solution_secure(const Elem* elem, std::map<ID, std::vector<double>>& values,
+        const std::vector<Point>& p) override;
 
-  virtual void do_calculate_density_at_k(DofField& density);
+  virtual void do_assemble(const ModelOptions& options) override;
+
+  virtual void do_calculate_density_at_k(DofField& density) override;
 
   //! Setup the available variables
-  virtual void do_setup_solution_variables(void);
+  virtual void do_setup_solution_variables(void) override;
 
-  virtual void do_copy_H_to_solver(void);
+  virtual void do_copy_H_to_solver(void) override;
 
-  virtual int get_H_dim(void) const;
+  virtual int get_H_dim(void) const override;
   
-  virtual int get_H_nnz(void) const;
+  virtual int get_H_nnz(void) const override;
   
-  virtual void get_H_csr(std::vector<libMesh::Complex>& A, std::vector<int>& JA, std::vector<int>& IA) const;
+  virtual void get_H_csr(std::vector<libMesh::Complex>& A,
+                         std::vector<int>& JA,
+                         std::vector<int>& IA,
+                         const std::vector<unsigned int>& perm
+                               = std::vector<unsigned int>(0)) const override;
 
   virtual void setup_atomistic_structure(void);
 
@@ -194,7 +198,7 @@ class ETB : public TightBinding
   virtual std::complex<double> calculate_matrix_element(const std::string& i_particle,
 							unsigned int i,
 							const std::string& j_particle,
-							unsigned int j);
+							unsigned int j) override;
 
   /* Note: for the moment calculate_matrix_element relays on the fact that the first
    *  n_vb states are valence states, then there are all the electron states.

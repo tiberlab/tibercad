@@ -139,9 +139,15 @@ class EigenvalueProblem : public SimulationInterface
     virtual int get_H_nnz() const = 0;
 
     //! The Hamiltonian is returned in eV
+    /*!
+     * The matrix is returned back in CSR format, and is copied.
+     * If necessary, a permutation can be provided.
+     */
     virtual void get_H_csr(std::vector<libMesh::Complex>& A,
                            std::vector<int>& JA,
-                           std::vector<int>& IA) const = 0;
+                           std::vector<int>& IA,
+                           const std::vector<unsigned int>& perm
+                                 = std::vector<unsigned int>(0)) const = 0;
 
     //! The overlap matrix
     /*!
@@ -149,10 +155,15 @@ class EigenvalueProblem : public SimulationInterface
      * be implemented if the problem formulation uses an orthogonal
      * basis. is_generalized() should be used to obtain this
      * information.
+     *
+     * The matrix is returned back in CSR format, and is copied.
+     * If necessary, a permutation can be provided.
      */
     virtual void get_S_csr(std::vector<libMesh::Complex>& A,
                            std::vector<int>& JA,
-                           std::vector<int>& IA) const {};
+                           std::vector<int>& IA,
+                           const std::vector<unsigned int>& perm
+                                 = std::vector<unsigned int>(0)) const {};
 
     virtual void print_H(const std::string& outpath) const;
 

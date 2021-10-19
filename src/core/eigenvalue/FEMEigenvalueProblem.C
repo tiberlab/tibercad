@@ -17,17 +17,43 @@
 
 #include <petsc_matrix.h>
 
-using namespace std;
+#include <numeric>
+
+using std::set;
+using std::vector;
+
 using namespace libMesh;
+
+
+namespace
+{
+
+  class Compare
+  {
+    public:
+      Compare(const PetscInt *c,
+              const std::vector<unsigned int>& v) : _c(c), _v(v) {};
+
+      bool operator()(unsigned int i, unsigned int j)
+      {
+        return(_v[_c[i]] < _v[_c[j]]);
+      }
+
+    private:
+      const PetscInt *_c;
+      const std::vector<unsigned int>& _v;
+  };
+
+}
 
 FEMEigenvalueProblem::FEMEigenvalueProblem(const ModelOptions& options)
  : EigenvalueProblem(options),
-   min_coord {numeric_limits<double>::max(),
-              numeric_limits<double>::max(),
-              numeric_limits<double>::max()},
-   max_coord {numeric_limits<double>::min(),
-              numeric_limits<double>::min(),
-              numeric_limits<double>::min()}
+   min_coord {std::numeric_limits<double>::max(),
+              std::numeric_limits<double>::max(),
+              std::numeric_limits<double>::max()},
+   max_coord {std::numeric_limits<double>::min(),
+              std::numeric_limits<double>::min(),
+              std::numeric_limits<double>::min()}
 {
 
   es = NULL;
@@ -904,7 +930,8 @@ FEMEigenvalueProblem::get_H_nnz() const
 void 
 FEMEigenvalueProblem::get_H_csr(std::vector<Complex>& A,
                                 std::vector<int>& JA,
-                                std::vector<int>& IA) const
+                                std::vector<int>& IA,
+                                const std::vector<unsigned int>& perm) const
 
 {
 
@@ -934,12 +961,26 @@ FEMEigenvalueProblem::get_H_csr(std::vector<Complex>& A,
 
   unsigned int n_rows = row_stop - row_start;
 
+  std::vector<size_t> inv_perm(perm.size());
+  if (!perm.empty())
+  {
+    if (n_rows != perm.size())
+      throw std::runtime_error("In CSR matrix passing: "
+          "permutation is incompatible with (local) matrix size.");
+
+    for (size_t i = 0; i < perm.size(); ++i)
+      inv_perm[perm[i]] = i;
+  }
+
   IA.resize(n_rows + 1);
 
   IA[0] = 0;
 
-  for (unsigned int row = row_start ; row < row_stop; row++)
+  for (unsigned int i = 0; i < n_rows; ++i)
   {
+
+    unsigned int row = perm.empty() ? i + row_start : perm[i];
+
     //if (dof_map.is_constrained_dof(_inv_perm[row]))
     //  continue;
 
@@ -958,13 +999,26 @@ FEMEigenvalueProblem::get_H_csr(std::vector<Complex>& A,
 
     if (n_cols_real != n_cols_imag) Messages::error("n_cols_real != n_cols_imag");
 
-    for (unsigned int j = 0; j<n_cols_real; j++)
+    std::vector<unsigned int> j_order(n_cols_real);
+    std::iota(j_order.begin(), j_order.end(), 0);
+
+
+    // reshuffle according to increasing sequence
+    if (!perm.empty())
     {
-      col = petsc_cols[j];
-      
+       std::sort(j_order.begin(), j_order.end(), Compare(petsc_cols, perm));
+    }
+
+    for (unsigned int j = 0; j < n_cols_real; j++)
+    {
+      unsigned int jj = j_order[j];
+
+      unsigned int col = petsc_cols[jj];
+      if (!perm.empty())
+        col = inv_perm[col];
+
       //if (dof_map.is_constrained_dof(_inv_perm[col]))
       //  continue;
-
 
       if (A.size() <= ind)
       {
@@ -972,13 +1026,13 @@ FEMEigenvalueProblem::get_H_csr(std::vector<Complex>& A,
         JA.resize(5 * A.size() / 4);
       }
 
-      A[ind] = UnitsConversion * Complex(petsc_row_vals_real[j], petsc_row_vals_imag[j]); 
-      JA[ind] = petsc_cols[j];
+      A[ind] = UnitsConversion * Complex(petsc_row_vals_real[jj], petsc_row_vals_imag[jj]);
+      JA[ind] = col;
 
       ind++;  
     }
    
-    IA[row + 1]= ind;
+    IA[i + 1]= ind;
 
     ierr = MatRestoreRow(H_real_matrix->mat(), row ,&n_cols_real, &petsc_cols, &petsc_row_vals_real);
     CHKERRABORT(MPI::COMM_WORLD,ierr);
@@ -998,7 +1052,8 @@ FEMEigenvalueProblem::get_H_csr(std::vector<Complex>& A,
 void 
 FEMEigenvalueProblem::get_S_csr(std::vector<Complex>& A, 
                                 std::vector<int>& JA, 
-                                std::vector<int>& IA) const 
+                                std::vector<int>& IA,
+                                const std::vector<unsigned int>& perm) const
 {
   PetscMatrix<Number>* S_real_matrix = static_cast<PetscMatrix<Number>* >(_S_real);
   S_real_matrix->close();
@@ -1010,6 +1065,18 @@ FEMEigenvalueProblem::get_S_csr(std::vector<Complex>& A,
   unsigned int row, col, ind = 0;
 
   unsigned int n_rows = row_stop - row_start;
+
+  std::vector<size_t> inv_perm(perm.size());
+  if (!perm.empty())
+  {
+    if (n_rows != perm.size())
+      throw std::runtime_error("In CSR matrix passing: "
+          "permutation is incompatible with (local) matrix size.");
+
+    for (size_t i = 0; i < perm.size(); ++i)
+      inv_perm[perm[i]] = i;
+  }
+
 
   IA.resize(n_rows + 1);
 
@@ -1028,8 +1095,11 @@ FEMEigenvalueProblem::get_S_csr(std::vector<Complex>& A,
       break;
   }
 
-  for (unsigned int row = row_start ; row < row_stop; row++)
+  for (unsigned int i = 0; i < n_rows; ++i)
   {
+
+    unsigned int row = perm.empty() ? i + row_start : perm[i];
+
     //if (dof_map.is_constrained_dof(_inv_perm[row]))
     //  continue;
 
@@ -1042,10 +1112,25 @@ FEMEigenvalueProblem::get_S_csr(std::vector<Complex>& A,
     ierr = MatGetRow(S_real_matrix->mat(), row, &n_cols, &petsc_cols, &petsc_row_vals);
     CHKERRABORT(MPI::COMM_WORLD,ierr);
 
-    for (unsigned int j = 0; j<n_cols; j++)
+
+    std::vector<unsigned int> j_order(n_cols);
+    std::iota(j_order.begin(), j_order.end(), 0);
+
+    // reshuffle according to increasing sequence
+    if (!perm.empty())
     {
-      col = petsc_cols[j];
-      
+       std::sort(j_order.begin(), j_order.end(), Compare(petsc_cols, perm));
+    }
+
+
+    for (unsigned int j = 0; j < n_cols; j++)
+    {
+      unsigned int jj = j_order[j];
+
+      unsigned int col = petsc_cols[jj];
+      if (!perm.empty())
+        col = inv_perm[col];
+
       //if (dof_map.is_constrained_dof(_inv_perm[col]))
       //  continue;
 
@@ -1055,8 +1140,8 @@ FEMEigenvalueProblem::get_S_csr(std::vector<Complex>& A,
         JA.resize(5 * A.size() / 4);
       }
 
-      A[ind] = Complex(scale * petsc_row_vals[j], 0.0);
-      JA[ind] = petsc_cols[j];
+      A[ind] = Complex(scale * petsc_row_vals[jj], 0.0);
+      JA[ind] = col;
       ind++;  
     } 
 

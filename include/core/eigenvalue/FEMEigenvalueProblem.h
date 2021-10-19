@@ -94,11 +94,15 @@ class FEMEigenvalueProblem : public  EigenvalueProblem
 
   virtual void get_H_csr(std::vector<libMesh::Complex>& A,
                          std::vector<int>& JA,
-                         std::vector<int>& IA) const override;
+                         std::vector<int>& IA,
+                         const std::vector<unsigned int>& perm
+                               = std::vector<unsigned int>(0)) const override;
 
   virtual void get_S_csr(std::vector<libMesh::Complex>& A,
                          std::vector<int>& JA,
-                         std::vector<int>& IA) const override;
+                         std::vector<int>& IA,
+                         const std::vector<unsigned int>& perm
+                               = std::vector<unsigned int>(0)) const override;
 
   virtual void print_H(const std::string& outpath) const override;
  
@@ -205,6 +209,8 @@ class FEMEigenvalueProblem : public  EigenvalueProblem
 
 
  private:
+
+
 
   //!size of the Hamiltonian matrix
   unsigned int _hamiltonian_size;

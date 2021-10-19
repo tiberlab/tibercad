@@ -237,22 +237,17 @@ Negf::init_hamil(void)
 
   std::cout<<"(negf) init: "<< _hamil_type  <<std::endl;
 
+  std::string sim = negfmod->get_simulation(0);
+  std::cout<<"(negf) sim: "<< sim <<std::endl;
+
+  _ext_module = dynamic_cast<EigenvalueProblem*>(find_simulation(sim));
+
   if ( _hamil_type == "etb")  
   {
-     std::string sim = negfmod->get_simulation(0);
-     std::cout<<"(negf) sim: "<< sim <<std::endl;
-     
-     _ext_module = dynamic_cast<EigenvalueProblem*>(find_simulation(sim));
-  
      init_etb_hamil();
   }
   else if ( _hamil_type == "efa")
   {
-     std::string sim = negfmod->get_simulation(0);
-     std::cout<<"(negf) sim: "<< sim <<std::endl;
-     
-     _ext_module = dynamic_cast<EigenvalueProblem*>(find_simulation(sim));
-  
      init_efa_hamil();
   }  
   else 
@@ -679,7 +674,7 @@ Negf::setup_efa_hamil(void)
    
   //apply permutation to dofs
   //std::cout<<"(negf) Reordering dofs ..." << std::endl;
-  _ext_module->set_permutation(_inv_perm);
+  //_ext_module->set_permutation(_inv_perm);
   
   Point k_point; 
   for(short i=0;i<3;i++) k_point(i) = _k_vec(i);
@@ -736,9 +731,6 @@ Negf::setup_negf(void)
   _libnegf->init();
 
 
-  //std::cout<<"(negf) print H in "<<get_scratch_directory()<<std::endl;
-  //_ext_module->print_H(get_scratch_directory());
-
   int nrow = _ext_module->get_H_dim();
 
   {
@@ -749,10 +741,12 @@ Negf::setup_negf(void)
     std::vector<Complex> A(nnz);
 
     Messages::info("Passing Hamiltonian ... ", 0);
-    //std::cout<<"(negf) Get H csr "<<nrow<<"  "<<nnz<<std::endl;
-    _ext_module->get_H_csr(A, JA, IA);
 
-    //std::cout<<"(negf) Set H in libNEGF; nnz="<<IA[nrow]<<std::endl;
+    if ( _hamil_type == "etb" )
+      _ext_module->get_H_csr(A, JA, IA);
+    else
+      _ext_module->get_H_csr(A, JA, IA, _perm);
+
     _libnegf->set_H_csr(nrow, A, JA, IA);
 
     Messages::info("done.");
@@ -767,12 +761,14 @@ Negf::setup_negf(void)
     std::vector<int> IS(nrow+1,0);
     std::vector<int> JS(nrow,0);
 
-    //std::cout<<"(negf) Get S csr "<<std::endl;
     Messages::info("Passing overlap ... ", 0);
-    _ext_module->get_S_csr(S, JS, IS);
+
+    if ( _hamil_type == "etb" )
+      _ext_module->get_S_csr(S, JS, IS);
+    else
+      _ext_module->get_S_csr(S, JS, IS, _perm);
 
 
-    //std::cout<<"(negf) Set S in libNEGF; nnz="<<IA[nrow]<<std::endl;
     _libnegf->set_S_csr(nrow, S, JS, IS);
 
     Messages::info("done.");
@@ -1007,7 +1003,7 @@ Negf::finalize(void)
   }
   if ( _hamil_type == "efa" )
   {
-    _ext_module->init_permutation(_inv_perm.size());
+    //_ext_module->init_permutation(_inv_perm.size());
   }
 
 }
@@ -1303,7 +1299,8 @@ Negf::occupy_LDOS(const std::vector<double>& ldos)
 
 
   if (!potmodel->is_solved())
-      throw SolveFailedException("Simulation "+opt.pot_module+" must be solved first");
+      throw SolveFailedException("Simulation " + opt.pot_module +
+          " must be solved first");
 
 
   double Ec = get_band_edge("Ec");
@@ -2415,10 +2412,24 @@ Negf::reorder(void)
   //std::cerr<<"n_dofs: "<<n_dofs<<std::endl;
   //std::cerr<<"dev: "<<_device_n_dofs<<std::endl;
 
-  std::sort(_perm.begin(), _perm.end(), compare);
-  for (size_t p = 0; p < _perm.size(); ++p)
-    cerr << _perm[p] + 1 << " ";
-  cerr << "\n";
+
+  //
+  // NOTE: it seems there is a difference between > and < here,
+  // maybe something related to the reference contact?
+  class Compare
+  {
+    public:
+      Compare(const libMesh::NumericVector<Number>& v) : _v(v) {};
+      bool operator()(size_t i, size_t j)
+      {
+        return(_v(j) < _v(i));
+      }
+
+    private:
+      const libMesh::NumericVector<Number>& _v;
+  };
+
+  std::sort(_perm.begin(), _perm.end(), Compare(_sys->get_solution_vector()));
 
   // ========================================================================
   // Initial Dofs:
@@ -2462,10 +2473,18 @@ Negf::reorder(void)
       _inv_perm[index] = index;
     }
 
-  for (size_t i = 0; i < _inv_perm.size(); ++i)
-    cerr << _inv_perm[i] + 1 << " ";
-  cerr << endl;
+  // we recalculate the full permutation vector
+  _perm.resize(_inv_perm.size());
+  for (unsigned int i = 0; i < _perm.size(); ++i)
+    _perm[_inv_perm[i]] = i;
 
+  //for (auto&& p : _perm)
+  //  cerr << p+1 << " ";
+  //cerr << endl;
+
+  //for (auto&& p : _inv_perm)
+  //  cerr << p+1 << " ";
+  //cerr << endl;
 }
 
 void
@@ -2608,9 +2627,6 @@ Negf::do_reorder_assemble(libMesh::EquationSystems& es, const std::string& syste
 
         dof_map.dof_indices(elem, dof_indices, k);
         const unsigned int n_dofs= dof_indices.size();
-        for (size_t i = 0; i < n_dofs; ++i)
-          cerr << elem->node(i)+1 << " -> " << dof_indices[i]+1 << ", ";
-        cerr << "\n";
 
         fe->reinit(elem);
         Ke.resize(n_dofs, n_dofs);
@@ -2646,22 +2662,7 @@ Negf::do_reorder_assemble(libMesh::EquationSystems& es, const std::string& syste
   
 }
 
-//Need to compare two solution to reorder dof indices
-bool
-Negf::compare(size_t i, size_t j)
-{
-  return static_this->do_compare(i, j);
-}
 
-bool
-Negf::do_compare(size_t i, size_t j)
-{
-  const libMesh::NumericVector<Number>& solution = _sys->get_solution_vector();
-  return (solution(j) < solution(i));
-  // 2014-31-10 i and j were interchanged, before in 1D order of DOFs was flipped
-  // Was this on purpose??
-  //return (solution(i) < solution(j));
-}
 
 void
 Negf::get_boundary_potentials(QuantumContact* qc, double& av_V, double& av_mu_n, double& av_mu_p)

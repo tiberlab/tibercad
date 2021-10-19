@@ -2317,7 +2317,10 @@ ETB::get_H_nnz() const
 }
 
 void
-ETB::get_H_csr(std::vector<Complex>& A,std::vector<int>& JA, std::vector<int>& IA) const
+ETB::get_H_csr(std::vector<Complex>& A,
+               std::vector<int>& JA,
+               std::vector<int>& IA,
+               const std::vector<unsigned int>& perm) const
 {
    int nrow = inst->get_H_dim();
    inst->get_H_csr(nrow,' ',A,JA,IA);
