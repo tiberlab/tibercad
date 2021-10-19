@@ -163,7 +163,7 @@ class EigenvalueProblem : public SimulationInterface
                            std::vector<int>& JA,
                            std::vector<int>& IA,
                            const std::vector<unsigned int>& perm
-                                 = std::vector<unsigned int>(0)) const {};
+                                 = std::vector<unsigned int>(0)) const;
 
     virtual void print_H(const std::string& outpath) const;
 
@@ -182,9 +182,6 @@ class EigenvalueProblem : public SimulationInterface
 
     virtual unsigned int get_degeneracy(void) const { return 1; }
 
-    void set_permutation(const std::vector<unsigned int>& p);
-
-    void init_permutation(const unsigned int n_dofs);
 
     bool is_generalized() const;
 
@@ -300,9 +297,6 @@ class EigenvalueProblem : public SimulationInterface
     //! pointer to the real part of S matrix 
     libMesh::SparseMatrix<double>* _S_imag;
 
-    //! Stores a general permutation on dofs
-    std::vector<libMesh::dof_id_type> _perm;
-    std::vector<libMesh::dof_id_type> _inv_perm;
 
     //! Stores the energy values for each k point for dispersions
     std::vector< std::vector<double> > _dispersion;
@@ -402,6 +396,7 @@ EigenvalueProblem::calculate_matrix_element(const std::string&,
   return 0;
 }
 
+/*
 inline
 void EigenvalueProblem::init_permutation(const unsigned int n_dofs)
 {
@@ -419,7 +414,7 @@ void EigenvalueProblem::set_permutation(const std::vector<unsigned int>& p)
   for(unsigned int i = 0; i < p.size(); i++)
     _inv_perm[p[i]] = i;
 }
-
+*/
 
 inline 
 bool EigenvalueProblem::has_new_k(void) const

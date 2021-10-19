@@ -215,7 +215,12 @@ Point EigenvalueProblem::get_k_point(bool relative_coord) const
   return kp;
 }
 
-
+void EigenvalueProblem::get_S_csr(std::vector<libMesh::Complex>&,
+                                 std::vector<int>&,
+                                 std::vector<int>&,
+                                 const std::vector<unsigned int>&) const
+{
+}
 
 
 void EigenvalueProblem::do_calculate_density_at_k(DofField&)

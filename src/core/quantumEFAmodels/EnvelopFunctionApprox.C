@@ -1069,7 +1069,6 @@ void EnvelopFunctionApprox::do_init( )
 
   // Initialize identity permutation: does not have constrained dofs 
   //if (solver_opt.Dirichlet_bc_everywhere)
-  EigenvalueProblem::init_permutation(dof_map.n_dofs());
 }
 
 
@@ -1516,7 +1515,6 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
 
       {
-        vector<unsigned int> new_dof_indices;
         vector<unsigned int> dof_indices_tmp;
         
         //set<unsigned int> constrained;
@@ -1524,13 +1522,12 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
         dof_indices_tmp = dof_indices;
         dof_map.constrain_element_matrix(ham_real, dof_indices_tmp, false);
-        new_dof_indices.resize(dof_indices_tmp.size());
 
         dof_indices_tmp = dof_indices;
         dof_map.constrain_element_matrix(ham_imag, dof_indices_tmp, false);
 
 
-        for (unsigned int i=0; i< new_dof_indices.size(); i++)
+        for (unsigned int i=0; i< dof_indices_tmp.size(); i++)
         {
           DofConstraints::iterator it = my_dof_constraints.find(dof_indices_tmp[i]);
           if (it != my_dof_constraints.end())
@@ -1563,7 +1560,6 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
             }
           }
 
-          new_dof_indices[i] = _perm[dof_indices_tmp[i]];
         }
         
         if (_haveS)
@@ -1587,10 +1583,10 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
         }
         */
 
-        _H_real->add_matrix(ham_real, new_dof_indices);
-        _H_imag->add_matrix(ham_imag, new_dof_indices);
+        _H_real->add_matrix(ham_real, dof_indices_tmp);
+        _H_imag->add_matrix(ham_imag, dof_indices_tmp);
         if (_haveS)
-          _S_real->add_matrix(s_real, new_dof_indices);
+          _S_real->add_matrix(s_real, dof_indices_tmp);
       }
 
 

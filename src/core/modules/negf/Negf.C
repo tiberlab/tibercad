@@ -672,10 +672,6 @@ Negf::setup_efa_hamil(void)
 {
   do_reinit();
    
-  //apply permutation to dofs
-  //std::cout<<"(negf) Reordering dofs ..." << std::endl;
-  //_ext_module->set_permutation(_inv_perm);
-  
   Point k_point; 
   for(short i=0;i<3;i++) k_point(i) = _k_vec(i);
 
@@ -1001,11 +997,6 @@ Negf::finalize(void)
   {
     _ext_module->get_atomistic_structure()->reorder(_inv_perm);
   }
-  if ( _hamil_type == "efa" )
-  {
-    //_ext_module->init_permutation(_inv_perm.size());
-  }
-
 }
 
 void
