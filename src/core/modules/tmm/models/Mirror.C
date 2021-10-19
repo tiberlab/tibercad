@@ -16,9 +16,6 @@ void Mirror::do_init(void)
   get_parameter("m01", _member01);
   get_parameter("m10", _member10);
   get_parameter("m11", _member11);
-
-
-
 }
 
 void Mirror::Calculate_M_Matrix(void)
