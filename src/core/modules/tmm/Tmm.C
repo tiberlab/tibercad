@@ -140,7 +140,13 @@ vector<double> Tmm::theta_cal(vector<double> n_real , double incident_angle)
   theta[0]=incident_angle;
   for (int k=1; k<n_real.size();k++)
   {
-    theta[k]=asin((n_real[k-1]/n_real[k])*sin(theta[k-1]*M_PI/180))*180/M_PI;
+    //theta[k]=asin((n_real[k-1]/n_real[k])*sin(theta[k-1]*M_PI/180))*180/M_PI;
+    theta[k]=sin(theta[k-1]*M_PI/180);
+    std::cout<< "theta is 1st "<<k<<"  "<<theta[k]<<std::endl;
+    theta[k]=(n_real[k-1]/n_real[k])*theta[k];
+    std::cout<< "theta is 2st "<<k<<"  "<<theta[k]<<std::endl;
+    theta[k]=asin(theta[k])*180/M_PI;
+    std::cout<< "theta is 3st "<<k<<"  "<<theta[k]<<std::endl;
   }
   return theta;
 }
@@ -206,8 +212,8 @@ void
 Tmm::do_setup_solution_variables(void)
 {
   // we declare our solution variables
-  declare_solution(EField, REAL, CELL, "V/cm");
-  declare_solution(HField, VECTOR, CELL, "A/cm");
+  declare_solution(GenerationRate, REAL, CELL, "cm^3");
+  //declare_solution(HField, VECTOR, CELL, "A/cm");
   //declare_solution(Displacement, VECTOR, CELL, "C/cm^2");
   //declare_solution(Displacement, VECTOR, CELL, "C/cm^2");
 
@@ -263,6 +269,7 @@ Tmm::do_solve(void)
     double lambda = _wavelengths[i];
 
 
+
     const unsigned int uvar = system.variable_number("E");
 
 
@@ -279,6 +286,7 @@ Tmm::do_solve(void)
     double radiation = _radiation[ij];                   //[W/(m^2*nm)]
     double Esun2 = 2 * radiation / (c0 * 1e-9 * e0); // E^2 Electric Field [V^2 / (m^2 * nm)]
     double w = 2 * M_PI * c0 / lambda;                               // Frequency [1/s]
+    double plank_const = 1.055e-34;
 
     // TODO reserve space
     vector<double> n_real;
@@ -298,6 +306,7 @@ Tmm::do_solve(void)
     Tmm::Matrix_2by2 Boundry_condition(1,0,0,1);
 
     std::string direction;
+
 
     //**********************************************************************************************
     for ( ; el != end_el ; ++el)
@@ -347,7 +356,6 @@ Tmm::do_solve(void)
              Boundry_condition.set(1,mod_int->get_element(1));
              Boundry_condition.set(2,mod_int->get_element(2));
              Boundry_condition.set(3,mod_int->get_element(3));
-             Boundry_condition.print();
            }
 
            if (mod_int->read_type() == "Incident Wave"){
@@ -398,6 +406,8 @@ Tmm::do_solve(void)
     vector<double> theta(n_real.size());
     theta=Tmm::theta_cal(n_real,incoming_angle);
 
+
+
     //****************************************************
 
 
@@ -421,7 +431,6 @@ Tmm::do_solve(void)
 
     E_F[n_real.size()-1]=E_N.get(0);
     E_B[n_real.size()-1]=E_N.get(2);
-
 
 
     //******************************************************
@@ -457,6 +466,7 @@ Tmm::do_solve(void)
       }
      // std::cout<<"E_F is "<<k<<"    "<<abs(E_F[k]) <<std::endl;
     }
+    cout<<"TMM is :"<<endl;
     T.print();
 
     //***********************************************************************
@@ -473,6 +483,7 @@ Tmm::do_solve(void)
     //***************************************************************************
     //**************printing tansmission and reflection**************************
     cout<<"trasmision is :"<< Transmission << "reflection is :"<<Reflection<<endl;
+    cout<<"Sum is :"<< Transmission+Reflection<<endl;
 
     //****************************************************************************
     //***************normalizing electric field matrix******************************
@@ -489,16 +500,17 @@ Tmm::do_solve(void)
     complex<double> Etot; // Electric Field, Magnetic Field
     vector<complex<double>> Intensity;// Intensity, forward, backward
     vector<complex<double>> Generation_rate;        // Generation Rate
-
+    vector<double> Generation_rate_real;        // Generation Rate real
 
     for (int nm=0 ; nm < n_real.size() ; ++nm)
     {
-      complex<double> n_complex = (2 * M_PI / lambda * n_real[nm]- 1i * n_imag[nm] / 2.0);
       Etot = E_F_NORM[nm] + E_B_NORM[nm];
       Intensity.push_back(0.5 * c0 * 1e-9 * e0 * n_real[nm] * Esun2* pow(abs(Etot), 2)); // Intensity [W/(m^2 * nm)]
-      Generation_rate.push_back(1 / (1.055e-34 * w) * n_imag[nm] * 1e7 * Intensity[nm]/ 1e4);        // Generation rate [ cm^-3 s^-1 nm^-1]
+      Generation_rate.push_back(1 / (plank_const* w) * n_imag[nm] * 1e7 * Intensity[nm]/ 1e4);        // Generation rate [ cm^-3 s^-1 nm^-1]
+      Generation_rate_real.push_back(real(Generation_rate[nm]));
     }
 
+/*
     for(int nm=0; nm<Intensity.size();++nm){
       std::cout<<"intensity is " << nm << "   " << Intensity[nm] << std::endl;
     }
@@ -506,14 +518,13 @@ Tmm::do_solve(void)
       std::cout<<"Generation_rate is " << nm << "   " << Generation_rate[nm] << std::endl;
     }
 
-
-
+*/
     //*******************************************************************************
     //************************printing electric field********************************
-    for(double nm=0; nm <= l_length.size() ; ++nm){
+    for(double nm=0; nm < l_length.size() ; ++nm){
       //E=E_F_NORM[nm]+E_B_NORM[nm];
-      E = 1.0;                   //just for test
-      solution.add(l_length[nm], E );
+                        //just for test
+      solution.add(l_length[nm], Generation_rate_real[nm] );
     } 
 
   }
@@ -604,9 +615,9 @@ Tmm::get_solution_secure(const Elem* elem,
   }
 
 
-  if (values.count(EField))
+  if (values.count(GenerationRate))
   {
-    values[EField][0] = solution(dof_indices[0]);
+    values[GenerationRate][0] = solution(dof_indices[0]);
   //  values[EField][1] = field(1) / np;
   //  values[EField][2] = field(2) / np;
   }

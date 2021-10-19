@@ -168,8 +168,8 @@ class TBDLLOCAL Tmm : public SimulationInterface
      */
     enum Solutions
     {
-      EField,
-      HField,
+      //EField,
+     // HField,
       Intensity,
       GenerationRate
     };
