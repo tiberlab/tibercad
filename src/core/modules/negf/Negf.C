@@ -644,8 +644,15 @@ Negf::setup_hamil(void)
     _libnegf->set_S_id(nrow);
   }
 
-  setup_negf();
+  // we have to reinitialize some structures in libnegf
+  if (get_option("print_matrices",false))
+    _libnegf->print_mat();
+
+  _libnegf->init_structure(_quantum_contacts.size(),
+                           _surfstart, _surfend, _contend,
+                           _end_blocks.size(), _end_blocks);
 }
+
 
 void
 Negf::setup_efa_hamil(void)
@@ -694,18 +701,12 @@ Negf::setup_negf(void)
   // first time it will init
   _libnegf->init();
 
-
-
   _libnegf->set_scratch_path(get_scratch_directory());
 
   _libnegf->set_output_path(get_output_directory());
 
-  if (get_option("print_matrices",false))
-    _libnegf->print_mat();
-
   // initialize the contacts
   _libnegf->init_contacts(_quantum_contacts.size());
-  
 
   // new way via memory
   // first get the parameter strcture with defaults
@@ -833,17 +834,17 @@ Negf::setup_negf(void)
    * plend = last index of each PL
    */
   int n_vars = _ext_module->get_number_of_bands();
-  vector<int> contend(_qc_n_dofs.size());
-  for (unsigned int i = 0; i < contend.size(); ++i)
-    contend[i] = _qc_n_dofs[i]*n_vars;
+  _contend.resize(_qc_n_dofs.size());
+  for (unsigned int i = 0; i < _contend.size(); ++i)
+    _contend[i] = _qc_n_dofs[i]*n_vars;
 
-  vector<int> surfstart(_quantum_contacts.size());
-  surfstart[0] = _device_n_dofs*n_vars + 1;
-  for (unsigned int i = 1; i < surfstart.size(); ++i)
-    surfstart[i] = contend[i-1] + 1;
+  _surfstart.resize(_quantum_contacts.size());
+  _surfstart[0] = _device_n_dofs*n_vars + 1;
+  for (unsigned int i = 1; i < _surfstart.size(); ++i)
+    _surfstart[i] = _contend[i-1] + 1;
 
-  vector<int> surfend(surfstart);
-  for (auto&& s : surfend)
+  _surfend = _surfstart;
+  for (auto&& s : _surfend)
     s -= 1;
 
   /*
@@ -875,20 +876,19 @@ Negf::setup_negf(void)
 
     // try to calculate nPL
     if (_device_n_dofs % sizePL > 0)
-      throw InitFailedException("Given PL size is not commensurate with number of DOFs");
+      throw InitFailedException("Given PL size is not commensurate "
+          "with number of DOFs");
 
     nPL = _device_n_dofs / sizePL;
   }
 
-  vector<int> plend(nPL);
+  _end_blocks.resize(nPL);
   for (unsigned int i = 0; i < nPL; i++)
   {
-    plend[i] = (i+1)*sizePL*n_vars;
+    _end_blocks[i] = (i+1)*sizePL*n_vars;
   }
 
-  _libnegf->init_structure(_quantum_contacts.size(),
-                           surfstart, surfend, contend,
-                           nPL, plend);
+
 
   if (plot_solution("LDOS"))
   {
@@ -898,15 +898,7 @@ Negf::setup_negf(void)
     _libnegf->set_ldos_indices(0, vector<int>(1, -1));
   }
 
-  if (opt.verbosity > 60) _libnegf->partition_info();
-
-  //_libnegf->set_verbose(opt.verbosity);
-
-
-  // set reference contact at maximum electrochem pot.
-  //_libnegf->set_reference(1);
-
-  //Messages::info("(negf) Setup done");
+  //if (opt.verbosity > 60) _libnegf->partition_info();
 
 }
 
@@ -940,7 +932,7 @@ void
 Negf::do_solve(void)
 {
 
-  //reorder(); // dof indices reorder
+  setup_negf();
 
   if (plot_solution(elDensity) || plot_solution(hlDensity) ||
       plot_solution("LDOS"))
@@ -1861,9 +1853,7 @@ Negf::plot_globaldata (void)
 bool
 Negf::is_generalized(void)
 {
-  if (_ext_module == NULL) return true;
-  else
-    return _ext_module->is_generalized();
+  return _ext_module->is_generalized();
 }
 
 /*

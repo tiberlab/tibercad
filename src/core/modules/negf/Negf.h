@@ -231,11 +231,19 @@ class TBDLLOCAL Negf : public SimulationInterface
     //! inverse permutation vector (for DOFs)
     std::vector<unsigned int> _inv_perm;
 
-    std::vector<unsigned int> _end_blocks;
+    //! The ends of the PL blocks
+    std::vector<int> _end_blocks;
+
+    //! The ends of the contact blocks
+    std::vector<int> _contend;
+
+    //! The start of the surface blocks
+    std::vector<int> _surfstart;
+
+    //! The ends of the surface blocks
+    std::vector<int> _surfend;
 
     unsigned int _device_n_dofs;
-
-    //std::vector<unsigned int> _dev;
 
     std::vector<unsigned int> _qc_n_dofs;
 
