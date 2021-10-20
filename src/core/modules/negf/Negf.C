@@ -596,67 +596,6 @@ Negf::setup_hamil(void)
   {
       setup_etb_hamil();
   }
-}
-
-void
-Negf::setup_efa_hamil(void)
-{
-  do_reinit();
-   
-  Point k_point; 
-  for(short i=0;i<3;i++) k_point(i) = _k_vec(i);
-
-  _ext_module->set_k_point(k_point);
-
-  //std::cout<<"(negf) Reinit ..." << std::endl;
-  _ext_module->reinit();
- 
-  //std::cout<<"(negf) Assemble ..." << std::endl;
-  _ext_module->assemble();
- 
-  //std::cout<<"(negf) Ec= "<<Ec<<" Ev= "<<Ev<<std::endl;
-
-  //print_Lib();
-
-  //std::cout<<"(negf) setup negf ..." << std::endl;
-  setup_negf();
-  //std::cout<<"(negf) setup done." << std::endl;
-}
-
-
-void
-Negf::setup_etb_hamil(void)
-{
-  do_reinit();
-   
-  //apply permutation to atomistic structure
-   _ext_module->get_atomistic_structure()->reorder(_perm);
-  
-  Point k_point; 
-  for(short i=0;i<3;i++) k_point(i) = _k_vec(i);
-
-  _ext_module->set_k_point(k_point);
-
-  _ext_module->reinit();
-
-  _ext_module->assemble();
-
-  //_ext_module->print_H(get_scratch_directory());
-
-  //print_Lib();
-
-  setup_negf();
-}
-
-
-
-void
-Negf::setup_negf(void)
-{
-
-  // first time it will init
-  _libnegf->init();
-
 
   int nrow = _ext_module->get_H_dim();
 
@@ -702,9 +641,60 @@ Negf::setup_negf(void)
   }
   else
   {
-    //std::cout<<"(negf) Set S id "<<std::endl;
     _libnegf->set_S_id(nrow);
   }
+
+  setup_negf();
+}
+
+void
+Negf::setup_efa_hamil(void)
+{
+  do_reinit();
+   
+  Point k_point; 
+  for(short i=0;i<3;i++) k_point(i) = _k_vec(i);
+
+  _ext_module->set_k_point(k_point);
+
+  _ext_module->reinit();
+ 
+  _ext_module->assemble();
+ 
+}
+
+
+void
+Negf::setup_etb_hamil(void)
+{
+  do_reinit();
+   
+  //apply permutation to atomistic structure
+   _ext_module->get_atomistic_structure()->reorder(_perm);
+  
+  Point k_point; 
+  for(short i=0;i<3;i++) k_point(i) = _k_vec(i);
+
+  _ext_module->set_k_point(k_point);
+
+  _ext_module->reinit();
+
+  _ext_module->assemble();
+
+  //_ext_module->print_H(get_scratch_directory());
+
+}
+
+
+
+void
+Negf::setup_negf(void)
+{
+
+  // first time it will init
+  _libnegf->init();
+
+
 
   _libnegf->set_scratch_path(get_scratch_directory());
 
