@@ -1,0 +1,452 @@
+
+Log start: Wed Oct 20 11:08:08 2021
+
+
+tiberCAD release 3.1.0 (rev. 5171, x86_64-linux)
+
+Input file: barrier.tib
+
+Initialize global simulation options
+  Simulation temperature: 300 K
+  Database search path  : /home/maufder/Projects/TIBERCAD/trunk/materials
+  Log file              : output/barrier.log.0
+
+Setup mesh
+  Reading mesh file 'barrier.msh ...
+    mesh reading time: 0h 0m 0.013s
+    mesh preparation time: 0h 0m 0.003s
+    bd_regions preparation time: 0h 0m 4.1e-05s
+
+    mesh units          : 1e-09 m
+    mesh dimension      :       1
+    number of nodes     :    1521
+    number of elements  :    1520
+    number of subdomains:       7
+    number of boundaries:       4
+
+Create materials ...
+  Added material GaAs for region 'source_region' (mesh regions 1)
+    (using datafile /home/maufder/Projects/TIBERCAD/trunk/materials/GaAs.dat)
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+  AlGaAs is an alloy with components AlAs and GaAs and molar fraction of AlAs 0.3.
+  Added material AlGaAs for region 'barrier1' (mesh regions 2)
+    (using datafile /home/maufder/Projects/TIBERCAD/trunk/materials/AlGaAs.dat)
+    alloy with 0.3 AlAs, 0.7 GaAs
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+  AlGaAs is an alloy with components AlAs and GaAs and molar fraction of AlAs 0.3.
+  Added material AlGaAs for region 'barrier2' (mesh regions 4)
+    (using datafile /home/maufder/Projects/TIBERCAD/trunk/materials/AlGaAs.dat)
+    alloy with 0.3 AlAs, 0.7 GaAs
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+  Added material GaAs for region 'drain_region' (mesh regions 5)
+    (using datafile /home/maufder/Projects/TIBERCAD/trunk/materials/GaAs.dat)
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+  Added material GaAs for region 'dd_drain_region' (mesh regions 7)
+    (using datafile /home/maufder/Projects/TIBERCAD/trunk/materials/GaAs.dat)
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+  Added material GaAs for region 'dd_source_region' (mesh regions 6)
+    (using datafile /home/maufder/Projects/TIBERCAD/trunk/materials/GaAs.dat)
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+  Added material GaAs for region 'well' (mesh regions 3)
+    (using datafile /home/maufder/Projects/TIBERCAD/trunk/materials/GaAs.dat)
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+Creation of materials done.
+
+Setting up Cluster 'double_barrier' containing regions 1, 2, 3, 4, 5
+ 
+Creating quantum contact int_drain
+Extended mesh for quantum contact by 0.05 (mesh units).
+Added material GaAs for region 'int_drain' (mesh regions 8)
+  (using datafile /home/maufder/Projects/TIBERCAD/trunk/materials/GaAs.dat)
+  x growth direction : (1,0,0)
+  y growth direction : (0,1,0)
+  z growth direction : (0,0,1)
+ 
+Creating quantum contact int_source
+Extended mesh for quantum contact by 0.05 (mesh units).
+Added material GaAs for region 'int_source' (mesh regions 9)
+  (using datafile /home/maufder/Projects/TIBERCAD/trunk/materials/GaAs.dat)
+  x growth direction : (1,0,0)
+  y growth direction : (0,1,0)
+  z growth direction : (0,0,1)
+
+Setting up simulation of type 'driftdiffusion' ...
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/driftdiffusion/driftdiffusion.so)
+  Adding boundary 'source'
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/driftdiffusion/ddbnd_ohmic.so)
+  Adding boundary 'drain'
+Creating bulk models... 
+  Region: source_region
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/driftdiffusion/ddbulk_default.so)
+  Region: barrier1
+  Region: well
+  Region: barrier2
+  Region: drain_region
+  Region: dd_source_region
+  Region: dd_drain_region
+
+Setting up simulation of type 'efaschroedinger' ...
+Creating bulk models... 
+  Region: source_region
+  Region: barrier1
+  Region: well
+  Region: barrier2
+  Region: drain_region
+  Region: int_drain
+  Region: int_source
+
+Setting up simulation of type 'sweep' ...
+
+Setting up simulation of type 'negf' ...
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/negf/negf.so)
+  Adding boundary 'int_source'
+  Adding boundary 'int_drain'
+Creating bulk models... 
+  Region: source_region
+  Region: barrier1
+  Region: well
+  Region: barrier2
+  Region: drain_region
+
+Setting up bulk models ...
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/permittivity_constant.so)
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/driftdiffusion/band_properties.so)
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/driftdiffusion/mobility_constant.so)
+    (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/density_of_states_bulk.so)
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/negf/hamiltonian_efa.so)
+
+Setting up lower dimensional (boundary) models ...
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for driftdiffusion (driftdiffusion)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+
+Available solution variables:
+------------------------------------------------------------------
+Name                     Units          Type      Association Plot
+------------------------------------------------------------------
+Ec                       eV             real      nodal       y
+Ev                       eV             real      nodal       y
+eQFermi                  eV             real      nodal       y
+hQFermi                  eV             real      nodal       n
+ElPotential              V              real      nodal       y
+Ec0                      eV             real      nodal       n
+Ev0                      eV             real      nodal       n
+Eg                       eV             real      nodal       n
+ConductionBands          eV             n-tuple   cell        n
+ValenceBands             eV             n-tuple   cell        n
+eDensity                 cm^-3          real      nodal       y
+hDensity                 cm^-3          real      nodal       y
+ChargeDensity            cm^-3          real      nodal       n
+eMobility                cm^2/(V*s)     real      nodal       n
+hMobility                cm^2/(V*s)     real      nodal       n
+eConductivity            S/cm           real      nodal       n
+hConductivity            S/cm           real      nodal       n
+ElField                  V/cm           vector    cell        y
+Polarization             C/m^2          vector    cell        n
+Displacement             C/m^2          vector    cell        n
+CurrentDensity           A/cm^2         vector    cell        n
+eCurrentDensity          A/cm^2         vector    cell        y
+hCurrentDensity          A/cm^2         vector    cell        y
+IonizedDonors            cm^-3          real      nodal       n
+IonizedAcceptors         cm^-3          real      nodal       n
+IonizedElectronTraps     cm^-3          real      nodal       n
+IonizedHoleTraps         cm^-3          real      nodal       n
+eThElPower               eV/K           real      nodal       n
+hThElPower               eV/K           real      nodal       n
+eJoule                   W/cm^3         real      nodal       n
+hJoule                   W/cm^3         real      nodal       n
+ePowerFlux               W/cm^2         vector    nodal       n
+hPowerFlux               W/cm^2         vector    nodal       n
+ePeltier                 W/cm^3         real      nodal       n
+hPeltier                 W/cm^3         real      nodal       n
+RecombHeat               W/cm^3         real      nodal       n
+IQE                                     real      none        n
+ArtificialDiffusion                     real      nodal       n
+eNetRecombination        1/(s*cm^3)     real      nodal       y
+hNetRecombination        1/(s*cm^3)     real      nodal       y
+drain.current            A/cm^2         real      none        y
+source.current           A/cm^2         real      none        y
+RegionIDs                               real      cell        n
+------------------------------------------------------------------
+
+Output directory      : output
+Output file format    : grace
+Output file basename  : driftdiffusion
+
+
+solving for : poisson electrons 
+using local scaling
+
+# Region barrier1, AlGaAs (x = 0.3)
+  Conduction band:
+    DOS: bulk
+      band : energy  DOS mass  degeneracy
+      1 : 0.937711  0.0919  2
+    Ec = 0.937711, Nc = 6.99111e+17 cm^-3
+    m_dos = 0.0919, v_th = 3.85266e+07 cm/s
+  Valence band:
+    DOS: bulk
+      band : energy  DOS mass  degeneracy
+      1 : -0.959  1  2
+    Ev = -0.959, Nv = 2.50942e+19 cm^-3
+    m_dos = 1, v_th = 1.16793e+07 cm/s
+  Eg = 1.89671, Ef0 = 0.0356383, ni = 490.234
+
+# Region barrier2, AlGaAs (x = 0.3)
+  Conduction band:
+    DOS: bulk
+      band : energy  DOS mass  degeneracy
+      1 : 0.937711  0.0919  2
+    Ec = 0.937711, Nc = 6.99111e+17 cm^-3
+    m_dos = 0.0919, v_th = 3.85266e+07 cm/s
+  Valence band:
+    DOS: bulk
+      band : energy  DOS mass  degeneracy
+      1 : -0.959  1  2
+    Ev = -0.959, Nv = 2.50942e+19 cm^-3
+    m_dos = 1, v_th = 1.16793e+07 cm/s
+  Eg = 1.89671, Ef0 = 0.0356383, ni = 490.234
+
+# Region dd_drain_region, GaAs
+  Conduction band:
+    DOS: bulk
+      band : energy  DOS mass  degeneracy
+      1 : 0.622482  0.067  2
+    Ec = 0.622482, Nc = 4.35196e+17 cm^-3
+    m_dos = 0.067, v_th = 4.51213e+07 cm/s
+  Valence band:
+    DOS: bulk
+      band : energy  DOS mass  degeneracy
+      1 : -0.8  1  2
+    Ev = -0.8, Nv = 2.50942e+19 cm^-3
+    m_dos = 1, v_th = 1.16793e+07 cm/s
+  Eg = 1.42248, Ef0 = 0.621825, ni = 3.26466e+06
+
+# Region dd_source_region, GaAs
+  Conduction band:
+    DOS: bulk
+      band : energy  DOS mass  degeneracy
+      1 : 0.622482  0.067  2
+    Ec = 0.622482, Nc = 4.35196e+17 cm^-3
+    m_dos = 0.067, v_th = 4.51213e+07 cm/s
+  Valence band:
+    DOS: bulk
+      band : energy  DOS mass  degeneracy
+      1 : -0.8  1  2
+    Ev = -0.8, Nv = 2.50942e+19 cm^-3
+    m_dos = 1, v_th = 1.16793e+07 cm/s
+  Eg = 1.42248, Ef0 = 0.621825, ni = 3.26466e+06
+
+# Region drain_region, GaAs
+  Conduction band:
+    DOS: bulk
+      band : energy  DOS mass  degeneracy
+      1 : 0.622482  0.067  2
+    Ec = 0.622482, Nc = 4.35196e+17 cm^-3
+    m_dos = 0.067, v_th = 4.51213e+07 cm/s
+  Valence band:
+    DOS: bulk
+      band : energy  DOS mass  degeneracy
+      1 : -0.8  1  2
+    Ev = -0.8, Nv = 2.50942e+19 cm^-3
+    m_dos = 1, v_th = 1.16793e+07 cm/s
+  Eg = 1.42248, Ef0 = 0.621825, ni = 3.26466e+06
+
+# Region source_region, GaAs
+  Conduction band:
+    DOS: bulk
+      band : energy  DOS mass  degeneracy
+      1 : 0.622482  0.067  2
+    Ec = 0.622482, Nc = 4.35196e+17 cm^-3
+    m_dos = 0.067, v_th = 4.51213e+07 cm/s
+  Valence band:
+    DOS: bulk
+      band : energy  DOS mass  degeneracy
+      1 : -0.8  1  2
+    Ev = -0.8, Nv = 2.50942e+19 cm^-3
+    m_dos = 1, v_th = 1.16793e+07 cm/s
+  Eg = 1.42248, Ef0 = 0.621825, ni = 3.26466e+06
+
+# Region well, GaAs
+  Conduction band:
+    DOS: bulk
+      band : energy  DOS mass  degeneracy
+      1 : 0.622482  0.067  2
+    Ec = 0.622482, Nc = 4.35196e+17 cm^-3
+    m_dos = 0.067, v_th = 4.51213e+07 cm/s
+  Valence band:
+    DOS: bulk
+      band : energy  DOS mass  degeneracy
+      1 : -0.8  1  2
+    Ev = -0.8, Nv = 2.50942e+19 cm^-3
+    m_dos = 1, v_th = 1.16793e+07 cm/s
+  Eg = 1.42248, Ef0 = -0.0363492, ni = 3.72236e+06
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for quantum_el (efaschroedinger)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+
+*** Warning: found unused options in block Solver: Dirichlet_bc_everywhere, number_of_eigenstates
+Symmetry of k space: rectangular
+k-space initialized
+
+Available solution variables:
+------------------------------------------------------------------
+Name                     Units          Type      Association Plot
+------------------------------------------------------------------
+ProbabilityDensity       1/cm           n-tuple   nodal       y
+EigenEnergy              eV             n-tuple   none        y
+Occupation                              n-tuple   none        n
+EigenEnergyOnMesh        eV             n-tuple   nodal       n
+eDensity                 1/cm^3         real      nodal       y
+hDensity                 1/cm^3         real      nodal       y
+EnvelopeFunctions                       n-tuple   nodal       n
+RegionIDs                               real      cell        n
+------------------------------------------------------------------
+
+Output directory      : output
+Output file format    : grace
+Output file basename  : quantum_el
+
+Number of bands: 1
+Degeneracy: 2
+
+
+# Region barrier1, AlGaAs (x = 0.3)
+  single-band  Mass = 0.0919
+
+# Region barrier2, AlGaAs (x = 0.3)
+  single-band  Mass = 0.0919
+
+# Region drain_region, GaAs
+  single-band  Mass = 0.067
+
+# Region int_drain, GaAs
+  single-band  Mass = 0.067
+
+# Region int_source, GaAs
+  single-band  Mass = 0.067
+
+# Region source_region, GaAs
+  single-band  Mass = 0.067
+
+# Region well, GaAs
+  single-band  Mass = 0.067
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for sweep_drain (sweep)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for negf (negf)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+Setting up 2-dimensional k-space
+scaling k space (= k_max) by (0.5, 0.5, 0.5)
+Symmetry of k space: quadratic
+cell volume for normalization : 1 nm^2
+Doing Gamma point calculation
+Symmetry of k space: Gamma
+cell volume for normalization : 1 nm
+
+Available solution variables:
+------------------------------------------------------------------
+Name                     Units          Type      Association Plot
+------------------------------------------------------------------
+ReorderPotential                        real      nodal       n
+elDensity                1/cm^3         real      nodal       n
+hlDensity                1/cm^3         real      nodal       n
+eCurrentDensity          A/cm^2         real      nodal       n
+hCurrentDensity          A/cm^2         real      nodal       n
+int_drain.current        A/cm^2         real      none        y
+int_source.current       A/cm^2         real      none        y
+RegionIDs                               real      cell        n
+------------------------------------------------------------------
+
+Output directory      : output
+Output file format    : grace
+Output file basename  : negf
+
+
+# Region barrier1, AlGaAs (x = 0.3)
+
+# Region barrier2, AlGaAs (x = 0.3)
+
+# Region drain_region, GaAs
+
+# Region source_region, GaAs
+
+# Region well, GaAs
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+Output directory      : output
+Output file format    : grace
+Output file basename  : sweep_drain
+
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+We solve: driftdiffusion negf 
+
+>>>>----------------------------- (driftdiffusion) -----------------------------
+  Setting max_iterations for nonlinear solver to 150
+  Solving equilibrium
+  it 1, |du| = 25.4914, |r| = 0.000752272  alpha = 1
+  it 2, |du| = 0.381752, |r| = 2.06734e-05  alpha = 1
+  it 3, |du| = 0.0120833, |r| = 1.85613e-08  alpha = 1
+
+  iterations: 4, |du| = 1.07896e-05, |r| = 9.60876e-14
+  Equilibrium done
+
+Solve time: 0h 0m 0.73s
+<<<<----------------------------------------------------------------------------
+
+>>>>---------------------------------- (negf) ----------------------------------
+  Computing Current
+  Passing Hamiltonian ... done.
+  Passing overlap ... done.
+  Calculating number of principal layers (PL): 
+    # device DOFs = 521
+    PL size       = 1
+  Plot LDOS
+  Current done
+
+Solve time: 0h 0m 12s
+<<<<----------------------------------------------------------------------------
+
+Total solve time: 0h 0m 13s
+Simulation finished.
+
+1 warnings during run
+0 errors detected
+
+
+Log end: Wed Oct 20 11:08:21 2021
+
+
