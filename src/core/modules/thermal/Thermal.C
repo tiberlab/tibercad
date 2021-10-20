@@ -3,7 +3,6 @@
 #include "Thermal.h"
 #include "ThermalModel.h"
 #include "ThermalBoundaryModel.h"
-#include "TiberLinearSystem.h"
 #include "Messages.h"
 #include "SimulationOptions.h"
 #include "ModelOptions.h"
@@ -26,13 +25,11 @@
 using namespace std;
 
 
-Thermal*
-Thermal::_this = NULL;
-
-
 
 Thermal::Thermal(const ModelOptions& options) :
-  SimulationInterface(options)
+  SimulationInterface(options),
+  _my_assembly(this),
+  _max_temperature(SimulationOptions::T)
 {
   // there's nothing to be done
 }
@@ -65,7 +62,8 @@ Thermal::do_init(void)
 
 
   system.add_variable("T", libMesh::FIRST, &(this->get_region_ids()));
-  system.attach_assemble_function(assemble);
+
+  system.attach_assemble_object(_my_assembly);
   system.init();
 
   libMesh::NumericVector<double>& solution = system.get_local_solution_vector();
@@ -247,7 +245,6 @@ Thermal::compute_power_emitted()
 void
 Thermal::do_solve(void)
 {
-  _this = this;
 
   libMesh::EquationSystems& es = get_equation_systems();
 
@@ -394,7 +391,7 @@ Thermal::get_solution_secure(const Elem* elem,
 
 
 void
-Thermal::do_assemble(libMesh::EquationSystems& es, const std::string& system_name)
+Thermal::assemble(void)
 {
   TiberLinearSystem& system_fourier = get_equation_system<TiberLinearSystem>();
    const libMesh::NumericVector<Number>& solution = system_fourier.get_solution_vector();

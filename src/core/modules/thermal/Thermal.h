@@ -8,7 +8,7 @@
 #include "SimulationEnvironment.h"
 #include "tiber_dll.h"
 
-class TiberLinearSystem;
+#include "TiberLinearSystem.h"
 
 /*!
  *
@@ -27,11 +27,14 @@ class TBDLLOCAL Thermal : public SimulationInterface
      * We do not declare it virtual here, as we will not allow
      * to derive from this class anyway.
      */
-  ~Thermal(void);
+    ~Thermal(void);
 
     //! We need a public static creator function
     static Thermal* create(const ModelOptions& options);
 
+
+    //! The assembly function
+    void assemble(void);
 
 
   protected:
@@ -71,12 +74,28 @@ class TBDLLOCAL Thermal : public SimulationInterface
 
   private:
 
+    // A local helper class to be used to access assembly routine
+    class MyAssembly : public TiberLinearSystem::Assembly
+    {
+      public:
+      MyAssembly(Thermal* obj) : _obj(obj) {};
 
-  double compute_power_dissipated();
+      void assemble() override
+      {
+        _obj->assemble();
+      }
 
-  double compute_power_emitted();
+      private:
+      Thermal* _obj;
 
-  //TiberLinearSystem*  system;
+    };
+
+    MyAssembly _my_assembly;
+
+    double compute_power_dissipated();
+
+    double compute_power_emitted();
+
 
     //! These are the known solution variables
     /*!
@@ -89,7 +108,6 @@ class TBDLLOCAL Thermal : public SimulationInterface
      *
      * \note The name "all" is used to plot all solutions
      */
-
     enum Solutions
     {
       LatticeTemp,       /*!< the Lattice Temperature */
@@ -99,20 +117,11 @@ class TBDLLOCAL Thermal : public SimulationInterface
       MaxTemp                   /*!< MaxTemp */
     };
 
-  //! The constructor
+    //! The constructor
     /*!
      * Being private disables further inheritance.
      */
     Thermal(const ModelOptions& options);
-
-    //! The assembly function
-    static void assemble(libMesh::EquationSystems& es, const std::string& system_name);
-
-    //! The real assembly function
-    void do_assemble(libMesh::EquationSystems& es, const std::string& system_name);
-
-    //! A static pointer to this
-    static Thermal* _this;
 
     //! The maximum temperature calculated
     double _max_temperature;
@@ -120,13 +129,6 @@ class TBDLLOCAL Thermal : public SimulationInterface
 
 };
 
-
-inline
-void
-Thermal::assemble(libMesh::EquationSystems& es, const std::string& system_name)
-{
-  _this->do_assemble(es, system_name);
-}
 
 
 #endif // _MYPOISSON_H_
