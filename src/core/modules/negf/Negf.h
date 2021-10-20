@@ -75,8 +75,6 @@ class TBDLLOCAL Negf : public SimulationInterface
     //! Solve the MyPoisson equation
     virtual void do_solve(void);
 
-    void do_assemble(const ModelOptions& opt);
-
     void print_ham(std::string form);
 
     void print_Lib(void);
@@ -151,8 +149,6 @@ class TBDLLOCAL Negf : public SimulationInterface
 	double deltaE;
 
         bool writeLDOS;
-
-        bool set_dirichlet_bc;
     };
 
 
@@ -191,13 +187,12 @@ class TBDLLOCAL Negf : public SimulationInterface
     //! Print energy resolved data to file
     void print_energy_resolved(const std::string& file,
         const std::vector<double>& energy,
-        const std::vector<std::vector<double>>& data) const;
+        const std::vector<std::vector<double>>& data,
+        const std::string& header = "") const;
 
     Device* _device;
 
     SimulationEnvironment* _env;
-
-    std::set<const Boundary*> _dirichlet_boundaries;
 
     std::map<const Boundary*, QuantumContact*> _qc_boundaries;
 
@@ -215,14 +210,17 @@ class TBDLLOCAL Negf : public SimulationInterface
     TiberLinearSystem* _sys_S;
     TiberLinearSystem* _qdens_sys;
 
-    std::vector<unsigned int> _perm;      //permutation vector
-    std::vector<unsigned int> _inv_perm;     //inverse permutation
+    //! permutation vector (for DOFs)
+    std::vector<unsigned int> _perm;
+
+    //! inverse permutation vector (for DOFs)
+    std::vector<unsigned int> _inv_perm;
 
     std::vector<unsigned int> _end_blocks;
 
     unsigned int _device_n_dofs;
 
-    std::vector<unsigned int> _dev;
+    //std::vector<unsigned int> _dev;
 
     std::vector<unsigned int> _qc_n_dofs;
 
@@ -230,8 +228,6 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     options opt;
 
-    //!diriclet DOFS
-    std::set<unsigned int>  dirichlet_dofs;
 
     KspaceIntegration* _k_int_density;
 
@@ -241,12 +237,6 @@ class TBDLLOCAL Negf : public SimulationInterface
     int _which_integration;
 
     libMesh::VectorValue<double> _k_vec;
-
-    DofField _eldensity;
-    //DofField _eldensity;
-
-    DofField _hldensity;
-    //DofField _hldensity;
 
     DofField current;
 

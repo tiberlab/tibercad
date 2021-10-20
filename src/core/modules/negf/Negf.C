@@ -195,14 +195,6 @@ Negf::do_init(void)
         qc->set_neighbor_map();
 
       }
-      else
-      {
-        if ((*it)->get_options().get_option("dirichlet",false))
-        {
-          _dirichlet_boundaries.insert(*it);
-        }
-      }
-
     }
   }
 
@@ -1509,7 +1501,14 @@ Negf::calculate_for_k_point(const Point& k_point,
            << k_point(1) << "," << k_point(2) << ")";
        os << ".dat";
 
-       print_energy_resolved(os.str(), erg, transmission);
+       ostringstream header;
+       header << "# Transmission at k = "
+              << "(" << k_point(0) << "," << k_point(1) << ","
+              << k_point(2) << ")\n"
+              << "#\n"
+              << "# energy T\n";
+
+       print_energy_resolved(os.str(), erg, transmission, header.str());
 
        //double curr = _libnegf->current();
        //_contact_potential[]
@@ -1548,7 +1547,7 @@ Negf::calculate_for_k_point(const Point& k_point,
 
 void
 Negf::print_energy_resolved(const string& file, const vector<double>& energy,
-    const vector<vector<double>>& data) const
+    const vector<vector<double>>& data, const string& header) const
 {
   if (get_communicator().rank() != 0)
     return;
@@ -1558,6 +1557,8 @@ Negf::print_energy_resolved(const string& file, const vector<double>& energy,
 
   if (!out.good())
       throw std::runtime_error("Could not open " + file + " for writing.");
+
+  out << header;
 
   size_t N = energy.size();
 
@@ -1843,8 +1844,6 @@ Negf::parse_options(void)
   //sol_opt.check_unused();
   opt.writeLDOS = plot_solution("LDOS");
   opt.writeLDOS = sol_opt.get_option("writeLDOS", opt.writeLDOS);
-
-  opt.set_dirichlet_bc = get_option("dirichlet", false);
 
 }
 
@@ -2534,7 +2533,6 @@ Negf::do_reorder_assemble(libMesh::EquationSystems& es, const std::string& syste
     MeshBase::const_element_iterator       el     = this->active_local_elements_begin();
     const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
 
-    _dev.resize(1);
 
     for ( ; el != end_el; ++el)
     {
