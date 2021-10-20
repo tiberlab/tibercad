@@ -75,8 +75,6 @@ class TBDLLOCAL Negf : public SimulationInterface
     //! Solve the MyPoisson equation
     virtual void do_solve(void);
 
-    void print_ham(std::string form);
-
     void print_Lib(void);
 
     //! We need to create a physical model
@@ -106,11 +104,7 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     void compute_current(void);
 
-    static void reorder_assemble(libMesh::EquationSystems& es, const std::string& system_name);
-
-    static Negf* static_this;
-
-    void do_reorder_assemble(libMesh::EquationSystems& es, const std::string& system_name);
+    void reorder_assemble(void);
 
     void get_boundary_potentials(QuantumContact* qc, double& av_V, double& av_mu_n, double& av_mu_p);
 
@@ -155,6 +149,23 @@ class TBDLLOCAL Negf : public SimulationInterface
 
   private:
 
+    // A local helper class to be used to access assembly routine
+    class MyAssembly : public TiberLinearSystem::Assembly
+    {
+      public:
+      MyAssembly(Negf* obj) : _obj(obj) {};
+
+      void assemble() override
+      {
+        _obj->reorder_assemble();
+      }
+
+      private:
+      Negf* _obj;
+
+    };
+
+    MyAssembly _reorder_assembly;
 
     double get_band_edge(const std::string& band) const;
     double get_band_edge(SimulationInterface* model, const std::string& band, const Elem* elem) const;
@@ -205,9 +216,13 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     Negf(const ModelOptions& option);
 
+    //! This system is used for calculating DOF ordering
     TiberLinearSystem* _sys;
+
+    //! This system is used to work with DOF indices
     TiberLinearSystem* _sys_H;
-    TiberLinearSystem* _sys_S;
+
+    //! This system is used to handle density results
     TiberLinearSystem* _qdens_sys;
 
     //! permutation vector (for DOFs)
@@ -248,6 +263,7 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     std::string _hamil_type;
 
+    //! The provider of the hamiltonian
     EigenvalueProblem* _ext_module;
 
     AtomisticStructure* _atom_structure;

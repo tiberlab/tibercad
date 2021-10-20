@@ -64,41 +64,7 @@ namespace {
   };
 }
 
-/* -----------------------------------------------------------------
- *  do_init
- *  {
- *     init quantum contacts
- *     init_hamil()      
- *  }
- *  
- *  init_hamil()
- *  {
- *      attach_systems() 
- *      _sys_H, _sys_S, _reorder, _qdens
- *      reorder() //works also for ext_module if defined on the same regions
- *  }
- *
- *  do_solve()
- *  { 
- *    setup_hamil()
- *    calculate_density||current()
- *    OR
- *    k->solve()
- *  }
- * 
- *  calculate_for_k_point()
- *  {
- *      setup_hamil()
- *      calculate_density||current()
- *  }   
- *
- *  get_solution()
- *  {
- *     
- * 
- *  }
- * 
- */
+
  
 
 
@@ -121,17 +87,15 @@ namespace
 }
 
 
-Negf* Negf::static_this;
 
 Negf::Negf(const ModelOptions& options) :
   SimulationInterface(options),
+  _reorder_assembly(this),
   _device_n_dofs(0),
   _k_int_density(NULL),
   _k_int_current(NULL),
   _ext_module(NULL)
 {
-  _k_int_density = NULL;
-  _k_int_current = NULL;
   _libnegf = NegfWrapper::create();
 
   this->has_solution_vector(false);
@@ -139,16 +103,13 @@ Negf::Negf(const ModelOptions& options) :
 
 Negf::~Negf(void)
 {
-  static_this = NULL;	
   delete _libnegf;
 }
 
 Negf*
 Negf::create(const ModelOptions& options)
 {
-  static_this = new Negf(options);
-  //std::cout<<"this & "<<static_this<<std::endl;
-  return static_this;
+  return(new Negf(options));
 }
 
 PhysicalModel*
@@ -167,7 +128,6 @@ Negf::create_bulk_model(const ModelOptions& options,
 void
 Negf::do_init(void)
 {
-  static_this = this;
 
   parse_options();
 
@@ -294,23 +254,6 @@ Negf::init_efa_hamil(void)
     _sys_H->add_variable(out.str(), FIRST, LAGRANGE, &get_region_ids());
   }
 
-  _sys_H->add_matrix("Hi");
-
-  // Setup Overlap matrix
-  std::cout<<"(negf) create eq sys for S"<<std::endl;
-  id = create_equation_system("linear","");
-  _sys_S = &get_equation_system<TiberLinearSystem>(id);
-
-  // attach a variable for each subband
-  for (unsigned int band=0; band < n_bands; band++)
-  {
-    std::stringstream out;
-    out<<"phi"<<band;
-    _sys_S->add_variable(out.str(), FIRST, LAGRANGE, &get_region_ids());
-  }
-
-  _sys_S->add_matrix("Si");
-
 
   // attach system for reorder dofs
   std::cout<<"(negf) get eq sys for reorder"<<std::endl;
@@ -329,12 +272,9 @@ Negf::init_efa_hamil(void)
     _qdens_sys->init();
   }
 
-  std::cout<<"(negf) init H and S"<<std::endl;
-  //H-assembly only outside module
-  //_sys_H->attach_assemble_function(ham_assemble);
+  //std::cout<<"(negf) init H and S"<<std::endl;
 
   _sys_H->init();
-  _sys_S->init();
 
   std::cout<<"(negf) init k-integration"<<std::endl;
   init_k_space_integration();
@@ -461,7 +401,6 @@ Negf::init_etb_hamil(void)
 void
 Negf::do_reinit(void)
 {
-  static_this = this;
   //std::cout<<"(negf) clean up libnegf"<<std::endl;
   //_libnegf->clean_libnegf();
 }
@@ -1010,7 +949,6 @@ Negf::compute_current(void)
 void
 Negf::do_solve(void)
 {
-  static_this = this;
 
   //reorder(); // dof indices reorder
 
@@ -1928,20 +1866,7 @@ Negf::plot_globaldata (void)
 
 
 
-void
-Negf::print_ham(std::string form)
-{
-  std::string outpath = get_scratch_directory();
 
-  if (form=="matlab")
-  {
-    _sys_H->matrix->print_matlab(outpath+"/Hr.m");
-    _sys_S->matrix->print_matlab(outpath+"/Sr.m");
-    _sys_H->get_matrix("Hi").print_matlab(outpath+"/Hi.m");
-    _sys_S->get_matrix("Si").print_matlab(outpath+"/Si.m");
-    //std::cout<<"print Matlab matrices"<<std::endl;
-  }
-}
 
 bool
 Negf::is_generalized(void)
@@ -2371,7 +2296,7 @@ Negf::reorder(void)
     u_vars[n] = _sys->variable_number(name);
   }
 
-  _sys->attach_assemble_function(reorder_assemble);
+  _sys->attach_assemble_object(_reorder_assembly);
 
   _sys->init();
 
@@ -2477,15 +2402,11 @@ Negf::reorder(void)
   //cerr << endl;
 }
 
-void
-Negf::reorder_assemble(libMesh::EquationSystems& es, const std::string& system_name)
-{
-  static_this->do_reorder_assemble(es, system_name);
-}
+
 
 //Approch to Laplace problem
 void
-Negf::do_reorder_assemble(libMesh::EquationSystems& es, const std::string& system_name)
+Negf::reorder_assemble(void)
 {
 
   std::map<const Boundary*, int> boundary_ids;
