@@ -413,7 +413,7 @@ EnvelopFunctionApprox::get_solution_secure(const Elem* elem,
 
   if (do_edens || do_hdens)
   {
-    TiberLinearSystem& qdens_sys = get_equation_system<TiberLinearSystem>(0);
+    TiberLinearSystem& qdens_sys = get_equation_system<TiberLinearSystem>(1);
     libMesh::NumericVector<Number>& qdens = *qdens_sys.current_local_solution;
 
     FEType fe_type = qdens_sys.variable_type(0);
@@ -938,11 +938,15 @@ void EnvelopFunctionApprox::do_init( )
 
   es = &(get_equation_systems());
   
-  system_name = get_equation_system_name ( );
+  create_equation_system("linear");
+  system = &get_equation_system<LinearImplicitSystem>(0);
+  system_name = system->name();
+
+  //system_name = get_equation_system_name ( );
   
-  es->add_system<LinearImplicitSystem> (system_name);
+  //es->add_system<LinearImplicitSystem> (system_name);
   
-  system = &( es->get_system<LinearImplicitSystem>( system_name ) );
+  //system = &( es->get_system<LinearImplicitSystem>( system_name ) );
 
   dim = get_mesh().mesh_dimension();
 
@@ -1015,7 +1019,7 @@ void EnvelopFunctionApprox::do_init( )
   
   // We add a second system just to contain the density
   create_equation_system("linear");
-  TiberLinearSystem& linsys = get_equation_system<TiberLinearSystem>(0);
+  TiberLinearSystem& linsys = get_equation_system<TiberLinearSystem>(1);
   linsys.add_variable("edens", libMeshEnums::FIRST,
                                libMeshEnums::LAGRANGE,
                                &(this->get_region_ids()));
@@ -1111,7 +1115,7 @@ void EnvelopFunctionApprox::do_solve()
       DofField dens;
       integrate_density(dens);
 
-      TiberLinearSystem& qdens_sys = get_equation_system<TiberLinearSystem>();
+      TiberLinearSystem& qdens_sys = get_equation_system<TiberLinearSystem>(1);
       NumericVector<Number>& qdens = *qdens_sys.solution;
       for (unsigned int i = 0; i < qdens.size(); ++i)
         qdens.set(i, dens[i]);
@@ -2684,7 +2688,7 @@ void EnvelopFunctionApprox::calculate_density_analytic(void)
   std::vector<unsigned int> dof_indices;
 
   // The qdens_sys system contains the nodal quantum density
-  TiberLinearSystem& qdens_sys = get_equation_system<TiberLinearSystem>();
+  TiberLinearSystem& qdens_sys = get_equation_system<TiberLinearSystem>(1);
   DofMap& dof_map_qdens = qdens_sys.get_dof_map();
   std::vector<unsigned int> dof_indices_qdens;
   std::vector<unsigned int> dof_indices_qdens_p;
@@ -2802,7 +2806,7 @@ EnvelopFunctionApprox::do_calculate_density_at_k(DofField& density)
   std::vector<unsigned int> dof_indices;
 
   // The qdens_sys system contains the nodal quantum density
-  TiberLinearSystem& qdens_sys = get_equation_system<TiberLinearSystem>();
+  TiberLinearSystem& qdens_sys = get_equation_system<TiberLinearSystem>(1);
   DofMap& dof_map_qdens = qdens_sys.get_dof_map();
   std::vector<unsigned int> dof_indices_qdens;
   //std::vector<unsigned int> dof_indices_qdens_p;
