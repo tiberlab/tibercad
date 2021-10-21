@@ -885,6 +885,12 @@ SimulationInterface::init(void)
 }
 
 
+unsigned int
+SimulationInterface::get_equation_system_id(ID i) const
+{
+  const libMesh::System& sys = get_equation_system<libMesh::System>(i);
+  return(sys.number());
+}
 
 void
 SimulationInterface::create_equation_system_name(void)

@@ -2252,7 +2252,13 @@ Negf::get_solution_secure(std::map<ID, std::vector<double> >& values)
 void
 Negf::reorder(void)
 {
-  //std::cerr<<"Reorder dofs"<<std::endl;
+
+  //
+  // The following does only make sense if the the mesh in this module is
+  // the same as the one of the Hamiltonian provider
+  //
+  if (&this->get_mesh() != &_ext_module->get_mesh())
+    throw InitFailedException("mesh in NEGF and Hamiltonian provider must be the same.");
 
   unsigned int n_vars = _sys_H->n_vars();
   unsigned int n_var_reord = 1;
@@ -2325,6 +2331,16 @@ Negf::reorder(void)
   };
 
   std::sort(_perm.begin(), _perm.end(), Compare(_sys->get_solution_vector()));
+
+  //
+  // Now _perm contains the permutation of the nodes, basically, and we can now calculate
+  // the PL blocks. For that we need to get the number of DOFs on each node of the external
+  // module. At the same time, we prepare the DOF permutation tables.
+
+  unsigned int sysid = _ext_module->get_equation_system_id();
+
+
+  // at last, prepare permutation
 
   // ========================================================================
   // Initial Dofs:

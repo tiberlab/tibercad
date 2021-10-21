@@ -848,6 +848,16 @@ class SimulationInterface : public TiberModelObject
     const std::set<ID>& get_region_ids(void) const;
 
 
+    //! Get equation system ID
+    /*!
+     * The equation system ID can be used to obtain information on DOFs, if needed
+     *
+     * \param i the index of the equation system
+     * (the same as the sequence number at creation time)
+     */
+    unsigned int get_equation_system_id(ID i = 0) const;
+
+
   protected:
  
 
@@ -888,7 +898,7 @@ class SimulationInterface : public TiberModelObject
      * (the same as the sequence number at creation time)
      */
     template <typename T>
-    T& get_equation_system(ID i = 0);
+    T& get_equation_system(ID i = 0) const;
 
 
     //! Get the solver options
@@ -1675,7 +1685,7 @@ SimulationInterface::get_simulation(ID id)
 template <typename T>
 inline
 T&
-SimulationInterface::get_equation_system(ID i)
+SimulationInterface::get_equation_system(ID i) const
 {
   if (i >= _systems.size())
     throw RuntimeException("Trying to access inexistent system.");
