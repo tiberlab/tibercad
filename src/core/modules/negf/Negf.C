@@ -218,20 +218,12 @@ void
 Negf::init_efa_hamil(void)
 {
 
-  // get the number of subbands.
-  //const MeshBase& mesh = get_mesh();
-  //MeshBase::const_element_iterator el = this->active_local_elements_begin();
-  //const Elem* elem = *el;
-
   unsigned int n_bands;
 
   if (_ext_module == NULL)
   {
     throw InitFailedException("NEGF module needs an external"
         " provider of the Hamiltonian.");
-    // TODO I think this shouldn't happen anymore?
-    //NegfModel* negfmod = get_bulk_model<NegfModel>(elem);
-    //n_bands = negfmod->get_n_bands();
   }
   else
   {
@@ -863,30 +855,6 @@ Negf::setup_negf(void)
     cerr << s << " ";
   cerr << endl;
   */
-
-  int nPL = sol_opt.get_option("number_of_PL", 0);
-  unsigned int sizePL = sol_opt.get_option("size_of_PL", 1);
-  if ((nPL == 0) && (sizePL > 0))
-  {
-    ostringstream os;
-    os << "Calculating number of principal layers (PL): \n"
-       << "  # device DOFs = " << _device_n_dofs * n_vars << "\n"
-       << "  PL size       = " << sizePL*n_vars;
-    Messages::info(os.str());
-
-    // try to calculate nPL
-    if (_device_n_dofs % sizePL > 0)
-      throw InitFailedException("Given PL size is not commensurate "
-          "with number of DOFs");
-
-    nPL = _device_n_dofs / sizePL;
-  }
-
-  _end_blocks.resize(nPL);
-  for (unsigned int i = 0; i < nPL; i++)
-  {
-    _end_blocks[i] = (i+1)*sizePL*n_vars;
-  }
 
 
 
@@ -2337,7 +2305,68 @@ Negf::reorder(void)
   // the PL blocks. For that we need to get the number of DOFs on each node of the external
   // module. At the same time, we prepare the DOF permutation tables.
 
+  unsigned int nPL = get_solver_options().get_option("number_of_PL", 0);
+
+  ostringstream os;
+  os << "Number of principal layers (PL) ";
+
+  if (nPL < _quantum_contacts.size())
+  {
+    nPL = _quantum_contacts.size();
+    os << "(automatic choice)";
+  }
+  os << ": " << nPL;
+  Messages::info(os.str());
+
+  _end_blocks.resize(0);
+  _end_blocks.resize(nPL, 0);
+
+  vector<double> ranges(nPL);
+  for (unsigned int i = 0; i < nPL; ++i)
+    ranges[nPL-1-i] = (_quantum_contacts.size() - 1) *
+                           (1 - static_cast<double>(i)/nPL);
+
+
   unsigned int sysid = _ext_module->get_equation_system_id();
+  unsigned int mysid = _sys->number();
+  unsigned int n_dofs_total = 0;
+
+  auto it = get_mesh().active_nodes_begin();
+  const auto end = get_mesh().active_nodes_end();
+  for ( ; it != end; ++it)
+  {
+    const Node* node = *it;
+    if (node->n_dofs(mysid, 0))
+    {
+      unsigned int dof = node->dof_number(mysid, 0, 0);
+
+      if (dof < _device_n_dofs)
+      {
+        // get the number of dofs in the Hamiltonian
+        unsigned int n_hamil_dofs = node->n_dofs(sysid);
+
+        //unsigned int real_dof = _perm[dof];
+
+        // the reorder "potential"
+        double v = _sys->get_solution_vector()(dof);
+
+        //find the position in the ranges and add number of dofs
+        unsigned int i = 0;
+        for ( ; (i < nPL) && (v > ranges[i]); ++i);
+        //cerr << v << " -> " << i << " # dof " << n_hamil_dofs << endl;
+        _end_blocks[i] += n_hamil_dofs;
+        n_dofs_total += n_hamil_dofs;
+      }
+    }
+  }
+
+  for (unsigned int i = 1; i < nPL; ++i)
+    _end_blocks[i] += _end_blocks[i-1];
+
+  os.str("");
+  os << "# DOFs       : " << n_dofs_total << "\n";
+  os << "mean PL size : " << n_dofs_total/nPL << "\n";
+  Messages::info(os.str());
 
 
   // at last, prepare permutation
