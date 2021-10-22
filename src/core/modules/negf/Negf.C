@@ -1728,6 +1728,7 @@ Negf::parse_options(void)
 
   opt.n_poles = sol_opt.get_option("Npoles", 0);
 
+  opt.verbosity = get_option("verbosity",0);
   opt.verbosity = sol_opt.get_option("verbosity",0);
   //sol_opt.check_unused();
   opt.writeLDOS = plot_solution("LDOS");
@@ -2306,6 +2307,7 @@ Negf::reorder(void)
   // module. At the same time, we prepare the DOF permutation tables.
 
   unsigned int nPL = get_solver_options().get_option("number_of_PL", 0);
+  unsigned int size_of_PL = get_solver_options().get_option("PL_size", 16);
 
   ostringstream os;
   os << "Number of principal layers (PL) ";
@@ -2324,7 +2326,7 @@ Negf::reorder(void)
   vector<double> ranges(nPL);
   for (unsigned int i = 0; i < nPL; ++i)
     ranges[nPL-1-i] = (_quantum_contacts.size() - 1) *
-                           (1 - static_cast<double>(i)/nPL);
+                           (1.0 - static_cast<double>(i)/nPL);
 
 
   unsigned int sysid = _ext_module->get_equation_system_id();
@@ -2367,6 +2369,14 @@ Negf::reorder(void)
   os << "# DOFs       : " << n_dofs_total << "\n";
   os << "mean PL size : " << n_dofs_total/nPL << "\n";
   Messages::info(os.str());
+
+  if (verbose() > 3)
+  {
+    cerr << "PLs (block end indices):\n";
+    for (auto&& b : _end_blocks)
+      cerr << b << " ";
+      cerr << endl;
+  }
 
 
   // at last, prepare permutation
