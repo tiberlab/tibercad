@@ -43,7 +43,7 @@ SVN=svn-1.9.5
 #  --with-tao-prefix=/usr/pack/tibercad_dev-2.2-ma/tao-1.10-p1 \
 
 ./configure \
-  --with-cuda=/usr/pack/cudatoolkit-10.2-ma \
+  --with-cuda=/usr/pack/cudatoolkit-5.5.11-ma \
   --with-petsc-prefix=${PETSC_DIR} \
   --with-petsc-arch=${ARCH}-linux \
   --with-slepc-prefix=${SLEPC_DIR} \
