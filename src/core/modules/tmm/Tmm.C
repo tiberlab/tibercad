@@ -95,15 +95,20 @@ std::complex<double> Tmm::Matrix_2by2::get(int elm)
 
 
 
-Tmm::Matrix_2by2 Tmm::get_M(double n_real,double n_imag,double lenght,double lambda, double theta)
+Tmm::Matrix_2by2 Tmm::get_M(double n_real,double n_imag,double lenght,double lambda, double theta, double phase)
 {
   Tmm::Matrix_2by2 new_Matrix_2by2;
   complex<double> bi ((2*M_PI*n_imag*lenght)/lambda , (2*M_PI*n_real*lenght)/lambda);
   bi=bi* cos(theta*M_PI/180);
-  new_Matrix_2by2.set(0,exp(bi));
+
+  complex<double> ps (0,phase);
+
+  new_Matrix_2by2.set(0,exp(bi + ps));
   new_Matrix_2by2.set(1,0);
   new_Matrix_2by2.set(2,0);
-  new_Matrix_2by2.set(3,exp(-bi));
+  new_Matrix_2by2.set(3,exp(-bi - ps));
+
+
   return(new_Matrix_2by2);
 }
 
@@ -142,11 +147,11 @@ vector<double> Tmm::theta_cal(vector<double> n_real , double incident_angle)
   {
     //theta[k]=asin((n_real[k-1]/n_real[k])*sin(theta[k-1]*M_PI/180))*180/M_PI;
     theta[k]=sin(theta[k-1]*M_PI/180);
-    std::cout<< "theta is 1st "<<k<<"  "<<theta[k]<<std::endl;
+
     theta[k]=(n_real[k-1]/n_real[k])*theta[k];
-    std::cout<< "theta is 2st "<<k<<"  "<<theta[k]<<std::endl;
+ 
     theta[k]=asin(theta[k])*180/M_PI;
-    std::cout<< "theta is 3st "<<k<<"  "<<theta[k]<<std::endl;
+  
   }
   return theta;
 }
@@ -409,6 +414,14 @@ Tmm::do_solve(void)
 
 
     //****************************************************
+    vector<double> phase(n_real.size());
+    srand( time( NULL ) );  // Initialize random seed
+    for(int uu =0; uu<phase.size(); ++uu)
+    {
+      phase[uu] =  2*M_PI*(double) rand()/RAND_MAX;      // Pseudo-random number between 0 and 1 * 2*Pi
+
+    }
+
 
 
     //*****************************************************
@@ -451,7 +464,7 @@ Tmm::do_solve(void)
       }
      // std::cout<<"D matrix is :" <<k<<"   "<< std::endl;
      // D.print();
-      M = get_M(n_real[k],n_imag[k],l[k],lambda,theta[k]);
+      M = get_M(n_real[k],n_imag[k],l[k],lambda,theta[k],phase[k]);
 
       T_load = D * M;
       T = T * T_load;

@@ -87,7 +87,7 @@ class TBDLLOCAL Tmm : public SimulationInterface
   * "lambda" is the light's wavelength
   * "theta" is the light's traveling angle(normal incident is equal to '0')
   */
-  Tmm::Matrix_2by2 get_M(double n_real,double n_imag,double length,double lambda, double theta);
+  Tmm::Matrix_2by2 get_M(double n_real,double n_imag,double length,double lambda, double theta, double phase);
 
 
   //! defining a function to return D matrix
@@ -192,6 +192,7 @@ class TBDLLOCAL Tmm : public SimulationInterface
     std::vector<double> _incident_angle;
 
     std::vector<double> _radiation;
+
 
 
 
