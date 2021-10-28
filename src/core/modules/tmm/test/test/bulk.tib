@@ -27,7 +27,7 @@ Module tmm
 
   name = tmm_study
   plot = (GenerationRate)
-  wavelengths = $W_l[450.0]
+  wavelengths = 450
   incident_angle = 0
   radiation = 1
   Physics
@@ -38,25 +38,15 @@ Module tmm
   {
   type = incident_wave
   }
-
 }
 
-Module sweep
-{
-  name = sweep_wave_length
-  solve = tmm_study
-  variable = $W_l
-  start = 250.0
-  stop = 850.0
-  steps = 10
-  plot_data = true
-}
+
 
 
 Simulation
 {
   verbose = 2
-  solve = sweep_wave_length
+  solve = tmm_study
   resultpath = output
 
 
