@@ -510,6 +510,8 @@ Tmm::do_solve(void)
       E_B_NORM[nm] = E_B[nm]/E_F[0];
     } 
 
+
+
     complex<double> Etot; // Electric Field, Magnetic Field
     vector<complex<double>> Intensity;// Intensity, forward, backward
     vector<complex<double>> Generation_rate;        // Generation Rate
@@ -518,8 +520,8 @@ Tmm::do_solve(void)
     for (int nm=0 ; nm < n_real.size() ; ++nm)
     {
       Etot = E_F_NORM[nm] + E_B_NORM[nm];
-      Intensity.push_back(0.5 * c0 * 1e-9 * e0 * n_real[nm] * Esun2* pow(abs(Etot), 2)); // Intensity [W/(m^2 * nm)]
-      Generation_rate.push_back(1 / (plank_const* w) * n_imag[nm] * 1e7 * Intensity[nm]/ 1e4);        // Generation rate [ cm^-3 s^-1 nm^-1]
+      Intensity.push_back( n_real[nm] * radiation* pow(abs(Etot), 2)); // Intensity [W/(m^2 * nm)]
+      Generation_rate.push_back(1 / (plank_const* w) * (4 * M_PI * n_imag[nm] * 1e7/(lambda)) * Intensity[nm]/ 1e4);        // Generation rate [ cm^-3 s^-1 nm^-1]
       Generation_rate_real.push_back(real(Generation_rate[nm]));
     }
 
@@ -535,9 +537,11 @@ Tmm::do_solve(void)
     //*******************************************************************************
     //************************printing electric field********************************
     for(double nm=0; nm < l_length.size() ; ++nm){
+      solution.add(l_length[nm], real(Intensity[nm]));
       //E=E_F_NORM[nm]+E_B_NORM[nm];
                         //just for test
-      solution.add(l_length[nm], Generation_rate_real[nm] );
+      //solution.add(l_length[nm], Generation_rate_real[nm] );
+
     } 
 
   }
