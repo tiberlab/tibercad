@@ -151,21 +151,63 @@ Negf::do_init(void)
         _qc_boundaries[*it] = qc;
         _bd_map[qc] = *it;
 
-        //std::cerr<<"(negf) _quantum_contact "<<qc->get_id()<<" "<<(*it)->get_name()<<std::endl;
         qc->set_neighbor_map();
 
       }
     }
   }
 
-  unsigned int id = 0;
+  // Now we assign an internal, successive integer to every contact. This
+  // number will be used as boundary condition for the reordering. We do
+  // this based on an ordering in coordinates.
+
+  std::map<ID, Point> min_coord;
+  std::vector<ID> qids;
+
   std::map<ID, QuantumContact*>::iterator it = _quantum_contacts.begin();
   const std::map<ID, QuantumContact*>::iterator end = _quantum_contacts.end();
-  for( ; it != end; ++it, ++id)
+  for( ; it != end; ++it)
   {
-    _bd_num[get_boundary(it->second)] = id;
+    QuantumContact& qc = *it->second;
+    ID qid = it->first;
+
+    qids.push_back(qid);
+
+    min_coord[qid] = Point(1e16, 1e16, 1e16);
+
+    for (auto s = qc.contact_elements_begin(); s != qc.contact_elements_end(); ++s)
+    {
+      const Elem* el = s->first;
+      for (int n = 0; n < el->n_nodes(); ++n)
+      {
+        if (el->point(n) < min_coord[qid])
+          min_coord[qid] = el->point(n);
+      }
+    }
   }
   
+  for(unsigned int i = 0; i < qids.size() - 1; ++i)
+  {
+    for(unsigned int j = i + 1; j < qids.size(); ++j)
+    {
+      if (min_coord[qids[j]] > min_coord[qids[i]])
+        std::swap(qids[i], qids[j]);
+    }
+  }
+
+  Messages m;
+  m.info("Quantum contacts with IDs for reordering:");
+  m.indent();
+  unsigned int id = 0;
+  for(unsigned int i = 0; i < qids.size(); ++i, ++id)
+  {
+    _bd_num[_bd_map[_quantum_contacts[qids[i]]]] = id;
+
+    ostringstream os;
+    os << _quantum_contacts[qids[i]]->get_name() << " -> " << i;
+    m.info(os.str());
+  }
+
   _qc_n_dofs.resize(_quantum_contacts.size(), 0);
   
   init_hamil();
@@ -2332,6 +2374,8 @@ Negf::reorder(void)
   unsigned int sysid = _ext_module->get_equation_system_id();
   unsigned int mysid = _sys->number();
   unsigned int n_dofs_total = 0;
+  //cerr << "sysid : " << sysid << endl;
+  //cerr << "_device_n_dofs : " << _device_n_dofs << endl;
 
   auto it = get_mesh().active_nodes_begin();
   const auto end = get_mesh().active_nodes_end();
@@ -2344,6 +2388,7 @@ Negf::reorder(void)
 
       if (dof < _device_n_dofs)
       {
+      //cerr << *node << endl;
         // get the number of dofs in the Hamiltonian
         unsigned int n_hamil_dofs = node->n_dofs(sysid);
 
@@ -2365,11 +2410,13 @@ Negf::reorder(void)
   for (unsigned int i = 1; i < nPL; ++i)
     _end_blocks[i] += _end_blocks[i-1];
 
+
   os.str("");
   os << "# DOFs       : " << n_dofs_total << "\n";
   os << "mean PL size : " << n_dofs_total/nPL << "\n";
   Messages::info(os.str());
 
+  /*
   if (verbose() > 3)
   {
     cerr << "PLs (block end indices):\n";
@@ -2377,6 +2424,7 @@ Negf::reorder(void)
       cerr << b << " ";
       cerr << endl;
   }
+  */
 
 
   // at last, prepare permutation

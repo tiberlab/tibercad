@@ -33,8 +33,6 @@ using namespace std;
 LIBMESHCLASS(QGauss);
 
 
-LIBMESHCLASS(QGauss);
-
 
 QuantumContact::QuantumContact(void)
 : _device(NULL),
