@@ -1,7 +1,7 @@
 // Gmsh project created on Thu Feb 21 2012
 lc1 = 0.1;
 l = 50;
-c = 20;
+c = 30;
 br = 3.5; 
 we = 5;
 

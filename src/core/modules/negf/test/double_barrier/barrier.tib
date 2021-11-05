@@ -79,13 +79,11 @@ Device
    Quantum_contact int_drain
    {
     regions = drain_region
-    length = 0.05
    }
 
    Quantum_contact int_source
    {
     regions = source_region  
-    length = 0.05
    }
 
 }
@@ -161,9 +159,10 @@ Module sweep
 
 Module negf
 {
-  plot = (Current, LDOS)
-  #plot = (elDensity, LDOS)
+  #plot = (Current, LDOS)
+  plot = (elDensity)
   regions = double_barrier
+  verbosity = 10
 
   potential_simulation = driftdiffusion
   Boundary int_source{}
@@ -172,12 +171,12 @@ Module negf
  
   Solver
   {
-    verbosity = 99 
+    number_of_PL = 90
     #writeLDOS = 1
-    #Np_contour = (100, 100)
-    #Npoles = 1 
-    Np_real = 50
-    delta = 2e-3
+    Np_contour = (30, 100)
+    Npoles = 1 
+    #Np_real = 50
+    delta = 1e-6
     deltaEc = 0.1
     Emin = -0.20
     Emax = 0.7
