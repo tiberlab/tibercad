@@ -190,7 +190,7 @@ Negf::do_init(void)
   {
     for(unsigned int j = i + 1; j < qids.size(); ++j)
     {
-      if (min_coord[qids[j]] > min_coord[qids[i]])
+      if (min_coord[qids[j]] < min_coord[qids[i]])
         std::swap(qids[i], qids[j]);
     }
   }
@@ -2334,7 +2334,7 @@ Negf::reorder(void)
       Compare(const libMesh::NumericVector<Number>& v) : _v(v) {};
       bool operator()(size_t i, size_t j)
       {
-        return(_v(j) < _v(i));
+        return(_v(j) > _v(i));
       }
 
     private:
