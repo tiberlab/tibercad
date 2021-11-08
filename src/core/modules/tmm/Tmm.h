@@ -101,7 +101,7 @@ class TBDLLOCAL Tmm : public SimulationInterface
   */
   Tmm::Matrix_2by2 get_D(double n1_real,double n1_imag,double n2_real,double n2_imag,double theta_layer1, double theta_layer2);
 
-
+  vector<double> linear_interpolation1 (vector<double> xData, vector<double> yData, vector<double> x_interp);
 
   protected:
 
@@ -184,14 +184,27 @@ class TBDLLOCAL Tmm : public SimulationInterface
     /*!
      * \brief The wavelengths
      */
-    std::vector<double> _wavelengths;
 
     /*!
      * \brief The incident angle
      */
     std::vector<double> _incident_angle;
 
-    std::vector<double> _radiation;
+    std::vector<double> _reflectivity;
+    std::vector<double> _up_lambda;
+    std::vector<double> _down_lambda;
+
+
+
+
+    //! The wavelengths
+    std::vector<double> _lambda;
+
+
+    //! The solar spectrum
+    std::vector<double> _spectrum;
+
+
 
 
 

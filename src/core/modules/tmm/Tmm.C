@@ -5,6 +5,7 @@
 #include "TmmBulkModel.h"
 #include "TmmBoundaryModel.h"
 #include "Messages.h"
+#include "Database.h"
 
 
 #include "libmesh/dof_map.h"
@@ -157,6 +158,32 @@ vector<double> Tmm::theta_cal(vector<double> n_real , double incident_angle)
 }
 
 
+vector<double> Tmm::linear_interpolation1 (vector<double> xData, vector<double> yData, vector<double> x_interp)
+{
+  int size = xData.size();
+  vector<double> y_interp;
+
+  for (double x : x_interp)
+  {
+    int i =0;
+    if (x >= xData[size-2])
+    {
+      i = size -2;
+    }
+    else
+    {
+      while (x > xData[i+1]) i++;
+    }
+    double xL = xData[i], yL = yData[i], xR = xData[i+1], yR = yData[i+1];
+    double delta = (yR - yL) / (xR - xL);
+    double y = yL + delta * (x-xL);
+    y_interp.push_back(y);
+  }
+  return y_interp;
+}
+
+
+
 Tmm::~Tmm(void)
 {
 }
@@ -193,22 +220,68 @@ void
 Tmm::parse_options(void)
 {
   // read wavelengths from input
-  get_option("wavelengths", _wavelengths);
-  if (_wavelengths.empty())
-  {
-    Messages::warning("You did not provide any wavelengths for TMM.");
-  }
+
   get_option("incident_angle", _incident_angle);
   if (_incident_angle.empty())
   {
     Messages::warning("You did not provide any incident_angle for TMM.");
   }
-  get_option("radiation", _radiation);
-  if (_radiation.empty())
+
+
+  get_option("reflectivity", _reflectivity);
+  if (_reflectivity.empty())
   {
-    Messages::warning("You did not provide any radiation for TMM.");
+    Messages::warning("You did not provide any reflectivity for TMM.");
   }
 
+  get_option("up_lambda", _up_lambda);
+  if (_up_lambda.empty())
+  {
+    Messages::warning("You did not provide any up_lambda for TMM.");
+  }
+  get_option("down_lambda", _down_lambda);
+  if (_down_lambda.empty())
+  {
+    Messages::warning("You did not provide any down_lambda for TMM.");
+  }
+
+  Database db;
+  ifstream is;
+  db.set_material("Sun1p5am", get_option("illumination_spectrum", ""));
+  is.open(db.get_data_file().c_str());
+  if (is.fail() || !is.good())
+    throw InitFailedException("Cannot read spectrum "
+        "from file " + db.get_data_file());
+
+  size_t i = 0;
+  const size_t buf_len = 256;
+  char buf[buf_len];
+
+    while (is.good())
+    {
+      if (i == _lambda.size())
+      {
+        size_t n_new = _lambda.size() + 100;
+        _lambda.reserve(n_new);
+        _spectrum.reserve(n_new);
+      }
+
+      is.getline(buf, buf_len);
+      if (buf[0] != '#')
+      {
+        istringstream in(buf);
+
+        double l, s;
+        if (in >> l >> s)
+        {
+          _lambda.push_back(l);
+          // conversion from nm^-1 to J
+          _spectrum.push_back(s);
+          i++;
+        }
+      }
+    }
+    is.close();
 
 }
 
@@ -261,17 +334,29 @@ Tmm::do_solve(void)
 
   DofMap& dof_map =  system.get_dof_map();
   vector<unsigned int> dof_indices;
+  vector<double> area;
+  vector<double> gen;
+  vector<double> lambda_interp;
+  vector<double> sun_interp;
+  for (double i = _down_lambda[0]; i<= _up_lambda[0]; i += 1)
+  {
+    lambda_interp.push_back(i);
+  }
+  sun_interp = Tmm::linear_interpolation1(_lambda,_spectrum,lambda_interp);
 
-  for (unsigned int i = 0; i < _wavelengths.size(); ++i)   //loop over wavelength
+
+  for (unsigned int i = 0; i < lambda_interp.size(); ++i)   //loop over wavelength
   {
 
   for (unsigned int j = 0; j < _incident_angle.size(); ++j)  //loop over incident angle
   {
-  for (unsigned int ij = 0; ij < _radiation.size(); ++ij)
-  {
 
+    std::cout<<"solving condition :  " << std::endl;
+    std::cout<<"Lambda is  " << lambda_interp[i] <<  std::endl;
+    std::cout<<"Radiation intensity is  " << sun_interp[i] <<  std::endl;
+   // std::cout<<"Incident angle is  " << _incident_angle[j] <<  std::endl;
 
-    double lambda = _wavelengths[i];
+    double lambda = lambda_interp[i];
 
 
 
@@ -288,7 +373,7 @@ Tmm::do_solve(void)
 
     double c0 = 2.998e8 * 1e9;              // Speed of light [nm/s]
     double e0 = 8.85e-12;                   // Vacuum permittivity  [F/m]
-    double radiation = _radiation[ij];                   //[W/(m^2*nm)]
+    double radiation = sun_interp[i] / 1e3;                   //[W/(m^2*nm)]
     double Esun2 = 2 * radiation / (c0 * 1e-9 * e0); // E^2 Electric Field [V^2 / (m^2 * nm)]
     double w = 2 * M_PI * c0 / lambda;                               // Frequency [1/s]
     double plank_const = 1.055e-34;
@@ -366,9 +451,15 @@ Tmm::do_solve(void)
            if (mod_int->read_type() == "Incident Wave"){
              BC_check_init.push_back(0);
              if ( s % 2 == 0)
-             {direction = "left to right propagation";std::cout<<direction<<std::endl;}
+             {
+               direction = "top to down propagation";
+               //std::cout<<direction<<std::endl;
+             }
              else
-             {direction = "right to left propagation";std::cout<<direction<<std::endl;}
+             {
+               direction = "down to top propagation";
+               //std::cout<<direction<<std::endl;
+             }
            }
 
          }
@@ -380,7 +471,7 @@ Tmm::do_solve(void)
     }
 
 
-    if (direction == "left to right propagation")
+    if (direction == "top to down propagation")
     {
       for (int uu=1; uu<BC_check_init.size();uu += 2)
         BC_check.push_back(BC_check_init[uu]);
@@ -391,7 +482,7 @@ Tmm::do_solve(void)
         l.push_back(l_init[uu]);
       }
 
-    }else if (direction == "right to left propagation")
+    }else if (direction == "down to top propagation          ")
     {
       for (int uu=BC_check_init.size()-2; uu>=0;uu -= 2)
         BC_check.push_back(BC_check_init[uu]);
@@ -403,9 +494,6 @@ Tmm::do_solve(void)
       }
     }
 
-
-  //   for (int uu=1; uu<n_real.size();++uu)
-   //    std::cout<<n_real[uu]<<"     "<<n_imag[uu]<<std::endl;
 
     //********************snell's law********************
     vector<double> theta(n_real.size());
@@ -432,7 +520,7 @@ Tmm::do_solve(void)
     Tmm::Matrix_2by2 T_load(0,0,0,0);
     Tmm::Matrix_2by2 T(1,0,0,1);
     
-    double r =0;
+    double r =_reflectivity[0];
     Tmm::Matrix_2by2 E_N(1,0,r,0);
     Tmm::Matrix_2by2 E_I(0,0,0,0);
 
@@ -464,8 +552,8 @@ Tmm::do_solve(void)
       }
      // std::cout<<"D matrix is :" <<k<<"   "<< std::endl;
      // D.print();
-      M = get_M(n_real[k],n_imag[k],l[k],lambda,theta[k],phase[k]);
-
+     // M = get_M(n_real[k],n_imag[k],l[k],lambda,theta[k],phase[k]);
+      M = get_M(n_real[k],n_imag[k],l[k],lambda,theta[k],0);
       T_load = D * M;
       T = T * T_load;
 
@@ -512,6 +600,8 @@ Tmm::do_solve(void)
 
 
 
+
+
     complex<double> Etot; // Electric Field, Magnetic Field
     vector<complex<double>> Intensity;// Intensity, forward, backward
     vector<complex<double>> Generation_rate;        // Generation Rate
@@ -520,34 +610,67 @@ Tmm::do_solve(void)
     for (int nm=0 ; nm < n_real.size() ; ++nm)
     {
       Etot = E_F_NORM[nm] + E_B_NORM[nm];
-      Intensity.push_back( n_real[nm] * radiation* pow(abs(Etot), 2)); // Intensity [W/(m^2 * nm)]
-      Generation_rate.push_back(1 / (plank_const* w) * (4 * M_PI * n_imag[nm] * 1e7/(lambda)) * Intensity[nm]/ 1e4);        // Generation rate [ cm^-3 s^-1 nm^-1]
+      Intensity.push_back(0.5 * c0 * 1e-9 * e0 * n_real[nm] * Esun2* pow(abs(Etot), 2)); // Intensity [W/(m^2 * nm)]
+      Generation_rate.push_back(1 / (plank_const* w) * (4 * M_PI * n_imag[nm] * 1e7/(lambda)) * real(Intensity[nm])/ 1e4 );        // Generation rate [ cm^-3 s^-1 nm^-1]
       Generation_rate_real.push_back(real(Generation_rate[nm]));
     }
+    // taking integral over the bandwidths
 
-/*
-    for(int nm=0; nm<Intensity.size();++nm){
-      std::cout<<"intensity is " << nm << "   " << Intensity[nm] << std::endl;
-    }
-    for(int nm=0; nm<Generation_rate.size();++nm){
-      std::cout<<"Generation_rate is " << nm << "   " << Generation_rate[nm] << std::endl;
+    if (i == 0)
+    {
+      area.resize(n_real.size());
+      area = Generation_rate_real;
     }
 
-*/
+    if (i != 0 && i != lambda_interp.size()-1)
+    {
+      for (int nm =0; nm< n_real.size();nm++)
+         area[nm] +=2 * Generation_rate_real[nm];
+    }
+    if (i == lambda_interp.size()-1)
+    {
+      for (int nm =0; nm< n_real.size();nm++)
+         area[nm] += Generation_rate_real[nm];
+      for (int nm =0; nm< n_real.size();nm++)
+         area[nm] *= (lambda_interp[lambda_interp.size()-1] - lambda_interp[0]) / (2 * lambda_interp.size()-1);
+    }
+
+
+    if( i == lambda_interp.size()-1)
+    for(double nm=0; nm < l_length.size() ; ++nm){
+      //solution.add(l_length[nm], real(Generation_rate[nm]));
+      //solution.add(l_length[nm], real(Intensity[nm]) );
+      solution.add(l_length[nm], area[nm]);
+    //  std::cout<<"area is " << nm << "   " << area[nm] <<std::endl;
+    }
+
+
+
+
+
+
     //*******************************************************************************
     //************************printing electric field********************************
-    for(double nm=0; nm < l_length.size() ; ++nm){
-      solution.add(l_length[nm], real(Intensity[nm]));
-      //E=E_F_NORM[nm]+E_B_NORM[nm];
-                        //just for test
-      //solution.add(l_length[nm], Generation_rate_real[nm] );
 
-    } 
+    /////////////////////////////////////////////////////////
+   // for(int nm=0; nm<_lambda.size();++nm){
+      //std::cout<<"sun radiation is " << nm << "   " << _lambda[nm] << "   "<< _spectrum[nm] <<std::endl;
+   // }
 
-  }
 
-  }
-  }
+
+
+
+    //////////////////////////////////////////////////////////////////
+
+
+
+  }// end of loop of angle
+
+
+  }// end of loop of wave_length
+
+
 
   solution.close();
   system.update();
