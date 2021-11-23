@@ -291,6 +291,7 @@ Tmm::do_setup_solution_variables(void)
 {
   // we declare our solution variables
   declare_solution(GenerationRate, REAL, CELL, "cm^3");
+  declare_solution(Intensity, REAL, CELL, "W/m^3/nm");
   //declare_solution(HField, VECTOR, CELL, "A/cm");
   //declare_solution(Displacement, VECTOR, CELL, "C/cm^2");
   //declare_solution(Displacement, VECTOR, CELL, "C/cm^2");
@@ -550,10 +551,12 @@ Tmm::do_solve(void)
         D.set(3,Boundry_condition.get(3));
         //std::cout<<"BC_check[k] == 1"<< std::endl;
       }
-     // std::cout<<"D matrix is :" <<k<<"   "<< std::endl;
-     // D.print();
+      //std::cout<<"D matrix is :" <<k<<"   "<< std::endl;
+      //D.print();
      // M = get_M(n_real[k],n_imag[k],l[k],lambda,theta[k],phase[k]);
       M = get_M(n_real[k],n_imag[k],l[k],lambda,theta[k],0);
+      //std::cout<<"M matrix is :" <<k<<"   "<< std::endl;
+      //M.print();
       T_load = D * M;
       T = T * T_load;
 
@@ -602,18 +605,26 @@ Tmm::do_solve(void)
 
 
 
-    complex<double> Etot; // Electric Field, Magnetic Field
+
+
+    vector<complex<double>> Etot(n_real.size()); // Electric Field, Magnetic Field
     vector<complex<double>> Intensity;// Intensity, forward, backward
     vector<complex<double>> Generation_rate;        // Generation Rate
     vector<double> Generation_rate_real;        // Generation Rate real
 
+
+
     for (int nm=0 ; nm < n_real.size() ; ++nm)
     {
-      Etot = E_F_NORM[nm] + E_B_NORM[nm];
-      Intensity.push_back(0.5 * c0 * 1e-9 * e0 * n_real[nm] * Esun2* pow(abs(Etot), 2)); // Intensity [W/(m^2 * nm)]
+      Etot[nm] = E_F_NORM[nm] + E_B_NORM[nm];
+      Intensity.push_back(0.5 * c0 * 1e-9 * e0 * n_real[nm] * Esun2* pow(abs(Etot[nm]), 2)); // Intensity [W/(m^2 * nm)]
       Generation_rate.push_back(1 / (plank_const* w) * (4 * M_PI * n_imag[nm] * 1e7/(lambda)) * real(Intensity[nm])/ 1e4 );        // Generation rate [ cm^-3 s^-1 nm^-1]
       Generation_rate_real.push_back(real(Generation_rate[nm]));
     }
+
+
+
+
     // taking integral over the bandwidths
 
     if (i == 0)
@@ -633,6 +644,7 @@ Tmm::do_solve(void)
          area[nm] += Generation_rate_real[nm];
       for (int nm =0; nm< n_real.size();nm++)
          area[nm] *= (lambda_interp[lambda_interp.size()-1] - lambda_interp[0]) / (2 * lambda_interp.size()-1);
+
     }
 
 
