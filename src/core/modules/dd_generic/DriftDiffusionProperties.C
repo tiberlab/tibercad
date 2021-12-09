@@ -377,6 +377,32 @@ DriftDiffusionProperties::reinit(const Elem* elem)
 }
 */
 
+double
+DriftDiffusionProperties::get_charge_density(void) const
+{
+  long double dens = 0.0;
+
+  for (auto& cp: _carrier_properties)
+  {
+    if (cp.second->is_dopant())
+    {
+      double ionized =
+          _pd->q_density[cp.first] - cp.second->get_maximum_density();
+      dens += cp.second->get_charge() * std::min(ionized, 0.0);
+    }
+    else
+      dens += cp.second->get_charge() * _pd->q_density[cp.first];
+  }
+
+  dens += static_cast<long double>(_pd->ionized_donor_density) -
+          static_cast<long double>(_pd->ionized_acceptor_density) +
+          static_cast<long double>(_pd->ionized_electron_traps) +
+          static_cast<long double>(_pd->ionized_hole_traps);
+
+  return static_cast<double>(dens);
+}
+
+
 
 
 void
@@ -392,15 +418,7 @@ DriftDiffusionProperties::calculate_densities(void)
     pair<double, double> dens_der(cp.second->get_density_and_derivative(
         _pd->fermi_potential[cp.first], _pd->electric_potential));
 
-    if (cp.second->is_dopant())
-    {
-      double DOS = cp.second->get_effective_DOS();
-      _pd->q_density[cp.first] = DOS - dens_der.first;
-    }
-    else
-    {
-      _pd->q_density[cp.first] = dens_der.first;
-    }
+    _pd->q_density[cp.first] = dens_der.first;
 
     _pd->q_density_derivative[cp.first] = dens_der.second;
 
