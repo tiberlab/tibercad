@@ -14,7 +14,7 @@ namespace libMesh
 }
 
 //! The base class for thermal balance boundary conditions
-class TmmBoundaryModel : public PhysicalModel
+class TmmBoundaryModel : public  PhysicalModel
 {
 
   public:

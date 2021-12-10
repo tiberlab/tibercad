@@ -418,7 +418,11 @@ Tmm::do_solve(void)
       // getting refractive index and length of layers from model
       libMesh::Complex nk = mod.get_refractive_index(lambda);
       // n_real.push_back(real(nk));
+
+      double coh = mod.get_incoherance_index();
+      std::cout<< "coh is" << coh <<std::endl;
       // n_imag.push_back(imag(nk));
+
 
       n_real_init.push_back(real(nk));
       n_imag_init.push_back(imag(nk));
@@ -655,6 +659,7 @@ Tmm::do_solve(void)
       solution.add(l_length[nm], area[nm]);
     //  std::cout<<"area is " << nm << "   " << area[nm] <<std::endl;
     }
+
 
 
 

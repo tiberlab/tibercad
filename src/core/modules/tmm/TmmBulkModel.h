@@ -4,7 +4,7 @@
 #define _TMMBULKMODEL_H_
 
 #include "PhysicalModel.h"
-
+#include "Tmm.h"
 #include "point.h"
 #include "tensor_value.h"
 #include "vector_value.h"
@@ -16,6 +16,7 @@ class TmmBulkModel : public PhysicalModel
 {
 
   public:
+
 
     //! Destructor
     virtual ~TmmBulkModel(void) {};
@@ -30,6 +31,11 @@ class TmmBulkModel : public PhysicalModel
 
     //! Get the complex refractive index
     libMesh::Complex get_refractive_index(double lambda) const;
+
+    //! Get the complex refractive index
+    virtual double get_incoherance_index() const;
+
+
 
 
   protected:
@@ -88,6 +94,9 @@ class TmmBulkModel : public PhysicalModel
 
     //! An addressing array for faster access during interpolation
     std::vector<int> _addressing;
+
+    double _incoh_index;
+
 };
 
 

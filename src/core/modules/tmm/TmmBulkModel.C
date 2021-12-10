@@ -40,18 +40,21 @@ TmmBulkModel::create(const Material* mat, const ModelOptions& options)
   options.get_option("type", type);
 
   TmmBulkModel* pm = NULL;
-
   if (type == "default")
+  {
     // we create the default model from explicit creation method
     pm = PhysicalModel::create<TmmBulkModel>(_create, _destroy, mat, options);
+
+  }
   else
   {
     // there is no such model, at the moment
-    //type = "bulk_" + type;
-    //pm = PhysicalModel::create<TmmBulkModel>(type, mat, options);
+    type = "bulk_model" + type;
+    pm = PhysicalModel::create<TmmBulkModel>(type, mat, options);
   }
 
   return(pm);
+
 }
 
 std::pair<double, double>
@@ -115,12 +118,19 @@ TmmBulkModel::get_refractive_index(double lambda) const
 }
 
 
+double
+TmmBulkModel::get_incoherance_index() const
+{
+  return(0);
+}
+
 
 void
 TmmBulkModel::read_database(void)
 {
   const Database& db = get_database();
   db.set_section("permittivity");
+
   string source = db.get("optical_data", "");
 
   // open the given file
@@ -211,6 +221,7 @@ TmmBulkModel::read_database(void)
 void
 TmmBulkModel::do_init(void)
 {
+
 }
 
 
