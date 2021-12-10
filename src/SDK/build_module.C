@@ -74,6 +74,9 @@ namespace BuildModule
   //! Verbose mode
   bool verbose = false;
 
+  //! Compile method
+  string compile_method = "devel";
+
   void usage(void)
   {
 #if defined(_WIN32)
@@ -83,7 +86,7 @@ namespace BuildModule
     cout << "press Enter ...";
     if (interactive) cin.get();
 # else
-    cout << endl << "Usage: build_module [-b] [-v] [-c globalconfig] moduleconfig" << endl << endl;
+    cout << endl << "Usage: build_module [-b] [-v] [-m method] [-c globalconfig] moduleconfig" << endl << endl;
 # endif
   }
 
@@ -166,7 +169,7 @@ int main(int argc, char** argv)
   string global_config_file;
   opterr = 0;
   int c;
-  while ((c = getopt(argc, argv, "bvc:")) != -1)
+  while ((c = getopt(argc, argv, "bvc:m:")) != -1)
     switch (c)
     {
       case 'b':
@@ -180,6 +183,9 @@ int main(int argc, char** argv)
       case 'c':
         global_config_file = string(optarg);
         break;
+
+      case 'm':
+        BuildModule::compile_method = string(optarg);
 
       case '?':
         cout << "Unknown option: -" << (char) optopt << endl;
@@ -498,6 +504,7 @@ Compiler::add_library(const ModelOptions& options, const string& compiler)
     string flags = ldflags[i];
     BuildModule::replace(flags, "@ROOT", BuildModule::tc_root);
     BuildModule::replace(flags, "@ARCH", ARCH);
+    BuildModule::replace(flags, "@METHOD", BuildModule::compile_method);
     linkerflags << flags;
   }
 
