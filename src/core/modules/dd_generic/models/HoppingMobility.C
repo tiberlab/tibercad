@@ -22,7 +22,7 @@ double HoppingMobility::get_mobility(void)
   ID id = get_carrier();
   double dens = get_driftdiffusionproperties().get_q_density(id);
   
-  double F = get_driftdiffusionproperties().get_electric_field().size();
+  double F = get_driftdiffusionproperties().get_electric_field().norm();
   double kT = get_driftdiffusionproperties().get_lattice_temperature();
 
   const double c1 = 1.8e-9;
@@ -92,7 +92,7 @@ HoppingMobility::get_derivative_grad_potential(libMesh::RealGradient& dm)
   ID id = get_carrier();
   double mu = this->get_mobility();
 
-  double F = get_driftdiffusionproperties().get_electric_field().size();
+  double F = get_driftdiffusionproperties().get_electric_field().norm();
   double kT = get_driftdiffusionproperties().get_lattice_temperature();
   double s = _sigma / kT;
   double a = pow(_N0, (-1.0/3.0));

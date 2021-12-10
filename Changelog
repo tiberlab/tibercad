@@ -1,3 +1,12 @@
+Version 3.2.0
+-------------
+
+New features:
+	- upgraded to libmesh 1.6.3, PETSc/SLEPc 3.16.1, boost 1.77, cuda 10.2
+	- several fixes
+	- added some features for k-space and crystal symmetries
+	- new module for TMM
+
 Version 3.1.0
 -------------
 

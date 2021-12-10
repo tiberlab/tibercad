@@ -6,6 +6,7 @@
 
 // Local includes
 #include "tecplot_IO_cell.h"
+#include "enum_io_package.h"
 #include "mesh_base.h"
 #include "elem.h"
 

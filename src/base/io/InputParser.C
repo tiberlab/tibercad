@@ -357,6 +357,8 @@ string InputParser::get_token(istream& in_stream, bool expand)
         break;
     }
   }
+
+  return("");
 }
 
 

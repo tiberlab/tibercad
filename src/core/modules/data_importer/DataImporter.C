@@ -420,14 +420,14 @@ DataImporter::_read_csv(void)
   for (size_t n = 0; n < get_mesh().n_nodes(); ++n)
   {
 
-    if (get_mesh().node(n).n_vars(system.number()) > 0)
+    if (get_mesh().node_ptr(n)->n_vars(system.number()) > 0)
     {
       for (unsigned int i = _dims; i < n_values; ++i)
       {
         unsigned int var = i - _dims;
-        if (get_mesh().node(n).n_comp(system.number(), var) > 0)
+        if (get_mesh().node_ptr(n)->n_comp(system.number(), var) > 0)
         {
-          dof_id_type dofid = get_mesh().node(n).dof_number(system.number(), var, 0);
+          dof_id_type dofid = get_mesh().node_ptr(n)->dof_number(system.number(), var, 0);
           get_solution_vector().set(dofid, data[i][n]);
         }
       }
@@ -546,18 +546,21 @@ DataImporter::_create_mesh_from_points(const vector<double>* x,
 
       el->subdomain_id() = id;
 
+      // 24/11/2021 if we delete elements here, then orphaned nodes will be deleted
+      // during mesh preparation
       // eliminate all elements that seem to lie outside of the structure
-      if (id == INVALID_ID)
-        mesh->delete_elem(el);
+      //if (id == INVALID_ID)
+      //  mesh->delete_elem(el);
     }
   }
+
+  //mesh->print_info();
+  //libMesh::GmshIO(*mesh).write("mesh.msh");
 
   if (mesh->n_elem() == 0)
     throw InitFailedException("Data import results in empty mesh: "
         "check units or geometry.");
 
-  //mesh->print_info();
-  //libMesh::GmshIO(*mesh).write("mesh.msh");
 
   mesh->allow_renumbering(false);
   mesh->prepare_for_use();
@@ -567,6 +570,7 @@ DataImporter::_create_mesh_from_points(const vector<double>* x,
   //cerr << "mesh comm size = " << mesh->comm().size() << "\n";
   //cerr << "# part = " << mesh->n_partitions() << "\n";
   //mesh->print_info();
+  //libMesh::GmshIO(*mesh).write("mesh.msh");
 }
 
 

@@ -189,7 +189,7 @@ SchottkyTunneling::do_init(void)
       Point dist_vec(centr - side_centr);
       if ((dist_vec * normal) < 0)
       {
-        double dist = dist_vec.size();
+        double dist = dist_vec.norm();
         if (dist < mindist)
         {
           p_mindist = dist_vec;
@@ -257,7 +257,7 @@ SchottkyTunneling::calculate_rate_and_derivatives(std::vector<double>& R,
     pot_diff =  _barrier + band_edge + _contact_voltage;
   }
 
-  double E = dd.get_electric_field() * it->second / it->second.size();
+  double E = dd.get_electric_field() * it->second / it->second.norm();
   E = 100 * E;
 
   if (pot_diff > 0.0)

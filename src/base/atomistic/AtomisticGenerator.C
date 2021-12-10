@@ -132,7 +132,7 @@ AtomisticGenerator::build(void)
     {
       for (unsigned int i = 0; i < elem->n_nodes(); i++)
       {
-        Node* nd = elem->get_node(i);
+        Node* nd = elem->node_ptr(i);
         if ( (*nd)(0) < min_x ) min_x = (*nd)(0);
         if ( (*nd)(0) > max_x ) max_x = (*nd)(0);
         if ( (*nd)(1) < min_y ) min_y = (*nd)(1);

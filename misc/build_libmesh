@@ -8,9 +8,6 @@ fi
 . common.sh
 
 
-#REVISION=3581
-REVISION=HEAD
-
 echo "Compiling libMesh version $LIBMESHVERSION in $BUILDDIR ..."
 
 mkdir -p $BUILDDIR
@@ -108,13 +105,15 @@ then
   ./configure --enable-petsc --disable-slepc --disable-complex \
     --enable-periodic ${SHARED} --disable-pfem --enable-static \
     --disable-strict-lgpl \
-    --disable-second --enable-exceptions --disable-laspack --disable-sfc \
+    --enable-second --enable-exceptions --disable-laspack --disable-sfc \
     --disable-gzstreams --disable-bzip2 --disable-vtk \
     --disable-tecplot --disable-netcdf-4 --disable-exodus --disable-nemesis \
     --disable-libHilbert --disable-perflog  --disable-gmv \
     --disable-reference-counting --disable-legacy-using-namespace --enable-unique-ptr \
+    --disable-deprecated \
+    --disable-metaphysicl \
     --with-subdomain-id-bytes=2 \
-    --with-fparser=none \
+    --disable-fparser \
     --with-methods="$METHOD" \
     --host=$HOST --build=$BUILD
 
@@ -131,7 +130,7 @@ echo "Create shared library ${SDKDIR}/${TCHOST}/lib/${dll_name} ..."
 #else
 #  staticlib=`find -name libmesh_opt.a`
 #fi
-contriblibs=
+contriblibs=`find -name libtimpi_${METHOD}.a`
 #contriblibs=`echo $staticlib | sed -e 's/\.libs\//contrib\/\.libs\//' -e 's/libmesh_opt\.a/libcontrib_opt\.a/'`
 #contribdir=${contriblibs/%\*\.a}
 #rm -f ${contribdir}/libnemesis.*

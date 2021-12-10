@@ -844,20 +844,20 @@ void ReadGMSH::read_mesh(istream& in)
             for (unsigned int s = 0; s < elem->n_sides(); s++)
             //if (elem->neighbor(s) == NULL)
             {
-              libMesh::UniquePtr<libMesh::Elem> side (elem->build_side(s));
+              unique_ptr<const libMesh::Elem> side (elem->build_side_ptr(s));
               set<unsigned int> side_nodes;
               set<unsigned int>::iterator iter = side_nodes.begin();
 
               // make a set with all nodes from this side
               // this allows for easy comparison
               for (unsigned int ns = 0; ns < side->n_nodes(); ns++)
-                side_nodes.insert(iter, side->node(ns));
+                side_nodes.insert(iter, side->node_id(ns));
 
               // See whether one of the side node occurs in the list
               // of tagged nodes. If we would loop over all side
               // nodes, we would just get multiple hits, so taking
               // node 0 is enough to do the job
-              unsigned int sn = side->node(0);
+              unsigned int sn = side->node_id(0);
               if (node_index.count(sn) > 0)
               {
                 // Loop over all tagged ("physical") "sides" which
@@ -903,20 +903,20 @@ void ReadGMSH::read_mesh(istream& in)
 
             for (unsigned int s = 0; s < elem->n_edges(); s++)
             {
-              libMesh::UniquePtr<libMesh::Elem> side (elem->build_edge(s));
+              unique_ptr<const libMesh::Elem> side (elem->build_edge_ptr(s));
               set<unsigned int> side_nodes;
               set<unsigned int>::iterator iter = side_nodes.begin();
 
               // make a set with all nodes from this side
               // this allows for easy comparison
               for (unsigned int ns = 0; ns < side->n_nodes(); ns++)
-                side_nodes.insert(iter, side->node(ns));
+                side_nodes.insert(iter, side->node_id(ns));
 
               // See whether one of the side node occurs in the list
               // of tagged nodes. If we would loop over all side
               // nodes, we would just get multiple hits, so taking
               // node 0 is enough to do the job
-              unsigned int sn = side->node(0);
+              unsigned int sn = side->node_id(0);
               if (node_index.count(sn) > 0)
               {
                 // Loop over all tagged ("physical") "sides" which

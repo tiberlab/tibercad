@@ -1052,7 +1052,9 @@ Elasticity::apply_shape_deformation()
         const Elem* elem = cel->first;
         for (unsigned int n = 0; n < elem->n_nodes(); ++n)
         {
-          Node* node = elem->get_node(n);
+          // we require this to be non-const, because we want to
+          // displace the coordinates
+          Node* node = const_cast<Node*>(elem->node_ptr(n));
           if ((node->n_dofs(system_number, uvar[0]) != 0) ||
               visited.count(node))
           {

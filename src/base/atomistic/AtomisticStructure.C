@@ -1215,7 +1215,7 @@ AtomisticStructure::read_tgn(const std::string& path, const Tensor1& transl)
       if (tmp_id == -1) _atoms[i - 1].set_elem(NULL);
       else
         {
-          _atoms[i - 1].set_elem(_device->get_mesh().elem(tmp_id));
+          _atoms[i - 1].set_elem(_device->get_mesh().elem_ptr(tmp_id));
         }
 
 
@@ -2320,7 +2320,8 @@ AtomisticStructure::create_conformal_grid(libMesh::UnstructuredMesh& mesh,
     }
   }
 
-  mesh.prepare_for_use(keep_node_order);
+  mesh.allow_renumbering(!keep_node_order);
+  mesh.prepare_for_use();
 
   Messages::info("done");
 #endif
@@ -2568,7 +2569,7 @@ AtomisticStructure::find_nearest_atom(const Elem* elem, const Point& point, doub
         continue;
 
       double dist = Point(center -
-          get_structure_atom(atoms[i]).get_position()).size();
+          get_structure_atom(atoms[i]).get_position()).norm();
       if (dist < min_dist)
       {
         min_dist = dist;
@@ -2604,7 +2605,7 @@ AtomisticStructure::find_nearest_atom(const Elem* elem, const Point& point, doub
             continue;
 
           double dist = Point(center -
-              get_structure_atom(atoms[i]).get_position()).size();
+              get_structure_atom(atoms[i]).get_position()).norm();
 
           if (dist < min_dist)
           {
@@ -2620,12 +2621,12 @@ AtomisticStructure::find_nearest_atom(const Elem* elem, const Point& point, doub
       for (int s = 0; s < next_el->n_sides(); s++)
       {
 
-        const Elem* neigh = next_el->neighbor(s);
+        const Elem* neigh = next_el->neighbor_ptr(s);
 
         if ((neigh != NULL) && //!processed_elems.count(neigh))
             !processed_elems.count(neigh) &&
             !to_process.count(neigh) &&
-            (Point(point - neigh->centroid()).size() <
+            (Point(point - neigh->centroid()).norm() <
                 min_dist / _scale))
         {
           next_to_process.insert(neigh);
@@ -2695,9 +2696,9 @@ AtomisticStructure::extract_alloy_statistics(const ModelOptions& opt)
     libMesh::RealVectorValue a, b, c;
     get_lattice_vectors(a, b, c);
 
-    double x = a.size() / 10;
-    double y = b.size() / 10;
-    double z = c.size() / 10;
+    double x = a.norm() / 10;
+    double y = b.norm() / 10;
+    double z = c.norm() / 10;
 
     string dir = opt.get_option("orientation", "x");
 
@@ -2913,17 +2914,17 @@ AtomisticStructure::extract_alloy_statistics(const ModelOptions& opt)
         {
 
           case 'y':
-            y = b.size() / 10.0;
+            y = b.norm() / 10.0;
             x = z = side;
             break;
 
           case 'z':
-            z = c.size() / 10.0;
+            z = c.norm() / 10.0;
             y = x = side;
             break;
 
           default: // 'x'
-            x = a.size() / 10.0;
+            x = a.norm() / 10.0;
             y = z = side;
             break;
         }
@@ -3058,17 +3059,17 @@ AtomisticStructure::plot_alloy_composition(const ModelOptions& opt)
     {
 
       case 'y':
-        y = b.size() / 10.0;
+        y = b.norm() / 10.0;
         x = z = side;
         break;
 
       case 'z':
-        z = c.size() / 10.0;
+        z = c.norm() / 10.0;
         y = x = side;
         break;
 
       default: // 'x'
-        x = a.size() / 10.0;
+        x = a.norm() / 10.0;
         y = z = side;
         break;
     }
@@ -3108,9 +3109,9 @@ AtomisticStructure::plot_alloy_composition(const ModelOptions& opt)
       {
         for (unsigned int n = 0; n < elem->n_nodes(); ++n)
         {
-          if (!used_nodes.count(elem->node(n)))
+          if (!used_nodes.count(elem->node_id(n)))
           {
-            used_nodes.insert(elem->node(n));
+            used_nodes.insert(elem->node_id(n));
 
             map<Specie, vector<unsigned int>>::iterator it(stats.begin());
             const map<Specie, vector<unsigned int>>::iterator end(stats.end());
@@ -3121,7 +3122,7 @@ AtomisticStructure::plot_alloy_composition(const ModelOptions& opt)
               {
                 SolutionDescriptor& descr = species_to_descr[it->first];
                 // +1 because the first values are the totals !
-                solmap[domain][descr].push_back((it->second)[elem->node(n) + 1]);
+                solmap[domain][descr].push_back((it->second)[elem->node_id(n) + 1]);
               }
             }
           }

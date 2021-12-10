@@ -78,7 +78,7 @@ Messages::_cout(&std::cout);
 ofstream
 Messages::nullstream("/dev/null");
 
-libMesh::Parallel::Communicator
+libMesh::Parallel::Communicator*
 Messages::_mpi_comm;
 
 int
@@ -112,11 +112,11 @@ Messages::set_stdout(std::ostream& os)
 
 
 void
-Messages::set_log_file(const string& logfile, const libMesh::Parallel::Communicator& comm, int rank)
+Messages::set_log_file(const string& logfile, libMesh::Parallel::Communicator& comm, int rank)
 {
   using namespace boost::filesystem;
 
-  _mpi_comm = comm;
+  _mpi_comm = &comm;
   _rank = rank;
 
 #if BOOST_VERSION >= 104700
@@ -153,7 +153,7 @@ Messages::set_log_file(const string& logfile, const libMesh::Parallel::Communica
   if (_log.fail() || !_log.good())
     throw InitFailedException("cannot open logfile for writing.");
 
-  if (_mpi_comm.rank() == _rank)
+  if (_mpi_comm->rank() == _rank)
   {
     time_t now;
     time(&now);
@@ -167,7 +167,7 @@ Messages::set_log_file(const string& logfile, const libMesh::Parallel::Communica
 void
 Messages::close_log_file(void)
 {
-  if (_mpi_comm.rank() == _rank)
+  if (_mpi_comm->rank() == _rank)
   {
     time_t now;
     time(&now);
@@ -179,11 +179,19 @@ Messages::close_log_file(void)
 }
 
 
+void
+Messages::set_communicator(libMesh::Parallel::Communicator& comm, int rank)
+{
+  _mpi_comm = &comm;
+  _rank = rank;
+}
+
+
 
 void
 Messages::warning(const string& msg)
 {
-  if (_mpi_comm.rank() == _rank)
+  if (_mpi_comm->rank() == _rank)
   {
     TeeStream ts(*_cout, _log);
     ts << Messages::endl;
@@ -252,7 +260,7 @@ Messages::error(const string& msg)
 void
 Messages::hint(const string& msg, bool newline)
 {
-  if (_mpi_comm.rank() == _rank)
+  if (_mpi_comm->rank() == _rank)
   {
 
     vector<string> lines;
@@ -302,7 +310,7 @@ Messages::hint(const string& msg, bool newline)
 void
 Messages::info(const string& msg, bool newline)
 {
-  if (_mpi_comm.rank() == _rank)
+  if (_mpi_comm->rank() == _rank)
   {
     static bool contd = false;
 
@@ -343,7 +351,7 @@ Messages::~Messages(void)
 void
 Messages::indent(void)
 {
-  if (_mpi_comm.rank() == _rank)
+  if (_mpi_comm->rank() == _rank)
   {
     _indent_loc++;
     _indent++;
@@ -355,7 +363,7 @@ Messages::indent(void)
 void
 Messages::unindent(void)
 {
-  if ((_mpi_comm.rank() == _rank) && (_indent_loc > 0))
+  if ((_mpi_comm->rank() == _rank) && (_indent_loc > 0))
   {
     _indent_loc--;
     _indent--;
@@ -377,7 +385,7 @@ Messages::debug(const string& msg)
 void
 Messages::newline(void)
 {
-  if (_mpi_comm.rank() == _rank)
+  if (_mpi_comm->rank() == _rank)
   {
     TeeStream ts(*_cout, _log);
     ts << endl << flush;
@@ -387,7 +395,7 @@ Messages::newline(void)
 void
 Messages::frameline(const std::string& start, const char ch, const std::string& name)
 {
-  if (_mpi_comm.rank() == _rank)
+  if (_mpi_comm->rank() == _rank)
   {
     //ostringstream os;
     //os << start;

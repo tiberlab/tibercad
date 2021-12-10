@@ -182,7 +182,7 @@ AC_DEFUN([TC_CUDA],
     CUDA_INCLUDEDIR="$tc_cv_cuda_dir/include"
     HAVE_CUDA="yes"
     case $host in
-      x86_64-*-*) CUDA_LIBS="-L$tc_cv_cuda_dir/lib64 -Wl,-rpath,$tc_cv_cuda_dir/lib64 -lcublas -lcusparse -lcurand -lcudart -lrt" ;;
+      x86_64-*-*) CUDA_LIBS="-L$tc_cv_cuda_dir/lib64 -Wl,-rpath,$tc_cv_cuda_dir/lib64 -lcublas -lcublasLt -lcusparse -lcurand -lcudart -lrt" ;;
       i?86-*-*) CUDA_LIBS="-L$tc_cv_cuda_dir/lib32 -Wl,-rpath,$tc_cv_cuda_dir/lib32 -lcublas -lcusparse -lcurand -lcudart -lrt" ;;
       *) tc_cv_cuda_dir="no"; HAVE_CUDA="no"; CUDA_LIBDIR= ; CUDA_INCLUDEDIR= ;;
     esac
@@ -361,7 +361,6 @@ AC_DEFUN([TC_LIBMESH_PATH],
 
 
 
-
 dnl check for libmesh-config
 dnl
 AC_DEFUN([TC_LIBMESH_CONFIG],
@@ -414,38 +413,37 @@ dnl fi
  CXXFLAGS_save=$CXXFLAGS
  LDFLAGS_save=$LDFLAGS
  AC_LANG_PUSH([C++])
-dnl LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real -L${MKL_LIBDIR} -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread"
- tc_LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real"
- LDFLAGS="${tc_LDFLAGS} `${LIBMESH_CONFIG} --ldflags`"
+ tc_LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh_devel -ltimpi_devel -lpetsc_real"
+ LDFLAGS="${tc_LDFLAGS} `${LIBMESH_CONFIG} --libs`"
  AC_LINK_IFELSE([AC_LANG_PROGRAM([], [])],
  			        [tc_cv_have_sharedlibs="yes"])
  if test "${tc_cv_have_sharedlibs:+set}" != "set"; then
-  tc_LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real -ldl"
+  tc_LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh_devel -ltimpi_devel -lpetsc_real -ldl"
   LDFLAGS="${tc_LDFLAGS}"
   AC_LINK_IFELSE([AC_LANG_PROGRAM([], [])],
   			         [tc_cv_have_sharedlibs="yes"])
  fi
  if test "${tc_cv_have_sharedlibs:+set}" != "set"; then
-  tc_LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real"
+  tc_LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh_devel -ltimpi_devel -lpetsc_real"
   LDFLAGS="${tc_LDFLAGS}"
   AC_LINK_IFELSE([AC_LANG_PROGRAM([], [])],
   			         [tc_cv_have_sharedlibs="yes"])
  fi
  if test "${tc_cv_have_sharedlibs:+set}" != "set"; then
-  tc_LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real"
-  LDFLAGS="${tc_LDFLAGS} `${LIBMESH_CONFIG} --ldflags` ${FCLIBS}"
+  tc_LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh_devel -ltimpi_devel -lpetsc_real"
+  LDFLAGS="${tc_LDFLAGS} `${LIBMESH_CONFIG} --libs` ${FCLIBS}"
   AC_LINK_IFELSE([AC_LANG_PROGRAM([], [])],
   			         [tc_cv_have_sharedlibs="yes"])
  fi
  if test "${tc_cv_have_sharedlibs:+set}" != "set"; then
-  tc_LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real -ldl"
-  LDFLAGS="${tc_LDFLAGS} `${LIBMESH_CONFIG} --ldflags`"
+  tc_LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh_devel -ltimpi_devel -lpetsc_real -ldl"
+  LDFLAGS="${tc_LDFLAGS} `${LIBMESH_CONFIG} --libs`"
   AC_LINK_IFELSE([AC_LANG_PROGRAM([], [])],
   			         [tc_cv_have_sharedlibs="yes"])
  fi
  if test "${tc_cv_have_sharedlibs:+set}" != "set"; then
-  tc_LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real -ldl"
-  LDFLAGS="${tc_LDFLAGS} `${LIBMESH_CONFIG} --ldflags` ${FCLIBS}"
+  tc_LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh_devel -ltimpi_devel -lpetsc_real -ldl"
+  LDFLAGS="${tc_LDFLAGS} `${LIBMESH_CONFIG} --libs` ${FCLIBS}"
   AC_LINK_IFELSE([AC_LANG_PROGRAM([], [])],
   			         [tc_cv_have_sharedlibs="yes"])
  fi
@@ -453,8 +451,8 @@ dnl LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} 
  if test "${tc_cv_have_sharedlibs}" == "yes"; then
    tc_libmesh_petsc_libs=${tc_LDFLAGS}
  else
-   #tc_libmesh_petsc_libs=$(${LIBMESH_CONFIG} --ldflags)
-   tc_libmesh_petsc_libs='$(shell export METHOD=$(LIBMESHMETHOD) && $(libmesh_config) --ldflags)'
+   #tc_libmesh_petsc_libs=$(${LIBMESH_CONFIG} --libs)
+   tc_libmesh_petsc_libs='$(shell export METHOD=$(LIBMESHMETHOD) && $(libmesh_config) --libs)'
  fi
  LDFLAGS=$LDFLAGS_save
  AC_SUBST([LIBMESH_PETSC_LIBS], "$tc_libmesh_petsc_libs")
@@ -579,7 +577,8 @@ AC_DEFUN([TC_MPIEXEC],
  AC_ARG_WITH([mpiexec], AS_HELP_STRING([--with-mpiexec=PROG],
  	[specify the mpi launcher]),
 	[tc_mpiexec=$with_mpiexec])
- AC_PATH_PROG([MPIEXEC], [$tc_mpiexec])])dnl
+ AC_PATH_PROG([MPIEXEC], [$tc_mpiexec])
+ AC_SUBST([MPIEXEC], "$tc_mpiexec")])dnl
 
 
 

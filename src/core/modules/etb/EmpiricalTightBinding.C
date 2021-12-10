@@ -2490,7 +2490,7 @@ ETB::project_densities(const Elem* elem, const Point& point, double cutoff)
 
         default:
         {
-          double factor = normalization * exp(-delta_r.size_sq() / sigma2);
+          double factor = normalization * exp(-delta_r.norm_sq() / sigma2);
           densities.first += _el_atomic_charges[atom_id] * factor;
           densities.second += _hl_atomic_charges[atom_id] * factor;
           //densities.first += _el_atomic_charges[atom_id] * normalization / coordination;

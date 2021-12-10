@@ -180,13 +180,14 @@ TiberPetscLinearSolver::do_solve(SparseMatrix<Number>&  matrix_in,
     ierr = PCSetType(pc, _pc_type.c_str());
 
   if (_solver_package != "") {
-    PCFactorSetMatSolverPackage(pc, _solver_package.c_str());
+    PCFactorSetMatSolverType(pc, _solver_package.c_str());
   }
 
   TiberPetscUtils::checkerr(ierr);
   // for composite type, do some extra stuff
   if (_pc_type.compare(PCCOMPOSITE) == 0)
   {
+    /*
     ierr = PCCompositeSetType(pc, PC_COMPOSITE_MULTIPLICATIVE);
     TiberPetscUtils::checkerr(ierr);
 
@@ -211,6 +212,7 @@ TiberPetscLinearSolver::do_solve(SparseMatrix<Number>&  matrix_in,
     PCFactorSetZeroPivot(sub_pc, 1e-32);
     //PCILUReorderForNonzeroDiagonal(sub_pc, 1e-32);
 #endif
+  */
   }
  
 #if (PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR <= 2)
@@ -291,7 +293,7 @@ void TiberPetscLinearSolver::get_residual_history(std::vector<double>& hist)
   // methods, the number of residuals returned in the history
   // vector may be different from what you are expecting.  For
   // example, TFQMR returns two residual values per iteration step.
-  double* p;
+  const double* p;
   ierr = KSPGetResidualHistory(_ksp, &p, &its);
   TiberPetscUtils::checkerr(ierr);
 
@@ -323,7 +325,7 @@ double TiberPetscLinearSolver::get_initial_residual(void)
   // methods, the number of residuals returned in the history
   // vector may be different from what you are expecting.  For
   // example, TFQMR returns two residual values per iteration step.
-  double* p;
+  const double* p;
   ierr = KSPGetResidualHistory(_ksp, &p, &its);
   TiberPetscUtils::checkerr(ierr);
 
@@ -382,7 +384,7 @@ TiberPetscLinearSolver::setup_monitors(void)
     {
 #if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3) \
     && (PETSC_VERSION_SUBMINOR > 2)) || (PETSC_VERSION_MAJOR >= 3)
-      ierr = KSPMonitorSet(_ksp, KSPMonitorDefault, PETSC_NULL, 0);
+      //ierr = KSPMonitorSet(_ksp, KSPMonitorDefault, PETSC_NULL, 0);
 #else
       ierr = KSPSetMonitor(_ksp, KSPDefaultMonitor, PETSC_NULL, 0);
 #endif

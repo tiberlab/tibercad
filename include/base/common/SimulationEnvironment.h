@@ -535,7 +535,7 @@ SimulationEnvironment::is_on_boundary(const ElementSide& side) const
 {
   bool result = true;
 
-  const libMesh::Elem* neighbour = (side.elem())->neighbor(side.side());
+  const libMesh::Elem* neighbour = (side.elem())->neighbor_ptr(side.side());
 
   if (neighbour != NULL)
   {
@@ -554,7 +554,7 @@ SimulationEnvironment::is_boundary(const ElementSide& side) const
 {
   bool result = false;
 
-  const libMesh::Elem* neighbour = (side.elem())->neighbor(side.side());
+  const libMesh::Elem* neighbour = (side.elem())->neighbor_ptr(side.side());
 
   if ((neighbour == NULL) ||
       (neighbour->subdomain_id() != (side.elem()->subdomain_id())))
@@ -571,7 +571,7 @@ SimulationEnvironment::is_outer_boundary(const ElementSide& side) const
 {
   bool result = true;
 
-  const libMesh::Elem* neighbour = (side.elem())->neighbor(side.side());
+  const libMesh::Elem* neighbour = (side.elem())->neighbor_ptr(side.side());
 
   if (neighbour != NULL)
   {
@@ -590,7 +590,7 @@ SimulationEnvironment::is_inner_boundary(const ElementSide& side) const
 {
   bool result = false;
 
-  const libMesh::Elem* neighbour = (side.elem())->neighbor(side.side());
+  const libMesh::Elem* neighbour = (side.elem())->neighbor_ptr(side.side());
 
   if ((neighbour != NULL) &&
       (neighbour->subdomain_id() != (side.elem()->subdomain_id())))

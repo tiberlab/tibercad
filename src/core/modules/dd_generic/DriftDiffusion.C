@@ -362,7 +362,7 @@ DriftDiffusion::set_electron_fermi_level(double Ef_n)
     for (unsigned int i = 0; i < elem->n_nodes(); i++)
     {
       unsigned int id =
-        elem->get_node(i)->dof_number(system.number(), var, 0);
+        elem->node_ptr(i)->dof_number(system.number(), var, 0);
       solution.set(id, level);
     }
   }
@@ -395,7 +395,7 @@ DriftDiffusion::set_hole_fermi_level(double Ef_p)
     for (unsigned int i = 0; i < elem->n_nodes(); i++)
     {
       unsigned int id =
-        elem->get_node(i)->dof_number(system.number(), var, 0);
+        elem->node_ptr(i)->dof_number(system.number(), var, 0);
       solution.set(id, level);
     }
   }
@@ -428,7 +428,7 @@ DriftDiffusion::set_electric_potential(double pot)
     for (unsigned int i = 0; i < elem->n_nodes(); i++)
     {
       unsigned int id =
-        elem->get_node(i)->dof_number(system.number(), var, 0);
+        elem->node_ptr(i)->dof_number(system.number(), var, 0);
       solution.set(id, level);
     }
   }
@@ -816,11 +816,11 @@ DriftDiffusion::calculate_weights(void)
       sc->set_coordinates(elem->point(i));
 
       unsigned int dofu =
-        elem->get_node(i)->dof_number(system.number(), var_u, 0);
+        elem->node_ptr(i)->dof_number(system.number(), var_u, 0);
       map<unsigned int, unsigned int> dofq;
       for (auto var : var_q)
         dofq.insert( make_pair(var.first, 
-                               elem->get_node(i)->
+                               elem->node_ptr(i)->
                                        dof_number(system.number(), var.first, 0)) );
 
       double u = solution(dofu);
@@ -1067,20 +1067,20 @@ DriftDiffusion::calculate_iqe(void)
   libMeshEnums::Order integration_order = params.integration_order;
 
   // the finite element
-  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
-  libMesh::UniquePtr<libMesh::QBase> qrule(libMesh::QBase::build(
+  unique_ptr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
+  unique_ptr<libMesh::QBase> qrule(libMesh::QBase::build(
         params.quadrature_type, dim, integration_order));
   fe->attach_quadrature_rule(qrule.get());
 
   const vector<Real>& JxW = fe->get_JxW();
 
   // the finite element for boundary integration
-  libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
+  unique_ptr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
 
   if (dim == 1)
     integration_order = libMeshEnums::CONSTANT;
 
-  libMesh::UniquePtr<libMesh::QBase> qface(libMesh::QBase::build(
+  unique_ptr<libMesh::QBase> qface(libMesh::QBase::build(
         params.quadrature_type, dim - 1, integration_order));
   fe_face->attach_quadrature_rule(qface.get());
 
@@ -1246,7 +1246,7 @@ DriftDiffusion::guess_equilibrium(void)
 
     for ( ; it != end; ++it)
       for (unsigned int n = 0; n < (*it)->n_nodes(); n++)
-	node_conn[(*it)->node(n)]++;
+	node_conn[(*it)->node_id(n)]++;
 
     this->get_communicator().sum(node_conn);
   }
@@ -1264,7 +1264,7 @@ DriftDiffusion::guess_equilibrium(void)
     {
       solution_u.add(dof_indices_u[i],
           sc->get_equilibrium_fermi_level()
-          / (phi0 * static_cast<Real>(node_conn[elem->node(i)])));
+          / (phi0 * static_cast<Real>(node_conn[elem->node_id(i)])));
     }
   }
 
@@ -1736,7 +1736,7 @@ DriftDiffusion::RSTFSys::user_assembly(void)
   const MeshBase& mesh = get_mesh();
   unsigned int dim = mesh.mesh_dimension();
 
-  libMesh::UniquePtr<libMesh::FEBase> fe(libMesh::FEBase::build(dim, fe_type));
+  unique_ptr<libMesh::FEBase> fe(libMesh::FEBase::build(dim, fe_type));
   libMesh::QGauss qrule(dim, SECOND);
   fe->attach_quadrature_rule(&qrule);
 
@@ -1880,7 +1880,7 @@ DriftDiffusion::RSTFSys::build_nodal_results(vector<double>& results,
 
     for (unsigned int n = 0; n < elem->n_nodes(); n++)
     {
-      unsigned int id = elem->node(n) * _boundaries.size();
+      unsigned int id = elem->node_id(n) * _boundaries.size();
       auto bdit(_boundaries.begin());
       for ( ; bdit != _boundaries.end(); ++bdit)
       {
@@ -2323,7 +2323,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
 
   libMesh::FEType fe_type = system->variable_type(u_var);
-  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
+  unique_ptr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
 
   vector<unsigned int> dof_indices_u;
   vector<vector<unsigned int>> dof_indices_q(n_vars);
@@ -2879,8 +2879,8 @@ DriftDiffusion::calculate_currents_rstf_global(void)
   // all have the same type
   libMesh::FEType fe_type = system->variable_type(u_var);
 
-  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
-  libMesh::UniquePtr<libMesh::QBase> qrule(libMesh::QBase::build(
+  unique_ptr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
+  unique_ptr<libMesh::QBase> qrule(libMesh::QBase::build(
         get_my_options().quadrature_type, dim, get_my_options().integration_order));
   fe->attach_quadrature_rule(qrule.get());
 
@@ -3121,8 +3121,8 @@ DriftDiffusion::calculate_currents_rstf_compact(void)
 
   libMesh::FEType fe_type = system->variable_type(u_var);
 
-  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
-  libMesh::UniquePtr<libMesh::QBase> qrule(libMesh::QBase::build(
+  unique_ptr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
+  unique_ptr<libMesh::QBase> qrule(libMesh::QBase::build(
         get_my_options().quadrature_type, dim, get_my_options().integration_order));
   fe->attach_quadrature_rule(qrule.get());
 
@@ -3199,7 +3199,7 @@ DriftDiffusion::calculate_currents_rstf_compact(void)
     // find the weight for each element node
     vector<double> weight(elem->n_nodes(), 0.0);
     for (unsigned int n = 0; n < elem->n_nodes(); n++)
-      if (env.is_node_on_boundary(elem->get_node(n), boundary))
+      if (env.is_node_on_boundary(elem->node_ptr(n), boundary))
         weight[n] = 1.0;
 
 
@@ -3364,14 +3364,14 @@ DriftDiffusion::calculate_field_emission(void)
   libMesh::FEType fe_type = system->variable_type(u_var);
 
   // the finite element for boundary integration
-  libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type));
+  unique_ptr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type));
   libMeshEnums::Order integration_order;
   if (dim == 1)
     integration_order = libMeshEnums::CONSTANT;
   else
     integration_order = libMeshEnums::FIRST;
 
-  libMesh::UniquePtr<libMesh::QBase> qface(libMesh::QBase::build(
+  unique_ptr<libMesh::QBase> qface(libMesh::QBase::build(
         get_my_options().quadrature_type, dim - 1, integration_order));
   fe_face->attach_quadrature_rule(qface.get());
 
@@ -3530,14 +3530,14 @@ DriftDiffusion::calculate_currents_surfint(void)
   libMesh::FEType fe_type = system->variable_type(u_var);
 
   // the finite element for boundary integration
-  libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type));
+  unique_ptr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type));
   libMeshEnums::Order integration_order;
   if (dim == 1)
     integration_order = libMeshEnums::CONSTANT;
   else
     integration_order = get_my_options().integration_order;
 
-  libMesh::UniquePtr<libMesh::QBase> qface(libMesh::QBase::build(
+  unique_ptr<libMesh::QBase> qface(libMesh::QBase::build(
         get_my_options().quadrature_type, dim - 1, integration_order));
   fe_face->attach_quadrature_rule(qface.get());
 
@@ -3771,14 +3771,14 @@ DriftDiffusion::calculate_surface_recombination(void)
   libMesh::FEType fe_type = system->variable_type(u_var);
 
   // the finite element for boundary integration
-  libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type));
+  unique_ptr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type));
   libMeshEnums::Order integration_order;
   if (dim == 1)
     integration_order = libMeshEnums::CONSTANT;
   else
     integration_order = get_my_options().integration_order;
 
-  libMesh::UniquePtr<libMesh::QBase> qface(libMesh::QBase::build(
+  unique_ptr<libMesh::QBase> qface(libMesh::QBase::build(
         get_my_options().quadrature_type, dim - 1, integration_order));
   fe_face->attach_quadrature_rule(qface.get());
 
@@ -3989,8 +3989,8 @@ DriftDiffusion::build_local_scaling_fem(void)
   // since (in future) different variables can ben set in different regions
 
   libMesh::FEType fe_type = system.variable_type(u_var);
-  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
-  libMesh::UniquePtr<libMesh::QBase> qrule(libMesh::QBase::build(
+  unique_ptr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+  unique_ptr<libMesh::QBase> qrule(libMesh::QBase::build(
         params.quadrature_type, dim, params.integration_order));
   fe->attach_quadrature_rule(qrule.get());
 
@@ -4011,11 +4011,11 @@ DriftDiffusion::build_local_scaling_fem(void)
   // for boundary elements
   //
 
-  libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
+  unique_ptr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
   libMeshEnums::Order integration_order = params.integration_order;
   if (dim == 1)
     integration_order = libMeshEnums::CONSTANT;
-  libMesh::UniquePtr<libMesh::QBase> qface(libMesh::QBase::build(
+  unique_ptr<libMesh::QBase> qface(libMesh::QBase::build(
         params.quadrature_type, dim - 1, integration_order));
   fe_face->attach_quadrature_rule(qface.get());
 
@@ -4354,7 +4354,7 @@ DriftDiffusion::build_local_scaling_fem(void)
               Real phi_i_x_phi_j =
                 phi_face[i][qp] * phi_face[i][qp];
 
-              local_scaling_[elem->get_node(i)][2] -= scale_u * deriv_u[0] * phi_i_x_phi_j;
+              local_scaling_[elem->node_ptr(i)][2] -= scale_u * deriv_u[0] * phi_i_x_phi_j;
 
 
               ////
@@ -4363,9 +4363,9 @@ DriftDiffusion::build_local_scaling_fem(void)
               //   and the normal point outwards, giving a positiv current for
               //   outflow
 
-              local_scaling_[elem->get_node(i)][0] -= scale_n * deriv_en[1] * phi_i_x_phi_j;
+              local_scaling_[elem->node_ptr(i)][0] -= scale_n * deriv_en[1] * phi_i_x_phi_j;
 
-              local_scaling_[elem->get_node(i)][1] += scale_p * deriv_ep[2] * phi_i_x_phi_j;
+              local_scaling_[elem->node_ptr(i)][1] += scale_p * deriv_ep[2] * phi_i_x_phi_j;
             }
           }
         }
@@ -4710,18 +4710,18 @@ DriftDiffusion::do_assembly_fem(const libMesh::NumericVector<Number>& x,
   libMeshEnums::Order integration_order = params.integration_order;
 
   // the finite element
-  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
-  libMesh::UniquePtr<libMesh::QBase> qrule(libMesh::QBase::build(
+  unique_ptr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+  unique_ptr<libMesh::QBase> qrule(libMesh::QBase::build(
         params.quadrature_type, dim, integration_order));
   fe->attach_quadrature_rule(qrule.get());
 
   // the finite element for boundary integration
-  libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
+  unique_ptr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
 
   if (dim == 1)
     integration_order = libMeshEnums::CONSTANT;
 
-  libMesh::UniquePtr<libMesh::QBase> qface(libMesh::QBase::build(
+  unique_ptr<libMesh::QBase> qface(libMesh::QBase::build(
         params.quadrature_type, dim - 1, integration_order));
   fe_face->attach_quadrature_rule(qface.get());
 
@@ -5999,18 +5999,18 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
   libMeshEnums::Order integration_order = params.integration_order;
 
   // the finite element
-  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
-  libMesh::UniquePtr<libMesh::QBase> qrule(libMesh::QBase::build(
+  unique_ptr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+  unique_ptr<libMesh::QBase> qrule(libMesh::QBase::build(
         params.quadrature_type, dim, integration_order));
   fe->attach_quadrature_rule(qrule.get());
 
   // the finite element for boundary integration
-  libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
+  unique_ptr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
 
   if (dim == 1)
     integration_order = libMeshEnums::CONSTANT;
 
-  libMesh::UniquePtr<libMesh::QBase> qface(libMesh::QBase::build(
+  unique_ptr<libMesh::QBase> qface(libMesh::QBase::build(
         params.quadrature_type, dim - 1, integration_order));
   fe_face->attach_quadrature_rule(qface.get());
 
@@ -6778,7 +6778,7 @@ DriftDiffusion::do_assembly_bim(const libMesh::NumericVector<Number>& x,
       if ((sm != NULL) || ((true_boundary) && (residual != NULL)))
       {
         // Get the necessary geometric quantities on the face element
-        UniquePtr<Elem> side = elem->side(s);
+        unique_ptr<const Elem> side = elem->side_ptr(s);
 
         VoronoiCell fcell(*side, length_scaling);
         fcell.calculate();

@@ -20,7 +20,7 @@ ExtProfile1D::ExtProfile1D(const ModelOptions& options) :
 {
   get_option("origin", _origin);
   get_option("direction", _direction);
-  _direction /= _direction.size();
+  _direction /= _direction.norm();
   _scale = get_option("length_scaling", _scale);
   _data_scale = get_option("data_scaling", _data_scale);
 

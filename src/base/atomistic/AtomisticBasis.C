@@ -385,17 +385,17 @@ AtomisticBasis::get_subset(vector<unsigned int>& subset,
     {
 
       case 'y':
-        y = b.size();
+        y = b.norm();
         x = z = side;
         break;
 
       case 'z':
-        z = c.size();
+        z = c.norm();
         y = x = side;
         break;
 
       default: // 'x'
-        x = a.size();
+        x = a.norm();
         y = z = side;
         break;
     }
@@ -414,7 +414,7 @@ AtomisticBasis::get_subset(vector<unsigned int>& subset,
       continue;
 
     Point d(atm.get_position() - center);
-    double d_len = d.size();
+    double d_len = d.norm();
     if (d_len < min_dist)
     {
       min_dist = d_len;

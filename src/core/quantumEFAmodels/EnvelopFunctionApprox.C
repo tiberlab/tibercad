@@ -876,7 +876,7 @@ void EnvelopFunctionApprox::parse_options()
     const unsigned int n = elem->n_nodes();
     for (unsigned int i = 0; i < n; i++)
     {
-      const Node* nd = elem->get_node(i);
+      const Node* nd = elem->node_ptr(i);
       used_nodes.insert(nd);
     }
   }

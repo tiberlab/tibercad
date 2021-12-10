@@ -562,14 +562,14 @@ SimulationInterface::_get_node_model(const Elem* elem, int node) const
 libMesh::MeshBase::const_element_iterator
 SimulationInterface::active_local_elements_begin(void) const
 {
-  return(this->get_mesh().active_local_subdomains_elements_begin(
+  return(this->get_mesh().active_local_subdomain_set_elements_begin(
       this->get_environment().get_region_ids()));
 }
 
 libMesh::MeshBase::const_element_iterator
 SimulationInterface::active_local_elements_end(void) const
 {
-  return(this->get_mesh().active_local_subdomains_elements_end(
+  return(this->get_mesh().active_local_subdomain_set_elements_end(
       this->get_environment().get_region_ids()));
 }
 
@@ -578,14 +578,14 @@ SimulationInterface::active_local_elements_end(void) const
 libMesh::MeshBase::element_iterator
 SimulationInterface::active_local_elements_begin(void)
 {
-  return(this->get_mesh().active_local_subdomains_elements_begin(
+  return(this->get_mesh().active_local_subdomain_set_elements_begin(
       this->get_environment().get_region_ids()));
 }
 
 libMesh::MeshBase::element_iterator
 SimulationInterface::active_local_elements_end(void)
 {
-  return(this->get_mesh().active_local_subdomains_elements_end(
+  return(this->get_mesh().active_local_subdomain_set_elements_end(
       this->get_environment().get_region_ids()));
 }
 
@@ -1496,13 +1496,13 @@ SimulationInterface::plot_meshdata(void)
 
       for (unsigned int n = 0; n < elem->n_nodes(); ++n)
       {
-        if (node_conn[subdomain].count(elem->node(n)) == 0)
+        if (node_conn[subdomain].count(elem->node_id(n)) == 0)
         {
           unsigned int nodeid = node_conn[subdomain].size();
-          node_conn[subdomain][elem->node(n)] = make_pair(nodeid, 1);
+          node_conn[subdomain][elem->node_id(n)] = make_pair(nodeid, 1);
         }
         else
-          (node_conn[subdomain][elem->node(n)].second)++;
+          (node_conn[subdomain][elem->node_id(n)].second)++;
       }
     }
   }
@@ -1592,8 +1592,8 @@ SimulationInterface::plot_meshdata(void)
           {
             unsigned int ncomp = descr.n_components();
             unsigned int index =
-              ncomp * node_conn[subdomain][elem->node(n)].first;
-            unsigned short w = node_conn[subdomain][elem->node(n)].second;
+              ncomp * node_conn[subdomain][elem->node_id(n)].first;
+            unsigned short w = node_conn[subdomain][elem->node_id(n)].second;
             for (unsigned int i = 0; i < ncomp; i++)
               vec[index + i] += sol[ncomp * n + i] / w;
 

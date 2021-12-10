@@ -50,7 +50,7 @@ Kspace::Kspace(const ModelOptions& options, const libMesh::Parallel::Communicato
 {
   kmesh = NULL;
 
-  kspace_comm = comm;
+  kspace_comm.duplicate(comm);
 
   transform_matrix = Tensor2Gen(1);
 
@@ -78,7 +78,7 @@ Kspace::Kspace( const Kspace& kspace)
    transform_matrix = 0;
    transform_matrix += kspace.transform_matrix;
    kmesh = new libMesh::Mesh(*(kspace.kmesh));
-   kspace_comm = kspace.kspace_comm;
+   kspace_comm.duplicate(kspace.kspace_comm);
 }
 
 
@@ -1660,7 +1660,7 @@ void Kspace::rotate_mesh(void)
 
   for (unsigned int n=0; n < kmesh->n_nodes(); n++)
   {
-    const libMesh::Point p = kmesh->node(n);
+    const libMesh::Point p = *kmesh->node_ptr(n);
     
     vec1(1) = p(0);
     vec1(2) = p(1);
@@ -1668,7 +1668,7 @@ void Kspace::rotate_mesh(void)
     
     vec1 = transform_matrix * vec1;
     
-    kmesh->node(n) = libMesh::Point( vec1(1), vec1(2), vec1(3) );
+    *kmesh->node_ptr(n) = libMesh::Point( vec1(1), vec1(2), vec1(3) );
     
   }
 
@@ -1685,7 +1685,7 @@ void Kspace::inv_rotate_mesh(void)
 
   for (unsigned int n=0; n < kmesh->n_nodes(); n++)
   {
-    const libMesh::Point p = kmesh->node(n);
+    const libMesh::Point p = *kmesh->node_ptr(n);
     
     vec1(1) = p(0);
     vec1(2) = p(1);
@@ -1693,7 +1693,7 @@ void Kspace::inv_rotate_mesh(void)
     
     vec1 = inv_matrix * vec1;
     
-    kmesh->node(n) = libMesh::Point( vec1(1), vec1(2), vec1(3) );
+    *kmesh->node_ptr(n) = libMesh::Point( vec1(1), vec1(2), vec1(3) );
     
   }
 

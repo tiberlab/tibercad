@@ -2,31 +2,28 @@
 
 ARCH=`uname -m`
 
-BASEDIR=/usr/pack/tibercad_dev-3.1-ma
+BASEDIR=/usr/pack/tibercad_dev-3.3-ma
 BUILDDIR=${BASEDIR}/build
 SDKDIR=${BASEDIR}/SDK
 #PETSC_DIR=${BUILDDIR}/petsc-3.7.3
 #SLEPC_DIR=${BUILDDIR}/slepc-3.7.3
 #LIBMESHDIR=${BUILDDIR}/libmesh-1.0.0-${ARCH}-linux
-PETSC_DIR=${BUILDDIR}/petsc-3.6.2
-SLEPC_DIR=${BUILDDIR}/slepc-3.6.2
-LIBMESHDIR=${BUILDDIR}/libmesh-1.0.0-${ARCH}-linux
+PETSC_DIR=${BUILDDIR}/petsc-3.16.1
+SLEPC_DIR=${BUILDDIR}/slepc-3.16.1
+LIBMESHDIR=${BUILDDIR}/libmesh-1.6.2-${ARCH}-linux
 
-export CXX=mpicxx-3.1.1
-export CC=mpicc-3.1.1
-export FC=mpifort-3.1.1
-export F77=${FC}
-#export CXX=/usr/pack/tibercad_dev-2.2-ma/${ARCH}-linux/bin/mpicxx
-#export CC=/usr/pack/tibercad_dev-2.2-ma/${ARCH}-linux/bin/mpicc
-#export FC=/usr/pack/tibercad_dev-2.2-ma/${ARCH}-linux/bin/mpif90
+export CXX=${SDKDIR}/${ARCH}-linux/bin/mpicxx
+export CC=${SDKDIR}/${ARCH}-linux/bin/mpicc
+export FC=${SDKDIR}/${ARCH}-linux/bin/mpifort
+export MPIEXEC=${SDKDIR}/${ARCH}-linux/bin/mpiexec.hydra
 #export FCFLAGS="${FCFLAGS} -fexceptions -gcc-name=${CC} -gxx-name=${CXX} -nofor-main"
 #export LDFLAGS="${LDFLAGS} `/usr/pack/tibercad_dev-2.2-ma/${ARCH}-linux/bin/mpicxx -showme:link`"
 #export LDFLAGS="${LDFLAGS} `${PETSC_DIR}/externalpackages/mpich2-1.0.8/bin/mpicxx -showme:link`"
 
 
-FORTRANDIR=/usr/pack/intel_ifort-13.0-ma
+FORTRANDIR=/usr/pack/intel_oneapi-2021-ma/compiler/latest/linux/compiler
 export LDFLAGS="-Wl,-rpath,${FORTRANDIR}/lib/intel64"
-export FCFLAGS="-fexceptions -g -gcc-name=$(which ${CC}) -gxx-name=$(which ${CXX}) -nofor-main -openmp"
+export FCFLAGS="-fexceptions -g -gcc-name=$(which ${CC}) -gxx-name=$(which ${CXX}) -nofor-main -qopenmp"
 
 BOOST="${SDKDIR}"
 
@@ -43,13 +40,13 @@ SVN=svn-1.9.5
 #  --with-tao-prefix=/usr/pack/tibercad_dev-2.2-ma/tao-1.10-p1 \
 
 ./configure \
-  --with-cuda=/usr/pack/cudatoolkit-5.5.11-ma \
+  --with-cuda=/usr/pack/cudatoolkit-11.4-ma \
   --with-petsc-prefix=${PETSC_DIR} \
   --with-petsc-arch=${ARCH}-linux \
   --with-slepc-prefix=${SLEPC_DIR} \
-  --with-mpiexec=mpiexec-3.1.1 \
-  --with-mkl=/usr/pack/intel_mkl-11.2-ma/mkl \
-  --with-thread-library=intel \
+  --with-mpiexec=${MPIEXEC} \
+  --with-mkl=/usr/pack/intel_oneapi-2021-ma/mkl/latest \
+  --with-thread-library=gnu \
   --with-subversion=${SVN} \
   --disable-license-check \
   --enable-uptight\

@@ -401,7 +401,7 @@ DDInterfaceModel::compute()
     {
       vector<double> data;
       // we take the flux from the neighbor element
-      if (_eflux_sim.first->get_solution(get_element()->neighbor(_side), _eflux_sim.second,
+      if (_eflux_sim.first->get_solution(get_element()->neighbor_ptr(_side), _eflux_sim.second,
           data, get_coordinates()))
       {
         flux = data[0] * _normal(0) + data[1] * _normal(1) + data[2] * _normal(2);
@@ -438,7 +438,7 @@ DDInterfaceModel::compute()
     {
       vector<double> data;
       // we take the flux from the neighbor element
-      if (_hflux_sim.first->get_solution(get_element()->neighbor(_side), _hflux_sim.second,
+      if (_hflux_sim.first->get_solution(get_element()->neighbor_ptr(_side), _hflux_sim.second,
           data, get_coordinates()))
       {
         flux = data[0] * _normal(0) + data[1] * _normal(1) + data[2] * _normal(2);

@@ -2199,7 +2199,7 @@ Negf::get_solution_secure(const Elem *elem, std::map<ID, std::vector<double>> &v
         Point point_current;      
         if (dim>1)
         { 
-          UniquePtr<Elem> elside = elem->build_side(side); 		
+          unique_ptr<const Elem> elside = elem->build_side_ptr(side); 		
           point_current = _contact_current[qc] * qc->get_normal() * elside->volume() / qc->get_area();
         }
         else
@@ -2605,8 +2605,8 @@ Negf::reorder_assemble(void)
 
   for (unsigned int k=0; k < n_vars; k++)
   {
-    auto       el     = mesh.active_subdomains_elements_begin(qc_ids);
-    const auto end_el = mesh.active_subdomains_elements_end(qc_ids);
+    auto       el     = mesh.active_subdomain_set_elements_begin(qc_ids);
+    const auto end_el = mesh.active_subdomain_set_elements_end(qc_ids);
 
     for ( ; el != end_el; ++el)
     {

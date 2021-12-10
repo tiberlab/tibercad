@@ -164,9 +164,9 @@ void  FEMEigenvalueProblem::create_dirichlet_dofs( )
     const Elem* elem = *it;
     for (unsigned int n = 0; n < elem->n_nodes(); n++)
     { 
-      unsigned int  node_id =  elem->node(n);
+      unsigned int  node_id =  elem->node_id(n);
       
-      const Node* nd = elem->get_node(n); 
+      const Node* nd = elem->node_ptr(n); 
 
       Boundary* bd = se.get_boundary(nd); 
       
@@ -230,7 +230,7 @@ void FEMEigenvalueProblem::apply_dirichlet_at_all_boundaries()
 	 
       //check if the side is external -------------------------
       
-      Elem* el1 = elem->neighbor(i);
+      const Elem* el1 = elem->neighbor_ptr(i);
 
       bool side_is_external = false;
 
@@ -867,7 +867,7 @@ void FEMEigenvalueProblem::make_nodes_periodic()
       // Loop over all the nodes
       for (unsigned int n = 0; n < get_mesh().n_nodes(); n++)
       {
-	const Node* node1 = & (get_mesh().node(n));
+	const Node* node1 = get_mesh().node_ptr(n);
 	// look only at the ones used by the module
 	if (node1->n_dofs(system_number) > 0)
 	{		

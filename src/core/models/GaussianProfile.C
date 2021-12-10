@@ -22,7 +22,7 @@ GaussianProfile::GaussianProfile(const ModelOptions& options) :
   get_option("origin", _origin);
   get_option("direction", _direction);
   _sigma = get_option("sigma", _sigma);
-  _direction /= _direction.size();
+  _direction /= _direction.norm();
   
   string type = get_option("type", "onesided");
   if (type == "symmetric")

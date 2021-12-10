@@ -765,7 +765,7 @@ sub compare_data_vectors($$$) {
   my @data1 = @{$_[0]};
   my @data2 = @{$_[1]};
   my $prec = $_[2];
-  my $eps = 1e-9;
+  my $eps = 1e-6;
 
   my $n = $#data1;
 

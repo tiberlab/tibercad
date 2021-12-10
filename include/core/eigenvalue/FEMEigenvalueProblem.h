@@ -253,7 +253,7 @@ inline bool FEMEigenvalueProblem::element_on_boundary(const libMesh::Elem* eleme
 
   for (short i = 0; i < n_sides; i++)
   {
-    Elem* el1 = element->neighbor(i);
+    const Elem* el1 = element->neighbor_ptr(i);
 
     if ( (el1 == NULL)  ) 
       result = true;

@@ -408,8 +408,7 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     const MeshBase* pc_mesh = pc_kspace.get_k_mesh();
 
     // get the bounding box, to obtain PC BZ radius
-    MeshTools::BoundingBox pc_bb =
-        MeshTools::bounding_box(*pc_mesh);
+    BoundingBox pc_bb = MeshTools::create_bounding_box(*pc_mesh);
     pc_bb.max() += Point(1e-2, 1e-2, 1e-2);
     pc_bb.min() -= Point(1e-2, 1e-2, 1e-2);
     double pc_diam = 2 * pc_bb.max().norm();
@@ -418,8 +417,7 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     const MeshBase* sc_mesh = sc_kspace->get_k_mesh();
 
     // get the bounding box, to obtain SC BZ radius
-    MeshTools::BoundingBox sc_bb =
-        MeshTools::bounding_box(*sc_mesh);
+    BoundingBox sc_bb = MeshTools::create_bounding_box(*sc_mesh);
     sc_bb.max() += Point(1e-2, 1e-2, 1e-2);
     sc_bb.min() -= Point(1e-2, 1e-2, 1e-2);
 
@@ -960,7 +958,7 @@ EigenvalueProblem::process_element(const Elem* elem, unsigned int entryside,
   {
     if (elem->is_node_on_side(n, entryside))
     { 
-      ref_node = elem->node(n);
+      ref_node = elem->node_id(n);
       if (ordered_solutions[ref_node].empty())
       {
         const Point& k_point = elem->point(n);
@@ -983,7 +981,7 @@ EigenvalueProblem::process_element(const Elem* elem, unsigned int entryside,
 
   for (unsigned int n = 0; n < elem->n_nodes(); ++n)
   {
-    unsigned int node_id = elem->node(n);
+    unsigned int node_id = elem->node_id(n);
     if (ordered_solutions[node_id].empty())
     {
       const Point& k_point = elem->point(n);
@@ -1037,13 +1035,13 @@ EigenvalueProblem::process_element(const Elem* elem, unsigned int entryside,
     {
       if (n != entryside)
       {
-        const Elem* neigh = elem->neighbor(n);
+        const Elem* neigh = elem->neighbor_ptr(n);
         if (neigh != NULL)
         {
           int neigh_entry;
           for (unsigned int ns = 0; ns < neigh->n_sides(); ++ns)
           {
-            if (neigh->neighbor(ns) == elem)
+            if (neigh->neighbor_ptr(ns) == elem)
             {
               neigh_entry = ns;
               break;
@@ -1173,7 +1171,7 @@ void EigenvalueProblem::calculate_dos(void)
     const Elem* kelem = *kit;
 
     fe->reinit(kelem);
-    unsigned int n_eigs = solutions[kelem->node(0)].size();
+    unsigned int n_eigs = solutions[kelem->node_id(0)].size();
 
     for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
     {
@@ -1182,10 +1180,10 @@ void EigenvalueProblem::calculate_dos(void)
       vector<double> energy(n_eigs, 0.0);
       for (unsigned int i = 0; i < kelem->n_nodes(); ++i)
       {
-        unsigned int node = kelem->node(i);
+        unsigned int node = kelem->node_id(i);
         for (unsigned int n = 0; n < n_eigs; ++n)
         {
-          energy[n] += solutions[kelem->node(i)][n].eigen_energy * phi[i][qp];
+          energy[n] += solutions[kelem->node_id(i)][n].eigen_energy * phi[i][qp];
         }
       }
 

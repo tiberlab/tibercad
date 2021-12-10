@@ -473,7 +473,7 @@ void Optics::calculate_for_k_point(const Point& k_point,
   compute_matrix_elements(); //calculate matrix elements of P operator
 
 
-  if ((plot_solution("EigenStates_k_0") && (k_point.size() < 1e-6)) ||
+  if ((plot_solution("EigenStates_k_0") && (k_point.norm() < 1e-6)) ||
       plot_solution("EigenStates"))
   {
     _initial_state_model->plot();

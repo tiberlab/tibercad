@@ -4,6 +4,8 @@ use lib '.';
 
 use strict;
 
+use lib '.';
+
 use TestSuite qw(run_test
                  read_configuration
                  get_option

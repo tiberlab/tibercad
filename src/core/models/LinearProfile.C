@@ -22,7 +22,7 @@ LinearProfile::LinearProfile(const ModelOptions& options) :
   get_option("origin", _origin);
   get_option("direction", _direction);
   _distance = get_option("distance", _distance);
-  _direction /= _direction.size();
+  _direction /= _direction.norm();
 
   string type = get_option("type", "onesided");
   if (type == "symmetric")

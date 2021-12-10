@@ -9,7 +9,7 @@
 #include <string>
 #include <list>
 
-#include "parallel.h"
+#include "libmesh/parallel.h"
 
 class Control;
 

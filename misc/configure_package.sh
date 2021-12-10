@@ -1,27 +1,33 @@
 #!/bin/bash
 
-export BUILDDIR=/usr/pack/tibercad_dev-3.2-ma/build
-export SDKDIR=/usr/pack/tibercad_dev-3.2-ma/SDK
-#export SDKDIR=/work/maufder/TiberCAD/3.2/SDK
+export PETSCVERSION="3.15.2"
+export SLEPCVERSION="3.15.2"
+export LIBMESHVERSION="1.6.2"
+export GMSHVERSION="4.8.3"
+export BOOSTVERSION="1_77_0"
+
+#export BUILDDIR=/usr/pack/tibercad_dev-3.2-ma/build
+#export SDKDIR=/usr/pack/tibercad_dev-3.2-ma/SDK
+#export SDKDIR=/scratch/maufder/TiberCAD/3.2/SDK
 ARCH=x86_64-linux
 
 export MKL=y
 export MKLDIR=/usr/pack/intel_oneapi-2021-ma/mkl/latest
 
 export MPI=y
-export MPIDIR=${SDKDIR}
+export MPIDIR="$(dirname `pwd`)/SDK"
+#export MPIDIR=/usr/pack/tibercad_dev-3.2-ma/SDK
 
 export FORTRANDIR=/usr/pack/intel_oneapi-2021-ma/compiler/latest/linux/compiler
 
-export MPIEXEC=${SDKDIR}/${ARCH}/bin/mpiexec
-
+export MPIEXEC=${MPIDIR}/${ARCH}/bin/mpiexec
 
 if test -e ${MPIEXEC}
 then 
-  export CC=${SDKDIR}/${ARCH}/bin/mpicc
-  export CXX=${SDKDIR}/${ARCH}/bin/mpicxx
-  export FC=${SDKDIR}/${ARCH}/bin/mpifort
-  export F77=${SDKDIR}/${ARCH}/bin/mpifort
+  export CC=${MPIDIR}/${ARCH}/bin/mpicc
+  export CXX=${MPIDIR}/${ARCH}/bin/mpicxx
+  export FC=${MPIDIR}/${ARCH}/bin/mpifort
+  export F77=${MPIDIR}/${ARCH}/bin/mpifort
 else
   export CC=gcc-11.1
   export CXX=g++-11.1

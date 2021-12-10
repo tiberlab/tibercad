@@ -20,7 +20,7 @@ ExponentialProfile::ExponentialProfile(const ModelOptions& options) :
   get_option("origin", _origin);
   get_option("direction", _direction);
   _lambda = get_option("lambda", _lambda);
-  _direction /= _direction.size();
+  _direction /= _direction.norm();
 
   string type = get_option("type", "onesided");
   if (type == "symmetric")

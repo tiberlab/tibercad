@@ -195,7 +195,7 @@ extern "C"
 #else
       const char* file, const char* dir, PetscErrorCode n,
 #endif
-      PetscErrorType, const char*, void*) throw (PetscRuntimeError)
+      PetscErrorType, const char*, void*)
   {
 #ifdef DEBUG
     std::ostringstream os;
@@ -503,6 +503,7 @@ TiberPetscNonlinearSolver::solve(SparseMatrix<double>&  jacobian,
     // for composite type, do some extra stuff
     if (strcmp(pc_type, PCCOMPOSITE) == 0)
     {
+      /*
       ierr = PCCompositeSetType(pc, PC_COMPOSITE_MULTIPLICATIVE);
       TiberPetscUtils::checkerr(ierr);
 
@@ -527,6 +528,7 @@ TiberPetscNonlinearSolver::solve(SparseMatrix<double>&  jacobian,
       PCFactorSetZeroPivot(sub_pc, 1e-32);
       //PCILUReorderForNonzeroDiagonal(sub_pc, 1e-32);
 #endif
+    */
     }
   }
 

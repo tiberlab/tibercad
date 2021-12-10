@@ -170,6 +170,8 @@ Control::init(void)
     InputParser::add_defined("MPI_PROC", os.str());
   }
 
+  Messages::set_communicator(TiberCad::get_mpi_comm(), 0);
+
   // I would like to define preprocessor variables from device
   // MPI comm groups, but for that the input parser is not flexible enough
   // Therefore at the moment we can do a trick and parse twice
@@ -293,9 +295,10 @@ Control::setup_globals(const ModelOptions& opts)
   logfile = logfile + "." + InputParser::get_defined("MPI_DEV_KEY");
 
 
-  Messages::info("Writing log to " + logfile);
 
   Messages::set_log_file(logfile, _device->get_communicator(), 0);
+
+  Messages::info("Writing log to " + logfile);
 
   // Copy input file
   if (opts.get_option("backup_inputfile", true))

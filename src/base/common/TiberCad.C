@@ -13,8 +13,9 @@
 #include "Messages.h"
 #include "InitFailedException.h"
 
-#include "libmesh.h"
+#include "libmesh/libmesh.h"
 #include "petscsys.h"
+
 #include "petscerror.h"
 
 #ifdef _WIN32
@@ -82,7 +83,7 @@ TiberCad::TiberCad(MPI_Comm mpi_comm) :
 
   _object_counter++;
 
-  _mpi_comm = mpi_comm;
+  _mpi_comm.get() = mpi_comm;
 }
 
 

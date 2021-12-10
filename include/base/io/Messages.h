@@ -73,10 +73,14 @@ class Messages
 
     //! Set the log file
     static void set_log_file(const std::string& logfile,
-        const libMesh::Parallel::Communicator& comm, int rank);
+        libMesh::Parallel::Communicator& comm, int rank);
 
     //! Close the log file
     static void close_log_file(void);
+
+    //! Set the communicator
+    static void set_communicator(
+        libMesh::Parallel::Communicator& comm, int rank);
 
     //! Set the stdout stream
     static void set_stdout(std::ostream& os = nullstream);
@@ -148,7 +152,7 @@ class Messages
 
 
     //! The MPI communicator associated with the logger
-    static libMesh::Parallel::Communicator _mpi_comm;
+    static libMesh::Parallel::Communicator* _mpi_comm;
 
     //! The rank on the communicator that should write to the file
     static int _rank;

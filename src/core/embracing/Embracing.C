@@ -120,7 +120,7 @@ Embracing::generate_embracing_region(void)
       const Elem* neighbour;
       for (unsigned int s = 0; s < elem->n_sides(); s++)
       {
-        if ((s != it->side()) && ((neighbour = elem->neighbor(s)) != NULL))
+        if ((s != it->side()) && ((neighbour = elem->neighbor_ptr(s)) != NULL))
         {
           if ((find_elem(neighbour) == list_end) &&
               (in.contains_element(neighbour)))
@@ -153,7 +153,7 @@ Embracing::generate_embracing_region(void)
 
       for (unsigned int s = 0; s < elem->n_sides(); s++)
       {
-        if (((neighbour = elem->neighbor(s)) != NULL) &&
+        if (((neighbour = elem->neighbor_ptr(s)) != NULL) &&
             (find_elem(neighbour) == list_end) &&
             (in.contains_element(neighbour)))
         {
@@ -191,7 +191,7 @@ Embracing::find_boundary(void)
     {
       for (unsigned int s = 0; s < elem->n_sides(); s++)
       {
-        const Elem* neighbour =  elem->neighbor(s);
+        const Elem* neighbour =  elem->neighbor_ptr(s);
         if (neighbour != NULL)
           if (out.contains_element(neighbour) &&
               (!in.contains_element(neighbour) ||
@@ -223,11 +223,11 @@ Embracing::find_inner_boundary(void)
 
     for (unsigned int s = 0; s < elem->n_sides(); s++)
     {
-      const Elem* neighbour =  elem->neighbor(s);
+      const Elem* neighbour =  elem->neighbor_ptr(s);
       if (neighbour != NULL)
       {
         ElementSide side(elem, s);
-        const Elem* neighbour =  elem->neighbor(s);
+        const Elem* neighbour =  elem->neighbor_ptr(s);
         if (!_sides.count(side) && !_elem_list.count(neighbour))
           _inner_sides.insert(ElementSide(elem, s));
       }
@@ -480,7 +480,7 @@ Embracing::LaplaceEq::build_nodal_results(vector<double>& results,
 
     for (unsigned int n = 0; n < elem->n_nodes(); n++)
     {
-      unsigned int id =  elem->node(n);
+      unsigned int id =  elem->node_id(n);
       results[id]  =  (*solution)(dof_indices[n]);
     }
   }

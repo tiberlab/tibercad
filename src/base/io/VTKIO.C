@@ -61,7 +61,7 @@ void TiberVTKIO::write_nodal_data(const string& fname,
 
       unsigned int nn = elem->n_nodes();
       for (unsigned int i = 0; i < nn; i++)
-        node_ids.insert(elem->node(i));
+        node_ids.insert(elem->node_id(i));
     }
   }
 
@@ -91,7 +91,7 @@ void TiberVTKIO::write_nodal_data(const string& fname,
   const set<unsigned int>::iterator nodeend(node_ids.end());
   for (unsigned int vtk_id = 0; nodeit != nodeend; ++nodeit, vtk_id++)
   {
-    const Node& node = mesh.node(*nodeit);
+    const Node& node = *mesh.node_ptr(*nodeit);
     out << node(0) << " " << node(1) << " " << node(2) << "\n";
 
     vtk_node_ids[*nodeit] = vtk_id;
@@ -129,7 +129,7 @@ void TiberVTKIO::write_nodal_data(const string& fname,
     out << nn;
 
     for (unsigned int i = 0; i < nn; i++)
-      out << " " << vtk_node_ids[elem->node(i)];
+      out << " " << vtk_node_ids[elem->node_id(i)];
 
     out << "\n";
   }
@@ -178,11 +178,11 @@ void TiberVTKIO::write_nodal_data(const string& fname,
         Number value;
 
         // Get the global id of the node
-        unsigned int global_id = elem->node(i);
+        unsigned int global_id = elem->node_id(i);
 
         value = soln[global_id*n_vars + var];
 
-        node_map[vtk_node_ids[elem->node(i)]] = value;
+        node_map[vtk_node_ids[elem->node_id(i)]] = value;
       }
     }
 
@@ -234,7 +234,7 @@ void TiberVTKIO::write_elemental_data(const string& fname,
 
       unsigned int nn = elem->n_nodes();
       for (unsigned int i = 0; i < nn; i++)
-        node_ids.insert(elem->node(i));
+        node_ids.insert(elem->node_id(i));
     }
   }
 
@@ -264,7 +264,7 @@ void TiberVTKIO::write_elemental_data(const string& fname,
   const set<unsigned int>::iterator nodeend(node_ids.end());
   for (unsigned int vtk_id = 0; nodeit != nodeend; ++nodeit, vtk_id++)
   {
-    const Node& node = mesh.node(*nodeit);
+    const Node& node = *mesh.node_ptr(*nodeit);
     out << node(0) << " " << node(1) << " " << node(2) << "\n";
 
     vtk_node_ids[*nodeit] = vtk_id;
@@ -302,7 +302,7 @@ void TiberVTKIO::write_elemental_data(const string& fname,
     out << nn;
 
     for (unsigned int i = 0; i < nn; i++)
-      out << " " << vtk_node_ids[elem->node(i)];
+      out << " " << vtk_node_ids[elem->node_id(i)];
 
     out << "\n";
   }
@@ -871,8 +871,8 @@ TiberVTKIO::create_pieces(map<ID, vector<unsigned int> >& points,
 
     const MeshBase& mesh = get_mesh();
 
-    MeshBase::const_element_iterator it  = mesh.active_local_subdomains_elements_begin(subdomains);
-    MeshBase::const_element_iterator end = mesh.active_local_subdomains_elements_end(subdomains);
+    MeshBase::const_element_iterator it  = mesh.active_local_subdomain_set_elements_begin(subdomains);
+    MeshBase::const_element_iterator end = mesh.active_local_subdomain_set_elements_end(subdomains);
 
     for ( ; it != end; ++it)
     {
@@ -888,7 +888,7 @@ TiberVTKIO::create_pieces(map<ID, vector<unsigned int> >& points,
     // translation table for node IDs
     map<ID, map<libMesh::dof_id_type, unsigned int> > ttable;
 
-    for (it = mesh.active_local_subdomains_elements_begin(subdomains); it != end; ++it)
+    for (it = mesh.active_local_subdomain_set_elements_begin(subdomains); it != end; ++it)
     {
       const Elem* elem = *it;
       unsigned int id = elem->subdomain_id();
@@ -896,10 +896,10 @@ TiberVTKIO::create_pieces(map<ID, vector<unsigned int> >& points,
       unsigned int nn = elem->n_nodes();
       for (unsigned int i = 0; i < nn; i++)
       {
-        if (ttable[id].count(elem->node(i)) == 0)
+        if (ttable[id].count(elem->node_id(i)) == 0)
         {
           unsigned int n_id = ttable[id].size();
-          ttable[id][elem->node(i)] = n_id;
+          ttable[id][elem->node_id(i)] = n_id;
         }
       }
     }
@@ -912,7 +912,7 @@ TiberVTKIO::create_pieces(map<ID, vector<unsigned int> >& points,
     }
 
 
-    for (it = mesh.active_local_subdomains_elements_begin(subdomains); it != end; ++it)
+    for (it = mesh.active_local_subdomain_set_elements_begin(subdomains); it != end; ++it)
     {
       const Elem* elem = *it;
       unsigned int id = elem->subdomain_id();
@@ -925,8 +925,8 @@ TiberVTKIO::create_pieces(map<ID, vector<unsigned int> >& points,
 
       for (unsigned int i = 0; i < nn; i++)
       {
-        unsigned int n = ttable[id][elem->node(i)];
-        points[id][n] = elem->node(i);
+        unsigned int n = ttable[id][elem->node_id(i)];
+        points[id][n] = elem->node_id(i);
         vtkel.connectivity[i] = n;
       }
 

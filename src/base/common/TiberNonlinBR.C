@@ -43,7 +43,7 @@ TiberNonlinBR::do_solve(void)
   //NumericVector<Number>& u = get_vector("sol");
   NumericVector<Number>& u = get_solution_vector();
   NumericVector<Number>& du = *solution;
-  libMesh::UniquePtr<NumericVector<Number> > u_old_ptr = u.clone();
+  unique_ptr<NumericVector<Number> > u_old_ptr = u.clone();
   NumericVector<Number>& u_old = *u_old_ptr;
 
   // the l_infty tolerance for the step size
