@@ -1,7 +1,7 @@
 #!/bin/bash
 
-export PETSCVERSION="3.15.2"
-export SLEPCVERSION="3.15.2"
+export PETSCVERSION="3.16.1"
+export SLEPCVERSION="3.16.1"
 export LIBMESHVERSION="1.6.2"
 export GMSHVERSION="4.8.3"
 export BOOSTVERSION="1_77_0"

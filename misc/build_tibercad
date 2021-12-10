@@ -48,7 +48,7 @@ export LDFLAGS="$LDFLAGS -fopenmp"
   --with-slepc-prefix=${BUILDDIR}/slepc-${PETSCVERSION}${SLEPCPATCHLEVEL} \
   $TIBEROPTS \
   --with-libmesh-prefix=${BUILDDIR}/libmesh-${LIBMESHVERSION}-${TCHOST} \
-  --with-libmesh-petsc-libdir=${TOPDIR}/${TCHOST}/lib \
+  --with-libmesh-petsc-libdir=${SDKDIR}/${TCHOST}/lib \
   --with-boost-prefix=${SDKDIR} --with-boost-libdir=${TOPDIR}/${TCHOST}/lib \
   --host=$HOST --build=$BUILD
 
