@@ -104,12 +104,7 @@ void
 ExcitonGaussDOS::calculate_density_and_derivative(std::vector<double>& result, double Ef, double Epot,
     double kT, double kTlattice, const Elem* elem, const Point& p) const
 {
-  return calculate_density_and_derivative(result, Ef, Epot, kT, kTlattice);
-}
 
-void
-ExcitonGaussDOS::calculate_density_and_derivative(std::vector<double>& result, double Ef, double Epot, double kT, double kTlattice) const
-{
   double dens, der, der2;
   double N0 = (2.0*_J + 1.0) * get_effective_dos();
 

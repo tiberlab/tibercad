@@ -345,12 +345,16 @@ SRHRecombination::get_net_recombination_rates(double& recomb_e,
   }
   else
   {
-    std::pair<double, double> occ_h(_dos->get_occupied_density_and_derivative(Efp, dd.get_electric_potential() - get_trap_level(), kT_h));
+    std::pair<double, double> occ_h(_dos->get_occupied_density_and_derivative(
+        Efp, dd.get_electric_potential() - get_trap_level(),
+        kT_h, dd.get_element(), dd.get_coordinates()));
     f_h = occ_h.first;
     //f_h = _dos->get_occupied_density(-arg_h, kT_h);
     //deriv_h = _dos->get_occupied_density_derivative(-arg_h, kT_h);
 
-    std::pair<double, double> occ_e(_dos->get_occupied_density_and_derivative(Efn, dd.get_electric_potential() - get_trap_level(), kT_e));
+    std::pair<double, double> occ_e(_dos->get_occupied_density_and_derivative(
+        Efn, dd.get_electric_potential() - get_trap_level(),
+        kT_e, dd.get_element(), dd.get_coordinates()));
     f_e = occ_e.first;
     //f_e = _dos->get_occupied_density(-arg_e, kT_e);
     //deriv_e = _dos->get_occupied_density_derivative(-arg_e, kT_e);
@@ -475,14 +479,18 @@ SRHRecombination::get_net_recombination_rate_derivatives(
   }
   else
   {
-    std::pair<double, double> occ_h(_dos->get_occupied_density_and_derivative(Efp, dd.get_electric_potential() - get_trap_level(), kT_h));
+    std::pair<double, double> occ_h(_dos->get_occupied_density_and_derivative(
+        Efp, dd.get_electric_potential() - get_trap_level(),
+        kT_h, dd.get_element(), dd.get_coordinates()));
     f_h = occ_h.first;
     deriv_h = occ_h.second;
 
     //f_h = _dos->get_occupied_density(-arg_h, kT_h);
     //deriv_h = _dos->get_occupied_density_derivative(-arg_h, kT_h);
 
-    std::pair<double, double> occ_e(_dos->get_occupied_density_and_derivative(Efn, dd.get_electric_potential() - get_trap_level(), kT_e));
+    std::pair<double, double> occ_e(_dos->get_occupied_density_and_derivative(
+        Efn, dd.get_electric_potential() - get_trap_level(),
+        kT_e, dd.get_element(), dd.get_coordinates()));
     f_e = occ_e.first;
     deriv_e = occ_e.second;
     //f_e = _dos->get_occupied_density(-arg_e, kT_e);

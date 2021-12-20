@@ -6,6 +6,7 @@
 
 #include "PhysicalModel.h"
 
+class ExternalProfile;
 
 /*!
  * \brief Base class for density of states
@@ -69,9 +70,9 @@ class TBDLEXPORT DensityOfStates : public PhysicalModel
 
 
     //overloading for Trap.C
-    std::pair<double, double>
-    get_occupied_density_and_derivative(double Ef, double Epot,
-        double kT, double kTlattice = -1) const;
+    //std::pair<double, double>
+    //get_occupied_density_and_derivative(double Ef, double Epot,
+    //    double kT, double kTlattice = -1) const;
 
     //! Get the particle name
     char get_particle(void) const;
@@ -132,8 +133,11 @@ class TBDLEXPORT DensityOfStates : public PhysicalModel
     //! Constructor
     DensityOfStates(const ModelOptions& options);
 
-    //! A readable reference to the effective DOS
+    //! A readable reference to the effective DOS parameter
     double& effective_dos(void) { return _effective_dos; }
+
+    //! Get the effective DOS at given position
+    double get_effective_dos(const Elem* elem, const Point& p) const;
 
     //! A RW reference to _fixed_DOS
     bool& fixed_dos(void) { return _fixed_DOS; }
@@ -145,9 +149,9 @@ class TBDLEXPORT DensityOfStates : public PhysicalModel
         const Elem* elem, const Point& p) const = 0;
 
     //! overloading for Trap.C
-    virtual void
-    calculate_density_and_derivative(std::vector<double>& result,
-        double Ef, double Epot, double kT, double kTlattice) const = 0;
+    //virtual void
+    //calculate_density_and_derivative(std::vector<double>& result,
+    //    double Ef, double Epot, double kT, double kTlattice) const;
 
     //! Do we have a quantum density?
     bool& is_quantum_density(void);
@@ -208,6 +212,8 @@ class TBDLEXPORT DensityOfStates : public PhysicalModel
      * */
     double _total_density;
 
+    //! A profile for the effective DOS
+    ExternalProfile* _profile;
 
 };
 
@@ -239,12 +245,7 @@ DensityOfStates::get_total_state_density(void)
 }
 
 
-//inline
-//void
-//DensityOfStates::set_effective_dos(double Neff)
-//{
-//  _effective_dos = Neff;
-//}
+
 
 inline
 char
@@ -291,18 +292,7 @@ DensityOfStates::get_occupied_density_and_derivative(std::vector<double>& result
 }
 
 
-inline
-std::pair<double, double>
-DensityOfStates::get_occupied_density_and_derivative(double Ef, double Epot,
-    double kT, double kTlattice) const
-{
-  kTlattice = (kTlattice < 0) ? kT : kTlattice;
 
-  std::vector<double> result(2, 0.0);
-  calculate_density_and_derivative(result, Ef, Epot, kT, kTlattice);
-
-  return(std::make_pair(result[0], result[1]));
-}
 
 
 inline

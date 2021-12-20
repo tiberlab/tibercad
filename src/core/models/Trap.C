@@ -365,10 +365,9 @@ Trap::get_ionized_density_and_derivative(const Elem* elem, const Point& p,
           // NOTE: need to take away electrostatic energy because it is
           // added internally in the DOS model
           _dos->set_reference_energy(- level - _phi);
-          //cout<<"- hl.fermi_level() = " << - hl.fermi_level() << " _phi = " << _phi << endl;
-          //cout<<"hl.fermi_level() = " << hl.fermi_level() << endl ;
           std::pair<double, double> result(
-              _dos->get_occupied_density_and_derivative(hl.fermi_level(), _phi, kT_h));
+              _dos->get_occupied_density_and_derivative(
+                  hl.fermi_level(), _phi, kT_h, elem, p));
           f = result.first;
           deriv = -Nt * result.second;
           //cout<<"f_h = " << f << " deriv_h = " << deriv << endl;
@@ -383,7 +382,8 @@ Trap::get_ionized_density_and_derivative(const Elem* elem, const Point& p,
           //cout<<"level + _phi = " << level + _phi << endl;
           
           std::pair<double, double> result(
-              _dos->get_occupied_density_and_derivative(-el.fermi_level(), - _phi, kT_e));
+              _dos->get_occupied_density_and_derivative(
+                  -el.fermi_level(), - _phi, kT_e, elem, p));
           f = result.first;
           deriv = Nt * result.second;
           //cout<<"f_e = " << f << " deriv_e = " << deriv << endl;

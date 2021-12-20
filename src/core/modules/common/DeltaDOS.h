@@ -38,9 +38,6 @@ class TBDLEXPORT DeltaDOS : public DensityOfStates
     calculate_density_and_derivative(std::vector<double>& result, double Ef, double Epot,
         double kT, double kTlattice, const Elem* elem, const Point& p) const;
 
-    //overloading for Trap.C
-    virtual void
-    calculate_density_and_derivative(std::vector<double>& result, double Ef, double Epot, double kT, double kTlattice) const;
 
   private:
 

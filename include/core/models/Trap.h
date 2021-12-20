@@ -56,6 +56,8 @@ class TBDLEXPORT Trap : public PhysicalModel
     //! Get ionized density (= charge density, cm^-3)
     /*!
      * \return the charge density in cm^-3 including sign
+     * \param elem the mesh element
+     * \param p the point inside \c elem
      * \param el the electron population
      * \param hl the hole population
      * \param will be filled with the partial derivatives: [d/dn d/dp d/dEfn d/dEfp]

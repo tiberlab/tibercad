@@ -43,15 +43,9 @@ double _get_value_derivative(double e, double E, double kT) const
 
 void
 ExponentialDOS::calculate_density_and_derivative(vector<double>& result, double E, double Epot,
-    double kT, double kTlattice, const Elem* , const Point& ) const
+    double kT, double , const Elem* , const Point& ) const
 {
-  return calculate_density_and_derivative(result, E, Epot, kT, kTlattice);
-}
 
-void
-ExponentialDOS::calculate_density_and_derivative(vector<double>& result,
-    double E, double Epot, double kT, double ) const
-{
   E -= get_reference_energy()[0] + Epot;
 
   double sum = 0, der = 0, der2 = 0;

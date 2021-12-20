@@ -59,15 +59,9 @@ ConstantDOS::do_init(void)
 
 void
 ConstantDOS::calculate_density_and_derivative(std::vector<double>& result, double Ef, double Epot,
-    double kT, double kTlattice, const Elem* , const Point& ) const
+    double kT, double , const Elem* , const Point& ) const
 {
-  return calculate_density_and_derivative(result, Ef, Epot, kT, kTlattice);
-}
 
-void
-ConstantDOS::calculate_density_and_derivative(std::vector<double>& result,
-    double Ef, double Epot, double kT, double ) const
-{
   double dens, der, der2, Emin, Emax, exp_num, exp_den, ref_en;
   //cout<<"ref_energy "<<reference_energy()<<endl;
 
