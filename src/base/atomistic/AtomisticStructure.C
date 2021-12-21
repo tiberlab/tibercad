@@ -1733,10 +1733,11 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
 
   file << "#Interfaces " << std::endl;
 
-  //std::set<Utils::Couple<const Material*>>::iterator int_it = interfaces.begin();
-  //for (;int_it != interfaces.end(); ++int_it)
+  // to check for already processed pairs of species
+  multimap<Utils::Couple<ID>, Utils::Couple<Specie>> processed;
 
-  std::multimap<Utils::Couple<ID>, Utils::Couple<Specie>> processed;
+  // to keep all possible interactions for a pair of materials
+  map<Utils::Couple<ID>, pair<vector<string>, vector<double>>> couplings;
 
 
   for (size_t i = 0; i < get_N_atoms(); ++i)
@@ -1783,25 +1784,6 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
 
       processed.insert(make_pair(couple, sp_couple));
 
-      // Put interfaces in increasing order
-      if (material_map[mat1] > material_map[mat2])
-      {
-        swap(mat1, mat2);
-      }
-
-      file << std::setw(3) << material_map[mat1]<<"  "<< material_map[mat2]<<"  ";
-
-      if (mat1->is_alloy() || mat2->is_alloy())
-      {
-        if (is_random_alloy())
-          file <<  " RND";
-        else
-          file <<  " VCA";
-      }
-      else
-      {
-        file <<  " CRY";
-      }
 
       std::vector<std::string> str;
       std::vector<double> frac;
@@ -1810,29 +1792,65 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
       interface_interactions(mat1, mat2, str, frac,
           _atoms[i], _atoms[bondmap[i][j]]);
 
-      unsigned int size1 = str.size();
-      file << " " << size1 << "  ";
 
       interface_interactions(mat2, mat1, str, frac,
           _atoms[bondmap[i][j]], _atoms[i]);
 
-      file << " " << str.size()-size1 << "  ";
+      for (unsigned int i = 0; i < str.size(); i++)
+      {
+        if (find(couplings[couple].first.begin(),
+                 couplings[couple].first.end(), str[i])
+            == couplings[couple].first.end())
+        {
+          couplings[couple].first.push_back(str[i]);
+          couplings[couple].second.push_back(frac[i]);
+        }
+      }
 
-      for (unsigned int i=0; i < str.size(); i++)
-        file <<"  " << str[i];
-
-      for (unsigned int i=0; i < str.size(); i++)
-        file <<"  " << frac[i];
-
-      for (unsigned int i=0; i<str.size(); i++)
-        file <<"  " << str[i]<<etb_dataset<<".etb";
-      //if (check_data_file(Database::get_search_path()+"/"+str[i]+etb_dataset+".etb") )
-      //    file <<"  " << str[i]<<etb_dataset<<".etb";
-      //else
-      //  Messages::error("Database file does not exist"+Database::get_search_path()+"/"+str[i]+etb_dataset+".etb");
-
-      file<<std::endl;
     }
+  }
+
+
+  for (auto& a : couplings)
+  {
+    ID reg_i = a.first.first;
+    ID reg_j = a.first.second;
+    const Material* mat1 = _device->get_material(reg_i);
+    const Material* mat2 = _device->get_material(reg_j);
+
+    // Put interfaces in increasing order
+    if (material_map[mat1] > material_map[mat2])
+    {
+      swap(mat1, mat2);
+    }
+
+    file << std::setw(3) << material_map[mat1]<<"  "<< material_map[mat2]<<"  ";
+
+    if (mat1->is_alloy() || mat2->is_alloy())
+    {
+      if (is_random_alloy())
+        file <<  " RND";
+      else
+        file <<  " VCA";
+    }
+    else
+    {
+      file <<  " CRY";
+    }
+
+    unsigned int size = a.second.first.size();
+    file << " " << size << " 0";
+
+    for (unsigned int i = 0; i < size; ++i)
+      file << "  " << a.second.first[i];
+
+    for (unsigned int i = 0; i < size; ++i)
+      file << "  " << a.second.second[i];
+
+    for (unsigned int i = 0; i < size; ++i)
+      file << "  " << a.second.first[i] << etb_dataset << ".etb";
+
+    file << std::endl;
   }
 
   file.close();
@@ -1920,7 +1938,8 @@ AtomisticStructure::interface_interactions(const Material* mat1,
                                            const Atom& at2)
 {
 
-  str.clear();
+  //str.clear();
+  //frac.clear();
   stringstream ss;
   double conc1, conc2;
 
