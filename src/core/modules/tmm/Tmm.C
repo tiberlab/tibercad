@@ -421,7 +421,7 @@ Tmm::do_solve(void)
       // n_real.push_back(real(nk));
 
       double coh = mod.get_coherent_index();
-      std::cout<< "coherent index is " << coh <<std::endl;
+     // std::cout<< "coherent index is " << coh <<std::endl;
       // n_imag.push_back(imag(nk));
 
 
