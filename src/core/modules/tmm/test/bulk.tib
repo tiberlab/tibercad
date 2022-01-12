@@ -1,0 +1,105 @@
+Device
+{
+  meshfile = bulk.msh 
+
+  Region AIR 
+  {
+  material = Optic_Air
+  optical_data = /home/pamiri/TiberCAD/materials/optics/Air_book
+  }
+
+  Region ITO 
+  {
+  material = Optic_ITO
+  optical_data = /home/pamiri/TiberCAD/materials/optics/ITO-1.2E21_book.dat
+
+  }
+
+  Region PTAA
+  {
+  material = Optic_PTAA
+  optical_data = /home/pamiri/TiberCAD/materials/optics/PTAA_Santbergen.dat
+  }
+
+  Region PSK
+  {
+  material = Optic_PSK
+  optical_data = /home/pamiri/TiberCAD/materials/optics/PSK.dat
+  }
+
+  Region SnO
+  {
+  material = Optic_SnO2
+  optical_data = /home/pamiri/TiberCAD/materials/optics/SnO2_book.dat
+  }
+
+}
+
+
+Module tmm
+{ 
+  
+  name = tmm_study 
+  plot = (GenerationRate)
+  
+  reflectivity = 0
+  incident_angle = 0
+  up_lambda = 600
+  down_lambda = 280
+  Physics
+  {
+
+  InCoherent constant 
+  {
+   regions = (AIR)
+   InCoherence = 1
+  }
+
+  InCoherent constant 
+  {
+   regions = (ITO)
+   InCoherence = 1
+  }
+
+  InCoherent constant 
+  {
+   regions = (PTAA)
+   InCoherence = 0
+  }
+
+  InCoherent constant 
+  {
+   regions = (PSK)
+   InCoherence = 1
+  }
+
+  InCoherent constant 
+  {
+   regions = (SnO)
+   InCoherence = 0
+  }
+
+  }
+
+
+  Contact point1
+  {
+  type = incident_wave
+  }
+}
+
+
+
+Simulation
+{
+  verbose = 2
+  solve = tmm_study
+  resultpath = output
+
+
+}
+
+
+
+
+

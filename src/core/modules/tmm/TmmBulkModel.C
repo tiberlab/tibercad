@@ -3,6 +3,7 @@
 #include "TmmBulkModel.h"
 #include "Database.h"
 #include "Messages.h"
+#include "InCoherentModel.h"
 //#include "PermittivityModel.h"
 
 #include <boost/filesystem/operations.hpp>
@@ -22,6 +23,8 @@ inline
 TmmBulkModel::TmmBulkModel(const ModelOptions& options) :
   PhysicalModel(options)
 {
+
+
 }
 
 
@@ -117,12 +120,18 @@ TmmBulkModel::get_refractive_index(double lambda) const
   return(ri);
 }
 
-
 double
-TmmBulkModel::get_incoherance_index() const
+TmmBulkModel::get_coherent_index(void) const
 {
-  return(0);
+
+  double ri= _incoherent_index;
+
+  return(ri);
 }
+
+
+
+
 
 
 void
@@ -222,6 +231,11 @@ void
 TmmBulkModel::do_init(void)
 {
 
+  SubmodelIterator it = submodels_begin("InCoherent");
+  InCoherentModel* pm =  dynamic_cast<InCoherentModel*>(it->second);
+  _incoherent_index = pm->get_InCoherent_Index();
+
+
 }
 
 
@@ -239,6 +253,12 @@ TmmBulkModel::do_print_info(void)
 void
 TmmBulkModel::prepare_submodels(void)
 {
+
+  InCoherentModel* pm = NULL;
+  ModelOptions opts;
+  opts.set_option("type", "constant");
+  create_submodel(pm, "InCoherent", opts);
+
   // Maybe it would be more elegant to extend the existing
   // permittivity model implementation
   //ModelOptions opts;

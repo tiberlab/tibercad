@@ -417,10 +417,11 @@ Tmm::do_solve(void)
       
       // getting refractive index and length of layers from model
       libMesh::Complex nk = mod.get_refractive_index(lambda);
+
       // n_real.push_back(real(nk));
 
-      double coh = mod.get_incoherance_index();
-      std::cout<< "coh is" << coh <<std::endl;
+      double coh = mod.get_coherent_index();
+      std::cout<< "coherent index is " << coh <<std::endl;
       // n_imag.push_back(imag(nk));
 
 

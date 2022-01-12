@@ -32,8 +32,9 @@ class TmmBulkModel : public PhysicalModel
     //! Get the complex refractive index
     libMesh::Complex get_refractive_index(double lambda) const;
 
-    //! Get the complex refractive index
-    virtual double get_incoherance_index() const;
+    double get_coherent_index(void) const;
+
+
 
 
 
@@ -62,6 +63,7 @@ class TmmBulkModel : public PhysicalModel
     virtual void do_init(void) override;
 
     virtual void prepare_submodels(void) override;
+
 
     virtual void do_print_info(void) override;
 
@@ -95,7 +97,9 @@ class TmmBulkModel : public PhysicalModel
     //! An addressing array for faster access during interpolation
     std::vector<int> _addressing;
 
-    double _incoh_index;
+    double _incoherent_index;
+
+
 
 };
 
