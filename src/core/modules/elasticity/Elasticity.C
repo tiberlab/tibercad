@@ -31,13 +31,12 @@
 using namespace std;
 using namespace libMesh;
 
-Elasticity*
-Elasticity::_this = NULL;
 
 
 
 Elasticity::Elasticity(const ModelOptions& options) :
-  SimulationInterface(options)
+  SimulationInterface(options),
+  _my_assembly(this)
 {
   // there's nothing to be done
 }
@@ -91,7 +90,7 @@ Elasticity::do_init(void)
   uvar[2] =  system.variable_number("uz");
 
 
-  system.attach_assemble_function(assemble);
+  system.attach_assemble_object(_my_assembly);
   system.init();
 
   int n_elem = 0;
@@ -149,7 +148,6 @@ Elasticity::do_setup_solution_variables(void)
 void
 Elasticity::do_solve(void)
 {
-  _this = this;
 
   TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
 
@@ -622,7 +620,7 @@ Elasticity::compute_elastic_energy(void)
 
 
 void
-Elasticity::do_assemble(libMesh::EquationSystems& es, const std::string& system_name)
+Elasticity::assemble(void)
 {
 
 

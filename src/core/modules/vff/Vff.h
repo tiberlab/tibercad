@@ -105,8 +105,6 @@ private:
    */
   Vff(const ModelOptions& options);
 
-  //! A static pointer to this
-  static Vff* _this;
 
   class Options
   {

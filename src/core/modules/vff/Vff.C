@@ -20,9 +20,6 @@ using namespace std;
 using namespace libMesh;
 
 
-Vff*
-Vff::_this = NULL;
-
 
 Vff::Options::Options(void)
 : boundary_conditions("free_standing"),
