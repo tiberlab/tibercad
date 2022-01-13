@@ -132,9 +132,8 @@ Elasticity::do_setup_solution_variables(void)
   declare_solution(RelativeStrain, TENSOR, NODES, "");
   declare_solution(StrainCell, TENSOR, CELL, "");
   declare_solution(StrainCrystal, TENSOR, NODES, "");
-  //declare_solution(Energy, REAL, NODES, "Joule");
   declare_solution(Stress, TENSOR, NODES, "GPa");
-  declare_solution(StressCrystal, TENSOR, NODES, "");
+  declare_solution(StressCrystal, TENSOR, NODES, "GPa");
   declare_solution(Displacement, VECTOR, NODES, "m");
   declare_solution(StrainSource, TENSOR, NODES, "");
   declare_solution(StressSource, TENSOR, NODES, "GPa");
