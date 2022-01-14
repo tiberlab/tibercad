@@ -4,12 +4,14 @@ Device
 
   Region AIR 
   {
+  Incoherency = 1
   material = Optic_Air
   optical_data = /home/pamiri/TiberCAD/materials/optics/Air_book
   }
 
   Region ITO 
   {
+  Incoherency = 0
   material = Optic_ITO
   optical_data = /home/pamiri/TiberCAD/materials/optics/ITO-1.2E21_book.dat
 
@@ -17,18 +19,21 @@ Device
 
   Region PTAA
   {
+  Incoherency = 0
   material = Optic_PTAA
   optical_data = /home/pamiri/TiberCAD/materials/optics/PTAA_Santbergen.dat
   }
 
   Region PSK
   {
+  Incoherency= 0
   material = Optic_PSK
   optical_data = /home/pamiri/TiberCAD/materials/optics/PSK.dat
   }
 
   Region SnO
   {
+  Incoherency = 0
   material = Optic_SnO2
   optical_data = /home/pamiri/TiberCAD/materials/optics/SnO2_book.dat
   }
@@ -46,46 +51,17 @@ Module tmm
   incident_angle = 0
   up_lambda = 600
   down_lambda = 280
-  Physics
+
+  Physics 
   {
 
-  InCoherent constant 
-  {
-   regions = (AIR)
-   InCoherence = 1
   }
-
-  InCoherent constant 
-  {
-   regions = (ITO)
-   InCoherence = 1
-  }
-
-  InCoherent constant 
-  {
-   regions = (PTAA)
-   InCoherence = 0
-  }
-
-  InCoherent constant 
-  {
-   regions = (PSK)
-   InCoherence = 1
-  }
-
-  InCoherent constant 
-  {
-   regions = (SnO)
-   InCoherence = 0
-  }
-
-  }
-
 
   Contact point1
   {
   type = incident_wave
   }
+
 }
 
 

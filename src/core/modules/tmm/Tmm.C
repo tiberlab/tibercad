@@ -384,12 +384,14 @@ Tmm::do_solve(void)
     vector<double> n_imag;
     vector<double> l_length;
     vector<double> l;
+    vector<double> coh;
 
 
     vector<double> n_real_init;
     vector<double> n_imag_init;
     vector<double> l_length_init;
     vector<double> l_init;
+    vector<double> coh_init;
 
 
     vector<int> BC_check;
@@ -419,9 +421,7 @@ Tmm::do_solve(void)
       libMesh::Complex nk = mod.get_refractive_index(lambda);
 
       // n_real.push_back(real(nk));
-
-      double coh = mod.get_coherent_index();
-     // std::cout<< "coherent index is " << coh <<std::endl;
+      coh_init.push_back(mod.get_coherent_index());
       // n_imag.push_back(imag(nk));
 
 
@@ -486,6 +486,7 @@ Tmm::do_solve(void)
         n_real.push_back(n_real_init[uu]);
         n_imag.push_back(n_imag_init[uu]);
         l.push_back(l_init[uu]);
+        coh.push_back(coh_init[uu]);
       }
 
     }else if (direction == "down to top propagation          ")
@@ -497,6 +498,7 @@ Tmm::do_solve(void)
         n_real.push_back(n_real_init[uu]);
         n_imag.push_back(n_imag_init[uu]);
         l.push_back(l_init[uu]);
+        coh.push_back(coh_init[uu]);
       }
     }
 
@@ -508,125 +510,141 @@ Tmm::do_solve(void)
 
 
     //****************************************************
-    vector<double> phase(n_real.size());
-    srand( time( NULL ) );  // Initialize random seed
-    for(int uu =0; uu<phase.size(); ++uu)
+    
+    double rnd = 1;
+    double phase_step;
+    vector<double> Generation_rate_total(n_real.size());        // Generation Rate real
+    
+    for (int nm = 0; nm<coh.size(); ++nm)
+      if(coh[nm]==1)
+        rnd = 5;
+    std::cout<<"random is "<<rnd<<std::endl;
+    phase_step = 2 * M_PI / rnd;
+    for (int iter = 0; iter <rnd; ++iter )
     {
-      phase[uu] =  2*M_PI*(double) rand()/RAND_MAX;      // Pseudo-random number between 0 and 1 * 2*Pi
-
-    }
+      std::cout<<"phase is "<<phase_step * iter<<std::endl;
 
 
 
-    //*****************************************************
-    //************** defining Vectors**********************
-    
-    Tmm::Matrix_2by2 D(1,0,0,1);
-    Tmm::Matrix_2by2 M(0,0,0,0);
-    Tmm::Matrix_2by2 T_load(0,0,0,0);
-    Tmm::Matrix_2by2 T(1,0,0,1);
-    
-    double r =_reflectivity[0];
-    Tmm::Matrix_2by2 E_N(1,0,r,0);
-    Tmm::Matrix_2by2 E_I(0,0,0,0);
+      //*****************************************************
+      //************** defining Vectors**********************
+
+      Tmm::Matrix_2by2 D(1,0,0,1);
+      Tmm::Matrix_2by2 M(0,0,0,0);
+      Tmm::Matrix_2by2 T_load(0,0,0,0);
+      Tmm::Matrix_2by2 T(1,0,0,1);
+
+      double r =_reflectivity[0];
+      Tmm::Matrix_2by2 E_N(1,0,r,0);
+      Tmm::Matrix_2by2 E_I(0,0,0,0);
 
 
-    vector<complex<double>> E_F(n_real.size());
-    vector<complex<double>> E_B(n_real.size());
-    
-   // E_N.print();
+      vector<complex<double>> E_F(n_real.size());
+      vector<complex<double>> E_B(n_real.size());
 
-    E_F[n_real.size()-1]=E_N.get(0);
-    E_B[n_real.size()-1]=E_N.get(2);
+     // E_N.print();
+
+      E_F[n_real.size()-1]=E_N.get(0);
+      E_B[n_real.size()-1]=E_N.get(2);
 
 
-    //******************************************************
-    //******main loop over layer, calculating matrixs*******
-    for (int k=n_real.size()-1 ; k>=0 ; --k){
-      if (BC_check[k] == 0) {
-        if (k<n_real.size()-1){
-         D = get_D(n_real[k],n_imag[k],n_real[k+1],n_imag[k+1],theta[k],theta[k+1]);
-         //std::cout<<"BC_check[k] == 0"<< std::endl;
+      //******************************************************
+      //******main loop over layer, calculating matrixs*******
+      for (int k=n_real.size()-1 ; k>=0 ; --k){
+        if (BC_check[k] == 0) {
+          if (k<n_real.size()-1){
+           D = get_D(n_real[k],n_imag[k],n_real[k+1],n_imag[k+1],theta[k],theta[k+1]);
+           //std::cout<<"BC_check[k] == 0"<< std::endl;
+          }
+
+        }else {
+          D.set(0,Boundry_condition.get(0));
+          D.set(1,Boundry_condition.get(1));
+          D.set(2,Boundry_condition.get(2));
+          D.set(3,Boundry_condition.get(3));
+          //std::cout<<"BC_check[k] == 1"<< std::endl;
         }
+        //std::cout<<"D matrix is :" <<k<<"   "<< std::endl;
+        //D.print();
+       // M = get_M(n_real[k],n_imag[k],l[k],lambda,theta[k],phase[k]);
+        if (coh[k] == 0)
+        {
+          std::cout<<"coh[k] = 0" <<std::endl;
+          M = get_M(n_real[k],n_imag[k],l[k],lambda,theta[k],phase_step * iter);
+        }
+        else
+        {
+          M = get_M(n_real[k],n_imag[k],l[k],lambda,theta[k],0);
+          std::cout<<"coh[k] = 1" << std::endl;
+        }
+        //std::cout<<"M matrix is :" <<k<<"   "<< std::endl;
+        //M.print();
+        T_load = D * M;
+        T = T * T_load;
 
-      }else {
-        D.set(0,Boundry_condition.get(0));
-        D.set(1,Boundry_condition.get(1));
-        D.set(2,Boundry_condition.get(2));
-        D.set(3,Boundry_condition.get(3));
-        //std::cout<<"BC_check[k] == 1"<< std::endl;
+        if (k<n_real.size()-1){
+        E_I = T * E_N ;
+
+        //std::cout<<"E_I is "<<k <<std::endl;
+        //E_I.print();
+        E_F[k]+= E_I.get(0);
+        E_B[k]+= E_I.get(2);
+        }
+       // std::cout<<"E_F is "<<k<<"    "<<abs(E_F[k]) <<std::endl;
       }
-      //std::cout<<"D matrix is :" <<k<<"   "<< std::endl;
-      //D.print();
-     // M = get_M(n_real[k],n_imag[k],l[k],lambda,theta[k],phase[k]);
-      M = get_M(n_real[k],n_imag[k],l[k],lambda,theta[k],0);
-      //std::cout<<"M matrix is :" <<k<<"   "<< std::endl;
-      //M.print();
-      T_load = D * M;
-      T = T * T_load;
+      cout<<"TMM is :"<<endl;
+      T.print();
 
-      if (k<n_real.size()-1){
-      E_I = T * E_N ;
+      //***********************************************************************
+      //**********reflection and transmission calculation**********************
 
-      //std::cout<<"E_I is "<<k <<std::endl;
-      //E_I.print();
-      E_F[k]+= E_I.get(0);
-      E_B[k]+= E_I.get(2);
+      complex<double> Reflection,Transmission;
+      Reflection = pow(abs(T.get(2)/T.get(0)),2);
+      complex<double> nc_first (n_real[0],n_imag[0]);
+      complex<double> nc_last (n_real[n_real.size()-1],n_imag[n_imag.size()-1]);
+      complex<double> ratio_complex;
+      ratio_complex = ((nc_last)*cos(theta[theta.size()-1]*M_PI/180))/(nc_first*cos(theta[0]*M_PI/180));
+      Transmission = ratio_complex*pow(abs(1.0/T.get(0)),2);
+
+      //***************************************************************************
+      //**************printing tansmission and reflection**************************
+      cout<<"trasmision is :"<< Transmission << "reflection is :"<<Reflection<<endl;
+      cout<<"Sum is :"<< Transmission+Reflection<<endl;
+
+      //****************************************************************************
+      //***************normalizing electric field matrix******************************
+
+      vector<complex<double>> E_F_NORM(n_real.size());
+      vector<complex<double>> E_B_NORM(n_real.size());
+
+      for(double nm=0; nm < n_real.size() ; ++nm)
+      {
+        E_F_NORM[nm] = E_F[nm]/E_F[0];
+        E_B_NORM[nm] = E_B[nm]/E_F[0];
       }
-     // std::cout<<"E_F is "<<k<<"    "<<abs(E_F[k]) <<std::endl;
+
+
+
+
+
+
+
+      vector<complex<double>> Etot(n_real.size()); // Electric Field, Magnetic Field
+      vector<complex<double>> Intensity;// Intensity, forward, backward
+      vector<complex<double>> Generation_rate;        // Generation Rate
+      vector<double> Generation_rate_real;        // Generation Rate real
+
+
+
+      for (int nm=0 ; nm < n_real.size() ; ++nm)
+      {
+        Etot[nm] = E_F_NORM[nm] + E_B_NORM[nm];
+        Intensity.push_back(0.5 * c0 * 1e-9 * e0 * n_real[nm] * Esun2* pow(abs(Etot[nm]), 2)); // Intensity [W/(m^2 * nm)]
+        Generation_rate.push_back(1 / (plank_const* w) * (4 * M_PI * n_imag[nm] * 1e7/(lambda)) * real(Intensity[nm])/ 1e4 );        // Generation rate [ cm^-3 s^-1 nm^-1]
+        Generation_rate_real.push_back(real(Generation_rate[nm]));
+        Generation_rate_total[nm] = Generation_rate_total[nm] + Generation_rate_real[nm]/rnd;
+      }
     }
-    cout<<"TMM is :"<<endl;
-    T.print();
-
-    //***********************************************************************
-    //**********reflection and transmission calculation**********************
-
-    complex<double> Reflection,Transmission;
-    Reflection = pow(abs(T.get(2)/T.get(0)),2);
-    complex<double> nc_first (n_real[0],n_imag[0]);
-    complex<double> nc_last (n_real[n_real.size()-1],n_imag[n_imag.size()-1]);
-    complex<double> ratio_complex;
-    ratio_complex = ((nc_last)*cos(theta[theta.size()-1]*M_PI/180))/(nc_first*cos(theta[0]*M_PI/180));
-    Transmission = ratio_complex*pow(abs(1.0/T.get(0)),2);
-
-    //***************************************************************************
-    //**************printing tansmission and reflection**************************
-    cout<<"trasmision is :"<< Transmission << "reflection is :"<<Reflection<<endl;
-    cout<<"Sum is :"<< Transmission+Reflection<<endl;
-
-    //****************************************************************************
-    //***************normalizing electric field matrix******************************
-
-    vector<complex<double>> E_F_NORM(n_real.size());
-    vector<complex<double>> E_B_NORM(n_real.size());
-
-    for(double nm=0; nm < n_real.size() ; ++nm)
-    {
-      E_F_NORM[nm] = E_F[nm]/E_F[0];
-      E_B_NORM[nm] = E_B[nm]/E_F[0];
-    } 
-
-
-
-
-
-
-
-    vector<complex<double>> Etot(n_real.size()); // Electric Field, Magnetic Field
-    vector<complex<double>> Intensity;// Intensity, forward, backward
-    vector<complex<double>> Generation_rate;        // Generation Rate
-    vector<double> Generation_rate_real;        // Generation Rate real
-
-
-
-    for (int nm=0 ; nm < n_real.size() ; ++nm)
-    {
-      Etot[nm] = E_F_NORM[nm] + E_B_NORM[nm];
-      Intensity.push_back(0.5 * c0 * 1e-9 * e0 * n_real[nm] * Esun2* pow(abs(Etot[nm]), 2)); // Intensity [W/(m^2 * nm)]
-      Generation_rate.push_back(1 / (plank_const* w) * (4 * M_PI * n_imag[nm] * 1e7/(lambda)) * real(Intensity[nm])/ 1e4 );        // Generation rate [ cm^-3 s^-1 nm^-1]
-      Generation_rate_real.push_back(real(Generation_rate[nm]));
-    }
-
 
 
 
@@ -635,18 +653,18 @@ Tmm::do_solve(void)
     if (i == 0)
     {
       area.resize(n_real.size());
-      area = Generation_rate_real;
+      area = Generation_rate_total;
     }
 
     if (i != 0 && i != lambda_interp.size()-1)
     {
       for (int nm =0; nm< n_real.size();nm++)
-         area[nm] +=2 * Generation_rate_real[nm];
+         area[nm] +=2 * Generation_rate_total[nm];
     }
     if (i == lambda_interp.size()-1)
     {
       for (int nm =0; nm< n_real.size();nm++)
-         area[nm] += Generation_rate_real[nm];
+         area[nm] += Generation_rate_total[nm];
       for (int nm =0; nm< n_real.size();nm++)
          area[nm] *= (lambda_interp[lambda_interp.size()-1] - lambda_interp[0]) / (2 * lambda_interp.size()-1);
 
