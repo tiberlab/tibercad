@@ -727,6 +727,8 @@ class SimulationInterface : public TiberModelObject
     //! Check if all IDs in \c region_ids are included in this simulation
     bool includes_regions(std::set<ID> region_ids) const;
 
+    //! Create a boundary
+    void create_boundary(const ModelOptions& options);
 
     //! Create a bulk physical model to be used with this simulation
     PhysicalModel* new_bulk_model(const ModelOptions& options,
@@ -1637,6 +1639,8 @@ class SimulationInterface : public TiberModelObject
     //! Do not allow assignement operator
     SimulationInterface& operator=(const SimulationInterface&) TBDLLOCAL;
 
+    //! Eliminate unneeded submodels
+    void _eliminate_unneeded_submodels(ModelOptions& opts, ID reg_id) const;
 
     //! \see get_bulk_model()
     PhysicalModel* _get_bulk_model(const libMesh::Elem* elem) const;
