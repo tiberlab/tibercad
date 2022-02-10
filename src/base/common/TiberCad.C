@@ -83,7 +83,7 @@ TiberCad::TiberCad(MPI_Comm mpi_comm) :
 
   _object_counter++;
 
-  _mpi_comm.get() = mpi_comm;
+  _mpi_comm.duplicate(mpi_comm);
 }
 
 
