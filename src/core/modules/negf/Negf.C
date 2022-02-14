@@ -186,6 +186,7 @@ Negf::do_init(void)
     }
   }
   
+  // reorder contacts according to minimum coordinate
   for(unsigned int i = 0; i < qids.size() - 1; ++i)
   {
     for(unsigned int j = i + 1; j < qids.size(); ++j)
@@ -786,6 +787,8 @@ Negf::setup_negf(void)
     params.mu_n[id] =  mu_n;
     params.mu_p[id] = -mu_p;
     //params.mu[id] = ; // not needed, for DFTB
+    // TODO a hack for now
+    params.mu[id] = mu_n;
 
     // for now T is the same everywhere
     params.kbt_dm[id] = kbT;
@@ -1066,20 +1069,20 @@ Negf::do_solve(void)
        finalize();
     }
 
-    double u = get_mesh_units();
-    unsigned int dim = get_mesh().mesh_dimension();
-    double area_factor;
+    double area_factor = 1.0;
 
-    switch (dim)
+    // k is defined in units of 1/nm
+    switch (get_mesh().mesh_dimension())
     {
       case 1:
-        area_factor = 1e-4/(u*u);  // k is in 1/u  
-        break;                    // u = 1e-9 m => u = 1e-9 * 10^2 cm
-      case 2:                     // 1/m = 1e-2/u 1/cm
-        area_factor = 1e-2/u;
+        area_factor = 1e14;
         break;
-      case 3:
-        area_factor = 1.0;
+      case 2:
+        area_factor = 1e7;
+        break;
+      //case 3: // it remains 1 in this case
+      default:
+        break;
     }
 
     //get degeneracy of first band
