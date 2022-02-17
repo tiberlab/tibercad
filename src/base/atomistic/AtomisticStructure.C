@@ -1835,7 +1835,7 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
     }
     else
     {
-      file <<  " CRY";
+      file <<  " RND";
     }
 
     unsigned int size = a.second.first.size();
