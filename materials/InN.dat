@@ -9,7 +9,10 @@ structure = wz
 #E_v = -0.4203
 
 # Vurgauftman
-E_v = -0.21033
+#E_v = -0.21033
+
+# adjusted for hole localisation
+E_v = 0.03967
 
 # osram ??
 #E_v = 0.289
