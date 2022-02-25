@@ -1,0 +1,2266 @@
+
+Log start: Fri Feb 25 08:42:44 2022
+
+
+Writing log to output/led_spectrum.log.0
+tiberCAD release 3.2.0 (rev. 5239, x86_64-linux)
+
+Input file: led_spectrum.tib
+
+Initialize global simulation options
+  Simulation temperature: 300 K
+  Database search path  : /scratch/maufder/TiberCAD_testsuite/trunk/materials
+  Log file              : output/led_spectrum.log.0
+
+Setup mesh
+  Reading mesh file 'led_spectrum.msh ...
+    mesh reading time: 0h 0m 0.0074s
+    mesh preparation time: 0h 0m 0.0023s
+    bd_regions preparation time: 0h 0m 2.9e-05s
+
+    mesh units          : 1e-09 m
+    mesh dimension      :       1
+    number of nodes     :    2218
+    number of elements  :    2217
+    number of subdomains:      12
+    number of boundaries:       2
+
+Create materials ...
+  AlGaN is an alloy with components AlN and GaN and molar fraction of AlN 0.2.
+  Added material AlGaN for region 'n-algan' (mesh regions 3)
+    (using datafile /scratch/maufder/TiberCAD_testsuite/trunk/materials/AlGaN.dat)
+    alloy with 0.2 AlN, 0.8 GaN
+    x growth direction : (0,0,0,1)
+    y growth direction : (1,0,-1,0)
+    z growth direction : (-1,2,-1,0)
+  AlInN is an alloy with components AlN and InN and molar fraction of AlN 0.78.
+  Added material AlInN for region 'alinn' (mesh regions 4)
+    (using datafile /scratch/maufder/TiberCAD_testsuite/trunk/materials/AlInN.dat)
+    alloy with 0.78 AlN, 0.22 InN
+    x growth direction : (0,0,0,1)
+    y growth direction : (1,0,-1,0)
+    z growth direction : (-1,2,-1,0)
+  AlGaN is an alloy with components AlN and GaN and molar fraction of AlN 0.2.
+  Added material AlGaN for region 'algan_barr1' (mesh regions 5)
+    (using datafile /scratch/maufder/TiberCAD_testsuite/trunk/materials/AlGaN.dat)
+    alloy with 0.2 AlN, 0.8 GaN
+    x growth direction : (0,0,0,1)
+    y growth direction : (1,0,-1,0)
+    z growth direction : (-1,2,-1,0)
+  AlGaN is an alloy with components AlN and GaN and molar fraction of AlN 0.2.
+  Added material AlGaN for region 'AlGaN_barrier_quantum' (mesh regions 6, 8, 10)
+    (using datafile /scratch/maufder/TiberCAD_testsuite/trunk/materials/AlGaN.dat)
+    alloy with 0.2 AlN, 0.8 GaN
+    x growth direction : (0,0,0,1)
+    y growth direction : (1,0,-1,0)
+    z growth direction : (-1,2,-1,0)
+  Added material GaN for region 'GaN_QWell' (mesh regions 7, 9, 11)
+    (using datafile /scratch/maufder/TiberCAD_testsuite/trunk/materials/GaN.dat)
+    x growth direction : (0,0,0,1)
+    y growth direction : (1,0,-1,0)
+    z growth direction : (-1,2,-1,0)
+  AlGaN is an alloy with components AlN and GaN and molar fraction of AlN 0.2.
+  Added material AlGaN for region 'i_AlGaN1_quantum' (mesh regions 12)
+    (using datafile /scratch/maufder/TiberCAD_testsuite/trunk/materials/AlGaN.dat)
+    alloy with 0.2 AlN, 0.8 GaN
+    x growth direction : (0,0,0,1)
+    y growth direction : (1,0,-1,0)
+    z growth direction : (-1,2,-1,0)
+  AlGaN is an alloy with components AlN and GaN and molar fraction of AlN 0.2.
+  Added material AlGaN for region 'i_AlGaN2_noquantum' (mesh regions 13)
+    (using datafile /scratch/maufder/TiberCAD_testsuite/trunk/materials/AlGaN.dat)
+    alloy with 0.2 AlN, 0.8 GaN
+    x growth direction : (0,0,0,1)
+    y growth direction : (1,0,-1,0)
+    z growth direction : (-1,2,-1,0)
+  AlGaN is an alloy with components AlN and GaN and molar fraction of AlN 0.2.
+  Added material AlGaN for region 'p_AlGaN' (mesh regions 14)
+    (using datafile /scratch/maufder/TiberCAD_testsuite/trunk/materials/AlGaN.dat)
+    alloy with 0.2 AlN, 0.8 GaN
+    x growth direction : (0,0,0,1)
+    y growth direction : (1,0,-1,0)
+    z growth direction : (-1,2,-1,0)
+Creation of materials done.
+
+Setting up Cluster 'Quantum_1' containing regions 6, 7
+
+Setting up Cluster 'Quantum_2' containing regions 8, 9
+
+Setting up Cluster 'Quantum_3' containing regions 10, 11, 12
+
+Setting up simulation of type 'driftdiffusion' ...
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/driftdiffusion/driftdiffusion.so)
+  Adding boundary 'n_contact'
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/driftdiffusion/ddbnd_ohmic.so)
+  Adding boundary 'p_contact'
+Creating bulk models... 
+  Region: n-algan
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/driftdiffusion/ddbulk_default.so)
+  Region: alinn
+  Region: algan_barr1
+  Region: AlGaN_barrier_quantum
+  Region: GaN_QWell
+  Region: AlGaN_barrier_quantum
+  Region: GaN_QWell
+  Region: AlGaN_barrier_quantum
+  Region: GaN_QWell
+  Region: i_AlGaN1_quantum
+  Region: i_AlGaN2_noquantum
+  Region: p_AlGaN
+(using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/driftdiffusion/recombination_srh.so)
+(using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/driftdiffusion/recombination_direct.so)
+
+Setting up simulation of type 'elasticity' ...
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/elasticity/elasticity.so)
+  Adding boundary 'n_contact'
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/elasticity/ebnd_clamp.so)
+Creating bulk models... 
+  Region: n-algan
+  Region: alinn
+  Region: algan_barr1
+  Region: AlGaN_barrier_quantum
+  Region: GaN_QWell
+  Region: AlGaN_barrier_quantum
+  Region: GaN_QWell
+  Region: AlGaN_barrier_quantum
+  Region: GaN_QWell
+  Region: i_AlGaN1_quantum
+  Region: i_AlGaN2_noquantum
+  Region: p_AlGaN
+
+Setting up simulation of type 'efaschroedinger' ...
+Creating bulk models... 
+  Region: AlGaN_barrier_quantum
+  Region: GaN_QWell
+  Region: i_AlGaN1_quantum
+
+Setting up simulation of type 'efaschroedinger' ...
+Creating bulk models... 
+  Region: AlGaN_barrier_quantum
+  Region: GaN_QWell
+  Region: i_AlGaN1_quantum
+
+Setting up simulation of type 'opticskp' ...
+Creating bulk models... 
+  Region: AlGaN_barrier_quantum
+  Region: GaN_QWell
+  Region: i_AlGaN1_quantum
+
+Setting up simulation of type 'sweep' ...
+
+Setting up bulk models ...
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/driftdiffusion/band_properties.so)
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/permittivity_constant.so)
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/polarization_piezo.so)
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/polarization_pyro.so)
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/driftdiffusion/mobility_constant.so)
+    (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/density_of_states_bulk_kp.so)
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/elasticity/stiffness_anisotropic.so)
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/elasticity/body_force_lattice_mismatch.so)
+    AlGaN is an alloy with components AlN and GaN and molar fraction of AlN 0.2.
+    AlGaN is an alloy with components AlN and GaN and molar fraction of AlN 0.2.
+    AlGaN is an alloy with components AlN and GaN and molar fraction of AlN 0.2.
+    AlGaN is an alloy with components AlN and GaN and molar fraction of AlN 0.2.
+    AlGaN is an alloy with components AlN and GaN and molar fraction of AlN 0.2.
+    AlGaN is an alloy with components AlN and GaN and molar fraction of AlN 0.2.
+    AlGaN is an alloy with components AlN and GaN and molar fraction of AlN 0.2.
+    AlGaN is an alloy with components AlN and GaN and molar fraction of AlN 0.2.
+    AlGaN is an alloy with components AlN and GaN and molar fraction of AlN 0.2.
+    AlGaN is an alloy with components AlN and GaN and molar fraction of AlN 0.2.
+    AlGaN is an alloy with components AlN and GaN and molar fraction of AlN 0.2.
+    AlGaN is an alloy with components AlN and GaN and molar fraction of AlN 0.2.
+    AlGaN is an alloy with components AlN and GaN and molar fraction of AlN 0.2.
+    AlGaN is an alloy with components AlN and GaN and molar fraction of AlN 0.2.
+    AlGaN is an alloy with components AlN and GaN and molar fraction of AlN 0.2.
+    AlGaN is an alloy with components AlN and GaN and molar fraction of AlN 0.2.
+    AlGaN is an alloy with components AlN and GaN and molar fraction of AlN 0.2.
+    AlGaN is an alloy with components AlN and GaN and molar fraction of AlN 0.2.
+    AlGaN is an alloy with components AlN and GaN and molar fraction of AlN 0.2.
+    AlGaN is an alloy with components AlN and GaN and molar fraction of AlN 0.2.
+    AlGaN is an alloy with components AlN and GaN and molar fraction of AlN 0.2.
+    AlGaN is an alloy with components AlN and GaN and molar fraction of AlN 0.2.
+
+Setting up lower dimensional (boundary) models ...
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for driftdiffusion (driftdiffusion)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+
+Available solution variables:
+------------------------------------------------------------------
+Name                     Units          Type      Association Plot
+------------------------------------------------------------------
+Ec                       eV             real      nodal       y
+Ev                       eV             real      nodal       y
+eQFermi                  eV             real      nodal       y
+hQFermi                  eV             real      nodal       y
+ElPotential              V              real      nodal       n
+Ec0                      eV             real      nodal       n
+Ev0                      eV             real      nodal       n
+Eg                       eV             real      nodal       n
+ConductionBands          eV             n-tuple   cell        n
+ValenceBands             eV             n-tuple   cell        n
+eDensity                 cm^-3          real      nodal       y
+hDensity                 cm^-3          real      nodal       y
+ChargeDensity            cm^-3          real      nodal       n
+eMobility                cm^2/(V*s)     real      nodal       y
+hMobility                cm^2/(V*s)     real      nodal       y
+eConductivity            S/cm           real      nodal       n
+hConductivity            S/cm           real      nodal       n
+ElField                  V/cm           vector    cell        y
+Polarization             C/m^2          vector    cell        y
+Displacement             C/m^2          vector    cell        n
+CurrentDensity           A/cm^2         vector    cell        n
+eCurrentDensity          A/cm^2         vector    cell        y
+hCurrentDensity          A/cm^2         vector    cell        y
+IonizedDonors            cm^-3          real      nodal       n
+IonizedAcceptors         cm^-3          real      nodal       n
+IonizedElectronTraps     cm^-3          real      nodal       n
+IonizedHoleTraps         cm^-3          real      nodal       n
+eThElPower               eV/K           real      nodal       n
+hThElPower               eV/K           real      nodal       n
+eJoule                   W/cm^3         real      nodal       n
+hJoule                   W/cm^3         real      nodal       n
+ePowerFlux               W/cm^2         vector    nodal       n
+hPowerFlux               W/cm^2         vector    nodal       n
+ePeltier                 W/cm^3         real      nodal       n
+hPeltier                 W/cm^3         real      nodal       n
+RecombHeat               W/cm^3         real      nodal       n
+IQE                                     real      none        n
+ArtificialDiffusion                     real      nodal       n
+eNetRecombination        1/(s*cm^3)     real      nodal       n
+eSRHRecombination        1/(s*cm^3)     real      nodal       n
+eDirectRecombination     1/(s*cm^3)     real      nodal       n
+hNetRecombination        1/(s*cm^3)     real      nodal       n
+hSRHRecombination        1/(s*cm^3)     real      nodal       n
+hDirectRecombination     1/(s*cm^3)     real      nodal       n
+n_contact.current        A/cm^2         real      none        y
+p_contact.current        A/cm^2         real      none        y
+RegionIDs                               real      cell        n
+------------------------------------------------------------------
+
+Output directory      : output
+Output file format    : grace
+Output file basename  : driftdiffusion
+
+
+solving for : poisson electrons holes 
+using local scaling
+
+# Region AlGaN_barrier_quantum, AlGaN (x = 0.2)
+  Conduction band:
+    DOS: bulk_kp
+      band edge :  2.99633
+      eff. mass :  0.223974
+      degeneracy:  2
+    Ec = 2.99633, Nc = 2.65993e+18 cm^-3
+    m_dos = 0.223974, v_th = 2.46785e+07 cm/s
+  Valence band:
+    DOS: bulk_kp
+      band edge :  -0.908976  -0.895374  -0.873372
+      eff. mass :  0.485429  0.561125  0.789533
+      degeneracy:  2  2  2
+    Ev = -0.873372, Nv = 8.48713e+18 cm^-3
+    m_dos = 0.789533, v_th = 1.31442e+07 cm/s
+  Eg = 3.8697, Ef0 = 2.97311, ni = 2.36223e-14
+
+# Region GaN_QWell, GaN
+  Conduction band:
+    DOS: bulk_kp
+      band edge :  2.72727
+      eff. mass :  0.203325
+      degeneracy:  2
+    Ec = 2.72727, Nc = 2.30069e+18 cm^-3
+    m_dos = 0.203325, v_th = 2.59014e+07 cm/s
+  Valence band:
+    DOS: bulk_kp
+      band edge :  -0.732132  -0.715528  -0.71033
+      eff. mass :  0.414872  0.364748  0.498748
+      degeneracy:  2  2  2
+    Ev = -0.71033, Nv = 6.70569e+18 cm^-3
+    m_dos = 0.498748, v_th = 1.65378e+07 cm/s
+  Eg = 3.4376, Ef0 = 2.5271, ni = 8.16029e-11
+
+# Region algan_barr1, AlGaN (x = 0.2)
+  Conduction band:
+    DOS: bulk_kp
+      band edge :  2.99633
+      eff. mass :  0.223974
+      degeneracy:  2
+    Ec = 2.99633, Nc = 2.65993e+18 cm^-3
+    m_dos = 0.223974, v_th = 2.46785e+07 cm/s
+  Valence band:
+    DOS: bulk_kp
+      band edge :  -0.908976  -0.895374  -0.873372
+      eff. mass :  0.485429  0.561125  0.789533
+      degeneracy:  2  2  2
+    Ev = -0.873372, Nv = 8.48713e+18 cm^-3
+    m_dos = 0.789533, v_th = 1.31442e+07 cm/s
+  Eg = 3.8697, Ef0 = 2.97311, ni = 2.36223e-14
+
+# Region alinn, AlInN (x = 0.78)
+  Conduction band:
+    DOS: bulk_kp
+      band edge :  3.35948
+      eff. mass :  0.254495
+      degeneracy:  2
+    Ec = 3.35948, Nc = 3.22175e+18 cm^-3
+    m_dos = 0.254495, v_th = 2.31515e+07 cm/s
+  Valence band:
+    DOS: bulk_kp
+      band edge :  -1.3104  -1.29934  -1.18119
+      eff. mass :  0.749812  0.758712  1.189
+      degeneracy:  2  2  2
+    Ev = -1.18119, Nv = 1.6293e+19 cm^-3
+    m_dos = 1.189, v_th = 1.07109e+07 cm/s
+  Eg = 4.54068, Ef0 = 3.35259, ni = 6.68595e-20
+
+# Region i_AlGaN1_quantum, AlGaN (x = 0.2)
+  Conduction band:
+    DOS: bulk_kp
+      band edge :  2.99633
+      eff. mass :  0.223974
+      degeneracy:  2
+    Ec = 2.99633, Nc = 2.65993e+18 cm^-3
+    m_dos = 0.223974, v_th = 2.46785e+07 cm/s
+  Valence band:
+    DOS: bulk_kp
+      band edge :  -0.908976  -0.895374  -0.873372
+      eff. mass :  0.485429  0.561125  0.789533
+      degeneracy:  2  2  2
+    Ev = -0.873372, Nv = 8.48713e+18 cm^-3
+    m_dos = 0.789533, v_th = 1.31442e+07 cm/s
+  Eg = 3.8697, Ef0 = 2.79241, ni = 2.51602e-14
+
+# Region i_AlGaN2_noquantum, AlGaN (x = 0.2)
+  Conduction band:
+    DOS: bulk_kp
+      band edge :  2.99633
+      eff. mass :  0.223974
+      degeneracy:  2
+    Ec = 2.99633, Nc = 2.65993e+18 cm^-3
+    m_dos = 0.223974, v_th = 2.46785e+07 cm/s
+  Valence band:
+    DOS: bulk_kp
+      band edge :  -0.908976  -0.895374  -0.873372
+      eff. mass :  0.485429  0.561125  0.789533
+      degeneracy:  2  2  2
+    Ev = -0.873372, Nv = 8.48713e+18 cm^-3
+    m_dos = 0.789533, v_th = 1.31442e+07 cm/s
+  Eg = 3.8697, Ef0 = 2.79241, ni = 2.51602e-14
+
+# Region n-algan, AlGaN (x = 0.2)
+  Conduction band:
+    DOS: bulk_kp
+      band edge :  2.99633
+      eff. mass :  0.223974
+      degeneracy:  2
+    Ec = 2.99633, Nc = 2.65993e+18 cm^-3
+    m_dos = 0.223974, v_th = 2.46785e+07 cm/s
+  Valence band:
+    DOS: bulk_kp
+      band edge :  -0.908976  -0.895374  -0.873372
+      eff. mass :  0.485429  0.561125  0.789533
+      degeneracy:  2  2  2
+    Ev = -0.873372, Nv = 8.48713e+18 cm^-3
+    m_dos = 0.789533, v_th = 1.31442e+07 cm/s
+  Eg = 3.8697, Ef0 = 2.98142, ni = 2.31467e-14
+
+# Region p_AlGaN, AlGaN (x = 0.2)
+  Conduction band:
+    DOS: bulk_kp
+      band edge :  2.99633
+      eff. mass :  0.223974
+      degeneracy:  2
+    Ec = 2.99633, Nc = 2.65993e+18 cm^-3
+    m_dos = 0.223974, v_th = 2.46785e+07 cm/s
+  Valence band:
+    DOS: bulk_kp
+      band edge :  -0.908976  -0.895374  -0.873372
+      eff. mass :  0.485429  0.561125  0.789533
+      degeneracy:  2  2  2
+    Ev = -0.873372, Nv = 8.48713e+18 cm^-3
+    m_dos = 0.789533, v_th = 1.31442e+07 cm/s
+  Eg = 3.8697, Ef0 = -0.773065, ni = 2.50865e-14
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for strain (elasticity)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+
+Available solution variables:
+------------------------------------------------------------------
+Name                     Units          Type      Association Plot
+------------------------------------------------------------------
+Strain                                  tensor    nodal       y
+StrainCell                              tensor    cell        n
+StrainCrystal                           tensor    nodal       n
+Stress                   GPa            tensor    nodal       y
+RelativeStrain                          tensor    nodal       n
+StressCrystal            GPa            tensor    nodal       n
+Displacement             m              vector    nodal       y
+ForceSource              N/m3           tensor    nodal       n
+StrainSource                            tensor    nodal       n
+StressSource             GPa            tensor    nodal       n
+HydrostaticStrain                       real      nodal       n
+EnergyDensity            J/m^3          real      nodal       n
+RegionIDs                               real      cell        n
+------------------------------------------------------------------
+
+Output directory      : output
+Output file format    : grace
+Output file basename  : strain
+
+
+# Region AlGaN_barrier_quantum, AlGaN (x = 0.2)
+  Stiffness Constants (GPa, in calculation coordinate system):
+    C11 = 398.6 C12 = 104 C13 = 104 C33 = 372.8 C44 = 118.7
+
+# Region GaN_QWell, GaN
+  Stiffness Constants (GPa, in calculation coordinate system):
+    C11 = 405 C12 = 103 C13 = 103 C33 = 367 C44 = 116
+
+# Region algan_barr1, AlGaN (x = 0.2)
+  Stiffness Constants (GPa, in calculation coordinate system):
+    C11 = 398.6 C12 = 104 C13 = 104 C33 = 372.8 C44 = 118.7
+
+# Region alinn, AlInN (x = 0.78)
+  Stiffness Constants (GPa, in calculation coordinate system):
+    C11 = 340.22 C12 = 104.48 C13 = 104.48 C33 = 357.94 C44 = 112.89
+
+# Region i_AlGaN1_quantum, AlGaN (x = 0.2)
+  Stiffness Constants (GPa, in calculation coordinate system):
+    C11 = 398.6 C12 = 104 C13 = 104 C33 = 372.8 C44 = 118.7
+
+# Region i_AlGaN2_noquantum, AlGaN (x = 0.2)
+  Stiffness Constants (GPa, in calculation coordinate system):
+    C11 = 398.6 C12 = 104 C13 = 104 C33 = 372.8 C44 = 118.7
+
+# Region n-algan, AlGaN (x = 0.2)
+  Stiffness Constants (GPa, in calculation coordinate system):
+    C11 = 398.6 C12 = 104 C13 = 104 C33 = 372.8 C44 = 118.7
+
+# Region p_AlGaN, AlGaN (x = 0.2)
+  Stiffness Constants (GPa, in calculation coordinate system):
+    C11 = 398.6 C12 = 104 C13 = 104 C33 = 372.8 C44 = 118.7
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for QW3_electrons (efaschroedinger)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+Symmetry of k space: rectangular
+k-space initialized
+
+Available solution variables:
+------------------------------------------------------------------
+Name                     Units          Type      Association Plot
+------------------------------------------------------------------
+ProbabilityDensity       1/cm           n-tuple   nodal       y
+EigenEnergy              eV             n-tuple   none        y
+Occupation                              n-tuple   none        n
+EigenEnergyOnMesh        eV             n-tuple   nodal       n
+EnvelopeFunctions                       n-tuple   nodal       n
+RegionIDs                               real      cell        n
+------------------------------------------------------------------
+
+Output directory      : output
+Output file format    : grace
+Output file basename  : QW3_electrons
+
+Number of bands: 1
+Degeneracy: 2
+
+
+# Region AlGaN_barrier_quantum, AlGaN (x = 0.2)
+  single-band 
+
+# Region GaN_QWell, GaN
+  single-band 
+
+# Region i_AlGaN1_quantum, AlGaN (x = 0.2)
+  single-band 
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for QW3_holes (efaschroedinger)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+Symmetry of k space: rectangular
+k-space initialized
+
+Available solution variables:
+------------------------------------------------------------------
+Name                     Units          Type      Association Plot
+------------------------------------------------------------------
+ProbabilityDensity       1/cm           n-tuple   nodal       y
+EigenEnergy              eV             n-tuple   none        y
+Occupation                              n-tuple   none        n
+EigenEnergyOnMesh        eV             n-tuple   nodal       n
+EnvelopeFunctions                       n-tuple   nodal       n
+RegionIDs                               real      cell        n
+------------------------------------------------------------------
+
+Output directory      : output
+Output file format    : grace
+Output file basename  : QW3_holes
+
+Number of bands: 6
+Degeneracy: 1
+
+
+# Region AlGaN_barrier_quantum, AlGaN (x = 0.2)
+  KxP 6x6
+    L = -3.724 M = -0.71 N = -3.014  m_c = inf
+
+# Region GaN_QWell, GaN
+  KxP 6x6
+    L = -4.15 M = -0.75 N = -3.4  m_c = inf
+
+# Region i_AlGaN1_quantum, AlGaN (x = 0.2)
+  KxP 6x6
+    L = -3.724 M = -0.71 N = -3.014  m_c = inf
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for spectrum (opticskp)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+Setting up k-space integration
+  Setting up 2-dimensional k-space
+  scaling k space (= k_max) by (0.5, 0.5, 0.5)
+  Symmetry of k space: rectangular
+  cell volume for normalization : 1 nm^2
+
+Available solution variables:
+------------------------------------------------------------------
+Name                     Units          Type      Association Plot
+------------------------------------------------------------------
+OpticalPower             W/cm^2         real      none        y
+Recombination            1/s/cm^2       real      none        y
+PeakEnergy               eV             real      none        n
+RegionIDs                               real      cell        n
+------------------------------------------------------------------
+
+Output directory      : output
+Output file format    : grace
+Output file basename  : spectrum
+
+
+# Region AlGaN_barrier_quantum, AlGaN (x = 0.2)
+  KxP 8x8
+    L = -2.03869 M = -0.71 N = -1.32869 P0 = 0.489924
+    m_c = 1
+
+# Region GaN_QWell, GaN
+  KxP 8x8
+    L = -2.22283 M = -0.75 N = -1.47283 P0 = 0.493822
+    m_c = 1
+
+# Region i_AlGaN1_quantum, AlGaN (x = 0.2)
+  KxP 8x8
+    L = -2.03869 M = -0.71 N = -1.32869 P0 = 0.489924
+    m_c = 1
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for sweep (sweep)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+
+Output directory      : output
+Output file format    : grace
+Output file basename  : sweep
+
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+We solve: strain driftdiffusion QW3_electrons QW3_holes spectrum 
+
+>>>>--------------------------------- (strain) ---------------------------------
+
+  | Iteration | Elastic energy [J] | ||u|| [m.u.] | dE [%] | du [m.u.] |
+  -------------------------------------------------------------------------------------
+  |         1 |        1.22062e+09 |     0.219492 |    inf |  0.219492 |
+
+Solve time: 0h 0m 0.11s
+<<<<----------------------------------------------------------------------------
+
+>>>>----------------------------- (driftdiffusion) -----------------------------
+  Reading state from reference/driftdiffusion_Vb_3.5.tsv
+
+  iterations: 1, |du| = 4.32296e-05, |r| = 1.30841e-10
+  Rrad = 16.3361 Rsrh = 248.491 Raug = 0 Rtot = 264.827
+  Surface recombination current = 0
+
+  contact name:       voltage:            current:
+  n_contact           0                   272.98
+  p_contact           3.5                -272.98
+
+Solve time: 0h 0m 0.89s
+<<<<----------------------------------------------------------------------------
+
+>>>>----------------------------- (QW3_electrons) ------------------------------
+  (EFA) Solving for k = (0.00000 0.00000 0.00000 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0142359 0.134805 0.177299 0.243556 0.316241 0.407982 0.527168 0.646233 
+    0.810701 0.960308 1.1616 1.35002 1.57877 1.81373 2.06521 2.34862 
+    2.62571 2.95147 3.26327 3.62069 
+
+
+Solve time: 0h 0m 0.15s
+<<<<----------------------------------------------------------------------------
+
+>>>>------------------------------- (QW3_holes) --------------------------------
+  (EFA) Solving for k = (0.00000 0.00000 0.00000 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (15):
+    -3.56656 -3.56656 -3.57752 -3.57752 -3.66765 -3.66765 -3.67882 -3.67882 
+    -3.68494 -3.68494 -3.71968 -3.71968 -3.73159 -3.73159 -3.76029 
+
+  converged eigenenergies (24):
+    -3.76029 -3.77108 -3.77108 -3.78952 -3.78952 -3.79779 -3.79779 -3.80047 
+    -3.80047 -3.80614 -3.80614 -3.81097 -3.81097 -3.81418 -3.81418 -3.82593 
+    -3.82593 -3.82623 -3.82623 -3.83702 -3.83702 -3.8418 -3.8418 -3.85307 
+
+
+Solve time: 0h 0m 0.39s
+<<<<----------------------------------------------------------------------------
+
+>>>>-------------------------------- (spectrum) --------------------------------
+  k = (0, 0.0261541, 0.0262842), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.0261541 0.0262842 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0144837 0.13504 0.177532 0.243791 0.316475 0.408219 0.527403 0.64647 
+    0.810936 0.960545 1.16184 1.35025 1.57901 1.81397 2.06545 2.34886 
+    2.62594 2.9517 3.2635 3.62092 
+
+  (EFA) Solving for k = (0.00000 0.0261541 0.0262842 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.56667 -3.56667 -3.57757 -3.57768 -3.66753 -3.66754 -3.67818 -3.67875 
+    -3.68535 -3.68556 -3.71976 -3.71977 -3.73144 -3.7319 
+
+  converged eigenenergies (32):
+    -3.76036 -3.76036 -3.77109 -3.77119 -3.78953 -3.78953 -3.79784 -3.79785 
+    -3.8 -3.80085 -3.8053 -3.80731 -3.8106 -3.81155 -3.81433 -3.81435 
+    -3.82586 -3.82612 -3.82619 -3.82622 -3.83627 -3.83755 -3.84182 -3.84183 
+    -3.85256 -3.85327 -3.85416 -3.85418 -3.8551 -3.85645 -3.86572 -3.86581 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.0976083, 0.0262842), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.0976083 0.0262842 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0160966 0.136577 0.179054 0.245331 0.318005 0.409762 0.528936 0.648014 
+    0.81247 0.962087 1.16337 1.35179 1.58055 1.81551 2.06699 2.3504 
+    2.62749 2.95324 3.26505 3.62246 
+
+  (EFA) Solving for k = (0.00000 0.0976083 0.0262842 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.56734 -3.56735 -3.5782 -3.57849 -3.66675 -3.66684 -3.67659 -3.67758 
+    -3.68785 -3.68796 -3.72026 -3.72032 -3.73156 -3.73282 
+
+  converged eigenenergies (32):
+    -3.76081 -3.76081 -3.77147 -3.77167 -3.78955 -3.7896 -3.79801 -3.79829 
+    -3.7994 -3.80111 -3.80467 -3.80997 -3.81043 -3.81273 -3.81519 -3.81568 
+    -3.82576 -3.82603 -3.82618 -3.8271 -3.83489 -3.8379 -3.84194 -3.8421 
+    -3.85212 -3.8528 -3.85434 -3.85444 -3.85832 -3.86026 -3.86587 -3.86625 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.0261541, 0.0980939), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.0261541 0.0980939 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0160741 0.136545 0.179021 0.2453 0.317973 0.409732 0.528904 0.647983 
+    0.812439 0.962056 1.16334 1.35176 1.58051 1.81548 2.06696 2.35036 
+    2.62745 2.95321 3.26501 3.62243 
+
+  (EFA) Solving for k = (0.00000 0.0261541 0.0980939 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.56734 -3.56736 -3.5782 -3.5785 -3.66675 -3.66684 -3.67658 -3.67757 
+    -3.68787 -3.68798 -3.72026 -3.72033 -3.73157 -3.73283 
+
+  converged eigenenergies (32):
+    -3.76081 -3.76082 -3.77147 -3.77167 -3.78955 -3.7896 -3.79801 -3.7983 
+    -3.7994 -3.80111 -3.80467 -3.80999 -3.81043 -3.81273 -3.8152 -3.81569 
+    -3.82575 -3.82603 -3.82619 -3.82711 -3.83488 -3.8379 -3.84194 -3.8421 
+    -3.85212 -3.8528 -3.85434 -3.85444 -3.85835 -3.86029 -3.86588 -3.86626 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.0976083, 0.0980939), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.0976083 0.0980939 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0176869 0.138081 0.180543 0.24684 0.319503 0.411275 0.530437 0.649527 
+    0.813973 0.963599 1.16488 1.3533 1.58206 1.81701 2.0685 2.3519 
+    2.629 2.95475 3.26656 3.62397 
+
+  (EFA) Solving for k = (0.00000 0.0976083 0.0980939 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.56795 -3.56798 -3.5789 -3.57933 -3.66594 -3.66615 -3.67587 -3.6769 
+    -3.68967 -3.68974 -3.72071 -3.72087 -3.73185 -3.73358 
+
+  converged eigenenergies (32):
+    -3.76123 -3.76125 -3.77193 -3.7721 -3.7896 -3.78972 -3.798 -3.79872 
+    -3.79942 -3.80116 -3.80463 -3.81046 -3.81185 -3.81335 -3.81603 -3.81708 
+    -3.82534 -3.82612 -3.82654 -3.828 -3.83428 -3.83788 -3.84214 -3.84242 
+    -3.85209 -3.8528 -3.85453 -3.85471 -3.86115 -3.86278 -3.86606 -3.86697 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.149916, 0.0262842), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.149916 0.0262842 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0184579 0.138826 0.181283 0.247586 0.320245 0.412022 0.53118 0.650274 
+    0.814717 0.964345 1.16562 1.35405 1.5828 1.81776 2.06925 2.35265 
+    2.62974 2.95549 3.2673 3.62472 
+
+  (EFA) Solving for k = (0.00000 0.149916 0.0262842 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.56821 -3.56825 -3.57924 -3.57972 -3.66557 -3.66584 -3.67567 -3.67669 
+    -3.69033 -3.69047 -3.7209 -3.7211 -3.732 -3.7339 
+
+  converged eigenenergies (32):
+    -3.76142 -3.76145 -3.77215 -3.77229 -3.78963 -3.78979 -3.79797 -3.79891 
+    -3.7995 -3.80119 -3.80465 -3.8105 -3.81256 -3.81358 -3.8164 -3.81766 
+    -3.82517 -3.82619 -3.82674 -3.8284 -3.83411 -3.83786 -3.84226 -3.84258 
+    -3.85212 -3.85284 -3.85461 -3.85483 -3.86232 -3.8636 -3.86616 -3.86747 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.221371, 0.0262842), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.221371 0.0262842 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0232962 0.143434 0.185849 0.252206 0.324834 0.416652 0.535779 0.654906 
+    0.81932 0.968973 1.17023 1.35867 1.58742 1.82237 2.07388 2.35726 
+    2.63437 2.9601 3.27193 3.62934 
+
+  (EFA) Solving for k = (0.00000 0.221371 0.0262842 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.56967 -3.56977 -3.58165 -3.58241 -3.66334 -3.66394 -3.67517 -3.67604 
+    -3.69383 -3.69435 -3.722 -3.72253 -3.7331 -3.73583 
+
+  converged eigenenergies (32):
+    -3.76253 -3.76266 -3.77345 -3.77376 -3.79003 -3.79046 -3.79799 -3.79998 
+    -3.80019 -3.80169 -3.80479 -3.81081 -3.81481 -3.81598 -3.81886 -3.82053 
+    -3.82446 -3.82732 -3.82832 -3.83115 -3.83379 -3.83781 -3.84345 -3.84377 
+    -3.85254 -3.85349 -3.85525 -3.85567 -3.86584 -3.86653 -3.86931 -3.87256 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.149916, 0.0980939), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.149916 0.0980939 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0200482 0.140331 0.182772 0.249095 0.321742 0.413535 0.532682 0.651788 
+    0.816219 0.965857 1.16713 1.35555 1.58431 1.81927 2.07076 2.35415 
+    2.63126 2.957 3.26881 3.62623 
+
+  (EFA) Solving for k = (0.00000 0.149916 0.0980939 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.56874 -3.56881 -3.58002 -3.5806 -3.66478 -3.66517 -3.67538 -3.67635 
+    -3.69165 -3.69193 -3.7213 -3.72161 -3.73235 -3.73459 
+
+  converged eigenenergies (32):
+    -3.76182 -3.76187 -3.77267 -3.77269 -3.78973 -3.78997 -3.79793 -3.7993 
+    -3.79972 -3.80131 -3.8047 -3.8106 -3.81394 -3.81403 -3.81722 -3.81882 
+    -3.82483 -3.82646 -3.82722 -3.82933 -3.83388 -3.83782 -3.84259 -3.84295 
+    -3.85221 -3.85301 -3.85482 -3.8551 -3.86468 -3.86478 -3.86646 -3.86899 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.221371, 0.0980939), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.221371 0.0980939 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0248864 0.144939 0.187338 0.253715 0.326332 0.418165 0.537281 0.656419 
+    0.820822 0.970484 1.17174 1.36018 1.58893 1.82388 2.07539 2.35876 
+    2.63589 2.96161 3.27344 3.63085 
+
+  (EFA) Solving for k = (0.00000 0.221371 0.0980939 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.57008 -3.5702 -3.58253 -3.58336 -3.66267 -3.66336 -3.67516 -3.67598 
+    -3.69481 -3.69541 -3.72233 -3.72296 -3.7335 -3.73641 
+
+  converged eigenenergies (32):
+    -3.76286 -3.76304 -3.77382 -3.77433 -3.79024 -3.79075 -3.79808 -3.8003 
+    -3.80041 -3.80193 -3.80483 -3.81091 -3.81517 -3.81671 -3.81964 -3.82115 
+    -3.8245 -3.82787 -3.82894 -3.83205 -3.83385 -3.83784 -3.84398 -3.84425 
+    -3.85276 -3.8538 -3.85549 -3.85598 -3.8662 -3.86679 -3.87119 -3.87424 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.0261541, 0.150662), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.0261541 0.150662 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0184026 0.138748 0.181201 0.24751 0.320166 0.411947 0.531102 0.650199 
+    0.814639 0.96427 1.16555 1.35397 1.58272 1.81768 2.06917 2.35257 
+    2.62967 2.95541 3.26723 3.62464 
+
+  (EFA) Solving for k = (0.00000 0.0261541 0.150662 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.56822 -3.56826 -3.57926 -3.57974 -3.66555 -3.66583 -3.67566 -3.67668 
+    -3.69037 -3.69051 -3.72091 -3.72112 -3.73201 -3.73392 
+
+  converged eigenenergies (32):
+    -3.76143 -3.76146 -3.77216 -3.7723 -3.78963 -3.78979 -3.79797 -3.79892 
+    -3.79951 -3.80119 -3.80465 -3.8105 -3.81259 -3.81359 -3.81642 -3.81769 
+    -3.82516 -3.8262 -3.82675 -3.82843 -3.8341 -3.83786 -3.84227 -3.84259 
+    -3.85212 -3.85285 -3.85462 -3.85483 -3.86238 -3.86364 -3.86617 -3.8675 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.0976083, 0.150662), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.0976083 0.150662 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0200153 0.140285 0.182723 0.24905 0.321696 0.41349 0.532635 0.651743 
+    0.816173 0.965812 1.16708 1.35551 1.58427 1.81922 2.07072 2.35411 
+    2.63121 2.95695 3.26877 3.62618 
+
+  (EFA) Solving for k = (0.00000 0.0976083 0.150662 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.56875 -3.56881 -3.58003 -3.58061 -3.66477 -3.66516 -3.67538 -3.67635 
+    -3.69167 -3.69195 -3.7213 -3.72162 -3.73235 -3.7346 
+
+  converged eigenenergies (32):
+    -3.76182 -3.76187 -3.77268 -3.7727 -3.78973 -3.78998 -3.79793 -3.7993 
+    -3.79973 -3.80131 -3.8047 -3.8106 -3.81396 -3.81404 -3.81723 -3.81884 
+    -3.82482 -3.82646 -3.82723 -3.82934 -3.83388 -3.83782 -3.8426 -3.84295 
+    -3.85222 -3.85301 -3.85482 -3.8551 -3.86471 -3.86479 -3.86647 -3.86901 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.0261541, 0.222472), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.0261541 0.222472 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0231734 0.143263 0.185668 0.252037 0.324659 0.416486 0.535606 0.65474 
+    0.819147 0.968805 1.17006 1.3585 1.58725 1.8222 2.07371 2.35709 
+    2.63421 2.95993 3.27176 3.62917 
+
+  (EFA) Solving for k = (0.00000 0.0261541 0.222472 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.56969 -3.5698 -3.5817 -3.58246 -3.6633 -3.66391 -3.67517 -3.67603 
+    -3.69389 -3.69441 -3.72202 -3.72255 -3.73312 -3.73586 
+
+  converged eigenenergies (32):
+    -3.76255 -3.76268 -3.77347 -3.77379 -3.79004 -3.79047 -3.79799 -3.8 
+    -3.8002 -3.8017 -3.80479 -3.81081 -3.81483 -3.81603 -3.81891 -3.82057 
+    -3.82445 -3.82734 -3.82836 -3.8312 -3.83379 -3.83781 -3.84348 -3.8438 
+    -3.85255 -3.8535 -3.85526 -3.85568 -3.86586 -3.86654 -3.86942 -3.87266 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.0976083, 0.222472), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.0976083 0.222472 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.024786 0.144799 0.18719 0.253577 0.326189 0.418029 0.537139 0.656283 
+    0.820682 0.970348 1.1716 1.36004 1.58879 1.82374 2.07525 2.35862 
+    2.63575 2.96147 3.2733 3.63071 
+
+  (EFA) Solving for k = (0.00000 0.0976083 0.222472 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.5701 -3.57022 -3.58257 -3.5834 -3.66264 -3.66334 -3.67516 -3.67598 
+    -3.69485 -3.69546 -3.72234 -3.72297 -3.73352 -3.73644 
+
+  converged eigenenergies (32):
+    -3.76288 -3.76306 -3.77384 -3.77435 -3.79025 -3.79076 -3.79809 -3.80031 
+    -3.80042 -3.80195 -3.80483 -3.81091 -3.81518 -3.81674 -3.81967 -3.82118 
+    -3.82451 -3.8279 -3.82897 -3.83209 -3.83386 -3.83784 -3.844 -3.84427 
+    -3.85277 -3.85381 -3.8555 -3.85599 -3.86621 -3.8668 -3.87127 -3.87431 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.149916, 0.150662), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.149916 0.150662 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0223765 0.142534 0.184952 0.251304 0.323935 0.41575 0.53488 0.654003 
+    0.81842 0.968071 1.16933 1.35776 1.58652 1.82147 2.07298 2.35636 
+    2.63347 2.9592 3.27102 3.62844 
+
+  (EFA) Solving for k = (0.00000 0.149916 0.150662 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.56944 -3.56954 -3.58122 -3.58193 -3.66369 -3.66425 -3.67519 -3.67609 
+    -3.69331 -3.69377 -3.72183 -3.7223 -3.7329 -3.73552 
+
+  converged eigenenergies (32):
+    -3.76236 -3.76246 -3.77326 -3.77347 -3.78994 -3.79032 -3.79796 -3.79981 
+    -3.80007 -3.80158 -3.80477 -3.81076 -3.81462 -3.81554 -3.81844 -3.82016 
+    -3.8245 -3.82706 -3.82802 -3.83069 -3.83378 -3.8378 -3.84321 -3.84355 
+    -3.85244 -3.85335 -3.85513 -3.85552 -3.86564 -3.86637 -3.86833 -3.87166 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.221371, 0.150662), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.221371 0.150662 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0272145 0.147143 0.189518 0.255924 0.328525 0.420381 0.539479 0.658635 
+    0.823023 0.972698 1.17394 1.36238 1.59114 1.82609 2.0776 2.36097 
+    2.6381 2.96382 3.27565 3.63306 
+
+  (EFA) Solving for k = (0.00000 0.221371 0.150662 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.57063 -3.57078 -3.58384 -3.58478 -3.66176 -3.66257 -3.67522 -3.67597 
+    -3.69611 -3.69684 -3.72277 -3.72354 -3.7341 -3.73723 
+
+  converged eigenenergies (32):
+    -3.76331 -3.76358 -3.77434 -3.77517 -3.79059 -3.79123 -3.79828 -3.80073 
+    -3.80075 -3.80232 -3.80487 -3.81105 -3.81565 -3.81752 -3.82051 -3.82187 
+    -3.82498 -3.82877 -3.82987 -3.83328 -3.83405 -3.83792 -3.84483 -3.84501 
+    -3.85316 -3.85434 -3.85586 -3.85645 -3.86667 -3.86715 -3.87369 -3.87628 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.149916, 0.222472), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.149916 0.222472 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0271471 0.147049 0.189419 0.255832 0.328428 0.420289 0.539384 0.658544 
+    0.822928 0.972606 1.17385 1.36229 1.59105 1.82599 2.07751 2.36087 
+    2.63801 2.96372 3.27556 3.63296 
+
+  (EFA) Solving for k = (0.00000 0.149916 0.222472 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.57064 -3.57079 -3.58387 -3.58481 -3.66174 -3.66256 -3.67522 -3.67597 
+    -3.69614 -3.69687 -3.72278 -3.72355 -3.73411 -3.73724 
+
+  converged eigenenergies (32):
+    -3.76332 -3.76359 -3.77435 -3.77519 -3.7906 -3.79124 -3.79829 -3.80074 
+    -3.80076 -3.80233 -3.80487 -3.81105 -3.81566 -3.81753 -3.82052 -3.82188 
+    -3.825 -3.82879 -3.82988 -3.8333 -3.83406 -3.83792 -3.84485 -3.84502 
+    -3.85317 -3.85436 -3.85586 -3.85646 -3.86668 -3.86716 -3.87373 -3.87631 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.221371, 0.222472), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.221371 0.222472 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0319847 0.151658 0.193985 0.260451 0.333018 0.424919 0.543983 0.663176 
+    0.827531 0.977233 1.17846 1.36691 1.59567 1.83061 2.08214 2.36549 
+    2.64264 2.96834 3.28018 3.63758 
+
+  (EFA) Solving for k = (0.00000 0.221371 0.222472 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.57162 -3.57179 -3.58662 -3.58775 -3.66014 -3.66114 -3.67548 -3.67611 
+    -3.69849 -3.69939 -3.7236 -3.7246 -3.73535 -3.73874 
+
+  converged eigenenergies (31):
+    -3.76412 -3.7646 -3.77534 -3.77685 -3.79151 -3.79235 -3.79889 -3.80138 
+    -3.80172 -3.80312 -3.80493 -3.81133 -3.81652 -3.8186 -3.82118 -3.82296 
+    -3.82721 -3.83075 -3.83161 -3.83475 -3.83546 -3.83821 -3.8467 -3.8467 
+    -3.85436 -3.85582 -3.8567 -3.85757 -3.86766 -3.86799 -3.87759 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.273679, 0.0262842), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.273679 0.0262842 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0280183 0.147933 0.190305 0.256715 0.329314 0.421172 0.540268 0.659427 
+    0.823812 0.973489 1.17473 1.36318 1.59193 1.82688 2.0784 2.36176 
+    2.63889 2.96461 3.27644 3.63385 
+
+  (EFA) Solving for k = (0.00000 0.273679 0.0262842 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.57079 -3.57094 -3.58424 -3.58521 -3.66151 -3.66235 -3.67525 -3.67598 
+    -3.69648 -3.69724 -3.7229 -3.7237 -3.73428 -3.73746 
+
+  converged eigenenergies (32):
+    -3.76344 -3.76373 -3.77449 -3.77542 -3.79071 -3.79138 -3.79836 -3.80082 
+    -3.80089 -3.80244 -3.80488 -3.81109 -3.81578 -3.81771 -3.82069 -3.82205 
+    -3.82522 -3.82905 -3.83014 -3.83361 -3.83414 -3.83795 -3.8451 -3.84524 
+    -3.8533 -3.85453 -3.85597 -3.8566 -3.86681 -3.86727 -3.87436 -3.87674 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.345133, 0.0262842), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.345133 0.0262842 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0360809 0.155614 0.197915 0.264415 0.336963 0.428889 0.547933 0.667146 
+    0.831484 0.981201 1.18242 1.37088 1.59963 1.83457 2.08611 2.36944 
+    2.64661 2.9723 3.28415 3.64155 
+
+  (EFA) Solving for k = (0.00000 0.345133 0.0262842 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.57229 -3.57249 -3.58887 -3.59013 -3.65904 -3.66016 -3.67576 -3.67632 
+    -3.70016 -3.70117 -3.7242 -3.72534 -3.73634 -3.73981 
+
+  converged eigenenergies (30):
+    -3.76469 -3.76534 -3.77607 -3.77806 -3.79236 -3.79331 -3.79951 -3.80199 
+    -3.80256 -3.80374 -3.80496 -3.81155 -3.81716 -3.81916 -3.82134 -3.82368 
+    -3.82917 -3.83228 -3.8328 -3.83572 -3.83675 -3.83857 -3.84801 -3.84808 
+    -3.85577 -3.85727 -3.85745 -3.85872 -3.86855 -3.8688 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.273679, 0.0980939), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.273679 0.0980939 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0296084 0.149438 0.191794 0.258224 0.330811 0.422685 0.54177 0.66094 
+    0.825315 0.975001 1.17624 1.36468 1.59344 1.82838 2.07991 2.36326 
+    2.6404 2.96611 3.27795 3.63536 
+
+  (EFA) Solving for k = (0.00000 0.273679 0.0980939 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.57113 -3.57129 -3.58516 -3.5862 -3.66095 -3.66186 -3.67533 -3.67601 
+    -3.69729 -3.69811 -3.72318 -3.72407 -3.73469 -3.73797 
+
+  converged eigenenergies (32):
+    -3.76372 -3.76408 -3.77483 -3.77599 -3.79101 -3.79175 -3.79855 -3.80104 
+    -3.8012 -3.80271 -3.8049 -3.81119 -3.81608 -3.8181 -3.82096 -3.82244 
+    -3.82592 -3.82971 -3.83074 -3.83424 -3.83448 -3.83803 -3.84572 -3.84581 
+    -3.85367 -3.85499 -3.85624 -3.85696 -3.86713 -3.86753 -3.87578 -3.87753 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.345133, 0.0980939), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.345133 0.0980939 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0376708 0.157119 0.199404 0.265924 0.33846 0.430402 0.549435 0.66866 
+    0.832987 0.982713 1.18392 1.37238 1.60114 1.83607 2.08762 2.37095 
+    2.64812 2.9738 3.28566 3.64306 
+
+  (EFA) Solving for k = (0.00000 0.345133 0.0980939 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.57256 -3.57275 -3.58981 -3.59112 -3.65862 -3.65979 -3.67589 -3.67642 
+    -3.70082 -3.70186 -3.72444 -3.72563 -3.73675 -3.74023 
+
+  converged eigenenergies (30):
+    -3.76491 -3.76563 -3.77635 -3.77853 -3.79272 -3.79371 -3.79978 -3.80229 
+    -3.80293 -3.80399 -3.80498 -3.81165 -3.81743 -3.81936 -3.82141 -3.82396 
+    -3.82987 -3.83284 -3.83328 -3.83624 -3.8372 -3.83877 -3.8485 -3.84859 
+    -3.8565 -3.85778 -3.85785 -3.85935 -3.86896 -3.86919 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.397441, 0.0262842), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.397441 0.0262842 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0431628 0.162363 0.2046 0.271179 0.343682 0.435668 0.554667 0.673928 
+    0.838223 0.987976 1.18917 1.37764 1.6064 1.84132 2.09289 2.37619 
+    2.65338 2.97905 3.29092 3.64831 
+
+  (EFA) Solving for k = (0.00000 0.397441 0.0262842 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.57338 -3.57359 -3.59295 -3.59441 -3.65737 -3.65868 -3.67636 -3.67681 
+    -3.70289 -3.70402 -3.72521 -3.72652 -3.7381 -3.74154 
+
+  converged eigenenergies (25):
+    -3.76561 -3.76655 -3.77725 -3.77991 -3.7939 -3.79503 -3.80061 -3.80369 
+    -3.8041 -3.80491 -3.8051 -3.81198 -3.8184 -3.81994 -3.82175 -3.82489 
+    -3.83164 -3.83411 -3.83499 -3.83839 -3.83842 -3.83969 -3.84983 -3.85 
+    -3.85889 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.468895, 0.0262842), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.468895 0.0262842 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0544477 0.173118 0.215254 0.281958 0.354391 0.446472 0.565398 0.684736 
+    0.848963 0.998773 1.19992 1.38842 1.61718 1.85209 2.10369 2.38695 
+    2.66418 2.98982 3.30171 3.65909 
+
+  (EFA) Solving for k = (0.00000 0.468895 0.0262842 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (13):
+    -3.57489 -3.5751 -3.59921 -3.60097 -3.65537 -3.65691 -3.67742 -3.67773 
+    -3.70665 -3.70786 -3.72669 -3.72811 -3.74074 
+
+  converged eigenenergies (31):
+    -3.74387 -3.76689 -3.76822 -3.77887 -3.78202 -3.79586 -3.79734 -3.80166 
+    -3.80473 -3.80612 -3.80785 -3.80798 -3.81285 -3.82094 -3.82159 -3.82285 
+    -3.82708 -3.83363 -3.83582 -3.83701 -3.84003 -3.8428 -3.84312 -3.85156 
+    -3.85194 -3.86132 -3.86227 -3.86655 -3.86743 -3.8748 -3.87663 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.397441, 0.0980939), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.397441 0.0980939 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0447525 0.163868 0.206089 0.272688 0.34518 0.437181 0.556168 0.675441 
+    0.839726 0.989488 1.19067 1.37915 1.60791 1.84283 2.0944 2.3777 
+    2.6549 2.98056 3.29243 3.64982 
+
+  (EFA) Solving for k = (0.00000 0.397441 0.0980939 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.57361 -3.57382 -3.59387 -3.59538 -3.65703 -3.65838 -3.67651 -3.67693 
+    -3.70348 -3.70462 -3.72543 -3.72677 -3.73849 -3.74191 
+
+  converged eigenenergies (30):
+    -3.7658 -3.76681 -3.7775 -3.78027 -3.79422 -3.7954 -3.80081 -3.80422 
+    -3.80434 -3.80515 -3.80528 -3.81208 -3.81872 -3.82012 -3.82187 -3.82518 
+    -3.83202 -3.83441 -3.83542 -3.83869 -3.83913 -3.84006 -3.85014 -3.85034 
+    -3.85926 -3.85994 -3.86049 -3.86293 -3.87105 -3.87148 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.468895, 0.0980939), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.468895 0.0980939 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0560372 0.174623 0.216743 0.283467 0.355888 0.447985 0.566899 0.686249 
+    0.850466 1.00028 1.20143 1.38993 1.61869 1.85359 2.1052 2.38846 
+    2.6657 2.99132 3.30322 3.6606 
+
+  (EFA) Solving for k = (0.00000 0.468895 0.0980939 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (13):
+    -3.57509 -3.5753 -3.60008 -3.60188 -3.65513 -3.65671 -3.67758 -3.67787 
+    -3.70715 -3.70836 -3.7269 -3.72832 -3.7411 
+
+  converged eigenenergies (31):
+    -3.74417 -3.76707 -3.76845 -3.77908 -3.78226 -3.79609 -3.79762 -3.80176 
+    -3.80475 -3.80631 -3.80828 -3.8086 -3.81301 -3.82136 -3.82191 -3.82309 
+    -3.82748 -3.83386 -3.83603 -3.83717 -3.84021 -3.8433 -3.8437 -3.85176 
+    -3.85216 -3.86163 -3.86262 -3.86751 -3.86802 -3.87556 -3.8777 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.273679, 0.150662), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.273679 0.150662 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0319364 0.151641 0.193974 0.260434 0.333004 0.4249 0.543968 0.663156 
+    0.827515 0.977214 1.17844 1.36689 1.59565 1.83059 2.08212 2.36547 
+    2.64262 2.96832 3.28016 3.63757 
+
+  (EFA) Solving for k = (0.00000 0.273679 0.150662 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.57158 -3.57176 -3.58653 -3.58765 -3.66019 -3.66119 -3.67547 -3.6761 
+    -3.69841 -3.69931 -3.72357 -3.72457 -3.7353 -3.73869 
+
+  converged eigenenergies (31):
+    -3.7641 -3.76457 -3.77531 -3.77679 -3.79148 -3.79231 -3.79887 -3.80136 
+    -3.80169 -3.8031 -3.80493 -3.81132 -3.81649 -3.81857 -3.82117 -3.82293 
+    -3.82713 -3.83068 -3.83156 -3.83471 -3.8354 -3.83819 -3.84664 -3.84665 
+    -3.85431 -3.85577 -3.85667 -3.85753 -3.86763 -3.86796 -3.87749 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.345133, 0.150662), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.345133 0.150662 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0399984 0.159323 0.201584 0.268133 0.340653 0.432617 0.551633 0.670876 
+    0.835187 0.984926 1.18613 1.37459 1.60335 1.83828 2.08984 2.37315 
+    2.65033 2.97601 3.28787 3.64527 
+
+  (EFA) Solving for k = (0.00000 0.345133 0.150662 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.57293 -3.57313 -3.59119 -3.59257 -3.65804 -3.65928 -3.67609 -3.67658 
+    -3.70175 -3.70284 -3.72478 -3.72604 -3.73734 -3.74082 
+
+  converged eigenenergies (30):
+    -3.76522 -3.76605 -3.77676 -3.77917 -3.79325 -3.7943 -3.80017 -3.80283 
+    -3.80348 -3.80437 -3.80501 -3.81179 -3.81784 -3.81962 -3.82154 -3.82437 
+    -3.83075 -3.83348 -3.83405 -3.83713 -3.83777 -3.83912 -3.84914 -3.84926 
+    -3.85769 -3.85831 -3.85863 -3.86044 -3.86961 -3.86985 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.273679, 0.222472), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.273679 0.222472 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0367062 0.156156 0.198441 0.264961 0.337497 0.429439 0.548472 0.667697 
+    0.832023 0.98175 1.18296 1.37142 1.60018 1.83511 2.08666 2.36999 
+    2.64715 2.97284 3.28469 3.64209 
+
+  (EFA) Solving for k = (0.00000 0.273679 0.222472 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.57243 -3.57262 -3.58935 -3.59064 -3.65882 -3.65997 -3.67583 -3.67637 
+    -3.7005 -3.70153 -3.72432 -3.72549 -3.73655 -3.74003 
+
+  converged eigenenergies (30):
+    -3.76481 -3.76549 -3.77622 -3.7783 -3.79254 -3.79352 -3.79965 -3.80214 
+    -3.80275 -3.80387 -3.80497 -3.8116 -3.8173 -3.81926 -3.82138 -3.82382 
+    -3.82954 -3.83258 -3.83304 -3.83598 -3.83699 -3.83867 -3.84827 -3.84835 
+    -3.85614 -3.85757 -3.85762 -3.85903 -3.86876 -3.869 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.345133, 0.222472), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.345133 0.222472 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0447677 0.163838 0.206051 0.27266 0.345146 0.437156 0.556137 0.675416 
+    0.839695 0.989462 1.19064 1.37912 1.60788 1.8428 2.09437 2.37767 
+    2.65487 2.98053 3.2924 3.64979 
+
+  (EFA) Solving for k = (0.00000 0.345133 0.222472 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.57364 -3.57384 -3.59398 -3.59549 -3.657 -3.65835 -3.67653 -3.67695 
+    -3.70354 -3.70469 -3.72546 -3.7268 -3.73854 -3.74195 
+
+  converged eigenenergies (30):
+    -3.76582 -3.76684 -3.77753 -3.78031 -3.79426 -3.79544 -3.80083 -3.80429 
+    -3.80436 -3.80517 -3.80532 -3.8121 -3.81875 -3.82014 -3.82189 -3.82521 
+    -3.83206 -3.83444 -3.83546 -3.83872 -3.83922 -3.8401 -3.85018 -3.85038 
+    -3.85931 -3.85999 -3.8606 -3.86303 -3.87111 -3.87155 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.397441, 0.150662), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.397441 0.150662 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0470799 0.166071 0.208269 0.274897 0.347373 0.439396 0.558366 0.677657 
+    0.841926 0.991701 1.19288 1.38136 1.61012 1.84503 2.09661 2.3799 
+    2.65711 2.98276 3.29464 3.65203 
+
+  (EFA) Solving for k = (0.00000 0.397441 0.150662 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.57394 -3.57415 -3.59522 -3.59679 -3.65657 -3.65798 -3.67673 -3.67712 
+    -3.7043 -3.70547 -3.72575 -3.72712 -3.73906 -3.74242 
+
+  converged eigenenergies (30):
+    -3.76608 -3.76718 -3.77786 -3.78076 -3.79468 -3.79592 -3.80107 -3.80456 
+    -3.80509 -3.80534 -3.80586 -3.81225 -3.81921 -3.82041 -3.82208 -3.8256 
+    -3.83249 -3.8348 -3.83595 -3.83907 -3.84018 -3.84066 -3.85055 -3.85079 
+    -3.85979 -3.86056 -3.86198 -3.86419 -3.87188 -3.87252 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.468895, 0.150662), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.468895 0.150662 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0583642 0.176827 0.218923 0.285677 0.358081 0.4502 0.569097 0.688465 
+    0.852666 1.0025 1.20363 1.39214 1.6209 1.8558 2.10741 2.39066 
+    2.66791 2.99353 3.30543 3.66281 
+
+  (EFA) Solving for k = (0.00000 0.468895 0.150662 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (13):
+    -3.57539 -3.5756 -3.60133 -3.60319 -3.6548 -3.65643 -3.67781 -3.67808 
+    -3.70786 -3.70907 -3.7272 -3.72862 -3.74162 
+
+  converged eigenenergies (31):
+    -3.74461 -3.76733 -3.76876 -3.77938 -3.78261 -3.79641 -3.79802 -3.80191 
+    -3.80476 -3.80657 -3.8089 -3.80944 -3.81328 -3.82199 -3.82238 -3.82354 
+    -3.82811 -3.83419 -3.83633 -3.83738 -3.84047 -3.844 -3.84449 -3.85203 
+    -3.85248 -3.86207 -3.86311 -3.86881 -3.86881 -3.87675 -3.87933 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.397441, 0.222472), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.397441 0.222472 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0518486 0.170587 0.212736 0.279424 0.351866 0.443935 0.56287 0.682198 
+    0.846434 0.996237 1.19739 1.38589 1.61465 1.84956 2.10115 2.38442 
+    2.66165 2.98728 3.29917 3.65656 
+
+  (EFA) Solving for k = (0.00000 0.397441 0.222472 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.57458 -3.57479 -3.59791 -3.59961 -3.65573 -3.65724 -3.67719 -3.67752 
+    -3.70591 -3.7071 -3.72639 -3.7278 -3.7402 -3.74341 
+
+  converged eigenenergies (30):
+    -3.76663 -3.76789 -3.77855 -3.78164 -3.7955 -3.7969 -3.80149 -3.80471 
+    -3.80586 -3.80703 -3.8072 -3.81263 -3.82034 -3.82115 -3.82256 -3.82656 
+    -3.83329 -3.83551 -3.83674 -3.83974 -3.84208 -3.84222 -3.85126 -3.85159 
+    -3.86083 -3.86174 -3.86509 -3.86648 -3.87377 -3.87514 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.468895, 0.222472), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.468895 0.222472 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0631321 0.181343 0.22339 0.290204 0.362575 0.454739 0.573601 0.693006 
+    0.857174 1.00703 1.20815 1.39667 1.62543 1.86032 2.11195 2.39518 
+    2.67245 2.99805 3.30996 3.66734 
+
+  (EFA) Solving for k = (0.00000 0.468895 0.222472 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (13):
+    -3.57597 -3.57618 -3.60384 -3.60582 -3.6542 -3.65592 -3.6783 -3.67852 
+    -3.70925 -3.71046 -3.72781 -3.72922 -3.74267 
+
+  converged eigenenergies (31):
+    -3.74546 -3.76784 -3.76939 -3.77998 -3.78325 -3.79701 -3.79877 -3.80219 
+    -3.80478 -3.8071 -3.81005 -3.81081 -3.81394 -3.82311 -3.82324 -3.82505 
+    -3.82965 -3.83491 -3.83694 -3.83774 -3.84095 -3.8454 -3.84591 -3.85256 
+    -3.85308 -3.86291 -3.86401 -3.8702 -3.87106 -3.8795 -3.88272 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.0261541, 0.27504), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.0261541 0.275040 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0278296 0.14767 0.190028 0.256456 0.329045 0.420916 0.540002 0.659171 
+    0.823548 0.973232 1.17447 1.36292 1.59167 1.82662 2.07814 2.3615 
+    2.63863 2.96435 3.27618 3.63359 
+
+  (EFA) Solving for k = (0.00000 0.0261541 0.275040 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.57082 -3.57097 -3.58432 -3.58529 -3.66146 -3.66231 -3.67525 -3.67598 
+    -3.69655 -3.69731 -3.72292 -3.72374 -3.73431 -3.7375 
+
+  converged eigenenergies (33):
+    -3.76346 -3.76376 -3.77452 -3.77547 -3.79074 -3.79141 -3.79837 -3.80084 
+    -3.80091 -3.80246 -3.80489 -3.8111 -3.81581 -3.81775 -3.82072 -3.82209 
+    -3.82527 -3.8291 -3.83019 -3.83368 -3.83416 -3.83795 -3.84515 -3.84529 
+    -3.85333 -3.85456 -3.85599 -3.85663 -3.86684 -3.86729 -3.87449 -3.87682 
+    -3.87849 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.0976083, 0.27504), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.0976083 0.275040 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0294422 0.149206 0.19155 0.257996 0.330574 0.42246 0.541535 0.660715 
+    0.825082 0.974775 1.17601 1.36446 1.59321 1.82815 2.07968 2.36303 
+    2.64018 2.96588 3.27772 3.63513 
+
+  (EFA) Solving for k = (0.00000 0.0976083 0.275040 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.57115 -3.57131 -3.58523 -3.58627 -3.66091 -3.66182 -3.67533 -3.67602 
+    -3.69735 -3.69817 -3.7232 -3.7241 -3.73472 -3.73801 
+
+  converged eigenenergies (34):
+    -3.76374 -3.76411 -3.77486 -3.77603 -3.79103 -3.79178 -3.79856 -3.80105 
+    -3.80123 -3.80273 -3.80491 -3.81119 -3.8161 -3.81813 -3.82098 -3.82246 
+    -3.82598 -3.82975 -3.83078 -3.83427 -3.83452 -3.83804 -3.84577 -3.84585 
+    -3.8537 -3.85503 -3.85626 -3.85698 -3.86716 -3.86755 -3.87588 -3.87757 
+    -3.87879 -3.87988 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.0261541, 0.34685), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.0261541 0.346850 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0357794 0.155195 0.197473 0.264001 0.336533 0.428481 0.547509 0.666739 
+    0.831061 0.980791 1.182 1.37046 1.59922 1.83415 2.0857 2.36903 
+    2.6462 2.97188 3.28374 3.64113 
+
+  (EFA) Solving for k = (0.00000 0.0261541 0.346850 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.57233 -3.57252 -3.589 -3.59026 -3.65898 -3.66011 -3.67578 -3.67633 
+    -3.70025 -3.70126 -3.72423 -3.72538 -3.73639 -3.73987 
+
+  converged eigenenergies (30):
+    -3.76472 -3.76538 -3.7761 -3.77812 -3.7924 -3.79336 -3.79955 -3.80203 
+    -3.80261 -3.80377 -3.80497 -3.81157 -3.8172 -3.81919 -3.82135 -3.82371 
+    -3.82926 -3.83236 -3.83286 -3.83578 -3.83681 -3.83859 -3.84808 -3.84815 
+    -3.85587 -3.85735 -3.85749 -3.8588 -3.8686 -3.86885 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.0976083, 0.34685), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.0976083 0.346850 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0373918 0.156731 0.198995 0.265541 0.338063 0.430024 0.549042 0.668283 
+    0.832596 0.982334 1.18354 1.372 1.60076 1.83569 2.08724 2.37056 
+    2.64774 2.97342 3.28528 3.64267 
+
+  (EFA) Solving for k = (0.00000 0.0976083 0.346850 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.57259 -3.57279 -3.58993 -3.59124 -3.65857 -3.65975 -3.67591 -3.67643 
+    -3.7009 -3.70195 -3.72447 -3.72567 -3.7368 -3.74028 
+
+  converged eigenenergies (30):
+    -3.76494 -3.76567 -3.77639 -3.77858 -3.79276 -3.79376 -3.79982 -3.80233 
+    -3.80298 -3.80403 -3.80498 -3.81166 -3.81747 -3.81938 -3.82142 -3.824 
+    -3.82995 -3.8329 -3.83335 -3.83631 -3.83725 -3.83879 -3.84856 -3.84865 
+    -3.8566 -3.85782 -3.85792 -3.85943 -3.86901 -3.86924 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.149916, 0.27504), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.149916 0.275040 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.031803 0.151456 0.193779 0.26025 0.332814 0.424719 0.54378 0.662976 
+    0.827328 0.977033 1.17826 1.36671 1.59547 1.83041 2.08194 2.36528 
+    2.64244 2.96814 3.27998 3.63738 
+
+  (EFA) Solving for k = (0.00000 0.149916 0.275040 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.5716 -3.57178 -3.58658 -3.58771 -3.66016 -3.66116 -3.67548 -3.67611 
+    -3.69845 -3.69936 -3.72359 -3.72459 -3.73533 -3.73872 
+
+  converged eigenenergies (31):
+    -3.76411 -3.76459 -3.77533 -3.77683 -3.7915 -3.79233 -3.79888 -3.80137 
+    -3.80171 -3.80311 -3.80493 -3.81133 -3.81651 -3.81858 -3.82117 -3.82295 
+    -3.82718 -3.83072 -3.83159 -3.83473 -3.83543 -3.8382 -3.84668 -3.84668 
+    -3.85434 -3.8558 -3.85668 -3.85755 -3.86765 -3.86798 -3.87755 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.221371, 0.27504), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.221371 0.275040 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0366403 0.156065 0.198345 0.26487 0.337403 0.42935 0.548379 0.667608 
+    0.831931 0.98166 1.18287 1.37133 1.60009 1.83502 2.08657 2.36989 
+    2.64707 2.97275 3.2846 3.642 
+
+  (EFA) Solving for k = (0.00000 0.221371 0.275040 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.57244 -3.57263 -3.58938 -3.59067 -3.65881 -3.65996 -3.67583 -3.67637 
+    -3.70052 -3.70155 -3.72433 -3.7255 -3.73656 -3.74004 
+
+  converged eigenenergies (30):
+    -3.76481 -3.7655 -3.77622 -3.77832 -3.79255 -3.79353 -3.79966 -3.80215 
+    -3.80276 -3.80388 -3.80497 -3.8116 -3.81731 -3.81927 -3.82138 -3.82383 
+    -3.82956 -3.83259 -3.83306 -3.83599 -3.837 -3.83867 -3.84828 -3.84837 
+    -3.85616 -3.85759 -3.85763 -3.85905 -3.86877 -3.86901 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.149916, 0.34685), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.149916 0.346850 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0397524 0.158981 0.201224 0.267796 0.340303 0.432284 0.551286 0.670543 
+    0.834842 0.984592 1.18579 1.37426 1.60302 1.83794 2.0895 2.37281 
+    2.65 2.97567 3.28753 3.64493 
+
+  (EFA) Solving for k = (0.00000 0.149916 0.346850 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.57295 -3.57316 -3.59129 -3.59267 -3.658 -3.65924 -3.67611 -3.67659 
+    -3.70182 -3.70291 -3.72481 -3.72606 -3.73739 -3.74087 
+
+  converged eigenenergies (30):
+    -3.76525 -3.76608 -3.77679 -3.77921 -3.79329 -3.79434 -3.8002 -3.80287 
+    -3.80351 -3.8044 -3.80501 -3.8118 -3.81787 -3.81964 -3.82155 -3.8244 
+    -3.83081 -3.83352 -3.8341 -3.8372 -3.83781 -3.83914 -3.84918 -3.84931 
+    -3.85778 -3.85835 -3.85868 -3.86053 -3.86966 -3.8699 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.221371, 0.34685), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.221371 0.346850 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.044589 0.16359 0.20579 0.272415 0.344892 0.436914 0.555885 0.675175 
+    0.839445 0.989219 1.1904 1.37888 1.60764 1.84255 2.09413 2.37742 
+    2.65463 2.98028 3.29216 3.64955 
+
+  (EFA) Solving for k = (0.00000 0.221371 0.346850 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.57365 -3.57386 -3.59405 -3.59557 -3.65697 -3.65833 -3.67654 -3.67696 
+    -3.70359 -3.70473 -3.72547 -3.72682 -3.73857 -3.74198 
+
+  converged eigenenergies (30):
+    -3.76584 -3.76686 -3.77755 -3.78033 -3.79429 -3.79547 -3.80085 -3.80433 
+    -3.80438 -3.80518 -3.80535 -3.8121 -3.81878 -3.82016 -3.8219 -3.82523 
+    -3.83209 -3.83446 -3.83549 -3.83874 -3.83927 -3.84013 -3.8502 -3.8504 
+    -3.85933 -3.86003 -3.86068 -3.8631 -3.87116 -3.8716 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.0261541, 0.399419), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.0261541 0.399419 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0427621 0.161806 0.204014 0.270629 0.343112 0.435126 0.554103 0.673387 
+    0.837662 0.987432 1.18861 1.37709 1.60585 1.84077 2.09234 2.37564 
+    2.65284 2.9785 3.29037 3.64776 
+
+  (EFA) Solving for k = (0.00000 0.0261541 0.399419 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.57342 -3.57363 -3.59311 -3.59458 -3.65731 -3.65862 -3.67639 -3.67683 
+    -3.703 -3.70413 -3.72525 -3.72657 -3.73817 -3.74161 
+
+  converged eigenenergies (30):
+    -3.76564 -3.7666 -3.7773 -3.77997 -3.79396 -3.79509 -3.80065 -3.80378 
+    -3.80415 -3.80497 -3.80511 -3.812 -3.81845 -3.81997 -3.82177 -3.82494 
+    -3.83171 -3.83417 -3.83507 -3.83845 -3.83854 -3.83975 -3.84989 -3.85006 
+    -3.85896 -3.85959 -3.85968 -3.86221 -3.87061 -3.87096 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.0976083, 0.399419), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.0976083 0.399419 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0443743 0.163342 0.205536 0.272169 0.344641 0.43667 0.555636 0.674931 
+    0.839196 0.988974 1.19015 1.37863 1.60739 1.84231 2.09388 2.37718 
+    2.65438 2.98004 3.29191 3.6493 
+
+  (EFA) Solving for k = (0.00000 0.0976083 0.399419 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.57365 -3.57386 -3.59403 -3.59554 -3.65698 -3.65833 -3.67654 -3.67695 
+    -3.70357 -3.70472 -3.72547 -3.72681 -3.73856 -3.74197 
+
+  converged eigenenergies (30):
+    -3.76583 -3.76686 -3.77754 -3.78033 -3.79428 -3.79546 -3.80084 -3.80432 
+    -3.80437 -3.80517 -3.80534 -3.8121 -3.81877 -3.82015 -3.82189 -3.82523 
+    -3.83208 -3.83445 -3.83548 -3.83873 -3.83925 -3.84012 -3.85019 -3.85039 
+    -3.85932 -3.86002 -3.86065 -3.86308 -3.87114 -3.87159 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.0261541, 0.471228), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.0261541 0.471228 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0538887 0.172342 0.214437 0.281192 0.353596 0.445717 0.564612 0.683981 
+    0.848181 0.998014 1.19915 1.38766 1.61642 1.85132 2.10293 2.38618 
+    2.66343 2.98905 3.30094 3.65833 
+
+  (EFA) Solving for k = (0.00000 0.0261541 0.471228 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.57494 -3.57515 -3.59942 -3.60119 -3.65531 -3.65686 -3.67746 -3.67776 
+    -3.70678 -3.70798 -3.72674 -3.72816 -3.74083 -3.74394 
+
+  converged eigenenergies (30):
+    -3.76694 -3.76828 -3.77892 -3.78208 -3.79591 -3.79741 -3.80168 -3.80474 
+    -3.80617 -3.80796 -3.80813 -3.81288 -3.82104 -3.82167 -3.82291 -3.82718 
+    -3.83369 -3.83588 -3.83705 -3.84007 -3.84292 -3.84327 -3.85161 -3.85199 
+    -3.86139 -3.86236 -3.86679 -3.86758 -3.87499 -3.87688 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.0976083, 0.471228), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.0976083 0.471228 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0555006 0.173879 0.215959 0.282732 0.355126 0.44726 0.566145 0.685525 
+    0.849715 0.999557 1.20069 1.3892 1.61796 1.85285 2.10447 2.38772 
+    2.66497 2.99058 3.30249 3.65987 
+
+  (EFA) Solving for k = (0.00000 0.0976083 0.471228 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.57514 -3.57535 -3.60028 -3.60209 -3.65507 -3.65666 -3.67762 -3.6779 
+    -3.70727 -3.70847 -3.72695 -3.72837 -3.74118 -3.74424 
+
+  converged eigenenergies (30):
+    -3.76711 -3.7685 -3.77913 -3.78232 -3.79614 -3.79769 -3.80179 -3.80475 
+    -3.80635 -3.80839 -3.80874 -3.81305 -3.82146 -3.82199 -3.82315 -3.82757 
+    -3.83391 -3.83608 -3.83721 -3.84025 -3.84341 -3.84383 -3.8518 -3.85221 
+    -3.8617 -3.8627 -3.86772 -3.86816 -3.87574 -3.87796 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.149916, 0.399419), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.149916 0.399419 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0467346 0.165592 0.207764 0.274424 0.346881 0.438929 0.557881 0.677191 
+    0.841443 0.991232 1.1924 1.38089 1.60965 1.84456 2.09614 2.37943 
+    2.65664 2.98229 3.29417 3.65156 
+
+  (EFA) Solving for k = (0.00000 0.149916 0.399419 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.57397 -3.57418 -3.59535 -3.59693 -3.65653 -3.65794 -3.67675 -3.67714 
+    -3.70438 -3.70555 -3.72578 -3.72716 -3.73912 -3.74247 
+
+  converged eigenenergies (30):
+    -3.76611 -3.76722 -3.77789 -3.7808 -3.79472 -3.79597 -3.80109 -3.80457 
+    -3.80518 -3.80537 -3.80593 -3.81226 -3.81926 -3.82044 -3.8221 -3.82565 
+    -3.83254 -3.83484 -3.836 -3.83911 -3.84029 -3.84073 -3.85059 -3.85084 
+    -3.85985 -3.86062 -3.86214 -3.86432 -3.87196 -3.87263 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.221371, 0.399419), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.221371 0.399419 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0515708 0.170201 0.21233 0.279044 0.351471 0.44356 0.56248 0.681823 
+    0.846045 0.99586 1.19701 1.38551 1.61427 1.84917 2.10077 2.38404 
+    2.66127 2.9869 3.29879 3.65618 
+
+  (EFA) Solving for k = (0.00000 0.221371 0.399419 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.57461 -3.57482 -3.59802 -3.59973 -3.6557 -3.65721 -3.67721 -3.67754 
+    -3.70597 -3.70717 -3.72641 -3.72782 -3.74024 -3.74345 
+
+  converged eigenenergies (30):
+    -3.76665 -3.76792 -3.77857 -3.78167 -3.79553 -3.79694 -3.8015 -3.80471 
+    -3.80588 -3.80711 -3.80725 -3.81264 -3.82039 -3.82118 -3.82259 -3.8266 
+    -3.83332 -3.83553 -3.83676 -3.83977 -3.84214 -3.8423 -3.85129 -3.85162 
+    -3.86087 -3.86178 -3.86521 -3.86656 -3.87385 -3.87526 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.149916, 0.471228), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.149916 0.471228 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0578605 0.176129 0.218187 0.284987 0.357366 0.44952 0.56839 0.687786 
+    0.851962 1.00182 1.20294 1.39145 1.62021 1.85511 2.10673 2.38997 
+    2.66723 2.99283 3.30474 3.66212 
+
+  (EFA) Solving for k = (0.00000 0.149916 0.471228 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (13):
+    -3.57543 -3.57564 -3.60152 -3.60339 -3.65476 -3.65639 -3.67785 -3.67811 
+    -3.70796 -3.70917 -3.72724 -3.72867 -3.7417 
+
+  converged eigenenergies (31):
+    -3.74467 -3.76736 -3.76881 -3.77943 -3.78265 -3.79645 -3.79807 -3.80193 
+    -3.80476 -3.80661 -3.80899 -3.80955 -3.81332 -3.82208 -3.82244 -3.82363 
+    -3.82821 -3.83424 -3.83638 -3.83741 -3.8405 -3.84411 -3.8446 -3.85207 
+    -3.85252 -3.86214 -3.86318 -3.86893 -3.869 -3.87694 -3.87958 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.221371, 0.471228), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.221371 0.471228 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0626958 0.180738 0.222753 0.289607 0.361955 0.45415 0.572989 0.692418 
+    0.856565 1.00644 1.20755 1.39607 1.62483 1.85972 2.11136 2.39458 
+    2.67186 2.99745 3.30937 3.66674 
+
+  (EFA) Solving for k = (0.00000 0.221371 0.471228 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (13):
+    -3.57601 -3.57622 -3.604 -3.60598 -3.65417 -3.65589 -3.67833 -3.67854 
+    -3.70934 -3.71054 -3.72785 -3.72925 -3.74273 
+
+  converged eigenenergies (31):
+    -3.74551 -3.76787 -3.76942 -3.78002 -3.78328 -3.79705 -3.79881 -3.8022 
+    -3.80478 -3.80713 -3.81011 -3.81088 -3.81399 -3.82315 -3.82331 -3.82517 
+    -3.82976 -3.83496 -3.83698 -3.83776 -3.84098 -3.84548 -3.84599 -3.8526 
+    -3.85312 -3.86296 -3.86406 -3.87028 -3.87118 -3.87968 -3.88293 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.273679, 0.27504), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.273679 0.275040 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0413615 0.160563 0.202801 0.269379 0.341883 0.433869 0.552868 0.672129 
+    0.836424 0.986177 1.18737 1.37584 1.6046 1.83952 2.09109 2.3744 
+    2.65158 2.97725 3.28912 3.64651 
+
+  (EFA) Solving for k = (0.00000 0.273679 0.275040 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.57316 -3.57337 -3.5921 -3.59353 -3.65768 -3.65896 -3.67623 -3.6767 
+    -3.70235 -3.70346 -3.72501 -3.72629 -3.73774 -3.7412 
+
+  converged eigenenergies (30):
+    -3.76543 -3.76631 -3.77702 -3.77956 -3.79359 -3.79468 -3.80041 -3.80325 
+    -3.80382 -3.80464 -3.80505 -3.81189 -3.81812 -3.81978 -3.82164 -3.82464 
+    -3.83124 -3.83383 -3.83455 -3.83778 -3.83811 -3.83939 -3.84951 -3.84966 
+    -3.85846 -3.85876 -3.8591 -3.86126 -3.87007 -3.87034 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.345133, 0.27504), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.345133 0.275040 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0494224 0.168246 0.210411 0.277079 0.349532 0.441586 0.560533 0.679848 
+    0.844095 0.993889 1.19505 1.38354 1.6123 1.84721 2.0988 2.38208 
+    2.6593 2.98494 3.29682 3.65421 
+
+  (EFA) Solving for k = (0.00000 0.345133 0.275040 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.57428 -3.57449 -3.59665 -3.59829 -3.65612 -3.65757 -3.67697 -3.67733 
+    -3.70516 -3.70634 -3.72609 -3.72748 -3.73966 -3.74295 
+
+  converged eigenenergies (30):
+    -3.76637 -3.76756 -3.77823 -3.78124 -3.79512 -3.79645 -3.8013 -3.80466 
+    -3.8056 -3.8061 -3.80656 -3.81244 -3.81978 -3.82077 -3.82232 -3.82609 
+    -3.83293 -3.83518 -3.83641 -3.83944 -3.84128 -3.84139 -3.85094 -3.85123 
+    -3.86035 -3.86119 -3.86362 -3.86545 -3.87284 -3.87382 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.273679, 0.34685), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.273679 0.346850 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0493097 0.168089 0.210246 0.276925 0.349372 0.441434 0.560374 0.679696 
+    0.843938 0.993736 1.1949 1.38339 1.61215 1.84706 2.09865 2.38192 
+    2.65915 2.98479 3.29667 3.65406 
+
+  (EFA) Solving for k = (0.00000 0.273679 0.346850 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (14):
+    -3.57429 -3.5745 -3.59669 -3.59833 -3.6561 -3.65756 -3.67698 -3.67734 
+    -3.70519 -3.70637 -3.7261 -3.72749 -3.73968 -3.74297 
+
+  converged eigenenergies (30):
+    -3.76638 -3.76757 -3.77824 -3.78125 -3.79514 -3.79647 -3.80131 -3.80467 
+    -3.80561 -3.80613 -3.80658 -3.81244 -3.8198 -3.82078 -3.82233 -3.8261 
+    -3.83295 -3.83519 -3.83642 -3.83945 -3.84132 -3.84141 -3.85095 -3.85124 
+    -3.86037 -3.86121 -3.86367 -3.86549 -3.87287 -3.87386 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.345133, 0.34685), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.345133 0.346850 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0573695 0.175772 0.217856 0.284624 0.357021 0.449151 0.56804 0.687416 
+    0.851609 1.00145 1.20258 1.39109 1.61985 1.85475 2.10636 2.38961 
+    2.66686 2.99248 3.30438 3.66176 
+
+  (EFA) Solving for k = (0.00000 0.345133 0.346850 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (13):
+    -3.57531 -3.57553 -3.60103 -3.60288 -3.65488 -3.65649 -3.67776 -3.67803 
+    -3.70769 -3.7089 -3.72713 -3.72855 -3.7415 
+
+  converged eigenenergies (31):
+    -3.7445 -3.76726 -3.76869 -3.77931 -3.78253 -3.79633 -3.79792 -3.80188 
+    -3.80476 -3.80651 -3.80875 -3.80924 -3.81321 -3.82184 -3.82227 -3.82342 
+    -3.82795 -3.83411 -3.83626 -3.83734 -3.84041 -3.84383 -3.84431 -3.85197 
+    -3.8524 -3.86197 -3.86299 -3.86851 -3.86863 -3.87646 -3.87893 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.397441, 0.27504), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.397441 0.275040 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0565028 0.174995 0.217096 0.283843 0.356252 0.448365 0.567266 0.68663 
+    0.850835 1.00066 1.2018 1.39031 1.61907 1.85397 2.10558 2.38883 
+    2.66608 2.9917 3.30359 3.66098 
+
+  (EFA) Solving for k = (0.00000 0.397441 0.275040 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (13):
+    -3.57518 -3.5754 -3.60047 -3.60229 -3.65502 -3.65662 -3.67765 -3.67794 
+    -3.70738 -3.70858 -3.72699 -3.72842 -3.74126 
+
+  converged eigenenergies (31):
+    -3.74431 -3.76715 -3.76855 -3.77917 -3.78237 -3.79619 -3.79775 -3.80181 
+    -3.80475 -3.80639 -3.80848 -3.80887 -3.81309 -3.82156 -3.82206 -3.82322 
+    -3.82767 -3.83396 -3.83613 -3.83724 -3.84029 -3.84352 -3.84396 -3.85184 
+    -3.85226 -3.86177 -3.86278 -3.86793 -3.86828 -3.87593 -3.87821 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.468895, 0.27504), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.468895 0.275040 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0677854 0.185751 0.22775 0.294623 0.36696 0.459169 0.577998 0.697438 
+    0.861575 1.01146 1.21256 1.40109 1.62985 1.86473 2.11638 2.39959 
+    2.67688 3.00246 3.31438 3.67176 
+
+  (EFA) Solving for k = (0.00000 0.468895 0.275040 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (13):
+    -3.57653 -3.57674 -3.60621 -3.60829 -3.65369 -3.65549 -3.67877 -3.67895 
+    -3.71054 -3.71174 -3.72839 -3.72977 -3.74365 
+
+  converged eigenenergies (30):
+    -3.74626 -3.76834 -3.76997 -3.78055 -3.78382 -3.79755 -3.79943 -3.80243 
+    -3.80481 -3.8076 -3.81101 -3.81171 -3.81468 -3.82364 -3.82432 -3.8271 
+    -3.8315 -3.83574 -3.83757 -3.83805 -3.84138 -3.84669 -3.84708 -3.85307 
+    -3.85364 -3.86364 -3.86478 -3.87132 -3.87269 -3.8824 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.397441, 0.34685), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.397441 0.346850 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0644491 0.182521 0.224541 0.291388 0.36374 0.45593 0.574773 0.694198 
+    0.858348 1.00822 1.20933 1.39785 1.62661 1.8615 2.11314 2.39636 
+    2.67364 2.99923 3.31115 3.66852 
+
+  (EFA) Solving for k = (0.00000 0.397441 0.346850 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (13):
+    -3.57617 -3.57637 -3.60466 -3.60667 -3.65402 -3.65576 -3.67846 -3.67866 
+    -3.7097 -3.7109 -3.72801 -3.72941 -3.74301 
+
+  converged eigenenergies (30):
+    -3.74574 -3.76801 -3.76959 -3.78018 -3.78345 -3.7972 -3.799 -3.80227 
+    -3.80479 -3.80727 -3.81039 -3.81116 -3.81419 -3.82331 -3.82363 -3.8257 
+    -3.83024 -3.83517 -3.83715 -3.83785 -3.8411 -3.84584 -3.84633 -3.85274 
+    -3.85328 -3.86317 -3.86428 -3.8706 -3.87167 -3.88048 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.468895, 0.34685), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.468895 0.346850 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0757303 0.193278 0.235195 0.302168 0.374449 0.466734 0.585505 0.705005 
+    0.869089 1.01902 1.22009 1.40863 1.6374 1.87227 2.12394 2.40712 
+    2.68444 3.01 3.32194 3.6793 
+
+  (EFA) Solving for k = (0.00000 0.468895 0.346850 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (13):
+    -3.57747 -3.57767 -3.61005 -3.61232 -3.65298 -3.65493 -3.67959 -3.67971 
+    -3.71258 -3.71376 -3.72939 -3.73069 -3.74527 
+
+  converged eigenenergies (29):
+    -3.74755 -3.76917 -3.77092 -3.78147 -3.7847 -3.79841 -3.80047 -3.80282 
+    -3.80488 -3.80843 -3.81237 -3.81268 -3.81583 -3.82443 -3.82581 -3.83081 
+    -3.83495 -3.83799 -3.8385 -3.83904 -3.84208 -3.84879 -3.84892 -3.85394 
+    -3.85454 -3.86475 -3.86591 -3.87284 -3.8746 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.273679, 0.399419), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.273679 0.399419 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0562909 0.174701 0.216787 0.283553 0.35595 0.448079 0.566969 0.686344 
+    0.850538 1.00038 1.20151 1.39002 1.61878 1.85368 2.10529 2.38854 
+    2.66579 2.9914 3.30331 3.66069 
+
+  (EFA) Solving for k = (0.00000 0.273679 0.399419 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (13):
+    -3.5752 -3.57541 -3.60055 -3.60238 -3.655 -3.6566 -3.67767 -3.67795 
+    -3.70742 -3.70863 -3.72701 -3.72844 -3.7413 
+
+  converged eigenenergies (31):
+    -3.74434 -3.76717 -3.76857 -3.77919 -3.7824 -3.79621 -3.79777 -3.80182 
+    -3.80475 -3.80641 -3.80852 -3.80893 -3.81311 -3.8216 -3.82209 -3.82324 
+    -3.82771 -3.83399 -3.83615 -3.83726 -3.84031 -3.84357 -3.84401 -3.85186 
+    -3.85228 -3.8618 -3.86281 -3.86801 -3.86833 -3.876 -3.87831 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.345133, 0.399419), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.345133 0.399419 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0643499 0.182384 0.224397 0.291253 0.3636 0.455796 0.574634 0.694064 
+    0.85821 1.00809 1.20919 1.39772 1.62648 1.86137 2.113 2.39622 
+    2.6735 2.99909 3.31101 3.66839 
+
+  (EFA) Solving for k = (0.00000 0.345133 0.399419 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (13):
+    -3.57617 -3.57638 -3.60469 -3.60671 -3.65401 -3.65576 -3.67846 -3.67867 
+    -3.70971 -3.71092 -3.72802 -3.72942 -3.74302 
+
+  converged eigenenergies (30):
+    -3.74575 -3.76802 -3.7696 -3.78018 -3.78345 -3.79721 -3.79901 -3.80227 
+    -3.80479 -3.80728 -3.81041 -3.81118 -3.8142 -3.82331 -3.82364 -3.82573 
+    -3.83027 -3.83518 -3.83716 -3.83786 -3.84111 -3.84586 -3.84635 -3.85274 
+    -3.85329 -3.86318 -3.86429 -3.87062 -3.87169 -3.88052 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.273679, 0.471228), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.273679 0.471228 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0674151 0.185238 0.22721 0.294116 0.366435 0.45867 0.577478 0.696939 
+    0.861058 1.01096 1.21205 1.40058 1.62934 1.86422 2.11587 2.39908 
+    2.67637 3.00195 3.31388 3.67125 
+
+  (EFA) Solving for k = (0.00000 0.273679 0.471228 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (13):
+    -3.57656 -3.57677 -3.60634 -3.60843 -3.65367 -3.65547 -3.6788 -3.67898 
+    -3.7106 -3.7118 -3.72843 -3.7298 -3.74371 
+
+  converged eigenenergies (30):
+    -3.7463 -3.76836 -3.77 -3.78058 -3.78385 -3.79758 -3.79947 -3.80244 
+    -3.80481 -3.80763 -3.81106 -3.81175 -3.81472 -3.82367 -3.82438 -3.82723 
+    -3.83161 -3.83579 -3.83761 -3.83807 -3.84141 -3.84676 -3.84715 -3.85309 
+    -3.85367 -3.86368 -3.86482 -3.87137 -3.87277 -3.88256 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.345133, 0.471228), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.345133 0.471228 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0754726 0.192921 0.23482 0.301816 0.374084 0.466387 0.585143 0.704659 
+    0.868729 1.01867 1.21973 1.40828 1.63705 1.87191 2.12359 2.40676 
+    2.68409 3.00964 3.32159 3.67895 
+
+  (EFA) Solving for k = (0.00000 0.345133 0.471228 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (13):
+    -3.57749 -3.57769 -3.61013 -3.61241 -3.65296 -3.65492 -3.67961 -3.67972 
+    -3.71262 -3.7138 -3.72941 -3.73071 -3.7453 
+
+  converged eigenenergies (29):
+    -3.74758 -3.76919 -3.77094 -3.78149 -3.78472 -3.79843 -3.80049 -3.80283 
+    -3.80488 -3.80845 -3.81239 -3.81269 -3.81586 -3.82445 -3.82584 -3.83088 
+    -3.83502 -3.83805 -3.83851 -3.83908 -3.8421 -3.84883 -3.84898 -3.85396 
+    -3.85456 -3.86477 -3.86593 -3.87287 -3.87463 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.397441, 0.399419), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.397441 0.399419 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0714287 0.189133 0.231082 0.298016 0.370319 0.462575 0.581368 0.700845 
+    0.864949 1.01486 1.21594 1.40448 1.63324 1.86812 2.11978 2.40298 
+    2.68028 3.00585 3.31778 3.67515 
+
+  (EFA) Solving for k = (0.00000 0.397441 0.399419 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (13):
+    -3.577 -3.5772 -3.60813 -3.61031 -3.65332 -3.65519 -3.67918 -3.67932 
+    -3.71156 -3.71275 -3.72888 -3.73023 -3.74446 
+
+  converged eigenenergies (29):
+    -3.7469 -3.76875 -3.77044 -3.781 -3.78426 -3.79798 -3.79996 -3.80263 
+    -3.80484 -3.80801 -3.81172 -3.81225 -3.81528 -3.82404 -3.82511 -3.82899 
+    -3.83322 -3.83666 -3.83815 -3.83832 -3.84173 -3.84777 -3.84796 -3.85349 
+    -3.85409 -3.86421 -3.86536 -3.87212 -3.87374 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.468895, 0.399419), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.468895 0.399419 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0827086 0.19989 0.241736 0.308796 0.381028 0.473379 0.592099 0.711653 
+    0.875689 1.02566 1.2267 1.41526 1.64403 1.87889 2.13058 2.41373 
+    2.69108 3.01661 3.32857 3.68593 
+
+  (EFA) Solving for k = (0.00000 0.468895 0.399419 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (13):
+    -3.57827 -3.57847 -3.61322 -3.61566 -3.65249 -3.65457 -3.68032 -3.68038 
+    -3.71423 -3.71539 -3.73025 -3.73147 -3.74662 
+
+  converged eigenenergies (29):
+    -3.74863 -3.7699 -3.77171 -3.78225 -3.78543 -3.79911 -3.8013 -3.80315 
+    -3.80497 -3.80914 -3.81329 -3.81333 -3.81665 -3.82509 -3.82684 -3.83307 
+    -3.83706 -3.83894 -3.84132 -3.84133 -3.84272 -3.85021 -3.85128 -3.8548 
+    -3.8553 -3.86562 -3.86677 -3.87389 -3.87576 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.397441, 0.471228), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.397441 0.471228 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0825502 0.199671 0.241505 0.30858 0.380804 0.473166 0.591877 0.71144 
+    0.875468 1.02545 1.22648 1.41505 1.64381 1.87867 2.13037 2.41352 
+    2.69087 3.0164 3.32836 3.68572 
+
+  (EFA) Solving for k = (0.00000 0.397441 0.471228 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (13):
+    -3.57828 -3.57848 -3.61326 -3.61571 -3.65248 -3.65457 -3.68033 -3.68039 
+    -3.71426 -3.71541 -3.73027 -3.73148 -3.74664 
+
+  converged eigenenergies (29):
+    -3.74864 -3.76991 -3.77173 -3.78226 -3.78544 -3.79912 -3.80131 -3.80316 
+    -3.80497 -3.80915 -3.8133 -3.81334 -3.81666 -3.8251 -3.82686 -3.8331 
+    -3.83708 -3.83894 -3.84138 -3.84138 -3.84273 -3.85023 -3.85132 -3.85481 
+    -3.85532 -3.86563 -3.86678 -3.87391 -3.87578 
+
+  calculation of matrix elements for dipole optical transition...
+  k = (0, 0.468895, 0.471228), w = 0.000389918
+  (EFA) Solving for k = (0.00000 0.468895 0.471228 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -0.50999
+  converged eigenenergies (20):
+    0.0938281 0.210429 0.252159 0.319359 0.391513 0.48397 0.602609 0.722248 
+    0.886209 1.03624 1.23724 1.42583 1.65459 1.88944 2.14116 2.42428 
+    2.70167 3.02716 3.33915 3.6965 
+
+  (EFA) Solving for k = (0.00000 0.468895 0.471228 ) /nm
+  Maximum of Ev (eV) :-3.47045
+  Minimum of Ec (eV) :-0.181049
+  (EFA) Estimated guess (eV): -3.14151
+  converged eigenenergies (12):
+    -3.57952 -3.57971 -3.61788 -3.62058 -3.65194 -3.65424 -3.68147 -3.68149 
+    -3.71664 -3.71775 -3.73163 -3.73266 
+
+  converged eigenenergies (30):
+    -3.74868 -3.75027 -3.77106 -3.77293 -3.78346 -3.78652 -3.80017 -3.80252 
+    -3.80369 -3.80518 -3.81025 -3.81416 -3.81461 -3.8177 -3.82613 -3.82823 
+    -3.83494 -3.83851 -3.83973 -3.84346 -3.8454 -3.84737 -3.85304 -3.85637 
+    -3.85711 -3.85721 -3.86694 -3.86801 -3.87525 -3.87717 
+
+  calculation of matrix elements for dipole optical transition...
+  Total emitted power     : 8.81122 W/cm^2
+  Total recombination rate: 1.5231e+19 1/s/cm^2
+  Peak emission energy    : 3.598 eV
+
+Solve time: 0h 1m 23s
+<<<<----------------------------------------------------------------------------
+
+Total solve time: 0h 1m 25s
+Simulation finished.
+
+0 warnings during run
+0 errors detected
+
+
+Log end: Fri Feb 25 08:44:09 2022
+
+
