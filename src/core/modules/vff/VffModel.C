@@ -105,9 +105,6 @@ VffModel::along_c(const Atom& atm1, const Atom& atm2) const
   double y_d = atm1.get_position(1) - atm2.get_position(1);
   double z_d = atm1.get_position(2) - atm2.get_position(2);
 
-  //How do I get a pointer to atomistic structure???
-  //SimulationInterface* owner = static_cast<SimulatonInterface*>(get_owner());
-//  std::vector<double> c_axis = owner->get_atomistic_structure()->get_c_axis();
 
   //TODO: doing this operation on the fly is not efficient at all, as the
   //c-axis has the same direction in the whole material. You could move it in
@@ -123,14 +120,7 @@ VffModel::along_c(const Atom& atm1, const Atom& atm2) const
   double norm_product = (cc * cc) * (bond_direction * bond_direction);
   double diff = scalar_product - norm_product;
 
-
-
-  if (fabs(diff) < tol)
-    {
-    return true;
-    }
-  else
-    return false;
+  return(fabs(diff) < tol);
 }
 
 

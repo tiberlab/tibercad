@@ -10,10 +10,12 @@
 #include "Atom.h"
 #include "RuntimeException.h"
 #include "TiberModule.h"
-#include "point.h"
-#include <cmath>
-#include "mesh.h"
 #include "Utils.h"
+
+#include "libmesh/point.h"
+#include "libmesh/mesh.h"
+
+#include <cmath>
 #include <fstream>
 
 using namespace std;
@@ -90,7 +92,7 @@ Vff::do_init()
 {
   Messages::info("Initializing VFF module");
 
-  if (get_atomistic_structure()==NULL)
+  if (get_atomistic_structure()==nullptr)
     throw InitFailedException("VFF: could not find atomistic structure");
 
   Messages::debug("Setting boundary conditions");
@@ -373,8 +375,6 @@ Vff::check_structure(void)
       if (get_atomistic_structure()->get_specie(i) == Specie::H)
         throw InitFailedException("VFF: hydrogens with wrong array index the structure");
     }
-
-
 }
 
 void
@@ -411,13 +411,11 @@ Vff::build_parameters(void)
   AtomisticStructure* as = get_atomistic_structure();
   int n_atoms = as->get_N_without_H();
   const BondMap& bondmap = as->get_bond_map();
-  VffModel* pm_a = NULL;
-  VffModel* pm_b = NULL;
-
-  bool parent(as->is_random_alloy());
+  VffModel* pm_a = nullptr;
+  VffModel* pm_b = nullptr;
 
   for (unsigned int i = 0; i < n_atoms; i++)
-    {
+  {
     const Atom& atm_i = as->get_structure_atom(i);
 
     unsigned int n_bonds = bondmap[i].size();
@@ -429,11 +427,11 @@ Vff::build_parameters(void)
       if (atm_j.get_specie() != Specie::H)
       {
 
-        pm_a = get_bulk_model<VffModel>(atm_i, atm_j, parent);
+        pm_a = get_model(atm_i, atm_j, true);
 
         _alpha[i][counter_j] = pm_a->get_alpha(atm_i, atm_j);
         _d[i][counter_j] = pm_a->get_d(atm_i, atm_j);
-        
+
         // TODO get rid of redundancy
         for (unsigned int counter_k = 0; counter_k < n_bonds; counter_k++)
         {
@@ -441,22 +439,71 @@ Vff::build_parameters(void)
           const Atom& atm_k = as->get_structure_atom(k);
           if (atm_k.get_specie() != Specie::H)
           {
-            pm_a = get_bulk_model<VffModel>(atm_i, atm_j, parent);
-            pm_b = get_bulk_model<VffModel>(atm_i, atm_k, parent);
-            
+            pm_b = get_model(atm_i, atm_k, true);
+
             _teta[i][counter_j][counter_k] =
-              (pm_a->get_costeta(atm_i, atm_j, atm_k) +
-               pm_b->get_costeta(atm_i, atm_j, atm_k)) / 2.0;
+                (pm_a->get_costeta(atm_i, atm_j, atm_k) +
+                    pm_b->get_costeta(atm_i, atm_j, atm_k)) / 2.0;
             _beta[i][counter_j][counter_k] = 
-              sqrt(pm_a->get_beta(atm_i, atm_j, atm_k) *
-                   pm_b->get_beta(atm_i, atm_j, atm_k));
+                sqrt(pm_a->get_beta(atm_i, atm_j, atm_k) *
+                    pm_b->get_beta(atm_i, atm_j, atm_k));
           }
-          
+
         }
-        
+
       }
     }
   }
+}
+
+
+
+VffModel*
+Vff::get_model(const Atom& at1, const Atom& at2, bool create_missing) const
+{
+  AtomisticStructure* as = get_atomistic_structure();
+
+  VffModel* model = get_bulk_model<VffModel>(at1, at2, as->is_random_alloy());
+
+  Specie sp1(at1.get_specie());
+  Specie sp2(at2.get_specie());
+
+  if (model == nullptr)
+  {
+    auto it = _interface_materials.find(
+        Utils::Couple<ID>(at1.get_region_ID(), at2.get_region_ID()));
+
+    if (it != _interface_materials.end())
+    {
+      auto iit = it->second.find(Utils::Couple<Specie>(sp1, sp2));
+
+      if (iit != it->second.end())
+        model = dynamic_cast<VffModel*>(iit->second->get_model(get_id()));
+    }
+
+    if (create_missing && (model == nullptr))
+    {
+      Material* mat1 = get_material(at1.get_elem());
+      const ModelOptions& opts = mat1->get_options();
+      PhysicalModel* mod = mat1->get_model(get_id());
+
+      Atom::label_t label1 = at1.get_label();
+      Atom::label_t label2 = at2.get_label();
+
+      if (label2 < label1)
+        swap(sp1, sp2);
+
+      stringstream ss;
+      ss << sp1 << sp2;
+
+      Material* mat = Material::create(ss.str(), opts);
+      model = dynamic_cast<VffModel*>(mod->copy());
+      mat->add_model(model, get_id());
+      mat->init();
+    }
+  }
+
+  return(model);
 }
 
 
@@ -472,86 +519,86 @@ Vff::keating_potential(void)
 
   //Substitute degree of freedom (they can change during optimization) in local coords
   for (unsigned int i = 0; i < _n_free_atoms; i ++)
-    {
-      unsigned int free_index = i * 3;
-      unsigned int index = _free_atoms[i] * 3;
-      coords[index] = _dof[free_index]; coords[index + 1] = _dof[free_index + 1];
-      coords[index + 2] = _dof[free_index + 2];
+  {
+    unsigned int free_index = i * 3;
+    unsigned int index = _free_atoms[i] * 3;
+    coords[index] = _dof[free_index]; coords[index + 1] = _dof[free_index + 1];
+    coords[index + 2] = _dof[free_index + 2];
 
-    }
+  }
 
   //Calculate the potential
   //NOTE: i, j and k denote an atom index. counter_j and counter_k keep track of the index of neighbor (0, 1, 2, 3)
   for (unsigned int i = 0; i < n_atoms; i++)
+  {
+
+
+    unsigned int n_bonds = bondmap[i].size();
+
+    for (unsigned int counter_j =0; counter_j < n_bonds; counter_j++)
     {
 
+      unsigned int j = bondmap[i][counter_j];
+      libMesh::Point trans(bondmap.get_translation(i, counter_j));
+      double t_j_x = trans(0);
+      double t_j_y = trans(1);
+      double t_j_z = trans(2);
+      // t_j_x = 0.0;
+      // t_j_y = 0.0;
+      // t_j_z = 0.0;
+      //Hydrogen bonds must not be included (they don't have reference distance and angles)
+      if (get_atomistic_structure()->get_structure_atoms()[j].get_specie() != Specie::H)
+      {
 
-      unsigned int n_bonds = bondmap[i].size();
 
-      for (unsigned int counter_j =0; counter_j < n_bonds; counter_j++)
+        unsigned int i_start = i * 3; unsigned int j_start = j * 3;
+
+        double prefactor = (_alpha[i][counter_j] * 3.0) / (16.0 * _d[i][counter_j] * _d[i][counter_j]);
+        double x_ij = coords[i_start] - coords[j_start] - t_j_x;
+        double y_ij = coords[i_start + 1] - coords[j_start + 1] - t_j_y;
+        double z_ij = coords[i_start + 2] - coords[j_start + 2] - t_j_z;
+
+        double bond_stretching = prefactor *
+            pow((x_ij * x_ij + y_ij * y_ij + z_ij * z_ij - _d[i][counter_j] * _d[i][counter_j]),2);
+
+        u += bond_stretching;
+
+        for (unsigned int counter_k = 0; counter_k < n_bonds; counter_k++)
         {
+          if (counter_k != counter_j)
+          {
 
-          unsigned int j = bondmap[i][counter_j];
-          libMesh::Point trans(bondmap.get_translation(i, counter_j));
-          double t_j_x = trans(0);
-          double t_j_y = trans(1);
-          double t_j_z = trans(2);
-          // t_j_x = 0.0;
-          // t_j_y = 0.0;
-          // t_j_z = 0.0;
-          //Hydrogen bonds must not be included (they don't have reference distance and angles)
-          if (get_atomistic_structure()->get_structure_atoms()[j].get_specie() != Specie::H)
+            unsigned int k = bondmap[i][counter_k];
+            libMesh::Point trans(bondmap.get_translation(i, counter_k));
+            double t_k_x = trans(0);
+            double t_k_y = trans(1);
+            double t_k_z = trans(2);
+            // t_k_x = 0.0;
+            // t_k_y = 0.0;
+            // t_k_z = 0.0;
+            //Hydrogen bonds must not be included (they don't have reference distance and angles)
+            if (get_atomistic_structure()->get_structure_atoms()[k].get_specie() != Specie::H)
             {
+              unsigned int k_start = k * 3;
+              double x_ik = coords[i_start] - coords[k_start] - t_k_x;
+              double y_ik = coords[i_start + 1] - coords[k_start + 1] - t_k_y;
+              double z_ik = coords[i_start + 2] - coords[k_start + 2] - t_k_z;
 
+              prefactor = (_beta[i][counter_j][counter_k] * 3.0) / (16.0 * _d[i][counter_j] * _d[i][counter_k]);
 
-              unsigned int i_start = i * 3; unsigned int j_start = j * 3;
+              double bond_bending = prefactor *
+                  pow((x_ij * x_ik + y_ij * y_ik + z_ij * z_ik - _d[i][counter_j] * _d[i][counter_k] * _teta[i][counter_j][counter_k]),2);
 
-              double prefactor = (_alpha[i][counter_j] * 3.0) / (16.0 * _d[i][counter_j] * _d[i][counter_j]);
-              double x_ij = coords[i_start] - coords[j_start] - t_j_x;
-              double y_ij = coords[i_start + 1] - coords[j_start + 1] - t_j_y;
-              double z_ij = coords[i_start + 2] - coords[j_start + 2] - t_j_z;
-
-              double bond_stretching = prefactor *
-                  pow((x_ij * x_ij + y_ij * y_ij + z_ij * z_ij - _d[i][counter_j] * _d[i][counter_j]),2);
-
-              u += bond_stretching;
-
-              for (unsigned int counter_k = 0; counter_k < n_bonds; counter_k++)
-                {
-                  if (counter_k != counter_j)
-                    {
-
-                      unsigned int k = bondmap[i][counter_k];
-                      libMesh::Point trans(bondmap.get_translation(i, counter_k));
-                      double t_k_x = trans(0);
-                      double t_k_y = trans(1);
-                      double t_k_z = trans(2);
-                      // t_k_x = 0.0;
-                      // t_k_y = 0.0;
-                      // t_k_z = 0.0;
-                      //Hydrogen bonds must not be included (they don't have reference distance and angles)
-                      if (get_atomistic_structure()->get_structure_atoms()[k].get_specie() != Specie::H)
-                        {
-                          unsigned int k_start = k * 3;
-                          double x_ik = coords[i_start] - coords[k_start] - t_k_x;
-                          double y_ik = coords[i_start + 1] - coords[k_start + 1] - t_k_y;
-                          double z_ik = coords[i_start + 2] - coords[k_start + 2] - t_k_z;
-
-                          prefactor = (_beta[i][counter_j][counter_k] * 3.0) / (16.0 * _d[i][counter_j] * _d[i][counter_k]);
-
-                          double bond_bending = prefactor *
-                              pow((x_ij * x_ik + y_ij * y_ik + z_ij * z_ik - _d[i][counter_j] * _d[i][counter_k] * _teta[i][counter_j][counter_k]),2);
-
-                          u += bond_bending;
-
-                        }
-                    }
-                }
+              u += bond_bending;
 
             }
+          }
         }
 
+      }
     }
+
+  }
 
   return u;
 
@@ -580,16 +627,12 @@ Vff::keating_gradient(double* grad, double* x, int n)
     throw InitFailedException("Cannot calculate keating potential. Number of coordinates and degree of freedoms mismatch");
 
   for (unsigned int i = 0; i < n; i++)
-    {
-      _dof[i] = x[i];
-    }
+  {
+    _dof[i] = x[i];
+  }
 
-  std::vector<double> grad_vec(keating_gradient());
+  keating_gradient(grad);
 
-  for (unsigned int i = 0; i < n; i++)
-    {
-      grad[i] = grad_vec[i];
-    }
 }
 
 double
@@ -600,8 +643,8 @@ Vff::keating_pot_grad(double* grad, double* x, int n)
 }
 
 
-std::vector<double>
-Vff::keating_gradient(void)
+void
+Vff::keating_gradient(double* grad_dof)
 {
 
   //Atoms to be considered in gradient (H passivation not included)
@@ -613,112 +656,112 @@ Vff::keating_gradient(void)
   //considering all the coordinates. Then we only take the elements corresponding to degrees
   //of freedom
   std::vector<double> grad_all(n_atoms * 3, 0.0);
-  std::vector<double> grad_dof(_n_free_atoms * 3, 0.0);
+  //std::vector<double> grad_dof(_n_free_atoms * 3, 0.0);
 
 
   //Substitute degree of freedom (they can change during optimization) in local coords
   for (unsigned int i = 0; i < _n_free_atoms; i ++)
-    {
-      unsigned int free_index = i * 3;
-      unsigned int index = _free_atoms[i] * 3;
-      coords[index] = _dof[free_index]; coords[index + 1] = _dof[free_index + 1];
-      coords[index + 2] = _dof[free_index + 2];
-    }
+  {
+    unsigned int free_index = i * 3;
+    unsigned int index = _free_atoms[i] * 3;
+    coords[index] = _dof[free_index]; coords[index + 1] = _dof[free_index + 1];
+    coords[index + 2] = _dof[free_index + 2];
+  }
 
 
   //Calculate the gradient
   //NOTE: i, j and k denote an atom index. counter_j and counter_k keep track of the index of neighbor (0, 1, 2, 3)
   for (unsigned int i = 0; i < n_atoms; i++)
+  {
+
+    unsigned int n_bonds = bondmap[i].size();
+
+    for (unsigned int counter_j =0; counter_j < n_bonds; counter_j++)
     {
 
-      unsigned int n_bonds = bondmap[i].size();
+      unsigned int j = bondmap[i][counter_j];
+      libMesh::Point trans(bondmap.get_translation(i, counter_j));
+      double t_j_x = trans(0);
+      double t_j_y = trans(1);
+      double t_j_z = trans(2);
+      //           t_j_x = 0.0;
+      //           t_j_y = 0.0;
+      //           t_j_z = 0.0;
+      //Hydrogen bonds must not be included (they don't have reference distance and angles)
+      if (get_atomistic_structure()->get_structure_atoms()[j].get_specie() != Specie::H)
+      {
 
-      for (unsigned int counter_j =0; counter_j < n_bonds; counter_j++)
+        unsigned int i_start = i * 3; unsigned int j_start = j * 3;
+
+        double prefactor = (_alpha[i][counter_j] * 3.0) / (16.0 * _d[i][counter_j] * _d[i][counter_j]);
+        double x_ij = coords[i_start] - coords[j_start] - t_j_x;
+        double y_ij = coords[i_start + 1] - coords[j_start + 1] - t_j_y;
+        double z_ij = coords[i_start + 2] - coords[j_start + 2] - t_j_z;
+
+        double common = (x_ij * x_ij + y_ij * y_ij + z_ij * z_ij - _d[i][counter_j] * _d[i][counter_j]) * prefactor * 4.0;
+
+        double grad_x = common * x_ij;
+        double grad_y = common * y_ij;
+        double grad_z = common * z_ij;
+
+        grad_all[i_start] += grad_x; grad_all[i_start + 1] += grad_y; grad_all[i_start + 2] += grad_z;
+        grad_all[j_start] -= grad_x; grad_all[j_start + 1] -= grad_y; grad_all[j_start + 2] -= grad_z;
+
+        for (unsigned int counter_k = 0; counter_k < n_bonds; counter_k++)
         {
-
-          unsigned int j = bondmap[i][counter_j];
-          libMesh::Point trans(bondmap.get_translation(i, counter_j));
-          double t_j_x = trans(0);
-          double t_j_y = trans(1);
-          double t_j_z = trans(2);
-//           t_j_x = 0.0;
-//           t_j_y = 0.0;
-//           t_j_z = 0.0;
-          //Hydrogen bonds must not be included (they don't have reference distance and angles)
-          if (get_atomistic_structure()->get_structure_atoms()[j].get_specie() != Specie::H)
+          if (counter_k != counter_j)
+          {
+            unsigned int k = bondmap[i][counter_k];
+            libMesh::Point trans(bondmap.get_translation(i, counter_k));
+            double t_k_x = trans(0);
+            double t_k_y = trans(1);
+            double t_k_z = trans(2);
+            //                       t_k_x = 0.0;
+            //                       t_k_y = 0.0;
+            //                       t_k_z = 0.0;
+            //Hydrogen bonds must not be included (they don't have reference distance and angles)
+            if (get_atomistic_structure()->get_structure_atoms()[k].get_specie() != Specie::H)
             {
+              unsigned int k_start = k * 3;
+              double x_ik = coords[i_start] - coords[k_start] - t_k_x;
+              double y_ik = coords[i_start + 1] - coords[k_start + 1] - t_k_y;
+              double z_ik = coords[i_start + 2] - coords[k_start + 2] - t_k_z;
 
-              unsigned int i_start = i * 3; unsigned int j_start = j * 3;
+              prefactor = (_beta[i][counter_j][counter_k] * 3.0) / (16.0 * _d[i][counter_j] * _d[i][counter_k]);
 
-              double prefactor = (_alpha[i][counter_j] * 3.0) / (16.0 * _d[i][counter_j] * _d[i][counter_j]);
-              double x_ij = coords[i_start] - coords[j_start] - t_j_x;
-              double y_ij = coords[i_start + 1] - coords[j_start + 1] - t_j_y;
-              double z_ij = coords[i_start + 2] - coords[j_start + 2] - t_j_z;
+              common = (x_ij * x_ik + y_ij * y_ik + z_ij * z_ik -
+                  _d[i][counter_j] * _d[i][counter_k] * _teta[i][counter_j][counter_k]) * 2.0 * prefactor;
 
-              double common = (x_ij * x_ij + y_ij * y_ij + z_ij * z_ij - _d[i][counter_j] * _d[i][counter_j]) * prefactor * 4.0;
+              grad_all[i_start] += common * (x_ik + x_ij); grad_all[i_start + 1] += common * (y_ik + y_ij);
+              grad_all[i_start + 2] += common * (z_ik + z_ij);
 
-              double grad_x = common * x_ij;
-              double grad_y = common * y_ij;
-              double grad_z = common * z_ij;
+              grad_all[j_start] -= common * (x_ik); grad_all[j_start + 1] -= common * (y_ik);
+              grad_all[j_start + 2] -= common * (z_ik);
 
-              grad_all[i_start] += grad_x; grad_all[i_start + 1] += grad_y; grad_all[i_start + 2] += grad_z;
-              grad_all[j_start] -= grad_x; grad_all[j_start + 1] -= grad_y; grad_all[j_start + 2] -= grad_z;
-
-              for (unsigned int counter_k = 0; counter_k < n_bonds; counter_k++)
-                {
-                  if (counter_k != counter_j)
-                    {
-                      unsigned int k = bondmap[i][counter_k];
-                      libMesh::Point trans(bondmap.get_translation(i, counter_k));
-                      double t_k_x = trans(0);
-                      double t_k_y = trans(1);
-                      double t_k_z = trans(2);
-//                       t_k_x = 0.0;
-//                       t_k_y = 0.0;
-//                       t_k_z = 0.0;
-                      //Hydrogen bonds must not be included (they don't have reference distance and angles)
-                      if (get_atomistic_structure()->get_structure_atoms()[k].get_specie() != Specie::H)
-                        {
-                          unsigned int k_start = k * 3;
-                          double x_ik = coords[i_start] - coords[k_start] - t_k_x;
-                          double y_ik = coords[i_start + 1] - coords[k_start + 1] - t_k_y;
-                          double z_ik = coords[i_start + 2] - coords[k_start + 2] - t_k_z;
-
-                          prefactor = (_beta[i][counter_j][counter_k] * 3.0) / (16.0 * _d[i][counter_j] * _d[i][counter_k]);
-
-                          common = (x_ij * x_ik + y_ij * y_ik + z_ij * z_ik -
-                              _d[i][counter_j] * _d[i][counter_k] * _teta[i][counter_j][counter_k]) * 2.0 * prefactor;
-
-                          grad_all[i_start] += common * (x_ik + x_ij); grad_all[i_start + 1] += common * (y_ik + y_ij);
-                          grad_all[i_start + 2] += common * (z_ik + z_ij);
-
-                          grad_all[j_start] -= common * (x_ik); grad_all[j_start + 1] -= common * (y_ik);
-                          grad_all[j_start + 2] -= common * (z_ik);
-
-                          grad_all[k_start] -= common * (x_ij); grad_all[k_start + 1] -= common * (y_ij);
-                          grad_all[k_start + 2] -= common * (z_ij);
-
-                        }
-                    }
-                }
+              grad_all[k_start] -= common * (x_ij); grad_all[k_start + 1] -= common * (y_ij);
+              grad_all[k_start + 2] -= common * (z_ij);
 
             }
+          }
         }
 
+      }
     }
+
+  }
 
   //Insert grad_dof values in right place
   for (unsigned int i = 0; i < _n_free_atoms; i ++)
-    {
-      unsigned int free_index = i * 3;
-      unsigned int index = _free_atoms[i] * 3;
-      grad_dof[free_index] = grad_all[index]; grad_dof[free_index + 1] = grad_all[index + 1];
-      grad_dof[free_index + 2] = grad_all[index + 2];
+  {
+    unsigned int free_index = i * 3;
+    unsigned int index = _free_atoms[i] * 3;
+    grad_dof[free_index] = grad_all[index]; grad_dof[free_index + 1] = grad_all[index + 1];
+    grad_dof[free_index + 2] = grad_all[index + 2];
 
-    }
+  }
 
 
-  return grad_dof;
+  //return grad_dof;
 
 }
 
