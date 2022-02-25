@@ -872,9 +872,6 @@ Elasticity::apply_shape_deformation()
   TiberLinearSystem* system = &get_equation_system<TiberLinearSystem>();
   const unsigned int system_number = system->number();
   
-  // TODO CHECK THIS! It seems that this was terribly wrong and worked only
-  // for one deformation step
-  //const NumericVector<Number>& solution = *sol;
   const libMesh::NumericVector<Number>& solution = system->get_solution_vector();
   const unsigned int dim = get_mesh().mesh_dimension();
   const libMesh::DofMap& dof_map = system->get_dof_map();
@@ -926,7 +923,7 @@ Elasticity::apply_shape_deformation()
       vector<Point> p_ref(1, old_pos);
 
       const Elem* elem = structure[na].get_elem();
-      if (elem == NULL)
+      if (elem == nullptr)
       {
         // here we may arrive when the atom is a passivation atom
         // we simply take the displacement at the neighbour atom
@@ -937,7 +934,7 @@ Elasticity::apply_shape_deformation()
 
         elem = structure[neighbor].get_elem();
 
-        if (elem == NULL)
+        if (elem == nullptr)
           throw RuntimeException("Found atom with no neighbour inside the mesh!");
 
         p_ref[0] = structure[neighbor].get_position() / scale;
@@ -965,13 +962,13 @@ Elasticity::apply_shape_deformation()
 
       fe->reinit(elem, &p_ref);
 
-      for (unsigned int i = 0; i< 3 ; i++)
-	dof_map.dof_indices(elem, dof_indices[i], uvar[i]);
+      for (unsigned int i = 0; i < 3 ; i++)
+        dof_map.dof_indices(elem, dof_indices[i], uvar[i]);
   
       Point displ(0);
-      for (unsigned int i = 0;i<3; i ++)
-	for (unsigned int alpha = 0; alpha < dof_indices[i].size(); alpha++)
-	  displ(i) += (solution)(dof_indices[i][alpha]) * phi[alpha][0];
+      for (unsigned int i = 0; i < 3; i++)
+        for (unsigned int alpha = 0; alpha < dof_indices[i].size(); alpha++)
+          displ(i) += (solution)(dof_indices[i][alpha]) * phi[alpha][0];
         
       //displ /= get_scaling().get_calc_mesh_units();
 
@@ -1101,12 +1098,12 @@ Elasticity::apply_shape_deformation()
       continue;
 
     Point pos;
-    for(unsigned int i = 0; i<dim; i++)
+    for(unsigned int i = 0; i < dim; i++)
       pos(i) = (*node)(i);
 
     for (unsigned int i = 0; i < dim; i++)
     {
-      const unsigned int  n_dof = node->dof_number(system_number,uvar[i],0);
+      const unsigned int  n_dof = node->dof_number(system_number, uvar[i], 0);
       pos(i) += (solution)(n_dof);
     }
 
