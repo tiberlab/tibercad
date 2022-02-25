@@ -659,10 +659,6 @@ SimulationInterface::_get_bulk_model(const Atom& atom1, const Atom& atom2,
   const Material* mat = get_atomistic_structure()->get_material(atom1, atom2, parent);
 
   if (mat != nullptr) mod = mat->get_model(get_id());
-  else
-  {
-    throw InitFailedException("Unknown material");
-  }
 
   return mod;
 }
