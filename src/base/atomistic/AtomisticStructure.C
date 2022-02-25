@@ -36,7 +36,6 @@ AtomisticStructure::_callback_functions;
 
 AtomisticStructure::AtomisticStructure()
 :_device(NULL),
- _atomistic_structure_options(),
  _scale(1.0),
  _random_alloy(false),
  _N_without_H(0)
@@ -46,7 +45,6 @@ AtomisticStructure::AtomisticStructure()
 
 AtomisticStructure::AtomisticStructure(const std::string& name)
 :_name(name),
- _atomistic_structure_options(),
  _scale(1.0),
  _device(NULL),
  _random_alloy(false),
@@ -57,7 +55,6 @@ AtomisticStructure::AtomisticStructure(const std::string& name)
 AtomisticStructure::AtomisticStructure(const AtomisticStructure& other) :
   AtomisticBasis(other),
   _options(other._options),
-  _atomistic_structure_options(other._atomistic_structure_options),
   _name(other._name),
   _scale(other._scale),
   _IDset(other._IDset),
@@ -77,9 +74,13 @@ AtomisticStructure::~AtomisticStructure(void)
 
 
 AtomisticStructure*
-AtomisticStructure::create()
+AtomisticStructure::create(const std::string& name,
+    const Device* const device, const ModelOptions& options)
 {
   AtomisticStructure* st = new AtomisticStructure();
+
+  st->init(name, device, options);
+
   return st;
 }
 
@@ -91,15 +92,6 @@ AtomisticStructure::create(const AtomisticStructure& as)
   return st;
 }
 
-
-
-AtomisticStructure::AtomisticStructureOptions::AtomisticStructureOptions(void)
-:is_associated(false)
-{}
-
-
-AtomisticStructure::AtomisticStructureOptions::~AtomisticStructureOptions(void)
-{}
 
 
 void
@@ -181,9 +173,7 @@ AtomisticStructure::init(const std::string& name,
     Messages::info("Build Bond Map");
     build_bond_map();
 
-    //Messages::info("Associate elements");
-    if (!_atomistic_structure_options.is_associated)
-      associate_elements();
+    associate_elements();
 
     set_labels();
 
@@ -468,11 +458,6 @@ AtomisticStructure::parse_lattice_vectors(void)
   }
 }
 
-
-void
-AtomisticStructure::init(const std::string& )
-{
-}
 
 
 void
@@ -1248,7 +1233,6 @@ AtomisticStructure::read_tgn(const std::string& path, const Tensor1& transl)
     }
 
   file.close();
-  _atomistic_structure_options.is_associated = true;
 
 }
 
@@ -2130,6 +2114,10 @@ AtomisticStructure::get_material(const Atom& atom1, const Atom& atom2,
   const Material* mat1 = get_device()->get_material(atom1.get_region_ID());
   const Material* mat2 = get_device()->get_material(atom2.get_region_ID());
 
+  //std::cerr << "Atoms: " << atom1.get_specie() << " " << atom2.get_specie() << std::endl;
+  //std::cerr << "mat1 : " << atom1.get_region_ID() << " -> " << mat1->get_name() << std::endl;
+  //std::cerr << "mat2 : " << atom2.get_region_ID() << " -> " << mat2->get_name() << std::endl;
+
   if (mat1->has_specie(atom1.get_specie()) && mat1->has_specie(atom2.get_specie()))
   {
     // can take it from here
@@ -2155,29 +2143,9 @@ AtomisticStructure::get_material(const Atom& atom1, const Atom& atom2,
 
   // if we didn't find it, we check interface materials (which is created if needed)
 
- //If not, we need to decide based on some other criteria. Up to now we're able to
- //decide only for III-V or II-VI alloys with different cations (eg. Ga-As belong to GaAs)
- //if (mat1->is_cation(atom1.get_specie()))
- //  return get_material(atom1, parent);
- //else if (mat2->is_cation(atom2.get_specie()))
- //  return get_material(atom2, parent);
- //else
- //(Alex) Test using the label on atoms rather than hardcoded CrystalDefs. 
-  /*
- if (atom1.is_cation())
-   return get_material(atom1, parent);
- else if (atom2.is_cation())
-   return get_material(atom2, parent);
- else 
- {
-   //If no value was already returned, throw an exception
-   Messages::error("Material for couple of atoms is decided "
-       "depending on the cation species. I cannot find a valid cation ");
-   throw RuntimeException("Cannot find valid cation");
- }
- */
  return(mat);
 }
+
 
 void
 AtomisticStructure::reorder(const std::vector<unsigned int>& P)

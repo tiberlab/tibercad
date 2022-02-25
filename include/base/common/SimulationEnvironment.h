@@ -59,57 +59,7 @@ class SimulationEnvironment
 
     //! An iterator for the boundaries
     typedef std::set<Boundary*>::iterator BoundaryIterator;
-    /*
-    class BoundaryIterator
-    {
-      public:
 
-        BoundaryIterator(void) {};
-
-        BoundaryIterator(const BCMap& bd, const BCMap::const_iterator it) :
-          _bd_it(it), _bd_end(bd.end()) {}
-
-        BoundaryIterator(const BoundaryIterator& it) :
-          _bd_it(it._bd_it), _bd_end(it._bd_end) {}
-
-        BoundaryIterator& operator++(void)
-        {
-          Boundary* bd = _bd_it->second;
-          while ((_bd_it != _bd_end) && (bd == _bd_it->second))
-            ++_bd_it;
-
-          return *this;
-        }
-
-        BoundaryIterator& operator=(const BoundaryIterator& it)
-        {
-          _bd_it = it._bd_it;
-          _bd_end = it._bd_end;
-        }
-
-        bool operator==(const BoundaryIterator& it)
-        {
-          return ((_bd_it == it._bd_it) || (_bd_it->second == it._bd_it->second));
-        }
-
-        bool operator!=(const BoundaryIterator& it)
-        {
-          return !(*this == it);
-        }
-
-        Boundary* operator*(void)
-        {
-          return ((_bd_it == _bd_end) ? NULL : _bd_it->second);
-        }
-
-
-      private:
-
-        BCMap::const_iterator _bd_it;
-        BCMap::const_iterator _bd_end;
-
-    };
-    */
 
     //! The constructor
     /*!

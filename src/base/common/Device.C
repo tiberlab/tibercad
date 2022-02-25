@@ -71,10 +71,18 @@ Device::Device(const ModelOptions& options)
 
   int color = 0;
 
+  // set up parallelization of device/mesh/solvers
   if (_options.has_submodel("Parallel"))
   {
     const ModelOptions& mpi_opts = _options.submodels_begin("Parallel")->second;
 
+    // nodes_per_device is the number of processes to be used for calculation of a device.
+    // If e.g. comm.size() = 4 and nodes_per_device = 2, then simulation on two independent
+    // devices is performed, each parallelized on two processes
+    //
+    // nodes_per_mesh is the number of processes used to calculate FEM based models. It
+    // must be between 1 and nodes_per_device. 1 means that FEM calculation is done in
+    // serial.
     nodes_per_device = mpi_opts.get_option("mpi_processes_per_device", nodes_per_device);
     nodes_per_mesh = mpi_opts.get_option("mpi_processes_per_mesh", nodes_per_device);
 
@@ -95,6 +103,7 @@ Device::Device(const ModelOptions& options)
     // this did not work before 1.0.0, because there was a bug in libmesh
     // parallel_implementation.h, line 470, missing this->assign(comm)
     comm.split(color, 0, _mpi_comm);
+
   }
   else
   {
@@ -577,22 +586,11 @@ Device::setup_atomistic_structures(void)
 
     const string& st_name = data.get_name();
 
-    AtomisticStructure* st = AtomisticStructure::create();
+    AtomisticStructure* st = AtomisticStructure::create(st_name, this, data);
 
     // Defined atomistic structure is put in the atomistic_structure_map
     _atomistic_structure_map[st_name] = st;
 
-    //WARNING: For debugging purposes, initialization of
-    //atomistic structures is here, but it's not the right place! (maybe it is...)
-    st->init(st_name, this, data);
-
-    //UnstructuredMesh* mesh = new Mesh(3);
-    //st->create_conformal_grid(*mesh);
-    //DataOutput* dto = DataOutput::create("vtk");
-    //dto->set_filename("pippo");
-    //dto->set_output_directory("./");
-    //dto->set_mesh(*mesh);
-    //dto->write(true);
   }
 
   Messages::debug("Control::create_atomistic_structures() end");
@@ -965,7 +963,7 @@ Device::get_material(const std::string& name) const
 MaterialBoundary*
 Device::get_boundary_object(ID id)
 {
-  MaterialBoundary* mb = NULL;
+  MaterialBoundary* mb = nullptr;
 
   if (id != INVALID_ID)
   {
@@ -1001,7 +999,7 @@ Device::get_boundary_object(ID id)
 MaterialBoundary*
 Device::get_boundary_object(const Elem* elem, int side)
 {
-  MaterialBoundary* mb = NULL;
+  MaterialBoundary* mb = nullptr;
 
   ID id = _bd_regions->get_side_id(elem, side);
   if (id != INVALID_ID)
@@ -1263,8 +1261,8 @@ Device::get_boundary_region_ids(const string& name, IDSet& ids) const
 
           // subdomain IDs have to be different, and be part of the simulation
           if ((neighbour == nullptr) ||
-              ((neighbour_id = neighbour->subdomain_id()) != id) &&
-               get_active_region_ids().count(neighbour_id))
+              (((neighbour_id = neighbour->subdomain_id()) != id) &&
+               get_active_region_ids().count(neighbour_id)))
           {
             map<IDPair, ID>::iterator it(known_ids.find(IDPair(id, neighbour_id)));
             // if the ID pair already exists, we can just add the elem side
