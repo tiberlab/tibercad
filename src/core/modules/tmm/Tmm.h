@@ -105,7 +105,7 @@ class TBDLLOCAL Tmm : public SimulationInterface
 
   protected:
 
-    
+
 
 
     //! The initialization
@@ -142,6 +142,9 @@ class TBDLLOCAL Tmm : public SimulationInterface
         std::map<ID, std::vector<double> >& values,
         const std::vector<Point>& p);
 
+    //! Get a mesh independent solution variable
+    virtual void get_solution_secure(std::map<ID, std::vector<double> >& values);
+
 
 
   private:
@@ -168,12 +171,20 @@ class TBDLLOCAL Tmm : public SimulationInterface
      */
     enum Solutions
     {
-      //EField,
-     // HField,
+      GenerationRate,
       Intensity,
-      GenerationRate
+      Transmission,
+      Reflection,
+      Absorbtion
     };
+    std::vector<double> _Transmission;
+    std::vector<double> _Reflection;
+    std::vector<double> _Absorbtion;
+    std::vector<double> _Intensity;
+
     
+
+
     /*!
      * \brief Constructor
      *

@@ -2,40 +2,52 @@ Device
 {
   meshfile = bulk.msh 
 
-  Region AIR 
+  Region AIR1 
   {
-  Incoherency = 1
-  material = Optic_Air
-  optical_data = /home/pamiri/TiberCAD/materials/optics/Air_book
+  Incoherency = 0
+  material = Air
+  }
+
+  Region Glass 
+  {
+  Incoherency = 0
+  material = Glass
   }
 
   Region ITO 
   {
-  Incoherency = 0
-  material = Optic_ITO
-  optical_data = /home/pamiri/TiberCAD/materials/optics/ITO-1.2E21_book.dat
-
-  }
-
-  Region PTAA
-  {
-  Incoherency = 0
-  material = Optic_PTAA
-  optical_data = /home/pamiri/TiberCAD/materials/optics/PTAA_Santbergen.dat
-  }
-
-  Region PSK
-  {
   Incoherency= 0
-  material = Optic_PSK
-  optical_data = /home/pamiri/TiberCAD/materials/optics/PSK.dat
+  material = ITO
   }
 
-  Region SnO
+  Region PTAA 
   {
   Incoherency = 0
-  material = Optic_SnO2
-  optical_data = /home/pamiri/TiberCAD/materials/optics/SnO2_book.dat
+  material = PTAA
+  }
+
+  Region PSK 
+  {
+  Incoherency = 0
+  material = PSK
+  }
+
+  Region SnO2 
+  {
+  Incoherency = 0
+  material = SnO2
+  }
+
+  Region Ag
+  {
+  Incoherency = 0
+  material = Ag
+  }
+
+  Region AIR2
+  {
+  Incoherency = 0
+  material = Air
   }
 
 }
@@ -45,18 +57,17 @@ Module tmm
 { 
   
   name = tmm_study 
-  plot = (GenerationRate)
+  plot = (GenerationRate,Intensity, Reflection,Transmission,Absorbtion)
   
   reflectivity = 0
   incident_angle = 0
-  up_lambda = 600
-  down_lambda = 280
+  up_lambda = 950
+  down_lambda = 300
 
   Physics 
   {
 
   }
-
   Contact point1
   {
   type = incident_wave
