@@ -104,10 +104,10 @@ Tmm::Matrix_2by2 Tmm::get_M(double n_real,double n_imag,double lenght,double lam
 
   complex<double> ps (0,phase);
 
-  new_Matrix_2by2.set(0,exp(bi - ps));
+  new_Matrix_2by2.set(0,exp(bi + ps));
   new_Matrix_2by2.set(1,0);
   new_Matrix_2by2.set(2,0);
-  new_Matrix_2by2.set(3,exp(-bi + ps));
+  new_Matrix_2by2.set(3,exp(-bi - ps));
 
 
   return(new_Matrix_2by2);
@@ -292,19 +292,13 @@ Tmm::do_setup_solution_variables(void)
 {
   // we declare our solution variables
   declare_solution(GenerationRate, REAL, CELL, "cm^3");
-  declare_solution(Intensity, REAL, CELL, "V/cm");
+  declare_solution(Intensity, REAL, CELL, "mW/cm^3nm^-1");
+  declare_solution(ElectricField, REAL, CELL, "V/cm");
 
   declare_solution(Transmission, REAL, GLOBAL, "1");
   declare_solution(Reflection, REAL, GLOBAL, "1");
-  declare_solution(Absorbtion, REAL, GLOBAL, "1");
+  declare_solution(Absorption, REAL, GLOBAL, "1");
 
-  //declare_solution(HField, VECTOR, CELL, "A/cm");
-  //declare_solution(Displacement, VECTOR, CELL, "C/cm^2");
-  //declare_solution(Displacement, VECTOR, CELL, "C/cm^2");
-
-  // we can define aliases but the same name cannot refer to
-  // several IDs
-  //add_alias("ElectricField", EField);
 }
 
 
@@ -343,6 +337,7 @@ Tmm::do_solve(void)
   DofMap& dof_map =  system.get_dof_map();
   vector<unsigned int> dof_indices;
   vector<double> intensity_integral;
+  vector<double> Electric_Field_integral;
   vector<double> generation_rate_integral;
   vector<double> gen;
   vector<double> lambda_interp;
@@ -469,12 +464,10 @@ Tmm::do_solve(void)
              if ( s % 2 == 0)
              {
                direction = "top to down propagation";
-               //std::cout<<direction<<std::endl;
              }
              else
              {
                direction = "down to top propagation";
-               //std::cout<<direction<<std::endl;
              }
            }
 
@@ -485,9 +478,6 @@ Tmm::do_solve(void)
            }
        }
     }
-  //  for (int nm=0;nm<n_real_init.size();nm++)
-    //  cout<<"n is : "<<n_real_init[nm]<<endl;
-
 
     if (direction == "top to down propagation")
     {
@@ -515,10 +505,6 @@ Tmm::do_solve(void)
     }
 
     std::cout<<direction<<std::endl;
-    for (int nm=0;nm<n_real.size();nm++)
-    cout<<"n,k is : "<<n_real[nm]<<","<<n_imag[nm]<<endl;
-    for (int nm=0;nm<l.size();nm++)
-    cout<<"l is : "<<l[nm]<<endl;
 
     //********************snell's law********************
     vector<double> theta(n_real.size());
@@ -539,11 +525,11 @@ Tmm::do_solve(void)
     
     double avg_reflection = 0;
     double avg_transmission = 0;
-    double avg_absorbtion = 0;
-
+    double avg_Absorption = 0;
+    srand(time(NULL));
     for (int nm = 0; nm<Incoh.size(); ++nm)
       if(Incoh[nm]==1)
-        rnd = 10;
+        rnd = 5;
     std::cout<<"random is "<<rnd<<std::endl;
     phase_step = 2 * M_PI / rnd;
     for (int iter = 0; iter <rnd; ++iter )
@@ -561,7 +547,11 @@ Tmm::do_solve(void)
       double r =_reflectivity[0];
       Tmm::Matrix_2by2 E_N(1,0,r,0);
       Tmm::Matrix_2by2 E_I(0,0,0,0);
+      double randoom = 0;
 
+
+      randoom = 2*M_PI*(double) rand()/RAND_MAX;
+      cout<<"randoom is "<<randoom << endl;
 
       vector<complex<double>> E_F(n_real.size());
       vector<complex<double>> E_B(n_real.size());
@@ -586,38 +576,33 @@ Tmm::do_solve(void)
           D.set(2,Boundry_condition.get(2));
           D.set(3,Boundry_condition.get(3));
         }
-        ///cout<<"D Ratio is:"<<abs(D.get(2)/D.get(0))<<endl;
-        cout<<"D is :"<<endl;
-        D.print();
-       // if (Incoh[k] == 1)
-          //M = get_M(n_real[k],n_imag[k],l[k],lambda,theta[k],phase_step * iter);
-       // M = get_M(n_real[k],n_imag[k],l[k],lambda,theta[k],phase_step * iter);
-       // else
+
+
+        if(Incoh[k]==1 && Incoh[k+1]==0)
+        {
+          M = get_M(n_real[k],n_imag[k],l[k],lambda,theta[k],phase_step * iter);
+        }
+        else
+        {
           M = get_M(n_real[k],n_imag[k],l[k],lambda,theta[k],0);
+        }
 
-        cout<<"abs(M00) is :"<<abs(M.get(0))<<endl;
-        //M.print();
 
-        T_load = D * M;
-        T = T * T_load;
 
-        //cout<<"T is :"<<endl;
-        //T.print();
-        cout<<"T Ratio is:"<<abs(T.get(2)/T.get(0))<<endl;
+        T_load = M * D;
+
+        T = T_load * T;
 
 
         if (k<n_real.size()-1){
         E_I = T * E_N;
-
-        //std::cout<<"E_I is "<<k <<std::endl;
-        //E_I.print();
         E_F[k]+= E_I.get(0);
         E_B[k]+= E_I.get(2);
         }
-       // std::cout<<"E_F is "<<k<<"    "<<abs(E_F[k]) <<std::endl;
       }
       cout<<"TMM is :"<<endl;
       T.print();
+      cout<<abs(T.get(2))<<" / "<<abs(T.get(0))<<endl;
 
       //***********************************************************************
       //**********reflection and transmission calculation**********************
@@ -633,7 +618,7 @@ Tmm::do_solve(void)
       ratio_complex = ((nc_last)*cos(theta[theta.size()-1]*M_PI/180))/(nc_first*cos(theta[0]*M_PI/180));
       Transmission = ratio_complex*pow(abs(1.0/T.get(0)),2);
       avg_transmission = avg_transmission + real(Transmission) / rnd;
-      avg_absorbtion = avg_absorbtion + (1-real(Reflection)-real(Transmission)) / rnd;
+      avg_Absorption = avg_Absorption + (1-real(Reflection)-real(Transmission)) / rnd;
 
 
       //***************************************************************************
@@ -662,27 +647,28 @@ Tmm::do_solve(void)
       for (int nm=0 ; nm < n_real.size() ; ++nm)
       {
         Etot[nm] = E_F_NORM[nm] + E_B_NORM[nm];
+        Electric_Field_avg[nm] =  Electric_Field_avg[nm] + pow(abs(Etot[nm]), 2)/rnd;
         Intensity.push_back(0.5 * c0 * 1e-9 * e0 * n_real[nm] * Esun2* pow(abs(Etot[nm]), 2)); // Intensity [W/(m^2 * nm)]
         Intensity_avg[nm] = Intensity_avg[nm] + real(Intensity[nm])/rnd;
+
         Generation_rate.push_back(1 / (plank_const* w) * (4 * M_PI * n_imag[nm] * 1e7/(lambda)) * real(Intensity[nm])/ 1e4 );        // Generation rate [ cm^-3 s^-1 nm^-1]
         Generation_rate_real.push_back(real(Generation_rate[nm]));
         Generation_rate_avg[nm] = Generation_rate_avg[nm] + Generation_rate_real[nm]/rnd;
-        Electric_Field_avg[nm] =  Electric_Field_avg[nm] + pow(abs(Etot[nm]), 2)/rnd;
+
       }
     }
+    _Wavelength.push_back(lambda);
     _Reflection.push_back(real(avg_reflection));
     _Transmission.push_back(real(avg_transmission));
-    _Absorbtion.push_back(avg_absorbtion);
- //   for(int nm=0; nm<Intensity_avg.size();++nm){
-   //   std::cout<<"Intensity_avg is " << Intensity_avg[nm] <<std::endl;
-    //}
-
-
+    _Absorption.push_back(avg_Absorption);
 
     // taking integral over the bandwidths
 
     if (i == 0)
     {
+      Electric_Field_integral.resize(n_real.size());
+      Electric_Field_integral = Electric_Field_avg;
+
       intensity_integral.resize(n_real.size());
       intensity_integral = Intensity_avg;
 
@@ -696,6 +682,7 @@ Tmm::do_solve(void)
       {
         generation_rate_integral[nm] +=2 * Generation_rate_avg[nm];
         intensity_integral[nm] +=2 * Intensity_avg[nm];
+        Electric_Field_integral[nm] +=2* Electric_Field_avg[nm];
 
       }
     }
@@ -705,11 +692,13 @@ Tmm::do_solve(void)
       {
         generation_rate_integral[nm] += Generation_rate_avg[nm];
         intensity_integral[nm] += Intensity_avg[nm];
+        Electric_Field_integral[nm] += Electric_Field_avg[nm];
       }
       for (int nm =0; nm< n_real.size();nm++)
       {
         generation_rate_integral[nm] *= (lambda_interp[lambda_interp.size()-1] - lambda_interp[0]) / (2 * (lambda_interp.size()-1));
         intensity_integral[nm] *= (lambda_interp[lambda_interp.size()-1] - lambda_interp[0]) / (2 * (lambda_interp.size()-1));
+        Electric_Field_integral[nm] *= (lambda_interp[lambda_interp.size()-1] - lambda_interp[0]) / (2 * (lambda_interp.size()-1));
       }
 
     }
@@ -718,6 +707,8 @@ Tmm::do_solve(void)
       for(double nm=0; nm < l_length.size() ; ++nm){
         solution.add(l_length[nm], generation_rate_integral[nm]);
         _Intensity.push_back(intensity_integral[nm]);
+        _ElectricField.push_back(Electric_Field_integral[nm]);
+
       }
     }
 
@@ -779,26 +770,34 @@ Tmm::create_boundary_model(const ModelOptions& options,
 }
 
 void
-Tmm::get_solution_secure(std::map<ID, std::vector<double> >& values)
+Tmm::plot_globaldata(void)
 {
-  if (values.count(Reflection))
-  {
-    values[Reflection] = _Reflection;
-  }
 
-  if (values.count(Transmission))
-  {
-    values[Transmission] = _Transmission;
-  }
+  string outdir = get_output_directory();
 
-  if (values.count(Absorbtion))
-  {
-    values[Absorbtion] = _Absorbtion;
-  }
+  string filename(outdir + "/" + get_output_filename() + ".dat");
 
+  ofstream file;
+  file.open(filename.c_str());
+
+  if (file.good())
+  {
+    // header
+    file << "# " << get_type() << " TMMM (" << get_name() << ")\n";
+
+    file << "# WaveLength[nm] " <<  " Transmission[1] "
+        << " Reflection[1] "
+         << " Absorption[1] " <<  "\n";
+
+    for (unsigned int i = 0; i < _Transmission.size(); i++)
+    {
+        file << _Wavelength[i] << " " << _Transmission[i] << " "
+             << _Reflection[i] << " "
+             << _Absorption[i] << "\n";
+    }
+  }
 
 }
-
 
 void
 Tmm::get_solution_secure(const Elem* elem,
@@ -835,7 +834,10 @@ Tmm::get_solution_secure(const Elem* elem,
   // cell data variable
   RealGradient field(0);
   TmmBulkModel& mod = *get_bulk_model<TmmBulkModel>(elem);
-
+  if (solutions.count(ElectricField))
+  {
+    solutions[ElectricField][0]= _ElectricField[dof_indices[0]];
+  }
   if (solutions.count(Intensity))
   {
     solutions[Intensity][0]= _Intensity[dof_indices[0]];

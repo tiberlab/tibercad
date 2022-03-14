@@ -79,6 +79,8 @@ class TBDLLOCAL Tmm : public SimulationInterface
 };
 
 
+
+
   //! defining a function to return M matrix
   /*!
   * "n_real" is real part of refractive index
@@ -106,6 +108,7 @@ class TBDLLOCAL Tmm : public SimulationInterface
   protected:
 
 
+  virtual void plot_globaldata(void);
 
 
     //! The initialization
@@ -143,7 +146,7 @@ class TBDLLOCAL Tmm : public SimulationInterface
         const std::vector<Point>& p);
 
     //! Get a mesh independent solution variable
-    virtual void get_solution_secure(std::map<ID, std::vector<double> >& values);
+  //  virtual void get_solution_secure(std::map<ID, std::vector<double> >& values);
 
 
 
@@ -173,14 +176,17 @@ class TBDLLOCAL Tmm : public SimulationInterface
     {
       GenerationRate,
       Intensity,
+      ElectricField,
       Transmission,
       Reflection,
-      Absorbtion
+      Absorption
     };
     std::vector<double> _Transmission;
     std::vector<double> _Reflection;
-    std::vector<double> _Absorbtion;
+    std::vector<double> _Absorption;
     std::vector<double> _Intensity;
+    std::vector<double> _ElectricField;
+    std::vector<double> _Wavelength;
 
     
 
