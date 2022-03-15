@@ -17,7 +17,14 @@
 USELIBMESHTYPE(RealVectorValue);
 
 
-// Base class for charge density models
+//! Base class for electrical polarization models
+/*!
+ * Polarization is assumed in units of C/m^2
+ *
+ * A fixed polarisation vector can be specified as
+ * \c polarization = (Px, Py, Pz)
+ * In this case, it assumed in the simulation coordinate system.
+ */
 class PolarizationModel : public PhysicalModel
 {
 
@@ -76,8 +83,10 @@ class PolarizationModel : public PhysicalModel
 
   private:
 
+   //! The polarization in C/m^2
    libMesh::RealVectorValue _polarization;
 
+   //! Polarization might typically depend on strain
    Tensor2Sym _strain;
 
    //! We may take it from some other module
