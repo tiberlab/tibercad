@@ -4,27 +4,35 @@ topdir := ../../..
 
 include $(topdir)/Make.common
 
-target := .$(ARCH)/liblicense.a
+CPPFLAGS += -I$(topdir)/contrib/crypto++/$(ARCH)
 
-ifeq ($(enable_license_check), yes)
-  CPPFLAGS += -I/home/maufder/Projects/TIBERCAD/LM-X/lmx-sdk-4.9.8/include
-  LMXCLIENTLIB := /home/maufder/Projects/TIBERCAD/LM-X/lmx-sdk-4.9.8/linux_x64/liblmxclient.a
+target := .$(ARCH)/liblicense.a $(topdir)/bin/create_license
 
-.$(ARCH)/liblicense.a: $(objects)
+
+# we take the library of crypto++ and add our stuff...
+.$(ARCH)/liblicense.a: $(topdir)/contrib/crypto++/$(ARCH)/libcryptopp.a $(objects)
 	@echo "Creating $@ ..."
-	@cp $(LMXCLIENTLIB) $@
+	@cp $(topdir)/contrib/crypto++/$(ARCH)/libcryptopp.a $@
 	@$(AR) ru $@ $(objects)
 	@$(RANLIB) $@
+
+
+$(topdir)/bin/create_license: .$(ARCH)/create_license$(obj-suffix) .$(ARCH)/liblicense.a
+ifeq ($(target_os),win32)
+	$(CXX) -o $@ $< .$(ARCH)/liblicense.a
 else
-.$(ARCH)/liblicense.a: $(objects)
-	@echo "Creating $@ ..."
-	$(AR) cr $@ $(objects)
-	@$(RANLIB) $@
+	$(CXX) -o $@ $< .$(ARCH)/liblicense.a $(LDFLAGS) -lpthread
 endif
+
+
+$(topdir)/contrib/crypto++/$(ARCH)/libcryptopp.a:
+	@$(MAKE) -C $(topdir)/contrib/crypto++
 
 
 
 distclean:
-	@rm -f .$(ARCH)/liblicense.a 
+	@rm -f .$(ARCH)/liblicense.a $(topdir)/bin/create_license
+	@$(MAKE) -C $(topdir)/contrib/crypto++ clean
+
 
 include $(topdir)/Make.rules

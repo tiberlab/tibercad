@@ -12,7 +12,6 @@
 #include "AtomisticStructure.h"
 #include "QuantumContact.h"
 #include "DataOutput.h"
-#include "License.h"
 
 #include "libmesh/equation_systems.h"
 #include "libmesh/dof_map.h"
@@ -44,8 +43,6 @@ Elasticity::Elasticity(const ModelOptions& options) :
 
 Elasticity::~Elasticity(void)
 {
-  if (TiberCad::get_mpi_comm().rank() == 0)
-      License::check_in("elasticity", 1);
 }
 
 
@@ -54,9 +51,6 @@ Elasticity::create(const ModelOptions& options)
 {
   // we could use the options to create different implementations
   // or something like that.
-  if (TiberCad::get_mpi_comm().rank() == 0)
-    License::check_out("elasticity",
-        TiberCad::major_version(), 0, 1);
 
   return new Elasticity(options);
 }

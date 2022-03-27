@@ -148,6 +148,9 @@ class TiberCad
 
 
     //! Get our MPI Communicator
+    //static const libMesh::Parallel::Communicator& get_mpi_comm(void);
+
+    //! Get our MPI Communicator
     static libMesh::Parallel::Communicator& get_mpi_comm(void);
 
 

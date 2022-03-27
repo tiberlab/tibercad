@@ -46,8 +46,7 @@ Library tibercad
     core/eigenvalue,
     utils/Tensor,
     utils/SLEPC,
-    utils/FADBAD++,
-    utils/license
+    utils/FADBAD++
   )
   libpath = @ARCH/lib
   linker_flags = -ltibercad

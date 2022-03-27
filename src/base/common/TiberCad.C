@@ -4,7 +4,6 @@
 #include "tiber_version.h"
 #include "svnrevision.h"
 #include "TiberCad.h"
-#include "License.h"
 #include "Control.h"
 #include "EigenSolver.h"
 #include "Database.h"
@@ -167,10 +166,6 @@ TiberCad::init(const std::string& inputfile)
   if (_is_initialized)
     return;
 
-  License::init();
-  if (_mpi_comm.rank() == 0)
-    License::check_out("core", major_version(), 0, 1);
-
   // read TIBERCADROOT from environment
   char* root = getenv("TIBERCADROOT");
   if (root != NULL)
@@ -258,11 +253,6 @@ TiberCad::cleanup(void)
 {
   if (!_is_initialized)
     return;
-
-  if (_mpi_comm.rank() == 0)
-    License::check_in("core");
-
-  License::close();
 
   // close EigenSolver
   EigenSolver::slepc_done();
