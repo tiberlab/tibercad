@@ -57,6 +57,8 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     void reorder(void);
 
+    //void set_stuff_for_etb(void);
+
     //! call-back method that KspaceIntegration invokes
     void calculate_for_k_point(const Point& kpoint, DofField& spectrum, double& estimator);
 
@@ -242,6 +244,9 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     //! The ends of the surface blocks
     std::vector<int> _surfend;
+
+    //! The indices of the contact blocks
+    std::vector<int> _cblk;
 
     unsigned int _device_n_dofs;
 

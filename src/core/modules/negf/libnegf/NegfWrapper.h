@@ -128,7 +128,12 @@ public:
   //! Initialize structure
   void init_structure(int ncont, const std::vector<int>& surfstart,
     const std::vector<int>& surfend, const std::vector<int>& contend,
-    int npl, const std::vector<int>& plend);
+    int npl, const std::vector<int>& plend, const std::vector<int>& cblks);
+
+  //! Find indices contact blocks
+  std::vector<int> contact_blocks(int ncont, const std::vector<int>& surfstart,
+      const std::vector<int>& surfend, const std::vector<int>& contend, int npl,
+      const std::vector<int>& plend);
 
   //! Get library version
   void get_version(void);

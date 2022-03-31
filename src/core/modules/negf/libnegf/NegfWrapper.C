@@ -267,10 +267,23 @@ NegfWrapper::init_contacts(int n_cont)
 void
 NegfWrapper::init_structure(int ncont, const std::vector<int>& surfstart,
     const std::vector<int>& surfend, const std::vector<int>& contend, int npl,
-    const std::vector<int>& plend)
+    const std::vector<int>& plend,const std::vector<int>& cblks)
 {
   f77_negf_init_structure(_handler, ncont, surfstart.data(),
-      surfend.data(), contend.data(), npl, plend.data());
+      surfend.data(), contend.data(), npl, plend.data(), cblks.data());
+}
+
+std::vector<int>
+NegfWrapper::contact_blocks(int ncont, const std::vector<int>& surfstart,
+    const std::vector<int>& surfend, const std::vector<int>& contend, int npl,
+    const std::vector<int>& plend)
+{
+  std::vector<int> cblks(ncont);
+
+  f77_negf_contact_blocks(_handler, ncont, surfstart.data(),
+      surfend.data(), contend.data(), npl, plend.data(), cblks.data());
+
+  return cblks;
 }
 
 void

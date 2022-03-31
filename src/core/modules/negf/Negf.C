@@ -382,13 +382,14 @@ Negf::init_etb_hamil(void)
      _perm[_inv_perm[i]]=i;
    }
 
+   //Order the atoms
    sortclass sortobj(atoms);
    std::sort(_perm.begin(),_perm.begin()+last_dev+1,sortobj);
 
    //for (unsigned int i=0; i< N_atoms; i++)
    //{
    //   std::cout<<"atom "<<i<<" reg "<<atoms[i].get_region_ID()
-   //            <<"iperm "<<_inv_perm[i]<<" perm "<<_perm[i]<<std::endl;
+   //            <<" iperm "<<_inv_perm[i]<<" perm "<<_perm[i]<<std::endl;
    //}
    
   
@@ -430,6 +431,14 @@ Negf::init_etb_hamil(void)
 
   std::cout<<"(negf) init k-integration"<<std::endl;
   init_k_space_integration();
+
+
+  //std::cout<<"(negf) get eq sys for etb stuff"<<std::endl;
+  //ID id = create_equation_system("linear","");
+  //_sys = &get_equation_system<TiberLinearSystem>(id);
+  //std::cout<<"(negf) setting up etb stuff"<<std::endl;
+  //set_stuff_for_etb();
+
 }
 
 
@@ -643,6 +652,7 @@ Negf::setup_hamil(void)
 
     Messages::info("Passing Hamiltonian ... ", 0);
 
+    //cout << "nrow= " << nrow << endl;
     if ( _hamil_type == "etb" )
       _ext_module->get_H_csr(A, JA, IA);
     else
@@ -676,6 +686,7 @@ Negf::setup_hamil(void)
   }
   else
   {
+    //cout << "before set_S_id: nrow= " << nrow << endl;
     _libnegf->set_S_id(nrow);
   }
 
@@ -683,9 +694,13 @@ Negf::setup_hamil(void)
   if (get_option("print_matrices",false))
     _libnegf->print_mat();
 
+  _cblk = _libnegf->contact_blocks(_quantum_contacts.size(),
+                               _surfstart, _surfend, _contend,
+                               _end_blocks.size(), _end_blocks);
+
   _libnegf->init_structure(_quantum_contacts.size(),
                            _surfstart, _surfend, _contend,
-                           _end_blocks.size(), _end_blocks);
+                           _end_blocks.size(), _end_blocks, _cblk);
 }
 
 
@@ -789,7 +804,7 @@ Negf::setup_negf(void)
     //params.mu[id] = ; // not needed, for DFTB
     // TODO a hack for now
     params.mu[id] = mu_n;
-
+    
     // for now T is the same everywhere
     params.kbt_dm[id] = kbT;
     params.kbt_t[id]  = kbT;
@@ -1090,7 +1105,6 @@ Negf::do_solve(void)
     //MeshBase::const_element_iterator el = mesh.active_elements_begin();
     //const Elem* elem = *el;
     //NegfModel* negfmod = get_bulk_model<NegfModel>(elem);
-    double deg = _ext_module->get_degeneracy();
 
     ID id = 0;
     double sign;
@@ -1105,7 +1119,7 @@ Negf::do_solve(void)
       //std::cout<<"(negf) I= "<<current[id]<<std::endl;
       //std::cout<<"(negf) sgn, deg area "<<sign<<" "<<deg<<" "<<area_factor<<std::endl;
 
-      _contact_current[it->second] = sign * deg * current[id] * area_factor;
+      _contact_current[it->second] = sign * current[id] * area_factor;
       id++;
     }
 
@@ -1363,6 +1377,7 @@ Negf::calculate_for_k_point(const Point& k_point,
    for(short i=0;i<3;i++) _k_vec(i) = k_point(i);
 
    setup_hamil();
+   //cout << "calculate_for_k_point: after setup_hamil()";
 
    //unsigned int n_vars = _sys_H->n_vars();
    //field.resize(_device_n_dofs * n_vars);
@@ -1417,6 +1432,7 @@ Negf::calculate_for_k_point(const Point& k_point,
      case INTCURRENT:
      {
        field.clear();
+       //cout << "calculate_for_k_point: after setup_hamil()";
        compute_current();
 
        // get_energies
@@ -2313,7 +2329,7 @@ Negf::reorder(void)
   unsigned int sol_size = solution.size();
   //cerr << "solution size = " << sol_size << endl;
 
-  // setup initial permutation vector as identitiy
+  // setup initial permutation vector as identity
   // the vector runs only on the device region where the
   // dof reordering is performed
   _perm.resize(_device_n_dofs, 0);
@@ -2816,4 +2832,108 @@ Negf::get_boundary(const QuantumContact* qc)
   return it->second;
 }
 
+/*
+void
+Negf::set_stuff_for_etb(void)
+{
 
+  //
+  // The following does only make sense if the the mesh in this module is
+  // the same as the one of the Hamiltonian provider
+  //
+  if (&this->get_mesh() != &_ext_module->get_mesh())
+    throw InitFailedException("mesh in NEGF and Hamiltonian provider must be the same.");
+
+  //cerr << "solution size = " << sol_size << endl;
+
+  // setup initial permutation vector as identitiy
+  // the vector runs only on the device region where the
+  // dof reordering is performed
+
+  // Number of dofs of the first band
+  cout << "set_stuff_for_etb: check8" << endl;
+  unsigned int n_dofs = _qc_n_dofs[_quantum_contacts.size()-1];
+
+  cout << "set_stuff_for_etb: n_dofs= "<< n_dofs << endl;
+
+  //
+  // Now _perm contains the permutation of the nodes, basically, and we can now calculate
+  // the PL blocks. For that we need to get the number of DOFs on each node of the external
+  // module. At the same time, we prepare the DOF permutation tables.
+
+  unsigned int nPL = get_solver_options().get_option("number_of_PL", 0);
+  unsigned int size_of_PL = get_solver_options().get_option("PL_size", 16);
+
+  ostringstream os;
+  os << "Number of principal layers (PL) ";
+  cout << "set_stuff_for_etb: check9" << endl;
+
+  if (nPL < _quantum_contacts.size())
+  {
+    nPL = _quantum_contacts.size();
+    os << "(automatic choice)";
+  }
+  os << ": " << nPL;
+  Messages::info(os.str());
+
+  _end_blocks.resize(0);
+  _end_blocks.resize(nPL, 0);
+
+  vector<double> ranges(nPL);
+  for (unsigned int i = 0; i < nPL; ++i)
+    ranges[nPL-1-i] = (_quantum_contacts.size() - 1) *
+                           (1.0 - static_cast<double>(i)/nPL);
+
+  cout << "set_stuff_for_etb: check10" << endl;
+
+  unsigned int sysid = _ext_module->get_equation_system_id();
+  unsigned int mysid = _sys->number();
+  unsigned int n_dofs_total = 0;
+  //cerr << "sysid : " << sysid << endl;
+  //cerr << "_device_n_dofs : " << _device_n_dofs << endl;
+
+  auto it = get_mesh().active_nodes_begin();
+  const auto end = get_mesh().active_nodes_end();
+  cout << "set_stuff_for_etb: check11" << endl;
+  for ( ; it != end; ++it)
+  {
+    const Node* node = *it;
+  cout << "set_stuff_for_etb: check11.1" << endl;
+    if (node->n_dofs(mysid, 0))
+    {
+  cout << "set_stuff_for_etb: check11.2" << endl;
+      unsigned int dof = node->dof_number(mysid, 0, 0);
+
+      if (dof < _device_n_dofs)
+      {
+  cout << "set_stuff_for_etb: check11.3" << endl;
+      //cerr << *node << endl;
+        // get the number of dofs in the Hamiltonian
+        unsigned int n_hamil_dofs = node->n_dofs(sysid);
+
+        // the reorder "potential"
+        double v = _sys->get_solution_vector()(dof);
+
+        //find the position in the ranges and add number of dofs
+        unsigned int i = 0;
+  cout << "set_stuff_for_etb: check11.4" << endl;
+        for ( ; (i < nPL) && (v > ranges[i]); ++i);
+        //cerr << v << " -> " << i << " # dof " << n_hamil_dofs << endl;
+        _end_blocks[i] += n_hamil_dofs;
+        n_dofs_total += n_hamil_dofs;
+      }
+    }
+  }
+  cout << "set_stuff_for_etb: check12" << endl;
+
+  for (unsigned int i = 1; i < nPL; ++i)
+    _end_blocks[i] += _end_blocks[i-1];
+
+
+  cout << "set_stuff_for_etb: check13" << endl;
+  os.str("");
+  os << "# DOFs       : " << n_dofs_total << "\n";
+  os << "mean PL size : " << n_dofs_total/nPL << "\n";
+  Messages::info(os.str());
+}
+*/
