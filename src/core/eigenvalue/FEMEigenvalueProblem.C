@@ -715,137 +715,139 @@ void FEMEigenvalueProblem::apply_periodic_bc()
   //dof_map.print_dof_constraints();  
 
   for (int i = 0; i < get_mesh().mesh_dimension(); i++) //Loop over all the mesh directions
-    { 
-      if  (solver_opt.periodicity[i]) //Check if the periodic b.c. are applied along the direction i
-	
-	{
-	 
-	  std :: vector <const Node*>& vec =  nodes_periodic[i];
+  {
+    if  (solver_opt.periodicity[i]) //Check if the periodic b.c. are applied along the direction i
+    {
 
-	  for (unsigned int n = 0; n < vec.size(); n++) // Loop over all the nodes
-	    {
-	      const Node* node1 = vec[n];
-	      
-		 
-	      for (unsigned int var_index = 0 ; var_index  <  number_of_variables;  var_index ++)
-		{//let us find dof for it-----------------
-		  
+      std::vector <const Node*>& vec =  nodes_periodic[i];
 
-		 // const Node& node = mesh.node(n);
-		  
-		  const unsigned int  n_dof = node1->dof_number(system_number,uvar[var_index],0);
-		
-		  //dof is found-------------------------------
-		 
-		
+      for (unsigned int n = 0; n < vec.size(); n++) // Loop over all the nodes
+      {
+        const Node* node1 = vec[n];
+
+        for (unsigned int var_index = 0 ; var_index  <  number_of_variables;  var_index ++)
+        {//let us find dof for it-----------------
 
 
-                  //only if the dof is not constrained and not a dirichlet node do the job
-		  if (!(dof_map.is_constrained_dof(n_dof) || dirichlet_dofs.count(n_dof)))
-		    {
-		      //let us make a  point that lies at the opposite side
-		      Point point2(*node1);
-		
-		      point2(i) = point2(i) + max_coord[i] - min_coord[i] - tolerance;
-		  
-		      
-		      //corresponding point is created
-		      
-		      
-		      //let us find an element this point belongs to and calculate the constraints
+          // const Node& node = mesh.node(n);
 
-		      //the most coarse element first
-		      unsigned int refinement_level = 0; 
-		      MeshBase::const_element_iterator el3  = this->active_local_elements_begin();
-		      MeshBase::const_element_iterator end_el3 = this->active_local_elements_end();
-		      
-		      const Elem* elem1;
-		      bool found = false; 
+          const unsigned int  n_dof = node1->dof_number(system_number,uvar[var_index],0);
 
-		      unsigned int el_number = 0;
-
-		      for ( ; ( (el3 != end_el3) ) ; ++el3)  
-			{
-			  Elem* elem = *el3;
-			  
-			  if (element_on_boundary(elem))
-			    {
-			      if (elem->contains_point(point2))
-				{
-				  elem1 = elem;
-				  found = true;
-				  break;
-				  
-				}
-			    }
-			  el_number++;
-			}
-		      
-		      //if (!found)  throw ModelErrorException("EnvelopFunctionApprox: Mesh periproblem");
-		      if (!found)
-		      {
-		        continue;
-		      }
-		  
-		      _constrained_dof_periodicity[n_dof](i) = min_coord[i] - max_coord[i];
+          //dof is found-------------------------------
 
 
-		      
-		      //active elem1 contains the opposite  point, we can constrain it now
-		      
-		      DofConstraintRow constraint;
-		      constraint.clear();
-		      
-
-		      dof_map.dof_indices (elem1, dof_indices_component, uvar[var_index]);
-		      
-		      std::vector<Point> point2_vec(1);
-		      
-		      point2_vec[0] = point2;
-		      
-		      std::vector<Point> point2_ref_vec(1);
-			  
-			  
-		      FEInterface::inverse_map (elem1->dim(), fe_type , elem1,  point2_vec,  point2_ref_vec)  ;
-		      
-		      fe->reinit (elem1, &point2_ref_vec);
-
-		      Point point_temp = point2_ref_vec[0];
-		     
-		      
-		      double sum = 0;
-		      for (int i1 = 0; i1 < phi.size(); i1++)
-			{
-			
-			  //if ( std::abs(phi[i1][0]) >  func_tol )
-			    {
-			     
-			      constraint[dof_indices_component[i1]] = phi[i1][0];
-			      sum += phi[i1][0];
-			    
-			    }
-			}
-
-		      //constraint[n_dof] = sum;
 
 
-		       
-		      dof_map.add_constraint_row (n_dof,  constraint); 
-                      my_dof_constraints.insert(make_pair(n_dof, constraint));
-		      
-		    }
-		     
-		    
-		}
-	    }
-	  
-	  
-	}
-    }  
+          //only if the dof is not constrained and not a dirichlet node do the job
+          if (!(dof_map.is_constrained_dof(n_dof) || dirichlet_dofs.count(n_dof)))
+          {
+            //let us make a  point that lies at the opposite side
+            Point point2(*node1);
+
+            point2(i) = point2(i) + max_coord[i] - min_coord[i] - tolerance;
+
+
+            //corresponding point is created
+
+
+            //let us find an element this point belongs to and calculate the constraints
+
+            //the most coarse element first
+            unsigned int refinement_level = 0;
+            MeshBase::const_element_iterator el3  = this->active_local_elements_begin();
+            MeshBase::const_element_iterator end_el3 = this->active_local_elements_end();
+
+            const Elem* elem1;
+            bool found = false;
+
+            unsigned int el_number = 0;
+
+            for ( ; ( (el3 != end_el3) ) ; ++el3)
+            {
+              Elem* elem = *el3;
+
+              for (unsigned int ns = 0; ns < elem->n_sides(); ++ns)
+              {
+                ElementSide es(elem, ns);
+                if (get_environment().is_boundary(es))
+                {
+                  if (elem->contains_point(point2))
+                  {
+                    elem1 = elem;
+                    found = true;
+                    break;
+
+                  }
+                }
+                if (found) break;
+              }
+              el_number++;
+            }
+
+            //if (!found)  throw ModelErrorException("EnvelopFunctionApprox: Mesh periproblem");
+            if (!found)
+            {
+              continue;
+            }
+
+            _constrained_dof_periodicity[n_dof](i) = min_coord[i] - max_coord[i];
+
+
+
+            //active elem1 contains the opposite  point, we can constrain it now
+
+            DofConstraintRow constraint;
+            constraint.clear();
+
+
+            dof_map.dof_indices (elem1, dof_indices_component, uvar[var_index]);
+
+            std::vector<Point> point2_vec(1);
+
+            point2_vec[0] = point2;
+
+            std::vector<Point> point2_ref_vec(1);
+
+
+            FEInterface::inverse_map (elem1->dim(), fe_type , elem1,  point2_vec,  point2_ref_vec)  ;
+
+            fe->reinit (elem1, &point2_ref_vec);
+
+            Point point_temp = point2_ref_vec[0];
+
+
+            double sum = 0;
+            for (int i1 = 0; i1 < phi.size(); i1++)
+            {
+
+              //if ( std::abs(phi[i1][0]) >  func_tol )
+              {
+
+                constraint[dof_indices_component[i1]] = phi[i1][0];
+                sum += phi[i1][0];
+
+              }
+            }
+
+            //constraint[n_dof] = sum;
+
+
+
+            dof_map.add_constraint_row (n_dof,  constraint);
+            my_dof_constraints.insert(make_pair(n_dof, constraint));
+
+          }
+
+
+        }
+      }
+
+
+    }
+  }
 
   dof_map.process_constraints(get_mesh());
   system->reinit();
- 
 }
 //---------------------------------------------------------------------------------------------
 

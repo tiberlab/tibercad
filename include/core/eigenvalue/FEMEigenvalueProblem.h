@@ -170,9 +170,6 @@ class FEMEigenvalueProblem : public  EigenvalueProblem
   //!updates my_dof_constraints 
   void make_constraints(void);
 
-  //! checks if element lies on boundary
-  bool element_on_boundary(const Elem* element);
-    
   //!creates dirichlet dofs
   void create_dirichlet_dofs(void);
   
@@ -237,39 +234,7 @@ FEMEigenvalueProblem::get_periodicity_vector(unsigned int dof) const
 
 //---------------------------------------------------------------------------------//
 
-inline bool FEMEigenvalueProblem::element_on_boundary(const libMesh::Elem* element)
-{
-  bool result = false;
 
-  
-    
-  unsigned int n_sides ; 
-
-  if ( dim > 1 ) 
-    n_sides = element->n_sides();
-  else
-    n_sides = element->n_nodes();
-
-
-  for (short i = 0; i < n_sides; i++)
-  {
-    const Elem* el1 = element->neighbor_ptr(i);
-
-    if ( (el1 == NULL)  ) 
-      result = true;
-    else
-      if (!( el1 -> active() ))
-	result = true;
-	  
-    if (result) break;
-	
-      
-  }
-
- 
-  return(result);
-  
-}
 
 
 #endif // _FEMEIGENVALUEPROBLEM_H_
