@@ -43,7 +43,6 @@ checkout:
 	@if [ ! -e libnegf ]; then \
 		git clone https://github.com/libnegf/libnegf.git; \
 		cd libnegf; \
-		patch -p1 < ../libnegf.patch; \
 	fi
 
 clean:
