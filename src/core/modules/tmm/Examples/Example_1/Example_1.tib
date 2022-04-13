@@ -1,0 +1,64 @@
+Device
+{
+  meshfile = Example_1.msh 
+  mesh_units = 1e-9
+  dimension = 1
+
+  Region AIR1 
+  {
+  Incoherency = 0
+  material = Air
+  }
+  Region Ag 
+  {
+  Incoherency= 1
+  material = Ag
+  }
+  Region AIR2 
+  {
+  Incoherency = 0
+  material = Ag
+
+  }
+
+
+}
+
+
+Module tmm
+{ 
+  
+  name = tmm_study 
+  plot = (GenerationRate,Intensity,ElectricField, Reflection,Transmission,Absorbtion)
+  
+  reflectivity = 0
+  incident_angle = 0
+  up_lambda = 950
+  down_lambda = 300
+
+  Physics 
+  {
+
+  }
+  Contact point1
+  {
+  type = incident_wave
+  }
+
+}
+
+
+
+Simulation
+{
+  verbose = 2
+  solve = tmm_study
+  resultpath = output
+
+
+}
+
+
+
+
+

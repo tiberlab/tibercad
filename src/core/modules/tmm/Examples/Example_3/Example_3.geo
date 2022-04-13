@@ -1,6 +1,6 @@
 L_AIR1 = 20;
-L_Glass = 100;
-L_ITO = 142;
+L_Glass = 1000;
+L_ITO = 140;
 L_PTAA = 20;
 L_PSK = 400;
 L_SnO2 = 20;

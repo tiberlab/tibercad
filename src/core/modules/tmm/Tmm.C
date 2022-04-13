@@ -354,12 +354,11 @@ Tmm::do_solve(void)
 
   for (unsigned int j = 0; j < _incident_angle.size(); ++j)  //loop over incident angle
   {
-
-    std::cout<<"----------------------------------------" << std::endl;
-    std::cout<<"solving condition :  " << std::endl;
-    std::cout<<"Lambda is  " << lambda_interp[i] <<  std::endl;
-    std::cout<<"Radiation intensity is  " << sun_interp[i] <<  std::endl;
-   // std::cout<<"Incident angle is  " << _incident_angle[j] <<  std::endl;
+    ostringstream os;
+    os << "----------------------------------------"<<"\n" << "solving condition :  " ;
+    os << "Lambda is : " << lambda_interp[i] << "nm" << "\n" ;
+    os << "Radiation intensity is : " << sun_interp[i]<< "mW m^-2 nm^-1" <<"\n" ;
+    Messages::info(os.str());
 
     double lambda = lambda_interp[i];
 
@@ -504,7 +503,6 @@ Tmm::do_solve(void)
       }
     }
 
-    std::cout<<direction<<std::endl;
 
     //********************snell's law********************
     vector<double> theta(n_real.size());
@@ -526,15 +524,13 @@ Tmm::do_solve(void)
     double avg_reflection = 0;
     double avg_transmission = 0;
     double avg_Absorption = 0;
-    srand(time(NULL));
     for (int nm = 0; nm<Incoh.size(); ++nm)
       if(Incoh[nm]==1)
         rnd = 5;
-    std::cout<<"random is "<<rnd<<std::endl;
+    //std::cout<<"random is "<<rnd<<std::endl;
     phase_step = 2 * M_PI / rnd;
     for (int iter = 0; iter <rnd; ++iter )
     {
-      std::cout<<"phase is "<<phase_step * iter<<std::endl;
 
       //*****************************************************
       //************** defining Vectors**********************
@@ -551,7 +547,6 @@ Tmm::do_solve(void)
 
 
       randoom = 2*M_PI*(double) rand()/RAND_MAX;
-      cout<<"randoom is "<<randoom << endl;
 
       vector<complex<double>> E_F(n_real.size());
       vector<complex<double>> E_B(n_real.size());
@@ -600,9 +595,6 @@ Tmm::do_solve(void)
         E_B[k]+= E_I.get(2);
         }
       }
-      cout<<"TMM is :"<<endl;
-      T.print();
-      cout<<abs(T.get(2))<<" / "<<abs(T.get(0))<<endl;
 
       //***********************************************************************
       //**********reflection and transmission calculation**********************
@@ -619,12 +611,6 @@ Tmm::do_solve(void)
       Transmission = ratio_complex*pow(abs(1.0/T.get(0)),2);
       avg_transmission = avg_transmission + real(Transmission) / rnd;
       avg_Absorption = avg_Absorption + (1-real(Reflection)-real(Transmission)) / rnd;
-
-
-      //***************************************************************************
-      //**************printing tansmission and reflection**************************
-      cout<<"trasmision is :"<< Transmission << "reflection is :"<<Reflection<<endl;
-      cout<<"Sum is :"<< Transmission+Reflection<<endl;
 
       //****************************************************************************
       //***************normalizing electric field matrix******************************
@@ -666,6 +652,7 @@ Tmm::do_solve(void)
 
     if (i == 0)
     {
+
       Electric_Field_integral.resize(n_real.size());
       Electric_Field_integral = Electric_Field_avg;
 
@@ -674,6 +661,7 @@ Tmm::do_solve(void)
 
       generation_rate_integral.resize(n_real.size());
       generation_rate_integral = Generation_rate_avg;
+
     }
 
     if (i != 0 && i != lambda_interp.size()-1)
@@ -834,6 +822,7 @@ Tmm::get_solution_secure(const Elem* elem,
   // cell data variable
   RealGradient field(0);
   TmmBulkModel& mod = *get_bulk_model<TmmBulkModel>(elem);
+
   if (solutions.count(ElectricField))
   {
     solutions[ElectricField][0]= _ElectricField[dof_indices[0]];
