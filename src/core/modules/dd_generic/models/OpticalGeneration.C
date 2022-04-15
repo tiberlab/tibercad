@@ -6,6 +6,7 @@
 #include "SimulationInterface.h"
 #include "DriftDiffusionProperties.h"
 #include "TiberMath.h"
+#include "Messages.h"
 
 #include "TiberModule.h"
 
@@ -42,7 +43,7 @@ OpticalGeneration::do_init(void)
   {
     _profile = ExternalProfile::create(get_options().submodels_begin("profile")->second);
   }
-  if ((is >> val) || (gen_str[0] == '$'))
+  else if ((is >> val) || (gen_str[0] == '$'))
   {
     get_parameter("generation", _generation);
   }
