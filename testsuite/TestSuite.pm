@@ -907,7 +907,8 @@ sub send_email($)
                              Debug => 0);
     }
     $smtp->mail($from);
-    $smtp->to($rcpt);
+    my @addr = split(',', $rcpt);
+    $smtp->to(@addr);
 
     $smtp->data();
     $smtp->datasend("To: $rcpt\n");
