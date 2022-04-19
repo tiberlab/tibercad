@@ -90,6 +90,8 @@ std::complex<double> Tmm::Matrix_2by2::get(int elm)
     case 3:
       return(_m11);
       break;
+    default:
+      return(0);
   }
 }
 
@@ -335,6 +337,7 @@ Tmm::do_solve(void)
   get_scaling().set_length_scaling(1.0);
 
   DofMap& dof_map =  system.get_dof_map();
+  double mesh_units = get_mesh_units();
   vector<unsigned int> dof_indices;
   vector<double> intensity_integral;
   vector<double> Electric_Field_integral;
@@ -405,6 +408,7 @@ Tmm::do_solve(void)
 
 
     //**********************************************************************************************
+
     for ( ; el != end_el ; ++el)
     {
 
@@ -436,7 +440,8 @@ Tmm::do_solve(void)
       //n_imag.push_back(sqrt((abs(mod.get_permittivity(lambda))-real(mod.get_permittivity(lambda)))/2));
       //n_real.push_back(sqrt((abs(mod.get_permittivity(lambda))+real(mod.get_permittivity(lambda)))/2));
       //l.push_back(elem->volume());
-      l_init.push_back(elem->volume());
+      l_init.push_back(elem->volume()*(mesh_units/1e-9));
+
      // std::cout<<"elem n_sides is :" << elem->n_sides() << std::endl;
 
       // the sides
@@ -502,7 +507,6 @@ Tmm::do_solve(void)
         Incoh.push_back(Incoh_init[uu]);
       }
     }
-
 
     //********************snell's law********************
     vector<double> theta(n_real.size());
