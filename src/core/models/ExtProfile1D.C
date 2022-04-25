@@ -97,7 +97,7 @@ ExtProfile1D::_read_source(void)
   unsigned int ctr = 0;
   for (unsigned int i = 0; i < N; ++i)
   {
-    double x = _min + i * dx;
+    double x = _x_coord.front() + i * dx;
 
     while ((_x_coord[ctr] < x) && (ctr < _x_coord.size()))
       ++ctr;
