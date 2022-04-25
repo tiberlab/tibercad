@@ -8,8 +8,6 @@
 #include "vector_value.h"
 #include "SimulationInterface.h"
 #include "point.h"
-#include "ExtProfile1D.h"
-#include "ExternalProfile.h"
 
 // forward declarations
 class Elem;
@@ -38,9 +36,6 @@ class TBDLLOCAL OpticalGeneration : public RecombinationModelInterface
 
     //! \copydoc RecombinationModelInterface::get_net_recombination_rates()
     void get_net_recombination_rates(double& recomb_e, double& recomb_h);
-
-    //! File to read the external generation
-    double read_file(void);
 
 
   protected:
@@ -73,6 +68,7 @@ class TBDLLOCAL OpticalGeneration : public RecombinationModelInterface
     //! The solution ID of the generation models variable
     std::vector<ID> _gen_id;
 
+    //! Can use externally generated generation profiles
     ExternalProfile* _profile;
 
 };

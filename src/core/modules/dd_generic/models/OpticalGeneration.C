@@ -13,8 +13,6 @@
 #include <string>
 #include "elem.h"
 
-// add
-#include "ExtProfile1D.h"
 #include "ExternalProfile.h"
 
 
