@@ -846,11 +846,11 @@ Negf::setup_negf(void)
     os << "Setting real line integration points to " << Np_real;
     Messages::info(os.str());
   }
-  params.np_real[0] = Np_real;
+  params.np_real = Np_real;
 
   // probably it does not make sense to have both?
   int contour_points = params.n_poles + opt.Np_n[0] + opt.Np_n[1];
-  if ((params.np_real[0] > 0) && (contour_points > 0))
+  if ((params.np_real > 0) && (contour_points > 0))
     Messages::warning("Are you sure you want both contour and real axis integration?");
 
   // 0 -> min(mu)
