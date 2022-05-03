@@ -35,11 +35,12 @@ class TBDLLOCAL Tmm : public SimulationInterface
     static Tmm* create(const ModelOptions& options);
 
 
+
   class Matrix_2by2 {
     public:
 
     Matrix_2by2();
-    Matrix_2by2(double, double, double, double);
+    Matrix_2by2(double, double,double,double);
 
     //! defining operator  for two matrics product
     Matrix_2by2 operator*(Matrix_2by2 const & old_Matrix_2by2);
@@ -91,6 +92,7 @@ class TBDLLOCAL Tmm : public SimulationInterface
   */
   Tmm::Matrix_2by2 get_M(double n_real,double n_imag,double length,double lambda, double theta, double phase);
 
+  Tmm::Matrix_2by2 Determinal_Matrix (Tmm::Matrix_2by2 MAT);
 
   //! defining a function to return D matrix
   /*!

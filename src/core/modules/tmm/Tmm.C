@@ -137,7 +137,18 @@ Tmm::Matrix_2by2 Tmm::get_D(double n1_real,double n1_imag,double n2_real,double 
   return(new_Matrix_2by2);
 }
 
+Tmm::Matrix_2by2 Tmm::Determinal_Matrix (Tmm::Matrix_2by2 MAT)
+{
+  complex<double> ratio;
+  Tmm::Matrix_2by2 MAT_DET;
+  ratio = 1/(MAT.get(0)*MAT.get(3) - MAT.get(1)*MAT.get(2));
+  MAT_DET.set(0, ratio * MAT.get(3));
+  MAT_DET.set(1,-ratio * MAT.get(1));
+  MAT_DET.set(2,-ratio * MAT.get(2));
+  MAT_DET.set(3, ratio * MAT.get(0));
+  return (MAT_DET);
 
+}
 
 
 
@@ -428,30 +439,23 @@ Tmm::do_solve(void)
       // getting refractive index and length of layers from model
       libMesh::Complex nk = mod.get_refractive_index(lambda);
 
-      // n_real.push_back(real(nk));
       Incoh_init.push_back(mod.get_coherent_index());
-      // n_imag.push_back(imag(nk));
 
 
       n_real_init.push_back(real(nk));
       n_imag_init.push_back(imag(nk));
 
 
-      //n_imag.push_back(sqrt((abs(mod.get_permittivity(lambda))-real(mod.get_permittivity(lambda)))/2));
-      //n_real.push_back(sqrt((abs(mod.get_permittivity(lambda))+real(mod.get_permittivity(lambda)))/2));
-      //l.push_back(elem->volume());
       l_init.push_back(elem->volume()*(mesh_units/1e-9));
 
-     // std::cout<<"elem n_sides is :" << elem->n_sides() << std::endl;
 
-      // the sides
 
        for (unsigned int s = 0; s < elem->n_sides(); s++)
        {
          TmmBoundaryModel* mod_int =
            get_interface_model<TmmBoundaryModel>(elem, s);
 
-        // std::cout<<"elements  "<<s<<"   "<<elem->n_sides()<<std::endl;
+
          if (mod_int != NULL)
          {
            if (mod_int->read_type() == "Mirror"){
@@ -531,74 +535,86 @@ Tmm::do_solve(void)
     for (int nm = 0; nm<Incoh.size(); ++nm)
       if(Incoh[nm]==1)
         rnd = 5;
-    //std::cout<<"random is "<<rnd<<std::endl;
     phase_step = 2 * M_PI / rnd;
+    double N0 = 0;
     for (int iter = 0; iter <rnd; ++iter )
     {
+      // ***************************************
+      //****************************************
 
-      //*****************************************************
-      //************** defining Vectors**********************
-
-      Tmm::Matrix_2by2 D(1,0,0,1);
-      Tmm::Matrix_2by2 M(0,0,0,0);
-      Tmm::Matrix_2by2 T_load(0,0,0,0);
-      Tmm::Matrix_2by2 T(1,0,0,1);
-
-      double r =_reflectivity[0];
-      Tmm::Matrix_2by2 E_N(1,0,r,0);
-      Tmm::Matrix_2by2 E_I(0,0,0,0);
       double randoom = 0;
+      double r =_reflectivity[0];
 
-
-      randoom = 2*M_PI*(double) rand()/RAND_MAX;
-
-      vector<complex<double>> E_F(n_real.size());
-      vector<complex<double>> E_B(n_real.size());
-
-     // E_N.print();
-
-      E_F[n_real.size()-1]=E_N.get(0);
-      E_B[n_real.size()-1]=E_N.get(2);
-
-
-      //******************************************************
-      //******main loop over layer, calculating matrixs*******
-      for (int k=n_real.size()-1 ; k>=0 ; --k){
-        if (BC_check[k] == 0) {
-          if (k<n_real.size()-1){
-           D = get_D(n_real[k],n_imag[k],n_real[k+1],n_imag[k+1],theta[k],theta[k+1]);
-          }
-
-        }else {
-          D.set(0,Boundry_condition.get(0));
-          D.set(1,Boundry_condition.get(1));
-          D.set(2,Boundry_condition.get(2));
-          D.set(3,Boundry_condition.get(3));
-        }
-
-
+      Tmm::Matrix_2by2 Unit(1,0,0,1);
+      Tmm::Matrix_2by2 DD(1,0,0,1);
+      Tmm::Matrix_2by2 MM(0,0,0,0);
+      Tmm::Matrix_2by2 TT_load(0,0,0,0);
+      Tmm::Matrix_2by2 TT(1,0,0,1);
+      for (int k = 0 ;k <= n_real.size()-2 ; ++k)
+      {
+        DD = get_D(n_real[k],n_imag[k],n_real[k+1],n_imag[k+1],theta[k],theta[k+1]);
         if(Incoh[k]==1 && Incoh[k+1]==0)
         {
-          M = get_M(n_real[k],n_imag[k],l[k],lambda,theta[k],phase_step * iter);
+          MM = get_M(n_real[k],n_imag[k],l[k],lambda,theta[k],phase_step * iter);
         }
         else
         {
-          M = get_M(n_real[k],n_imag[k],l[k],lambda,theta[k],0);
+          MM = get_M(n_real[k],n_imag[k],l[k],lambda,theta[k],0);
+         }
+         TT_load = MM * DD;
+         if (real(abs(TT.get(0))) > 1e150)
+         {
+           TT_load = Unit;
+           TT = TT * TT_load ;
+           if (N0 == 0){
+             std::cout<<"reached maximum number"<<std::endl;
+             N0 = n_real.size() - k;
+           }
+          }else
+          {
+            TT = TT * TT_load ;
+          }
+
         }
+        Tmm::Matrix_2by2 D(1,0,0,1);
+        Tmm::Matrix_2by2 M(0,0,0,0);
+        Tmm::Matrix_2by2 T_load(0,0,0,0);
+        Tmm::Matrix_2by2 T(1,0,0,1);
 
+        Tmm::Matrix_2by2 E_N(1,0,0,0);
+        Tmm::Matrix_2by2 E_I(0,0,0,0);
 
+        vector<complex<double>> E_F;
+        vector<complex<double>> E_B;
 
-        T_load = M * D;
+        if (N0 != 0)
+             for (int nm = 0 ; nm< N0; nm++)
+             {
+               E_F.push_back(0);
+               E_B.push_back(0);
+             }
+           E_F.push_back(1);
+           E_B.push_back(0);
+           for (int k = n_real.size()-N0-2 ;k >= 0 ; --k)
+           {
 
-        T = T_load * T;
+             D = get_D(n_real[k],n_imag[k],n_real[k+1],n_imag[k+1],theta[k],theta[k+1]);
+             if(Incoh[k]==1 && Incoh[k+1]==0)
+             {
+               M = get_M(n_real[k],n_imag[k],l[k],lambda,theta[k],phase_step * iter);
+             }
+             else
+             {
+               M = get_M(n_real[k],n_imag[k],l[k],lambda,theta[k],0);
+             }
+             T_load = M * D;
+             T = T_load * T;
 
+             E_I = T * E_N  ;
+             E_F.push_back(E_I.get(0)) ;
+             E_B.push_back(E_I.get(2));
+           }
 
-        if (k<n_real.size()-1){
-        E_I = T * E_N;
-        E_F[k]+= E_I.get(0);
-        E_B[k]+= E_I.get(2);
-        }
-      }
 
       //***********************************************************************
       //**********reflection and transmission calculation**********************
@@ -624,8 +640,8 @@ Tmm::do_solve(void)
 
       for(double nm=0; nm < n_real.size() ; ++nm)
       {
-        E_F_NORM[nm] = E_F[nm]/E_F[0];
-        E_B_NORM[nm] = E_B[nm]/E_F[0];
+        E_F_NORM[nm] = E_F[E_F.size()-1-nm]/E_F[E_F.size()-1];
+        E_B_NORM[nm] = E_B[E_F.size()-1-nm]/E_F[E_F.size()-1];
       }
 
       vector<complex<double>> Etot(n_real.size()); // Electric Field, Magnetic Field
@@ -645,14 +661,20 @@ Tmm::do_solve(void)
         Generation_rate_real.push_back(real(Generation_rate[nm]));
         Generation_rate_avg[nm] = Generation_rate_avg[nm] + Generation_rate_real[nm]/rnd;
 
-      }
-    }
-    _Wavelength.push_back(lambda);
-    _Reflection.push_back(real(avg_reflection));
-    _Transmission.push_back(real(avg_transmission));
-    _Absorption.push_back(avg_Absorption);
 
-    // taking integral over the bandwidths
+      }
+
+
+    }
+
+
+
+    _Wavelength.push_back(lambda);
+    double scale = 1e-6;
+    _Reflection.push_back((int)(real(avg_reflection) / scale) * scale);
+    _Transmission.push_back((int)(real(avg_transmission) / scale) * scale);
+    _Absorption.push_back((int)(avg_Absorption / scale) * scale);
+
 
     if (i == 0)
     {
@@ -678,6 +700,7 @@ Tmm::do_solve(void)
 
       }
     }
+
     if (i == lambda_interp.size()-1)
     {
       for (int nm =0; nm< n_real.size();nm++)
@@ -696,11 +719,17 @@ Tmm::do_solve(void)
     }
     if( i == lambda_interp.size()-1)
     {
+
+      vector<double> Etot_Normalized(l_length.size());
+      vector<double> Intensity_Normalized(l_length.size());
+      for(double nm=0; nm < l_length.size() ; ++nm){
+        Etot_Normalized[nm] = Electric_Field_integral[nm] / Electric_Field_integral[0];
+        Intensity_Normalized[nm] = intensity_integral[nm] / intensity_integral[0];
+      }
       for(double nm=0; nm < l_length.size() ; ++nm){
         solution.add(l_length[nm], generation_rate_integral[nm]);
-        _Intensity.push_back(intensity_integral[nm]);
-        _ElectricField.push_back(Electric_Field_integral[nm]);
-
+        _Intensity.push_back(Intensity_Normalized[nm]);
+        _ElectricField.push_back(Etot_Normalized[nm]);
       }
     }
 
