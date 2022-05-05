@@ -1086,6 +1086,16 @@ void EnvelopFunctionApprox::do_solve()
   sol_opt.find_option("simulation"); // remove simulation name
   sol_opt.check_unused();
 
+  // we recalculate the bounding box, because strain could have changed it
+  // (and this would change e.g. periodicity)
+  pair<Point, Point> bbox(get_environment().get_bounding_box(true));
+  for (unsigned i = 0; i < 3; i++)
+  {
+    min_coord[i] = bbox.first(i);
+    max_coord[i] = bbox.second(i);
+  }
+
+
   if (_solution.size() !=
       get_solution_descriptor(EigenEnergy).n_components())
   {
