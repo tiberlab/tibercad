@@ -20,6 +20,11 @@ ExponentialProfile::ExponentialProfile(const ModelOptions& options) :
   get_option("origin", _origin);
   get_option("direction", _direction);
   _lambda = get_option("lambda", _lambda);
+  double decay = 0.0;
+  decay = get_option("decay_length", decay);
+  if (decay > 0.0)
+    _lambda = 1.0 / decay;
+
   _direction /= _direction.norm();
 
   string type = get_option("type", "onesided");
