@@ -637,6 +637,7 @@ void FEMEigenvalueProblem::do_copy_S_to_solver()
 //=======================================================================================/
 void FEMEigenvalueProblem::apply_bc()
 {
+
   if (solver_opt.Dirichlet_bc_everywhere)
   {
     apply_dirichlet_at_all_boundaries();
@@ -716,6 +717,7 @@ void FEMEigenvalueProblem::apply_periodic_bc()
 
   for (int i = 0; i < get_mesh().mesh_dimension(); i++) //Loop over all the mesh directions
   {
+
     if  (solver_opt.periodicity[i]) //Check if the periodic b.c. are applied along the direction i
     {
 
@@ -737,13 +739,11 @@ void FEMEigenvalueProblem::apply_periodic_bc()
 
 
 
-
           //only if the dof is not constrained and not a dirichlet node do the job
           if (!(dof_map.is_constrained_dof(n_dof) || dirichlet_dofs.count(n_dof)))
           {
             //let us make a  point that lies at the opposite side
             Point point2(*node1);
-
             point2(i) = point2(i) + max_coord[i] - min_coord[i] - tolerance;
 
 
@@ -859,10 +859,9 @@ void FEMEigenvalueProblem::make_nodes_periodic()
 
   unsigned int system_number = system->number();
 
-  for (unsigned dir = 0; dir <=dim-1; dir++)
+  for (unsigned dir = 0; dir <= dim-1; dir++)
   {//directions
-    std::vector < const Node*> temp_vec;
-    temp_vec.clear();
+    std::vector<const Node*> temp_vec;
     
     if (solver_opt.periodicity[dir]) 
     {  
@@ -873,7 +872,7 @@ void FEMEigenvalueProblem::make_nodes_periodic()
 	// look only at the ones used by the module
 	if (node1->n_dofs(system_number) > 0)
 	{		
-	  if ( std::abs( (*node1)(dir) - min_coord[dir]) < pos_tol)
+	  if (std::abs((*node1)(dir) - min_coord[dir]) < pos_tol)
 	    temp_vec.push_back(node1);
 	}
       }

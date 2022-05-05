@@ -122,9 +122,11 @@ class EigenSolver
     \param row row number
     \param columns numbers of columns
     \param value values of matrix elements
+    \param indexing_base the base for indexing in \c columns
   */
   static void insert_matrix_row(const char matrix, int row,
-      const std::vector<unsigned int>& columns, const std::vector<Complex>& value);
+      const std::vector<unsigned int>& columns,
+      const std::vector<Complex>& value, int indexing_base = 0);
 
   static void print_options(const SLEPCoptions& opt);
 

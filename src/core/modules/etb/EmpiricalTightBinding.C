@@ -571,7 +571,6 @@ ETB::call_uptight(void)
   if (_assemble && _upt_options.assemble_H) assemble(options);
 
   if (!_upt_options.assemble_H) create_dummy_H(); 
-  //print_H("./");
 
   if (_upt_solver_options.read_states)
   {
@@ -663,8 +662,8 @@ ETB::call_uptight(void)
   }
   else if (_upt_solver_options.solver.compare("slepc") == 0) 
   {
-      Messages::info("Solving Tight Binding with SLEPc eigensolver");
-      //copy_H_to_solver();
+    Messages::info("Solving Tight Binding with SLEPc eigensolver");
+    copy_H_to_solver();
 
 
   }
@@ -2265,10 +2264,13 @@ void ETB::do_copy_H_to_solver( )
   
   vector<int> non_zeros_number(size_matrix);
   vector<int> offdiag_nnz(0);
+  int nnz = 0;
 
   for (int row = 0 ; row < size_matrix; row++)	
   {
-    non_zeros_number[row] = inst->get_H_row_size(row);	  
+    // nrow + 1 to get Fortran indexing
+    non_zeros_number[row] = inst->get_H_row_size(row + 1);
+    nnz += non_zeros_number[row];
   }
 
 
@@ -2281,16 +2283,16 @@ void ETB::do_copy_H_to_solver( )
   
   for (int row = 0 ; row < size_matrix; row++)
   {
-      int n_cols = 0;
-	
-      vector<unsigned int> column_vector;
-      vector<Complex> row_values;
 
-      n_cols = inst->get_H_row_size(row);
+      // nrow + 1 to get Fortran indexing
+      int n_cols = inst->get_H_row_size(row + 1);
+
+      vector<unsigned int> column_vector(n_cols);
+      vector<Complex> row_values(n_cols);
  
-      inst->get_H_row(row, reinterpret_cast<int*>(column_vector.data()), row_values.data());
+      inst->get_H_row(row + 1, reinterpret_cast<int*>(column_vector.data()), row_values.data());
 
-      EigenSolver::insert_matrix_row('H', row, column_vector, row_values);
+      EigenSolver::insert_matrix_row('H', row, column_vector, row_values, 1);
   }
 
   EigenSolver::finalize_matrix_assembly('H');

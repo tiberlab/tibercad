@@ -809,7 +809,8 @@ void EigenSolver::finalize_matrix_assembly(const char matrix)
 
 
 void EigenSolver::insert_matrix_row(const char matrix, int row,
-    const std::vector<unsigned int>& colums, const std::vector<Complex>& value_vector)
+    const std::vector<unsigned int>& colums,
+    const std::vector<Complex>& value_vector, int indexing_base)
 {
   int ierr;
   int number_of_columns =  colums.size();
@@ -818,7 +819,7 @@ void EigenSolver::insert_matrix_row(const char matrix, int row,
 
   for (unsigned int i = 0; i < number_of_columns; i++)
   {
-    col[i] = colums[i];
+    col[i] = colums[i] - indexing_base;
     value[i] = value_vector[i];
   }
 
