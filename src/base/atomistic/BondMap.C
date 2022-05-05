@@ -214,6 +214,9 @@ BondMap::process_atoms(const std::vector<Atom>& basis,
   shift(2) = per(0) * _period(3, 1) + per(1) * _period(3, 2) + per(2) * _period(3, 3);
   
 
+  // here we use the fixed cutoffs to decide whether a given couple of atoms
+  // is a potential bond. For this to work, the cutoffs need to be sufficiently
+  // large, but not too large.
   if ((i != j) || (per.norm() > 1e-5))
   {
    
@@ -260,7 +263,8 @@ BondMap::fix_bondmap(const std::vector<Atom>& basis)
   // if the midpoint lies inside the Voronoi box around the
   // center atom. But this seems to work only if we check for
   // something longer than midpoint. Otherwise, some 2nd NN
-  // bondings appear as 1st NN.
+  // bondings appear as 1st NN. Maybe one could take the the
+  // shortest bonds up to the valence of the atom?
   double scale = 1.0;
 
   // loop over all atoms
@@ -359,19 +363,7 @@ BondMap::fix_bondmap(const std::vector<Atom>& basis)
 
         (*this)[i].erase((*this)[i].begin() + id);
         _translation[i].erase(_translation[i].begin() + id);
-/*
-        if (neighbour != i)
-        {
-          for (int j = (*this)[neighbour].size() - 1; j >= 0; --j)
-          {
-            if ((*this)[neighbour][j] == i)
-            {
 
-              (*this)[neighbour].erase((*this)[neighbour].begin() + j);
-              _translation[neighbour].erase(_translation[neighbour].begin() + j);
-            }
-          }
-        }*/
       }
     }
   }
