@@ -311,7 +311,7 @@ void FEMEigenvalueProblem::apply_dirichlet_at_all_boundaries()
 }
 
 
-
+/*
 //=======================================================================//
 void FEMEigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, double st_shift_value)
 {
@@ -371,9 +371,7 @@ void FEMEigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, dou
  
   //std::cout << "  (EFA) Solving using guess (Hartree) " << st_shift_value << endl;
 
-  bool foundall = false;
-
-  while (!foundall)
+  while (slep_opt.ev_number > 0)
   {
 
     int result;
@@ -385,10 +383,10 @@ void FEMEigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, dou
     if (result !=0 )
       throw SolveFailedException("Eigensolver problem\n");
 
-    foundall = read_SLEPC_solution();
+    auto n_and_s = read_slepc_solution();
 
-    slep_opt.spectrum_shift = get_new_spectrum_shift();
-    slep_opt.ev_number = solver_opt.number_of_eigenstates;
+    slep_opt.spectrum_shift = n_and_s.second;
+    slep_opt.ev_number = n_and_s.first;
   }
   
 
@@ -396,12 +394,13 @@ void FEMEigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, dou
  
   
 }
+*/
 
 
 //=====================================================//
 void FEMEigenvalueProblem::parse_options()
 {
-  const ModelOptions& sol_opt = get_solver_options();
+  ModelOptions& sol_opt = get_solver_options();
 
   solver_opt.solver = sol_opt.get_option("solver","krylovshur");
 
@@ -449,24 +448,23 @@ void FEMEigenvalueProblem::parse_options()
 
   solver_opt.dump_on_file = get_option("dump_HS_on_files",false);
 
-  {
-    
-    solver_opt.st_ksp_type = std::string("bcgsl");
 
-    if (dim == 1)
-      solver_opt.preconditioner = std::string("lu");
-    else
-      solver_opt.preconditioner = std::string("jacobi");
+  solver_opt.st_ksp_type = std::string("bcgsl");
 
-  }
+  if (dim == 1)
+    solver_opt.preconditioner = std::string("lu");
+  else
+    solver_opt.preconditioner = std::string("jacobi");
 
   solver_opt.preconditioner =  sol_opt.get_option("pc_type", solver_opt.preconditioner);
+  sol_opt.set_option("pc_type", solver_opt.preconditioner);
 
   solver_opt.st_ksp_type =  sol_opt.get_option("ksp_type",solver_opt.st_ksp_type);
 
   if ((this->get_solver_communicator().size() == 1) && (solver_opt.preconditioner == "lu"))
   {
     solver_opt.st_ksp_type = std::string("preonly");
+    sol_opt.set_option("ksp_type", solver_opt.st_ksp_type);
   }
 
 }

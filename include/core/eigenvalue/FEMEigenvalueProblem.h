@@ -190,7 +190,7 @@ class FEMEigenvalueProblem : public  EigenvalueProblem
     \param ev_number number of eigenvalues requested
     \param spectrum_shift additional spectrum shift 
   */
-  void solve_eigen_value_problem(unsigned int ev_number, double spectrum_shift = 0.0);
+  //void solve_eigen_value_problem(unsigned int ev_number, double spectrum_shift = 0.0);
 
 
   //!simulation domain boundary

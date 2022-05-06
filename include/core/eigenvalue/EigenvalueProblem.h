@@ -127,10 +127,10 @@ class EigenvalueProblem : public SimulationInterface
     void write_states(void) const;
 
 
-    //!passes H matrix to the eigensolver
+    //! passes H matrix to the eigensolver
     void copy_H_to_solver(void);
  
-    //!passes S matrix to the eigensolver
+    //! passes S matrix to the eigensolver
     void copy_S_to_solver(void);    
    
     //! get H and S
@@ -221,25 +221,27 @@ class EigenvalueProblem : public SimulationInterface
     virtual void do_delete_remembered_solution(ID id);
 
     /*!
-     * \brief solve the eigenvalue problem via SLEPc
+     * \brief solve the eigenvalue problem
      *
      * \param num_eigenvalues the number of eigenvalues required
      * \param spectrum_shift the spectral shift
      */
-    void solve_slepc(unsigned int num_eigenvalues, double spectrum_shift = 0.0);
+    void solve_eigenvalue_problem(unsigned int num_eigenvalues,
+                                  double spectrum_shift = 0.0);
 
     //! read SLEPc solutions
     /*!
      * \return true when all required eigenstates are found
- 
-    1) Read all eigenvalues
-    2) Sort the eigenvalues and select those we want 
-    3) Read eigenvectors that correspond to the eigenvalues we want
-    4) do something else
- 
-    \param number_of_ev number of eigen functions to read
+     *
+     *  1) Read all eigenvalues
+     *  2) Sort the eigenvalues and select those we want
+     *  3) Read eigenvectors that correspond to the eigenvalues we want
+     *  4) do something else
+     *
+     *  \return number of eigenvalues to still be computed,
+     *      and next spectral shift
     */
-    virtual bool read_SLEPC_solution(void) { return true; }
+    virtual std::pair<unsigned int, double> read_slepc_solution(void);
 
     //! Implementation of projection on different BZ
     /*!

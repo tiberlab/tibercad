@@ -1189,8 +1189,8 @@ void EnvelopFunctionApprox::do_solve_for_kpoint(const Point& k_point)
     
 
     initialize_solution_container(opt.num_el_states + opt.num_hl_states);
-    
-    solve_eigen_value_problem((opt.num_el_states + opt.num_hl_states) / 2 + 1,
+    assemble();
+    solve_eigenvalue_problem((opt.num_el_states + opt.num_hl_states) / 2 + 1,
                               solver_opt.spectrum_shift/Hartree);
 
 
@@ -1688,7 +1688,7 @@ double EnvelopFunctionApprox::get_new_spectrum_shift(void)
 
 
 
-bool EnvelopFunctionApprox::read_SLEPC_solution(void)
+pair<unsigned int, double> EnvelopFunctionApprox::read_slepc_solution(void)
 {//
   /*
   1) Read all eigenvalues
@@ -2071,10 +2071,9 @@ bool EnvelopFunctionApprox::read_SLEPC_solution(void)
 //    }
     }
   }
-
   
-  return foundall;
-
+  return(make_pair(solver_opt.number_of_eigenstates,
+                   solver_opt.spectrum_shift / Hartree));
 }
 
 
@@ -2591,7 +2590,8 @@ void EnvelopFunctionApprox::calculate_density_analytic(void)
 
     set_k_point(kvector_1);
     initialize_solution_container(num_states);
-    solve_eigen_value_problem(num_states, spectrum_shift);
+    assemble();
+    solve_eigenvalue_problem(num_states, spectrum_shift);
     get_eigenenergies(energy_k_1);
   }
 
@@ -2606,7 +2606,8 @@ void EnvelopFunctionApprox::calculate_density_analytic(void)
 
     set_k_point(kvector_2);
     initialize_solution_container(num_states);
-    solve_eigen_value_problem(num_states, spectrum_shift);
+    assemble();
+    solve_eigenvalue_problem(num_states, spectrum_shift);
     get_eigenenergies(energy_k_2);
 
     // [0 1 1]
@@ -2622,7 +2623,8 @@ void EnvelopFunctionApprox::calculate_density_analytic(void)
 
       set_k_point(kvector_2);
       initialize_solution_container(num_states);
-      solve_eigen_value_problem(num_states, spectrum_shift);
+      assemble();
+      solve_eigenvalue_problem(num_states, spectrum_shift);
       get_eigenenergies(energy_k_3);
     }
   }
@@ -2638,7 +2640,8 @@ void EnvelopFunctionApprox::calculate_density_analytic(void)
 
   set_k_point(kvector_0);
   initialize_solution_container(opt.num_el_states + opt.num_hl_states);
-  solve_eigen_value_problem(opt.num_el_states + opt.num_hl_states, spectrum_shift);
+  assemble();
+  solve_eigenvalue_problem(opt.num_el_states + opt.num_hl_states, spectrum_shift);
   get_eigenenergies(energy_k_0);
 
 

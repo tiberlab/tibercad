@@ -663,7 +663,7 @@ ETB::call_uptight(void)
   else if (_upt_solver_options.solver.compare("slepc") == 0) 
   {
     Messages::info("Solving Tight Binding with SLEPc eigensolver");
-    solve_slepc(_upt_solver_options.n_vb + _upt_solver_options.n_cb, _upt_solver_options.guess_cb);
+    solve_eigenvalue_problem(_upt_solver_options.n_vb + _upt_solver_options.n_cb, _upt_solver_options.guess_cb);
 
 
   }

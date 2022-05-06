@@ -256,9 +256,10 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   4) normalize eigenfunctions
   5) calculate fermi energy for each state
  
-    \param number_of_ev number of eigen functions to read
+    return number of eigenvalues to still be computed,
+           and next spectral shift
   */
-  bool read_SLEPC_solution(void);
+  std::pair<unsigned int, double> read_slepc_solution(void) override;
 
 
   //! Transform the eigenstate with S^-1/2, if needed

@@ -33,6 +33,14 @@ namespace
   }
 }
 
+
+
+std::pair<unsigned int, double>
+EigenvalueProblem::read_slepc_solution(void)
+{
+  return(make_pair(0, 0));
+}
+
 void
 EigenvalueProblem::initialize_solution_container(size_t num_solutions)
 {
@@ -1542,7 +1550,8 @@ EigenvalueProblem::calculate_density_at_k(const Point& k_point,
 
 
 void
-EigenvalueProblem::solve_slepc(unsigned int num_eigenvalues, double spectrum_shift)
+EigenvalueProblem::solve_eigenvalue_problem(unsigned int num_eigenvalues,
+                                            double spectrum_shift)
 {
 
   EigenSolver::prepare_slepc(get_solver_communicator().get());
@@ -1579,7 +1588,7 @@ EigenvalueProblem::solve_slepc(unsigned int num_eigenvalues, double spectrum_shi
 
   slep_opt.pc_type = sol_opt.get_option("pc_type", "ilu");
 
-  slep_opt.st_ksp_type = sol_opt.get_option("ksp_type", "krylovshur");
+  slep_opt.st_ksp_type = sol_opt.get_option("ksp_type", "bcgsl");
 
   if ((this->get_solver_communicator().size() == 1) && (slep_opt.pc_type == "lu"))
   {
@@ -1601,9 +1610,8 @@ EigenvalueProblem::solve_slepc(unsigned int num_eigenvalues, double spectrum_shi
 
   slep_opt.spectrum_shift  = spectrum_shift;
 
-  bool foundall = false;
 
-  while (!foundall)
+  while (slep_opt.ev_number > 0)
   {
 
     int result;
@@ -1615,10 +1623,10 @@ EigenvalueProblem::solve_slepc(unsigned int num_eigenvalues, double spectrum_shi
     if (result !=0 )
       throw SolveFailedException("Eigensolver problem\n");
 
-    foundall = read_SLEPC_solution();
+    auto n_and_s = read_slepc_solution();
 
-    slep_opt.spectrum_shift = get_new_spectrum_shift();
-    //slep_opt.ev_number = solver_opt.number_of_eigenstates;
+    slep_opt.spectrum_shift = n_and_s.second;
+    slep_opt.ev_number = n_and_s.first;
   }
 
 
