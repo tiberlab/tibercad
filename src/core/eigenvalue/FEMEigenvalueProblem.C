@@ -311,128 +311,19 @@ void FEMEigenvalueProblem::apply_dirichlet_at_all_boundaries()
 }
 
 
-/*
-//=======================================================================//
-void FEMEigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, double st_shift_value)
-{
-
-  assemble(); //calculate Hamiltonian and S matrix
-
-  EigenSolver::prepare_slepc(get_solver_communicator().get());
-  
-  copy_H_to_solver( );
-
-  if (_haveS)  copy_S_to_solver( );
-  
-  // for practical reasons, we let ev_number always be even
-  if ((ev_number % 2) == 1)
-    ev_number += 1;
-  
-  if (ev_number > _hamiltonian_size)
-    throw SolveFailedException("Number of requested eigenvalues is bigger than the Hamiltonian size");
-
-  
-
-  EigenSolver::SLEPCoptions slep_opt;
-
-  slep_opt.solver_type = solver_opt.solver;
-
-  slep_opt.H_file_name = "H.out";
-    
-  slep_opt.S_file_name = "S.out";
-
-  slep_opt.eps_max_it =  solver_opt.max_iteration_number;
-
-  slep_opt.spectral_trans = solver_opt.spectral_trans;
-
-  slep_opt.read_matrix_from_file = false;
-
-  slep_opt.matrix_output = solver_opt.dump_on_file;
-
-  slep_opt.pc_type = solver_opt.preconditioner;
-
-  slep_opt.st_ksp_type = solver_opt.st_ksp_type;
-
-  slep_opt.use_deflation_space =
-      get_solver_options().get_option("use_deflation_space", true);
- 
- 
-  slep_opt.monitor = solver_opt.monitor;
-
-  slep_opt.spectrum_inversion_tolerance = solver_opt.spectrum_inversion_tolerance;
-
-  //EigenSolver::check_matrices(1e-10,true);
-
-  slep_opt.eps_tolerance = solver_opt.eigen_solver_tolerance;
-
-  slep_opt.ev_number = ev_number;
-  
-  slep_opt.spectrum_shift  = st_shift_value;
- 
-  //std::cout << "  (EFA) Solving using guess (Hartree) " << st_shift_value << endl;
-
-  while (slep_opt.ev_number > 0)
-  {
-
-    int result;
-    if (_haveS) 
-      result = EigenSolver::eig_value_problem_general(slep_opt);
-    else
-      result = EigenSolver::eig_value_problem(slep_opt);
-      
-    if (result !=0 )
-      throw SolveFailedException("Eigensolver problem\n");
-
-    auto n_and_s = read_slepc_solution();
-
-    slep_opt.spectrum_shift = n_and_s.second;
-    slep_opt.ev_number = n_and_s.first;
-  }
-  
-
-  int result = EigenSolver::clear_slepc();
- 
-  
-}
-*/
-
 
 //=====================================================//
 void FEMEigenvalueProblem::parse_options()
 {
   ModelOptions& sol_opt = get_solver_options();
 
-  solver_opt.solver = sol_opt.get_option("solver","krylovshur");
-
-  if ( !(solver_opt.solver == "krylovshur" ||
-         solver_opt.solver == "arnoldi" ||
-         solver_opt.solver == "arpack" ||
-         solver_opt.solver == "lapack" ) )
-    throw InitFailedException("Invalid solver " +solver_opt.solver);
-      
-
-  solver_opt.max_iteration_number = sol_opt.get_option("max_iteration_number",30000);
-
-  solver_opt.eigen_solver_tolerance  = sol_opt.get_option("eigen_solver_tolerance",1e-9);
-
-  solver_opt.spectral_trans = sol_opt.get_option("spectral_transformation","shift_and_invert");
-
   solver_opt.number_of_eigenstates   = sol_opt.get_option("number_of_eigenstates", 6);
 
-  solver_opt.spectrum_shift = sol_opt.get_option("guess",0.0);
+  solver_opt.spectrum_shift = sol_opt.get_option("guess", 0.0);
 
-  // only Dirichlet BC works at the moment !
   solver_opt.Dirichlet_bc_everywhere = sol_opt.get_option("Dirichlet_bc_everywhere", true);
   solver_opt.Dirichlet_bc_everywhere = get_option("Dirichlet_bc_everywhere",
       solver_opt.Dirichlet_bc_everywhere);
-  //solver_opt.Dirichlet_bc_everywhere = true;
-
-  solver_opt.monitor = sol_opt.get_option("monitor", false);
-
-
-  solver_opt.spectrum_inversion_tolerance = sol_opt.get_option("spectrum_inversion_tolerance", 1e-8);
-
-  //cerr <<  solver_opt.Dirichlet_bc_everywhere << "\n";
 
   {
     std::string  method_name = get_option("discretization_method","FEM");
@@ -446,26 +337,12 @@ void FEMEigenvalueProblem::parse_options()
    
   }
 
-  solver_opt.dump_on_file = get_option("dump_HS_on_files",false);
+  std::string preconditioner("lu");
+  if (dim > 1)
+    preconditioner = std::string("jacobi");
 
-
-  solver_opt.st_ksp_type = std::string("bcgsl");
-
-  if (dim == 1)
-    solver_opt.preconditioner = std::string("lu");
-  else
-    solver_opt.preconditioner = std::string("jacobi");
-
-  solver_opt.preconditioner =  sol_opt.get_option("pc_type", solver_opt.preconditioner);
-  sol_opt.set_option("pc_type", solver_opt.preconditioner);
-
-  solver_opt.st_ksp_type =  sol_opt.get_option("ksp_type",solver_opt.st_ksp_type);
-
-  if ((this->get_solver_communicator().size() == 1) && (solver_opt.preconditioner == "lu"))
-  {
-    solver_opt.st_ksp_type = std::string("preonly");
-    sol_opt.set_option("ksp_type", solver_opt.st_ksp_type);
-  }
+  preconditioner =  sol_opt.get_option("pc_type", preconditioner);
+  sol_opt.set_option("pc_type", preconditioner);
 
 }
 

@@ -156,6 +156,8 @@ class ETB : public TightBinding
 
   virtual void parse_options(void) override;
 
+  std::pair<unsigned int, double> read_slepc_solution(void) override;
+
   //! Provide solution values
   virtual void
     get_solution_secure(const Elem* elem, std::map<ID, std::vector<double>>& values,

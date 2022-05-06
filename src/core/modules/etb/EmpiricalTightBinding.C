@@ -758,6 +758,16 @@ ETB::call_uptight(void)
 
 }
 
+
+std::pair<unsigned int, double>
+ETB::read_slepc_solution(void)
+{
+  return(make_pair(0, 0.0));
+}
+
+
+
+
 //-------------------------------------------------------------------------
 void ETB::do_assemble(const ModelOptions& options)
 {
