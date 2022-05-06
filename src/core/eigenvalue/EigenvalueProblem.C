@@ -3,6 +3,7 @@
 #include "EigenvalueProblem.h"
 #include "SimulationEnvironment.h"
 #include "AtomisticStructure.h"
+#include "EigenSolver.h"
 #include "BulkCrystal.h"
 #include "Constants.h"
 #include "Messages.h"
@@ -1537,6 +1538,91 @@ EigenvalueProblem::calculate_density_at_k(const Point& k_point,
 {
   solve_for_kpoint(k_point);
   do_calculate_density_at_k(density);
+}
+
+
+void
+EigenvalueProblem::solve_slepc(unsigned int num_eigenvalues, double spectrum_shift)
+{
+
+  EigenSolver::prepare_slepc(get_solver_communicator().get());
+
+  copy_H_to_solver( );
+
+  if (_haveS)  copy_S_to_solver( );
+
+  // for practical reasons, we let ev_number always be even
+  //if ((ev_number % 2) == 1)
+  //  ev_number += 1;
+
+  if (num_eigenvalues > get_H_dim())
+    throw SolveFailedException("Number of requested eigenvalues is bigger than the Hamiltonian size");
+
+
+  const ModelOptions& sol_opt = get_solver_options();
+
+  EigenSolver::SLEPCoptions slep_opt;
+
+  slep_opt.solver_type = sol_opt.get_option("solver","krylovshur");
+
+  slep_opt.H_file_name = "H.out";
+
+  slep_opt.S_file_name = "S.out";
+
+  slep_opt.eps_max_it =  sol_opt.get_option("max_iteration_number", 30000);
+
+  slep_opt.spectral_trans = sol_opt.get_option("spectral_transformation","shift_and_invert");
+
+  slep_opt.read_matrix_from_file = false;
+
+  slep_opt.matrix_output = get_option("write_matrices_to_files",false);
+
+  slep_opt.pc_type = sol_opt.get_option("pc_type", "ilu");
+
+  slep_opt.st_ksp_type = sol_opt.get_option("ksp_type", "krylovshur");
+
+  if ((this->get_solver_communicator().size() == 1) && (slep_opt.pc_type == "lu"))
+  {
+    slep_opt.st_ksp_type = std::string("preonly");
+  }
+
+  slep_opt.use_deflation_space = sol_opt.get_option("use_deflation_space", true);
+
+
+  slep_opt.monitor = sol_opt.get_option("monitor", false);
+
+  slep_opt.spectrum_inversion_tolerance = sol_opt.get_option("spectrum_inversion_tolerance", 1e-8);
+
+  //EigenSolver::check_matrices(1e-10,true);
+
+  slep_opt.eps_tolerance = sol_opt.get_option("eigen_solver_tolerance",1e-9);
+
+  slep_opt.ev_number = num_eigenvalues;
+
+  slep_opt.spectrum_shift  = spectrum_shift;
+
+  bool foundall = false;
+
+  while (!foundall)
+  {
+
+    int result;
+    if (_haveS)
+      result = EigenSolver::eig_value_problem_general(slep_opt);
+    else
+      result = EigenSolver::eig_value_problem(slep_opt);
+
+    if (result !=0 )
+      throw SolveFailedException("Eigensolver problem\n");
+
+    foundall = read_SLEPC_solution();
+
+    slep_opt.spectrum_shift = get_new_spectrum_shift();
+    //slep_opt.ev_number = solver_opt.number_of_eigenstates;
+  }
+
+
+  int result = EigenSolver::clear_slepc();
 }
 
 

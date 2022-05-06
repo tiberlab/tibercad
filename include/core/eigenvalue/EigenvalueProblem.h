@@ -220,7 +220,15 @@ class EigenvalueProblem : public SimulationInterface
 
     virtual void do_delete_remembered_solution(ID id);
 
-    //!read SLEPc solutions
+    /*!
+     * \brief solve the eigenvalue problem via SLEPc
+     *
+     * \param num_eigenvalues the number of eigenvalues required
+     * \param spectrum_shift the spectral shift
+     */
+    void solve_slepc(unsigned int num_eigenvalues, double spectrum_shift = 0.0);
+
+    //! read SLEPc solutions
     /*!
      * \return true when all required eigenstates are found
  

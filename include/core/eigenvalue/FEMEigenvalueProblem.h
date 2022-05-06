@@ -189,7 +189,6 @@ class FEMEigenvalueProblem : public  EigenvalueProblem
   /*!
     \param ev_number number of eigenvalues requested
     \param spectrum_shift additional spectrum shift 
-    \param haveS decides whether it is a generalize eigenproblem
   */
   void solve_eigen_value_problem(unsigned int ev_number, double spectrum_shift = 0.0);
 
