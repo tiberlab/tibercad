@@ -646,6 +646,19 @@ ETB::call_uptight(void)
     initialize_solution_container(_upt_solver_options.n_vb + _upt_solver_options.n_cb);
     solve_eigenvalue_problem(_upt_solver_options.n_vb + _upt_solver_options.n_cb, _upt_solver_options.guess_cb);
 
+    int num_states = _upt_solver_options.n_vb + _upt_solver_options.n_cb;
+
+    for (int i = 0; i < num_states; ++i)
+    {
+      // +1 is electron, -1 is hole
+      int particle = 1;
+      if (_solution[i].particle == "hl")
+        particle = -1;
+
+      inst->set_state(num_states, i, _solution[i].eigen_vector.size(),
+                                     _solution[i].eigen_energy,
+                                     _solution[i].eigen_vector, particle);
+    }
   }
   else
   {

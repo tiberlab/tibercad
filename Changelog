@@ -6,6 +6,7 @@ New features:
 	- several fixes
 	- added some features for k-space and crystal symmetries
 	- new module for TMM
+	- added interfacing to SLEPc in ETB module (solver = slepc)
 
 Version 3.1.0
 -------------
