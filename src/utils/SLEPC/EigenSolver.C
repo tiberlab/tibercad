@@ -668,6 +668,7 @@ int EigenSolver::do_solve(const SLEPCoptions& opt)
   int ncv, nconv;
 
 
+  //print_options(opt);
 
 
   if (opt.ev_number > 8)
@@ -699,7 +700,7 @@ int EigenSolver::do_solve(const SLEPCoptions& opt)
 
   ierr = EPSSolve(eps);
 
-  if (opt.use_deflation_space)
+  if (ierr == 0 && opt.use_deflation_space)
   {
     ierr = EPSGetConverged(eps, &nconv);  TiberPetscUtils::checkerr(ierr);
 

@@ -1587,6 +1587,7 @@ EigenvalueProblem::solve_eigenvalue_problem(unsigned int num_eigenvalues,
   slep_opt.matrix_output = get_option("write_matrices_to_files",false);
 
   slep_opt.pc_type = sol_opt.get_option("pc_type", "ilu");
+  slep_opt.pc_type = sol_opt.get_option("preconditioner", slep_opt.pc_type);
 
   slep_opt.st_ksp_type = sol_opt.get_option("ksp_type", "bcgsl");
 

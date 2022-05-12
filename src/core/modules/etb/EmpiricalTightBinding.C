@@ -639,7 +639,6 @@ ETB::call_uptight(void)
     }
   }
 
-  //if (_upt_solver_options.solver.compare("slepc") == 0)
   string solver_type = get_solver_options().get_option("solver_type", "cpu");
   if (solver_type.compare("slepc") == 0)
   {
