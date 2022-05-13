@@ -222,6 +222,10 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt,
       set_ksp_and_pc(st, opt);
     }
   }
+  else
+  {
+    throw RuntimeException("Unknown SLEPc solver: " + opt.solver_type);
+  }
 
 
 

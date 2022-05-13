@@ -128,7 +128,7 @@ ETB::UptOptions::~UptOptions(void)
 }
 
 ETB::UptSolverOptions::UptSolverOptions(void)
-  :solver("upt_lanczos"),
+  :solver("lanczos"),
    start_vb(1),
    start_cb(1),
    n_vb(0),
@@ -662,7 +662,8 @@ ETB::call_uptight(void)
   }
   else
   {
-    if (_upt_solver_options.solver.compare("upt_lanczos") == 0)
+    if ((_upt_solver_options.solver.compare("upt_lanczos") == 0) ||
+        (_upt_solver_options.solver.compare("lanczos") == 0))
     {
 
       Messages::info("\n("+get_name()+") solving using lanczos");
@@ -1331,7 +1332,7 @@ void ETB::parse_options(void)
 
  
   // Solver options: "upt_lanczos"  
-  _upt_solver_options.solver = solopts.get_option("solver", "upt_lanczos");
+  _upt_solver_options.solver = solopts.get_option("solver", "lanczos");
   string solver_type = solopts.get_option("solver_type", "cpu");
   if ( solver_type == "cpu") _upt_solver_options.solver_flag = 0;
   if ( solver_type == "gpu") _upt_solver_options.solver_flag = 1;
