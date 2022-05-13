@@ -1,0 +1,83 @@
+Device
+{
+  meshfile = Example_3.msh 
+  mesh_units = 1e-9
+  dimension = 1
+  Region AIR 
+  {
+  	Incoherency = 0
+  	material = Air
+  }
+
+  Region Glass 
+  {
+  	Incoherency = 1
+  	material = Glass
+  }
+
+  Region ITO 
+  {
+  	Incoherency= 0
+  	material = ITO
+  }
+
+  Region PTAA 
+  {
+  	Incoherency = 0
+  	material = PTAA
+  }
+
+  Region PSK 
+  {
+  	Incoherency = 0
+  	material = PSK
+  }
+
+  Region SnO2 
+  {
+  	Incoherency = 0
+  	material = SnO2
+  }
+
+  Region Ag
+  {
+  	Incoherency = 0
+  	material = Ag
+  }
+
+}
+
+
+Module tmm
+{ 
+  name = tmm_study 
+  plot = (GenerationRate,Intensity,ElectricField, Reflection,Transmission,Absorption)
+  back_reflectivity = 0
+  incident_angle = 0
+  wavelength_uper_lim = 950
+  wavelength_lower_lim = 300
+  wavelength_steps = 10
+  Physics 
+  {
+
+  }
+  Contact point1
+  {
+  	type = incident_wave
+  }
+}
+
+
+Simulation
+{
+  verbose = 2
+  solve = tmm_study
+  resultpath = output
+
+
+}
+
+
+
+
+

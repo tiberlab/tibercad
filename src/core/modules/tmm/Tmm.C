@@ -238,25 +238,32 @@ Tmm::parse_options(void)
   get_option("incident_angle", _incident_angle);
   if (_incident_angle.empty())
   {
-    Messages::warning("You did not provide any incident_angle for TMM.");
+    _incident_angle.push_back(0);
   }
 
 
-  get_option("reflectivity", _reflectivity);
+  get_option("back_reflectivity", _reflectivity);
   if (_reflectivity.empty())
   {
-    Messages::warning("You did not provide any reflectivity for TMM.");
+    _reflectivity.push_back(0);
   }
 
-  get_option("up_lambda", _up_lambda);
+  get_option("wavelength_uper_lim", _up_lambda);
   if (_up_lambda.empty())
   {
     Messages::warning("You did not provide any up_lambda for TMM.");
   }
-  get_option("down_lambda", _down_lambda);
+
+  get_option("wavelength_lower_lim", _down_lambda);
   if (_down_lambda.empty())
   {
     Messages::warning("You did not provide any down_lambda for TMM.");
+  }
+
+  get_option("wavelength_steps", _wavelength_steps);
+  if (_wavelength_steps.empty())
+  {
+    _wavelength_steps.push_back(1);
   }
 
   Database db;
@@ -356,7 +363,7 @@ Tmm::do_solve(void)
   vector<double> gen;
   vector<double> lambda_interp;
   vector<double> sun_interp;
-  for (double i = _down_lambda[0]; i<= _up_lambda[0]; i += 1)
+  for (double i = _down_lambda[0]; i<= _up_lambda[0]; i += _wavelength_steps[0])
   {
     lambda_interp.push_back(i);
   }
@@ -567,7 +574,7 @@ Tmm::do_solve(void)
            TT_load = Unit;
            TT = TT * TT_load ;
            if (N0 == 0){
-             std::cout<<"reached maximum number"<<std::endl;
+             std::cout<<" Maximum Absorption Reached"<<std::endl;
              N0 = n_real.size() - k;
            }
           }else

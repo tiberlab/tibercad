@@ -212,6 +212,7 @@ class TBDLLOCAL Tmm : public SimulationInterface
     std::vector<double> _reflectivity;
     std::vector<double> _up_lambda;
     std::vector<double> _down_lambda;
+    std::vector<double> _wavelength_steps;
 
 
 

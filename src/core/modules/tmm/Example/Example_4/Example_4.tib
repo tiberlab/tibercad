@@ -1,0 +1,60 @@
+Device
+{
+  meshfile = Example_4.msh 
+  mesh_units = 1e-9
+
+  Region AIR
+  {
+  	Incoherency = 0
+  	material = Air
+  }
+
+  Region ITO 
+  {
+  	Incoherency= 0
+  	material = ITO
+  }
+
+  Region Si 
+  {
+  	Incoherency = 1
+  	material = Si
+  }
+
+}
+
+
+Module tmm
+{ 
+  plot = (GenerationRate,Intensity,ElectricField, Reflection,Transmission,Absorption)
+
+  back_reflectivity = 0
+  incident_angle = 0
+  wavelength_uper_lim = 950
+  wavelength_lower_lim = 300
+  wavelength_steps = 10
+
+  Physics 
+  {
+
+  }
+  Contact front
+  {
+  	type = incident_wave
+  }
+}
+
+
+Simulation
+{
+  verbose = 2
+  solve = tmm
+  resultpath = output
+
+
+}
+
+
+
+
+

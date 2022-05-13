@@ -1,0 +1,3998 @@
+
+Log start: Fri May 13 10:37:42 2022
+
+
+Writing log to output_700//Example_5.log.0
+tiberCAD release 3.2.0 (rev. 5261, x86_64-linux)
+
+Input file: Example_5.tib
+
+Initialize global simulation options
+  Simulation temperature: 300 K
+  Database search path  : .
+  Log file              : output_700//Example_5.log.0
+
+Setup mesh
+  Reading mesh file 'Example_5.msh ...
+    mesh reading time: 0h 0m 0.0052s
+    mesh preparation time: 0h 0m 0.002s
+    bd_regions preparation time: 0h 0m 2.9e-05s
+
+    mesh units          : 1e-09 m
+    mesh dimension      :       1
+    number of nodes     :    2063
+    number of elements  :    2062
+    number of subdomains:       8
+    number of boundaries:       3
+
+Create materials ...
+
+*** Warning: found unused options in block : x-growth-direction, y-growth-direction, z-growth-direction
+  Added material Air for region 'AIR' (mesh regions 1)
+    (using datafile /home/pamiri/TiberCAD/materials/Air.dat)
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+  Added material MgF2 for region 'MgF2' (mesh regions 2)
+    (using datafile /home/pamiri/TiberCAD/materials/MgF2.dat)
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+  Added material Glass for region 'Glass' (mesh regions 3)
+    (using datafile /home/pamiri/TiberCAD/materials/Glass.dat)
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+  Added material ITO for region 'ITO' (mesh regions 4)
+    (using datafile /home/pamiri/TiberCAD/materials/ITO.dat)
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+  Added material PTAA for region 'PTAA' (mesh regions 5)
+    (using datafile /home/pamiri/TiberCAD/materials/PTAA.dat)
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+  Added material PSK for region 'PSK' (mesh regions 6)
+    (using datafile /home/pamiri/TiberCAD/materials/PSK.dat)
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+  Added material C60 for region 'C60' (mesh regions 7)
+    (using datafile /home/pamiri/TiberCAD/materials/C60.dat)
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+  Added material Ag for region 'Ag' (mesh regions 8)
+    (using datafile /home/pamiri/TiberCAD/materials/Ag.dat)
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+Creation of materials done.
+
+Setting up simulation of type 'tmm' ...
+  (using /home/pamiri/TiberCAD/x86_64-linux/modules/tmm/tmm.so)
+    Adding boundary 'cathode'
+    (using /home/pamiri/TiberCAD/x86_64-linux/modules/tmm/tmm_bnd_incident_wave.so)
+  Creating bulk models... 
+    Region: AIR
+    Region: MgF2
+    Region: Glass
+    Region: ITO
+    Region: PTAA
+    Region: PSK
+    Region: C60
+    Region: Ag
+
+Setting up simulation of type 'dd_generic' ...
+  (using /home/pamiri/TiberCAD/x86_64-linux/modules/dd_generic/dd_generic.so)
+    Adding boundary 'cathode'
+    (using /home/pamiri/TiberCAD/x86_64-linux/modules/dd_generic/ddbnd_schottky.so)
+    Adding boundary 'anode'
+  Creating bulk models... 
+    Region: PTAA
+    (using /home/pamiri/TiberCAD/x86_64-linux/modules/dd_generic/ddbulk_default.so)
+    Region: PSK
+    Region: C60
+
+Setting up simulation of type 'sweep' ...
+
+Setting up simulation of type 'sweep' ...
+
+Setting up simulation of type 'sweep' ...
+
+Setting up bulk models ...
+  (using /home/pamiri/TiberCAD/x86_64-linux/modules/dd_generic/carrier.so)
+  (using /home/pamiri/TiberCAD/x86_64-linux/modules/permittivity_constant.so)
+    (using /home/pamiri/TiberCAD/x86_64-linux/modules/density_of_states_bulk.so)
+    (using /home/pamiri/TiberCAD/x86_64-linux/modules/dd_generic/mobility_constant.so)
+
+*** Warning: found unused options in block density_of_states (bulk): charge
+
+*** Warning: found unused options in block density_of_states (bulk): charge
+  (using /home/pamiri/TiberCAD/x86_64-linux/modules/dd_generic/recombination_srh.so)
+  (using /home/pamiri/TiberCAD/x86_64-linux/modules/dd_generic/recombination_direct.so)
+  (using /home/pamiri/TiberCAD/x86_64-linux/modules/dd_generic/recombination_optical.so)
+
+*** Warning: found unused options in block density_of_states (bulk): charge
+
+*** Warning: found unused options in block density_of_states (bulk): charge
+    Found generation model: tmm_study.GenerationRate (0x1049530), variable ID 0
+
+*** Warning: found unused options in block density_of_states (bulk): charge
+
+*** Warning: found unused options in block density_of_states (bulk): charge
+
+Setting up lower dimensional (boundary) models ...
+
+*** Warning: found unused options in block density_of_states (bulk): charge
+
+*** Warning: found unused options in block density_of_states (bulk): charge
+    Found generation model: tmm_study.GenerationRate (0x1049530), variable ID 0
+
+*** Warning: found unused options in block density_of_states (bulk): charge
+
+*** Warning: found unused options in block density_of_states (bulk): charge
+
+*** Warning: found unused options in block density_of_states (bulk): charge
+
+*** Warning: found unused options in block density_of_states (bulk): charge
+
+*** Warning: found unused options in block density_of_states (bulk): charge
+
+*** Warning: found unused options in block density_of_states (bulk): charge
+    Found generation model: tmm_study.GenerationRate (0x1049530), variable ID 0
+
+*** Warning: found unused options in block density_of_states (bulk): charge
+
+*** Warning: found unused options in block density_of_states (bulk): charge
+
+*** Warning: found unused options in block density_of_states (bulk): charge
+
+*** Warning: found unused options in block density_of_states (bulk): charge
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for tmm_study (tmm)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+
+Available solution variables:
+------------------------------------------------------------------
+Name                     Units          Type      Association Plot
+------------------------------------------------------------------
+GenerationRate           cm^3           real      cell        y
+Intensity                mW/cm^3nm^-1   real      cell        y
+ElectricField            V/cm           real      cell        y
+Transmission             1              real      none        y
+Reflection               1              real      none        y
+Absorption               1              real      none        y
+RegionIDs                               real      cell        n
+------------------------------------------------------------------
+
+Output directory      : output_700/
+Output file format    : grace
+Output file basename  : tmm_study
+
+1D TMM
+
+# Region AIR, Air
+  Reading optical data from /home/pamiri/TiberCAD/materials/optics/Air_book.dat
+  wavelength range: 300 - 1000 nm
+
+# Region Ag, Ag
+  Reading optical data from /home/pamiri/TiberCAD/materials/optics/Ag_book.dat
+  wavelength range: 300 - 1200 nm
+
+# Region C60, C60
+  Reading optical data from /home/pamiri/TiberCAD/materials/optics/PTAA_Santbergen.dat
+  wavelength range: 299 - 1197 nm
+
+# Region Glass, Glass
+  Reading optical data from /home/pamiri/TiberCAD/materials/optics/SiO2_book_Gao.dat
+  wavelength range: 300 - 1200 nm
+
+# Region ITO, ITO
+  Reading optical data from /home/pamiri/TiberCAD/materials/optics/ITO-2.1E20_book.dat
+  wavelength range: 300 - 1200 nm
+
+# Region MgF2, MgF2
+  Reading optical data from /home/pamiri/TiberCAD/materials/optics/MgF2_book.dat
+  wavelength range: 300 - 1200 nm
+
+# Region PSK, PSK
+  Reading optical data from /home/pamiri/TiberCAD/materials/optics/MAPb(Br0.25I0.75)3_book.dat
+  wavelength range: 300 - 1200 nm
+
+# Region PTAA, PTAA
+  Reading optical data from /home/pamiri/TiberCAD/materials/optics/PTAA_Santbergen.dat
+  wavelength range: 299 - 1197 nm
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for driftdiffusion (dd_generic)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+
+Available solution variables:
+------------------------------------------------------------------
+Name                     Units          Type      Association Plot
+------------------------------------------------------------------
+ElPotential              V              real      nodal       n
+ElField                  V/cm           vector    cell        n
+Polarization             C/m^2          vector    cell        n
+TotalCurrentDensity      A/cm^2         vector    cell        n
+IonizedDonors            cm^-3          real      nodal       n
+IonizedAcceptors         cm^-3          real      nodal       n
+IQE                                     real      none        n
+anode.current            A/cm^2         real      none        y
+cathode.current          A/cm^2         real      none        y
+electronQFermi           eV             real      nodal       y
+holeQFermi               eV             real      nodal       y
+electronRefEnergy        eV             real      nodal       y
+holeRefEnergy            eV             real      nodal       y
+electronDensity          cm^-3          real      nodal       y
+holeDensity              cm^-3          real      nodal       y
+electronMobility         cm^2/(V*s)     real      nodal       n
+holeMobility             cm^2/(V*s)     real      nodal       n
+electronConductivity     S/cm           real      nodal       n
+holeConductivity         S/cm           real      nodal       n
+electronFlux             1/(s*cm^2)     vector    cell        y
+holeFlux                 1/(s*cm^2)     vector    cell        y
+electronCurrentDensity   A/cm^2         vector    cell        n
+holeCurrentDensity       A/cm^2         vector    cell        n
+electronJoule            W/cm^3         real      nodal       n
+holeJoule                W/cm^3         real      nodal       n
+TotalJouleHeat           W/cm^3         real      nodal       n
+electronThElPower        eV/K           real      nodal       n
+holeThElPower            eV/K           real      nodal       n
+TotalRecombinationHeat   W/cm^3         real      nodal       y
+electronNetRecombination 1/(s*cm^3)     real      nodal       y
+holeNetRecombination     1/(s*cm^3)     real      nodal       y
+electronRecombination_gen1/(s*cm^3)     real      nodal       y
+holeRecombination_gen    1/(s*cm^3)     real      nodal       y
+RegionIDs                               real      cell        n
+------------------------------------------------------------------
+
+Output directory      : output_700/
+Output file format    : grace
+Output file basename  : driftdiffusion
+
+
+solving for : poisson, quasi Fermi levels 
+using local scaling
+Using discretization method FEM
+
+# Region C60, C60
+  Carrier:
+    name = electron, charge = -1, spin = 0.5
+    DOS: bulk
+      band : energy  DOS mass  degeneracy
+      1 : -3.9  1  2
+    Band edge = -3.9, N0 = 2.50942e+19 cm^-3
+    m_dos = 1, v_th = 1.16793e+07 cm/s
+  Carrier:
+    name = hole, charge = 1, spin = 0.5
+    DOS: bulk
+      band : energy  DOS mass  degeneracy
+      1 : -5.9  1  2
+    Band edge = -5.9, N0 = 2.50942e+19 cm^-3
+    m_dos = 1, v_th = 1.16793e+07 cm/s
+
+# Region PSK, PSK
+  Carrier:
+    name = electron, charge = -1, spin = 0.5
+    DOS: bulk
+      band : energy  DOS mass  degeneracy
+      1 : -3.9  1  2
+    Band edge = -3.9, N0 = 2.50942e+19 cm^-3
+    m_dos = 1, v_th = 1.16793e+07 cm/s
+  Carrier:
+    name = hole, charge = 1, spin = 0.5
+    DOS: bulk
+      band : energy  DOS mass  degeneracy
+      1 : -5.6  1  2
+    Band edge = -5.6, N0 = 2.50942e+19 cm^-3
+    m_dos = 1, v_th = 1.16793e+07 cm/s
+
+# Region PTAA, PTAA
+  Carrier:
+    name = electron, charge = -1, spin = 0.5
+    DOS: bulk
+      band : energy  DOS mass  degeneracy
+      1 : -3  1  2
+    Band edge = -3, N0 = 2.50942e+19 cm^-3
+    m_dos = 1, v_th = 1.16793e+07 cm/s
+  Carrier:
+    name = hole, charge = 1, spin = 0.5
+    DOS: bulk
+      band : energy  DOS mass  degeneracy
+      1 : -5.5  1  2
+    Band edge = -5.5, N0 = 2.50942e+19 cm^-3
+    m_dos = 1, v_th = 1.16793e+07 cm/s
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for sweep (sweep)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+
+Output directory      : output_700/
+Output file format    : grace
+Output file basename  : sweep
+
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for sweep_back (sweep)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+
+Output directory      : output_700/
+Output file format    : grace
+Output file basename  : sweep_back
+
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for sweep_gen (sweep)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+
+Output directory      : output_700/
+Output file format    : grace
+Output file basename  : sweep_gen
+
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+We solve: tmm_study sweep sweep_gen sweep_back 
+
+>>>>------------------------------- (tmm_study) --------------------------------
+  ----------------------------------------
+  solving condition :  Lambda is : 300nm
+  Radiation intensity is : 1.0205mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 301nm
+  Radiation intensity is : 1.93mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 302nm
+  Radiation intensity is : 2.9209mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 303nm
+  Radiation intensity is : 7.0945mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 304nm
+  Radiation intensity is : 9.4701mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 305nm
+  Radiation intensity is : 16.463mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 306nm
+  Radiation intensity is : 18.577mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 307nm
+  Radiation intensity is : 27.849mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 308nm
+  Radiation intensity is : 37.837mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 309nm
+  Radiation intensity is : 40.534mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 310nm
+  Radiation intensity is : 50.939mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 311nm
+  Radiation intensity is : 82.922mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 312nm
+  Radiation intensity is : 93.376mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 313nm
+  Radiation intensity is : 107.33mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 314nm
+  Radiation intensity is : 119.69mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 315nm
+  Radiation intensity is : 136.25mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 316nm
+  Radiation intensity is : 123.48mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 317nm
+  Radiation intensity is : 171.58mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 318nm
+  Radiation intensity is : 175.94mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 319nm
+  Radiation intensity is : 204.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 320nm
+  Radiation intensity is : 205.27mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 321nm
+  Radiation intensity is : 250.24mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 322nm
+  Radiation intensity is : 222.03mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 323nm
+  Radiation intensity is : 212.26mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 324nm
+  Radiation intensity is : 275.37mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 325nm
+  Radiation intensity is : 278.94mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 326nm
+  Radiation intensity is : 381.2mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 327nm
+  Radiation intensity is : 398.06mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 328nm
+  Radiation intensity is : 351.16mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 329nm
+  Radiation intensity is : 422.35mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 330nm
+  Radiation intensity is : 471.39mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 331nm
+  Radiation intensity is : 402.62mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 332nm
+  Radiation intensity is : 436.23mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 333nm
+  Radiation intensity is : 429.44mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 334nm
+  Radiation intensity is : 414.97mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 335nm
+  Radiation intensity is : 463.88mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 336nm
+  Radiation intensity is : 415.19mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 337nm
+  Radiation intensity is : 373.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 338nm
+  Radiation intensity is : 434.11mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 339nm
+  Radiation intensity is : 463.55mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 340nm
+  Radiation intensity is : 501.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 341nm
+  Radiation intensity is : 471.39mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 342nm
+  Radiation intensity is : 489.34mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 343nm
+  Radiation intensity is : 514.89mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 344nm
+  Radiation intensity is : 418.43mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 345nm
+  Radiation intensity is : 458.98mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 346nm
+  Radiation intensity is : 477.78mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 347nm
+  Radiation intensity is : 494.04mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 348nm
+  Radiation intensity is : 475.11mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 349nm
+  Radiation intensity is : 465.64mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 350nm
+  Radiation intensity is : 527.98mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 351nm
+  Radiation intensity is : 551.72mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 352nm
+  Radiation intensity is : 517.91mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 353nm
+  Radiation intensity is : 520.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 354nm
+  Radiation intensity is : 604.98mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 355nm
+  Radiation intensity is : 611.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 356nm
+  Radiation intensity is : 553.87mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 357nm
+  Radiation intensity is : 456.73mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 358nm
+  Radiation intensity is : 430.06mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 359nm
+  Radiation intensity is : 469.53mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 360nm
+  Radiation intensity is : 598.17mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 361nm
+  Radiation intensity is : 520.24mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 362nm
+  Radiation intensity is : 534.2mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 363nm
+  Radiation intensity is : 601.91mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 364nm
+  Radiation intensity is : 606.28mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 365nm
+  Radiation intensity is : 623.59mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 366nm
+  Radiation intensity is : 735.32mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 367nm
+  Radiation intensity is : 722.85mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 368nm
+  Radiation intensity is : 667.59mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 369nm
+  Radiation intensity is : 693.15mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 370nm
+  Radiation intensity is : 755.07mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 371nm
+  Radiation intensity is : 693.38mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 372nm
+  Radiation intensity is : 674.44mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 373nm
+  Radiation intensity is : 618.86mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 374nm
+  Radiation intensity is : 556.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 375nm
+  Radiation intensity is : 589.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 376nm
+  Radiation intensity is : 674.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 377nm
+  Radiation intensity is : 712.25mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 378nm
+  Radiation intensity is : 855.95mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 379nm
+  Radiation intensity is : 743.89mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 380nm
+  Radiation intensity is : 700.77mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 381nm
+  Radiation intensity is : 763.83mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 382nm
+  Radiation intensity is : 586.78mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 383nm
+  Radiation intensity is : 454.99mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 384nm
+  Radiation intensity is : 509.68mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 385nm
+  Radiation intensity is : 673.55mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 386nm
+  Radiation intensity is : 621mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 387nm
+  Radiation intensity is : 651.47mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 388nm
+  Radiation intensity is : 635.82mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 389nm
+  Radiation intensity is : 685.43mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 390nm
+  Radiation intensity is : 796.99mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 391nm
+  Radiation intensity is : 851.38mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 392nm
+  Radiation intensity is : 794.93mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 393nm
+  Radiation intensity is : 479.75mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 394nm
+  Radiation intensity is : 495.67mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 395nm
+  Radiation intensity is : 807.72mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 396nm
+  Radiation intensity is : 756.55mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 397nm
+  Radiation intensity is : 426.19mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 398nm
+  Radiation intensity is : 852.49mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 399nm
+  Radiation intensity is : 1069.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 400nm
+  Radiation intensity is : 1114.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 401nm
+  Radiation intensity is : 1160.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 402nm
+  Radiation intensity is : 1206.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 403nm
+  Radiation intensity is : 1161.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 404nm
+  Radiation intensity is : 1180.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 405nm
+  Radiation intensity is : 1151.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 406nm
+  Radiation intensity is : 1122.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 407nm
+  Radiation intensity is : 1102.6mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 408nm
+  Radiation intensity is : 1151.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 409nm
+  Radiation intensity is : 1229.9mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 410nm
+  Radiation intensity is : 1048.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 411nm
+  Radiation intensity is : 1173.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 412nm
+  Radiation intensity is : 1247.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 413nm
+  Radiation intensity is : 1197.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 414nm
+  Radiation intensity is : 1184.2mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 415nm
+  Radiation intensity is : 1225.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 416nm
+  Radiation intensity is : 1262.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 417nm
+  Radiation intensity is : 1231.2mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 418nm
+  Radiation intensity is : 1177.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 419nm
+  Radiation intensity is : 1225.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 420nm
+  Radiation intensity is : 1123.2mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 421nm
+  Radiation intensity is : 1275.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 422nm
+  Radiation intensity is : 1258.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 423nm
+  Radiation intensity is : 1218.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 424nm
+  Radiation intensity is : 1211.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 425nm
+  Radiation intensity is : 1248.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 426nm
+  Radiation intensity is : 1213.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 427nm
+  Radiation intensity is : 1172.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 428nm
+  Radiation intensity is : 1183.9mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 429nm
+  Radiation intensity is : 1096.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 430nm
+  Radiation intensity is : 874.62mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 431nm
+  Radiation intensity is : 793.94mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 432nm
+  Radiation intensity is : 1320.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 433nm
+  Radiation intensity is : 1228.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 434nm
+  Radiation intensity is : 1135.2mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 435nm
+  Radiation intensity is : 1245.2mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 436nm
+  Radiation intensity is : 1365.9mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 437nm
+  Radiation intensity is : 1394.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 438nm
+  Radiation intensity is : 1223.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 439nm
+  Radiation intensity is : 1177.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 440nm
+  Radiation intensity is : 1349.9mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 441nm
+  Radiation intensity is : 1331.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 442nm
+  Radiation intensity is : 1425mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 443nm
+  Radiation intensity is : 1445.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 444nm
+  Radiation intensity is : 1408.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 445nm
+  Radiation intensity is : 1461.9mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 446nm
+  Radiation intensity is : 1310.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 447nm
+  Radiation intensity is : 1490.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 448nm
+  Radiation intensity is : 1508.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 449nm
+  Radiation intensity is : 1504.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 450nm
+  Radiation intensity is : 1559.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 451nm
+  Radiation intensity is : 1617.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 452nm
+  Radiation intensity is : 1548.2mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 453nm
+  Radiation intensity is : 1429.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 454nm
+  Radiation intensity is : 1533.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 455nm
+  Radiation intensity is : 1522.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 456nm
+  Radiation intensity is : 1572.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 457nm
+  Radiation intensity is : 1585.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 458nm
+  Radiation intensity is : 1551.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 459nm
+  Radiation intensity is : 1539.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 460nm
+  Radiation intensity is : 1529.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 461nm
+  Radiation intensity is : 1582.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 462nm
+  Radiation intensity is : 1597.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 463nm
+  Radiation intensity is : 1603.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 464nm
+  Radiation intensity is : 1554.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 465nm
+  Radiation intensity is : 1535mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 466nm
+  Radiation intensity is : 1567.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 467nm
+  Radiation intensity is : 1497.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 468nm
+  Radiation intensity is : 1561.9mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 469nm
+  Radiation intensity is : 1568.2mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 470nm
+  Radiation intensity is : 1507.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 471nm
+  Radiation intensity is : 1533.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 472nm
+  Radiation intensity is : 1612.6mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 473nm
+  Radiation intensity is : 1549.9mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 474nm
+  Radiation intensity is : 1567.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 475nm
+  Radiation intensity is : 1618.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 476nm
+  Radiation intensity is : 1563.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 477nm
+  Radiation intensity is : 1572.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 478nm
+  Radiation intensity is : 1623mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 479nm
+  Radiation intensity is : 1591.6mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 480nm
+  Radiation intensity is : 1618.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 481nm
+  Radiation intensity is : 1617.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 482nm
+  Radiation intensity is : 1623.6mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 483nm
+  Radiation intensity is : 1603.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 484nm
+  Radiation intensity is : 1573.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 485nm
+  Radiation intensity is : 1568.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 486nm
+  Radiation intensity is : 1271.6mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 487nm
+  Radiation intensity is : 1424.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 488nm
+  Radiation intensity is : 1541.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 489nm
+  Radiation intensity is : 1451.9mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 490nm
+  Radiation intensity is : 1622.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 491nm
+  Radiation intensity is : 1559.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 492nm
+  Radiation intensity is : 1486.9mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 493nm
+  Radiation intensity is : 1590.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 494nm
+  Radiation intensity is : 1552.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 495nm
+  Radiation intensity is : 1648.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 496nm
+  Radiation intensity is : 1567.6mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 497nm
+  Radiation intensity is : 1594.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 498nm
+  Radiation intensity is : 1550.9mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 499nm
+  Radiation intensity is : 1550.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 500nm
+  Radiation intensity is : 1545.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 501nm
+  Radiation intensity is : 1497.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 502nm
+  Radiation intensity is : 1496.6mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 503nm
+  Radiation intensity is : 1565.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 504nm
+  Radiation intensity is : 1458.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 505nm
+  Radiation intensity is : 1563.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 506nm
+  Radiation intensity is : 1626.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 507nm
+  Radiation intensity is : 1556mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 508nm
+  Radiation intensity is : 1516.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 509nm
+  Radiation intensity is : 1589.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 510nm
+  Radiation intensity is : 1548.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 511nm
+  Radiation intensity is : 1576.9mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 512nm
+  Radiation intensity is : 1618.6mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 513nm
+  Radiation intensity is : 1520.6mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 514nm
+  Radiation intensity is : 1488.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 515nm
+  Radiation intensity is : 1531.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 516nm
+  Radiation intensity is : 1545.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 517nm
+  Radiation intensity is : 1259.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 518nm
+  Radiation intensity is : 1440.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 519nm
+  Radiation intensity is : 1395.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 520nm
+  Radiation intensity is : 1523.6mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 521nm
+  Radiation intensity is : 1534.6mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 522nm
+  Radiation intensity is : 1569mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 523nm
+  Radiation intensity is : 1478.9mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 524nm
+  Radiation intensity is : 1590.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 525nm
+  Radiation intensity is : 1578.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 526nm
+  Radiation intensity is : 1534.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 527nm
+  Radiation intensity is : 1341.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 528nm
+  Radiation intensity is : 1535.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 529nm
+  Radiation intensity is : 1607.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 530nm
+  Radiation intensity is : 1544.6mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 531nm
+  Radiation intensity is : 1629.2mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 532nm
+  Radiation intensity is : 1599.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 533nm
+  Radiation intensity is : 1428.6mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 534nm
+  Radiation intensity is : 1530.2mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 535nm
+  Radiation intensity is : 1553.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 536nm
+  Radiation intensity is : 1619.9mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 537nm
+  Radiation intensity is : 1498.9mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 538nm
+  Radiation intensity is : 1573.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 539nm
+  Radiation intensity is : 1535.2mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 540nm
+  Radiation intensity is : 1482.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 541nm
+  Radiation intensity is : 1425.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 542nm
+  Radiation intensity is : 1551.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 543nm
+  Radiation intensity is : 1525.6mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 544nm
+  Radiation intensity is : 1579.2mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 545nm
+  Radiation intensity is : 1543.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 546nm
+  Radiation intensity is : 1529.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 547nm
+  Radiation intensity is : 1549mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 548nm
+  Radiation intensity is : 1504.9mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 549nm
+  Radiation intensity is : 1552mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 550nm
+  Radiation intensity is : 1539.9mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 551nm
+  Radiation intensity is : 1538.2mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 552nm
+  Radiation intensity is : 1569.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 553nm
+  Radiation intensity is : 1525mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 554nm
+  Radiation intensity is : 1554.9mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 555nm
+  Radiation intensity is : 1563.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 556nm
+  Radiation intensity is : 1536.6mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 557nm
+  Radiation intensity is : 1498.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 558nm
+  Radiation intensity is : 1531mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 559nm
+  Radiation intensity is : 1448.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 560nm
+  Radiation intensity is : 1474mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 561nm
+  Radiation intensity is : 1559.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 562nm
+  Radiation intensity is : 1484.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 563nm
+  Radiation intensity is : 1540.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 564nm
+  Radiation intensity is : 1510.6mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 565nm
+  Radiation intensity is : 1520.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 566nm
+  Radiation intensity is : 1437.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 567nm
+  Radiation intensity is : 1532mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 568nm
+  Radiation intensity is : 1518mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 569nm
+  Radiation intensity is : 1480.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 570nm
+  Radiation intensity is : 1481.6mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 571nm
+  Radiation intensity is : 1433.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 572nm
+  Radiation intensity is : 1513.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 573nm
+  Radiation intensity is : 1519.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 574nm
+  Radiation intensity is : 1511.9mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 575nm
+  Radiation intensity is : 1477.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 576nm
+  Radiation intensity is : 1465.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 577nm
+  Radiation intensity is : 1502.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 578nm
+  Radiation intensity is : 1456mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 579nm
+  Radiation intensity is : 1477mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 580nm
+  Radiation intensity is : 1502mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 581nm
+  Radiation intensity is : 1508.9mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 582nm
+  Radiation intensity is : 1532mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 583nm
+  Radiation intensity is : 1547.9mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 584nm
+  Radiation intensity is : 1544.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 585nm
+  Radiation intensity is : 1532.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 586nm
+  Radiation intensity is : 1495.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 587nm
+  Radiation intensity is : 1528.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 588nm
+  Radiation intensity is : 1493.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 589nm
+  Radiation intensity is : 1289.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 590nm
+  Radiation intensity is : 1370.9mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 591nm
+  Radiation intensity is : 1466.2mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 592nm
+  Radiation intensity is : 1435.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 593nm
+  Radiation intensity is : 1456.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 594nm
+  Radiation intensity is : 1449.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 595nm
+  Radiation intensity is : 1430.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 596nm
+  Radiation intensity is : 1474.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 597nm
+  Radiation intensity is : 1478.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 598nm
+  Radiation intensity is : 1460.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 599nm
+  Radiation intensity is : 1460.6mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 600nm
+  Radiation intensity is : 1475.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 601nm
+  Radiation intensity is : 1457.9mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 602nm
+  Radiation intensity is : 1436mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 603nm
+  Radiation intensity is : 1466.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 604nm
+  Radiation intensity is : 1492.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 605nm
+  Radiation intensity is : 1489.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 606nm
+  Radiation intensity is : 1482.2mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 607nm
+  Radiation intensity is : 1491.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 608nm
+  Radiation intensity is : 1486.2mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 609nm
+  Radiation intensity is : 1474.9mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 610nm
+  Radiation intensity is : 1468.6mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 611nm
+  Radiation intensity is : 1461.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 612nm
+  Radiation intensity is : 1483.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 613nm
+  Radiation intensity is : 1462.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 614nm
+  Radiation intensity is : 1417.6mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 615nm
+  Radiation intensity is : 1469.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 616nm
+  Radiation intensity is : 1431mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 617nm
+  Radiation intensity is : 1412.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 618nm
+  Radiation intensity is : 1466.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 619nm
+  Radiation intensity is : 1473.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 620nm
+  Radiation intensity is : 1473.9mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 621nm
+  Radiation intensity is : 1480.2mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 622nm
+  Radiation intensity is : 1426.9mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 623nm
+  Radiation intensity is : 1416.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 624nm
+  Radiation intensity is : 1411.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 625nm
+  Radiation intensity is : 1402.6mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 626nm
+  Radiation intensity is : 1401.2mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 627nm
+  Radiation intensity is : 1441.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 628nm
+  Radiation intensity is : 1363.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 629nm
+  Radiation intensity is : 1411.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 630nm
+  Radiation intensity is : 1392.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 631nm
+  Radiation intensity is : 1416.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 632nm
+  Radiation intensity is : 1363.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 633nm
+  Radiation intensity is : 1450.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 634nm
+  Radiation intensity is : 1428.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 635nm
+  Radiation intensity is : 1445.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 636nm
+  Radiation intensity is : 1412.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 637nm
+  Radiation intensity is : 1461mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 638nm
+  Radiation intensity is : 1470.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 639nm
+  Radiation intensity is : 1464.6mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 640nm
+  Radiation intensity is : 1434mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 641nm
+  Radiation intensity is : 1434.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 642nm
+  Radiation intensity is : 1437.6mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 643nm
+  Radiation intensity is : 1452.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 644nm
+  Radiation intensity is : 1446.2mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 645nm
+  Radiation intensity is : 1456.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 646nm
+  Radiation intensity is : 1415mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 647nm
+  Radiation intensity is : 1408.6mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 648nm
+  Radiation intensity is : 1395.2mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 649nm
+  Radiation intensity is : 1351.9mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 650nm
+  Radiation intensity is : 1359.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 651nm
+  Radiation intensity is : 1444.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 652nm
+  Radiation intensity is : 1387.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 653nm
+  Radiation intensity is : 1431.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 654nm
+  Radiation intensity is : 1415.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 655nm
+  Radiation intensity is : 1349.9mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 656nm
+  Radiation intensity is : 1185.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 657nm
+  Radiation intensity is : 1239.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 658nm
+  Radiation intensity is : 1385.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 659nm
+  Radiation intensity is : 1390.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 660nm
+  Radiation intensity is : 1399.2mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 661nm
+  Radiation intensity is : 1393.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 662nm
+  Radiation intensity is : 1381.9mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 663nm
+  Radiation intensity is : 1384.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 664nm
+  Radiation intensity is : 1396.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 665nm
+  Radiation intensity is : 1421.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 666nm
+  Radiation intensity is : 1420.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 667nm
+  Radiation intensity is : 1410.2mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 668nm
+  Radiation intensity is : 1415mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 669nm
+  Radiation intensity is : 1439.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 670nm
+  Radiation intensity is : 1419.6mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 671nm
+  Radiation intensity is : 1416.9mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 672nm
+  Radiation intensity is : 1397.2mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 673nm
+  Radiation intensity is : 1409.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 674nm
+  Radiation intensity is : 1407.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 675nm
+  Radiation intensity is : 1395.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 676nm
+  Radiation intensity is : 1412mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 677nm
+  Radiation intensity is : 1399.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 678nm
+  Radiation intensity is : 1406.6mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 679nm
+  Radiation intensity is : 1394.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 680nm
+  Radiation intensity is : 1396.9mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 681nm
+  Radiation intensity is : 1391.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 682nm
+  Radiation intensity is : 1398.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 683nm
+  Radiation intensity is : 1383mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 684nm
+  Radiation intensity is : 1373.9mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 685nm
+  Radiation intensity is : 1374.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 686nm
+  Radiation intensity is : 1343.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 687nm
+  Radiation intensity is : 968.24mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 688nm
+  Radiation intensity is : 1120.6mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 689nm
+  Radiation intensity is : 1127.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 690nm
+  Radiation intensity is : 1182.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 691nm
+  Radiation intensity is : 1233.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 692nm
+  Radiation intensity is : 1268.9mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 693nm
+  Radiation intensity is : 1260.9mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 694nm
+  Radiation intensity is : 1246.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 695nm
+  Radiation intensity is : 1271.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 696nm
+  Radiation intensity is : 1268.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 697nm
+  Radiation intensity is : 1340.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 698nm
+  Radiation intensity is : 1319.2mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 699nm
+  Radiation intensity is : 1291.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 700nm
+  Radiation intensity is : 1282.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 701nm
+  Radiation intensity is : 1265.9mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 702nm
+  Radiation intensity is : 1267.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 703nm
+  Radiation intensity is : 1274.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 704nm
+  Radiation intensity is : 1307.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 705nm
+  Radiation intensity is : 1321.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 706nm
+  Radiation intensity is : 1314.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 707nm
+  Radiation intensity is : 1309mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 708nm
+  Radiation intensity is : 1304.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 709nm
+  Radiation intensity is : 1309.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 710nm
+  Radiation intensity is : 1317.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 711nm
+  Radiation intensity is : 1315.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 712nm
+  Radiation intensity is : 1307.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 713nm
+  Radiation intensity is : 1291.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 714nm
+  Radiation intensity is : 1302.9mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 715nm
+  Radiation intensity is : 1258.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 716nm
+  Radiation intensity is : 1271.6mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 717nm
+  Radiation intensity is : 1107.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 718nm
+  Radiation intensity is : 1029.6mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 719nm
+  Radiation intensity is : 923.18mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 720nm
+  Radiation intensity is : 985.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 721nm
+  Radiation intensity is : 1086.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 722nm
+  Radiation intensity is : 1240.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 723nm
+  Radiation intensity is : 1144.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 724nm
+  Radiation intensity is : 1055.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 725nm
+  Radiation intensity is : 1038mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 726nm
+  Radiation intensity is : 1081.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 727nm
+  Radiation intensity is : 1085mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 728nm
+  Radiation intensity is : 1040mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 729nm
+  Radiation intensity is : 1046.6mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 730nm
+  Radiation intensity is : 1128.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 731nm
+  Radiation intensity is : 1070.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 732nm
+  Radiation intensity is : 1153.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 733nm
+  Radiation intensity is : 1196.2mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 734nm
+  Radiation intensity is : 1235.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 735nm
+  Radiation intensity is : 1217.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 736nm
+  Radiation intensity is : 1205.9mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 737nm
+  Radiation intensity is : 1203.9mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 738nm
+  Radiation intensity is : 1226.9mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 739nm
+  Radiation intensity is : 1190.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 740nm
+  Radiation intensity is : 1219.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 741nm
+  Radiation intensity is : 1214.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 742nm
+  Radiation intensity is : 1215.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 743nm
+  Radiation intensity is : 1240.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 744nm
+  Radiation intensity is : 1250.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 745nm
+  Radiation intensity is : 1249.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 746nm
+  Radiation intensity is : 1247mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 747nm
+  Radiation intensity is : 1247.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 748nm
+  Radiation intensity is : 1240.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 749nm
+  Radiation intensity is : 1235.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 750nm
+  Radiation intensity is : 1234.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 751nm
+  Radiation intensity is : 1228.6mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 752nm
+  Radiation intensity is : 1233mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 753nm
+  Radiation intensity is : 1226.6mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 754nm
+  Radiation intensity is : 1242mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 755nm
+  Radiation intensity is : 1238.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 756nm
+  Radiation intensity is : 1223.2mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 757nm
+  Radiation intensity is : 1222.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 758nm
+  Radiation intensity is : 1229.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 759nm
+  Radiation intensity is : 1194.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 760nm
+  Radiation intensity is : 266.04mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 761nm
+  Radiation intensity is : 153.96mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 762nm
+  Radiation intensity is : 687.66mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 763nm
+  Radiation intensity is : 379.52mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 764nm
+  Radiation intensity is : 538.78mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 765nm
+  Radiation intensity is : 686.01mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 766nm
+  Radiation intensity is : 814.61mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 767nm
+  Radiation intensity is : 974.17mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 768nm
+  Radiation intensity is : 1113.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 769nm
+  Radiation intensity is : 1127.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 770nm
+  Radiation intensity is : 1160.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 771nm
+  Radiation intensity is : 1168.6mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 772nm
+  Radiation intensity is : 1177.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 773nm
+  Radiation intensity is : 1177.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 774nm
+  Radiation intensity is : 1177.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 775nm
+  Radiation intensity is : 1177.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 776nm
+  Radiation intensity is : 1179.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 777nm
+  Radiation intensity is : 1172.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 778nm
+  Radiation intensity is : 1171.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 779nm
+  Radiation intensity is : 1176.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 780nm
+  Radiation intensity is : 1163.6mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 781nm
+  Radiation intensity is : 1160.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 782nm
+  Radiation intensity is : 1166.2mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 783nm
+  Radiation intensity is : 1161.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 784nm
+  Radiation intensity is : 1153.6mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 785nm
+  Radiation intensity is : 1158.6mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 786nm
+  Radiation intensity is : 1159.2mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 787nm
+  Radiation intensity is : 1145mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 788nm
+  Radiation intensity is : 1130.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 789nm
+  Radiation intensity is : 1125.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 790nm
+  Radiation intensity is : 1091mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 791nm
+  Radiation intensity is : 1105.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 792nm
+  Radiation intensity is : 1095.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 793nm
+  Radiation intensity is : 1087.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 794nm
+  Radiation intensity is : 1097.2mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 795nm
+  Radiation intensity is : 1093.2mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 796nm
+  Radiation intensity is : 1074.2mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 797nm
+  Radiation intensity is : 1091.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 798nm
+  Radiation intensity is : 1112.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 799nm
+  Radiation intensity is : 1090.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 800nm
+  Radiation intensity is : 1072.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 801nm
+  Radiation intensity is : 1084.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 802nm
+  Radiation intensity is : 1085.6mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 803nm
+  Radiation intensity is : 1065.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 804nm
+  Radiation intensity is : 1078.2mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 805nm
+  Radiation intensity is : 1054.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 806nm
+  Radiation intensity is : 1097.4mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 807nm
+  Radiation intensity is : 1085.9mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 808nm
+  Radiation intensity is : 1082.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 809nm
+  Radiation intensity is : 1054.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 810nm
+  Radiation intensity is : 1055.9mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 811nm
+  Radiation intensity is : 1053.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 812nm
+  Radiation intensity is : 1026.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 813nm
+  Radiation intensity is : 1008.6mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 814nm
+  Radiation intensity is : 903.56mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 815nm
+  Radiation intensity is : 895.23mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 816nm
+  Radiation intensity is : 832.16mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 817nm
+  Radiation intensity is : 851.83mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 818nm
+  Radiation intensity is : 822.59mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 819nm
+  Radiation intensity is : 905.19mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 820nm
+  Radiation intensity is : 861.88mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 821nm
+  Radiation intensity is : 997.64mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 822nm
+  Radiation intensity is : 951.57mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 823nm
+  Radiation intensity is : 672.71mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 824nm
+  Radiation intensity is : 935.06mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 825nm
+  Radiation intensity is : 969.35mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 826nm
+  Radiation intensity is : 933.81mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 827nm
+  Radiation intensity is : 984.65mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 828nm
+  Radiation intensity is : 849.79mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 829nm
+  Radiation intensity is : 929.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 830nm
+  Radiation intensity is : 916.01mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 831nm
+  Radiation intensity is : 923.92mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 832nm
+  Radiation intensity is : 894.26mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 833nm
+  Radiation intensity is : 956.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 834nm
+  Radiation intensity is : 934.12mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 835nm
+  Radiation intensity is : 1003.2mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 836nm
+  Radiation intensity is : 972.34mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 837nm
+  Radiation intensity is : 1009.2mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 838nm
+  Radiation intensity is : 999.01mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 839nm
+  Radiation intensity is : 1001.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 840nm
+  Radiation intensity is : 1015.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 841nm
+  Radiation intensity is : 1010.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 842nm
+  Radiation intensity is : 997.03mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 843nm
+  Radiation intensity is : 1005.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 844nm
+  Radiation intensity is : 986.31mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 845nm
+  Radiation intensity is : 1016.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 846nm
+  Radiation intensity is : 1018.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 847nm
+  Radiation intensity is : 991.7mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 848nm
+  Radiation intensity is : 992.17mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 849nm
+  Radiation intensity is : 985.96mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 850nm
+  Radiation intensity is : 893.72mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 851nm
+  Radiation intensity is : 974.93mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 852nm
+  Radiation intensity is : 969.27mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 853nm
+  Radiation intensity is : 964.86mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 854nm
+  Radiation intensity is : 851.12mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 855nm
+  Radiation intensity is : 913mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 856nm
+  Radiation intensity is : 973.17mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 857nm
+  Radiation intensity is : 991.66mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 858nm
+  Radiation intensity is : 991.96mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 859nm
+  Radiation intensity is : 991.71mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 860nm
+  Radiation intensity is : 988.16mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 861nm
+  Radiation intensity is : 986.79mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 862nm
+  Radiation intensity is : 994.49mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 863nm
+  Radiation intensity is : 1000.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 864nm
+  Radiation intensity is : 979.16mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 865nm
+  Radiation intensity is : 963.24mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 866nm
+  Radiation intensity is : 849mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 867nm
+  Radiation intensity is : 915.46mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 868nm
+  Radiation intensity is : 959.2mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 869nm
+  Radiation intensity is : 949.56mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 870nm
+  Radiation intensity is : 967.55mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 871nm
+  Radiation intensity is : 953.87mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 872nm
+  Radiation intensity is : 966.86mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 873nm
+  Radiation intensity is : 957.21mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 874nm
+  Radiation intensity is : 940.42mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 875nm
+  Radiation intensity is : 926.87mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 876nm
+  Radiation intensity is : 952.77mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 877nm
+  Radiation intensity is : 956.15mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 878nm
+  Radiation intensity is : 952.37mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 879nm
+  Radiation intensity is : 936.56mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 880nm
+  Radiation intensity is : 939.57mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 881nm
+  Radiation intensity is : 908.61mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 882nm
+  Radiation intensity is : 932.45mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 883nm
+  Radiation intensity is : 929.27mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 884nm
+  Radiation intensity is : 933.05mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 885nm
+  Radiation intensity is : 944.23mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 886nm
+  Radiation intensity is : 907.52mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 887nm
+  Radiation intensity is : 910.62mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 888nm
+  Radiation intensity is : 922.28mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 889nm
+  Radiation intensity is : 934.55mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 890nm
+  Radiation intensity is : 923.93mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 891nm
+  Radiation intensity is : 925.84mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 892nm
+  Radiation intensity is : 908.81mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 893nm
+  Radiation intensity is : 873.27mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 894nm
+  Radiation intensity is : 851.3mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 895nm
+  Radiation intensity is : 813.57mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 896nm
+  Radiation intensity is : 762.53mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 897nm
+  Radiation intensity is : 665.66mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 898nm
+  Radiation intensity is : 717.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 899nm
+  Radiation intensity is : 548.71mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 900nm
+  Radiation intensity is : 742.6mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 901nm
+  Radiation intensity is : 599.33mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 902nm
+  Radiation intensity is : 667.91mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 903nm
+  Radiation intensity is : 688.89mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 904nm
+  Radiation intensity is : 844.57mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 905nm
+  Radiation intensity is : 817.09mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 906nm
+  Radiation intensity is : 775.58mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 907nm
+  Radiation intensity is : 638.54mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 908nm
+  Radiation intensity is : 652.17mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 909nm
+  Radiation intensity is : 704.31mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 910nm
+  Radiation intensity is : 624.67mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 911nm
+  Radiation intensity is : 668.08mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 912nm
+  Radiation intensity is : 688.93mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 913nm
+  Radiation intensity is : 628.34mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 914nm
+  Radiation intensity is : 626.49mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 915nm
+  Radiation intensity is : 678.36mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 916nm
+  Radiation intensity is : 576.46mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 917nm
+  Radiation intensity is : 730.17mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 918nm
+  Radiation intensity is : 592.71mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 919nm
+  Radiation intensity is : 738.77mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 920nm
+  Radiation intensity is : 744.14mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 921nm
+  Radiation intensity is : 780.49mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 922nm
+  Radiation intensity is : 700.26mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 923nm
+  Radiation intensity is : 745.04mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 924nm
+  Radiation intensity is : 721.5mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 925nm
+  Radiation intensity is : 711.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 926nm
+  Radiation intensity is : 703.31mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 927nm
+  Radiation intensity is : 787.42mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 928nm
+  Radiation intensity is : 589.68mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 929nm
+  Radiation intensity is : 551.27mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 930nm
+  Radiation intensity is : 432.1mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 931nm
+  Radiation intensity is : 409.21mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 932nm
+  Radiation intensity is : 300.86mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 933nm
+  Radiation intensity is : 248.41mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 934nm
+  Radiation intensity is : 143.8mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 935nm
+  Radiation intensity is : 250.84mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 936nm
+  Radiation intensity is : 161.42mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 937nm
+  Radiation intensity is : 163.38mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 938nm
+  Radiation intensity is : 200.58mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 939nm
+  Radiation intensity is : 398.87mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 940nm
+  Radiation intensity is : 471.81mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 941nm
+  Radiation intensity is : 371.95mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 942nm
+  Radiation intensity is : 405.32mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 943nm
+  Radiation intensity is : 278.34mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 944nm
+  Radiation intensity is : 285.79mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 945nm
+  Radiation intensity is : 368.21mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 946nm
+  Radiation intensity is : 194.61mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 947nm
+  Radiation intensity is : 371.12mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 948nm
+  Radiation intensity is : 274.23mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 949nm
+  Radiation intensity is : 493.96mW m^-2 nm^-1
+  ----------------------------------------
+  solving condition :  Lambda is : 950nm
+  Radiation intensity is : 147.26mW m^-2 nm^-1
+
+Solve time: 0h 0m 5.5s
+<<<<----------------------------------------------------------------------------
+
+>>>>--------------------------------- (sweep) ----------------------------------
+  Ramping to sweep value $Vb = 0
+
+*** Warning: driftdiffusion has never been solved before ramping.
+  Trying $Vb = 0
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    Setting max_iterations for nonlinear solver to 150
+    Solving equilibrium
+    it 1, |du| = 43.2211, |r| = 0.543038  alpha = 1
+    it 2, |du| = 3.07923, |r| = 0.0799493  alpha = 1
+    it 3, |du| = 1.0638, |r| = 0.0221111  alpha = 1
+    it 4, |du| = 0.910068, |r| = 0.00470414  alpha = 1
+    it 5, |du| = 0.43074, |r| = 0.000426859  alpha = 1
+    it 6, |du| = 0.0518576, |r| = 4.55962e-06  alpha = 1
+
+    iterations: 7, |du| = 0.000557904, |r| = 5.17721e-10
+    Equilibrium done
+
+  Solve time: 0h 0m 8.4s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.1
+  Trying $Vb = 0.1
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 3.86817, |r| = 0.0215499  alpha = 1
+    it 2, |du| = 2.5702, |r| = 0.0023766  alpha = 0.25
+    it 3, |du| = 0.87634, |r| = 0.000806564  alpha = 0.5
+    it 4, |du| = 0.210011, |r| = 7.70065e-05  alpha = 1
+    it 5, |du| = 0.0192886, |r| = 6.23783e-07  alpha = 1
+
+    iterations: 6, |du| = 0.000188404, |r| = 1.23753e-09
+    Surface recombination current = 1.60193e-26
+
+    contact name:       voltage:            current:
+    anode               0                   5.70523e-07
+    cathode             0.1                -5.70523e-07
+
+  Solve time: 0h 0m 1.4s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.2
+  Trying $Vb = 0.2
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 3.86817, |r| = 0.0060531  alpha = 1
+    it 2, |du| = 0.0819304, |r| = 1.30574e-05  alpha = 1
+    it 3, |du| = 0.00342275, |r| = 3.38834e-08  alpha = 1
+
+    iterations: 4, |du| = 5.86366e-06, |r| = 6.32301e-10
+    Surface recombination current = 7.36477e-25
+
+    contact name:       voltage:            current:
+    anode               0                   4.65763e-06
+    cathode             0.2                -4.65763e-06
+
+  Solve time: 0h 0m 0.81s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.3
+  Trying $Vb = 0.3
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 3.86817, |r| = 0.000292982  alpha = 1
+    it 2, |du| = 0.00658924, |r| = 2.14807e-07  alpha = 1
+
+    iterations: 3, |du| = 7.41987e-06, |r| = 3.37181e-10
+    Surface recombination current = 3.30126e-23
+
+    contact name:       voltage:            current:
+    anode               0                   3.52241e-05
+    cathode             0.3                -3.52241e-05
+
+  Solve time: 0h 0m 0.63s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.4
+  Trying $Vb = 0.4
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 3.86817, |r| = 0.000344539  alpha = 1
+    it 2, |du| = 0.00862816, |r| = 2.20973e-07  alpha = 1
+
+    iterations: 3, |du| = 1.64919e-05, |r| = 2.30095e-09
+    Surface recombination current = 1.46213e-21
+
+    contact name:       voltage:            current:
+    anode               0                   0.000265215
+    cathode             0.4                -0.000265215
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.5
+  Trying $Vb = 0.5
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 3.86817, |r| = 0.000379327  alpha = 1
+    it 2, |du| = 0.0117331, |r| = 2.35643e-07  alpha = 1
+
+    iterations: 3, |du| = 3.73341e-05, |r| = 6.20962e-10
+    Surface recombination current = 6.37049e-20
+
+    contact name:       voltage:            current:
+    anode               0                   0.00200576
+    cathode             0.5                -0.00200576
+
+  Solve time: 0h 0m 0.63s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.6
+  Trying $Vb = 0.6
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 3.86817, |r| = 0.000421874  alpha = 1
+    it 2, |du| = 0.0163332, |r| = 2.70492e-07  alpha = 1
+
+    iterations: 3, |du| = 8.04789e-05, |r| = 8.10986e-10
+    Surface recombination current = 2.71264e-18
+
+    contact name:       voltage:            current:
+    anode               0                   0.0152512
+    cathode             0.6                -0.0152512
+
+  Solve time: 0h 0m 0.64s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.7
+  Trying $Vb = 0.7
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 3.86817, |r| = 0.000475891  alpha = 1
+    it 2, |du| = 0.0255386, |r| = 6.45178e-07  alpha = 1
+
+    iterations: 3, |du| = 0.000200492, |r| = 9.13355e-10
+    Surface recombination current = 1.1144e-16
+
+    contact name:       voltage:            current:
+    anode               0                   0.116281
+    cathode             0.7                -0.116281
+
+  Solve time: 0h 0m 0.64s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.8
+  Trying $Vb = 0.8
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 3.86817, |r| = 0.000538119  alpha = 1
+    it 2, |du| = 0.055696, |r| = 2.87109e-05  alpha = 1
+
+    iterations: 3, |du| = 0.000803748, |r| = 1.32651e-09
+    Surface recombination current = 4.23806e-15
+
+    contact name:       voltage:            current:
+    anode               0                   0.87334
+    cathode             0.8                -0.87334
+
+  Solve time: 0h 0m 0.68s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.9
+  Trying $Vb = 0.9
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 3.86817, |r| = 0.00064988  alpha = 1
+    it 2, |du| = 0.190584, |r| = 0.00032493  alpha = 0.165107
+    it 3, |du| = 0.161709, |r| = 0.000291172  alpha = 0.210488
+    it 4, |du| = 0.130014, |r| = 0.000249831  alpha = 0.25
+    it 5, |du| = 0.0992865, |r| = 0.000196747  alpha = 0.5
+    it 6, |du| = 0.0514499, |r| = 7.57265e-05  alpha = 1
+
+    iterations: 7, |du| = 0.000676263, |r| = 4.11343e-09
+    Surface recombination current = 1.23111e-13
+
+    contact name:       voltage:            current:
+    anode               0                   5.82235
+    cathode             0.9                -5.82235
+
+  Solve time: 0h 0m 2s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1
+  Trying $Vb = 1
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 3.86817, |r| = 0.0114563  alpha = 1
+    it 2, |du| = 0.542148, |r| = 0.00868681  alpha = 0.5
+    it 3, |du| = 0.326796, |r| = 0.0031954  alpha = 1
+    it 4, |du| = 0.0308656, |r| = 1.95799e-05  alpha = 1
+
+    iterations: 5, |du| = 0.000294216, |r| = 8.7191e-10
+    Surface recombination current = 1.44152e-12
+
+    contact name:       voltage:            current:
+    anode               0                   23.7583
+    cathode             1                  -23.7583
+
+  Solve time: 0h 0m 1.2s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.1
+  Trying $Vb = 1.1
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 3.86817, |r| = 0.0833253  alpha = 1
+    it 2, |du| = 0.627253, |r| = 0.00907875  alpha = 1
+    it 3, |du| = 0.100792, |r| = 0.000206801  alpha = 1
+    it 4, |du| = 0.00266491, |r| = 7.41527e-08  alpha = 1
+
+    iterations: 5, |du| = 2.19144e-06, |r| = 1.18632e-09
+    Surface recombination current = 4.32378e-12
+
+    contact name:       voltage:            current:
+    anode               0                   44.7263
+    cathode             1.1                -44.7263
+
+  Solve time: 0h 0m 1s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.2
+  Trying $Vb = 1.2
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 3.86817, |r| = 0.0667457  alpha = 1
+    it 2, |du| = 0.344097, |r| = 0.0242328  alpha = 1
+    it 3, |du| = 0.0404493, |r| = 0.000513682  alpha = 1
+
+    iterations: 4, |du| = 0.000784804, |r| = 2.46228e-07
+    Surface recombination current = 6.85183e-12
+
+    contact name:       voltage:            current:
+    anode               0                   58.3239
+    cathode             1.2                -58.3239
+
+  Solve time: 0h 0m 0.88s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.3
+  Trying $Vb = 1.3
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 3.86817, |r| = 0.0410262  alpha = 1
+    it 2, |du| = 0.334326, |r| = 0.0127593  alpha = 1
+    it 3, |du| = 0.0247717, |r| = 0.000186996  alpha = 1
+
+    iterations: 4, |du| = 0.000334547, |r| = 4.29932e-08
+    Surface recombination current = 9.23257e-12
+
+    contact name:       voltage:            current:
+    anode               0                   69.2468
+    cathode             1.3                -69.2468
+
+  Solve time: 0h 0m 0.87s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.4
+  Trying $Vb = 1.4
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 3.86817, |r| = 0.0290103  alpha = 1
+    it 2, |du| = 0.270906, |r| = 0.00602823  alpha = 1
+    it 3, |du| = 0.012223, |r| = 4.94764e-05  alpha = 1
+
+    iterations: 4, |du| = 8.7354e-05, |r| = 3.13121e-09
+    Surface recombination current = 1.15792e-11
+
+    contact name:       voltage:            current:
+    anode               0                   78.8444
+    cathode             1.4                -78.8444
+
+  Solve time: 0h 0m 0.87s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.5
+  Trying $Vb = 1.5
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 3.86817, |r| = 0.0218471  alpha = 1
+    it 2, |du| = 0.223739, |r| = 0.00322529  alpha = 1
+    it 3, |du| = 0.00674182, |r| = 1.57284e-05  alpha = 1
+
+    iterations: 4, |du| = 2.9293e-05, |r| = 1.37573e-09
+    Surface recombination current = 1.39099e-11
+
+    contact name:       voltage:            current:
+    anode               0                   87.4953
+    cathode             1.5                -87.4953
+
+  Solve time: 0h 0m 0.9s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.6
+  Trying $Vb = 1.6
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 3.86817, |r| = 0.0171088  alpha = 1
+    it 2, |du| = 0.191832, |r| = 0.00189362  alpha = 1
+    it 3, |du| = 0.00374298, |r| = 5.80615e-06  alpha = 1
+
+    iterations: 4, |du| = 1.06887e-05, |r| = 1.16707e-10
+    Surface recombination current = 1.62507e-11
+
+    contact name:       voltage:            current:
+    anode               0                   95.3995
+    cathode             1.6                -95.3995
+
+  Solve time: 0h 0m 0.84s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.7
+  Trying $Vb = 1.7
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 3.86817, |r| = 0.0137273  alpha = 1
+    it 2, |du| = 0.172711, |r| = 0.00118343  alpha = 1
+    it 3, |du| = 0.00213322, |r| = 2.38168e-06  alpha = 1
+
+    iterations: 4, |du| = 7.85995e-06, |r| = 9.53802e-10
+    Surface recombination current = 1.8663e-11
+
+    contact name:       voltage:            current:
+    anode               0                   102.666
+    cathode             1.7                -102.666
+
+  Solve time: 0h 0m 0.84s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.8
+  Trying $Vb = 1.8
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 3.86817, |r| = 0.0111365  alpha = 1
+    it 2, |du| = 0.169226, |r| = 0.000771406  alpha = 1
+    it 3, |du| = 0.00344601, |r| = 1.09928e-06  alpha = 1
+    it 4, |du| = 0.00276112, |r| = 1.64995e-07  alpha = 1
+
+    iterations: 5, |du| = 0.000239043, |r| = 1.6336e-09
+    Surface recombination current = 2.13209e-11
+
+    contact name:       voltage:            current:
+    anode               0                   109.325
+    cathode             1.8                -109.325
+
+  Solve time: 0h 0m 1.1s
+  <<<<--------------------------------------------------------------------------
+
+Solve time: 0h 0m 27s
+<<<<----------------------------------------------------------------------------
+
+>>>>------------------------------- (sweep_gen) --------------------------------
+  Ramping to sweep value $x = 1e-12
+  Trying $x = 1e-12
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+
+    iterations: 1, |du| = 0.000295475, |r| = 2.03454e-09
+    Surface recombination current = 2.13209e-11
+
+    contact name:       voltage:            current:
+    anode               0                   109.325
+    cathode             1.8                -109.325
+
+  Solve time: 0h 0m 0.23s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $x = 1e-09
+  Trying $x = 1e-09
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+
+    iterations: 1, |du| = 9.04074e-05, |r| = 1.07551e-09
+    Surface recombination current = 2.13209e-11
+
+    contact name:       voltage:            current:
+    anode               0                   109.325
+    cathode             1.8                -109.325
+
+  Solve time: 0h 0m 0.23s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $x = 1e-06
+  Trying $x = 1e-06
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+
+    iterations: 1, |du| = 1.16454e-05, |r| = 3.25813e-10
+    Surface recombination current = 2.1321e-11
+
+    contact name:       voltage:            current:
+    anode               0                   109.325
+    cathode             1.8                -109.325
+
+  Solve time: 0h 0m 0.23s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $x = 0.0001
+  Trying $x = 0.0001
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.001154, |r| = 2.77801e-09  alpha = 1
+
+    iterations: 2, |du| = 1.36673e-05, |r| = 4.18657e-10
+    Surface recombination current = 2.1331e-11
+
+    contact name:       voltage:            current:
+    anode               0                   109.325
+    cathode             1.8                -109.325
+
+  Solve time: 0h 0m 0.42s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $x = 0.01
+  Trying $x = 0.01
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.115267, |r| = 2.88134e-05  alpha = 1
+    it 2, |du| = 0.00615123, |r| = 1.23538e-07  alpha = 1
+
+    iterations: 3, |du| = 1.89919e-05, |r| = 4.26115e-10
+    Surface recombination current = 2.23344e-11
+
+    contact name:       voltage:            current:
+    anode               0                   109.324
+    cathode             1.8                -109.324
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $x = 0.1
+  Trying $x = 0.1
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.939628, |r| = 0.000764434  alpha = 0.5
+    it 2, |du| = 0.212604, |r| = 7.62953e-05  alpha = 1
+    it 3, |du| = 0.0196175, |r| = 1.7063e-06  alpha = 1
+    it 4, |du| = 0.00295181, |r| = 1.94018e-07  alpha = 1
+    it 5, |du| = 0.00147565, |r| = 4.70877e-08  alpha = 1
+
+    iterations: 6, |du| = 0.000127054, |r| = 3.52898e-10
+    Surface recombination current = 3.14723e-11
+
+    contact name:       voltage:            current:
+    anode               0                   109.312
+    cathode             1.8                -109.312
+
+  Solve time: 0h 0m 1.4s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $x = 0.2
+  Trying $x = 0.2
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.538441, |r| = 0.000646969  alpha = 0.5
+    it 2, |du| = 0.175401, |r| = 5.64685e-05  alpha = 1
+    it 3, |du| = 0.0136797, |r| = 4.83071e-07  alpha = 1
+    it 4, |du| = 0.00733349, |r| = 4.1282e-07  alpha = 0.25
+    it 5, |du| = 0.00255905, |r| = 1.39384e-07  alpha = 1
+    it 6, |du| = 0.00100015, |r| = 2.15839e-08  alpha = 1
+
+    iterations: 7, |du| = 0.000113728, |r| = 2.89291e-10
+    Surface recombination current = 4.16585e-11
+
+    contact name:       voltage:            current:
+    anode               0                   109.299
+    cathode             1.8                -109.299
+
+  Solve time: 0h 0m 1.7s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $x = 0.5
+  Trying $x = 0.5
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 1.05036, |r| = 0.00103644  alpha = 0.5
+    it 2, |du| = 0.213424, |r| = 8.15321e-05  alpha = 1
+    it 3, |du| = 0.0219574, |r| = 8.23723e-07  alpha = 1
+
+    iterations: 4, |du| = 0.000674347, |r| = 1.50882e-08
+    Surface recombination current = 7.24245e-11
+
+    contact name:       voltage:            current:
+    anode               0                   109.261
+    cathode             1.8                -109.261
+
+  Solve time: 0h 0m 0.94s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $x = 0.75
+  Trying $x = 0.75
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.427306, |r| = 0.000380881  alpha = 1
+    it 2, |du| = 0.0688743, |r| = 9.50487e-06  alpha = 1
+    it 3, |du| = 0.00500614, |r| = 3.09359e-07  alpha = 1
+    it 4, |du| = 0.00137449, |r| = 4.07602e-08  alpha = 1
+
+    iterations: 5, |du| = 0.000153543, |r| = 1.74243e-09
+    Surface recombination current = 9.82977e-11
+
+    contact name:       voltage:            current:
+    anode               0                   109.23
+    cathode             1.8                -109.23
+
+  Solve time: 0h 0m 1.1s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $x = 1.1
+  Trying $x = 1.1
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.419503, |r| = 0.000365026  alpha = 1
+    it 2, |du| = 0.0666586, |r| = 8.6204e-06  alpha = 1
+    it 3, |du| = 0.00232258, |r| = 1.65491e-08  alpha = 1
+
+    iterations: 4, |du| = 4.64665e-05, |r| = 7.25007e-10
+    Surface recombination current = 1.34874e-10
+
+    contact name:       voltage:            current:
+    anode               0                   109.186
+    cathode             1.8                -109.186
+
+  Solve time: 0h 0m 0.87s
+  <<<<--------------------------------------------------------------------------
+
+Solve time: 0h 0m 9.1s
+<<<<----------------------------------------------------------------------------
+
+>>>>------------------------------- (sweep_back) -------------------------------
+  Ramping to sweep value $Vb = 1.8
+  Trying $Vb = 1.8
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+
+    iterations: 1, |du| = 6.39888e-06, |r| = 1.06641e-09
+    Surface recombination current = 1.34874e-10
+
+    contact name:       voltage:            current:
+    anode               0                   109.186
+    cathode             1.8                -109.186
+
+  Solve time: 0h 0m 0.23s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.775
+  Trying $Vb = 1.775
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.000748104  alpha = 1
+    it 2, |du| = 0.0114089, |r| = 2.36392e-06  alpha = 1
+
+    iterations: 3, |du| = 0.00033028, |r| = 2.64967e-09
+    Surface recombination current = 1.40726e-10
+
+    contact name:       voltage:            current:
+    anode               0                   107.574
+    cathode             1.775              -107.574
+
+  Solve time: 0h 0m 0.64s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.75
+  Trying $Vb = 1.75
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.000796102  alpha = 1
+    it 2, |du| = 0.0110259, |r| = 2.45424e-06  alpha = 1
+
+    iterations: 3, |du| = 8.61403e-05, |r| = 2.12716e-09
+    Surface recombination current = 1.46027e-10
+
+    contact name:       voltage:            current:
+    anode               0                   105.921
+    cathode             1.75               -105.921
+
+  Solve time: 0h 0m 0.63s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.725
+  Trying $Vb = 1.725
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.000846785  alpha = 1
+    it 2, |du| = 0.0107631, |r| = 2.66223e-06  alpha = 1
+
+    iterations: 3, |du| = 1.38059e-05, |r| = 3.81096e-10
+    Surface recombination current = 1.50797e-10
+
+    contact name:       voltage:            current:
+    anode               0                   104.23
+    cathode             1.725              -104.23
+
+  Solve time: 0h 0m 0.65s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.7
+  Trying $Vb = 1.7
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.000899968  alpha = 1
+    it 2, |du| = 0.010636, |r| = 2.92911e-06  alpha = 1
+
+    iterations: 3, |du| = 1.18188e-05, |r| = 9.78787e-11
+    Surface recombination current = 1.5506e-10
+
+    contact name:       voltage:            current:
+    anode               0                   102.5
+    cathode             1.7                -102.5
+
+  Solve time: 0h 0m 0.65s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.675
+  Trying $Vb = 1.675
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.000955952  alpha = 1
+    it 2, |du| = 0.0106331, |r| = 3.2396e-06  alpha = 1
+
+    iterations: 3, |du| = 1.05812e-05, |r| = 1.85602e-09
+    Surface recombination current = 1.58846e-10
+
+    contact name:       voltage:            current:
+    anode               0                   100.733
+    cathode             1.675              -100.733
+
+  Solve time: 0h 0m 0.65s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.65
+  Trying $Vb = 1.65
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.00101521  alpha = 1
+    it 2, |du| = 0.0106345, |r| = 3.59288e-06  alpha = 1
+
+    iterations: 3, |du| = 9.69088e-06, |r| = 3.88743e-10
+    Surface recombination current = 1.62186e-10
+
+    contact name:       voltage:            current:
+    anode               0                   98.9282
+    cathode             1.65               -98.9282
+
+  Solve time: 0h 0m 0.63s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.625
+  Trying $Vb = 1.625
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.00107832  alpha = 1
+    it 2, |du| = 0.0108373, |r| = 3.99347e-06  alpha = 1
+
+    iterations: 3, |du| = 9.23859e-06, |r| = 1.34053e-09
+    Surface recombination current = 1.6511e-10
+
+    contact name:       voltage:            current:
+    anode               0                   97.085
+    cathode             1.625              -97.085
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.6
+  Trying $Vb = 1.6
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.00114589  alpha = 1
+    it 2, |du| = 0.0108982, |r| = 4.44861e-06  alpha = 1
+
+    iterations: 3, |du| = 8.89486e-06, |r| = 3.22575e-10
+    Surface recombination current = 1.67649e-10
+
+    contact name:       voltage:            current:
+    anode               0                   95.2028
+    cathode             1.6                -95.2028
+
+  Solve time: 0h 0m 0.64s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.575
+  Trying $Vb = 1.575
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.00121864  alpha = 1
+    it 2, |du| = 0.011283, |r| = 4.96773e-06  alpha = 1
+
+    iterations: 3, |du| = 9.07821e-06, |r| = 1.51628e-09
+    Surface recombination current = 1.69833e-10
+
+    contact name:       voltage:            current:
+    anode               0                   93.2805
+    cathode             1.575              -93.2805
+
+  Solve time: 0h 0m 0.65s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.55
+  Trying $Vb = 1.55
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.00129736  alpha = 1
+    it 2, |du| = 0.011419, |r| = 5.56243e-06  alpha = 1
+
+    iterations: 3, |du| = 1.05219e-05, |r| = 1.38978e-09
+    Surface recombination current = 1.7169e-10
+
+    contact name:       voltage:            current:
+    anode               0                   91.3169
+    cathode             1.55               -91.3169
+
+  Solve time: 0h 0m 0.66s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.525
+  Trying $Vb = 1.525
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.00138296  alpha = 1
+    it 2, |du| = 0.0119304, |r| = 6.24719e-06  alpha = 1
+
+    iterations: 3, |du| = 1.29007e-05, |r| = 3.15372e-10
+    Surface recombination current = 1.73244e-10
+
+    contact name:       voltage:            current:
+    anode               0                   89.3102
+    cathode             1.525              -89.3102
+
+  Solve time: 0h 0m 0.65s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.5
+  Trying $Vb = 1.5
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.00147649  alpha = 1
+    it 2, |du| = 0.012187, |r| = 7.03967e-06  alpha = 1
+
+    iterations: 3, |du| = 1.42338e-05, |r| = 1.45629e-09
+    Surface recombination current = 1.74521e-10
+
+    contact name:       voltage:            current:
+    anode               0                   87.2586
+    cathode             1.5                -87.2586
+
+  Solve time: 0h 0m 0.65s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.475
+  Trying $Vb = 1.475
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.00157919  alpha = 1
+    it 2, |du| = 0.0127737, |r| = 7.96222e-06  alpha = 1
+
+    iterations: 3, |du| = 1.75829e-05, |r| = 8.54004e-10
+    Surface recombination current = 1.75543e-10
+
+    contact name:       voltage:            current:
+    anode               0                   85.1597
+    cathode             1.475              -85.1597
+
+  Solve time: 0h 0m 0.66s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.45
+  Trying $Vb = 1.45
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.00169251  alpha = 1
+    it 2, |du| = 0.0131366, |r| = 9.04234e-06  alpha = 1
+
+    iterations: 3, |du| = 1.90837e-05, |r| = 3.45787e-09
+    Surface recombination current = 1.7633e-10
+
+    contact name:       voltage:            current:
+    anode               0                   83.0109
+    cathode             1.45               -83.0109
+
+  Solve time: 0h 0m 0.65s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.425
+  Trying $Vb = 1.425
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.00181817  alpha = 1
+    it 2, |du| = 0.013831, |r| = 1.03155e-05  alpha = 1
+
+    iterations: 3, |du| = 2.37621e-05, |r| = 4.56726e-10
+    Surface recombination current = 1.769e-10
+
+    contact name:       voltage:            current:
+    anode               0                   80.8093
+    cathode             1.425              -80.8093
+
+  Solve time: 0h 0m 0.63s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.4
+  Trying $Vb = 1.4
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.00195823  alpha = 1
+    it 2, |du| = 0.0142742, |r| = 1.18258e-05  alpha = 1
+
+    iterations: 3, |du| = 2.59367e-05, |r| = 1.58998e-09
+    Surface recombination current = 1.7727e-10
+
+    contact name:       voltage:            current:
+    anode               0                   78.5514
+    cathode             1.4                -78.5514
+
+  Solve time: 0h 0m 0.63s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.375
+  Trying $Vb = 1.375
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.00211521  alpha = 1
+    it 2, |du| = 0.0151355, |r| = 1.36313e-05  alpha = 1
+
+    iterations: 3, |du| = 3.23196e-05, |r| = 3.85122e-09
+    Surface recombination current = 1.77453e-10
+
+    contact name:       voltage:            current:
+    anode               0                   76.2332
+    cathode             1.375              -76.2332
+
+  Solve time: 0h 0m 0.64s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.35
+  Trying $Vb = 1.35
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.00229216  alpha = 1
+    it 2, |du| = 0.0156055, |r| = 1.58056e-05  alpha = 1
+
+    iterations: 3, |du| = 3.61524e-05, |r| = 1.50568e-09
+    Surface recombination current = 1.77463e-10
+
+    contact name:       voltage:            current:
+    anode               0                   73.8501
+    cathode             1.35               -73.8501
+
+  Solve time: 0h 0m 0.66s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.325
+  Trying $Vb = 1.325
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.00249283  alpha = 1
+    it 2, |du| = 0.0167235, |r| = 1.84464e-05  alpha = 1
+
+    iterations: 3, |du| = 4.44703e-05, |r| = 1.00561e-09
+    Surface recombination current = 1.77309e-10
+
+    contact name:       voltage:            current:
+    anode               0                   71.3969
+    cathode             1.325              -71.3969
+
+  Solve time: 0h 0m 0.66s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.3
+  Trying $Vb = 1.3
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.00272188  alpha = 1
+    it 2, |du| = 0.0173363, |r| = 2.168e-05  alpha = 1
+
+    iterations: 3, |du| = 5.18863e-05, |r| = 1.43651e-09
+    Surface recombination current = 1.76999e-10
+
+    contact name:       voltage:            current:
+    anode               0                   68.8673
+    cathode             1.3                -68.8673
+
+  Solve time: 0h 0m 0.64s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.275
+  Trying $Vb = 1.275
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.00298515  alpha = 1
+    it 2, |du| = 0.0185962, |r| = 2.56729e-05  alpha = 1
+
+    iterations: 3, |du| = 6.16722e-05, |r| = 2.26118e-09
+    Surface recombination current = 1.76539e-10
+
+    contact name:       voltage:            current:
+    anode               0                   66.2534
+    cathode             1.275              -66.2534
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.25
+  Trying $Vb = 1.25
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.00328996  alpha = 1
+    it 2, |du| = 0.0196007, |r| = 3.06409e-05  alpha = 1
+
+    iterations: 3, |du| = 7.6267e-05, |r| = 2.31638e-09
+    Surface recombination current = 1.75933e-10
+
+    contact name:       voltage:            current:
+    anode               0                   63.5456
+    cathode             1.25               -63.5456
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.225
+  Trying $Vb = 1.225
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.00364561  alpha = 1
+    it 2, |du| = 0.0205873, |r| = 3.68444e-05  alpha = 1
+
+    iterations: 3, |du| = 8.51727e-05, |r| = 2.58665e-09
+    Surface recombination current = 1.75178e-10
+
+    contact name:       voltage:            current:
+    anode               0                   60.7307
+    cathode             1.225              -60.7307
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.2
+  Trying $Vb = 1.2
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.00406372  alpha = 1
+    it 2, |du| = 0.0220454, |r| = 4.45764e-05  alpha = 1
+
+    iterations: 3, |du| = 0.000112054, |r| = 3.77978e-09
+    Surface recombination current = 1.74269e-10
+
+    contact name:       voltage:            current:
+    anode               0                   57.789
+    cathode             1.2                -57.789
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.175
+  Trying $Vb = 1.175
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.00455857  alpha = 1
+    it 2, |du| = 0.0227501, |r| = 5.40336e-05  alpha = 1
+
+    iterations: 3, |du| = 0.000134928, |r| = 6.1327e-09
+    Surface recombination current = 1.7319e-10
+
+    contact name:       voltage:            current:
+    anode               0                   54.6894
+    cathode             1.175              -54.6894
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.15
+  Trying $Vb = 1.15
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.00514648  alpha = 1
+    it 2, |du| = 0.0232227, |r| = 6.50156e-05  alpha = 1
+
+    iterations: 3, |du| = 0.000151058, |r| = 7.43293e-09
+    Surface recombination current = 1.71912e-10
+
+    contact name:       voltage:            current:
+    anode               0                   51.3793
+    cathode             1.15               -51.3793
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.125
+  Trying $Vb = 1.125
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.00584307  alpha = 1
+    it 2, |du| = 0.0231167, |r| = 7.62992e-05  alpha = 1
+
+    iterations: 3, |du| = 0.000183706, |r| = 9.76232e-09
+    Surface recombination current = 1.70376e-10
+
+    contact name:       voltage:            current:
+    anode               0                   47.7695
+    cathode             1.125              -47.7695
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.1
+  Trying $Vb = 1.1
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.00665595  alpha = 1
+    it 2, |du| = 0.0207027, |r| = 8.46738e-05  alpha = 1
+
+    iterations: 3, |du| = 0.000186297, |r| = 1.04096e-08
+    Surface recombination current = 1.68482e-10
+
+    contact name:       voltage:            current:
+    anode               0                   43.7198
+    cathode             1.1                -43.7198
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.075
+  Trying $Vb = 1.075
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.00756941  alpha = 1
+    it 2, |du| = 0.0247122, |r| = 8.44718e-05  alpha = 1
+
+    iterations: 3, |du| = 0.000138385, |r| = 6.77505e-09
+    Surface recombination current = 1.6607e-10
+
+    contact name:       voltage:            current:
+    anode               0                   39.0467
+    cathode             1.075              -39.0467
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.05
+  Trying $Vb = 1.05
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.00850607  alpha = 1
+    it 2, |du| = 0.0351972, |r| = 7.16625e-05  alpha = 1
+
+    iterations: 3, |du| = 0.000219484, |r| = 2.94072e-09
+    Surface recombination current = 1.62926e-10
+
+    contact name:       voltage:            current:
+    anode               0                   33.5963
+    cathode             1.05               -33.5963
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.025
+  Trying $Vb = 1.025
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.0092118  alpha = 1
+    it 2, |du| = 0.0445059, |r| = 6.39006e-05  alpha = 1
+
+    iterations: 3, |du| = 0.000388711, |r| = 6.33602e-09
+    Surface recombination current = 1.58836e-10
+
+    contact name:       voltage:            current:
+    anode               0                   27.3919
+    cathode             1.025              -27.3919
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1
+  Trying $Vb = 1
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.00915887  alpha = 1
+    it 2, |du| = 0.049301, |r| = 7.18136e-05  alpha = 1
+
+    iterations: 3, |du| = 0.00054906, |r| = 8.58463e-09
+    Surface recombination current = 1.53655e-10
+
+    contact name:       voltage:            current:
+    anode               0                   20.7491
+    cathode             1                  -20.7491
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.975
+  Trying $Vb = 0.975
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.00795312  alpha = 1
+    it 2, |du| = 0.0502151, |r| = 7.99131e-05  alpha = 1
+
+    iterations: 3, |du| = 0.000592277, |r| = 1.06094e-08
+    Surface recombination current = 1.47369e-10
+
+    contact name:       voltage:            current:
+    anode               0                   14.213
+    cathode             0.975              -14.213
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.95
+  Trying $Vb = 0.95
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.00590458  alpha = 1
+    it 2, |du| = 0.0474741, |r| = 8.21413e-05  alpha = 1
+
+    iterations: 3, |du| = 0.000500474, |r| = 8.45528e-09
+    Surface recombination current = 1.40101e-10
+
+    contact name:       voltage:            current:
+    anode               0                   8.33699
+    cathode             0.95               -8.33699
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.925
+  Trying $Vb = 0.925
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.00377794  alpha = 1
+    it 2, |du| = 0.0413118, |r| = 7.09782e-05  alpha = 1
+
+    iterations: 3, |du| = 0.000342164, |r| = 4.92976e-09
+    Surface recombination current = 1.32092e-10
+
+    contact name:       voltage:            current:
+    anode               0                   3.47785
+    cathode             0.925              -3.47785
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.9
+  Trying $Vb = 0.9
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.00213679  alpha = 1
+    it 2, |du| = 0.0360767, |r| = 4.95253e-05  alpha = 1
+
+    iterations: 3, |du| = 0.000194026, |r| = 2.78774e-09
+    Surface recombination current = 1.23652e-10
+
+    contact name:       voltage:            current:
+    anode               0                  -0.274154
+    cathode             0.9                 0.274154
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.875
+  Trying $Vb = 0.875
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.00110709  alpha = 1
+    it 2, |du| = 0.0342659, |r| = 2.85727e-05  alpha = 1
+
+    iterations: 3, |du| = 0.000236948, |r| = 9.4595e-10
+    Surface recombination current = 1.151e-10
+
+    contact name:       voltage:            current:
+    anode               0                  -3.03642
+    cathode             0.875               3.03642
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.85
+  Trying $Vb = 0.85
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.000549652  alpha = 1
+    it 2, |du| = 0.0324991, |r| = 1.41738e-05  alpha = 1
+
+    iterations: 3, |du| = 0.000270456, |r| = 2.25036e-10
+    Surface recombination current = 1.06707e-10
+
+    contact name:       voltage:            current:
+    anode               0                  -5.02477
+    cathode             0.85                5.02477
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.825
+  Trying $Vb = 0.825
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.000277403  alpha = 1
+    it 2, |du| = 0.0307229, |r| = 6.34438e-06  alpha = 1
+
+    iterations: 3, |du| = 0.000290868, |r| = 4.41787e-10
+    Surface recombination current = 9.8664e-11
+
+    contact name:       voltage:            current:
+    anode               0                  -6.4629
+    cathode             0.825               6.4629
+
+  Solve time: 0h 0m 0.63s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.8
+  Trying $Vb = 0.8
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.000154099  alpha = 1
+    it 2, |du| = 0.028803, |r| = 2.84438e-06  alpha = 1
+
+    iterations: 3, |du| = 0.000297862, |r| = 1.34552e-09
+    Surface recombination current = 9.10866e-11
+
+    contact name:       voltage:            current:
+    anode               0                  -7.53504
+    cathode             0.8                 7.53504
+
+  Solve time: 0h 0m 0.63s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.775
+  Trying $Vb = 0.775
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 0.000101656  alpha = 1
+    it 2, |du| = 0.0267557, |r| = 1.62316e-06  alpha = 1
+
+    iterations: 3, |du| = 0.000289795, |r| = 1.64781e-09
+    Surface recombination current = 8.40268e-11
+
+    contact name:       voltage:            current:
+    anode               0                  -8.37344
+    cathode             0.775               8.37344
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.75
+  Trying $Vb = 0.75
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 7.97223e-05  alpha = 1
+    it 2, |du| = 0.0246883, |r| = 1.27161e-06  alpha = 1
+
+    iterations: 3, |du| = 0.000267452, |r| = 7.79919e-10
+    Surface recombination current = 7.74945e-11
+
+    contact name:       voltage:            current:
+    anode               0                  -9.06401
+    cathode             0.75                9.06401
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.725
+  Trying $Vb = 0.725
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 6.95351e-05  alpha = 1
+    it 2, |du| = 0.0226859, |r| = 1.10554e-06  alpha = 1
+
+    iterations: 3, |du| = 0.000235359, |r| = 4.70678e-10
+    Surface recombination current = 7.14742e-11
+
+    contact name:       voltage:            current:
+    anode               0                  -9.65837
+    cathode             0.725               9.65837
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.7
+  Trying $Vb = 0.7
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 6.3724e-05  alpha = 1
+    it 2, |du| = 0.0208122, |r| = 9.7111e-07  alpha = 1
+
+    iterations: 3, |du| = 0.000199897, |r| = 7.98412e-10
+    Surface recombination current = 6.59374e-11
+
+    contact name:       voltage:            current:
+    anode               0                  -10.1859
+    cathode             0.7                 10.1859
+
+  Solve time: 0h 0m 0.63s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.675
+  Trying $Vb = 0.675
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 5.97466e-05  alpha = 1
+    it 2, |du| = 0.0191153, |r| = 8.54625e-07  alpha = 1
+
+    iterations: 3, |du| = 0.000167058, |r| = 1.30693e-09
+    Surface recombination current = 6.08504e-11
+
+    contact name:       voltage:            current:
+    anode               0                  -10.6632
+    cathode             0.675               10.6632
+
+  Solve time: 0h 0m 0.63s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.65
+  Trying $Vb = 0.65
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 5.67329e-05  alpha = 1
+    it 2, |du| = 0.0176076, |r| = 7.56365e-07  alpha = 1
+
+    iterations: 3, |du| = 0.00013954, |r| = 1.0905e-09
+    Surface recombination current = 5.61784e-11
+
+    contact name:       voltage:            current:
+    anode               0                  -11.0998
+    cathode             0.65                11.0998
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.625
+  Trying $Vb = 0.625
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 5.43387e-05  alpha = 1
+    it 2, |du| = 0.0162833, |r| = 6.74498e-07  alpha = 1
+
+    iterations: 3, |du| = 0.000117427, |r| = 7.28775e-10
+    Surface recombination current = 5.18877e-11
+
+    contact name:       voltage:            current:
+    anode               0                  -11.5016
+    cathode             0.625               11.5016
+
+  Solve time: 0h 0m 0.63s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.6
+  Trying $Vb = 0.6
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 5.23849e-05  alpha = 1
+    it 2, |du| = 0.0151189, |r| = 6.06119e-07  alpha = 1
+
+    iterations: 3, |du| = 9.97723e-05, |r| = 3.63581e-10
+    Surface recombination current = 4.79464e-11
+
+    contact name:       voltage:            current:
+    anode               0                  -11.8728
+    cathode             0.6                 11.8728
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.575
+  Trying $Vb = 0.575
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 5.07593e-05  alpha = 1
+    it 2, |du| = 0.0140925, |r| = 5.485e-07  alpha = 1
+
+    iterations: 3, |du| = 8.55543e-05, |r| = 1.96599e-09
+    Surface recombination current = 4.4325e-11
+
+    contact name:       voltage:            current:
+    anode               0                  -12.2168
+    cathode             0.575               12.2168
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.55
+  Trying $Vb = 0.55
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 4.93872e-05  alpha = 1
+    it 2, |du| = 0.0131816, |r| = 4.99442e-07  alpha = 1
+
+    iterations: 3, |du| = 7.43712e-05, |r| = 1.08058e-10
+    Surface recombination current = 4.09963e-11
+
+    contact name:       voltage:            current:
+    anode               0                  -12.5361
+    cathode             0.55                12.5361
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.525
+  Trying $Vb = 0.525
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 4.8214e-05  alpha = 1
+    it 2, |du| = 0.0123699, |r| = 4.57254e-07  alpha = 1
+
+    iterations: 3, |du| = 6.561e-05, |r| = 5.03355e-11
+    Surface recombination current = 3.79354e-11
+
+    contact name:       voltage:            current:
+    anode               0                  -12.8331
+    cathode             0.525               12.8331
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.5
+  Trying $Vb = 0.5
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 4.72007e-05  alpha = 1
+    it 2, |du| = 0.0116403, |r| = 4.20486e-07  alpha = 1
+
+    iterations: 3, |du| = 5.82071e-05, |r| = 1.99292e-10
+    Surface recombination current = 3.51194e-11
+
+    contact name:       voltage:            current:
+    anode               0                  -13.1097
+    cathode             0.5                 13.1097
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.475
+  Trying $Vb = 0.475
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 4.63177e-05  alpha = 1
+    it 2, |du| = 0.0109823, |r| = 3.8824e-07  alpha = 1
+
+    iterations: 3, |du| = 5.19109e-05, |r| = 1.15614e-09
+    Surface recombination current = 3.25274e-11
+
+    contact name:       voltage:            current:
+    anode               0                  -13.3678
+    cathode             0.475               13.3678
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.45
+  Trying $Vb = 0.45
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 4.55429e-05  alpha = 1
+    it 2, |du| = 0.0103871, |r| = 3.598e-07  alpha = 1
+
+    iterations: 3, |du| = 4.65274e-05, |r| = 6.93567e-10
+    Surface recombination current = 3.01404e-11
+
+    contact name:       voltage:            current:
+    anode               0                  -13.609
+    cathode             0.45                13.609
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.425
+  Trying $Vb = 0.425
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 4.48589e-05  alpha = 1
+    it 2, |du| = 0.00984371, |r| = 3.34551e-07  alpha = 1
+
+    iterations: 3, |du| = 4.1867e-05, |r| = 1.74464e-09
+    Surface recombination current = 2.79411e-11
+
+    contact name:       voltage:            current:
+    anode               0                  -13.8346
+    cathode             0.425               13.8346
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.4
+  Trying $Vb = 0.4
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 4.42511e-05  alpha = 1
+    it 2, |du| = 0.00934755, |r| = 3.12035e-07  alpha = 1
+
+    iterations: 3, |du| = 3.78241e-05, |r| = 1.65419e-10
+    Surface recombination current = 2.59136e-11
+
+    contact name:       voltage:            current:
+    anode               0                  -14.0461
+    cathode             0.4                 14.0461
+
+  Solve time: 0h 0m 0.63s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.375
+  Trying $Vb = 0.375
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 4.37087e-05  alpha = 1
+    it 2, |du| = 0.00889162, |r| = 2.91836e-07  alpha = 1
+
+    iterations: 3, |du| = 3.42871e-05, |r| = 9.52157e-10
+    Surface recombination current = 2.40435e-11
+
+    contact name:       voltage:            current:
+    anode               0                  -14.2446
+    cathode             0.375               14.2446
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.35
+  Trying $Vb = 0.35
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 4.32216e-05  alpha = 1
+    it 2, |du| = 0.00847344, |r| = 2.73703e-07  alpha = 1
+
+    iterations: 3, |du| = 3.11961e-05, |r| = 3.33143e-10
+    Surface recombination current = 2.23177e-11
+
+    contact name:       voltage:            current:
+    anode               0                  -14.431
+    cathode             0.35                14.431
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.325
+  Trying $Vb = 0.325
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 4.27822e-05  alpha = 1
+    it 2, |du| = 0.00808709, |r| = 2.57356e-07  alpha = 1
+
+    iterations: 3, |du| = 2.84676e-05, |r| = 2.54684e-11
+    Surface recombination current = 2.07242e-11
+
+    contact name:       voltage:            current:
+    anode               0                  -14.6065
+    cathode             0.325               14.6065
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.3
+  Trying $Vb = 0.3
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 4.2384e-05  alpha = 1
+    it 2, |du| = 0.0077294, |r| = 2.42524e-07  alpha = 1
+
+    iterations: 3, |du| = 2.60509e-05, |r| = 9.35442e-10
+    Surface recombination current = 1.92522e-11
+
+    contact name:       voltage:            current:
+    anode               0                  -14.7718
+    cathode             0.3                 14.7718
+
+  Solve time: 0h 0m 0.63s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.275
+  Trying $Vb = 0.275
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 4.20212e-05  alpha = 1
+    it 2, |du| = 0.00739792, |r| = 2.29095e-07  alpha = 1
+
+    iterations: 3, |du| = 2.39076e-05, |r| = 3.486e-10
+    Surface recombination current = 1.78916e-11
+
+    contact name:       voltage:            current:
+    anode               0                  -14.9277
+    cathode             0.275               14.9277
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.25
+  Trying $Vb = 0.25
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 4.16895e-05  alpha = 1
+    it 2, |du| = 0.0070901, |r| = 2.16849e-07  alpha = 1
+
+    iterations: 3, |du| = 2.19961e-05, |r| = 5.15853e-10
+    Surface recombination current = 1.66335e-11
+
+    contact name:       voltage:            current:
+    anode               0                  -15.0749
+    cathode             0.25                15.0749
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.225
+  Trying $Vb = 0.225
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 4.13848e-05  alpha = 1
+    it 2, |du| = 0.0068039, |r| = 2.0567e-07  alpha = 1
+
+    iterations: 3, |du| = 2.02913e-05, |r| = 7.9454e-10
+    Surface recombination current = 1.54696e-11
+
+    contact name:       voltage:            current:
+    anode               0                  -15.2141
+    cathode             0.225               15.2141
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.2
+  Trying $Vb = 0.2
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 4.11037e-05  alpha = 1
+    it 2, |du| = 0.00653645, |r| = 1.95442e-07  alpha = 1
+
+    iterations: 3, |du| = 1.87588e-05, |r| = 1.37771e-09
+    Surface recombination current = 1.43924e-11
+
+    contact name:       voltage:            current:
+    anode               0                  -15.3459
+    cathode             0.2                 15.3459
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.175
+  Trying $Vb = 0.175
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 4.08438e-05  alpha = 1
+    it 2, |du| = 0.00628602, |r| = 1.86043e-07  alpha = 1
+
+    iterations: 3, |du| = 1.73772e-05, |r| = 1.55324e-09
+    Surface recombination current = 1.33948e-11
+
+    contact name:       voltage:            current:
+    anode               0                  -15.4708
+    cathode             0.175               15.4708
+
+  Solve time: 0h 0m 0.63s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.15
+  Trying $Vb = 0.15
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 4.06024e-05  alpha = 1
+    it 2, |du| = 0.00605151, |r| = 1.77396e-07  alpha = 1
+
+    iterations: 3, |du| = 1.61324e-05, |r| = 6.54727e-10
+    Surface recombination current = 1.24707e-11
+
+    contact name:       voltage:            current:
+    anode               0                  -15.5893
+    cathode             0.15                15.5893
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.125
+  Trying $Vb = 0.125
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 4.03777e-05  alpha = 1
+    it 2, |du| = 0.00583255, |r| = 1.69417e-07  alpha = 1
+
+    iterations: 3, |du| = 1.50094e-05, |r| = 4.05869e-10
+    Surface recombination current = 1.16143e-11
+
+    contact name:       voltage:            current:
+    anode               0                  -15.7018
+    cathode             0.125               15.7018
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.1
+  Trying $Vb = 0.1
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 4.01679e-05  alpha = 1
+    it 2, |du| = 0.00562556, |r| = 1.6202e-07  alpha = 1
+
+    iterations: 3, |du| = 1.39857e-05, |r| = 1.29271e-10
+    Surface recombination current = 1.08203e-11
+
+    contact name:       voltage:            current:
+    anode               0                  -15.8088
+    cathode             0.1                 15.8088
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.075
+  Trying $Vb = 0.075
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 3.99716e-05  alpha = 1
+    it 2, |du| = 0.0054306, |r| = 1.55166e-07  alpha = 1
+
+    iterations: 3, |du| = 1.30517e-05, |r| = 5.67881e-10
+    Surface recombination current = 1.00839e-11
+
+    contact name:       voltage:            current:
+    anode               0                  -15.9106
+    cathode             0.075               15.9106
+
+  Solve time: 0h 0m 0.62s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.05
+  Trying $Vb = 0.05
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 3.97875e-05  alpha = 1
+    it 2, |du| = 0.00524788, |r| = 1.48792e-07  alpha = 1
+
+    iterations: 3, |du| = 1.22071e-05, |r| = 1.82744e-09
+    Surface recombination current = 9.40056e-12
+
+    contact name:       voltage:            current:
+    anode               0                  -16.0076
+    cathode             0.05                16.0076
+
+  Solve time: 0h 0m 0.63s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.025
+  Trying $Vb = 0.025
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 3.96145e-05  alpha = 1
+    it 2, |du| = 0.00507487, |r| = 1.42853e-07  alpha = 1
+
+    iterations: 3, |du| = 1.14328e-05, |r| = 2.55024e-11
+    Surface recombination current = 8.76636e-12
+
+    contact name:       voltage:            current:
+    anode               0                  -16.1002
+    cathode             0.025               16.1002
+
+  Solve time: 0h 0m 0.63s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0
+  Trying $Vb = 0
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    it 1, |du| = 0.967042, |r| = 3.9452e-05  alpha = 1
+    it 2, |du| = 0.00491089, |r| = 1.3731e-07  alpha = 1
+
+    iterations: 3, |du| = 1.07215e-05, |r| = 4.87847e-10
+    Surface recombination current = 8.17752e-12
+
+    contact name:       voltage:            current:
+    anode               0                  -16.1885
+    cathode             0                   16.1885
+
+  Solve time: 0h 0m 0.63s
+  <<<<--------------------------------------------------------------------------
+
+Solve time: 0h 0m 55s
+<<<<----------------------------------------------------------------------------
+
+Total solve time: 0h 1m 37s
+Simulation finished.
+
+20 warnings during run
+0 errors detected
+
+
+Log end: Fri May 13 10:39:22 2022
+
+
