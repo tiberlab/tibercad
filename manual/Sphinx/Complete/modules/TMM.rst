@@ -54,9 +54,9 @@ Incident wave boundry condition should be used to determin incoming wave point. 
 reflectivity
 ---------------
 this parameter indicate reflectivity at the other side of Incoming wave. 
-reflectivity = 1 is equal to total reflection at the end of the geometry.
+back_reflectivity = 1 is equal to total reflection at the end of the geometry.
 
-		reflectivity = 0
+		back_reflectivity = 0
 
 incident angle
 ---------------
@@ -69,8 +69,11 @@ down_lambda & up_lambda
 These two parameter will detrmin range of wavelength which will be used in the calculations.
 Usauly it should be from 300 to 1000(nm)
 
- 		up_lambda = 950
- 		down_lambda = 300
+  wavelength_lower_lim = 300
+  wavelength_steps = 10
+  wavelength_uper_lim = 1000
+
+
 
 Incoherency
 ---------------
@@ -127,8 +130,9 @@ In the modules section, we will define which Tmm Outputs we are intested in for 
 Then we have define wavelength spectrum for simulation by given value to two parameters of "up_lambda" and "down_lambda"(unit is nm).
 make sure than "down_lambda" should has a lower value.
 
-		up_lambda = 950
-		down_lambda = 300
+  		wavelength_lower_lim = 300
+  		wavelength_steps = 10
+  		wavelength_uper_lim = 1000
 
 We should also define incomin wave point( in this example due to symetry it dosnt make any diffenet)
 
@@ -140,7 +144,7 @@ We should also define incomin wave point( in this example due to symetry it dosn
 At the end we will define Normal Incident and zero back reflection.
   
 		incident_angle = 0
-		reflectivity = 0
+		back_reflectivity = 0
 
 
 
@@ -184,10 +188,11 @@ Point1 is the postion of the incoming wave.
 	{ 
  		name = tmm_study 
  		plot = (GenerationRate,Intensity,ElectricField, Reflection,Transmission,Absorbtion)
- 		reflectivity = 0
- 		incident_angle = 0
- 		up_lambda = 950
- 		down_lambda = 300
+  		back_reflectivity = 0
+  		incident_angle = 0
+  		wavelength_uper_lim = 950
+  		wavelength_lower_lim = 300
+  		wavelength_steps = 10
  		Physics 
  		{
 
@@ -276,10 +281,11 @@ TMM Module configuration is:
 	{ 
  		name = tmm_study 
  		plot = (GenerationRate,Intensity,ElectricField, Reflection,Transmission,Absorbtion)
- 		reflectivity = 0
- 		incident_angle = 0
- 		up_lambda = 950
- 		down_lambda = 300
+  		back_reflectivity = 0
+  		incident_angle = 0
+  		wavelength_uper_lim = 950
+  		wavelength_lower_lim = 300
+  		wavelength_steps = 10
  		Physics 
  		{
 
