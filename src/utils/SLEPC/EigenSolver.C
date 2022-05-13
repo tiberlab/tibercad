@@ -131,14 +131,16 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt,
     ierr = PetscViewerASCIIOpen(slepc_comm,"matA.m",&viewer_out); TiberPetscUtils::checkerr(ierr);
     ierr = PetscViewerPushFormat(viewer_out,PETSC_VIEWER_ASCII_MATLAB);
     ierr = MatView(A, viewer_out); TiberPetscUtils::checkerr(ierr);
+    ierr = PetscViewerPopFormat(viewer_out);
     ierr = PetscViewerDestroy(&viewer_out);TiberPetscUtils::checkerr(ierr);
 
 
     if (evp_type == GENERALIZED)
     {
       ierr = PetscViewerASCIIOpen(slepc_comm,"matB.m",&viewer_out); TiberPetscUtils::checkerr(ierr);
-      ierr = PetscViewerSetFormat(viewer_out,PETSC_VIEWER_ASCII_MATLAB);
+      ierr = PetscViewerPushFormat(viewer_out,PETSC_VIEWER_ASCII_MATLAB);
       ierr = MatView(B, viewer_out); TiberPetscUtils::checkerr(ierr);
+      ierr = PetscViewerPopFormat(viewer_out);
       ierr = PetscViewerDestroy(&viewer_out);TiberPetscUtils::checkerr(ierr);
     }
   }
@@ -569,7 +571,7 @@ int EigenSolver::do_solve(const SLEPCoptions& opt)
     (SLEPC_VERSION_SUBMINOR <= 2))
   if (opt.monitor) EPSSetMonitor(eps, EPSDefaultMonitor, PETSC_NULL);
 //#else
-//  if (opt.monitor) EPSMonitorSet(eps, EPSMonitorDefault, PETSC_NULL, PETSC_NULL);
+//  if (opt.monitor) EPSMonitorSet(eps, EPSMonitorAll, PETSC_NULL, PETSC_NULL);
 #endif
 
 
