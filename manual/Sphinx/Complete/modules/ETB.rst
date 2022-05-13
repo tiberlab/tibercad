@@ -326,7 +326,7 @@ The following options influence the behaviour of the **Module**  ``empirical_tb`
 
 
 Solver section
-^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^
 
 
 The Solver section of the **Module**  ``empirical_tb`` contains the following options:
@@ -355,7 +355,13 @@ The Solver section of the **Module**  ``empirical_tb`` contains the following op
  ``long_tolerance`` : double
       solver convergence criterion (default 1e-9) 
 
+ ``solver_type`` : string
+      this indicates the class of implemented solvers to use: ``cpu`` (default), ``gpu`` or ``slepc``. The former two use uptight internal implementations, the latter uses the external SLEPc library.
 
+ ``solver`` : string
+      the actual solver to be used. For ``gpu`` one can choose ``jd`` or ``lanczos``, for ``cpu`` ``lanczos`` or ``lapack``, for ``slepc`` all SLEPc solvers
+
+When using SLEPc solvers, options have to be passed in the ``solver`` block.
 
 
 With  the  keyword *load_states = true* it is  possible to resume a  calculation starting from the last of the states loaded from a  file. Also,  one  can use  a  set  of already calculated states for an optical  spectrum calculation (see in the following). 
