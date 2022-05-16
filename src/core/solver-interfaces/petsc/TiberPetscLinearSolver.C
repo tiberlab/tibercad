@@ -384,9 +384,11 @@ TiberPetscLinearSolver::setup_monitors(void)
     {
 #if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3) \
     && (PETSC_VERSION_SUBMINOR > 2)) || (PETSC_VERSION_MAJOR >= 3)
-      //ierr = KSPMonitorSet(_ksp, KSPMonitorDefault, PETSC_NULL, 0);
+      PetscViewerAndFormat *vf;
+      ierr = PetscViewerAndFormatCreate(PETSC_VIEWER_STDOUT_WORLD,PETSC_VIEWER_DEFAULT, &vf); TiberPetscUtils::checkerr(ierr);
+      ierr = KSPMonitorSet(_ksp, KSPMonitorDefault, vf, 0);
 #else
-      ierr = KSPSetMonitor(_ksp, KSPDefaultMonitor, PETSC_NULL, 0);
+      ierr = KSPSetMonitor(_ksp, KSPDefaultMonitor, PetscViewerAndFormatDestroy, 0);
 #endif
     }
     else

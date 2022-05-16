@@ -338,6 +338,13 @@ int set_ksp_and_pc(ST st, const EigenSolver::SLEPCoptions& opt)
 
   ierr = KSPSetTolerances(ksp,opt.spectrum_inversion_tolerance, PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT);
 
+  if (opt.monitor)
+  {
+    PetscViewerAndFormat *vf;
+    ierr = PetscViewerAndFormatCreate(PETSC_VIEWER_STDOUT_WORLD,PETSC_VIEWER_DEFAULT, &vf); TiberPetscUtils::checkerr(ierr);
+    ierr = KSPMonitorSet(ksp, KSPMonitorDefault, vf, 0);
+  }
+
   return ierr;
 
 }
@@ -570,8 +577,14 @@ int EigenSolver::do_solve(const SLEPCoptions& opt)
 #if ((SLEPC_VERSION_MAJOR == 2) && (SLEPC_VERSION_MINOR == 3) && \
     (SLEPC_VERSION_SUBMINOR <= 2))
   if (opt.monitor) EPSSetMonitor(eps, EPSDefaultMonitor, PETSC_NULL);
-//#else
-//  if (opt.monitor) EPSMonitorSet(eps, EPSMonitorAll, PETSC_NULL, PETSC_NULL);
+#else
+  if (opt.monitor)
+  {
+    PetscViewerAndFormat *vf;
+    ierr = PetscViewerAndFormatCreate(PETSC_VIEWER_STDOUT_WORLD,PETSC_VIEWER_DEFAULT, &vf); TiberPetscUtils::checkerr(ierr);
+    ierr = EPSMonitorSet(eps, EPSMonitorAll, vf, PetscViewerAndFormatDestroy); TiberPetscUtils::checkerr(ierr);
+    ierr = EPSMonitorCancel(eps); TiberPetscUtils::checkerr(ierr);
+  }
 #endif
 
 
