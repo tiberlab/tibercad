@@ -170,16 +170,17 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt,
 
   ierr = EPSSetTolerances(eps,opt.eps_tolerance,opt.eps_max_it);  TiberPetscUtils::checkerr(ierr);
   ierr = EPSSetWhichEigenpairs(eps,EPS_TARGET_MAGNITUDE);TiberPetscUtils::checkerr(ierr);
+  //ierr = EPSSetWhichEigenpairs(eps,EPS_ALL);TiberPetscUtils::checkerr(ierr);
   ierr = EPSSetTarget(eps, opt.spectrum_shift);TiberPetscUtils::checkerr(ierr);
 
 
-  if (opt.solver_type == "arnoldi" || opt.solver_type == "krylovshur" )
+  if (opt.solver_type == "arnoldi" || opt.solver_type == "krylovshur")
   {
     //ierr = EPSSetProblemType(eps,EPS_GNHEP);TiberPetscUtils::checkerr(ierr);
 
     if (opt.solver_type == "arnoldi")
       ierr = EPSSetType(eps, EPSARNOLDI);
-    else
+    else if (opt.solver_type == "krylovshur")
       ierr = EPSSetType(eps, EPSKRYLOVSCHUR);
 
 
@@ -223,6 +224,13 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt,
 
       set_ksp_and_pc(st, opt);
     }
+  }
+  else if (opt.solver_type == "jd")
+  {
+    ierr = EPSSetType(eps, EPSJD);
+    ierr = EPSGetST(eps,&st); TiberPetscUtils::checkerr(ierr);
+    ierr = STSetShift(st, opt.spectrum_shift);TiberPetscUtils::checkerr(ierr);
+    ierr = STSetType(st,STPRECOND); TiberPetscUtils::checkerr(ierr);
   }
   else
   {
@@ -342,7 +350,7 @@ int set_ksp_and_pc(ST st, const EigenSolver::SLEPCoptions& opt)
   {
     PetscViewerAndFormat *vf;
     ierr = PetscViewerAndFormatCreate(PETSC_VIEWER_STDOUT_WORLD,PETSC_VIEWER_DEFAULT, &vf); TiberPetscUtils::checkerr(ierr);
-    ierr = KSPMonitorSet(ksp, KSPMonitorDefault, vf, 0);
+    ierr = KSPMonitorSet(ksp, (PetscErrorCode (*)(KSP, PetscInt, PetscReal, void*))KSPMonitorResidual, vf, 0);
   }
 
   return ierr;
@@ -582,7 +590,8 @@ int EigenSolver::do_solve(const SLEPCoptions& opt)
   {
     PetscViewerAndFormat *vf;
     ierr = PetscViewerAndFormatCreate(PETSC_VIEWER_STDOUT_WORLD,PETSC_VIEWER_DEFAULT, &vf); TiberPetscUtils::checkerr(ierr);
-    ierr = EPSMonitorSet(eps, EPSMonitorAll, vf, PetscViewerAndFormatDestroy); TiberPetscUtils::checkerr(ierr);
+    ierr = EPSMonitorSet(eps, (PetscErrorCode (*)(EPS, PetscInt, PetscInt, PetscScalar*, PetscScalar*, PetscReal*, PetscInt, void*))EPSMonitorAll,
+                         vf, (PetscErrorCode (*)(void**))PetscViewerAndFormatDestroy); TiberPetscUtils::checkerr(ierr);
     ierr = EPSMonitorCancel(eps); TiberPetscUtils::checkerr(ierr);
   }
 #endif

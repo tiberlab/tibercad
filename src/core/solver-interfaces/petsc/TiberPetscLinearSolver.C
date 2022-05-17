@@ -386,7 +386,7 @@ TiberPetscLinearSolver::setup_monitors(void)
     && (PETSC_VERSION_SUBMINOR > 2)) || (PETSC_VERSION_MAJOR >= 3)
       PetscViewerAndFormat *vf;
       ierr = PetscViewerAndFormatCreate(PETSC_VIEWER_STDOUT_WORLD,PETSC_VIEWER_DEFAULT, &vf); TiberPetscUtils::checkerr(ierr);
-      ierr = KSPMonitorSet(_ksp, KSPMonitorDefault, vf, 0);
+      ierr = KSPMonitorSet(_ksp, (PetscErrorCode (*)(KSP, PetscInt, PetscReal, void*))KSPMonitorResidual, vf, 0);
 #else
       ierr = KSPSetMonitor(_ksp, KSPDefaultMonitor, PetscViewerAndFormatDestroy, 0);
 #endif
