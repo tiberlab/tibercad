@@ -686,7 +686,6 @@ Negf::setup_hamil(void)
   }
   else
   {
-    //cout << "before set_S_id: nrow= " << nrow << endl;
     _libnegf->set_S_id(nrow);
   }
 
@@ -827,6 +826,7 @@ Negf::setup_negf(void)
   params.emin = sol_opt.get_option("Emin", -mumax-opt.n_kT*kbT);
   params.emax = sol_opt.get_option("Emax", -mumin+opt.n_kT*kbT);
   params.estep = opt.Estep;
+  params.estep_coarse = opt.Estep_coarse;
 
   // contour integration parameters
   for (unsigned int i = 0; i < 2; ++i)
@@ -971,6 +971,8 @@ Negf::do_solve(void)
   if ( plot_solution(elDensity) )
   {
     Messages::info("Computing Electronic Density");
+    if (get_option("quasi_equilibrium",false))
+      Messages::info("Quasi-equilibrium approximation");
 
     if (get_options().has_submodel("k_integration_density"))
     {
@@ -988,10 +990,25 @@ Negf::do_solve(void)
       setup_hamil();
 
       unsigned int n_vars = _sys_H->n_vars();
-      std::vector<double> density(_device_n_dofs * n_vars, 0.0);
+      std::vector<double> density(_device_n_dofs * n_vars, 0.0); //device_n_dofs = n nodi del device
 
-      _libnegf->density(density, "el");
 
+      if (get_option("quasi_equilibrium",false))
+      {
+        std::vector<double> Ec;
+        std::vector<double> Ev;
+        std::vector<double> muN;
+        std::vector<double> muP;
+
+        get_mu_and_bands(Ec, Ev, muN, muP);
+
+        _libnegf->quasi_equilibrium_density(density, "el", Ec, Ev, muN, muP);
+
+      }
+      else
+      {
+        _libnegf->density(density, "el");
+      }
       transfer_density(density, "el");
 
       // write qdens on eldensity
@@ -1002,7 +1019,6 @@ Negf::do_solve(void)
       //_eldensity.reserve(_device_n_dofs);
       //for (unsigned int i=0; i < _device_n_dofs; i++)
       //  _eldensity.push_back( qdens(start+i) );
-
 
       finalize();
     }
@@ -1017,6 +1033,8 @@ Negf::do_solve(void)
   if ( plot_solution("hlDensity") )
   {
     Messages::info("Computing Hole Density");
+    if (get_option("quasi_equilibrium",false))
+          Messages::info("Quasi-equilibrium approximation");
 
     if (get_options().has_submodel("k_integration_density"))
     {
@@ -1036,8 +1054,22 @@ Negf::do_solve(void)
       unsigned int n_vars = _sys_H->n_vars();
       std::vector<double> density(_device_n_dofs * n_vars, 0.0);
 
-      _libnegf->density(density, "hl");
+      if (get_option("quasi_equilibrium",false))
+      {
+        std::vector<double> Ec;
+        std::vector<double> Ev;
+        std::vector<double> muN;
+        std::vector<double> muP;
 
+        get_mu_and_bands(Ec, Ev, muN, muP);
+
+        _libnegf->quasi_equilibrium_density(density, "hl", Ec, Ev, muN, muP);
+
+      }
+      else
+      {
+        _libnegf->density(density, "hl");
+      }
       transfer_density(density, "hl");
 
       // write qdens on hldensity
@@ -1366,8 +1398,6 @@ Negf::occupy_LDOS(const std::vector<double>& ldos)
 }
 
 
-
-
 void
 Negf::calculate_for_k_point(const Point& k_point,
                                   DofField& field,
@@ -1377,54 +1407,93 @@ Negf::calculate_for_k_point(const Point& k_point,
    for(short i=0;i<3;i++) _k_vec(i) = k_point(i);
 
    setup_hamil();
-   //cout << "calculate_for_k_point: after setup_hamil()";
 
-   //unsigned int n_vars = _sys_H->n_vars();
-   //field.resize(_device_n_dofs * n_vars);
-   unsigned int n_vars = _ext_module->get_H_dim();
-   field.resize(n_vars);
+   //In theory, size of "field" has to be consistent with _device_n_dofs, which is # of nodes
+   unsigned int n_vars = _sys_H->n_vars();
+   field.resize(_device_n_dofs * n_vars);
+
+   //unsigned int n_vars = _ext_module->get_H_dim();
+   //field.resize(n_vars); //FOR NOW THIS IS BEST SOLUTION
 
    switch (_which_integration)
    {
      case INTDENSITYEL:
      {
 
-       _libnegf->density(field, "el");
-
-       //std::string out_file = "density_new.dat";
-       //std::fstream ff(out_file.c_str(),std::fstream::out);
-       //for (unsigned int i = 0; i < field.size(); i++)
-       //      ff<< field[i] <<std::endl;
-       //ff.close();
-
-       error = 0.0;
-
-       for (unsigned int i=0; i < field.size(); i++)
+       if (get_option("quasi_equilibrium", false))
        {
-         error += field[i];
+         std::vector<double> Ec;
+         std::vector<double> Ev;
+         std::vector<double> muN;
+         std::vector<double> muP;
+
+         get_mu_and_bands(Ec, Ev, muN, muP);
+
+         _libnegf->quasi_equilibrium_density(field, "el", Ec, Ev, muN, muP);
+
+         error = 0.0;
+
+         for (unsigned int i=0; i < field.size(); i++)
+         {
+           error += field[i];
+         }
+
+         error /= _device_n_dofs;
+
        }
+       else
+       {
 
-       error /= _device_n_dofs;
+         _libnegf->density(field, "el");
 
-       //cout<<"(negf) density error: "<<error<<endl;
+         error = 0.0;
 
+         for (unsigned int i=0; i < field.size(); i++)
+         {
+           error += field[i];
+         }
+
+         error /= _device_n_dofs;
+       }
        break;
      }
 
      case INTDENSITYHL:
      {
-
-       _libnegf->density(field, "hl");
-
-       error = 0.0;
-
-       for (unsigned int i=0; i < field.size(); i++)
+       if (get_option("quasi_equilibrium", false))
        {
-         error += field[i];
+         std::vector<double> Ec;
+         std::vector<double> Ev;
+         std::vector<double> muN;
+         std::vector<double> muP;
+
+         get_mu_and_bands(Ec, Ev, muN, muP);
+
+         _libnegf->quasi_equilibrium_density(field, "hl", Ec, Ev, muN, muP);
+
+         error = 0.0;
+
+         for (unsigned int i=0; i < field.size(); i++)
+         {
+            error += field[i];
+         }
+
+         error /= _device_n_dofs;
        }
+       else
+       {
 
-       error /= _device_n_dofs;
+         _libnegf->density(field, "hl");
 
+         error = 0.0;
+
+         for (unsigned int i=0; i < field.size(); i++)
+         {
+           error += field[i];
+         }
+
+         error /= _device_n_dofs;
+         }
        break;
      }
 
@@ -1432,7 +1501,6 @@ Negf::calculate_for_k_point(const Point& k_point,
      case INTCURRENT:
      {
        field.clear();
-       //cout << "calculate_for_k_point: after setup_hamil()";
        compute_current();
 
        // get_energies
@@ -1770,6 +1838,8 @@ Negf::parse_options(void)
   opt.Emax = sol_opt.get_option("Emax",0.0);
 
   opt.Estep = sol_opt.get_option("Estep",0.1);
+
+  opt.Estep_coarse = sol_opt.get_option("Estep_coarse",1.0);
 
   opt.Np_n.resize(2, 0);
 
@@ -2506,11 +2576,10 @@ Negf::reorder(void)
 
 
 
-//Approch to Laplace problem
+//Approach to Laplace problem
 void
 Negf::reorder_assemble(void)
 {
-
   std::map<const Boundary*, int> boundary_ids;
   int id = 0;
   std::map<const Boundary*, QuantumContact*>::iterator it = _qc_boundaries.begin();
@@ -2609,7 +2678,8 @@ Negf::reorder_assemble(void)
 
       // Update number of dofs in device region
       for (unsigned int n = 0; n <n_dofs; n++)
-        if (_device_n_dofs < dof_indices[n]+1) _device_n_dofs = dof_indices[n]+1;
+        if (_device_n_dofs < dof_indices[n]+1)
+          _device_n_dofs = dof_indices[n]+1;
 
     }
   }
@@ -2673,7 +2743,6 @@ Negf::reorder_assemble(void)
   }
   
 }
-
 
 
 void
@@ -2741,12 +2810,109 @@ Negf::get_boundary_potentials(QuantumContact* qc, double& av_V, double& av_mu_n,
       {
         std::pair<const Elem*, Point> pair = qc->project_on_boundary(elem, q_point[qp]);
 
-        av_V += pot_model.get_potential(pair.first, pair.second) * elem->volume()/volume ;
+        av_V += pot_model.get_potential(pair.first, pair.second) * elem->volume()/volume;
         av_mu_n += mue_model.get_potential(pair.first, pair.second) * elem->volume()/volume;
         av_mu_p += muh_model.get_potential(pair.first, pair.second) * elem->volume()/volume;
+
       }
     }
   }
+}
+
+void
+Negf::get_mu_and_bands(std::vector<double>& Ec, std::vector<double>& Ev,
+                       std::vector<double>& muN, std::vector<double>& muP)
+{
+  SimulationInterface* model;
+
+  if (opt.pot_module != "none")
+  {
+    model = SimulationInterface::find_simulation(opt.pot_module);
+    if (!model->is_solved() )
+      throw SolveFailedException("Simulation "+opt.pot_module+" must be solved first");
+  }
+  else
+  {
+    model = NULL;
+  }
+
+  //Inefficient, it performs 4 loops on the elements instead of one. But code more clear
+  Ec = get_ordered_solution(model, "Ec");
+  Ev = get_ordered_solution(model, "Ev");
+  muN = get_ordered_solution(model, "eQFermi");
+  muP = get_ordered_solution(model, "hQFermi");
+
+  for (size_t i = 0; i < muP.size(); ++i)
+    muP[i] = -1.0 * muP[i];
+
+  return;
+}
+
+std::vector<double>
+Negf::get_ordered_solution(SimulationInterface* model, const std::string& var)
+{
+  std::vector<double> solution;
+  std::vector<double> tot_vals;
+  ID ID = model->get_solution_id(var);
+
+  MeshBase::const_element_iterator       el     = this->active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
+
+  assert(el != end_el);
+
+  const Elem* elem = *el;
+  std::vector<double> values(elem->n_nodes());
+  std::vector<Point> p(elem->n_nodes());
+
+  for (unsigned int i = 0; i < elem->n_nodes(); ++i)
+      p[i] = elem->point(i);
+
+  //tot_vals.resize(_device_n_dofs);
+
+  model->get_solution(elem, ID, values, p);
+  tot_vals.push_back(values[0]);
+
+  for (; el != end_el ; ++el )
+  {
+    const Elem* elem = *el;
+    std::vector<double> values(elem->n_nodes());
+    std::vector<Point> p(elem->n_nodes());
+    for (unsigned int i = 0; i < elem->n_nodes(); ++i)
+         p[i] = elem->point(i);
+
+    model->get_solution(elem, ID, values, p);
+
+    for (size_t i = 1; i < elem->n_nodes(); ++i)
+      tot_vals.push_back(values[i]);
+  }
+
+  libMesh::DofMap& dof_map = _sys->get_dof_map();
+  std::vector<unsigned int> dof_indices;
+
+  el = this->active_local_elements_begin();
+  elem = *el;
+
+  dof_map.dof_indices(elem, dof_indices);
+  //if n_vars (number of bands) > 1 we need a solution (n_vars*_device_n_dofs) long
+  unsigned int n_vars = _sys_H->n_vars();
+
+  //alloca prima il vettore
+  //solution.resize(_device_n_dofs*n_vars);
+
+  for (size_t i = 0; i < n_vars; ++i)
+    solution.push_back(tot_vals[_perm[dof_indices[0]]]);
+
+  for (; el != end_el ; ++el )
+  {
+    const Elem* elem = *el;
+    dof_map.dof_indices(elem, dof_indices);
+
+    for (size_t n = 1; n < elem->n_nodes(); n++)
+      //if n_vars (number of bands) > 1 we need a solution (n_vars*_device_n_dofs) long
+      for (size_t i = 0; i < n_vars; ++i)
+        solution.push_back(tot_vals[_perm[dof_indices[n]]]);
+  }
+  return solution;
 }
 
 
@@ -2832,108 +2998,3 @@ Negf::get_boundary(const QuantumContact* qc)
   return it->second;
 }
 
-/*
-void
-Negf::set_stuff_for_etb(void)
-{
-
-  //
-  // The following does only make sense if the the mesh in this module is
-  // the same as the one of the Hamiltonian provider
-  //
-  if (&this->get_mesh() != &_ext_module->get_mesh())
-    throw InitFailedException("mesh in NEGF and Hamiltonian provider must be the same.");
-
-  //cerr << "solution size = " << sol_size << endl;
-
-  // setup initial permutation vector as identitiy
-  // the vector runs only on the device region where the
-  // dof reordering is performed
-
-  // Number of dofs of the first band
-  cout << "set_stuff_for_etb: check8" << endl;
-  unsigned int n_dofs = _qc_n_dofs[_quantum_contacts.size()-1];
-
-  cout << "set_stuff_for_etb: n_dofs= "<< n_dofs << endl;
-
-  //
-  // Now _perm contains the permutation of the nodes, basically, and we can now calculate
-  // the PL blocks. For that we need to get the number of DOFs on each node of the external
-  // module. At the same time, we prepare the DOF permutation tables.
-
-  unsigned int nPL = get_solver_options().get_option("number_of_PL", 0);
-  unsigned int size_of_PL = get_solver_options().get_option("PL_size", 16);
-
-  ostringstream os;
-  os << "Number of principal layers (PL) ";
-  cout << "set_stuff_for_etb: check9" << endl;
-
-  if (nPL < _quantum_contacts.size())
-  {
-    nPL = _quantum_contacts.size();
-    os << "(automatic choice)";
-  }
-  os << ": " << nPL;
-  Messages::info(os.str());
-
-  _end_blocks.resize(0);
-  _end_blocks.resize(nPL, 0);
-
-  vector<double> ranges(nPL);
-  for (unsigned int i = 0; i < nPL; ++i)
-    ranges[nPL-1-i] = (_quantum_contacts.size() - 1) *
-                           (1.0 - static_cast<double>(i)/nPL);
-
-  cout << "set_stuff_for_etb: check10" << endl;
-
-  unsigned int sysid = _ext_module->get_equation_system_id();
-  unsigned int mysid = _sys->number();
-  unsigned int n_dofs_total = 0;
-  //cerr << "sysid : " << sysid << endl;
-  //cerr << "_device_n_dofs : " << _device_n_dofs << endl;
-
-  auto it = get_mesh().active_nodes_begin();
-  const auto end = get_mesh().active_nodes_end();
-  cout << "set_stuff_for_etb: check11" << endl;
-  for ( ; it != end; ++it)
-  {
-    const Node* node = *it;
-  cout << "set_stuff_for_etb: check11.1" << endl;
-    if (node->n_dofs(mysid, 0))
-    {
-  cout << "set_stuff_for_etb: check11.2" << endl;
-      unsigned int dof = node->dof_number(mysid, 0, 0);
-
-      if (dof < _device_n_dofs)
-      {
-  cout << "set_stuff_for_etb: check11.3" << endl;
-      //cerr << *node << endl;
-        // get the number of dofs in the Hamiltonian
-        unsigned int n_hamil_dofs = node->n_dofs(sysid);
-
-        // the reorder "potential"
-        double v = _sys->get_solution_vector()(dof);
-
-        //find the position in the ranges and add number of dofs
-        unsigned int i = 0;
-  cout << "set_stuff_for_etb: check11.4" << endl;
-        for ( ; (i < nPL) && (v > ranges[i]); ++i);
-        //cerr << v << " -> " << i << " # dof " << n_hamil_dofs << endl;
-        _end_blocks[i] += n_hamil_dofs;
-        n_dofs_total += n_hamil_dofs;
-      }
-    }
-  }
-  cout << "set_stuff_for_etb: check12" << endl;
-
-  for (unsigned int i = 1; i < nPL; ++i)
-    _end_blocks[i] += _end_blocks[i-1];
-
-
-  cout << "set_stuff_for_etb: check13" << endl;
-  os.str("");
-  os << "# DOFs       : " << n_dofs_total << "\n";
-  os << "mean PL size : " << n_dofs_total/nPL << "\n";
-  Messages::info(os.str());
-}
-*/

@@ -41,7 +41,7 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     enum kIntegrationType
     {
-       INTDENSITYEL, 
+       INTDENSITYEL,
        INTDENSITYHL, 
        INTCURRENT
     };
@@ -126,6 +126,8 @@ class TBDLLOCAL Negf : public SimulationInterface
 
         double Estep;
 
+        double Estep_coarse;
+
         std::vector <int> Np_n;
 
         int n_poles;
@@ -171,6 +173,11 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     double get_band_edge(const std::string& band) const;
     double get_band_edge(SimulationInterface* model, const std::string& band, const Elem* elem) const;
+
+    void get_mu_and_bands(std::vector<double>& Ec, std::vector<double>& Ev,
+                          std::vector<double>& muN, std::vector<double>& muP);
+
+    std::vector<double> get_ordered_solution(SimulationInterface* model, const std::string& var);
 
     const Boundary* get_boundary(const QuantumContact* qc);
 

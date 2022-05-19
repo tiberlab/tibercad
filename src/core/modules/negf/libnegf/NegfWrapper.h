@@ -69,6 +69,11 @@ public:
   //!Compute charge density
   void density(std::vector<double>& density, std::string particle);
 
+  //!Compute charge density, using quasi-equilibrium approximation
+  void quasi_equilibrium_density(std::vector<double>& density, std::string particle,
+                                 std::vector<double>& Ec, std::vector<double>& Ev,
+                                 std::vector<double>& muN, std::vector<double>& muP);
+
   //! Return the LDOS in matrix form
   void get_ldos(std::vector<std::vector<double>>& ldos);
 

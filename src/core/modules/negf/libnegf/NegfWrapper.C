@@ -155,6 +155,21 @@ NegfWrapper::density(std::vector<double>& density, std::string particle)
    f77_negf_density_efa(_handler, size, density.data(), p);
 }
 
+void
+NegfWrapper::quasi_equilibrium_density(std::vector<double>& density, std::string particle,
+                                       std::vector<double>& Ec, std::vector<double>& Ev,
+                                       std::vector<double>& muN, std::vector<double>& muP)
+{
+
+   int size = density.size();
+   int p = 0;
+
+   if (particle == "el"){ p = +1;}
+   if (particle == "hl"){ p = -1;}
+
+   f77_negf_density_quasi_equilibrium(_handler, size, density.data(), p, Ec.data(),
+       Ev.data(), muN.data(), muP.data());
+}
 
 void
 NegfWrapper::get_ldos(std::vector<std::vector<double>>& ldos)
