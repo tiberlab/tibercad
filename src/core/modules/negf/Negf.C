@@ -826,7 +826,7 @@ Negf::setup_negf(void)
   params.emin = sol_opt.get_option("Emin", -mumax-opt.n_kT*kbT);
   params.emax = sol_opt.get_option("Emax", -mumin+opt.n_kT*kbT);
   params.estep = opt.Estep;
-  params.estep_coarse = opt.Estep_coarse;
+//  params.estep_coarse = opt.Estep_coarse;
 
   // contour integration parameters
   for (unsigned int i = 0; i < 2; ++i)
@@ -1839,7 +1839,7 @@ Negf::parse_options(void)
 
   opt.Estep = sol_opt.get_option("Estep",0.1);
 
-  opt.Estep_coarse = sol_opt.get_option("Estep_coarse",1.0);
+//  opt.Estep_coarse = sol_opt.get_option("Estep_coarse",1.0);
 
   opt.Np_n.resize(2, 0);
 
