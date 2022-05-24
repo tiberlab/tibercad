@@ -826,7 +826,7 @@ Negf::setup_negf(void)
   params.emin = sol_opt.get_option("Emin", -mumax-opt.n_kT*kbT);
   params.emax = sol_opt.get_option("Emax", -mumin+opt.n_kT*kbT);
   params.estep = opt.Estep;
-//  params.estep_coarse = opt.Estep_coarse;
+  params.estep_coarse = opt.Estep_coarse;
 
   // contour integration parameters
   for (unsigned int i = 0; i < 2; ++i)
@@ -995,10 +995,10 @@ Negf::do_solve(void)
 
       if (get_option("quasi_equilibrium",false))
       {
-        std::vector<double> Ec;
-        std::vector<double> Ev;
-        std::vector<double> muN;
-        std::vector<double> muP;
+        std::vector<double> Ec(_device_n_dofs*n_vars);
+        std::vector<double> Ev(_device_n_dofs*n_vars);
+        std::vector<double> muN(_device_n_dofs*n_vars);
+        std::vector<double> muP(_device_n_dofs*n_vars);
 
         get_mu_and_bands(Ec, Ev, muN, muP);
 
@@ -1056,10 +1056,10 @@ Negf::do_solve(void)
 
       if (get_option("quasi_equilibrium",false))
       {
-        std::vector<double> Ec;
-        std::vector<double> Ev;
-        std::vector<double> muN;
-        std::vector<double> muP;
+        std::vector<double> Ec(_device_n_dofs*n_vars);
+        std::vector<double> Ev(_device_n_dofs*n_vars);
+        std::vector<double> muN(_device_n_dofs*n_vars);
+        std::vector<double> muP(_device_n_dofs*n_vars);
 
         get_mu_and_bands(Ec, Ev, muN, muP);
 
@@ -1422,10 +1422,10 @@ Negf::calculate_for_k_point(const Point& k_point,
 
        if (get_option("quasi_equilibrium", false))
        {
-         std::vector<double> Ec;
-         std::vector<double> Ev;
-         std::vector<double> muN;
-         std::vector<double> muP;
+         std::vector<double> Ec(_device_n_dofs*n_vars);
+         std::vector<double> Ev(_device_n_dofs*n_vars);
+         std::vector<double> muN(_device_n_dofs*n_vars);
+         std::vector<double> muP(_device_n_dofs*n_vars);
 
          get_mu_and_bands(Ec, Ev, muN, muP);
 
@@ -1462,10 +1462,10 @@ Negf::calculate_for_k_point(const Point& k_point,
      {
        if (get_option("quasi_equilibrium", false))
        {
-         std::vector<double> Ec;
-         std::vector<double> Ev;
-         std::vector<double> muN;
-         std::vector<double> muP;
+         std::vector<double> Ec(_device_n_dofs*n_vars);
+         std::vector<double> Ev(_device_n_dofs*n_vars);
+         std::vector<double> muN(_device_n_dofs*n_vars);
+         std::vector<double> muP(_device_n_dofs*n_vars);
 
          get_mu_and_bands(Ec, Ev, muN, muP);
 
@@ -1839,7 +1839,7 @@ Negf::parse_options(void)
 
   opt.Estep = sol_opt.get_option("Estep",0.1);
 
-//  opt.Estep_coarse = sol_opt.get_option("Estep_coarse",1.0);
+  opt.Estep_coarse = sol_opt.get_option("Estep_coarse",1.0);
 
   opt.Np_n.resize(2, 0);
 
@@ -2836,14 +2836,11 @@ Negf::get_mu_and_bands(std::vector<double>& Ec, std::vector<double>& Ev,
     model = NULL;
   }
 
-  //Inefficient, it performs 4 loops on the elements instead of one. But code more clear
+  //Inefficient, it performs 2x4 loops on the elements instead of 2x1. But code more clear
   Ec = get_ordered_solution(model, "Ec");
   Ev = get_ordered_solution(model, "Ev");
   muN = get_ordered_solution(model, "eQFermi");
   muP = get_ordered_solution(model, "hQFermi");
-
-  for (size_t i = 0; i < muP.size(); ++i)
-    muP[i] = -1.0 * muP[i];
 
   return;
 }
@@ -2854,6 +2851,10 @@ Negf::get_ordered_solution(SimulationInterface* model, const std::string& var)
   std::vector<double> solution;
   std::vector<double> tot_vals;
   ID ID = model->get_solution_id(var);
+  unsigned int n_vars = _sys_H->n_vars();
+
+  solution.reserve(_device_n_dofs*n_vars);
+  tot_vals.reserve(_device_n_dofs);
 
   MeshBase::const_element_iterator       el     = this->active_local_elements_begin();
   const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
@@ -2867,7 +2868,6 @@ Negf::get_ordered_solution(SimulationInterface* model, const std::string& var)
   for (unsigned int i = 0; i < elem->n_nodes(); ++i)
       p[i] = elem->point(i);
 
-  //tot_vals.resize(_device_n_dofs);
 
   model->get_solution(elem, ID, values, p);
   tot_vals.push_back(values[0]);
@@ -2894,10 +2894,7 @@ Negf::get_ordered_solution(SimulationInterface* model, const std::string& var)
 
   dof_map.dof_indices(elem, dof_indices);
   //if n_vars (number of bands) > 1 we need a solution (n_vars*_device_n_dofs) long
-  unsigned int n_vars = _sys_H->n_vars();
 
-  //alloca prima il vettore
-  //solution.resize(_device_n_dofs*n_vars);
 
   for (size_t i = 0; i < n_vars; ++i)
     solution.push_back(tot_vals[_perm[dof_indices[0]]]);

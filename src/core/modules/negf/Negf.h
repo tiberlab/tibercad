@@ -126,7 +126,7 @@ class TBDLLOCAL Negf : public SimulationInterface
 
         double Estep;
 
-        //double Estep_coarse;
+        double Estep_coarse;
 
         std::vector <int> Np_n;
 

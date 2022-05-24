@@ -167,8 +167,8 @@ NegfWrapper::quasi_equilibrium_density(std::vector<double>& density, std::string
    if (particle == "el"){ p = +1;}
    if (particle == "hl"){ p = -1;}
 
-   //f77_negf_density_quasi_equilibrium(_handler, size, density.data(), p, Ec.data(),
-   //    Ev.data(), muN.data(), muP.data());
+   f77_negf_density_quasi_equilibrium(_handler, size, density.data(), p, Ec.data(),
+       Ev.data(), muN.data(), muP.data());
 }
 
 void
