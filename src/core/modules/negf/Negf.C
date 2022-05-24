@@ -222,11 +222,14 @@ Negf::init_hamil(void)
   // setup external module as Hamiltonian generator
   
   const MeshBase& mesh = get_mesh();
-  MeshBase::const_element_iterator el = mesh.active_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
+  MeshBase::const_element_iterator el = active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el = active_local_elements_end();
   NegfModel* negfmod;
 
   negfmod = get_bulk_model<NegfModel>(*el);
+
+  if (negfmod == nullptr)
+    throw InitFailedException("Cannot find bulk model in NEGF");
 
   _hamil_type = negfmod->get_model_name(0);
 
