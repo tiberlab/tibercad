@@ -801,8 +801,8 @@ Negf::setup_negf(void)
     double phi, mu_n, mu_p;
     get_boundary_potentials(it->second, phi, mu_n, mu_p);
 
-    params.mu_n[id] =  mu_n;
-    params.mu_p[id] = -mu_p;
+    params.mu_n[id] = mu_n;
+    params.mu_p[id] = mu_p;
     //params.mu[id] = ; // not needed, for DFTB
     // TODO a hack for now
     params.mu[id] = mu_n;
