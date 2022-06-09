@@ -20,13 +20,56 @@ using namespace std;
 
 namespace
 {
-  Mat A; //Hamiltonian
-  Mat B; //S-matrix
-  EPS eps; //EigenSolver
+  Mat A; // Hamiltonian
+  Mat B; // S-matrix
+  Mat M; // Shell matrix for spectrum folding
+  Mat P; // preconditioner matrix
+  EPS eps; // EigenSolver
   MPI_Comm slepc_comm;
-  double shift; //could be stored in ST but lapack does not apply any shift
+  double shift; // could be stored in ST but lapack does not apply any shift
   
   vector<Vec> _deflation_space;
+
+  // A context structure for spectrum folding
+  typedef struct
+  {
+    Mat       A;
+    Vec       w;
+    PetscReal target;
+  } STFoldCtx;
+
+  // An instance of STFoldCtx
+  STFoldCtx *fold_ctx = nullptr;
+
+  // The spectrum folding
+  PetscErrorCode MatMult_Fold(Mat M, Vec x, Vec y)
+  {
+    STFoldCtx   *ctx;
+    PetscScalar    sigma;
+
+    MatShellGetContext(M, &ctx);
+    sigma = -ctx->target;
+    MatMult(ctx->A, x, ctx->w);
+    VecAXPY(ctx->w, sigma,x);
+    MatMult(ctx->A, ctx->w,y);
+    VecAXPY(y,sigma, ctx->w);
+
+    return(0);
+  }
+
+
+  // For spectrum folding, we need to recover the real eigenvalues
+  PetscErrorCode RayleighQuotient(Mat A, Vec x, PetscScalar *r)
+  {
+    Vec Ax;
+
+    VecDuplicate(x, &Ax);
+    MatMult(A, x, Ax);
+    VecDot(Ax, x, r);
+    VecDestroy(&Ax);
+
+    return(0);
+  }
 }
 
 
@@ -150,9 +193,30 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt,
                 Create the eigensolver and set various options
      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-  /*
-     Set operators. In this case, it is a generalized eigenvalue problem
-  */
+  shift = opt.spectrum_shift.real();
+
+  if (opt.spectral_trans == "folding")
+  {
+    if (fold_ctx == nullptr)
+    {
+      PetscInt N, nloc, mloc;
+      MatGetSize(A, &N, nullptr); // we only have square matrices
+      MatGetLocalSize(A, &nloc, &mloc);
+
+      PetscNew(&fold_ctx);
+      fold_ctx->A = A;
+      MatCreateVecs(A, &fold_ctx->w, NULL);
+      //VecDuplicate(x, &ctx->w);
+
+      MatCreateShell(slepc_comm, nloc, mloc, N, N, fold_ctx, &M);
+      MatShellSetOperation(M, MATOP_MULT, (void(*)(void))MatMult_Fold);
+    }
+
+    fold_ctx->target = shift;
+
+  }
+
+  // Set operators.
   if (evp_type == GENERALIZED)
   {
     ierr = EPSSetOperators(eps,A,B);TiberPetscUtils::checkerr(ierr);
@@ -160,18 +224,31 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt,
   }
   else
   {
-    ierr = EPSSetOperators(eps,A,PETSC_NULL);TiberPetscUtils::checkerr(ierr);
+    if (opt.spectral_trans == "folding")
+      ierr = EPSSetOperators(eps, M, PETSC_NULL);
+    else
+      ierr = EPSSetOperators(eps, A, PETSC_NULL);
+
+    TiberPetscUtils::checkerr(ierr);
+
     ierr = EPSSetProblemType(eps,EPS_HEP);TiberPetscUtils::checkerr(ierr);
   }
 
 
 
-  shift = opt.spectrum_shift.real();
+  ierr = EPSSetTolerances(eps, opt.eps_tolerance, opt.eps_max_it);  TiberPetscUtils::checkerr(ierr);
 
-  ierr = EPSSetTolerances(eps,opt.eps_tolerance,opt.eps_max_it);  TiberPetscUtils::checkerr(ierr);
-  ierr = EPSSetWhichEigenpairs(eps,EPS_TARGET_MAGNITUDE);TiberPetscUtils::checkerr(ierr);
-  //ierr = EPSSetWhichEigenpairs(eps,EPS_ALL);TiberPetscUtils::checkerr(ierr);
-  ierr = EPSSetTarget(eps, opt.spectrum_shift);TiberPetscUtils::checkerr(ierr);
+  if (opt.spectral_trans == "folding")
+  {
+    ierr = EPSSetWhichEigenpairs(eps, EPS_SMALLEST_REAL); TiberPetscUtils::checkerr(ierr);
+    ierr = EPSSetTarget(eps, 0.0);TiberPetscUtils::checkerr(ierr);
+  }
+  else
+  {
+    ierr = EPSSetWhichEigenpairs(eps, EPS_TARGET_MAGNITUDE); TiberPetscUtils::checkerr(ierr);
+    //ierr = EPSSetWhichEigenpairs(eps,EPS_ALL);TiberPetscUtils::checkerr(ierr);
+    ierr = EPSSetTarget(eps, opt.spectrum_shift);TiberPetscUtils::checkerr(ierr);
+  }
 
 
   if (opt.solver_type == "arnoldi" || opt.solver_type == "krylovshur")
@@ -191,15 +268,12 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt,
     {
       //ierr = STSetType(st,STFOLD); TiberPetscUtils::checkerr(ierr);
 
-      throw RuntimeException("\'folding\' as spectral transform is"
-          " temporarily unsupported.");
+      ierr = STSetType(st, STSHIFT); TiberPetscUtils::checkerr(ierr);
     }
     else
     {
-      ierr = STSetType(st,STSINVERT); TiberPetscUtils::checkerr(ierr);
+      ierr = STSetType(st, STSINVERT); TiberPetscUtils::checkerr(ierr);
     }
-
-    //ierr = STSetShift(st, opt.spectrum_shift);TiberPetscUtils::checkerr(ierr);
 
     set_ksp_and_pc(st, opt);
 
@@ -208,7 +282,6 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt,
   {
     ierr = EPSSetType(eps, EPSLAPACK);
     //ierr = EPSGetST(eps,&st); TiberPetscUtils::checkerr(ierr);
-    //ierr = STSetShift(st, opt.spectrum_shift);TiberPetscUtils::checkerr(ierr);
 
   }
   else if (opt.solver_type == "arpack")
@@ -228,15 +301,129 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt,
   else if (opt.solver_type == "jd")
   {
     ierr = EPSSetType(eps, EPSJD);
-    ierr = EPSGetST(eps,&st); TiberPetscUtils::checkerr(ierr);
-    ierr = STSetShift(st, opt.spectrum_shift);TiberPetscUtils::checkerr(ierr);
-    ierr = STSetType(st,STPRECOND); TiberPetscUtils::checkerr(ierr);
+
+    //set_ksp_and_pc(st, opt);
+    if ((opt.spectral_trans == "folding") && (fold_ctx != nullptr))
+    {
+      PetscInt N;
+      MatGetSize(A, &N, nullptr); // we only have square matrices
+
+      MatCreate(PETSC_COMM_WORLD, &P);
+      MatSetSizes(P, PETSC_DECIDE, PETSC_DECIDE, N, N);
+
+      // we abuse of the woking vector in the folding context to calculate
+      // the diagonal of A^2
+      PetscInt start, stop;
+      MatGetOwnershipRange(A, &start, &stop);
+
+      for (PetscInt i = start; i < stop; ++i)
+      {
+        PetscInt nvals;
+        const PetscScalar *vals;
+        const PetscInt *cols;
+        MatGetRow(A, i, &nvals, &cols, &vals);
+
+        double sum = 0;
+        for (unsigned int j = 0; j < nvals; ++j)
+        {
+          double norm = std::abs(vals[j]);
+          //if (i == cols[j])
+          //  norm -= shift;
+
+          sum += norm*norm;
+        }
+
+        MatRestoreRow(A, i, &nvals, &cols, &vals);
+
+        VecSetValue(fold_ctx->w, i, sum, INSERT_VALUES);
+      }
+      VecAssemblyBegin(fold_ctx->w);
+      VecAssemblyEnd(fold_ctx->w);
+
+
+      MatSetUp(P);
+      MatDiagonalSet(P, fold_ctx->w, INSERT_VALUES);
+
+      EPSGetST(eps, &st);
+      STSetType(st, STPRECOND);
+      STSetPreconditionerMat(st, P);
+      MatDestroy(&P);
+      //set_ksp_and_pc(st, opt);
+      STGetKSP(st, &ksp);
+      KSPSetType( ksp, KSPMINRES);
+      KSPGetPC(ksp, &pc);
+      PCSetType(pc, PCJACOBI);
+      KSPSetTolerances(ksp,opt.spectrum_inversion_tolerance, PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT);
+
+      if (opt.monitor)
+      {
+        PetscViewerAndFormat *vf;
+        ierr = PetscViewerAndFormatCreate(PETSC_VIEWER_STDOUT_WORLD,PETSC_VIEWER_DEFAULT, &vf);
+        TiberPetscUtils::checkerr(ierr);
+        ierr = KSPMonitorSet(ksp, (PetscErrorCode (*)(KSP, PetscInt, PetscReal, void*))KSPMonitorResidual, vf, 0);
+        TiberPetscUtils::checkerr(ierr);
+      }
+    }
+  }
+  else if (opt.solver_type == "gd")
+  {
+    ierr = EPSSetType(eps, EPSGD);
+
+    if ((opt.spectral_trans == "folding") && (fold_ctx != nullptr))
+    {
+      PetscInt N;
+      MatGetSize(A, &N, nullptr); // we only have square matrices
+
+      MatCreate(PETSC_COMM_WORLD, &P);
+      MatSetSizes(P, PETSC_DECIDE, PETSC_DECIDE, N, N);
+
+      // we abuse of the woking vector in the folding context to calculate
+      // the diagonal of A^2
+      PetscInt start, stop;
+      MatGetOwnershipRange(A, &start, &stop);
+
+      for (PetscInt i = start; i < stop; ++i)
+      {
+        PetscInt nvals;
+        const PetscScalar *vals;
+        const PetscInt *cols;
+        MatGetRow(A, i, &nvals, &cols, &vals);
+
+        double sum = 0;
+        for (unsigned int j = 0; j < nvals; ++j)
+        {
+          double norm = std::abs(vals[j]);
+          //if (i == cols[j])
+          //  norm -= shift;
+
+          sum += norm*norm;
+        }
+
+        MatRestoreRow(A, i, &nvals, &cols, &vals);
+
+        VecSetValue(fold_ctx->w, i, sum, INSERT_VALUES);
+      }
+      VecAssemblyBegin(fold_ctx->w);
+      VecAssemblyEnd(fold_ctx->w);
+
+
+      MatSetUp(P);
+      MatDiagonalSet(P, fold_ctx->w, INSERT_VALUES);
+
+      EPSGetST(eps, &st);
+      STSetType(st, STPRECOND);
+      STSetPreconditionerMat(st, P);
+      MatDestroy(&P);
+      STGetKSP(st, &ksp);
+      KSPSetType( ksp, KSPPREONLY);
+      KSPGetPC(ksp, &pc);
+      PCSetType(pc, PCJACOBI);
+    }
   }
   else
   {
     throw RuntimeException("Unknown SLEPc solver: " + opt.solver_type);
   }
-
 
 
   ierr = do_solve(opt);
@@ -286,7 +473,7 @@ int set_ksp_and_pc(ST st, const EigenSolver::SLEPCoptions& opt)
 #endif
 
   if (opt.st_ksp_type == "bcgsl")
-    ierr = KSPSetType( ksp, KSPBCGS);
+    ierr = KSPSetType( ksp, KSPBCGSL);
   else if (opt.st_ksp_type == "gmres" )
     ierr = KSPSetType( ksp, KSPGMRES);
   else if (opt.st_ksp_type == "bcgs" )
@@ -306,7 +493,7 @@ int set_ksp_and_pc(ST st, const EigenSolver::SLEPCoptions& opt)
   MPI_Comm_size(slepc_comm, &comm_size);
 
   if (opt.pc_type == "cholesky")
-    ierr = PCSetType(pc,PCCHOLESKY);
+    ierr = PCSetType(pc, PCCHOLESKY);
   else if (opt.pc_type == "jacobi" )
     ierr =  PCSetType(pc, PCJACOBI);
   else if (opt.pc_type == "ilu" )
@@ -368,12 +555,30 @@ int EigenSolver::number_of_converged_eigenvalues()
   return(nconv);
 }
 //--------------------------------------------------------------//
-double EigenSolver::get_eigenvalue( int i)
+double EigenSolver::get_eigenvalue(int i)
 {
   int ierr;
   PetscScalar ev, ev_i;
 
-  ierr = EPSGetEigenvalue(eps, i, &ev,  &ev_i);
+
+  // in case of spectrum folding, we recover the real eigenvalue
+  // by calculating the Rayleigh quotient
+  if (fold_ctx != nullptr)
+  {
+    Vec eigen_vector;
+    ierr = MatCreateVecs(A, PETSC_NULL, &eigen_vector);
+    TiberPetscUtils::checkerr(ierr);
+
+    ierr = EPSGetEigenpair(eps, i, &ev, &ev_i, eigen_vector, PETSC_NULL);
+    TiberPetscUtils::checkerr(ierr);
+
+    ierr = RayleighQuotient(A, eigen_vector, &ev);
+    VecDestroy(&eigen_vector);
+  }
+  else
+    ierr = EPSGetEigenvalue(eps, i, &ev,  &ev_i);
+
+  TiberPetscUtils::checkerr(ierr);
 
   double eigen_value = PetscRealPart(ev);
 
@@ -485,8 +690,6 @@ int EigenSolver::prepare_slepc(MPI_Comm comm)
   {
     ierr = EPSCreate(slepc_comm,&eps);TiberPetscUtils::checkerr(ierr);
 //    ierr = EPSCreate(comm ,&eps);TiberPetscUtils::checkerr(ierr);
-
-    //ierr = EPSSetFromOptions(eps); TiberPetscUtils::checkerr(ierr);
   }
 
 
@@ -545,6 +748,13 @@ int EigenSolver::clear_slepc()
     if ( generalized)  ierr = MatDestroy(&B);TiberPetscUtils::checkerr(ierr);
   }
 
+  if (fold_ctx != nullptr)
+  {
+    VecDestroy(&fold_ctx->w);
+    delete fold_ctx;
+    fold_ctx = nullptr;
+  }
+
 
   // NOTE: with real MPI this leads to too many communicators
   // in a future version of SLEPc one could maybe use EPSReset()
@@ -588,23 +798,21 @@ int EigenSolver::do_solve(const SLEPCoptions& opt)
 #else
   if (opt.monitor)
   {
+    ierr = EPSMonitorCancel(eps); TiberPetscUtils::checkerr(ierr);
     PetscViewerAndFormat *vf;
     ierr = PetscViewerAndFormatCreate(PETSC_VIEWER_STDOUT_WORLD,PETSC_VIEWER_DEFAULT, &vf); TiberPetscUtils::checkerr(ierr);
     ierr = EPSMonitorSet(eps, (PetscErrorCode (*)(EPS, PetscInt, PetscInt, PetscScalar*, PetscScalar*, PetscReal*, PetscInt, void*))EPSMonitorAll,
                          vf, (PetscErrorCode (*)(void**))PetscViewerAndFormatDestroy); TiberPetscUtils::checkerr(ierr);
-    ierr = EPSMonitorCancel(eps); TiberPetscUtils::checkerr(ierr);
   }
 #endif
 
 
 
 #if (SLEPC_VERSION_MAJOR >= 3)
-  ierr = EPSSetDimensions(eps,opt.ev_number, ncv, PETSC_DECIDE); TiberPetscUtils::checkerr(ierr);
+  ierr = EPSSetDimensions(eps,opt.ev_number, PETSC_DECIDE, PETSC_DECIDE); TiberPetscUtils::checkerr(ierr);
 #else
   ierr = EPSSetDimensions(eps,opt.ev_number, ncv); TiberPetscUtils::checkerr(ierr);
 #endif
-
-  //EPSSetFromOptions(eps);
 
 
   ierr = EPSSolve(eps);
@@ -643,8 +851,8 @@ int EigenSolver::init_H_matrix(unsigned int n)
 
   ierr = MatCreate(slepc_comm,&A);
   TiberPetscUtils::checkerr(ierr);
-  ierr = MatSetType(A, MATAIJ);
-  TiberPetscUtils::checkerr(ierr);
+  //ierr = MatSetType(A, MATAIJ);
+  //TiberPetscUtils::checkerr(ierr);
 
 
 
@@ -652,18 +860,7 @@ int EigenSolver::init_H_matrix(unsigned int n)
 
   TiberPetscUtils::checkerr(ierr);
 
-
-  //ierr = MatSetFromOptions(A);
-
-
-  //TiberPetscUtils::checkerr(ierr);
-
-
-
-
-
   return(ierr);
-
 
 }
 
@@ -676,16 +873,12 @@ int EigenSolver::init_S_matrix(unsigned int n)
 
   ierr = MatCreate(slepc_comm,&B);
   TiberPetscUtils::checkerr(ierr);
-  ierr = MatSetType(B, MATAIJ);
-  TiberPetscUtils::checkerr(ierr);
+  //ierr = MatSetType(B, MATAIJ);
+  //TiberPetscUtils::checkerr(ierr);
 
 
   ierr = MatSetSizes(B,PETSC_DECIDE,PETSC_DECIDE,n,n);
   TiberPetscUtils::checkerr(ierr);
-
-
-  //ierr = MatSetFromOptions(B);
-  //TiberPetscUtils::checkerr(ierr);
 
 
   return(ierr);
