@@ -809,7 +809,8 @@ int EigenSolver::do_solve(const SLEPCoptions& opt)
 
 
 #if (SLEPC_VERSION_MAJOR >= 3)
-  ierr = EPSSetDimensions(eps,opt.ev_number, PETSC_DECIDE, PETSC_DECIDE); TiberPetscUtils::checkerr(ierr);
+  //ierr = EPSSetDimensions(eps,opt.ev_number, PETSC_DECIDE, PETSC_DECIDE); TiberPetscUtils::checkerr(ierr);
+  ierr = EPSSetDimensions(eps,opt.ev_number, ncv, PETSC_DECIDE); TiberPetscUtils::checkerr(ierr);
 #else
   ierr = EPSSetDimensions(eps,opt.ev_number, ncv); TiberPetscUtils::checkerr(ierr);
 #endif
