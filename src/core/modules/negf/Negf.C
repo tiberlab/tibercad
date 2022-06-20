@@ -693,7 +693,7 @@ Negf::setup_hamil(void)
   }
 
   // we have to reinitialize some structures in libnegf
-  if (get_option("print_matrices",false))
+  if (get_option("print_matrices", false))
     _libnegf->print_mat();
 
   _cblk = _libnegf->contact_blocks(_quantum_contacts.size(),
@@ -770,6 +770,11 @@ Negf::setup_negf(void)
   //params.readOldDM_SGFs = ;
   //params.readOldT_SGFs = ;
   params.g_spin = _ext_module->get_degeneracy();
+  {
+    ostringstream os;
+    os << "spin degeneracy : " << params.g_spin;
+    Messages::info(os.str());
+  }
   params.delta = opt.delta;
   //params.deltaModel = ;
   //params.wmax = ;
@@ -801,8 +806,8 @@ Negf::setup_negf(void)
     double phi, mu_n, mu_p;
     get_boundary_potentials(it->second, phi, mu_n, mu_p);
 
-    params.mu_n[id] = mu_n;
-    params.mu_p[id] = mu_p;
+    params.mu_n[id] =  mu_n;
+    params.mu_p[id] =  mu_p;
     //params.mu[id] = ; // not needed, for DFTB
     // TODO a hack for now
     params.mu[id] = mu_n;
@@ -902,19 +907,20 @@ Negf::setup_negf(void)
   for (auto&& s : _surfend)
     s -= 1;
 
+
   /*
   cerr << "surfstart = ";
-  for (auto&& s : surfstart)
+  for (auto&& s : _surfstart)
     cerr << s << " ";
   cerr << endl;
 
   cerr << "surfend = ";
-  for (auto&& s : surfend)
+  for (auto&& s : _surfend)
     cerr << s << " ";
   cerr << endl;
 
   cerr << "contend = ";
-  for (auto&& s : contend)
+  for (auto&& s : _contend)
     cerr << s << " ";
   cerr << endl;
   */
@@ -2568,13 +2574,15 @@ Negf::reorder(void)
   for (unsigned int i = 0; i < _perm.size(); ++i)
     _perm[_inv_perm[i]] = i;
 
-  //for (auto&& p : _perm)
-  //  cerr << p+1 << " ";
-  //cerr << endl;
+  /*
+  for (auto&& p : _perm)
+    cerr << p+1 << " ";
+  cerr << endl;
 
-  //for (auto&& p : _inv_perm)
-  //  cerr << p+1 << " ";
-  //cerr << endl;
+  for (auto&& p : _inv_perm)
+    cerr << p+1 << " ";
+  cerr << endl;
+  */
 }
 
 
@@ -2583,16 +2591,6 @@ Negf::reorder(void)
 void
 Negf::reorder_assemble(void)
 {
-  std::map<const Boundary*, int> boundary_ids;
-  int id = 0;
-  std::map<const Boundary*, QuantumContact*>::iterator it = _qc_boundaries.begin();
-  const std::map<const Boundary*, QuantumContact*>::iterator end = _qc_boundaries.end();
-  for( ; it != end; ++it, ++id)
-  {
-    boundary_ids[it->first] = id;
-  }
-
-
   const MeshBase& mesh = get_mesh();
 
   const unsigned int dim = mesh.mesh_dimension();
@@ -2738,6 +2736,7 @@ Negf::reorder_assemble(void)
 
     }
 
+
     // Reorder the qc_n_dofs such that they are with increasing order
     for (unsigned int i = 0; i <(_quantum_contacts.size()-1); i++)
       if (_qc_n_dofs[i]>_qc_n_dofs[i+1])
@@ -2801,7 +2800,7 @@ Negf::get_boundary_potentials(QuantumContact* qc, double& av_V, double& av_mu_n,
   it = mesh.active_elements_begin();
   it_end  = mesh.active_elements_end();
 
-  for ( ; it != it_end ; ++it) //loop over k space elements
+  for ( ; it != it_end ; ++it) 
   {
     const Elem* elem = *it;
 
