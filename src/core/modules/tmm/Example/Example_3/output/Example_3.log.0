@@ -1,5 +1,5 @@
 
-Log start: Fri May 13 10:23:48 2022
+Log start: Fri May 13 11:12:33 2022
 
 
 Writing log to output/Example_3.log.0
@@ -14,9 +14,9 @@ Initialize global simulation options
 
 Setup mesh
   Reading mesh file 'Example_3.msh ...
-    mesh reading time: 0h 0m 0.0061s
-    mesh preparation time: 0h 0m 0.0017s
-    bd_regions preparation time: 0h 0m 2.3e-05s
+    mesh reading time: 0h 0m 0.0051s
+    mesh preparation time: 0h 0m 0.0016s
+    bd_regions preparation time: 0h 0m 2.5e-05s
 
     mesh units          : 1e-09 m
     mesh dimension      :       1
@@ -338,16 +338,16 @@ We solve: tmm_study
   solving condition :  Lambda is : 950nm
   Radiation intensity is : 147.26mW m^-2 nm^-1
 
-Solve time: 0h 0m 0.41s
+Solve time: 0h 0m 0.42s
 <<<<----------------------------------------------------------------------------
 
-Total solve time: 0h 0m 0.45s
+Total solve time: 0h 0m 0.46s
 Simulation finished.
 
 1 warnings during run
 0 errors detected
 
 
-Log end: Fri May 13 10:23:49 2022
+Log end: Fri May 13 11:12:33 2022
 
 

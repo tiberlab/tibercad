@@ -183,12 +183,16 @@ class TBDLLOCAL Tmm : public SimulationInterface
       Reflection,
       Absorption
     };
+
     std::vector<double> _Transmission;
     std::vector<double> _Reflection;
     std::vector<double> _Absorption;
+
     std::vector<double> _Intensity;
     std::vector<double> _ElectricField;
     std::vector<double> _Wavelength;
+    std::vector<double> _Generation_rate;
+
 
     
 
@@ -207,12 +211,13 @@ class TBDLLOCAL Tmm : public SimulationInterface
     /*!
      * \brief The incident angle
      */
-    std::vector<double> _incident_angle;
+    double _incident_angle;
+    double _reflectivity;
+    double _up_lambda;
+    double _down_lambda;
+    double _wavelength_steps;
 
-    std::vector<double> _reflectivity;
-    std::vector<double> _up_lambda;
-    std::vector<double> _down_lambda;
-    std::vector<double> _wavelength_steps;
+    std::vector<double> _wavelength_vector;
 
 
 

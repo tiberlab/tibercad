@@ -11,7 +11,7 @@ Device
   }
   Region Ag 
   {
-  Incoherency= 1
+  Incoherency= 0
   material = Ag
   }
 

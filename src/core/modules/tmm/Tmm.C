@@ -21,9 +21,9 @@ using namespace libMesh;
 
 
 
+ // ,_incident_angle({0.0})
 Tmm::Tmm(const ModelOptions& options) :
-  SimulationInterface(options),
-  _incident_angle({0.0})
+  SimulationInterface(options)
 {
 }
 
@@ -235,36 +235,24 @@ Tmm::parse_options(void)
 {
   // read wavelengths from input
 
-  get_option("incident_angle", _incident_angle);
-  if (_incident_angle.empty())
+  _incident_angle = get_option("incident_angle",0);
+  _reflectivity = get_option("back_reflectivity",0);
+  get_option("wavelengths",_wavelength_vector );
+  if (_wavelength_vector.empty())
   {
-    _incident_angle.push_back(0);
+      _up_lambda = get_option("wavelength_uper_lim", 0 );
+      if (_up_lambda == 0)
+      {
+        Messages::warning("You did not provide any up_lambda for TMM.");
+      }
+      _down_lambda = get_option("wavelength_lower_lim", 0);
+      if (_down_lambda == 0)
+      {
+        Messages::warning("You did not provide any down_lambda for TMM.");
+      }
+      _wavelength_steps = get_option("wavelength_steps",1);
   }
 
-
-  get_option("back_reflectivity", _reflectivity);
-  if (_reflectivity.empty())
-  {
-    _reflectivity.push_back(0);
-  }
-
-  get_option("wavelength_uper_lim", _up_lambda);
-  if (_up_lambda.empty())
-  {
-    Messages::warning("You did not provide any up_lambda for TMM.");
-  }
-
-  get_option("wavelength_lower_lim", _down_lambda);
-  if (_down_lambda.empty())
-  {
-    Messages::warning("You did not provide any down_lambda for TMM.");
-  }
-
-  get_option("wavelength_steps", _wavelength_steps);
-  if (_wavelength_steps.empty())
-  {
-    _wavelength_steps.push_back(1);
-  }
 
   Database db;
   ifstream is;
@@ -363,17 +351,18 @@ Tmm::do_solve(void)
   vector<double> gen;
   vector<double> lambda_interp;
   vector<double> sun_interp;
-  for (double i = _down_lambda[0]; i<= _up_lambda[0]; i += _wavelength_steps[0])
-  {
-    lambda_interp.push_back(i);
-  }
+
+  if (_wavelength_vector.empty())
+    for (double i = _down_lambda; i<= _up_lambda; i += _wavelength_steps)
+      lambda_interp.push_back(i);
+  else
+    for (double i = 0; i< _wavelength_vector.size(); ++i)
+      lambda_interp.push_back(_wavelength_vector[i]);
+
   sun_interp = Tmm::linear_interpolation1(_lambda,_spectrum,lambda_interp);
 
 
   for (unsigned int i = 0; i < lambda_interp.size(); ++i)   //loop over wavelength
-  {
-
-  for (unsigned int j = 0; j < _incident_angle.size(); ++j)  //loop over incident angle
   {
     ostringstream os;
     os << "----------------------------------------"<<"\n" << "solving condition :  " ;
@@ -394,7 +383,7 @@ Tmm::do_solve(void)
     const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
 
     double E = 1.0;
-    double incoming_angle=_incident_angle[j];
+    double incoming_angle=_incident_angle;
 
     double c0 = 2.998e8 * 1e9;              // Speed of light [nm/s]
     double e0 = 8.85e-12;                   // Vacuum permittivity  [F/m]
@@ -544,13 +533,16 @@ Tmm::do_solve(void)
         rnd = 5;
     phase_step = 2 * M_PI / rnd;
     double N0 = 0;
-    for (int iter = 0; iter <rnd; ++iter )
+    for (int iter = 0; iter <rnd; ++iter )    // loop over phases
     {
-      // ***************************************
-      //****************************************
 
       double randoom = 0;
-      double r =_reflectivity[0];
+      double r =_reflectivity;
+
+
+
+      //***********************************************************************
+      //**********loop added for highly absorbing structures*******************
 
       Tmm::Matrix_2by2 Unit(1,0,0,1);
       Tmm::Matrix_2by2 DD(1,0,0,1);
@@ -574,7 +566,7 @@ Tmm::do_solve(void)
            TT_load = Unit;
            TT = TT * TT_load ;
            if (N0 == 0){
-             std::cout<<" Maximum Absorption Reached"<<std::endl;
+             //std::cout<<" Maximum Absorption Reached"<<std::endl;
              N0 = n_real.size() - k;
            }
           }else
@@ -583,9 +575,10 @@ Tmm::do_solve(void)
           }
 
         }
-        Tmm::Matrix_2by2 D(1,0,0,1);
-        Tmm::Matrix_2by2 M(0,0,0,0);
-        Tmm::Matrix_2by2 T_load(0,0,0,0);
+
+      //***********************************************************************
+      //**********************Main TMM loop************************************
+
         Tmm::Matrix_2by2 T(1,0,0,1);
 
         Tmm::Matrix_2by2 E_N(1,0,0,0);
@@ -600,27 +593,33 @@ Tmm::do_solve(void)
                E_F.push_back(0);
                E_B.push_back(0);
              }
-           E_F.push_back(1);
-           E_B.push_back(0);
-           for (int k = n_real.size()-N0-2 ;k >= 0 ; --k)
+
+         E_F.push_back(1);
+         E_B.push_back(0);
+
+         for (int k = n_real.size()-N0-2 ;k >= 0 ; --k)
+         {
+
+           DD = get_D(n_real[k],n_imag[k],n_real[k+1],n_imag[k+1],theta[k],theta[k+1]);
+           if(Incoh[k]==1 && Incoh[k+1]==0)
            {
-
-             D = get_D(n_real[k],n_imag[k],n_real[k+1],n_imag[k+1],theta[k],theta[k+1]);
-             if(Incoh[k]==1 && Incoh[k+1]==0)
-             {
-               M = get_M(n_real[k],n_imag[k],l[k],lambda,theta[k],phase_step * iter);
-             }
-             else
-             {
-               M = get_M(n_real[k],n_imag[k],l[k],lambda,theta[k],0);
-             }
-             T_load = M * D;
-             T = T_load * T;
-
-             E_I = T * E_N  ;
-             E_F.push_back(E_I.get(0)) ;
-             E_B.push_back(E_I.get(2));
+             MM = get_M(n_real[k],n_imag[k],l[k],lambda,theta[k],phase_step * iter);
            }
+           else
+           {
+             MM = get_M(n_real[k],n_imag[k],l[k],lambda,theta[k],0);
+           }
+           TT_load = DD * T;
+           T = MM * TT_load;
+
+
+           E_I = T * E_N  ;
+           E_F.push_back(E_I.get(0)) ;
+           E_B.push_back(E_I.get(2));
+         }
+
+
+
 
 
       //***********************************************************************
@@ -639,8 +638,10 @@ Tmm::do_solve(void)
       avg_transmission = avg_transmission + real(Transmission) / rnd;
       avg_Absorption = avg_Absorption + (1-real(Reflection)-real(Transmission)) / rnd;
 
+
+
       //****************************************************************************
-      //***************normalizing electric field matrix******************************
+      //***************normalizing electric field matrix****************************
 
       vector<complex<double>> E_F_NORM(n_real.size());
       vector<complex<double>> E_B_NORM(n_real.size());
@@ -651,16 +652,19 @@ Tmm::do_solve(void)
         E_B_NORM[nm] = E_B[E_F.size()-1-nm]/E_F[E_F.size()-1];
       }
 
+
+      //****************************************************************************
+      //***************Calculating average values over random phases****************
+
       vector<complex<double>> Etot(n_real.size()); // Electric Field, Magnetic Field
       vector<complex<double>> Intensity;// Intensity, forward, backward
       vector<complex<double>> Generation_rate;        // Generation Rate
       vector<double> Generation_rate_real;        // Generation Rate real
 
-
       for (int nm=0 ; nm < n_real.size() ; ++nm)
       {
         Etot[nm] = E_F_NORM[nm] + E_B_NORM[nm];
-        Electric_Field_avg[nm] =  Electric_Field_avg[nm] + pow(abs(Etot[nm]), 2)/rnd;
+        Electric_Field_avg[nm] =  Electric_Field_avg[nm] + real(Etot[nm])/rnd;
         Intensity.push_back(0.5 * c0 * 1e-9 * e0 * n_real[nm] * Esun2* pow(abs(Etot[nm]), 2)); // Intensity [W/(m^2 * nm)]
         Intensity_avg[nm] = Intensity_avg[nm] + real(Intensity[nm])/rnd;
 
@@ -668,20 +672,17 @@ Tmm::do_solve(void)
         Generation_rate_real.push_back(real(Generation_rate[nm]));
         Generation_rate_avg[nm] = Generation_rate_avg[nm] + Generation_rate_real[nm]/rnd;
 
-
       }
 
-
     }
-
-
-
     _Wavelength.push_back(lambda);
     double scale = 1e-6;
     _Reflection.push_back((int)(real(avg_reflection) / scale) * scale);
     _Transmission.push_back((int)(real(avg_transmission) / scale) * scale);
     _Absorption.push_back((int)(avg_Absorption / scale) * scale);
 
+    //****************************************************************************
+    //*******************Calculating integral over wavelengths********************
 
     if (i == 0)
     {
@@ -695,80 +696,45 @@ Tmm::do_solve(void)
       generation_rate_integral.resize(n_real.size());
       generation_rate_integral = Generation_rate_avg;
 
-    }
-
-    if (i != 0 && i != lambda_interp.size()-1)
+    }else
     {
+
       for (int nm =0; nm< n_real.size();nm++)
       {
-        generation_rate_integral[nm] +=2 * Generation_rate_avg[nm];
-        intensity_integral[nm] +=2 * Intensity_avg[nm];
-        Electric_Field_integral[nm] +=2* Electric_Field_avg[nm];
-
-      }
-    }
-
-    if (i == lambda_interp.size()-1)
-    {
-      for (int nm =0; nm< n_real.size();nm++)
-      {
-        generation_rate_integral[nm] += Generation_rate_avg[nm];
+        generation_rate_integral[nm] +=  Generation_rate_avg[nm];
         intensity_integral[nm] += Intensity_avg[nm];
         Electric_Field_integral[nm] += Electric_Field_avg[nm];
-      }
-      for (int nm =0; nm< n_real.size();nm++)
-      {
-        generation_rate_integral[nm] *= (lambda_interp[lambda_interp.size()-1] - lambda_interp[0]) / (2 * (lambda_interp.size()-1));
-        intensity_integral[nm] *= (lambda_interp[lambda_interp.size()-1] - lambda_interp[0]) / (2 * (lambda_interp.size()-1));
-        Electric_Field_integral[nm] *= (lambda_interp[lambda_interp.size()-1] - lambda_interp[0]) / (2 * (lambda_interp.size()-1));
+
       }
 
     }
+
+
+    //****************************************************************************
+    //******************************Last Wavelength*******************************
+
     if( i == lambda_interp.size()-1)
     {
-
-      vector<double> Etot_Normalized(l_length.size());
-      vector<double> Intensity_Normalized(l_length.size());
-      for(double nm=0; nm < l_length.size() ; ++nm){
-        Etot_Normalized[nm] = Electric_Field_integral[nm] / Electric_Field_integral[0];
-        Intensity_Normalized[nm] = intensity_integral[nm] / intensity_integral[0];
+       i++ ;
+      for (int nm =0; nm< n_real.size();nm++)
+      {
+        generation_rate_integral[nm] *= 1.0/i;
+        intensity_integral[nm] *= 1.0/i;
+        Electric_Field_integral[nm] *= 1.0/i;
       }
       for(double nm=0; nm < l_length.size() ; ++nm){
-        solution.add(l_length[nm], generation_rate_integral[nm]);
-        _Intensity.push_back(Intensity_Normalized[nm]);
-        _ElectricField.push_back(Etot_Normalized[nm]);
+        //solution.add(l_length[nm], generation_rate_integral[nm]);
+        _Generation_rate.push_back(generation_rate_integral[nm]);
+        _Intensity.push_back(intensity_integral[nm]);
+        _ElectricField.push_back(Electric_Field_integral[nm]);
       }
     }
-
-
-
-
-
-
-
-
-
-    //*******************************************************************************
-    //************************printing electric field********************************
-
-
-
-
-
-
-
-    //////////////////////////////////////////////////////////////////
-
-
-
-  }// end of loop of angle
 
 
   }// end of loop of wave_length
 
   solution.close();
   system.update();
-  //solution.print_matlab("sol.m");
 
 }
 
@@ -871,10 +837,9 @@ Tmm::get_solution_secure(const Elem* elem,
   {
     solutions[Intensity][0]= _Intensity[dof_indices[0]];
   }
-
   if (solutions.count(GenerationRate))
   {
-    solutions[GenerationRate][0] = solution(dof_indices[0]);
+    solutions[GenerationRate][0] =_Generation_rate[dof_indices[0]];
   }
 
 }

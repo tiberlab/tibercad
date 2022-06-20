@@ -1,8 +1,8 @@
 
-Log start: Fri May 13 10:37:42 2022
+Log start: Fri May 13 11:12:50 2022
 
 
-Writing log to output_700//Example_5.log.0
+Writing log to output//Example_5.log.0
 tiberCAD release 3.2.0 (rev. 5261, x86_64-linux)
 
 Input file: Example_5.tib
@@ -10,12 +10,12 @@ Input file: Example_5.tib
 Initialize global simulation options
   Simulation temperature: 300 K
   Database search path  : .
-  Log file              : output_700//Example_5.log.0
+  Log file              : output//Example_5.log.0
 
 Setup mesh
   Reading mesh file 'Example_5.msh ...
-    mesh reading time: 0h 0m 0.0052s
-    mesh preparation time: 0h 0m 0.002s
+    mesh reading time: 0h 0m 0.0059s
+    mesh preparation time: 0h 0m 0.0021s
     bd_regions preparation time: 0h 0m 2.9e-05s
 
     mesh units          : 1e-09 m
@@ -117,7 +117,7 @@ Setting up bulk models ...
 *** Warning: found unused options in block density_of_states (bulk): charge
 
 *** Warning: found unused options in block density_of_states (bulk): charge
-    Found generation model: tmm_study.GenerationRate (0x1049530), variable ID 0
+    Found generation model: tmm_study.GenerationRate (0x1be4530), variable ID 0
 
 *** Warning: found unused options in block density_of_states (bulk): charge
 
@@ -128,7 +128,7 @@ Setting up lower dimensional (boundary) models ...
 *** Warning: found unused options in block density_of_states (bulk): charge
 
 *** Warning: found unused options in block density_of_states (bulk): charge
-    Found generation model: tmm_study.GenerationRate (0x1049530), variable ID 0
+    Found generation model: tmm_study.GenerationRate (0x1be4530), variable ID 0
 
 *** Warning: found unused options in block density_of_states (bulk): charge
 
@@ -141,7 +141,7 @@ Setting up lower dimensional (boundary) models ...
 *** Warning: found unused options in block density_of_states (bulk): charge
 
 *** Warning: found unused options in block density_of_states (bulk): charge
-    Found generation model: tmm_study.GenerationRate (0x1049530), variable ID 0
+    Found generation model: tmm_study.GenerationRate (0x1be4530), variable ID 0
 
 *** Warning: found unused options in block density_of_states (bulk): charge
 
@@ -169,7 +169,7 @@ Absorption               1              real      none        y
 RegionIDs                               real      cell        n
 ------------------------------------------------------------------
 
-Output directory      : output_700/
+Output directory      : output/
 Output file format    : grace
 Output file basename  : tmm_study
 
@@ -255,7 +255,7 @@ holeRecombination_gen    1/(s*cm^3)     real      nodal       y
 RegionIDs                               real      cell        n
 ------------------------------------------------------------------
 
-Output directory      : output_700/
+Output directory      : output/
 Output file format    : grace
 Output file basename  : driftdiffusion
 
@@ -320,7 +320,7 @@ Simulation options for sweep (sweep)
 MPI: rank 0 of communicator with size 1
 MPI: solver parallelized on 1 processes
 
-Output directory      : output_700/
+Output directory      : output/
 Output file format    : grace
 Output file basename  : sweep
 
@@ -333,7 +333,7 @@ Simulation options for sweep_back (sweep)
 MPI: rank 0 of communicator with size 1
 MPI: solver parallelized on 1 processes
 
-Output directory      : output_700/
+Output directory      : output/
 Output file format    : grace
 Output file basename  : sweep_back
 
@@ -346,7 +346,7 @@ Simulation options for sweep_gen (sweep)
 MPI: rank 0 of communicator with size 1
 MPI: solver parallelized on 1 processes
 
-Output directory      : output_700/
+Output directory      : output/
 Output file format    : grace
 Output file basename  : sweep_gen
 
@@ -2310,7 +2310,7 @@ We solve: tmm_study sweep sweep_gen sweep_back
   solving condition :  Lambda is : 950nm
   Radiation intensity is : 147.26mW m^-2 nm^-1
 
-Solve time: 0h 0m 5.5s
+Solve time: 0h 0m 5.3s
 <<<<----------------------------------------------------------------------------
 
 >>>>--------------------------------- (sweep) ----------------------------------
@@ -2332,7 +2332,7 @@ Solve time: 0h 0m 5.5s
     iterations: 7, |du| = 0.000557904, |r| = 5.17721e-10
     Equilibrium done
 
-  Solve time: 0h 0m 8.4s
+  Solve time: 0h 0m 1.4s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.1
   Trying $Vb = 0.1
@@ -2351,7 +2351,7 @@ Solve time: 0h 0m 5.5s
     anode               0                   5.70523e-07
     cathode             0.1                -5.70523e-07
 
-  Solve time: 0h 0m 1.4s
+  Solve time: 0h 0m 1.5s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.2
   Trying $Vb = 0.2
@@ -2368,7 +2368,7 @@ Solve time: 0h 0m 5.5s
     anode               0                   4.65763e-06
     cathode             0.2                -4.65763e-06
 
-  Solve time: 0h 0m 0.81s
+  Solve time: 0h 0m 0.82s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.3
   Trying $Vb = 0.3
@@ -2384,7 +2384,7 @@ Solve time: 0h 0m 5.5s
     anode               0                   3.52241e-05
     cathode             0.3                -3.52241e-05
 
-  Solve time: 0h 0m 0.63s
+  Solve time: 0h 0m 0.65s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.4
   Trying $Vb = 0.4
@@ -2400,7 +2400,7 @@ Solve time: 0h 0m 5.5s
     anode               0                   0.000265215
     cathode             0.4                -0.000265215
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.63s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.5
   Trying $Vb = 0.5
@@ -2448,7 +2448,7 @@ Solve time: 0h 0m 5.5s
     anode               0                   0.116281
     cathode             0.7                -0.116281
 
-  Solve time: 0h 0m 0.64s
+  Solve time: 0h 0m 0.63s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.8
   Trying $Vb = 0.8
@@ -2502,7 +2502,7 @@ Solve time: 0h 0m 5.5s
     anode               0                   23.7583
     cathode             1                  -23.7583
 
-  Solve time: 0h 0m 1.2s
+  Solve time: 0h 0m 1.1s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.1
   Trying $Vb = 1.1
@@ -2537,7 +2537,7 @@ Solve time: 0h 0m 5.5s
     anode               0                   58.3239
     cathode             1.2                -58.3239
 
-  Solve time: 0h 0m 0.88s
+  Solve time: 0h 0m 0.91s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.3
   Trying $Vb = 1.3
@@ -2554,7 +2554,7 @@ Solve time: 0h 0m 5.5s
     anode               0                   69.2468
     cathode             1.3                -69.2468
 
-  Solve time: 0h 0m 0.87s
+  Solve time: 0h 0m 0.88s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.4
   Trying $Vb = 1.4
@@ -2588,7 +2588,7 @@ Solve time: 0h 0m 5.5s
     anode               0                   87.4953
     cathode             1.5                -87.4953
 
-  Solve time: 0h 0m 0.9s
+  Solve time: 0h 0m 0.87s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.6
   Trying $Vb = 1.6
@@ -2622,7 +2622,7 @@ Solve time: 0h 0m 5.5s
     anode               0                   102.666
     cathode             1.7                -102.666
 
-  Solve time: 0h 0m 0.84s
+  Solve time: 0h 0m 0.83s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.8
   Trying $Vb = 1.8
@@ -2643,7 +2643,7 @@ Solve time: 0h 0m 5.5s
   Solve time: 0h 0m 1.1s
   <<<<--------------------------------------------------------------------------
 
-Solve time: 0h 0m 27s
+Solve time: 0h 0m 20s
 <<<<----------------------------------------------------------------------------
 
 >>>>------------------------------- (sweep_gen) --------------------------------
@@ -2702,7 +2702,7 @@ Solve time: 0h 0m 27s
     anode               0                   109.325
     cathode             1.8                -109.325
 
-  Solve time: 0h 0m 0.42s
+  Solve time: 0h 0m 0.43s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $x = 0.01
   Trying $x = 0.01
@@ -2718,7 +2718,7 @@ Solve time: 0h 0m 27s
     anode               0                   109.324
     cathode             1.8                -109.324
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.63s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $x = 0.1
   Trying $x = 0.1
@@ -2737,7 +2737,7 @@ Solve time: 0h 0m 27s
     anode               0                   109.312
     cathode             1.8                -109.312
 
-  Solve time: 0h 0m 1.4s
+  Solve time: 0h 0m 1.5s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $x = 0.2
   Trying $x = 0.2
@@ -2774,7 +2774,7 @@ Solve time: 0h 0m 27s
     anode               0                   109.261
     cathode             1.8                -109.261
 
-  Solve time: 0h 0m 0.94s
+  Solve time: 0h 0m 0.93s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $x = 0.75
   Trying $x = 0.75
@@ -2809,10 +2809,10 @@ Solve time: 0h 0m 27s
     anode               0                   109.186
     cathode             1.8                -109.186
 
-  Solve time: 0h 0m 0.87s
+  Solve time: 0h 0m 0.89s
   <<<<--------------------------------------------------------------------------
 
-Solve time: 0h 0m 9.1s
+Solve time: 0h 0m 9.2s
 <<<<----------------------------------------------------------------------------
 
 >>>>------------------------------- (sweep_back) -------------------------------
@@ -2844,7 +2844,7 @@ Solve time: 0h 0m 9.1s
     anode               0                   107.574
     cathode             1.775              -107.574
 
-  Solve time: 0h 0m 0.64s
+  Solve time: 0h 0m 0.63s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.75
   Trying $Vb = 1.75
@@ -2876,7 +2876,7 @@ Solve time: 0h 0m 9.1s
     anode               0                   104.23
     cathode             1.725              -104.23
 
-  Solve time: 0h 0m 0.65s
+  Solve time: 0h 0m 0.63s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.7
   Trying $Vb = 1.7
@@ -2892,7 +2892,7 @@ Solve time: 0h 0m 9.1s
     anode               0                   102.5
     cathode             1.7                -102.5
 
-  Solve time: 0h 0m 0.65s
+  Solve time: 0h 0m 0.63s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.675
   Trying $Vb = 1.675
@@ -2908,7 +2908,7 @@ Solve time: 0h 0m 9.1s
     anode               0                   100.733
     cathode             1.675              -100.733
 
-  Solve time: 0h 0m 0.65s
+  Solve time: 0h 0m 0.63s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.65
   Trying $Vb = 1.65
@@ -2940,7 +2940,7 @@ Solve time: 0h 0m 9.1s
     anode               0                   97.085
     cathode             1.625              -97.085
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.64s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.6
   Trying $Vb = 1.6
@@ -2956,7 +2956,7 @@ Solve time: 0h 0m 9.1s
     anode               0                   95.2028
     cathode             1.6                -95.2028
 
-  Solve time: 0h 0m 0.64s
+  Solve time: 0h 0m 0.63s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.575
   Trying $Vb = 1.575
@@ -2972,7 +2972,7 @@ Solve time: 0h 0m 9.1s
     anode               0                   93.2805
     cathode             1.575              -93.2805
 
-  Solve time: 0h 0m 0.65s
+  Solve time: 0h 0m 0.66s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.55
   Trying $Vb = 1.55
@@ -2988,7 +2988,7 @@ Solve time: 0h 0m 9.1s
     anode               0                   91.3169
     cathode             1.55               -91.3169
 
-  Solve time: 0h 0m 0.66s
+  Solve time: 0h 0m 0.65s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.525
   Trying $Vb = 1.525
@@ -3020,7 +3020,7 @@ Solve time: 0h 0m 9.1s
     anode               0                   87.2586
     cathode             1.5                -87.2586
 
-  Solve time: 0h 0m 0.65s
+  Solve time: 0h 0m 0.66s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.475
   Trying $Vb = 1.475
@@ -3036,7 +3036,7 @@ Solve time: 0h 0m 9.1s
     anode               0                   85.1597
     cathode             1.475              -85.1597
 
-  Solve time: 0h 0m 0.66s
+  Solve time: 0h 0m 0.65s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.45
   Trying $Vb = 1.45
@@ -3052,7 +3052,7 @@ Solve time: 0h 0m 9.1s
     anode               0                   83.0109
     cathode             1.45               -83.0109
 
-  Solve time: 0h 0m 0.65s
+  Solve time: 0h 0m 0.64s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.425
   Trying $Vb = 1.425
@@ -3068,7 +3068,7 @@ Solve time: 0h 0m 9.1s
     anode               0                   80.8093
     cathode             1.425              -80.8093
 
-  Solve time: 0h 0m 0.63s
+  Solve time: 0h 0m 0.64s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.4
   Trying $Vb = 1.4
@@ -3084,7 +3084,7 @@ Solve time: 0h 0m 9.1s
     anode               0                   78.5514
     cathode             1.4                -78.5514
 
-  Solve time: 0h 0m 0.63s
+  Solve time: 0h 0m 0.64s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.375
   Trying $Vb = 1.375
@@ -3100,7 +3100,7 @@ Solve time: 0h 0m 9.1s
     anode               0                   76.2332
     cathode             1.375              -76.2332
 
-  Solve time: 0h 0m 0.64s
+  Solve time: 0h 0m 0.63s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.35
   Trying $Vb = 1.35
@@ -3132,7 +3132,7 @@ Solve time: 0h 0m 9.1s
     anode               0                   71.3969
     cathode             1.325              -71.3969
 
-  Solve time: 0h 0m 0.66s
+  Solve time: 0h 0m 0.65s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.3
   Trying $Vb = 1.3
@@ -3148,7 +3148,7 @@ Solve time: 0h 0m 9.1s
     anode               0                   68.8673
     cathode             1.3                -68.8673
 
-  Solve time: 0h 0m 0.64s
+  Solve time: 0h 0m 0.66s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.275
   Trying $Vb = 1.275
@@ -3164,7 +3164,7 @@ Solve time: 0h 0m 9.1s
     anode               0                   66.2534
     cathode             1.275              -66.2534
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.65s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.25
   Trying $Vb = 1.25
@@ -3180,7 +3180,7 @@ Solve time: 0h 0m 9.1s
     anode               0                   63.5456
     cathode             1.25               -63.5456
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.63s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.225
   Trying $Vb = 1.225
@@ -3196,7 +3196,7 @@ Solve time: 0h 0m 9.1s
     anode               0                   60.7307
     cathode             1.225              -60.7307
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.64s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.2
   Trying $Vb = 1.2
@@ -3212,7 +3212,7 @@ Solve time: 0h 0m 9.1s
     anode               0                   57.789
     cathode             1.2                -57.789
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.65s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.175
   Trying $Vb = 1.175
@@ -3228,7 +3228,7 @@ Solve time: 0h 0m 9.1s
     anode               0                   54.6894
     cathode             1.175              -54.6894
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.64s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.15
   Trying $Vb = 1.15
@@ -3244,7 +3244,7 @@ Solve time: 0h 0m 9.1s
     anode               0                   51.3793
     cathode             1.15               -51.3793
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.65s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.125
   Trying $Vb = 1.125
@@ -3260,7 +3260,7 @@ Solve time: 0h 0m 9.1s
     anode               0                   47.7695
     cathode             1.125              -47.7695
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.63s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.1
   Trying $Vb = 1.1
@@ -3276,7 +3276,7 @@ Solve time: 0h 0m 9.1s
     anode               0                   43.7198
     cathode             1.1                -43.7198
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.63s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.075
   Trying $Vb = 1.075
@@ -3292,7 +3292,7 @@ Solve time: 0h 0m 9.1s
     anode               0                   39.0467
     cathode             1.075              -39.0467
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.65s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.05
   Trying $Vb = 1.05
@@ -3308,7 +3308,7 @@ Solve time: 0h 0m 9.1s
     anode               0                   33.5963
     cathode             1.05               -33.5963
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.64s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1.025
   Trying $Vb = 1.025
@@ -3324,7 +3324,7 @@ Solve time: 0h 0m 9.1s
     anode               0                   27.3919
     cathode             1.025              -27.3919
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.64s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 1
   Trying $Vb = 1
@@ -3340,7 +3340,7 @@ Solve time: 0h 0m 9.1s
     anode               0                   20.7491
     cathode             1                  -20.7491
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.64s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.975
   Trying $Vb = 0.975
@@ -3356,7 +3356,7 @@ Solve time: 0h 0m 9.1s
     anode               0                   14.213
     cathode             0.975              -14.213
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.64s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.95
   Trying $Vb = 0.95
@@ -3372,7 +3372,7 @@ Solve time: 0h 0m 9.1s
     anode               0                   8.33699
     cathode             0.95               -8.33699
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.64s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.925
   Trying $Vb = 0.925
@@ -3388,7 +3388,7 @@ Solve time: 0h 0m 9.1s
     anode               0                   3.47785
     cathode             0.925              -3.47785
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.63s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.9
   Trying $Vb = 0.9
@@ -3404,7 +3404,7 @@ Solve time: 0h 0m 9.1s
     anode               0                  -0.274154
     cathode             0.9                 0.274154
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.63s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.875
   Trying $Vb = 0.875
@@ -3420,7 +3420,7 @@ Solve time: 0h 0m 9.1s
     anode               0                  -3.03642
     cathode             0.875               3.03642
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.63s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.85
   Trying $Vb = 0.85
@@ -3436,7 +3436,7 @@ Solve time: 0h 0m 9.1s
     anode               0                  -5.02477
     cathode             0.85                5.02477
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.66s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.825
   Trying $Vb = 0.825
@@ -3452,7 +3452,7 @@ Solve time: 0h 0m 9.1s
     anode               0                  -6.4629
     cathode             0.825               6.4629
 
-  Solve time: 0h 0m 0.63s
+  Solve time: 0h 0m 0.65s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.8
   Trying $Vb = 0.8
@@ -3484,7 +3484,7 @@ Solve time: 0h 0m 9.1s
     anode               0                  -8.37344
     cathode             0.775               8.37344
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.64s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.75
   Trying $Vb = 0.75
@@ -3500,7 +3500,7 @@ Solve time: 0h 0m 9.1s
     anode               0                  -9.06401
     cathode             0.75                9.06401
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.66s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.725
   Trying $Vb = 0.725
@@ -3516,7 +3516,7 @@ Solve time: 0h 0m 9.1s
     anode               0                  -9.65837
     cathode             0.725               9.65837
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.64s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.7
   Trying $Vb = 0.7
@@ -3532,7 +3532,7 @@ Solve time: 0h 0m 9.1s
     anode               0                  -10.1859
     cathode             0.7                 10.1859
 
-  Solve time: 0h 0m 0.63s
+  Solve time: 0h 0m 0.66s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.675
   Trying $Vb = 0.675
@@ -3564,7 +3564,7 @@ Solve time: 0h 0m 9.1s
     anode               0                  -11.0998
     cathode             0.65                11.0998
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.65s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.625
   Trying $Vb = 0.625
@@ -3580,7 +3580,7 @@ Solve time: 0h 0m 9.1s
     anode               0                  -11.5016
     cathode             0.625               11.5016
 
-  Solve time: 0h 0m 0.63s
+  Solve time: 0h 0m 0.65s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.6
   Trying $Vb = 0.6
@@ -3596,7 +3596,7 @@ Solve time: 0h 0m 9.1s
     anode               0                  -11.8728
     cathode             0.6                 11.8728
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.63s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.575
   Trying $Vb = 0.575
@@ -3612,7 +3612,7 @@ Solve time: 0h 0m 9.1s
     anode               0                  -12.2168
     cathode             0.575               12.2168
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.63s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.55
   Trying $Vb = 0.55
@@ -3628,7 +3628,7 @@ Solve time: 0h 0m 9.1s
     anode               0                  -12.5361
     cathode             0.55                12.5361
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.64s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.525
   Trying $Vb = 0.525
@@ -3644,7 +3644,7 @@ Solve time: 0h 0m 9.1s
     anode               0                  -12.8331
     cathode             0.525               12.8331
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.66s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.5
   Trying $Vb = 0.5
@@ -3660,7 +3660,7 @@ Solve time: 0h 0m 9.1s
     anode               0                  -13.1097
     cathode             0.5                 13.1097
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.64s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.475
   Trying $Vb = 0.475
@@ -3676,7 +3676,7 @@ Solve time: 0h 0m 9.1s
     anode               0                  -13.3678
     cathode             0.475               13.3678
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.66s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.45
   Trying $Vb = 0.45
@@ -3692,7 +3692,7 @@ Solve time: 0h 0m 9.1s
     anode               0                  -13.609
     cathode             0.45                13.609
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.64s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.425
   Trying $Vb = 0.425
@@ -3708,7 +3708,7 @@ Solve time: 0h 0m 9.1s
     anode               0                  -13.8346
     cathode             0.425               13.8346
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.66s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.4
   Trying $Vb = 0.4
@@ -3724,7 +3724,7 @@ Solve time: 0h 0m 9.1s
     anode               0                  -14.0461
     cathode             0.4                 14.0461
 
-  Solve time: 0h 0m 0.63s
+  Solve time: 0h 0m 0.65s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.375
   Trying $Vb = 0.375
@@ -3740,7 +3740,7 @@ Solve time: 0h 0m 9.1s
     anode               0                  -14.2446
     cathode             0.375               14.2446
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.63s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.35
   Trying $Vb = 0.35
@@ -3756,7 +3756,7 @@ Solve time: 0h 0m 9.1s
     anode               0                  -14.431
     cathode             0.35                14.431
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.63s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.325
   Trying $Vb = 0.325
@@ -3772,7 +3772,7 @@ Solve time: 0h 0m 9.1s
     anode               0                  -14.6065
     cathode             0.325               14.6065
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.63s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.3
   Trying $Vb = 0.3
@@ -3804,7 +3804,7 @@ Solve time: 0h 0m 9.1s
     anode               0                  -14.9277
     cathode             0.275               14.9277
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.64s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.25
   Trying $Vb = 0.25
@@ -3820,7 +3820,7 @@ Solve time: 0h 0m 9.1s
     anode               0                  -15.0749
     cathode             0.25                15.0749
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.64s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.225
   Trying $Vb = 0.225
@@ -3852,7 +3852,7 @@ Solve time: 0h 0m 9.1s
     anode               0                  -15.3459
     cathode             0.2                 15.3459
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.63s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.175
   Trying $Vb = 0.175
@@ -3868,7 +3868,7 @@ Solve time: 0h 0m 9.1s
     anode               0                  -15.4708
     cathode             0.175               15.4708
 
-  Solve time: 0h 0m 0.63s
+  Solve time: 0h 0m 0.62s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.15
   Trying $Vb = 0.15
@@ -3884,7 +3884,7 @@ Solve time: 0h 0m 9.1s
     anode               0                  -15.5893
     cathode             0.15                15.5893
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.63s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.125
   Trying $Vb = 0.125
@@ -3900,7 +3900,7 @@ Solve time: 0h 0m 9.1s
     anode               0                  -15.7018
     cathode             0.125               15.7018
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.63s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.1
   Trying $Vb = 0.1
@@ -3916,7 +3916,7 @@ Solve time: 0h 0m 9.1s
     anode               0                  -15.8088
     cathode             0.1                 15.8088
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.63s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.075
   Trying $Vb = 0.075
@@ -3932,7 +3932,7 @@ Solve time: 0h 0m 9.1s
     anode               0                  -15.9106
     cathode             0.075               15.9106
 
-  Solve time: 0h 0m 0.62s
+  Solve time: 0h 0m 0.64s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.05
   Trying $Vb = 0.05
@@ -3948,7 +3948,7 @@ Solve time: 0h 0m 9.1s
     anode               0                  -16.0076
     cathode             0.05                16.0076
 
-  Solve time: 0h 0m 0.63s
+  Solve time: 0h 0m 0.64s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0.025
   Trying $Vb = 0.025
@@ -3964,7 +3964,7 @@ Solve time: 0h 0m 9.1s
     anode               0                  -16.1002
     cathode             0.025               16.1002
 
-  Solve time: 0h 0m 0.63s
+  Solve time: 0h 0m 0.64s
   <<<<--------------------------------------------------------------------------
   Ramping to sweep value $Vb = 0
   Trying $Vb = 0
@@ -3980,19 +3980,19 @@ Solve time: 0h 0m 9.1s
     anode               0                  -16.1885
     cathode             0                   16.1885
 
-  Solve time: 0h 0m 0.63s
+  Solve time: 0h 0m 0.64s
   <<<<--------------------------------------------------------------------------
 
-Solve time: 0h 0m 55s
+Solve time: 0h 0m 56s
 <<<<----------------------------------------------------------------------------
 
-Total solve time: 0h 1m 37s
+Total solve time: 0h 1m 31s
 Simulation finished.
 
 20 warnings during run
 0 errors detected
 
 
-Log end: Fri May 13 10:39:22 2022
+Log end: Fri May 13 11:14:21 2022
 
 

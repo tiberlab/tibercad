@@ -1,5 +1,5 @@
 
-Log start: Fri May 13 10:26:12 2022
+Log start: Fri May 13 11:12:24 2022
 
 
 Writing log to output/Example_2.log.0
@@ -16,7 +16,7 @@ Setup mesh
   Reading mesh file 'Example_2.msh ...
     mesh reading time: 0h 0m 0.005s
     mesh preparation time: 0h 0m 0.0018s
-    bd_regions preparation time: 0h 0m 2.5e-05s
+    bd_regions preparation time: 0h 0m 2.2e-05s
 
     mesh units          : 1e-09 m
     mesh dimension      :       1
@@ -199,6 +199,6 @@ Simulation finished.
 0 errors detected
 
 
-Log end: Fri May 13 10:26:12 2022
+Log end: Fri May 13 11:12:24 2022
 
 
