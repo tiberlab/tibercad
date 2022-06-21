@@ -217,6 +217,9 @@ QuantumDOS::calculate_density_and_derivative(std::vector<double>& result, double
 
   if (flag)
   {
+    if (density < 1e-12)
+      density = 1e-12;
+
     ID subdomid = elem->subdomain_id();
 
     if ((_barrier_ids.size() > 0) && _barrier_ids.count(subdomid))
