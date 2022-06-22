@@ -1556,9 +1556,11 @@ EigenvalueProblem::solve_eigenvalue_problem(unsigned int num_eigenvalues,
 
   EigenSolver::prepare_slepc(get_solver_communicator().get());
 
+  Messages::info("Copying matrices to SLEPc... ", 0);
   copy_H_to_solver( );
 
   if (_haveS)  copy_S_to_solver( );
+  Messages::info("done");
 
   // for practical reasons, we let ev_number always be even
   //if ((ev_number % 2) == 1)
@@ -1605,7 +1607,7 @@ EigenvalueProblem::solve_eigenvalue_problem(unsigned int num_eigenvalues,
 
   //EigenSolver::check_matrices(1e-10,true);
 
-  slep_opt.eps_tolerance = sol_opt.get_option("eigen_solver_tolerance",1e-9);
+  slep_opt.eps_tolerance = sol_opt.get_option("eigen_solver_tolerance", 1e-9);
 
   slep_opt.ev_number = num_eigenvalues;
 
@@ -1736,17 +1738,19 @@ void EigenvalueProblem::get_populations(const std::string& particle,
 
       if(_solution[i].statistics == "Fermi")
       {      
-	double val = Fermi(_solution[i].eigen_energy, _solution[i].electro_chem_pot, 
-		       _solution[i].temperature);
-
 	if(particle == "el" || particle == "electron")
 	{
+          double val = Fermi(_solution[i].eigen_energy, _solution[i].electro_chem_pot, 
+		       _solution[i].temperature);
+
 	  values.push_back(val);	  
 	}	
-	
-	if(particle == "hl" || particle == "hole")
+        else if(particle == "hl" || particle == "hole")
 	{
-	  values.push_back(1-val);	  
+          double val = Fermi(-_solution[i].eigen_energy, -_solution[i].electro_chem_pot, 
+		       _solution[i].temperature);
+
+	  values.push_back(val);	  
 	}
 
       }
