@@ -1022,7 +1022,7 @@ FEMEigenvalueProblem::get_S_csr(std::vector<Complex>& A,
     } 
 
    
-    IA[row + 1]= ind;
+    IA[i + 1]= ind;
 
 
     ierr = MatRestoreRow(S_real_matrix->mat(), row ,&n_cols, &petsc_cols, &petsc_row_vals);
