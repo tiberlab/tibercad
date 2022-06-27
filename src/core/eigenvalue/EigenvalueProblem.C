@@ -1778,13 +1778,15 @@ double  EigenvalueProblem::get_population(int i) const
 
   if(_solution[i].statistics == "Fermi")
   {        
-    val = Fermi(_solution[i].eigen_energy, _solution[i].electro_chem_pot,
-        _solution[i].temperature);
-
-
-    if(_solution[i].particle == "hl" || _solution[i].particle == "hole")
+    if(_solution[i].particle == "el" || _solution[i].particle == "electron")
     {
-      val = 1 - val;
+      val = Fermi(_solution[i].eigen_energy, _solution[i].electro_chem_pot,
+                  _solution[i].temperature);
+    }
+    else if(_solution[i].particle == "hl" || _solution[i].particle == "hole")
+    {
+      val = Fermi(-_solution[i].eigen_energy, -_solution[i].electro_chem_pot,
+                  _solution[i].temperature);
     }
 
   }

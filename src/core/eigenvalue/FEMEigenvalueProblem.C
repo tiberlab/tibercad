@@ -811,28 +811,74 @@ FEMEigenvalueProblem::get_H_csr(std::vector<Complex>& A,
 
 {
 
-  DofMap& dof_map = system->get_dof_map();
-
-  PetscMatrix<Number>* H_real_matrix = static_cast<PetscMatrix<Number>* >(_H_real);
-  H_real_matrix->close();
-
-  PetscMatrix<Number>* H_imag_matrix = static_cast<PetscMatrix<Number>* >(_H_imag);
-  H_imag_matrix->close();
-
   const Scaling& sc = get_scaling();
-  double UnitsConversion = get_H_units() * sc.get_length_scaling() / sc.get_calc_mesh_units();
+  double scaling = get_H_units() * sc.get_length_scaling() / sc.get_calc_mesh_units();
   switch (get_mesh().mesh_dimension())
   {
     case 3:
-      UnitsConversion *= sc.get_length_scaling() / sc.get_calc_mesh_units();
+      scaling *= sc.get_length_scaling() / sc.get_calc_mesh_units();
     case 2:
-      UnitsConversion *= sc.get_length_scaling() / sc.get_calc_mesh_units();
+      scaling *= sc.get_length_scaling() / sc.get_calc_mesh_units();
     default:
       break;
   }
 
-  unsigned int row_start = _H_real->row_start();
-  unsigned int row_stop = _H_real->row_stop();
+  get_csr(A, JA, IA, _H_real, _H_imag, scaling, perm);
+}
+
+
+
+void
+FEMEigenvalueProblem::get_S_csr(std::vector<Complex>& A,
+                                std::vector<int>& JA,
+                                std::vector<int>& IA,
+                                const std::vector<unsigned int>& perm) const
+{
+
+  // scale away length scaling in integration
+  const Scaling& sc = get_scaling();
+  double scale = sc.get_length_scaling() / sc.get_calc_mesh_units();
+  switch (get_mesh().mesh_dimension())
+  {
+    case 3:
+      scale *= sc.get_length_scaling() / sc.get_calc_mesh_units();
+    case 2:
+      scale *= sc.get_length_scaling() / sc.get_calc_mesh_units();
+    default:
+      break;
+  }
+
+  get_csr(A, JA, IA, _S_real, nullptr, scale, perm);
+}
+
+
+
+void
+FEMEigenvalueProblem::get_csr(std::vector<libMesh::Complex>& A,
+                              std::vector<int>& JA,
+                              std::vector<int>& IA,
+                              SparseMatrix<Real>* Mreal,
+                              SparseMatrix<Real>* Mimag,
+                              double scaling,
+                              const std::vector<unsigned int>& perm) const
+{
+
+  if (Mreal == nullptr)
+    throw RuntimeException("Real matrix part must not be "
+        "nullptr in conversion to csr");
+
+  PetscMatrix<Number>* Mr = static_cast<PetscMatrix<Number>* >(Mreal);
+  Mreal->close();
+
+  PetscMatrix<Number>* Mi = nullptr;
+  if (Mimag != nullptr)
+  {
+    Mi = static_cast<PetscMatrix<Number>* >(Mimag);
+    Mimag->close();
+  }
+
+  unsigned int row_start = Mr->row_start();
+  unsigned int row_stop  = Mr->row_stop();
   unsigned int row, col, ind = 0;
 
   unsigned int n_rows = row_stop - row_start;
@@ -852,6 +898,9 @@ FEMEigenvalueProblem::get_H_csr(std::vector<Complex>& A,
 
   IA[0] = 0;
 
+
+  //DofMap& dof_map = system->get_dof_map();
+
   for (unsigned int i = 0; i < n_rows; ++i)
   {
 
@@ -867,13 +916,18 @@ FEMEigenvalueProblem::get_H_csr(std::vector<Complex>& A,
     int n_cols_real = 0;
     int n_cols_imag = 0;
     
-    ierr = MatGetRow(H_real_matrix->mat(), row, &n_cols_real, &petsc_cols, &petsc_row_vals_real);
+    ierr = MatGetRow(Mr->mat(), row, &n_cols_real, &petsc_cols, &petsc_row_vals_real);
     CHKERRABORT(MPI::COMM_WORLD,ierr);
 
-    ierr = MatGetRow(H_imag_matrix->mat(), row, &n_cols_imag, &petsc_cols, &petsc_row_vals_imag);
-    CHKERRABORT(MPI::COMM_WORLD,ierr);
+    if (Mi != nullptr)
+    {
+      ierr = MatGetRow(Mi->mat(), row, &n_cols_imag, &petsc_cols, &petsc_row_vals_imag);
+      CHKERRABORT(MPI::COMM_WORLD,ierr);
 
-    if (n_cols_real != n_cols_imag) Messages::error("n_cols_real != n_cols_imag");
+      if (n_cols_real != n_cols_imag)
+        Messages::error("n_cols_real != n_cols_imag");
+    }
+
 
     std::vector<unsigned int> j_order(n_cols_real);
     std::iota(j_order.begin(), j_order.end(), 0);
@@ -902,7 +956,10 @@ FEMEigenvalueProblem::get_H_csr(std::vector<Complex>& A,
         JA.resize(5 * A.size() / 4);
       }
 
-      A[ind] = UnitsConversion * Complex(petsc_row_vals_real[jj], petsc_row_vals_imag[jj]);
+      double val_r = petsc_row_vals_real[jj];
+      double val_i = (Mi == nullptr) ? 0.0 : petsc_row_vals_imag[jj];
+
+      A[ind] = scaling * Complex(val_r, val_i);
       JA[ind] = col;
 
       ind++;  
@@ -910,11 +967,14 @@ FEMEigenvalueProblem::get_H_csr(std::vector<Complex>& A,
    
     IA[i + 1]= ind;
 
-    ierr = MatRestoreRow(H_real_matrix->mat(), row ,&n_cols_real, &petsc_cols, &petsc_row_vals_real);
+    ierr = MatRestoreRow(Mr->mat(), row ,&n_cols_real, &petsc_cols, &petsc_row_vals_real);
     CHKERRABORT(MPI::COMM_WORLD,ierr);
       
-    ierr = MatRestoreRow(H_imag_matrix->mat(), row ,&n_cols_imag, &petsc_cols, &petsc_row_vals_imag);
-    CHKERRABORT(MPI::COMM_WORLD,ierr);
+    if (Mi != nullptr)
+    {
+      ierr = MatRestoreRow(Mi->mat(), row ,&n_cols_imag, &petsc_cols, &petsc_row_vals_imag);
+      CHKERRABORT(MPI::COMM_WORLD,ierr);
+    }
  
 
   }
@@ -924,113 +984,3 @@ FEMEigenvalueProblem::get_H_csr(std::vector<Complex>& A,
 }
 
 
-
-void 
-FEMEigenvalueProblem::get_S_csr(std::vector<Complex>& A, 
-                                std::vector<int>& JA, 
-                                std::vector<int>& IA,
-                                const std::vector<unsigned int>& perm) const
-{
-  PetscMatrix<Number>* S_real_matrix = static_cast<PetscMatrix<Number>* >(_S_real);
-  S_real_matrix->close();
-
-  DofMap& dof_map = system->get_dof_map();
-
-  unsigned int row_start = _S_real->row_start();
-  unsigned int row_stop = _S_real->row_stop();
-  unsigned int row, col, ind = 0;
-
-  unsigned int n_rows = row_stop - row_start;
-
-  std::vector<size_t> inv_perm(perm.size());
-  if (!perm.empty())
-  {
-    if (n_rows != perm.size())
-      throw std::runtime_error("In CSR matrix passing: "
-          "permutation is incompatible with (local) matrix size.");
-
-    for (size_t i = 0; i < perm.size(); ++i)
-      inv_perm[perm[i]] = i;
-  }
-
-
-  IA.resize(n_rows + 1);
-
-  IA[0] = 0;
-
-  // scale away length scaling in integration
-  const Scaling& sc = get_scaling();
-  double scale = sc.get_length_scaling() / sc.get_calc_mesh_units();
-  switch (get_mesh().mesh_dimension())
-  {
-    case 3:
-      scale *= sc.get_length_scaling() / sc.get_calc_mesh_units();
-    case 2:
-      scale *= sc.get_length_scaling() / sc.get_calc_mesh_units();
-    default:
-      break;
-  }
-
-  for (unsigned int i = 0; i < n_rows; ++i)
-  {
-
-    unsigned int row = perm.empty() ? i + row_start : perm[i];
-
-    //if (dof_map.is_constrained_dof(_inv_perm[row]))
-    //  continue;
-
-    int ierr = 0;
-    const PetscScalar *petsc_row_vals;
-    const PetscInt *petsc_cols;
-    int n_cols = 0;
-    
-  
-    ierr = MatGetRow(S_real_matrix->mat(), row, &n_cols, &petsc_cols, &petsc_row_vals);
-    CHKERRABORT(MPI::COMM_WORLD,ierr);
-
-
-    std::vector<unsigned int> j_order(n_cols);
-    std::iota(j_order.begin(), j_order.end(), 0);
-
-    // reshuffle according to increasing sequence
-    if (!perm.empty())
-    {
-       std::sort(j_order.begin(), j_order.end(), Compare(petsc_cols, perm));
-    }
-
-
-    for (unsigned int j = 0; j < n_cols; j++)
-    {
-      unsigned int jj = j_order[j];
-
-      unsigned int col = petsc_cols[jj];
-      if (!perm.empty())
-        col = inv_perm[col];
-
-      //if (dof_map.is_constrained_dof(_inv_perm[col]))
-      //  continue;
-
-      if (A.size() <= ind)
-      {
-        A.resize(5 * A.size() / 4);
-        JA.resize(5 * A.size() / 4);
-      }
-
-      A[ind] = Complex(scale * petsc_row_vals[jj], 0.0);
-      JA[ind] = col;
-      ind++;  
-    } 
-
-   
-    IA[i + 1]= ind;
-
-
-    ierr = MatRestoreRow(S_real_matrix->mat(), row ,&n_cols, &petsc_cols, &petsc_row_vals);
-    CHKERRABORT(MPI::COMM_WORLD,ierr);
-       
-
-  }
-  A.resize(ind);
-  JA.resize(ind);
-
-}

@@ -186,6 +186,15 @@ class FEMEigenvalueProblem : public  EigenvalueProblem
 
   std::map<unsigned int, Point> _constrained_dof_periodicity;
 
+  //! Implementation for getting csr matrix
+  void get_csr(std::vector<libMesh::Complex>& A,
+               std::vector<int>& JA,
+               std::vector<int>& IA,
+               libMesh::SparseMatrix<Real>* Mr,
+               libMesh::SparseMatrix<Real>* Mi,
+               double scaling = 1.0,
+               const std::vector<unsigned int>& perm
+                          = std::vector<unsigned int>(0)) const;
 
 };
 
