@@ -1,2 +1,2 @@
-Example 1: Ag Contact
+Optical modeling of the Ag Contact
 
