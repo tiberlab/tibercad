@@ -1868,8 +1868,8 @@ Negf::parse_options(void)
 
   opt.n_poles = sol_opt.get_option("Npoles", 0);
 
-  opt.verbosity = get_option("verbosity",0);
-  opt.verbosity = sol_opt.get_option("verbosity",0);
+  opt.verbosity = get_option("verbosity", this->verbose());
+  opt.verbosity = sol_opt.get_option("verbosity", opt.verbosity);
   //sol_opt.check_unused();
   opt.writeLDOS = plot_solution("LDOS");
   opt.writeLDOS = sol_opt.get_option("writeLDOS", opt.writeLDOS);
@@ -2850,29 +2850,23 @@ Negf::get_mu_and_bands(std::vector<double>& Ec, std::vector<double>& Ev,
 std::vector<double>
 Negf::get_ordered_solution(SimulationInterface* model, const std::string& var)
 {
-  std::vector<double> solution;
-  std::vector<double> tot_vals;
   ID ID = model->get_solution_id(var);
   unsigned int n_vars = _sys_H->n_vars();
 
+  std::vector<double> solution;
   solution.reserve(_device_n_dofs*n_vars);
-  tot_vals.reserve(_device_n_dofs);
+
+  std::vector<double> tot_vals;
+  tot_vals.resize(_device_n_dofs, 0.0);
+
+  libMesh::DofMap& dof_map = _sys->get_dof_map();
+  std::vector<unsigned int> dof_indices;
 
   MeshBase::const_element_iterator       el     = this->active_local_elements_begin();
   const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
 
   assert(el != end_el);
 
-  const Elem* elem = *el;
-  std::vector<double> values(elem->n_nodes());
-  std::vector<Point> p(elem->n_nodes());
-
-  for (unsigned int i = 0; i < elem->n_nodes(); ++i)
-      p[i] = elem->point(i);
-
-
-  model->get_solution(elem, ID, values, p);
-  tot_vals.push_back(values[0]);
 
   for (; el != end_el ; ++el )
   {
@@ -2884,33 +2878,22 @@ Negf::get_ordered_solution(SimulationInterface* model, const std::string& var)
 
     model->get_solution(elem, ID, values, p);
 
-    for (size_t i = 1; i < elem->n_nodes(); ++i)
-      tot_vals.push_back(values[i]);
-  }
-
-  libMesh::DofMap& dof_map = _sys->get_dof_map();
-  std::vector<unsigned int> dof_indices;
-
-  el = this->active_local_elements_begin();
-  elem = *el;
-
-  dof_map.dof_indices(elem, dof_indices);
-  //if n_vars (number of bands) > 1 we need a solution (n_vars*_device_n_dofs) long
-
-
-  for (size_t i = 0; i < n_vars; ++i)
-    solution.push_back(tot_vals[_perm[dof_indices[0]]]);
-
-  for (; el != end_el ; ++el )
-  {
-    const Elem* elem = *el;
     dof_map.dof_indices(elem, dof_indices);
 
-    for (size_t n = 1; n < elem->n_nodes(); n++)
-      //if n_vars (number of bands) > 1 we need a solution (n_vars*_device_n_dofs) long
-      for (size_t i = 0; i < n_vars; ++i)
-        solution.push_back(tot_vals[_perm[dof_indices[n]]]);
+    for (size_t i = 0; i < elem->n_nodes(); ++i)
+      tot_vals[dof_indices[i]] = values[i];
   }
+
+
+  for (size_t i = 0; i < _device_n_dofs; ++i)
+  {
+    size_t index = _perm[i];
+
+    for (size_t j = 0; j < n_vars; ++j)
+      solution.push_back(tot_vals[index]);
+  }
+
+
   return solution;
 }
 
