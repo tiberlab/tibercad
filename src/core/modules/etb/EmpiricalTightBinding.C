@@ -644,6 +644,10 @@ ETB::call_uptight(void)
   {
     Messages::info("Solving Tight Binding with SLEPc eigensolver");
     initialize_solution_container(_upt_solver_options.n_vb + _upt_solver_options.n_cb);
+
+    // need to set some options for SLEPc eigensolver
+    get_solver_options().set_option("eigen_solver_tolerance", _upt_solver_options.long_tol);
+
     solve_eigenvalue_problem(_upt_solver_options.n_vb + _upt_solver_options.n_cb, _upt_solver_options.guess_cb);
 
     int num_states = _upt_solver_options.n_vb + _upt_solver_options.n_cb;
@@ -659,6 +663,8 @@ ETB::call_uptight(void)
                                      _solution[i].eigen_energy,
                                      _solution[i].eigen_vector, particle);
     }
+
+    _solution_size = _solution.size();
   }
   else
   {
