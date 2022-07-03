@@ -352,6 +352,9 @@ Tmm::do_solve(void)
   vector<double> lambda_interp;
   vector<double> sun_interp;
 
+  double dipole_simulation = 1;
+  vector<complex<double>> Ki;
+
   if (_wavelength_vector.empty())
     for (double i = _down_lambda; i<= _up_lambda; i += _wavelength_steps)
       lambda_interp.push_back(i);
@@ -600,7 +603,9 @@ Tmm::do_solve(void)
          for (int k = n_real.size()-N0-2 ;k >= 0 ; --k)
          {
 
-           DD = get_D(n_real[k],n_imag[k],n_real[k+1],n_imag[k+1],theta[k],theta[k+1]);
+           DD = get_D(n_real[k],-n_imag[k],n_real[k+1],-n_imag[k+1],theta[k],theta[k+1]);
+         //  std::cout<<"DD IS "<<std::endl;
+         //  DD.print();
            if(Incoh[k]==1 && Incoh[k+1]==0)
            {
              MM = get_M(n_real[k],n_imag[k],l[k],lambda,theta[k],phase_step * iter);
@@ -609,15 +614,60 @@ Tmm::do_solve(void)
            {
              MM = get_M(n_real[k],n_imag[k],l[k],lambda,theta[k],0);
            }
-           TT_load = DD * T;
-           T = MM * TT_load;
 
+         //  std::cout<<"MM IS "<<std::endl;
+         //  MM.print();
+
+           TT_load = DD * T;
+           T = MM* TT_load;
+
+        //   std::cout<<"TT_load IS "<<std::endl;
+         //  TT_load.print();
+
+         //  std::cout<<"T IS "<<std::endl;
+          // T.print();
 
            E_I = T * E_N  ;
            E_F.push_back(E_I.get(0)) ;
            E_B.push_back(E_I.get(2));
          }
+         std::cout<<"TMM IS "<<std::endl;
+         T.print();
 
+
+
+
+         //****************************************************************************
+         //***************normalizing electric field matrix****************************
+
+         vector<complex<double>> E_F_NORM(n_real.size());
+         vector<complex<double>> E_B_NORM(n_real.size());
+
+         for(double nm=0; nm < n_real.size() ; ++nm)
+         {
+           E_F_NORM[nm] = E_F[E_F.size()-1-nm]/E_F[E_F.size()-1];
+           E_B_NORM[nm] = E_B[E_F.size()-1-nm]/E_F[E_F.size()-1];
+         }
+/*
+         std::cout<<"real E_F  IS"<<std::endl;
+         for (int nm =0 ; nm < E_B_NORM.size() ;nm++)
+         {
+           std::cout<< real(E_F_NORM[nm]) << ", ";
+         }
+         std::cout<<std::endl;
+         std::cout<<"real E_B  IS"<<std::endl;
+         for (int nm =0 ; nm < E_B_NORM.size() ;nm++)
+         {
+           std::cout<< real(E_B_NORM[nm]) << ", ";
+         }
+         std::cout<<std::endl;
+         std::cout<<"real E  IS"<<std::endl;
+         for (int nm =0 ; nm < E_B_NORM.size() ;nm++)
+         {
+           std::cout<< real(E_B_NORM[nm]+E_F_NORM[nm]) << ", ";
+         }
+         std::cout<<std::endl;
+*/
 
 
 
@@ -639,18 +689,6 @@ Tmm::do_solve(void)
       avg_Absorption = avg_Absorption + (1-real(Reflection)-real(Transmission)) / rnd;
 
 
-
-      //****************************************************************************
-      //***************normalizing electric field matrix****************************
-
-      vector<complex<double>> E_F_NORM(n_real.size());
-      vector<complex<double>> E_B_NORM(n_real.size());
-
-      for(double nm=0; nm < n_real.size() ; ++nm)
-      {
-        E_F_NORM[nm] = E_F[E_F.size()-1-nm]/E_F[E_F.size()-1];
-        E_B_NORM[nm] = E_B[E_F.size()-1-nm]/E_F[E_F.size()-1];
-      }
 
 
       //****************************************************************************
@@ -728,7 +766,91 @@ Tmm::do_solve(void)
         _Intensity.push_back(intensity_integral[nm]);
         _ElectricField.push_back(Electric_Field_integral[nm]);
       }
+      /*
+      std::cout<<std::endl;
+      std::cout<<"_ElectricField  IS"<<std::endl;
+      for (int nm =0 ; nm < _ElectricField.size() ;nm++)
+      {
+        std::cout<< _ElectricField[nm] << ", ";
+      }
+      std::cout<<std::endl;
+      */
     }
+
+    if (dipole_simulation)
+    {
+      double dipole = n_real.size()/2;
+      //std::cout<<"Dipole loc is "<<dipole<< " length is " <<n_real.size()<<std::endl;
+      /*
+      for (int nm =0; nm< n_real.size();nm++)
+      {
+        complex<double> Dummy_Var(2*M_PI*n_real[nm]/lambda,-2*M_PI*n_imag[nm]/lambda);
+        Ki.push_back(Dummy_Var);
+      }
+      */
+
+      Tmm::Matrix_2by2 Unit(1,0,0,1);
+      Tmm::Matrix_2by2 D(1,0,0,1);
+      Tmm::Matrix_2by2 M(0,0,0,0);
+      Tmm::Matrix_2by2 T_load(0,0,0,0);
+      Tmm::Matrix_2by2 T_A(1,0,0,1);
+      Tmm::Matrix_2by2 T_B(1,0,0,1);
+
+      //TMM_A
+      for (double k = dipole ;k >= 1 ; --k)
+      {
+        D = get_D(n_real[k-1],-n_imag[k-1],n_real[k],-n_imag[k],0,0);
+
+        if (k == dipole)
+          M = get_M(n_real[k],n_imag[k],l[k]/2.0,lambda,0,0);
+        else
+          M = get_M(n_real[k],n_imag[k],l[k],lambda,0,0);
+
+        T_load = D * M;
+        T_A = T_A * T_load;
+      }
+
+
+      //TMM_B
+      for (double k = n_real.size()-1 ;k > dipole ; --k)
+      {
+        D = get_D(n_real[k-1],-n_imag[k-1],n_real[k],-n_imag[k],0,0);
+        if (k == dipole+1)
+          M = get_M(n_real[k-1],n_imag[k-1],l[k-1]/2.0,lambda,0,0);
+        else
+          M = get_M(n_real[k-1],n_imag[k-1],l[k-1],lambda,0,0);
+        T_load = M * D;
+        T_B = T_B * T_load;
+      }
+
+      //E0 Calculation
+      double A_P = -sqrt(3/(16 * M_PI));
+      double A_N =  sqrt(3/(16 * M_PI));
+      complex<double> num1;
+      complex<double> num2;
+      complex<double> den;
+      complex<double> E0;
+      complex<double> En;
+
+      num1 = T_A.get(0) * T_A.get(3) - T_A.get(1) * T_A.get(2);
+      num2 = T_B.get(2) * A_P - T_B.get(0) * A_N;
+      den  = T_A.get(0) * T_B.get(0) - T_A.get(1) * T_B.get(2);
+      E0 = num1 * num2 / den;
+      num1 = T_A.get(0) * A_P + T_A.get(1) * A_N;
+      En = num1 / den;
+      //std::cout<<" E0 is " << E0 <<"  En is " << En << std::endl;
+      //std::cout<<" E0 is " << abs(E0) <<"  En is " << abs(En) << std::endl;
+      //std::cout<<"error is "<< abs(E0-En) <<std::endl;
+/*
+      for (int nm = 0 ; nm <n_real.size();nm++)
+        std::cout<<n_real[nm]<<", ";
+      std::cout<<std::endl;
+      for (int nm = 0 ; nm <n_real.size();nm++)
+        std::cout<<n_imag[nm]<<", ";
+*/
+
+    } // end of loop for dipole simulation
+
 
 
   }// end of loop of wave_length
