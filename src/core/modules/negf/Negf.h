@@ -77,7 +77,6 @@ class TBDLLOCAL Negf : public SimulationInterface
     //! Solve the MyPoisson equation
     virtual void do_solve(void);
 
-    void print_Lib(void);
 
     //! We need to create a physical model
     virtual PhysicalModel* create_bulk_model(const ModelOptions& options,

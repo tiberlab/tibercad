@@ -252,6 +252,18 @@ Negf::init_hamil(void)
   {
     Messages::error("undefined hamiltonian type "+_hamil_type);
   }
+
+  // We add a second system just to contain the density
+  if (plot_solution(elDensity) || plot_solution(hlDensity) ||
+      plot_solution("LDOS"))
+  {
+    std::cout<<"(negf) create eq sys for elDensity"<<std::endl;
+    ID id = create_equation_system("linear","");
+    _qdens_sys = &get_equation_system<TiberLinearSystem>(id);
+    _qdens_sys->add_variable("edens", libMeshEnums::FIRST, LAGRANGE, &get_region_ids());
+    _qdens_sys->add_variable("hdens", libMeshEnums::FIRST, LAGRANGE, &get_region_ids());
+    _qdens_sys->init();
+  }
     
   
   std::cout<<"(negf) init done. " <<std::endl;
@@ -298,17 +310,7 @@ Negf::init_efa_hamil(void)
   id = create_equation_system("linear","");
   _sys = &get_equation_system<TiberLinearSystem>(id);
 
-  // We add a second system just to contain the density
-  if (plot_solution(elDensity) || plot_solution(hlDensity) ||
-      plot_solution("LDOS"))
-  {
-    std::cout<<"(negf) create eq sys for elDensity"<<std::endl;
-    id = create_equation_system("linear","");
-    _qdens_sys = &get_equation_system<TiberLinearSystem>(id);
-    _qdens_sys->add_variable("edens", libMeshEnums::FIRST, LAGRANGE, &get_region_ids());
-    _qdens_sys->add_variable("hdens", libMeshEnums::FIRST, LAGRANGE, &get_region_ids());
-    _qdens_sys->init();
-  }
+
 
   //std::cout<<"(negf) init H and S"<<std::endl;
 
@@ -883,9 +885,7 @@ Negf::setup_negf(void)
   _libnegf->device_contact_dm(0);
 
   // setup the structure
-  /* calls negf_init_structure(handler, ncont,
-   *                surfstart, surfend, contend, npl, plend, cblk)
-   *
+  /*
    * ncont = number of contacts
    * surfstart = indices of start of surface blocks
    * surfend  = indices of end of surface blocks (for first contact last device index)
@@ -1965,222 +1965,7 @@ Negf::is_generalized(void)
   return _ext_module->is_generalized();
 }
 
-/*
- *'outputd10nml50/Hr.m'
- *'outputd10nml50/Hi.m'
- *'outputd10nml50/Sr.m'
- *'outputd10nml50/Si.m'
- *2                 ! n_cont
- *0                 ! n_blocks (0 libnegf do it)
- *26118 27270       ! cont_end 
- *24966 26118       ! surf_end
- *-2 0              ! Ec Ev
- *0 0               ! DEc DEv
- *-0.25 0 0.01      ! Emin Emax Estep
- *0.025 0.025       ! kT
- *1                 ! weight of k-point
- *20 20             ! Np_n(1:2)
- *0 0               ! Np_p(1:2)
- *10                ! Real axis points
- *3                 ! n_kT
- *3                 ! n_poles
- *2                 ! degeneracy factor (spin)
- *1e-05             ! delta
- *0                 ! n_ldos
- *                  ! --
- *0.115355 0.184647 ! mu_n  
- *0.115355 0.184647 ! mu_p 
- */
 
-void
-Negf::print_Lib()
-{
-  ModelOptions& sol_opt = get_solver_options();
-  double DeltaEc = -opt.DEc;
-  double DeltaEv =  opt.DEv;
-
-  // Takes kb in eV/K so assuming eV as energy units.
-  double kbT = SimulationOptions::temperature * Constants::kb;
-  double wght = 1.0;
-
-
-  // for now, use the same parameters
-  std::vector <double> Np_p(2);
-  for (unsigned int i = 0; i < 2; i++)
-  {
-    Np_p[i] = opt.Np_n[i];
-  }
-
-  // spin degeneracy must be passed 
-  unsigned int n_vars = _ext_module->get_number_of_bands();
-  double Ec = _ext_module->get_band_edge("Ec");
-  double Ev = _ext_module->get_band_edge("Ev");
-
-  unsigned int spin = _ext_module->get_degeneracy();
-  unsigned int nLDOS = 0;
-  unsigned int n_bands = _ext_module->get_number_of_bands();
-  if (opt.writeLDOS) nLDOS = _device_n_dofs * n_bands;
-
-  // NOTE: adapted to new libnegf working with indeces 
-  std::vector <unsigned int> LDOSindeces(nLDOS);
-
-  unsigned int ctr = 1;
-  for (unsigned int i = 0; i < nLDOS; ctr++)
-  {
-    LDOSindeces[i] = ctr;
-  }
-
-  // phi: potential at boundaries (quantum contacts)
-  // mu : electrochemical potential at boundaries (qc)
-  std::vector <double> phi(_quantum_contacts.size(), 0.0);
-  std::vector <double> mu_n(_quantum_contacts.size(), 0.0);
-  std::vector <double> mu_p(_quantum_contacts.size(), 0.0);
-
-  mumin=10000;
-  mumax=-10000;
-  ID id = 0;
-  std::map<ID, QuantumContact*>::iterator it = _quantum_contacts.begin();
-  const std::map<ID, QuantumContact*>::iterator end = _quantum_contacts.end();
-  for (; it != end; ++it)
-  {
-    get_boundary_potentials(it->second, phi[id], mu_n[id], mu_p[id]);
-     
-    if(mu_n[id]>mumax){mumax = mu_n[id];}
-    if(mu_n[id]<mumin){mumin = mu_n[id];}
-    _contact_potential[it->second] = mu_n[id];
-
-    id++;
-  }
-
-  opt.Emin = sol_opt.get_option("Emin",-mumax-opt.n_kT*kbT);
-  opt.Emax = sol_opt.get_option("Emax",-mumin+opt.n_kT*kbT);
-
-  std::string outpath = get_scratch_directory();
-  std::string out_file = outpath + "/negf.in";
-  std::fstream ff(out_file.c_str(),std::fstream::out);
-
-  // we pass matrices by memory
-  // TODO libnegf reads two strings, first is discarded: what is it for?
-  ff << "Hr 'memory'" << endl;
-  ff << "Hi 'memory'" << endl;
-  ff << "Sr 'memory'" << endl;
-  ff << "Si 'memory'" << endl;
-  /*
-  ff<<"'"+outpath+"/Hr.m'"<<std::endl;
-  ff<<"'"+outpath+"/Hi.m'"<<std::endl;
-  
-  if (is_generalized())
-  {  
-    ff<<"'"+outpath+"/Sr.m'"<<std::endl;
-    ff<<"'"+outpath+"/Si.m'"<<std::endl; 
-  }
-  else
-  {
-    ff<<"'identity'"<<std::endl;
-    ff<<"'identity'"<<std::endl;
-  }
-  */
-  
-  ff<<"N.conts  "<<_quantum_contacts.size()<<std::endl;
-  
-  
-  // Nblocks (if 0 are partitioned by the library)
-  unsigned int nPL=sol_opt.get_option("number_of_PL",0);
-  ff<<"N.PLs  "<<nPL<<std::endl;
-  if (nPL>0)
-  { 
-    unsigned int sizePL=sol_opt.get_option("size_of_PL",1);
-    for (unsigned int i=0; i<nPL; i++)
-       ff<<(i+1)*sizePL*n_vars<<" ";
-
-    ff<<std::endl;
-  }
-
-  //ff<<floor(_device_n_dofs*n_vars/2)<<" "<<_device_n_dofs*n_vars<<std::endl;
-
-  // contact end dofs:
-  ff<<"Cont.dofs ";
-  for (unsigned int i = 0; i <_quantum_contacts.size(); i++)
-    ff<<_qc_n_dofs[i]*n_vars<<" ";
-  ff<<std::endl;
-
-  ff<<"Dev.dofs  "<<_device_n_dofs*n_vars<<" ";
-  for (unsigned int i = 0; i <(_quantum_contacts.size()-1); i++)
-    ff<<_qc_n_dofs[i]*n_vars<<" ";
-  ff<<std::endl;
-
-  ff<<"Emin.Emax  "<<opt.Emin<<" "<<opt.Emax<<" "<<opt.Estep<<std::endl;
-  ff<<"kbT  "<<kbT<<"  "<<kbT<<std::endl;
-  ff<<"wght  "<<wght<<std::endl;
-
-  ff<<"Np_n  ";
-  for (unsigned int i = 0; i < 2; i++)
-    ff<<opt.Np_n[i]<<" ";
-  ff<<std::endl;
-
-  ff<<"Np_p  ";
-  for (unsigned int i = 0; i < 2; i++)
-    ff<<Np_p[i]<<" ";
-  ff<<std::endl;
-
-  int Np;
-  if (sol_opt.find_option("Np_real"))
-  {
-     Np = opt.Np_real;
-  }
-  else
-  {  
-     Np = (abs(mu_n[0]-mu_n[1])+ 2 * opt.n_kT)/opt.deltaE ;
-     if (Np>1000) 
-     {	   
-        std::ostringstream os;
-        os << "Np_real has been set to "<<Np;
-	      Messages::warning(os.str());
-     }
-  }
-
-  ff<<"Np_real  "<< Np <<std::endl;
-  ff<<"n_kT  "<<opt.n_kT<<std::endl;
-  ff<<"n_poles  "<<opt.n_poles<<std::endl;
-  ff<<"spin  "<<spin<<std::endl;
-  ff<<"delta  "<<opt.delta<<std::endl;
-  ff<<"nLDOS  "<<nLDOS<<std::endl;
-  
-  if (nLDOS>0)
-  {
-    ff<<"LDOS  ";
-    for (unsigned int i = 0; i < nLDOS; i++)
-      ff<<LDOSindeces[i]<<" ";
-
-    ff<<std::endl;
-  }
-
-  ff<<"Ec.Ev  ";
-  
-  for (unsigned int i = 0; i < nLDOS; i++)
-    ff<<Ec<<" "<<Ev<<std::endl;
-  
-  ff<<std::endl;
-  // takes mu_n (ELECTROCHEMICAL potential for electrons) 
-  //       mu_p (ELECTROCHEMICAL potential for holes)
-  // NOTE: Ef has been removed now. 
-  // libNEGF works with eletrochemical potential, mu
-  // (e=|e|) For Ef=0, mu_n=-eV, mu_p=eV:
-  // OLD: Ef-(-mu_n) = mu_n ; Ef-mu_p = -mu_p
-  // NEW: pass mu_n and -mu_p
-  ff<<"mu_n  ";
-  for (unsigned int i = 0; i < _quantum_contacts.size(); i++)
-    ff<<mu_n[i]<<" ";
-  ff<<std::endl;
-
-  ff<<"mu_p  ";
-  for (unsigned int i = 0; i < _quantum_contacts.size(); i++)
-    ff<<-mu_p[i]<<" ";
-  ff<<std::endl;
-  ff<<"DEc.DEv  "<<DeltaEc<<" "<<DeltaEv<<std::endl;    
-  ff.close();
-
-}
 
 void
 Negf::get_solution_secure(const Elem *elem, std::map<ID, std::vector<double>> &values,
@@ -2415,7 +2200,7 @@ Negf::reorder(void)
   for (unsigned int i = 0; i < _device_n_dofs; i++)
     _perm[i] = i;
 
-  // Number of dofs of the first band
+  // Number of dofs of the first contact
   unsigned int n_dofs = _qc_n_dofs[_quantum_contacts.size()-1];
 
   //std::cerr<<"Sorting"<<std::endl;
@@ -2449,16 +2234,11 @@ Negf::reorder(void)
   unsigned int nPL = get_solver_options().get_option("number_of_PL", 0);
   unsigned int size_of_PL = get_solver_options().get_option("PL_size", 16);
 
-  ostringstream os;
-  os << "Number of principal layers (PL) ";
 
   if (nPL < _quantum_contacts.size())
   {
     nPL = _quantum_contacts.size();
-    os << "(automatic choice)";
   }
-  os << ": " << nPL;
-  Messages::info(os.str());
 
   _end_blocks.resize(0);
   _end_blocks.resize(nPL, 0);
@@ -2508,13 +2288,18 @@ Negf::reorder(void)
   for (unsigned int i = 1; i < nPL; ++i)
     _end_blocks[i] += _end_blocks[i-1];
 
+  auto bl_it = std::unique(_end_blocks.begin(), _end_blocks.end());
+  _end_blocks.resize(distance(_end_blocks.begin(), bl_it));
+  nPL = _end_blocks.size();
 
-  os.str("");
+
+  ostringstream os;
   os << "# DOFs       : " << n_dofs_total << "\n";
+  os << "# PLs        : " << nPL << "\n";
   os << "mean PL size : " << n_dofs_total/nPL << "\n";
   Messages::info(os.str());
 
-  /*
+
   if (verbose() > 3)
   {
     cerr << "PLs (block end indices):\n";
@@ -2522,7 +2307,7 @@ Negf::reorder(void)
       cerr << b << " ";
       cerr << endl;
   }
-  */
+
 
 
   // at last, prepare permutation
