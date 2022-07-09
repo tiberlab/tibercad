@@ -79,6 +79,12 @@ void NegfWrapper::set_verbose(int verbose_lev)
 
 }
 
+void NegfWrapper::print_memory_statistics(void)
+{
+  f77_negf_mem_stats(_handler);
+}
+
+
 double
 NegfWrapper::current(std::string unitsOfH, std::string unitsOfJ)
 {

@@ -158,6 +158,9 @@ public:
   //! Print matrix
   void print_mat(void);
 
+  //! Print memory statistics
+  void print_memory_statistics(void);
+
 private:
   int _handler[NEGF_HSIZE];
 
