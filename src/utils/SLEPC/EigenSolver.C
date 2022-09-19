@@ -219,8 +219,14 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt,
   // Set operators.
   if (evp_type == GENERALIZED)
   {
-    ierr = EPSSetOperators(eps,A,B);TiberPetscUtils::checkerr(ierr);
-    ierr = EPSSetProblemType(eps,EPS_GHEP);TiberPetscUtils::checkerr(ierr);
+    if (opt.spectral_trans == "folding")
+      ierr = EPSSetOperators(eps, M, B);
+    else
+      ierr = EPSSetOperators(eps, A, B);
+
+    TiberPetscUtils::checkerr(ierr);
+
+    ierr = EPSSetProblemType(eps, EPS_GHEP);TiberPetscUtils::checkerr(ierr);
   }
   else
   {
@@ -266,8 +272,6 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt,
    
     if (opt.spectral_trans == "folding")
     {
-      //ierr = STSetType(st,STFOLD); TiberPetscUtils::checkerr(ierr);
-
       ierr = STSetType(st, STSHIFT); TiberPetscUtils::checkerr(ierr);
     }
     else
@@ -311,7 +315,7 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt,
       MatCreate(PETSC_COMM_WORLD, &P);
       MatSetSizes(P, PETSC_DECIDE, PETSC_DECIDE, N, N);
 
-      // we abuse of the woking vector in the folding context to calculate
+      // we abuse of the working vector in the folding context to calculate
       // the diagonal of A^2
       PetscInt start, stop;
       MatGetOwnershipRange(A, &start, &stop);
@@ -355,14 +359,14 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt,
       PCSetType(pc, PCJACOBI);
       KSPSetTolerances(ksp,opt.spectrum_inversion_tolerance, PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT);
 
-      if (opt.monitor)
+      /*if (opt.monitor)
       {
         PetscViewerAndFormat *vf;
         ierr = PetscViewerAndFormatCreate(PETSC_VIEWER_STDOUT_WORLD,PETSC_VIEWER_DEFAULT, &vf);
         TiberPetscUtils::checkerr(ierr);
         ierr = KSPMonitorSet(ksp, (PetscErrorCode (*)(KSP, PetscInt, PetscReal, void*))KSPMonitorResidual, vf, 0);
         TiberPetscUtils::checkerr(ierr);
-      }
+      }*/
     }
   }
   else if (opt.solver_type == "gd")
@@ -419,6 +423,17 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt,
       KSPGetPC(ksp, &pc);
       PCSetType(pc, PCJACOBI);
     }
+  }
+  else if (opt.solver_type == "feast")
+  {
+    ierr = EPSSetType(eps, EPSFEAST);
+    TiberPetscUtils::checkerr(ierr);
+
+    ierr = EPSSetInterval(eps, shift - 0.5, shift + 0.5);
+    TiberPetscUtils::checkerr(ierr);
+
+    ierr = EPSSetWhichEigenpairs(eps, EPS_ALL);
+    TiberPetscUtils::checkerr(ierr);
   }
   else
   {
@@ -496,6 +511,8 @@ int set_ksp_and_pc(ST st, const EigenSolver::SLEPCoptions& opt)
     ierr = PCSetType(pc, PCCHOLESKY);
   else if (opt.pc_type == "jacobi" )
     ierr =  PCSetType(pc, PCJACOBI);
+  else if (opt.pc_type == "icc" )
+    ierr =  PCSetType(pc, PCICC);
   else if (opt.pc_type == "ilu" )
   {
     // in principle, this should have worked with this if, but for some reason even
