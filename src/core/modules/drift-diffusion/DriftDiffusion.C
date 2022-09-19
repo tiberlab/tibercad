@@ -3290,7 +3290,8 @@ DriftDiffusion::calculate_currents_surfint(void)
 
     DDBulkModel* sc = get_bulk_model<DDBulkModel>(elem);
 
-    assert(sc != NULL);
+    if (sc == nullptr)
+      continue;
 
     for (unsigned int s = 0; s < elem->n_sides(); s++)
     {
@@ -3851,9 +3852,9 @@ DriftDiffusion::build_local_scaling(void)
         drho = 0.0;
 
 
-
       for (unsigned int i = 0; i < n_dofs; i++)
       {
+
         double phi_i_x_phi_j = JxW[qp] * phi[i][qp] * phi[i][qp];
 
         scalen(i) +=
@@ -4713,6 +4714,9 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
           double lap_h = (dphi[i][qp] * grad_ep) / scalep(i);
           double dsigma_e_x_lap = dphi[i][qp] * (dsigma_e * grad_en) / scalen(i);
           double dsigma_h_x_lap = dphi[i][qp] * (dsigma_h * grad_ep) / scalep(i);
+
+          //Knn(i,i) +=  1e-9;
+          //Kpp(i,i) +=  1e-9;
 
           for (unsigned int j = 0; j < n_dofs; j++)
           {
