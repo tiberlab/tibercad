@@ -438,7 +438,10 @@ DDInterfaceModel::compute()
   {
     calculate_net_recombination_rates();
 
-    int div = is_internal_boundary() ? 2 : 1;
+    // 2022-10-17, maybe this is actually not reasonable.
+    // at least it leads to discrepancy with other tools
+    //int div = is_internal_boundary() ? 2 : 1;
+    int div = 1.0;
 
     for (unsigned int i = 0; i < n_known_carriers(); i++)
     {

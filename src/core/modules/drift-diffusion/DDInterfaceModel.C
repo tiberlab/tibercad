@@ -368,7 +368,10 @@ DDInterfaceModel::compute()
   {
     calculate_net_recombination_rates();
 
-    int div = is_internal_boundary() ? 2 : 1;
+    // 2022-10-17, maybe this is actually not reasonable.
+    // at least it leads to discrepancy with other tools
+    //int div = is_internal_boundary() ? 2 : 1;
+    int div = 1.0;
 
     _coeff_g[1] += pd.electron_recombination_rate / div;
     double dRn_dEfn = -pd.electron_recombination_rate_derivatives[0] *
