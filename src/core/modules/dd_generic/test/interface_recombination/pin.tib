@@ -62,7 +62,7 @@ Module dd_generic
     {
       carriers = (electron, hole)
       regions = AlP/AlAs
-      C = 1e-15
+      C = 0.5e-15
     }
 
   }   
