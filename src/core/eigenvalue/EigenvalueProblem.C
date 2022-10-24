@@ -230,7 +230,7 @@ void EigenvalueProblem::get_S_csr(std::vector<libMesh::Complex>&,
                                  const std::vector<unsigned int>&) const
 {
 }
-
+//
 
 void EigenvalueProblem::do_calculate_density_at_k(DofField&)
 {
@@ -287,14 +287,14 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
   vector<LPoint> G(1, {0, 0, 0});
 
   Kspace* kspace_for_plot = nullptr;
-
+//
   // this will contain the necessary k-points
   vector<Point> Kpoints;
   // these map k points from SC to PC, in case of unfolding
   vector<unsigned int> k_to_K;  // this is one-to-one !
   vector<set<unsigned int>> K_to_k;
 
-
+//
   const MeshBase* kmesh = nullptr;
   if (refmat != nullptr)
   {
@@ -1877,7 +1877,7 @@ void EigenvalueProblem::copy_S_to_solver( )
 
 Complex
 EigenvalueProblem::scalar_product(const eigen_problem_solution& a,
-                                  const eigen_problem_solution& b) const
+                                  const eigen_problem_solution& b)
 {
   return scalar_product(a.eigen_vector, b.eigen_vector);
 }
@@ -1886,7 +1886,7 @@ EigenvalueProblem::scalar_product(const eigen_problem_solution& a,
 
 Complex
 EigenvalueProblem::scalar_product(const vector<Complex>& a,
-                                  const vector<Complex>& b) const
+                                  const vector<Complex>& b)
 {
   Complex sprod(0,0);
 
@@ -1899,3 +1899,4 @@ EigenvalueProblem::scalar_product(const vector<Complex>& a,
 
   return sprod;
 }
+
