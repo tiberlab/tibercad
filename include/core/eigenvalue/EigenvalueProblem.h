@@ -32,7 +32,7 @@ class EigenvalueProblem : public SimulationInterface
     EigenvalueProblem(const ModelOptions& options);
 
     //! Destructor
-    ~EigenvalueProblem(void) { };
+    virtual ~EigenvalueProblem(void) { };
 
   
     //! Eigenstate structure useful to the solver when sorting states
@@ -78,6 +78,17 @@ class EigenvalueProblem : public SimulationInterface
     //! get population of a single state   
     double get_population(int i) const;
 
+    //! Calculate the scalar product between states a and b
+    virtual libMesh::Complex scalar_product(const std::vector<libMesh::Complex>& a,
+                           const std::vector<libMesh::Complex>& b);
+
+//    virtual libMesh::Complex scalar_product(const std::vector<libMesh::Complex>& a,
+//                           const std::vector<libMesh::Complex>& b);
+
+    //! Calculate the scalar product between states a and b
+    virtual libMesh::Complex scalar_product(const eigen_problem_solution& a,
+                           const eigen_problem_solution& b);
+
     //! public member to invoke matrix assembly from other modules
     void assemble(const ModelOptions& options = ModelOptions());
 
@@ -93,10 +104,29 @@ class EigenvalueProblem : public SimulationInterface
     void solve_for_kpoint(const Point& k_point);
     
     //! computes matrix elements between state i of particle_i and state j of particle_j
-    virtual libMesh::Complex calculate_matrix_element(const std::string& i_particle,
+    virtual libMesh::Complex calculate_matrix_element(
+        const std::string& i_particle,
         unsigned int i, 
         const std::string& j_particle,
         unsigned int j);
+
+    //! computes matrix elements between two explicitly given states
+    virtual libMesh::Complex calculate_hamiltonian_matrix_element(
+                            const std::vector<libMesh::Complex>& a,
+                            const libMesh::NumericVector<double>& b_real,
+                            libMesh::NumericVector<double>& b_imag);
+    
+    virtual libMesh::Complex compute_overlap(const std::vector<libMesh::Complex>& a,
+                         const libMesh::NumericVector<double>& b_real,
+                         libMesh::NumericVector<double>& b_imag);
+
+    virtual void postprocess_solution(void);
+
+//
+
+    virtual double eigenstate_norm(unsigned int state_number);
+
+
 
     //! Projection on different Brillouin zone
     /*!
@@ -175,6 +205,8 @@ class EigenvalueProblem : public SimulationInterface
      * this is dangerous and should be substituted with calls to get_eigenvectors()
      */
     const std::vector<eigen_problem_solution>& get_solution(void) const {return _solution;};
+
+    std::vector<eigen_problem_solution>& get_solution(void) {return _solution;};
 
     virtual double get_band_edge(const std::string& band);
 
@@ -287,13 +319,6 @@ class EigenvalueProblem : public SimulationInterface
     void process_element(const Elem* elem, unsigned int entryside,
         std::vector<std::vector<eigen_problem_solution>>& ordered_solutions);
 
-    //! Calculate the scalar product between states a and b
-    libMesh::Complex scalar_product(const eigen_problem_solution& a,
-                           const eigen_problem_solution& b) const;
-
-    //! Calculate the scalar product between states a and b
-    libMesh::Complex scalar_product(const std::vector<libMesh::Complex>& a,
-                           const std::vector<libMesh::Complex>& b) const;
 
     //! pointer to the real part of the Hamiltonian
     libMesh::SparseMatrix<double>* _H_real;
@@ -405,6 +430,30 @@ EigenvalueProblem::calculate_matrix_element(const std::string&,
 {
   return 0;
 }
+//
+
+
+inline
+libMesh::Complex
+EigenvalueProblem::calculate_hamiltonian_matrix_element
+                (const std::vector<libMesh::Complex>& a,
+                 const libMesh::NumericVector<double>& b_real,
+                 libMesh::NumericVector<double>& b_imag
+                )
+{
+  return 0;
+}
+
+inline
+libMesh::Complex
+EigenvalueProblem::compute_overlap
+                (const std::vector<libMesh::Complex>& a,
+                 const libMesh::NumericVector<double>& b_real,
+                 libMesh::NumericVector<double>& b_imag
+                )
+{
+  return 0;
+}
 
 /*
 inline
@@ -444,6 +493,21 @@ inline
 bool EigenvalueProblem::is_generalized(void) const
 {
   return _haveS;
+}
+
+
+
+inline
+void EigenvalueProblem::postprocess_solution(void)
+{
+}
+
+
+
+inline
+double EigenvalueProblem::eigenstate_norm(unsigned int state_number)
+{
+  return 0;
 }
 
 //=======================================================================//
