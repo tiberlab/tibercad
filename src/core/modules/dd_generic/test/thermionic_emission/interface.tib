@@ -89,7 +89,7 @@ Module dd_generic
     {
       regions = (left/right)
       carriers = (electron, elr)
-      C = 2.3e7
+      C = 1.15e7
     }
 
 
