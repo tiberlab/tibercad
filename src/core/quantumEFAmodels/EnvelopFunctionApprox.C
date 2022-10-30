@@ -21,11 +21,9 @@
 #include <dense_submatrix.h>
 #include <quadrature_gauss.h>
 
-#include "petsc_matrix.h"
-
-#include "signal.h"
 
 #include "Messages.h"
+
 
 extern "C"
 {
@@ -65,7 +63,7 @@ inline void EnvelopFunctionApprox::get_electric_potential(const Elem* elem, cons
 inline double EnvelopFunctionApprox::get_band_edge(const Elem* elem, const std::string& particle) const
 {
   /*
-  if (poisson_equation==NULL)
+  if (poisson_equation==NULL) 
   {
     Messages::warning("trying to find band-edge without drift-diffusion: return 0");
     return 0.0;
@@ -81,7 +79,7 @@ inline double EnvelopFunctionApprox::get_band_edge(const Elem* elem, const std::
 
   //for (size_t i = 0; i < elem->n_nodes(); ++i)
   //      p[i] = elem->point(i);
-
+  
   vector<double> values(1);
   vector<Point> p(1, elem->centroid());
 
@@ -459,7 +457,7 @@ EnvelopFunctionApprox::get_solution_secure(const Elem* elem,
 
 
 //====================================================//
-double EnvelopFunctionApprox::get_band_edge(const std::string& particle)
+double EnvelopFunctionApprox::get_band_edge(const std::string& particle) 
 {
   double band_edge = 0;
 
@@ -666,7 +664,7 @@ void EnvelopFunctionApprox::parse_options()
   else
     throw InitFailedException( "EnvelopeFunctionApprox: Incorrect job " + job_name );
 
-
+  
   if (_job == BULKEIGENSTATES)
   {
     if (has_option("bulk_point"))
@@ -705,7 +703,7 @@ void EnvelopFunctionApprox::parse_options()
 
     if (!found) throw SolveFailedException("Bad bulk material point\n");
   }
-
+ 
 
 
  //-------------------------------------------------------------------------------------------//
@@ -836,7 +834,7 @@ void EnvelopFunctionApprox::parse_options()
 
   if (sol_opt.find_option("guess")) opt.estimate_spectrum_shift = false;
 
-  if ( !opt.consider_potential && opt.estimate_spectrum_shift)
+  if ( !opt.consider_potential && opt.estimate_spectrum_shift) 
     throw InitFailedException( "EnvelopeFunctionApprox: cannot estimate guess without electric potential");
 
   if (!sol_opt.find_option("guess") && !opt.estimate_spectrum_shift)
@@ -860,7 +858,7 @@ void EnvelopFunctionApprox::parse_options()
   // Options for converged density  (NOT USED NOW)
   //---------------------------------------------------------------------------------//
   opt.convergent_density = false; //get_option("convergent_density", true);
-  opt.initial_eigenstates_number = sol_opt.get_option("initial_eigenstates_number",
+  opt.initial_eigenstates_number = sol_opt.get_option("initial_eigenstates_number", 
                                                      solver_opt.number_of_eigenstates );
 
   opt.eigen_number_increase_factor = get_option("eigen_number_increase_factor",1.2);
@@ -889,7 +887,7 @@ void EnvelopFunctionApprox::parse_options()
 
   //--------------------------------------------------------------------------------------------//
   // Block QuantumDensity  //
-  opt.first_state = 0;
+  opt.first_state = 0; 
   opt.k_val = 0.188; //0.01;
   opt.assume_paraboloid = false;
 
@@ -911,7 +909,7 @@ void EnvelopFunctionApprox::parse_options()
   }
 
 
-
+  
 
 }
 
@@ -939,15 +937,15 @@ void EnvelopFunctionApprox::do_init( )
   FEMEigenvalueProblem::do_init();
 
   es = &(get_equation_systems());
-
+  
   create_equation_system("linear");
   system = &get_equation_system<LinearImplicitSystem>(0);
   system_name = system->name();
 
   //system_name = get_equation_system_name ( );
-
+  
   //es->add_system<LinearImplicitSystem> (system_name);
-
+  
   //system = &( es->get_system<LinearImplicitSystem>( system_name ) );
 
   dim = get_mesh().mesh_dimension();
@@ -992,17 +990,17 @@ void EnvelopFunctionApprox::do_init( )
 
   _S_real = &( system->get_matrix("S_real") );
 
-  system->add_matrix("S_imag"); //add matrix for S matrix
+  //system->add_matrix("S_imag"); //add matrix for S matrix
 
-  _S_imag = &( system->get_matrix("S_imag") );
+  //_S_imag = &( system->get_matrix("S_imag") );
 
 
   //peiodicity can not be changed between runs because that will require cleaning of the DOF constraint table
   solver_opt.periodicity[0]          = get_option("x-periodicity", false);
   solver_opt.periodicity[1]          = get_option("y-periodicity", false);
   solver_opt.periodicity[2]          = get_option("z-periodicity", false);
-
-
+  
+   
   pair<Point, Point> bbox(get_environment().get_bounding_box());
   for (unsigned i = 0; i < 3; i++)
   {
@@ -1018,7 +1016,7 @@ void EnvelopFunctionApprox::do_init( )
   //scaling.set_calc_mesh_units(get_mesh_units());
   system->init();
 
-
+  
   // We add a second system just to contain the density
   create_equation_system("linear");
   TiberLinearSystem& linsys = get_equation_system<TiberLinearSystem>(1);
@@ -1029,7 +1027,7 @@ void EnvelopFunctionApprox::do_init( )
                                libMeshEnums::LAGRANGE,
                                &(this->get_region_ids()));
   linsys.init();
-
+  
 
   //------------------------------------------------------------------------------------------------------//
   //kp bands map
@@ -1067,13 +1065,13 @@ void EnvelopFunctionApprox::do_init( )
     this->get_solver_communicator().broadcast(opt.degeneracy, proc_id);
   }
   //------------------------------------------------------------------------------------------------------//
-
+ 
 
   parse_options();
 
   init_kspace(ModelOptions());
 
-  // Initialize identity permutation: does not have constrained dofs
+  // Initialize identity permutation: does not have constrained dofs 
   //if (solver_opt.Dirichlet_bc_everywhere)
 }
 
@@ -1168,7 +1166,7 @@ EnvelopFunctionApprox::redeclare_solutions(void)
 //===========================================================//
 void EnvelopFunctionApprox::do_solve_for_kpoint(const Point& k_point)
 {
-
+   
   if (verbose() > 0)
   {
     ostringstream os;
@@ -1183,12 +1181,12 @@ void EnvelopFunctionApprox::do_solve_for_kpoint(const Point& k_point)
     solve_bulk();
   }
   else
-  {
+  { 
 
     estimate_spectrum_shift();
-
+    
     //apply_bc();
-
+    
 
     initialize_solution_container(opt.num_el_states + opt.num_hl_states);
     assemble();
@@ -1239,9 +1237,9 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
   _H_real->zero();
   _H_imag->zero();
   _S_real->zero();
-
+ 
   _haveS = (solver_opt.discretization_method == FEM);
-
+  
   apply_bc();
 
   //material list
@@ -1532,7 +1530,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
       {
         vector<unsigned int> dof_indices_tmp;
-
+        
         //set<unsigned int> constrained;
 
 
@@ -1577,7 +1575,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
           }
 
         }
-
+        
         if (_haveS)
         {
           dof_indices_tmp = dof_indices;
@@ -1608,7 +1606,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
     }
 
-
+  
   _H_real->close();
   _H_imag->close();
   if (_haveS)
@@ -1867,9 +1865,9 @@ pair<unsigned int, double> EnvelopFunctionApprox::read_slepc_solution(void)
     _solution[index].particle = ev[i].particle;
     _solution[index].statistics = "Fermi";
     //_solution[index].eigen_vector.resize(number_of_all_dofs, Complex(0.0, 0.0));
-
+    
     //vector<Complex> temp;
-
+    
     unsigned int solution_number = ev[i].index;
 
     //EigenSolver::get_eigen_vector(solution_number, temp);
@@ -1941,7 +1939,7 @@ pair<unsigned int, double> EnvelopFunctionApprox::read_slepc_solution(void)
             (_solution[index].eigen_energy > (_solution[ind].eigen_energy + delta)))
           break;
 
-        Complex norm = sqrt(EigenvalueProblem::scalar_product(_solution[ind], _solution[ind]));
+        Complex norm = sqrt(scalar_product(_solution[ind], _solution[ind]));
         Complex alpha = scalar_product(_solution[ind].eigen_vector, tempvec) / norm;
         //cerr << " (" << ind << ") " << alpha << ",";
         for (size_t j = 0; j < number_of_all_dofs; j++)
@@ -2011,7 +2009,7 @@ pair<unsigned int, double> EnvelopFunctionApprox::read_slepc_solution(void)
         solver_opt.spectrum_shift = (Ec + Ev) / 2.0;
     }
     else
-      solver_opt.spectrum_shift += 0.3;  //!? Rise a little the guess and restart
+      solver_opt.spectrum_shift += 0.3;  //!? Rise a little the guess and restart  
 
   }
   // if not all are found, look for so many electron states:
@@ -2073,7 +2071,7 @@ pair<unsigned int, double> EnvelopFunctionApprox::read_slepc_solution(void)
 //    }
     }
   }
-
+  
   return(make_pair(solver_opt.number_of_eigenstates,
                    solver_opt.spectrum_shift / Hartree));
 }
@@ -2277,7 +2275,7 @@ double  EnvelopFunctionApprox::eigenstate_norm(unsigned int state_number)
 		  for (unsigned int p2=0; p2<n_psi_dofs; p2++)
 		    {
 		      eigen_f_value2 = eigen_vector[dof_indices[p2]];
-		      temp += ( JxW[qp] * phi[p1][qp] * eigen_f_value1 *
+		      temp += ( JxW[qp] * phi[p1][qp] * eigen_f_value1 * 
                                       phi[p2][qp] * conj(eigen_f_value2) );
 		    }
 		}
@@ -2400,7 +2398,7 @@ double EnvelopFunctionApprox::calculate_fermi_averaged(unsigned int i, const str
 
 		    {
 		      eigen_f_value2 = eigen_vector[dof_indices[p2]];
-		      result += ( JxW[qp] * phi[p1][qp] * eigen_f_value1 *
+		      result += ( JxW[qp] * phi[p1][qp] * eigen_f_value1 *  
                                 phi[p2][qp] * conj(eigen_f_value2) ) * chem_pot_value_eV;
 
 		    }
@@ -2544,7 +2542,7 @@ void EnvelopFunctionApprox::do_assemble(const ModelOptions&)
 
 //=================================================================//
 
-
+  
 void EnvelopFunctionApprox::calculate_density_analytic(void)
 {
   unsigned int dim = get_mesh().mesh_dimension();
@@ -2630,6 +2628,7 @@ void EnvelopFunctionApprox::calculate_density_analytic(void)
       get_eigenenergies(energy_k_3);
     }
   }
+
   if (dim < 3)
   {
     ostringstream os;
@@ -2644,6 +2643,7 @@ void EnvelopFunctionApprox::calculate_density_analytic(void)
   assemble();
   solve_eigenvalue_problem(opt.num_el_states + opt.num_hl_states, spectrum_shift);
   get_eigenenergies(energy_k_0);
+
 
   // 2014-01-07: before, k-points were measured in Bohr radii, but now they
   //             are in nm!
@@ -3135,169 +3135,5 @@ void EnvelopFunctionApprox::solve_bulk(void)
   // we have to redeclare the solution variables to adjust the number
   // of eigenstates
   redeclare_solutions();
-
-}
-
-
-
-
-
-libMesh::Complex
-EnvelopFunctionApprox::calculate_hamiltonian_matrix_element(
-          const std::vector<libMesh::Complex>& a,
-          const libMesh::NumericVector<double>& b_real,
-          libMesh::NumericVector<double>& b_imag)
-{
-
-  return(calculate_matrix_element(a, b_real, b_imag, 'H'));
-}
-
-
-
-
-
-libMesh::Complex
-EnvelopFunctionApprox::compute_overlap(
-                         const std::vector<libMesh::Complex>& a,
-                         const libMesh::NumericVector<double>& b_real,
-                         libMesh::NumericVector<double>& b_imag)
-{
-  return(calculate_matrix_element(a, b_real, b_imag, 'S'));
-}
-
-
-
-
-
-
-//Calculate product: <a | H | b>  or  <a | S | b>
-libMesh::Complex
-EnvelopFunctionApprox::calculate_matrix_element(
-          const std::vector<libMesh::Complex>& a,
-          const libMesh::NumericVector<double>& b_real,
-          libMesh::NumericVector<double>& b_imag,
-          const char matrix)
-{
-
-  libMesh::Complex axMxb = 0;
-  //compare the dimension of the two wave functions passed as parameters to the
-  //method
-  if(a.size() == b_real.size())
-  {
-
-    libMesh::PetscMatrix<Number>* M_real = nullptr;
-    libMesh::PetscMatrix<Number>* M_imag = nullptr;
-    if (matrix == 'H')
-    {
-      M_real = static_cast<libMesh::PetscMatrix<Number>* >(_H_real);
-      M_real->close();
-
-      M_imag = static_cast<libMesh::PetscMatrix<Number>* >(_H_imag);
-      M_imag->close();
-    }
-    else if (matrix == 'S')
-    {
-      M_real = static_cast<libMesh::PetscMatrix<Number>* >(_S_real);
-      M_real->close();
-
-      M_imag = static_cast<libMesh::PetscMatrix<Number>* >(_S_imag);
-      M_imag->close();
-    }
-
-    TiberLinearSystem& system = get_equation_system<TiberLinearSystem>(0);
-
-    //Define two NumericVectors to hold real and imaginary part of the product:
-    //(Hre + iHim) * (Bre + iBim) = (Hre*Bre - Him*Bim) + i(Hre*Bim + Him*Bre)
-    unique_ptr<libMesh::NumericVector<Number>>
-                Mre_Bre_Mim_Bim((system.solution)->clone().release());
-
-    unique_ptr<libMesh::NumericVector<Number>>
-                Mre_Bim_Mim_Bre((system.solution)->clone().release());
-
-
-    unsigned int size_of_b = b_real.size();
-
-    //Store the product between real part of matrix and vec b_real in
-    //vec Mre_Bre_Mim_Bim
-    M_real->vector_mult(*Mre_Bre_Mim_Bim , b_real);
-
-    //negate b_imag
-    b_imag.scale(-1.0);
-
-    //Add the product between imaginary part of matrix and -b_imag in
-    //vec Mre_Bre_Mim_Bim
-    M_imag->vector_mult_add(*Mre_Bre_Mim_Bim , b_imag);
-
-    //negate b_imag for the second time
-    b_imag.scale(-1.0);
-
-    M_real->vector_mult(*Mre_Bim_Mim_Bre , b_imag);
-
-
-    M_imag->vector_mult_add(*Mre_Bim_Mim_Bre , b_real);
-
-
-    //Define a std::vector that holds the product of the matrix
-    //with the vector b
-    std::vector<libMesh::Complex> Mxb(size_of_b);
-
-     for(int i = 0; i < size_of_b; ++i)
-     {
-       Mxb[i].real(Mre_Bre_Mim_Bim->el(i));
-       Mxb[i].imag(Mre_Bim_Mim_Bre->el(i));
-     }
-
-
-    //Do the scalar product between the std::vector passed as parameter
-    //and the std::vector Hxb
-    axMxb = EigenvalueProblem::scalar_product(a, Mxb);
-  }
-
-  else
-  {
-    throw InitFailedException("efaschroedinger: cannot calculate matrix element;"
-                                      " different dimension of wave functions");
-  }
-
-  return axMxb;
-}
-
-
-
-
-
-void
-EnvelopFunctionApprox::postprocess_solution(void)
-{
-
-  redeclare_solutions();
-
-
-  const int n_states = _solution.size();
-
-  double Ec = get_band_edge("el");
-  double Ev = get_band_edge("hl");
-
-
-//  for (unsigned int i = 0; i < n_states; i++)
-//  {
-//    if (_solution[i].eigen_energy >= Ec)
-//    {
-//      _solution[i].particle = "el";
-//    }
-//    else
-//      _solution[i].particle = "hl";
-//
-//    // Fermi energy calculation
-//    _solution[i].electro_chem_pot = calculate_fermi_averaged(i,
-//        _solution[i].particle);
-//
-//    //Temperature calculation
-//    _solution[i].temperature = calculate_temperature_averaged(i);
-//
-//  }
-
-
-  increment_solve_sequence_number();
 
 }

@@ -3,12 +3,12 @@
 #ifndef _ENVELOPFUNCTIONAPPROX_H_ 
 #define _ENVELOPFUNCTIONAPPROX_H_
 
-#include "EigenvalueProblem.h"
+
 #include "FEMEigenvalueProblem.h"
 #include "TemperatureInterface.h"
 #include "StrainInterface.h"
 
-#include "petsc_vector.h"
+
 //! A class that constructs EFA Hamiltonian and S-matrix 
 class EnvelopFunctionApprox  : public FEMEigenvalueProblem
 {
@@ -116,9 +116,6 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
  
 
 
-
-
-
   //! sets opt.initial_eigestates_number
   void set_initial_eigenstates_number(unsigned int n);
 
@@ -159,7 +156,6 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
 
   //! returns element used for bulk calculation 
   inline const Elem*  return_bulk_element(void) const;
-
 
  private:
 
@@ -297,6 +293,12 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   void calculate_Hamiltonian_and_S(void);
 
 
+  //! calculates the norm of the eigenstate \f$ \sqrt {| \langle \psi|\psi \rangle |} \f$
+  /*!
+    \param state_number number of the eigenstate
+  */
+  double eigenstate_norm(unsigned int state_number);
+
 
   //!Calculates Fermi Dirac probability
   /*!
@@ -352,7 +354,7 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
 
 
 
-//
+
   //! bulk eigenstates
   void solve_bulk(void);
 
@@ -362,27 +364,6 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   void redeclare_solutions(void);
 
  protected:
-
-  virtual libMesh::Complex calculate_hamiltonian_matrix_element(
-                const std::vector<libMesh::Complex>& a,
-                const libMesh::NumericVector<double>& b_real,
-                libMesh::NumericVector<double>& b_imag) override;
-
-  //! Calculate the scalar product between states a and b
-  virtual libMesh::Complex compute_overlap(const std::vector<libMesh::Complex>& a,
-                         const libMesh::NumericVector<double>& b_real,
-                         libMesh::NumericVector<double>& b_imag) override;
-
-
-  //! calculates the norm of the eigenstate \f$ \sqrt {| \langle \psi|\psi \rangle |} \f$
-  /*!
-    \param state_number number of the eigenstate
-  */
-  virtual double eigenstate_norm(unsigned int state_number) override;
-
-
-
-  virtual void postprocess_solution(void) override;
 
 
   virtual void get_solution_secure(const Elem* elem,
@@ -411,7 +392,7 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
 
   virtual void 	parse_options (void);
 
-//  virtual void do_plot(void);
+  //virtual void do_plot(void);
 
   virtual void do_calculate_density_at_k(DofField& density);
 
@@ -427,13 +408,6 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
  private:
 
   bool check_confinement(const std::vector<libMesh::Complex>& state);
-
-
-  //! computes matrix elements between two explicitly given states
-  libMesh::Complex calculate_matrix_element(const std::vector<libMesh::Complex>& a,
-              const libMesh::NumericVector<double>& b_real,
-              libMesh::NumericVector<double>& b_imag,
-              const char matrix);
 
 };
 
@@ -502,28 +476,14 @@ inline const std::map<short, short>& EnvelopFunctionApprox::get_band_map(void) c
 
 
 
-//-------------------------------------------------------------------------------------//
-
-
-
 inline const Elem*  EnvelopFunctionApprox::return_bulk_element(void) const
 {
   return _bulk_mat_element;
 }
 
-
-
-//-----------------------------------------------------------------------------------------//
-
-
-
 inline double EnvelopFunctionApprox::get_H_units(void) const
 {
   return Constants::Hartree;
 }
-
-
-
-
 
 #endif
