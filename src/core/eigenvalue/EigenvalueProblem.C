@@ -954,6 +954,28 @@ EigenvalueProblem::do_project_to_primitive_cell(
 
 
 void
+EigenvalueProblem::project_on_bases(
+    const vector<string>& bases,
+    const vector<eigen_problem_solution>& states,
+    vector<vector<double>>& projection) const
+{
+  projection.resize(0);
+  projection.resize(states.size(), vector<double>(bases.size(), 0.0));
+
+  do_project_on_bases(bases, states, projection);
+}
+
+
+void
+EigenvalueProblem::do_project_on_bases(
+    const vector<string>&,
+    const vector<eigen_problem_solution>&,
+    vector<vector<double>>&) const
+{
+}
+
+
+void
 EigenvalueProblem::process_element(const Elem* elem, unsigned int entryside,
     vector<vector<eigen_problem_solution>>& ordered_solutions)
 {

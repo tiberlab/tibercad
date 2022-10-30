@@ -44,7 +44,7 @@ namespace
     if ((state1.particle == "hl") && (state1.particle == state2.particle))
       return (state2.energy < state1.energy);
 
-    return(state1.energy< state2.energy);
+    return(state1.energy < state2.energy);
   }
 }
 
@@ -1163,6 +1163,16 @@ EnvelopFunctionApprox::redeclare_solutions(void)
 
 
 
+void
+EnvelopFunctionApprox::do_project_on_bases(
+    const vector<string>&,
+    const vector<eigen_problem_solution>&,
+    vector<vector<double>>&) const
+{
+}
+
+
+
 //===========================================================//
 void EnvelopFunctionApprox::do_solve_for_kpoint(const Point& k_point)
 {
@@ -1611,10 +1621,10 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
   _H_imag->close();
   if (_haveS)
     _S_real->close();
-  //_H_real->print_matlab("Hr.m");
-  //_H_imag->print_matlab("Hi.m");
-  //if (_haveS)
-  //  _S_real->print_matlab("S.m");
+  _H_real->print_matlab("Hr.m");
+  _H_imag->print_matlab("Hi.m");
+  if (_haveS)
+    _S_real->print_matlab("S.m");
 
   //  dof_map.print_dof_constraints();
 

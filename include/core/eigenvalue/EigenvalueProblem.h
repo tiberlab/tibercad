@@ -113,6 +113,23 @@ class EigenvalueProblem : public SimulationInterface
         std::vector<std::vector<libMesh::Complex>>& weights) const;
 
 
+    //! Project solution states onto specific basis orbitals
+    /*!
+     * The specific implementation of this method is used to
+     * project the solutions onto the different basis functions or orbitals
+     * (or atoms, nodes etc) for further insight into the solutions.
+     * The projection will be done for each k-point
+     *
+     * \param bases strings identifying the bases/orbitals to be projected onto
+     * \param states the calculated states (solutions)
+     * \param projection contains the projections at return
+     */
+    void project_on_bases(
+        const std::vector<std::string>& bases,
+        const std::vector<eigen_problem_solution>& states,
+        std::vector<std::vector<double>>& projection) const;
+
+
     //! get number of states
     unsigned int get_num_states(void) const;
 
@@ -253,6 +270,15 @@ class EigenvalueProblem : public SimulationInterface
         const std::vector<libMesh::Point>& kpoints,
         std::vector<std::vector<libMesh::Complex>>& weights) const;
 
+    //! Implementation of the projection onto specific basis orbitals
+    /*!
+     * At entry, \c projection container is prepared with the right sizes.
+     */
+    virtual void do_project_on_bases(
+        const std::vector<std::string>& bases,
+        const std::vector<eigen_problem_solution>& states,
+        std::vector<std::vector<double>>& projection) const;
+
 
     //!put spectrum shift energy to be almost equal to the 1st eigenvalue
     virtual double get_new_spectrum_shift(void) { return 0; }
@@ -309,6 +335,9 @@ class EigenvalueProblem : public SimulationInterface
 
 
     //! Stores the energy values for each k point for dispersions
+    /*!
+     * The ordering of the k-points is as in k-space mesh (\c _kspace)
+     */
     std::vector< std::vector<double> > _dispersion;
 
     //! Stores projection weights for the k points
@@ -316,6 +345,17 @@ class EigenvalueProblem : public SimulationInterface
      * This is filled only in case of unfolding
      */
     std::vector< std::vector<double> > _projection_weights;
+
+
+    //! The names for the projection onto bases/orbitals/atoms
+    std::vector<std::string> _projection_names;
+
+    //! The projections of the different solutions at the different k-points
+    /*!
+     * This is filled only if projection option is given in input. It will
+     * create an additional file, to be used together with the dispersion data.
+     */
+    std::vector<std::vector<std::vector<double>>> _state_projections;
 
 
     //! Indicates whether this is a generalized eigenvalue problem
@@ -373,11 +413,6 @@ EigenvalueProblem::assemble(const ModelOptions& options)
   do_assemble(options);
 }
 
-//inline
-//std::vector<eigen_problem_solution>& EigenvalueProblem::get_solution(void) const 
-//{
-//   return _solution;
-//}
 
 
 
@@ -406,25 +441,6 @@ EigenvalueProblem::calculate_matrix_element(const std::string&,
   return 0;
 }
 
-/*
-inline
-void EigenvalueProblem::init_permutation(const unsigned int n_dofs)
-{
-  _perm.resize(n_dofs);
-  _inv_perm.resize(n_dofs);
-  for(unsigned int i=0; i<n_dofs; i++)
-    _perm[i] = _inv_perm[i] = i;
-}
-
-inline
-void EigenvalueProblem::set_permutation(const std::vector<unsigned int>& p)
-{
-  _perm = p;
-  _inv_perm.resize(p.size());
-  for(unsigned int i = 0; i < p.size(); i++)
-    _inv_perm[p[i]] = i;
-}
-*/
 
 inline 
 bool EigenvalueProblem::has_new_k(void) const
