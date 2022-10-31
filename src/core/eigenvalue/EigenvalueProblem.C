@@ -762,6 +762,12 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     _projection_weights = _dispersion;
   }
 
+  if (!_projection_names.empty())
+  {
+    _state_projections.resize(0);
+    _state_projections.resize(_dispersion.size());
+  }
+
   for (unsigned int i = 0; i < number_of_K_points; i++)
   {
     const Point& k_point = Kpoints[i];
@@ -774,8 +780,6 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     if (!_projection_names.empty())
     {
       project_on_bases(_projection_names, _solution, proj);
-      _state_projections.resize(0);
-      _state_projections.resize(_dispersion.size());
     }
 
     number_of_eigs = get_num_states();
@@ -837,76 +841,115 @@ EigenvalueProblem::plot_dispersion(const std::string& filename)
   bool is_unfolded = (_projection_weights.size() > 0);
   unsigned int mult = is_unfolded ? 2 : 1;
 
-    std::vector<std::string> formats;
-    get_output_format(formats);
+  std::vector<std::string> formats;
+  get_output_format(formats);
+
+  bool has_proj = (_state_projections.size() > 0);
+
+  short kdim =  _kspace->dimension();
+
+  if (_kspace->is_k_path())
+  {
+    formats.resize(1);
+    formats[0] = "grace";
+  }
 
 
-    short kdim =  _kspace->dimension();
 
-    if (_kspace->is_k_path())
+  for(short k = 0; k < formats.size(); k++)
+  {
+
+    std::string format = formats[k];
+
+    if (!(_kspace->is_k_path()) &&
+        (format == "grace") && (kdim > 1))
     {
-      formats.resize(1);
-      formats[0] = "grace";
+      format = "vtk";
     }
 
+    std::vector<double> results;
+    std::vector<std::string> names;
 
+    std::vector<double> results_proj;
+    std::vector<std::string> names_proj;
 
-    for(short k=0; k<formats.size();k++)
+    unsigned int number_of_eigs = _dispersion[0].size();
+    names.resize(mult * number_of_eigs);
+
+    unsigned int number_of_k_points = kmesh->n_nodes();
+
+    results.resize(mult * number_of_eigs * number_of_k_points );
+
+    if (has_proj)
     {
+      names_proj.resize(number_of_eigs * _projection_names.size());
+      results_proj.resize(number_of_k_points * names_proj.size());
+    }
 
-      std::string format = formats[k];
+    for (unsigned int i = 0; i < number_of_eigs ; i++)
+    {
+      std::ostringstream i_str;
+      //The states are numbered starting from 0
+      i_str << "state_number_" << i;
+      names[i] = i_str.str();
 
-      if (!(_kspace->is_k_path()) &&
-          (format == "grace") && (kdim > 1))
-      {
-        format = "vtk";
-      }
+      for (unsigned int j = 0; j < number_of_k_points ; j++)
+        results[mult * number_of_eigs * j + i] = _dispersion[j][i];
 
-      std::vector<double> results;
-      std::vector<std::string> names;
+      if (is_unfolded)
+        for (unsigned int j = 0; j < number_of_k_points ; j++)
+          results[(mult * j + 1) * number_of_eigs + i] =
+              _projection_weights[j][i];
+    }
 
-      unsigned int number_of_eigs = _dispersion[0].size();
-      names.resize(mult * number_of_eigs);
-
-      unsigned int number_of_k_points = kmesh->n_nodes();
-
-      results.resize(mult * number_of_eigs * number_of_k_points );
-
+    if (is_unfolded)
+    {
       for (unsigned int i = 0; i < number_of_eigs ; i++)
       {
         std::ostringstream i_str;
         //The states are numbered starting from 0
-        i_str << "state_number_" << i;
-        names[i] = i_str.str();
-
-        for (unsigned int j = 0; j < number_of_k_points ; j++)
-          results[mult * number_of_eigs * j + i] = _dispersion[j][i];
-
-        if (is_unfolded)
-          for (unsigned int j = 0; j < number_of_k_points ; j++)
-            results[(mult * j + 1) * number_of_eigs + i] =
-                _projection_weights[j][i];
+        i_str << "weight_" << i;
+        names[number_of_eigs + i] = i_str.str();
       }
+    }
 
-      if (is_unfolded)
+    DataOutput data_output(*kmesh, format);
+    data_output.set_output_directory(get_output_directory());
+
+    data_output.write_nodal_data(filename, results, names);
+
+
+    // projected data is written into a second file
+    if (has_proj)
+    {
+      for (unsigned int i = 0; i < number_of_eigs ; i++)
       {
-        for (unsigned int i = 0; i < number_of_eigs ; i++)
+        for (unsigned int n = 0; n < _projection_names.size(); ++n)
         {
-          std::ostringstream i_str;
-          //The states are numbered starting from 0
-          i_str << "weight_" << i;
-          names[number_of_eigs + i] = i_str.str();
+          std::ostringstream ostr;
+          ostr << i << "_" << _projection_names[n];
+          names_proj[i * _projection_names.size() + n] = ostr.str();
         }
       }
 
+      for (unsigned int k = 0; k < number_of_k_points ; k++)
+      {
+        unsigned int I = _state_projections[k].size();
+        for (unsigned int i = 0; i < I; ++i)
+        {
+          unsigned int J = _state_projections[k][i].size();
+          for (unsigned int j = 0; j < J; ++j)
+          {
+            results_proj[k * I * J + i * J + j] = _state_projections[k][i][j];
+          }
+        }
+      }
 
-      DataOutput data_output(*kmesh, format);
-      data_output.set_output_directory(get_output_directory());
-      //data_output.set_filename(filename);
-
-      data_output.write_nodal_data(filename, results, names);
-
+      string fn(filename + "_proj");
+      data_output.write_nodal_data(fn, results_proj, names_proj);
     }
+
+  }
 }
 
 
