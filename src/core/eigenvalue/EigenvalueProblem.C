@@ -259,6 +259,8 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
   string refmat_s = kopts.get_option("unfold_to", "");
   kopts.delete_option("unfold_to");
 
+  kopts.get_option("project_on_states", _projection_names);
+
   Material* refmat = nullptr;
   if (!refmat_s.empty())
   {
@@ -767,6 +769,15 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     if (i > 0)
       solve_for_kpoint(k_point);
 
+    // if requested, project onto basis functions
+    vector<vector<double>> proj;
+    if (!_projection_names.empty())
+    {
+      project_on_bases(_projection_names, _solution, proj);
+      _state_projections.resize(0);
+      _state_projections.resize(_dispersion.size());
+    }
+
     number_of_eigs = get_num_states();
     Utils::Timer tt;
 
@@ -778,6 +789,9 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
       for (auto&& k : K_to_k[i])
       {
         _dispersion[k][j] = _solution[j].eigen_energy;
+
+        if (!proj.empty())
+          _state_projections[k] = proj;
       }
     }
 

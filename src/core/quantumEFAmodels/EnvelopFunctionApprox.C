@@ -1165,10 +1165,109 @@ EnvelopFunctionApprox::redeclare_solutions(void)
 
 void
 EnvelopFunctionApprox::do_project_on_bases(
-    const vector<string>&,
-    const vector<eigen_problem_solution>&,
-    vector<vector<double>>&) const
+    const vector<string>& bases,
+    const vector<eigen_problem_solution>& states,
+    vector<vector<double>>& projection) const
 {
+  // we first calculate the projection on all Bloch bases, an then give
+  // back only the required ones.
+  vector<double> proj(8, 0.0);
+
+  vector<int> bm(band_map.size());
+
+  for (auto&& a : band_map)
+  {
+    bm[a.first] = a.second;
+  }
+
+  for (unsigned int n = 0; n < states.size(); ++n)
+  {
+    eigenstate_norm(n, &proj);
+
+    for (unsigned int i = 0; i < bases.size(); ++i)
+    {
+      string b = bases[i];
+
+      if (b[0] == 's')
+      {
+        if (b == "s")
+        {
+          projection[n][i] = proj[0] + proj[1];
+          continue;
+        }
+
+        if (b == "s_u")
+        {
+          projection[n][i] = proj[0];
+          continue;
+        }
+
+        if (b == "s_d")
+        {
+          projection[n][i] = proj[1];
+          continue;
+        }
+      }
+
+      if (b[0] == 'p')
+      {
+        if (b == "px")
+        {
+          projection[n][i] = proj[2] + proj[5];
+          continue;
+        }
+
+        if (b == "py")
+        {
+          projection[n][i] = proj[3] + proj[6];
+          continue;
+        }
+
+        if (b == "pz")
+        {
+          projection[n][i] = proj[4] + proj[7];
+          continue;
+        }
+
+        if (b == "px_u")
+        {
+          projection[n][i] = proj[2];
+          continue;
+        }
+
+        if (b == "py_u")
+        {
+          projection[n][i] = proj[3];
+          continue;
+        }
+
+        if (b == "pz_u")
+        {
+          projection[n][i] = proj[4];
+          continue;
+        }
+
+        if (b == "px_d")
+        {
+          projection[n][i] = proj[5];
+          continue;
+        }
+
+        if (b == "py_d")
+        {
+          projection[n][i] = proj[6];
+          continue;
+        }
+
+        if (b == "pz_d")
+        {
+          projection[n][i] = proj[7];
+          continue;
+        }
+
+      }
+    }
+  }
 }
 
 
@@ -2232,7 +2331,7 @@ void EnvelopFunctionApprox::transform_eigenstate(vector<Complex>& eigvec)
 }
 
 //-----------------------------------------------------------------------------//
-double  EnvelopFunctionApprox::eigenstate_norm(unsigned int state_number)
+double  EnvelopFunctionApprox::eigenstate_norm(unsigned int state_number, vector<double> *projections) const
 {
   double  result;
 
@@ -2263,52 +2362,49 @@ double  EnvelopFunctionApprox::eigenstate_norm(unsigned int state_number)
   MeshBase::const_element_iterator       el     = this->active_local_elements_begin();
   const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
 
-  Complex temp(0.0, 0.0);
+  vector<Complex> temp(number_of_bands, Complex(0.0, 0.0));
   Complex eigen_f_value1, eigen_f_value2;
 
   for ( ; el != end_el ; ++el)
-    {//el
+  {//el
 
-      const Elem* elem = *el;
-      fe->reinit (elem);
+    const Elem* elem = *el;
+    fe->reinit (elem);
 
-      for (short psi_index = 0; psi_index < number_of_bands; psi_index++)
-	{
-	  dof_map.dof_indices (elem, dof_indices, psi_index);
-	  const unsigned int n_psi_dofs = dof_indices.size();
+    for (short psi_index = 0; psi_index < number_of_bands; psi_index++)
+    {
+      dof_map.dof_indices (elem, dof_indices, psi_index);
+      const unsigned int n_psi_dofs = dof_indices.size();
 
-	  for (unsigned int qp=0; qp<qrule.n_points(); qp++)
-	    {//qp
-	      for (unsigned int p1=0; p1<n_psi_dofs; p1++)
-		{
-		  eigen_f_value1 = eigen_vector[dof_indices[p1]];
-		  for (unsigned int p2=0; p2<n_psi_dofs; p2++)
-		    {
-		      eigen_f_value2 = eigen_vector[dof_indices[p2]];
-		      temp += ( JxW[qp] * phi[p1][qp] * eigen_f_value1 * 
-                                      phi[p2][qp] * conj(eigen_f_value2) );
-		    }
-		}
-
-	    }
-
-
-
-
-	}
-
-
+      for (unsigned int qp=0; qp<qrule.n_points(); qp++)
+      {//qp
+        for (unsigned int p1=0; p1<n_psi_dofs; p1++)
+        {
+          eigen_f_value1 = eigen_vector[dof_indices[p1]];
+          for (unsigned int p2=0; p2<n_psi_dofs; p2++)
+          {
+            eigen_f_value2 = eigen_vector[dof_indices[p2]];
+            temp[psi_index] += ( JxW[qp] * phi[p1][qp] * eigen_f_value1 *
+                phi[p2][qp] * conj(eigen_f_value2) );
+          }
+        }
+      }
     }
+  }
 
 
   this->get_solver_communicator().sum(temp);
 
-  result = sqrt( abs(temp)  );
+  for (unsigned int i = 0; i < number_of_bands; ++i)
+  {
+    double val = abs(temp[i]);
+    result += val;
 
+    if (projections != nullptr)
+      (*projections)[i] = val;
+  }
 
-
-
-  return(result);
+  return(sqrt(result));
 
 }
 

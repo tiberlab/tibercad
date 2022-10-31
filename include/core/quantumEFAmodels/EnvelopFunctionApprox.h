@@ -255,8 +255,9 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   //! calculates the norm of the eigenstate \f$ \sqrt {| \langle \psi|\psi \rangle |} \f$
   /*!
     \param state_number number of the eigenstate
+    \param projections the projectiosn on the single bloch states, if required
   */
-  double eigenstate_norm(unsigned int state_number);
+  double eigenstate_norm(unsigned int state_number, std::vector<double> *projections = nullptr) const;
 
 
   //!Calculates Fermi Dirac probability
