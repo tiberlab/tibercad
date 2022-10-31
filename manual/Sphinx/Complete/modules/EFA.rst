@@ -377,8 +377,13 @@ The main parameters are:
 
  ``k_max`` : 
    maximum value of k (in units of 1/nm) in each direction. Can be specified as vector in order to have
-   different extensions in different directions.
+   different extensions in different directions. Note that for periodic structures the k-space is well defined, and 
+   k_max = 1 means the boundary of the Brillouin zone.
 
+ ``project_on_states`` :
+   this is used to extract the composition of the eigenstates in terms of the Bloch basis functions, and can
+   be a vector of strings. Valid entries are ``s``, ``px``, ``py``, ``pz``, and versions with ``_u`` or ``_d``
+   suffix for the single spin components. The projections are written into an additional file.
 
 
 The dispersion can  be calculated in  general in  a  k-space  dimension between 1 and (3-*simdim*),  where  *simdim*  is  the  simulation  dimension. That is a 1D k-space can be defined for 1D and 2D simulations and a 2D k-space for 1D simulations.
@@ -398,7 +403,7 @@ If  the  optional keyword ::
   k-path
 
 is  present,  then  the  dispersion is calculated in  1D  along  a  defined  path P1-P2-P3,  for  example G-K-M. Valid symmetry points  depend on the symmetry, standard notation is used.
-In  this  case,  ``number_of_nodes`` is an  integer.
+In  this  case,  ``number_of_nodes`` is an  integer, or a list of integers, if every single segment needs to be controlled individually.
 
 
 The dispersion is calculated for each of  the quantum states previously  defined in  the  simulation.
