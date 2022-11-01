@@ -177,7 +177,9 @@ Module  efaschroedinger
   {
     k-path = X-G-S
     k_max = 1
-    number_of_nodes = 10	
+    number_of_nodes = 40	
+
+    project_on_states = (px, py, pz)
   }	
 
   Solver {
