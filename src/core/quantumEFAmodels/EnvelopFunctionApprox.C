@@ -1177,7 +1177,7 @@ EnvelopFunctionApprox::do_project_on_bases(
 
   for (auto&& a : band_map)
   {
-    bm[a.first] = a.second;
+    bm[a.second] = a.first;
   }
 
   for (unsigned int n = 0; n < states.size(); ++n)
