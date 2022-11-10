@@ -31,6 +31,9 @@ DEBUG=${DEBUG:-'n'}
 # build shared libs (yes/no)
 shared_libs=${shared_libs:-'n'}
 
+# CUDA
+CUDADIR=${CUDADIR:-'/usr/pack-a/cudatoolkit-11.4-ma'}
+
 # use MKL (yes/no)
 MKL=${MKL:-'n'}
 MKLDIR=${MKLDIR:-"/usr/pack/intel_mkl-10.2-gp"}
@@ -115,14 +118,15 @@ RANLIB="@RANLIB@"
 #fi
 
 # compiler flags
-CFLAGS="${CFLAGS} -fexceptions"
-FCFLAGS="${FCFLAGS} -fexceptions"
+CFLAGS="${CFLAGS} -fexceptions -fPIC"
+FCFLAGS="${FCFLAGS} -fexceptions -fPIC"
 if [ "$march" == "x86_64" ] &&  [ "${target_os}" != "win32" ] ; then
   CXXFLAGS="-fPIC ${CXXFLAGS}"
   CFLAGS="-fPIC ${CFLAGS}"
   FCFLAGS="-fPIC ${FCFLAGS}"
 fi
-CXXFLAGS="${CXXFLAGS} -std=gnu++11"
+#CXXFLAGS="${CXXFLAGS} -fPIC -std=gnu++17"
+CXXFLAGS="${CXXFLAGS} -fPIC"
 FFLAGS=${FCFLAGS}
 export CXXFLAGS CFLAGS FFLAGS FCFLAGS
 

@@ -17,6 +17,8 @@ subdirs += negf
 subdirs += tmm 
 #subdirs += maxwell maxwellabsorption 
 
+.IGNORE:
+
 include $(topdir)/Make.common
 
 #modules: all

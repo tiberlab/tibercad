@@ -462,15 +462,15 @@ read -e answer
 if [ ! -f $answer ]
 then
   echo "The path you provided cannot be used."
-  echo "Don't forget to copy your license file to $instpath/license/tiberlab.lic after installation."
+  echo "Don't forget to copy your license file to $instpath/license/tibercad.lic after installation."
 else
   if [ -z $answer ]
   then
-    echo "Don't forget to copy your license file to $instpath/license/tiberlab.lic after installation."
+    echo "Don't forget to copy your license file to $instpath/license/tibercad.lic after installation."
   else
-    echo "Copying $answer to $instpath/license/tiberlab.lic"
+    echo "Copying $answer to $instpath/license/tibercad.lic"
     mkdir -p $instpath/license
-    cp $answer $instpath/license/tiberlab.lic
+    cp $answer $instpath/license/tibercad.lic
   fi
 fi
 

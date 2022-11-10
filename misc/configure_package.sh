@@ -1,9 +1,9 @@
 #!/bin/bash
 
-export PETSCVERSION="3.16.1"
-export SLEPCVERSION="3.16.1"
+export PETSCVERSION="3.17.4"
+export SLEPCVERSION="3.17.2"
 export LIBMESHVERSION="1.6.2"
-export GMSHVERSION="4.8.3"
+export GMSHVERSION="4.10.5"
 export BOOSTVERSION="1_77_0"
 
 #export BUILDDIR=/usr/pack/tibercad_dev-3.2-ma/build
@@ -14,9 +14,11 @@ ARCH=x86_64-linux
 export MKL=y
 export MKLDIR=/usr/pack/intel_oneapi-2021-ma/mkl/latest
 
+export CUDADIR=/usr/pack/cudatoolkit-11.4-ma
+
 export MPI=y
-export MPIDIR="$(dirname `pwd`)/SDK"
-#export MPIDIR=/usr/pack/tibercad_dev-3.2-ma/SDK
+#export MPIDIR="$(dirname `pwd`)/SDK"
+export MPIDIR=/usr/pack/tibercad_dev-3.3-ma/SDK
 
 export FORTRANDIR=/usr/pack/intel_oneapi-2021-ma/compiler/latest/linux/compiler
 
@@ -28,6 +30,8 @@ then
   export CXX=${MPIDIR}/${ARCH}/bin/mpicxx
   export FC=${MPIDIR}/${ARCH}/bin/mpifort
   export F77=${MPIDIR}/${ARCH}/bin/mpifort
+
+  export FCFLAGS="-fexceptions -gcc-name=$(which ${CC}) -gxx-name=$(which ${CXX}) -nofor-main"
 else
   export CC=gcc-11.1
   export CXX=g++-11.1
@@ -41,7 +45,6 @@ fi
 
 export CFLAGS=
 export CXXFLAGS=
-export FCFLAGS="-fexceptions -gcc-name=$(which ${CC}) -gxx-name=$(which ${CXX}) -nofor-main"
 #export FCFLAGS="-fexceptions"
 
 #export FFLAGS="-fallow-argument-mismatch"
