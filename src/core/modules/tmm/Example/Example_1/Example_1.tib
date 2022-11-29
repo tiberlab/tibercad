@@ -24,7 +24,7 @@ Module tmm
 { 
   
   name = tmm_study 
-  plot = (GenerationRate,Intensity,ElectricField, Reflection,Transmission,Absorbtion)
+  plot = (GenerationRate,Intensity,External_Source_ElectricField, Reflection,Transmission,Absorbtion)
   
   back_reflectivity = 0
   incident_angle = 0

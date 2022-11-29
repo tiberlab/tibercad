@@ -51,7 +51,7 @@ Device
 Module tmm
 { 
   name = tmm_study 
-  plot = (GenerationRate,Intensity,ElectricField, Reflection,Transmission,Absorption)
+  plot = (GenerationRate,Intensity,External_Source_ElectricField, Reflection,Transmission,Absorption)
   back_reflectivity = 0
   incident_angle = 0
   wavelength_uper_lim = 950

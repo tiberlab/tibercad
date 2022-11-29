@@ -46,6 +46,12 @@ class TBDLLOCAL Tmm : public SimulationInterface
     Matrix_2by2 operator*(Matrix_2by2 const & old_Matrix_2by2);
 
 
+    void inv();
+
+    void unit_matrix();
+
+
+
     //! defining a function to print matrix elements
     void print();
 
@@ -178,7 +184,8 @@ class TBDLLOCAL Tmm : public SimulationInterface
     {
       GenerationRate,
       Intensity,
-      ElectricField,
+      External_Source_ElectricField,
+      Internal_Source_ElectricField,
       Transmission,
       Reflection,
       Absorption
@@ -189,9 +196,10 @@ class TBDLLOCAL Tmm : public SimulationInterface
     std::vector<double> _Absorption;
 
     std::vector<double> _Intensity;
-    std::vector<double> _ElectricField;
+    std::vector<double> _External_Source_ElectricField;
     std::vector<double> _Wavelength;
     std::vector<double> _Generation_rate;
+    std::vector<double> _Internal_Source_ElectricField;
 
 
     
@@ -216,6 +224,8 @@ class TBDLLOCAL Tmm : public SimulationInterface
     double _up_lambda;
     double _down_lambda;
     double _wavelength_steps;
+    double _dipole_loc;
+
 
     std::vector<double> _wavelength_vector;
 
