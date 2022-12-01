@@ -1488,6 +1488,10 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
 
   std::set<Utils::Couple<const Material* > > interfaces;
 
+  //
+  // First we write the atom types and the structure including connectivity
+  //
+
   //Standard gen section (modified with material index)
   file << _atoms.size();
   
@@ -1548,8 +1552,10 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
     
   }
   
+  //
+  // Periodicity vectors come after the structure
+  //
 
-  // Periodicity vectors at the bottom
   if (is_periodic())
   {
     
@@ -1569,7 +1575,9 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
     }
   }
   
-  //Information about materials
+  //
+  // Now the information about all materials
+  //
   
 
   std::map<const Material*, unsigned int> n_species_map;
@@ -1681,8 +1689,8 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
         dbA.set_section("valenceband");
         dbB.set_section("valenceband");
     
-        file           << " " << dbA.get("E_v",0.0)
-                       << " " << dbB.get("E_v",0.0);
+        file           << " " << std::setprecision(5) << dbA.get("E_v",0.0)
+                       << " " << std::setprecision(5) << dbB.get("E_v",0.0);
       }
 
       if (alloy_type == "quaternary")
@@ -1705,7 +1713,7 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
            << " " << mat->get_name() << etb_dataset + ".etb";
       if (band_offsets)
       {               
-        file << " " << db.get("E_v",0.0);
+        file << " " << std::setprecision(5) << db.get("E_v",0.0);
       } 
       file << " 0.0  0.0"   << std::endl;
     }
@@ -1825,14 +1833,29 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
     unsigned int size = a.second.first.size();
     file << " " << size << " 0";
 
+    // we need to get the valence band reference energies
+    vector<double> ev = vector<double>(size, 0.0);
+
     for (unsigned int i = 0; i < size; ++i)
+    {
       file << "  " << a.second.first[i];
+
+      if (band_offsets)
+      {
+        Database db(a.second.first[i]);
+        db.set_section("valenceband");
+        ev[i] = db.get("E_v", 0.0);
+      }
+    }
 
     for (unsigned int i = 0; i < size; ++i)
       file << "  " << a.second.second[i];
 
     for (unsigned int i = 0; i < size; ++i)
       file << "  " << a.second.first[i] << etb_dataset << ".etb";
+
+    for (unsigned int i = 0; i < size; ++i)
+      file << "  " << std::setprecision(5) << ev[i];
 
     file << std::endl;
   }
