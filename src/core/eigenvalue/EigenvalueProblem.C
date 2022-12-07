@@ -1889,7 +1889,7 @@ double  EigenvalueProblem::Fermi(double Energy, double Fermi_energy, double Temp
   
   double occupation;
   
-  if (exp_arg > 35) 
+  if (exp_arg > 35.0)
     occupation = std::exp(-exp_arg);
   else
     occupation = 1.0/(std::exp(exp_arg) + 1.0);
@@ -1905,7 +1905,7 @@ double  EigenvalueProblem::Bose(double Energy, double electro_chem_pot, double T
   
   double bose;
   
-  if (exp_arg > 35) 
+  if (exp_arg > 35.0)
     bose = std::exp(-exp_arg);
   else
     bose = 1.0/(std::exp(exp_arg) - 1.0);
