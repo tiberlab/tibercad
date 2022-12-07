@@ -1720,10 +1720,10 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
   _H_imag->close();
   if (_haveS)
     _S_real->close();
-  _H_real->print_matlab("Hr.m");
-  _H_imag->print_matlab("Hi.m");
-  if (_haveS)
-    _S_real->print_matlab("S.m");
+  //_H_real->print_matlab("Hr.m");
+  //_H_imag->print_matlab("Hi.m");
+  //if (_haveS)
+  //  _S_real->print_matlab("S.m");
 
   //  dof_map.print_dof_constraints();
 
