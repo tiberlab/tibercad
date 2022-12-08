@@ -89,13 +89,11 @@ Optics::get_solution_secure(map<ID, vector<double> >& values)
 
 void Optics::parse_options()
 {
-   
   _initial_state_particle = "el";
   _final_state_particle = "hl";
 
   _initial_state_particle = get_option("initial_state_particle", _initial_state_particle);
   _final_state_particle = get_option("final_state_particle", _final_state_particle);
-
 
   //k-vector
   libMesh::RealVectorValue k_vec(0.0);
@@ -130,9 +128,12 @@ void Optics::parse_options()
 
   // Spectrum options ------------------------------------------------------------------------------
   if (has_option("Emin"))
-    _opt.Emin = get_option("Emin", 0.0);
+    _opt.Emin = get_option("Emin", 1e-6);
   else
      throw InitFailedException("Optical Spectrum: Emin must be defined\n");
+
+  if (_opt.Emin == 0.0)
+    _opt.Emin = 1e-6;
 
   if (has_option("Emax"))
     _opt.Emax = get_option("Emax", 0.0);
@@ -214,6 +215,14 @@ void Optics::do_init()
   comm.split(0,0,energy_comm); 
 
   parse_options();
+  ostringstream os;
+  os << "Calculating transitions between "
+      << _initial_state_model->get_name() << ", " << _initial_state_particle << " -> "
+      << _final_state_model->get_name() << ", " << _final_state_particle;
+  Messages::newline();
+  Messages::info(os.str());
+  Messages::newline();
+
 
   _energy_mesh = new Mesh(energy_comm, 1);
 
@@ -637,15 +646,12 @@ void Optics::do_solve()
   switch (dim)
   {
     case 0:
-//      area_dim_factor *= Constants::bohr_radius * 1e2;
       area_dim_factor *= 1e-9 * 1e2;
 
     case 1:
-//      area_dim_factor *= Constants::bohr_radius * 1e2;
       area_dim_factor *= 1e-9 * 1e2;
 
     case 2:
-//      area_dim_factor *= Constants::bohr_radius * 1e2;
       area_dim_factor *= 1e-9 * 1e2;
 
     default:
@@ -735,8 +741,13 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
     for (unsigned j = 0; j < n2; j++)  // "lower" states
     {
 
-      double trans_energy =  abs(is_eigen_values[_initial_indices[i]]
-	                       - fs_eigen_values[_final_indices[j]]);
+      double trans_energy =  is_eigen_values[_initial_indices[i]]
+	                   - fs_eigen_values[_final_indices[j]];
+
+      // initial state has to have higher energy. This also eliminates
+      // double counting for intra-subband terms
+      if (trans_energy < 1e-12)
+        continue;
 
       double f1 = 1.0;
       double f2 = 1.0;
@@ -816,8 +827,6 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
           Lorenzian = gaussian(trans_energy - En, Gamma) * Hartree;
         else
           Lorenzian = lorentzian(trans_energy - En, Gamma) * Hartree;
-        //double Lorenzian =  0.5*Gamma/( ( trans_energy - En) *  ( trans_energy - En)
-        //                    + (0.5*Gamma)*(0.5*Gamma)) / M_PI * Hartree;
 
         spectrum[el] += power * Lorenzian;
         spectrum[el + n_energy] += stimulated * Lorenzian;
@@ -1172,7 +1181,7 @@ Optics::plot_globaldata(void)
     {
       for (unsigned int j = 0; j < n2; j++)
       {
-        file << i << "  " << j << "  " << (is_ene[i] - fs_ene[j]);
+        file << i << "  " << j << "  " << std::abs(is_ene[i] - fs_ene[j]);
         for (unsigned int p = 0; p < 3; p++)
         {
           // norm returns the square of the absolute value

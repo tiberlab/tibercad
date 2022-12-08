@@ -277,6 +277,8 @@ void OpticsKP::calculate_matrix_bulk(void)
 void OpticsKP::do_assemble(const ModelOptions& opts)
 {
 
+  bool intraband = get_option("calculate_intraband_term", false);
+
   const MeshBase* mesh = &get_mesh();
   unsigned int dim = mesh->mesh_dimension();
 
@@ -352,8 +354,7 @@ void OpticsKP::do_assemble(const ModelOptions& opts)
   EFAbulkHamiltonian* element_hamiltonian;
   KPbulkHamiltonian* element_kp_hamiltonian;
 
-  unsigned int el_number = 0;
-  double temp;
+
   for ( ; el != end_el ; ++el)
   {//el
     // Store a pointer to the element we are currently
@@ -372,7 +373,7 @@ void OpticsKP::do_assemble(const ModelOptions& opts)
 
  
     dof_map.dof_indices (elem, dof_indices);
-    const unsigned int n_dofs   = dof_indices.size();
+    const unsigned int n_dofs = dof_indices.size();
     fe->reinit (elem);
 
     Px_real.resize(n_dofs, n_dofs );
@@ -398,6 +399,7 @@ void OpticsKP::do_assemble(const ModelOptions& opts)
         dof_map.dof_indices (elem, dof_indices_component, psivar[band1]);
 
         const unsigned int n_psi_dofs = dof_indices_component.size();
+
         for (unsigned int band2 = 0; band2 < 8; band2++)
         {//band2
           Px_real_sub.reposition(psivar[band1]*n_psi_dofs, psivar[band2]*n_psi_dofs, n_psi_dofs, n_psi_dofs);
@@ -419,11 +421,19 @@ void OpticsKP::do_assemble(const ModelOptions& opts)
               vector<libMesh::Complex> value(3, libMesh::Complex(0.0,0.0));
 
               //----constant part-----------------------------------
-              temp = JxW[qp] * phi[p1][qp] * phi[p2][qp];
+              double temp = JxW[qp] * phi[p1][qp] * phi[p2][qp];
 
               for (short pol = 0; pol < 3; pol++)
                 value[pol] += temp * P[pol][band1][band2].constant ;
 
+              // intraband part
+              if (intraband && (band1 == band2))
+              {
+                libMesh::Complex val(0.0, -JxW[qp] * phi[p1][qp]);
+                value[0] += val * dphi[p2][qp](0);
+                value[1] += val * dphi[p2][qp](1);
+                value[2] += val * dphi[p2][qp](2);
+              }
 
 
               //----            ------------------------------------
@@ -477,10 +487,16 @@ void OpticsKP::do_assemble(const ModelOptions& opts)
     Py_matr_imag->add_matrix(Py_imag,dof_indices );
     Pz_matr_imag->add_matrix(Pz_imag,dof_indices );
 
-
-    el_number++;
-
   }
+  Px_matr_imag->close();
+  Px_matr_real->close();
+  Py_matr_imag->close();
+  Py_matr_real->close();
+  Pz_matr_imag->close();
+  Pz_matr_real->close();
+
+  //Px_matr_imag->print_matlab("Px_i.m");
+  //Px_matr_real->print_matlab("Px_r.m");
 
 }
 

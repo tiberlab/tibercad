@@ -507,6 +507,12 @@ The main parameters are:
  ``final_state_model`` :
     quantum simulations associated to the final  state of optical transition
 
+ ``initial_state_particle``:
+     controls which states to use from the initial state model, can be ``el``, ``hl`` or ``all``
+
+ ``final_state_particle`` :
+     controls which states to use from the final state model, can be ``el``, ``hl`` or ``all``
+
  ``Emin``:
     minimum  energy 
 
@@ -536,7 +542,7 @@ transition (e.g. electron), and to the final state of optical transition (e.g. h
 
 
 
-By  default, all  the eigenstates calculated in  the electron  and  hole quantum simulations are taken in  account  for the  optical calculations.
+By  default, all  the eigenstates calculated in  the electron  and  hole quantum simulations are taken in  account  for the  optical calculations, but only electron-hole transitions are considered. Therefore, to calculate intersubband transitions one has to specify explcitly the initial and final state particles.
 
 Optionally, one  can  define  the  range  of  states to  be  used  for  optical  transitions, by  means  of  the  keywords ``initial_eigenstates`` and ``final_eigenstates``. 
 

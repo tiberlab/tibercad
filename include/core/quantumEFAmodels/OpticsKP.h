@@ -101,12 +101,6 @@ class OpticsKP: public Optics
 
 
 
-  //! creates kp material model for optics calculation
-  /*!
-    Has to be 8x8 model. Parameters may be different from those used in Schroedinger equation.
-  */ 
-
-
 
 
 

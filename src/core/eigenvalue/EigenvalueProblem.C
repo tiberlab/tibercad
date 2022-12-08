@@ -1755,7 +1755,7 @@ void EigenvalueProblem::get_eigenvalues(const std::string& particle,
 
   for (unsigned int i = 0; i < n; i++)
   {
-    if(particle.empty() || (_solution[i].particle == particle))
+    if(particle.empty() || (_solution[i].particle == particle) || (particle == "all"))
     {  
       num_st++;
 
@@ -1776,9 +1776,10 @@ unsigned int EigenvalueProblem::get_num_states(void) const
 unsigned int EigenvalueProblem::get_num_states(const std::string& particle) const
 {
   unsigned int num_i_states = 0;
-  for(unsigned int i=0; i<_solution.size(); i++)
+  for(unsigned int i = 0; i < _solution.size(); i++)
   {
-    if(_solution[i].particle == particle) num_i_states++;  
+    if ((_solution[i].particle == particle) || (particle == "all") || (particle.empty()))
+      num_i_states++;
   }
   
   return num_i_states;
@@ -1790,11 +1791,14 @@ EigenvalueProblem::get_state_indices(const std::string& particle) const
   unsigned int num = get_num_states(particle);	
   std::vector<ID> result(num, 0);
 
-  unsigned int num_st=0;
-  for(unsigned int i=0; i<_solution.size(); i++)
+  unsigned int num_st = 0;
+  for (unsigned int i = 0; i < _solution.size(); i++)
   {
-    if(_solution[i].particle == particle)
-      { result[num_st]=i; num_st++; }
+    if ((_solution[i].particle == particle) || (particle == "all") || (particle.empty()))
+    {
+      result[num_st] = i;
+      num_st++;
+    }
   }
   
   return result;
@@ -1811,20 +1815,22 @@ void EigenvalueProblem::get_populations(const std::string& particle,
  
   for (unsigned int i = 0; i < n; i++)
   {
-    if(_solution[i].particle == particle)
+    std::string p(_solution[i].particle);
+
+    if ((p == particle) || (particle == "all") || particle.empty())
     {  
       num_st++;
 
-      if(_solution[i].statistics == "Fermi")
+      if (_solution[i].statistics == "Fermi")
       {      
-	if(particle == "el" || particle == "electron")
+	if (p == "el" || p == "electron")
 	{
           double val = Fermi(_solution[i].eigen_energy, _solution[i].electro_chem_pot, 
 		       _solution[i].temperature);
 
 	  values.push_back(val);	  
 	}	
-        else if(particle == "hl" || particle == "hole")
+        else if (p == "hl" || p == "hole")
 	{
           double val = Fermi(-_solution[i].eigen_energy, -_solution[i].electro_chem_pot, 
 		       _solution[i].temperature);
