@@ -753,9 +753,25 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
       double f2 = 1.0;
       if (_opt.get_occ)
       {
-        f1 = is_occupations[_initial_indices[i]];   // occupation for  electron
-        
-        f2 = fs_occupations[_final_indices[j]]; // occupation for  holes
+        f1 = is_occupations[_initial_indices[i]];   // occupation for initial state
+        f2 = fs_occupations[_final_indices[j]]; // occupation for final state
+      }
+
+      // depending on combination, we have to change occupation into 1-f
+      // e.g. if f1 and f2 refer to electrons, then f2 has to become 1 - f2,
+      // because we need available states
+      string i_particle(_i_states[_initial_state_numbers[i]].particle);
+      string f_particle(_f_states[_final_state_numbers[j]].particle);
+      if (i_particle == f_particle)
+      {
+        if ((i_particle == "hl") ||  (i_particle == "hole"))
+        {
+          f1 = 1.0 - f1;
+        }
+        else
+        {
+          f2 = 1.0 - f2;
+        }
       }
 
 
