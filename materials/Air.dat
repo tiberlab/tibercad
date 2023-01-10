@@ -9,6 +9,9 @@ ThermCond = 0.026
 [permittivity]
 permittivity = 1.0
 
+[optical data]
+optical_data = /optics/Air_book.dat
+
 [bandgap]
 Eg_G = 3.34
 

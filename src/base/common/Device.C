@@ -71,10 +71,18 @@ Device::Device(const ModelOptions& options)
 
   int color = 0;
 
+  // set up parallelization of device/mesh/solvers
   if (_options.has_submodel("Parallel"))
   {
     const ModelOptions& mpi_opts = _options.submodels_begin("Parallel")->second;
 
+    // nodes_per_device is the number of processes to be used for calculation of a device.
+    // If e.g. comm.size() = 4 and nodes_per_device = 2, then simulation on two independent
+    // devices is performed, each parallelized on two processes
+    //
+    // nodes_per_mesh is the number of processes used to calculate FEM based models. It
+    // must be between 1 and nodes_per_device. 1 means that FEM calculation is done in
+    // serial.
     nodes_per_device = mpi_opts.get_option("mpi_processes_per_device", nodes_per_device);
     nodes_per_mesh = mpi_opts.get_option("mpi_processes_per_mesh", nodes_per_device);
 
@@ -95,6 +103,7 @@ Device::Device(const ModelOptions& options)
     // this did not work before 1.0.0, because there was a bug in libmesh
     // parallel_implementation.h, line 470, missing this->assign(comm)
     comm.split(color, 0, _mpi_comm);
+
   }
   else
   {
@@ -202,7 +211,7 @@ Device::prepare(void)
       writer->set_output_directory(_options.get_option("output_path", "./"));
       writer->set_filename(Utils::basename(_options["meshfile"]) + "_bnd");
 
-      libMesh::UniquePtr<MeshBase> bdmesh = MeshUtils::create_boundary_mesh(get_mesh());
+      unique_ptr<MeshBase> bdmesh = MeshUtils::create_boundary_mesh(get_mesh());
 
       writer->set_mesh(*bdmesh);
       writer->write(true);
@@ -577,22 +586,11 @@ Device::setup_atomistic_structures(void)
 
     const string& st_name = data.get_name();
 
-    AtomisticStructure* st = AtomisticStructure::create();
+    AtomisticStructure* st = AtomisticStructure::create(st_name, this, data);
 
     // Defined atomistic structure is put in the atomistic_structure_map
     _atomistic_structure_map[st_name] = st;
 
-    //WARNING: For debugging purposes, initialization of
-    //atomistic structures is here, but it's not the right place! (maybe it is...)
-    st->init(st_name, this, data);
-
-    //UnstructuredMesh* mesh = new Mesh(3);
-    //st->create_conformal_grid(*mesh);
-    //DataOutput* dto = DataOutput::create("vtk");
-    //dto->set_filename("pippo");
-    //dto->set_output_directory("./");
-    //dto->set_mesh(*mesh);
-    //dto->write(true);
   }
 
   Messages::debug("Control::create_atomistic_structures() end");
@@ -965,7 +963,7 @@ Device::get_material(const std::string& name) const
 MaterialBoundary*
 Device::get_boundary_object(ID id)
 {
-  MaterialBoundary* mb = NULL;
+  MaterialBoundary* mb = nullptr;
 
   if (id != INVALID_ID)
   {
@@ -1001,7 +999,7 @@ Device::get_boundary_object(ID id)
 MaterialBoundary*
 Device::get_boundary_object(const Elem* elem, int side)
 {
-  MaterialBoundary* mb = NULL;
+  MaterialBoundary* mb = nullptr;
 
   ID id = _bd_regions->get_side_id(elem, side);
   if (id != INVALID_ID)
@@ -1088,7 +1086,7 @@ Device::get_node_object(const Elem* elem, int node)
 {
   NodeObject* mb = NULL;
 
-  ID id = _bd_regions->get_node_id(elem->get_node(node));
+  ID id = _bd_regions->get_node_id(elem->node_ptr(node));
   if (id != INVALID_ID)
   {
     NodeObjMap::iterator it(_node_map.find(id));
@@ -1258,13 +1256,13 @@ Device::get_boundary_region_ids(const string& name, IDSet& ids) const
           //
           // we allow inner 'boundaries', i.e. we don't really consider
           // boundaries but n-1 dimensional domains
-          const Elem* neighbour = elem->neighbor(s);
+          const Elem* neighbour = elem->neighbor_ptr(s);
           ID neighbour_id = INVALID_ID;
 
           // subdomain IDs have to be different, and be part of the simulation
           if ((neighbour == nullptr) ||
-              ((neighbour_id = neighbour->subdomain_id()) != id) &&
-               get_active_region_ids().count(neighbour_id))
+              (((neighbour_id = neighbour->subdomain_id()) != id) &&
+               get_active_region_ids().count(neighbour_id)))
           {
             map<IDPair, ID>::iterator it(known_ids.find(IDPair(id, neighbour_id)));
             // if the ID pair already exists, we can just add the elem side
@@ -1464,14 +1462,14 @@ Device::reassign_alloy_regions(const string& source,
               // atomic coordinates are in Angstrom
               Point center = 10 * elem->centroid();
               double min_dist = Point(center -
-                  str->get_structure_atom(atoms[0]).get_position()).size();
+                  str->get_structure_atom(atoms[0]).get_position()).norm();
               unsigned int nearest = 0;
 
               // look for the atom nearest to the center
               for (unsigned int i = 1; i < atoms.size(); ++i)
               {
                 double dist = Point(center -
-                    str->get_structure_atom(atoms[i]).get_position()).size();
+                    str->get_structure_atom(atoms[i]).get_position()).norm();
                 if (dist < min_dist)
                 {
                   min_dist = dist;
@@ -1502,14 +1500,14 @@ Device::reassign_alloy_regions(const string& source,
                   // atomic coordinates are in Angstrom
                   Point center = 10 * elem->centroid();
                   double min_dist = Point(center -
-                      str->get_structure_atom(atoms[0]).get_position()).size();
+                      str->get_structure_atom(atoms[0]).get_position()).norm();
                   unsigned int nearest = 0;
 
                   // look for the atom nearest to the center
                   for (unsigned int i = 1; i < atoms.size(); ++i)
                   {
                     double dist = Point(center -
-                        str->get_structure_atom(atoms[i]).get_position()).size();
+                        str->get_structure_atom(atoms[i]).get_position()).norm();
                     if (dist < min_dist)
                     {
                       min_dist = dist;
@@ -1522,12 +1520,12 @@ Device::reassign_alloy_regions(const string& source,
                 for (int s = 0; s < next_el->n_sides(); s++)
                 {
 
-                  const Elem* neigh = next_el->neighbor(s);
+                  const Elem* neigh = next_el->neighbor_ptr(s);
 
                   if ((neigh != NULL) &&
                       reg_ids.count(neigh->subdomain_id()) &&
                       !processed_elems.count(neigh) &&
-                      (Point(elem->centroid() - neigh->centroid()).size() <
+                      (Point(elem->centroid() - neigh->centroid()).norm() <
                           scale * 3 * cutoff))
                   {
                     to_process.insert(neigh);

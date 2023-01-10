@@ -18,19 +18,11 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   struct options
   {
     
-    //std::string particle;   //!< particle name "el" or "hl"
-
     unsigned int num_el_states; //!< number of electron states to be calculated
 
     unsigned int num_hl_states; //!< number of hole states to be calculated
 
     unsigned int degeneracy; //!< the degeneracy factor
-
-    //double  length_scale;   //!< mesh length scale [Bohr radius]
-
-    //bool periodicity[3];    //!< periodic boundary conditions
-
-    //double spectrum_shift;    //!< shift of spectrum used in matrix assembly[eV]
 
     bool  consider_potential; //!< apply potential to the EFA Hamiltonian;
 
@@ -63,25 +55,6 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
 
 
 
-  //struct eigen_energy
-  //{
-  //  double energy; //!< eigen energy [eV]
-  //  unsigned int global_number; //< eigen vector
-  //};
-
-
-
-  //! data structure that contains eigenvalue and eigenvector
-  //struct eigen_propblem_solution
-  //{
-  //  double eigen_energy; //!< eigen energy [eV]
-  //  std::vector< std::complex<double>  > eigen_vector; //< eigen vector
-  //  double Fermi_energy; //< electro-chemical potential [eV] \f$ \langle \psi |\mu({\bf r} | \psi \rangle  \f$
-  //  double Temperature; //!< averaged temperature for the state [K] 
-  //};
-
-  //! returns a reference to solutions
-  //const std::vector<eigen_propblem_solution>& get_solution() const;
  
   //!constructor
   EnvelopFunctionApprox(const ModelOptions& options);
@@ -133,10 +106,6 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
         const Material* mat) const;
     
    
-
-  //returns a constant reference calculated density
-  //const std::map<const Elem*, double>& get_density(void) const
-  //{ return _density; } ;
 
   //!returns number of bands
   unsigned int get_number_of_bands(void) const;
@@ -236,8 +205,6 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   std::vector<std::string> psi_name;
  
 
-  //void set_k_vector(const RealVectorValue& k_vec);
-
   //!calculates analytical charge density for a 1D/2D structures
   /*!
     \f$  \rho({\bf r}) = |\psi({\bf r})|^2 \frac{mkT}{2 \pi \hbar^2}\ln (1 + \exp (\frac{\mu - E}{kT}) )    \f$
@@ -256,17 +223,14 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   4) normalize eigenfunctions
   5) calculate fermi energy for each state
  
-    \param number_of_ev number of eigen functions to read
+    return number of eigenvalues to still be computed,
+           and next spectral shift
   */
-  bool read_SLEPC_solution(void);
+  std::pair<unsigned int, double> read_slepc_solution(void) override;
 
 
   //! Transform the eigenstate with S^-1/2, if needed
   void transform_eigenstate(std::vector<libMesh::Complex>& eigvec);
-
- 
-  //!creates constraints
-  // void make_constraints(void);
 
  
   //!number of nodes used in the model
@@ -280,10 +244,6 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   static bool compare_eigen_energy_holes(const double& state1, const double& state2);
   
 
-  //! solutions of the eigenvalue problem
-  //std::vector<eigen_propblem_solution> solution;
-  
-
   //!list of periodic nodes
   std :: vector< std :: vector <const Node*> >  nodes_periodic; //dim node list's: each contains list of nodes that periodic b.c
                                                                 //must be applied to
@@ -295,8 +255,9 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   //! calculates the norm of the eigenstate \f$ \sqrt {| \langle \psi|\psi \rangle |} \f$
   /*!
     \param state_number number of the eigenstate
+    \param projections the projectiosn on the single bloch states, if required
   */
-  double eigenstate_norm(unsigned int state_number);
+  double eigenstate_norm(unsigned int state_number, std::vector<double> *projections = nullptr) const;
 
 
   //!Calculates Fermi Dirac probability
@@ -326,9 +287,6 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
  
    //! element used for bulk calculations
   const Elem* _bulk_mat_element;
-
-  //!k-vector in atomic units
-  //double k_vector[3];
 
   //!estimates shift according to band-edge
   void estimate_spectrum_shift(void);
@@ -367,13 +325,13 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
 
   virtual void get_solution_secure(const Elem* elem,
       std::map<ID, std::vector<double> >& values,
-      const std::vector<Point>& points);
+      const std::vector<Point>& points) final;
 
   virtual void get_solution_secure(
-      std::map<ID, std::vector<double> >& values);
+      std::map<ID, std::vector<double> >& values) final;
 
 
-  virtual void do_setup_solution_variables(void);
+  virtual void do_setup_solution_variables(void) final;
 
   //! set to a remembered solution
   /*
@@ -381,28 +339,34 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
    * need to also redeclare the solution variables with the
    * right number of solutions.
    */
-  virtual void do_set_to_remembered_solution(ID id);
+  virtual void do_set_to_remembered_solution(ID id) final;
 
-  virtual void 	do_init(void);
+  virtual void 	do_init(void) final;
 
-  virtual void 	do_solve (void);
+  virtual void 	do_solve (void) final;
 
-  virtual void do_print_info(void);
+  virtual void do_print_info(void) final;
 
-  virtual void 	parse_options (void);
+  virtual void 	parse_options (void) final;
 
   //virtual void do_plot(void);
 
-  virtual void do_calculate_density_at_k(DofField& density);
+  virtual void do_calculate_density_at_k(DofField& density) final;
 
 
-  virtual void do_solve_for_kpoint(const Point& kpoint);
-
-  //! We override this to write in our own format
-  //virtual void plot_globaldata(void);
+  virtual void do_solve_for_kpoint(const Point& kpoint) final;
 
  
-  virtual void do_assemble(const ModelOptions& options);
+  virtual void do_assemble(const ModelOptions& options) final;
+
+
+  //! Implements projection onto Bloch basis functions
+  virtual void do_project_on_bases(
+      const std::vector<std::string>& bases,
+      const std::vector<eigen_problem_solution>& states,
+      std::vector<std::vector<double>>& projection) const final;
+
+
 
  private:
 

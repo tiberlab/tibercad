@@ -184,17 +184,17 @@ SimulationEnvironment::create_bc_maps(void)
                 if (dim == 1)
                 {
                   // we cannot build the element sides here
-                  if (find(n_begin, n_end, elem->node(s)) != n_end)
+                  if (find(n_begin, n_end, elem->node_id(s)) != n_end)
                     _element_side_map[ElementSide(elem, s)] = bd_id;
                 }
                 else
                 {
                   bool found = true;
-                  libMesh::UniquePtr<Elem> side = elem->build_side(s);
+                  unique_ptr<const Elem> side = elem->build_side_ptr(s);
                   // check if all nodes of the side are in the node map
                   for (unsigned int i = 0; i < side->n_nodes(); i++)
                   {
-                    if (find(n_begin, n_end, side->node(i)) == n_end)
+                    if (find(n_begin, n_end, side->node_id(i)) == n_end)
                       found = false;
                   }
                   if (found)
@@ -260,7 +260,7 @@ SimulationEnvironment::update_boundary_node_map(void)
       const Elem* elem = elem_side.elem();
       //_node_map[(elem_side.first)->get_node(elem_side.second)] = it->second;
       _node_map.add_node(it->second,
-          (elem_side.elem())->get_node(elem_side.side()));
+          (elem_side.elem())->node_ptr(elem_side.side()));
     }
   }
   else
@@ -287,10 +287,10 @@ SimulationEnvironment::update_boundary_node_map(void)
         // we allow for internal boundaries
         if (is_boundary(elemside))
         {
-          libMesh::UniquePtr<Elem> side = child->build_side(side_num);
+          unique_ptr<const Elem> side = child->build_side_ptr(side_num);
           for (unsigned int i = 0; i < side->n_nodes(); i++)
             //_node_map[side->get_node(i)] = it->second;
-            _node_map.add_node(it->second, side->get_node(i));
+            _node_map.add_node(it->second, side->node_ptr(i));
         }
       }
     }
@@ -321,7 +321,7 @@ SimulationEnvironment::update_boundary_element_map(
     vector<ID> bd_set;
     for (unsigned int n = 0; n < elem->n_nodes(); n++)
       for (ctit = boundaries.begin(); ctit != ctend; ++ctit)
-        if (is_node_on_boundary(elem->get_node(n), *ctit))
+        if (is_node_on_boundary(elem->node_ptr(n), *ctit))
           _bd_elem_map.add(*ctit, elem);
   }
 

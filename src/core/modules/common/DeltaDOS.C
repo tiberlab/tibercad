@@ -25,15 +25,9 @@ DeltaDOS::do_init(void)
 
 void
 DeltaDOS::calculate_density_and_derivative(std::vector<double>& result, double Ef, double Epot,
-    double kT, double kTlattice, const Elem* , const Point& ) const
+    double kT, double , const Elem* , const Point& ) const
 {
-  return calculate_density_and_derivative(result, Ef, Epot, kT, kTlattice);
-}
 
-void
-DeltaDOS::calculate_density_and_derivative(std::vector<double>& result,
-    double Ef, double Epot, double kT, double ) const
-{
   double dens, der, der2;
 
   double expf = exp(-(Ef - get_reference_energy()[0] - Epot) / kT);

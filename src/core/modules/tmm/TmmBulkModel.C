@@ -3,7 +3,7 @@
 #include "TmmBulkModel.h"
 #include "Database.h"
 #include "Messages.h"
-//#include "PermittivityModel.h"
+//#include "InCoherentModel.h"
 
 #include <boost/filesystem/operations.hpp>
 
@@ -22,6 +22,8 @@ inline
 TmmBulkModel::TmmBulkModel(const ModelOptions& options) :
   PhysicalModel(options)
 {
+
+
 }
 
 
@@ -40,18 +42,21 @@ TmmBulkModel::create(const Material* mat, const ModelOptions& options)
   options.get_option("type", type);
 
   TmmBulkModel* pm = NULL;
-
   if (type == "default")
+  {
     // we create the default model from explicit creation method
     pm = PhysicalModel::create<TmmBulkModel>(_create, _destroy, mat, options);
+
+  }
   else
   {
     // there is no such model, at the moment
-    //type = "bulk_" + type;
-    //pm = PhysicalModel::create<TmmBulkModel>(type, mat, options);
+    type = "bulk_model" + type;
+    pm = PhysicalModel::create<TmmBulkModel>(type, mat, options);
   }
 
   return(pm);
+
 }
 
 std::pair<double, double>
@@ -114,6 +119,18 @@ TmmBulkModel::get_refractive_index(double lambda) const
   return(ri);
 }
 
+double
+TmmBulkModel::get_coherent_index(void) const
+{
+
+  double ri= _incoherent_index;
+
+  return(ri);
+}
+
+
+
+
 
 
 void
@@ -121,6 +138,7 @@ TmmBulkModel::read_database(void)
 {
   const Database& db = get_database();
   db.set_section("permittivity");
+
   string source = db.get("optical_data", "");
 
   // open the given file
@@ -211,6 +229,12 @@ TmmBulkModel::read_database(void)
 void
 TmmBulkModel::do_init(void)
 {
+
+  //SubmodelIterator it = submodels_begin("InCoherent");
+  //InCoherentModel* pm =  dynamic_cast<InCoherentModel*>(it->second);
+  //_incoherent_index = pm->get_InCoherent_Index();
+  get_parameter("Incoherency", _incoherent_index);
+
 }
 
 
@@ -228,6 +252,12 @@ TmmBulkModel::do_print_info(void)
 void
 TmmBulkModel::prepare_submodels(void)
 {
+
+ // InCoherentModel* pm = NULL;
+  //ModelOptions opts;
+  //opts.set_option("type", "constant");
+  //create_submodel(pm, "InCoherent", opts);
+
   // Maybe it would be more elegant to extend the existing
   // permittivity model implementation
   //ModelOptions opts;

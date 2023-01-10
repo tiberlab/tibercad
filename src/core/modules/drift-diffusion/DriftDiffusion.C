@@ -17,7 +17,6 @@
 #include "TiberLinearSystem.h"
 #include "SolveFailedException.h"
 #include "FowlerNordheim.h"
-#include "License.h"
 
 
 // libmesh includes
@@ -105,21 +104,8 @@ DriftDiffusion::DriftDiffusion(const ModelOptions& options)
 DriftDiffusion::~DriftDiffusion(void)
 {
   cleanup_solver();
-
-  if (TiberCad::get_mpi_comm().rank() == 0)
-      License::check_in("driftdiffusion", 1);
 }
 
-
-DriftDiffusion*
-DriftDiffusion::create(const ModelOptions& options)
-{
-  if (TiberCad::get_mpi_comm().rank() == 0)
-    License::check_out("driftdiffusion",
-        TiberCad::major_version(), 0, 1);
-
-  return new DriftDiffusion(options);
-}
 
 
 
@@ -293,7 +279,7 @@ DriftDiffusion::set_electron_fermi_level(double Ef_n)
     for (unsigned int i = 0; i < elem->n_nodes(); i++)
     {
       unsigned int id =
-        elem->get_node(i)->dof_number(system.number(), var, 0);
+        elem->node_ptr(i)->dof_number(system.number(), var, 0);
       solution.set(id, level);
     }
   }
@@ -326,7 +312,7 @@ DriftDiffusion::set_hole_fermi_level(double Ef_p)
     for (unsigned int i = 0; i < elem->n_nodes(); i++)
     {
       unsigned int id =
-        elem->get_node(i)->dof_number(system.number(), var, 0);
+        elem->node_ptr(i)->dof_number(system.number(), var, 0);
       solution.set(id, level);
     }
   }
@@ -359,7 +345,7 @@ DriftDiffusion::set_electric_potential(double pot)
     for (unsigned int i = 0; i < elem->n_nodes(); i++)
     {
       unsigned int id =
-        elem->get_node(i)->dof_number(system.number(), var, 0);
+        elem->node_ptr(i)->dof_number(system.number(), var, 0);
       solution.set(id, level);
     }
   }
@@ -392,15 +378,15 @@ DriftDiffusion::find_dielectric_boundary_nodes(void)
         if (get_environment().is_inner_boundary(ElementSide(el, s)))
         {
           // get the model of the neighbor element
-          DDBulkModel* scn = get_bulk_model<DDBulkModel>(el->neighbor(s));
+          DDBulkModel* scn = get_bulk_model<DDBulkModel>(el->neighbor_ptr(s));
 
 
           // if neighbor is not dielectric we record it
           if (!scn->is_dielectric())
           {
-            libMesh::UniquePtr<Elem> side(el->build_side(s));
+            unique_ptr<const Elem> side(el->side_ptr(s));
             for (unsigned int i = 0; i < side->n_nodes(); i++)
-              _dielectric_boundary_nodes.insert(side->get_node(i));
+              _dielectric_boundary_nodes.insert(side->node_ptr(i));
           }
         }
       }
@@ -671,11 +657,11 @@ DriftDiffusion::calculate_weights(void)
       sc->set_coordinates(elem, elem->point(i));
 
       unsigned int dofu =
-        elem->get_node(i)->dof_number(system.number(), var_u, 0);
+        elem->node_ptr(i)->dof_number(system.number(), var_u, 0);
       unsigned int dofen =
-        elem->get_node(i)->dof_number(system.number(), var_ef, 0);
+        elem->node_ptr(i)->dof_number(system.number(), var_ef, 0);
       unsigned int dofep =
-        elem->get_node(i)->dof_number(system.number(), var_hf, 0);
+        elem->node_ptr(i)->dof_number(system.number(), var_hf, 0);
 
       double u = solution(dofu);
       double en = solution(dofen);
@@ -1109,7 +1095,7 @@ DriftDiffusion::guess_equilibrium(void)
 
     for ( ; it != end; ++it)
       for (unsigned int n = 0; n < (*it)->n_nodes(); n++)
-	node_conn[(*it)->node(n)]++;
+	node_conn[(*it)->node_id(n)]++;
 
     this->get_solver_communicator().sum(node_conn);
   }
@@ -1125,7 +1111,7 @@ DriftDiffusion::guess_equilibrium(void)
     {
       solution_u.add(dof_indices_u[i],
           sc->get_equilibrium_fermi_level()
-          / (phi0 * static_cast<Real>(node_conn[elem->node(i)])));
+          / (phi0 * static_cast<Real>(node_conn[elem->node_id(i)])));
     }
   }
 
@@ -1613,7 +1599,7 @@ DriftDiffusion::RSTFSys::build_nodal_results(vector<double>& results,
 
     for (unsigned int n = 0; n < elem->n_nodes(); n++)
     {
-      unsigned int id = elem->node(n) * _boundaries.size();
+      unsigned int id = elem->node_id(n) * _boundaries.size();
       auto bdit(_boundaries.begin());
       for ( ; bdit != _boundaries.end(); ++bdit)
       {
@@ -2942,7 +2928,7 @@ DriftDiffusion::calculate_currents_rstf_compact(void)
     // find the weight for each element node
     vector<double> weight(elem->n_nodes(), 0.0);
     for (unsigned int n = 0; n < elem->n_nodes(); n++)
-      if (env.is_node_on_boundary(elem->get_node(n), boundary))
+      if (env.is_node_on_boundary(elem->node_ptr(n), boundary))
         weight[n] = 1.0;
 
 
@@ -3304,7 +3290,8 @@ DriftDiffusion::calculate_currents_surfint(void)
 
     DDBulkModel* sc = get_bulk_model<DDBulkModel>(elem);
 
-    assert(sc != NULL);
+    if (sc == nullptr)
+      continue;
 
     for (unsigned int s = 0; s < elem->n_sides(); s++)
     {
@@ -3865,9 +3852,9 @@ DriftDiffusion::build_local_scaling(void)
         drho = 0.0;
 
 
-
       for (unsigned int i = 0; i < n_dofs; i++)
       {
+
         double phi_i_x_phi_j = JxW[qp] * phi[i][qp] * phi[i][qp];
 
         scalen(i) +=
@@ -4019,7 +4006,7 @@ DriftDiffusion::build_local_scaling(void)
               Real phi_i_x_phi_j =
                 phi_face[i][qp] * phi_face[i][qp];
 
-              local_scaling_[elem->get_node(i)][2] -= scale_u * deriv_u[0] * phi_i_x_phi_j;
+              local_scaling_[elem->node_ptr(i)][2] -= scale_u * deriv_u[0] * phi_i_x_phi_j;
 
 
               ////
@@ -4028,9 +4015,9 @@ DriftDiffusion::build_local_scaling(void)
               //   and the normal point outwards, giving a positiv current for
               //   outflow
 
-              local_scaling_[elem->get_node(i)][0] -= scale_n * deriv_en[1] * phi_i_x_phi_j;
+              local_scaling_[elem->node_ptr(i)][0] -= scale_n * deriv_en[1] * phi_i_x_phi_j;
 
-              local_scaling_[elem->get_node(i)][1] += scale_p * deriv_ep[2] * phi_i_x_phi_j;
+              local_scaling_[elem->node_ptr(i)][1] += scale_p * deriv_ep[2] * phi_i_x_phi_j;
             }
           }
         }
@@ -4728,6 +4715,9 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
           double dsigma_e_x_lap = dphi[i][qp] * (dsigma_e * grad_en) / scalen(i);
           double dsigma_h_x_lap = dphi[i][qp] * (dsigma_h * grad_ep) / scalep(i);
 
+          //Knn(i,i) +=  1e-9;
+          //Kpp(i,i) +=  1e-9;
+
           for (unsigned int j = 0; j < n_dofs; j++)
           {
             // first the dKe_il/dX_j * X_l part
@@ -5280,7 +5270,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
           Kpu(i, j) = Kpn(i, j) = Kpp(i, j) = 0.0;
         }
 
-        if (is_dielectric_boundary_node(elem->get_node(i)))
+        if (is_dielectric_boundary_node(elem->node_ptr(i)))
           Knn(i, i) = Kpp(i, i) = 0.0;
         else
           Knn(i, i) = Kpp(i, i) = 1.0;
@@ -5403,7 +5393,7 @@ DriftDiffusion::write_nodal_vector(const string& filename, const libMesh::Numeri
 
     for (unsigned int n = 0; n < elem->n_nodes(); n++)
     {
-      unsigned int id = 3 * elem->node(n);
+      unsigned int id = 3 * elem->node_id(n);
       results[id] = vec(dof_indices_u[n]);
       results[id + 1] = vec(dof_indices_en[n]);
       results[id + 2] = vec(dof_indices_ep[n]);

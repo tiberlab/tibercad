@@ -12,16 +12,16 @@ BUILDDIR=${BUILDDIR:-"$(dirname `pwd`)/extern"}
 SDKDIR=${SDKDIR:-"$(dirname `pwd`)/SDK"}
 
 # PETSc version
-PETSCVERSION=${PETSCVERSION:-"3.6.2"}
+PETSCVERSION=${PETSCVERSION:-"3.7.4"}
 PETSCPATCHLEVEL=${PETSCPATCHLEVEL:-""}
 SLEPCVERSION=${SLEPCVERSION:-${PETSCVERSION}}
 SLEPCPATCHLEVEL=${SLEPCPATCHLEVEL:-""}
 
 # libMesh version
-LIBMESHVERSION=${LIBMESHVERSION:-"1.0.0"}
+LIBMESHVERSION=${LIBMESHVERSION:-"1.2.1"}
 
 # GMSH version
-GMSHVERSION=${GMSHVERSION:-"2.14.0"}
+GMSHVERSION=${GMSHVERSION:-"4.8.3"}
 
 # whether to compile debug mode or not (y/n)
 DEBUG=${DEBUG:-'n'}
@@ -30,6 +30,9 @@ DEBUG=${DEBUG:-'n'}
 
 # build shared libs (yes/no)
 shared_libs=${shared_libs:-'n'}
+
+# CUDA
+CUDADIR=${CUDADIR:-'/usr/pack-a/cudatoolkit-11.4-ma'}
 
 # use MKL (yes/no)
 MKL=${MKL:-'n'}
@@ -115,14 +118,15 @@ RANLIB="@RANLIB@"
 #fi
 
 # compiler flags
-CFLAGS="${CFLAGS} -fexceptions"
-FCFLAGS="${FCFLAGS} -fexceptions"
+CFLAGS="${CFLAGS} -fexceptions -fPIC"
+FCFLAGS="${FCFLAGS} -fexceptions -fPIC"
 if [ "$march" == "x86_64" ] &&  [ "${target_os}" != "win32" ] ; then
   CXXFLAGS="-fPIC ${CXXFLAGS}"
   CFLAGS="-fPIC ${CFLAGS}"
   FCFLAGS="-fPIC ${FCFLAGS}"
 fi
-CXXFLAGS="${CXXFLAGS} -std=gnu++11"
+#CXXFLAGS="${CXXFLAGS} -fPIC -std=gnu++17"
+CXXFLAGS="${CXXFLAGS} -fPIC"
 FFLAGS=${FCFLAGS}
 export CXXFLAGS CFLAGS FFLAGS FCFLAGS
 

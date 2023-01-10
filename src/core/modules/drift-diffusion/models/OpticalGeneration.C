@@ -6,6 +6,7 @@
 #include "SimulationInterface.h"
 #include "DriftDiffusionProperties.h"
 #include "Messages.h"
+#include "ExternalProfile.h"
 
 #include "TiberModule.h"
 
@@ -28,22 +29,14 @@ OpticalGeneration::do_init(void)
   get_parameter("multiplier", _multiplier);
  
   double val;
-  if ((is >> val) || (gen_str[0] == '$'))
-  {
-  // here we define if the generation is directly fixed by a number or 
-  // must be read in a data file. If gen_file != 0 then the program looks for a file.
-  // In this latter case generation contains the number of sun. The total generation
-  // is equal to _generation = _sun * G (from the file).
 
-//    if (gen_file[0] != '0')
-//    {
-//      _read_file = true;
-//      get_parameter("generation", _sun); 
-//    }
-//    else
-//    {
-      get_parameter("generation", _generation);
-//    }
+  if (get_options().has_submodel("profile"))
+  {
+    _profile = ExternalProfile::create(get_options().submodels_begin("profile")->second);
+  }
+  else if ((is >> val) || (gen_str[0] == '$'))
+  {
+    get_parameter("generation", _generation);
   }
   else
   {
@@ -57,7 +50,6 @@ OpticalGeneration::do_init(void)
         SimulationInterface::find_solution_provider(gens[i]);
       _generation_model[i] = provider.first;
       _gen_id[i] = provider.second;
-      cerr <<_generation_model[i] << " " << _gen_id[i] << endl;
 
       if (_generation_model[i] == NULL)
         throw InitFailedException("Cannot find generation model: " + gens[i]);
@@ -108,16 +100,11 @@ OpticalGeneration::get_net_recombination_rates(double& recomb_e,
           vector<Point>(1, dd.get_coordinates())))
         _generation += tmp[0];
     }
-/*
-    if (_read_file == true)
-    {
-      DriftDiffusionProperties& dd = get_driftdiffusionproperties();
-      const Elem* el = dd.get_element();
-      vector<Point> p = (1,dd.get_coordinates());
-      // prendere le cooridnate e passarle al file read_file
-      _generation = _sun * read_file(&gen_file, 1);
-    }
-*/
+  }
+  else if  (_profile  != nullptr)
+  {
+    DriftDiffusionProperties& dd = get_driftdiffusionproperties();
+    _generation = _profile->get_data(dd.get_element(), dd.get_coordinates());
   }
 
   recomb_e = recomb_h = -_multiplier * _generation;

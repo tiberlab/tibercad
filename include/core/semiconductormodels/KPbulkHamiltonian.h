@@ -9,7 +9,23 @@
 #include "Semiconductor.h"
 #include "KPparameters.h"
 
-//! A class that builds kp bulk Hamiltonian
+/*!
+ * \brief A class that builds kp bulk Hamiltonian
+ *
+ * This class handles in a unified way different kp models
+ * with different number of bands. The Bloch basis functions
+ * and there ordering are as follows:
+ *
+ * 2x2:
+ * |CB> |VB>
+ *
+ * 6x6:
+ * |X_u> |Y_u> |Z_u>  |X_d> |Y_d> |Z_d>
+ *
+ * 8x8:
+ * |S_u> |S_d> |X_u> |Y_u> |Z_u>  |X_d> |Y_d> |Z_d>
+ *
+ */
 class KPbulkHamiltonian : public EFAbulkHamiltonian
 {
  public:

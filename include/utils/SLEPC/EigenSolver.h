@@ -54,15 +54,28 @@ class EigenSolver
 
   };
 
+  //! Eigenvalue problem types
+  enum EVPType
+  {
+    NORMAL = 0, //! normal EVP Ax = kx
+    GENERALIZED = 1 //! generalized EVP Ax = kBx
+  };
 
 
 
-  //!solves general eigenvalue problem (Hx = gSx) matrix
-  static int eig_value_problem_general(const SLEPCoptions& opt) ;
+  //! solves general eigenvalue problem (Hx = gSx) matrix
+  static int eig_value_problem_general(const SLEPCoptions& opt);
 
-
-  //!solves  eigenvalue problem (Hx = gx)  matrix
-  static int eig_value_problem(const SLEPCoptions& opt) ;
+  //! solve a normal or general eigenvalue problem
+  /*!
+   * normal eigenvalue problem is Hx = gx
+   * general eigenvalue problem is Hx = gSx
+   *
+   * \param opt the solver options
+   * \param evp_type eigenproblem type, \c NORMAL or \c GENERALIZED
+   */
+  static int eig_value_problem(const SLEPCoptions& opt,
+                               EVPType evp_type = NORMAL);
 
   //!has to be called at the beginning of tibecad
   static void slepc_init(int argc1, char** argv1, MPI_Comm comm);
@@ -122,9 +135,11 @@ class EigenSolver
     \param row row number
     \param columns numbers of columns
     \param value values of matrix elements
+    \param indexing_base the base for indexing in \c columns
   */
   static void insert_matrix_row(const char matrix, int row,
-      const std::vector<unsigned int>& columns, const std::vector<Complex>& value);
+      const std::vector<unsigned int>& columns,
+      const std::vector<Complex>& value, int indexing_base = 0);
 
   static void print_options(const SLEPCoptions& opt);
 
@@ -141,21 +156,7 @@ class EigenSolver
   static bool check_matrices(double tol, bool verbose);
   static bool check_matrices(void);
 
-//MINE
-  static int eig_value_problem_general2(const SLEPCoptions& opt) ;
 
-  static int addARow(int row, const int columnsNum, int* columns, Complex* values);
-
-  static int addBRow(int row, const int columnsNum, int* columns, Complex* values);
-
-  static int addARow(int row, const int columnsNum, int* columns, Complex value);
-
-  static int addBRow(int row, const int columnsNum, int* columns, Complex value);
-
-  static Complex get_eigenvalue_c( int i);
-
-  static int f(int argc,char **argv);
-//ENDOFMINE
  private:
 
   static int do_solve(const SLEPCoptions& opt);

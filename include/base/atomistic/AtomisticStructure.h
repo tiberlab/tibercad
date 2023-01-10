@@ -30,30 +30,15 @@ class AtomisticStructure: public AtomisticBasis
 {
 public:
 
-//! A class for Dftb options
-  class AtomisticStructureOptions
-  {
-  public:
-
-    //!Options inizialization
-    AtomisticStructureOptions(void);
-
-    //!Options destructor
-    ~AtomisticStructureOptions(void);
-
-    //!Tells if association has been already done
-    bool is_associated;
-  };
-
-
 
   //! Destructor for AtomisticStructure class object
   ~AtomisticStructure(void);
 
-  //! Create a material with name /c name
-  static AtomisticStructure* create();
+  //! Create an atomistic structure accoridng to given options
+  static AtomisticStructure* create(const std::string& name,
+      const Device* const device, const ModelOptions& options);
 
-  //! Create a material with name /c name
+  //! Create a copy of an atomistic structure
   static AtomisticStructure* create(const AtomisticStructure& as);
 
   //! Get the structure options
@@ -91,18 +76,6 @@ public:
   //! Get scale factor (from mesh_units to amstrong mesh_units/1e-10)
   const double& get_scale(void) const;
 
-  //! Initialize a structure (to be read from input file)
-  void init(const std::string& name, const Device* const device, const ModelOptions& options);
-
-  //! Initialize a structure (to be read from file)
-  void init(const std::string& filename);
-
-  //! Combine structures
-  void combine_structures(const std::string& name, const ModelOptions& options);
-
-  //! Remove close atoms 
-  void remove_bad_atoms(void );
-
 
 
   //! Print structure to file (format depends on extension used)
@@ -111,13 +84,11 @@ public:
   //! A tool for printing atomic charges on output
   void print_structure(const std::string& path, double const* const charges);
 
-  //! Print structure in internal tgn format (contains bondmap and element map)
-  void print_tgn(const std::string& path) const;
+
 
   //! Print upg file (etb_dataset may be changed into type options)
-  void print_upg(const std::string& path, const std::string& etb_dataset, 
+  void print_upg(const std::string& path, const std::string& etb_dataset,
                                           bool band_offsets = false);
-
 
   //! extract alloy distribution statistics
   /*!
@@ -245,6 +216,10 @@ private:
   
   //! copy constructor
   AtomisticStructure(const AtomisticStructure& other);
+
+  //! Initialize a structure (to be read from input file)
+  void init(const std::string& name, const Device* const device,
+      const ModelOptions& options);
   
   //! Calculate the number of atoms excluding hydrogens, usefule for passivated structures
   void compute_N_without_H(void);
@@ -261,12 +236,18 @@ private:
   //!Build mesh regions infos
   void parse_regions(void);
 
+  //! Combine structures
+  void combine_structures(const std::string& name, const ModelOptions& options);
+
+  //! Remove close atoms
+  void remove_bad_atoms(void);
 
   //!Build element to atoms association map
   void build_elem_to_atoms(void);
 
-  //! AtomisticStructureOptions object pointer
-  AtomisticStructureOptions _atomistic_structure_options;
+  //! Print structure in internal tgn format (contains bondmap and element map)
+  void print_tgn(const std::string& path) const;
+
 
   //! Associate at any alement atoms contained
   std::map<const libMesh::Elem*, std::vector<unsigned int> > _elem_to_atoms;

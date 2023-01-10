@@ -10,6 +10,7 @@
 #include "TiberCad.h"
 
 #include "libmesh/mesh.h"
+#include "libmesh/replicated_mesh.h"
 #include "libmesh/elem.h"
 #include "libmesh/mesh_tools.h"
 #include "libmesh/mesh_base.h"
@@ -183,7 +184,7 @@ MeshUtils::get_outer_normal(const libMesh::Elem* elem, int side)
 
 
 
-    libMesh::UniquePtr<libMesh::Elem> side_el(elem->side(side));
+  unique_ptr<const libMesh::Elem> side_el(elem->side_ptr(side));
   //const libMesh::Elem* side_el = dynamic_cast<libMesh::Elem*>(sobj.get());
   const libMesh::Point& centroid = elem->centroid();
 
@@ -194,7 +195,7 @@ MeshUtils::get_outer_normal(const libMesh::Elem* elem, int side)
 
     case 1:
       // side is a node
-      normal = *side_el->get_node(0) - centroid;
+      normal = *side_el->node_ptr(0) - centroid;
       break;
 
     case 2:
@@ -203,8 +204,8 @@ MeshUtils::get_outer_normal(const libMesh::Elem* elem, int side)
       // normal direction is: p0 + t*(p1 - p0) - centroid, where
       // t gives the intersection between the side and the perpendicular
       // through the element centroid
-      libMesh::Point p10((*side_el->get_node(1) - *side_el->get_node(0)).unit());
-      libMesh::Point p03(*side_el->get_node(0) - centroid);
+      libMesh::Point p10((*side_el->node_ptr(1) - *side_el->node_ptr(0)).unit());
+      libMesh::Point p03(*side_el->node_ptr(0) - centroid);
       double t = p03 * p10;
       normal = p03 - t * p10;
       break;
@@ -224,10 +225,10 @@ MeshUtils::get_outer_normal(const libMesh::Elem* elem, int side)
 
 
 
-libMesh::UniquePtr<libMesh::MeshBase>
+unique_ptr<libMesh::MeshBase>
 MeshUtils::create_boundary_mesh(const libMesh::MeshBase& mesh)
 {
-  libMesh::MeshBase* bdmesh = new libMesh::SerialMesh(TiberCad::get_mpi_comm() , mesh.mesh_dimension());
+  libMesh::MeshBase* bdmesh = new libMesh::ReplicatedMesh(TiberCad::get_mpi_comm(), mesh.mesh_dimension());
 
   using namespace std;
 
@@ -246,7 +247,7 @@ MeshUtils::create_boundary_mesh(const libMesh::MeshBase& mesh)
 
     for (int i = 0; i < elem->n_sides(); ++i)
     {
-      const libMesh::Elem* nb = elem->neighbor(i);
+      const libMesh::Elem* nb = elem->neighbor_ptr(i);
       pair<const libMesh::Elem*, const libMesh::Elem*> el_pair(elem, nb);
       if (nb > elem) { el_pair.first = nb; el_pair.second = elem; }
 
@@ -254,20 +255,20 @@ MeshUtils::create_boundary_mesh(const libMesh::MeshBase& mesh)
       {
         sides_added.insert(el_pair);
 
-        libMesh::Elem* side_el = elem->side(i).release();
-        //libMesh::Elem* side_el = dynamic_cast<libMesh::Elem*>(sobj);
+        // The const_cast is needed here, because elem is const 
+        libMesh::Elem* side_el = const_cast<libMesh::Elem*>(elem->build_side_ptr(i, false).release());
 
         HashMap<unsigned int, unsigned int>::Type::iterator mit;
 
         for (unsigned int n = 0; n < side_el->n_nodes(); ++n)
         {
-          mit = node_id_map.find(side_el->node(n));
+          mit = node_id_map.find(side_el->node_id(n));
 
-          unsigned int id = side_el->get_node(n)->id();
+          unsigned int id = side_el->node_ptr(n)->id();
           if (mit == node_id_map.end())
           {
-            node_id_map[side_el->node(n)] = node_ctr;
-            const libMesh::Node* p = side_el->get_node(n);
+            node_id_map[side_el->node_id(n)] = node_ctr;
+            const libMesh::Node* p = side_el->node_ptr(n);
             bdmesh->add_point(*p, p->id(), 0);
           }
 
@@ -285,7 +286,7 @@ MeshUtils::create_boundary_mesh(const libMesh::MeshBase& mesh)
 
   //bdmesh->prepare_for_use();
 
-  return libMesh::UniquePtr<libMesh::MeshBase>(bdmesh);
+  return unique_ptr<libMesh::MeshBase>(bdmesh);
 }
 
 
@@ -327,7 +328,7 @@ MeshUtils::triangulate_point_set(libMesh::MeshBase& mesh)
 
 
   // now construct the supertriangle
-  auto bb = libMesh::MeshTools::bounding_box(mesh);
+  auto bb = libMesh::MeshTools::create_nodal_bounding_box(mesh);
   Point diag = bb.max() - bb.min();
   double dmax = (diag(0) > diag(1)) ? diag(0) : diag(1);
   Point mid = 0.5 * (bb.max() + bb.min());
@@ -342,6 +343,7 @@ MeshUtils::triangulate_point_set(libMesh::MeshBase& mesh)
   Point t3(mid);
   t3(0) += 20*dmax;
   t3(1) -= dmax;
+
 
   mesh.add_point(t1);
   mesh.add_point(t3);
@@ -555,7 +557,7 @@ MeshUtils::GridMapper::~GridMapper(void)
 void
 MeshUtils::GridMapper::setup(void)
 {
-  libMesh::MeshTools::BoundingBox bb(libMesh::MeshTools::bounding_box(*_mesh));
+  libMesh::BoundingBox bb(libMesh::MeshTools::create_bounding_box(*_mesh));
 
   int nx = 50, ny = 1, nz = 1;
   switch (_mesh->mesh_dimension())

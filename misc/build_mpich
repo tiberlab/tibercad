@@ -57,3 +57,9 @@ cd mpich-${VERSION}
 #            --with-cross=${TOPDIR}/misc/win_cross_values \
 make install
 
+echo ""
+echo "#######################################################################"
+echo "# It might be necessary to adjust the mpifort or mpicxx scripts       #"
+echo "#######################################################################"
+
+

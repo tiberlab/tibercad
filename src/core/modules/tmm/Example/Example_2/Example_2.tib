@@ -1,0 +1,54 @@
+Device
+{
+  meshfile = Example_2.msh 
+  mesh_units = 1e-9
+  dimension = 1
+  Region AIR
+  {
+  	Incoherency = 0
+  	material = Air
+  }
+  Region Glass 
+  {
+  	Incoherency= 1
+  	material = Glass
+  }
+}
+
+
+Module tmm
+{ 
+  
+  name = tmm_study 
+  plot = (X,GenerationRate,Intensity,External_Source_ElectricField, Reflection,Transmission,Absorbtion)
+
+  back_reflectivity = 0
+  incident_angle = 0
+  wavelength_uper_lim = 950
+  wavelength_lower_lim = 300
+  wavelength_steps = 20
+
+  Physics 
+  {
+
+  }
+  Contact point1
+  {
+  	type = incident_wave
+  }
+
+}
+
+
+
+Simulation
+{
+  verbose = 2
+  solve = tmm_study
+  resultpath = output
+}
+
+
+
+
+

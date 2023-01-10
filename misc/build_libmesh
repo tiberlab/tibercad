@@ -8,9 +8,6 @@ fi
 . common.sh
 
 
-#REVISION=3581
-REVISION=HEAD
-
 echo "Compiling libMesh version $LIBMESHVERSION in $BUILDDIR ..."
 
 mkdir -p $BUILDDIR
@@ -102,68 +99,27 @@ export LDFLAGS
 
 METHOD=devel
 
-if [ "x$LINKONLY" == "x" ]
-then
 
-  ./configure --enable-petsc --disable-slepc --disable-complex \
+./configure --enable-petsc --disable-slepc --disable-complex \
     --enable-periodic ${SHARED} --disable-pfem --enable-static \
     --disable-strict-lgpl \
-    --disable-second --enable-exceptions --disable-laspack --disable-sfc \
+    --enable-second --enable-exceptions --disable-laspack --disable-sfc \
     --disable-gzstreams --disable-bzip2 --disable-vtk \
-    --disable-tecplot --disable-netcdf-4 --disable-exodus --disable-nemesis \
+    --disable-tecplot --disable-netcdf --disable-netcdf-4 --disable-exodus --disable-nemesis \
     --disable-libHilbert --disable-perflog  --disable-gmv \
     --disable-reference-counting --disable-legacy-using-namespace --enable-unique-ptr \
+    --disable-deprecated \
+    --disable-metaphysicl \
+    --disable-hdf5 \
     --with-subdomain-id-bytes=2 \
-    --with-fparser=none \
+    --disable-fparser \
     --with-methods="$METHOD" \
-    --host=$HOST --build=$BUILD
+    --host=$HOST --build=$BUILD \
+    --prefix=${SDKDIR} --exec-prefix=${SDKDIR}/${TCHOST}
 
 
-  make |tee make.log
-fi
+#make |tee make.log
 
-
-echo "Create shared library ${SDKDIR}/${TCHOST}/lib/${dll_name} ..."
-#staticlib=`make echo | grep -m 1 libmesh.a`
-#if [ $DEBUG == 'y' ]
-#then
-  staticlib=`find -name libmesh_${METHOD}.a`
-#else
-#  staticlib=`find -name libmesh_opt.a`
-#fi
-contriblibs=
-#contriblibs=`echo $staticlib | sed -e 's/\.libs\//contrib\/\.libs\//' -e 's/libmesh_opt\.a/libcontrib_opt\.a/'`
-#contribdir=${contriblibs/%\*\.a}
-#rm -f ${contribdir}/libnemesis.*
-#rm -f ${contribdir}/libexodusii.*
-mkdir -p ${SDKDIR}/${TCHOST}/lib
-
-
-ARCHIVES="-Wl,--whole-archive ${staticlib} ${contriblibs} -Wl,--no-whole-archive" 
-if [ "$target_os" = darwin ]
-then
-  ARCHIVES="-Wl,-force_load,${staticlib}"
-  for l in $(ls ${contribdir}/*.a)
-  do
-    #ARCHIVES="${ARCHIVES} -Wl,-reexport-l$(basename $l | sed 's/lib\(.*\)\.a/\1/')"
-    ARCHIVES="${ARCHIVES} -Wl,-force_load,$l "
-  done
-fi 
-
-if [ "$target_os" = darwin ]
-then
-  libmesh_linker_flags="-Wl,-install_name,@rpath/lib/${dll_name}"
-fi
-
-
-${CXX} -shared -o ${SDKDIR}/${TCHOST}/lib/${dll_name} \
-  ${libmesh_linker_flags} \
-  ${ARCHIVES} \
-  -L${SDKDIR}/${TCHOST}/lib -Wl,-rpath,\$ORIGIN -lpetsc_real${dbg} \
-  ${LDFLAGS} ${LAPACK_LIBS} ${FORTRAN_LIBS}
-
-mkdir -p ${TOPDIR}/${TCHOST}/lib
-cp ${SDKDIR}/${TCHOST}/lib/${dll_name} ${TOPDIR}/${TCHOST}/lib/${dll_name}
-
+make install
 
 

@@ -7,6 +7,8 @@ fi
 
 . common.sh
 
+MKLINCLUDE=-I${MKLDIR}/include
+
 
 # Does the actual build
 # needs at least 1 argument ('real' or 'complex')
@@ -30,16 +32,17 @@ make_petsc()
 
   if [ ! -e  reconfigure-${PETSC_ARCH}.py ] && [ ! -e  conftest-${PETSC_ARCH} ]; then
     #./config/configure.py ${CONFIGOPTS} --with-debugging=${debug} --with-scalar-type=${datatype} \
-    #  --CFLAGS="${CFLAGS}" --FFLAGS="-fno-range-check ${FFLAGS}" --CXXFLAGS="${CXXFLAGS}" --LDFLAGS="${LDFLAGS}"
+    #  --CFLAGS="${CFLAGS}" --FFLAGS="-fno-range-check ${FFLAGS}" --CXXFLAGS="${{CXXFLAGS}" --LDFLAGS="${LDFLAGS}"
     ./configure \
     --CC="$CC" --CXX="$CXX" --FC="$FC" --F77="$F77" --CPP="$CPP" \
-    --CXXFLAGS="$CXXFLAGS" --FCFLAGS="$FCFLAGS" --CFLAGS="$CFLAGS" \
-    --FFLAGS="$FFLAGS" --LDFLAGS="$LDFLAGS" \
-    ${CONFIGOPTS} --with-debugging=${debug} --with-scalar-type=${datatype} \
-    --with-blas-lapack-lib="${LAPACK_LIBS}"
+    --CXXFLAGS="$CXXFLAGS ${MKLINCLUDE}" --FCFLAGS="$FCFLAGS ${MKLINCLUDE}" --CFLAGS="$CFLAGS ${MKLINCLUDE}" \
+    --FFLAGS="$FFLAGS ${MKLINCLUDE}" --LDFLAGS="$LDFLAGS" --COPTFLAGS="-g -O3" --CXXOPTFLAGS="-g -O3" \
+    ${CONFIGOPTS} --with-debugging=${debug} --with-scalar-type=${datatype} --CUDAFLAGS="-ccbin=$CXX" \
+    --with-blas-lapack-lib="${LAPACK_LIBS}" 
+
     #cp conftest conftest-${PETSC_ARCH}
 
-    if [ "$target_os" != "win32" ]; then
+    if [ "$target_os" != "win32" ] && [ -e conftest-${PETSC_ARCH} ]; then
       mpirun ./conftest-${PETSC_ARCH}
       #cp reconfigure.py reconfigure-${PETSC_ARCH}.py
     fi
@@ -54,8 +57,10 @@ make_petsc()
       sed "/PETSC_HAVE_SLEEP/,+2 d" > ${PETSC_ARCH}/include/petscconf.h 
     fi
 
-    make
   fi
+
+  make all
+
   rm conftest* reconfigure*
 }
 
@@ -149,7 +154,7 @@ cd petsc-${PETSCVERSION}${PETSCPATCHLEVEL}
 # PETSc shared libraries cannot be moved around, therefore
 # we compile them always statically
 
-SHARED="--with-shared-libraries=0"
+SHARED="--with-shared-libraries=0 "
   
 
 #COMPILERS="--with-cc=$CC --with-cxx=$CXX --with-fc=$FC --with-ranlib=$RANLIB \
@@ -198,11 +203,14 @@ then
 fi
 
 
-CONFIGOPTS="--with-matlab=0 $SHARED  $MPIFLAGS $COMPILERS --with-clanguage=cxx --with-batch=1 --with-x=0 ${petsc_host} --with-ssl=0"
+CONFIGOPTS="--with-matlab=0 $SHARED  $MPIFLAGS $COMPILERS --with-batch=1 --with-x=0 ${petsc_host} \
+  --with-ssl=0 --known-64-bit-blas-indices=0 --with-cudac=${CUDADIR}/bin/nvcc --with-cuda-dir=${CUDADIR} \
+  --with-mkl_pardiso=1 --with-mkl_pardiso-dir=${MKLDIR} --download-scalapack --download-mumps --with-cxx-dialect=c++17 --with-cuda-dialect=c++17"
 #CONFIGOPTS="--with-matlab=0 $SHARED  $MPI $COMPILERS --with-clanguage=C++ ${LAPACKLIBS} --with-batch=1 --with-x=0 \
 #  ${petsc_host} --download-mumps=yes  --download-parmetis=1 --download-scalapack=1 --download-blacs=1"
 
-export FCFLAGS="-fno-range-check $FCFLAGS"
+# only for gfortran
+#export FCFLAGS="-fno-range-check $FCFLAGS"
 export FFLAGS=$FCFLAGS
 
 

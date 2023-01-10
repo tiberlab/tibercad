@@ -3,6 +3,7 @@
 #include "EigenvalueProblem.h"
 #include "SimulationEnvironment.h"
 #include "AtomisticStructure.h"
+#include "EigenSolver.h"
 #include "BulkCrystal.h"
 #include "Constants.h"
 #include "Messages.h"
@@ -30,6 +31,14 @@ namespace
   {
     return(a.absolute_fuzzy_equals(b, 1e-5));
   }
+}
+
+
+
+std::pair<unsigned int, double>
+EigenvalueProblem::read_slepc_solution(void)
+{
+  return(make_pair(0, 0));
 }
 
 void
@@ -250,6 +259,8 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
   string refmat_s = kopts.get_option("unfold_to", "");
   kopts.delete_option("unfold_to");
 
+  kopts.get_option("project_on_states", _projection_names);
+
   Material* refmat = nullptr;
   if (!refmat_s.empty())
   {
@@ -408,8 +419,7 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     const MeshBase* pc_mesh = pc_kspace.get_k_mesh();
 
     // get the bounding box, to obtain PC BZ radius
-    MeshTools::BoundingBox pc_bb =
-        MeshTools::bounding_box(*pc_mesh);
+    BoundingBox pc_bb = MeshTools::create_bounding_box(*pc_mesh);
     pc_bb.max() += Point(1e-2, 1e-2, 1e-2);
     pc_bb.min() -= Point(1e-2, 1e-2, 1e-2);
     double pc_diam = 2 * pc_bb.max().norm();
@@ -418,8 +428,7 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     const MeshBase* sc_mesh = sc_kspace->get_k_mesh();
 
     // get the bounding box, to obtain SC BZ radius
-    MeshTools::BoundingBox sc_bb =
-        MeshTools::bounding_box(*sc_mesh);
+    BoundingBox sc_bb = MeshTools::create_bounding_box(*sc_mesh);
     sc_bb.max() += Point(1e-2, 1e-2, 1e-2);
     sc_bb.min() -= Point(1e-2, 1e-2, 1e-2);
 
@@ -753,12 +762,25 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     _projection_weights = _dispersion;
   }
 
+  if (!_projection_names.empty())
+  {
+    _state_projections.resize(0);
+    _state_projections.resize(_dispersion.size());
+  }
+
   for (unsigned int i = 0; i < number_of_K_points; i++)
   {
     const Point& k_point = Kpoints[i];
 
     if (i > 0)
       solve_for_kpoint(k_point);
+
+    // if requested, project onto basis functions
+    vector<vector<double>> proj;
+    if (!_projection_names.empty())
+    {
+      project_on_bases(_projection_names, _solution, proj);
+    }
 
     number_of_eigs = get_num_states();
     Utils::Timer tt;
@@ -771,6 +793,9 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
       for (auto&& k : K_to_k[i])
       {
         _dispersion[k][j] = _solution[j].eigen_energy;
+
+        if (!proj.empty())
+          _state_projections[k] = proj;
       }
     }
 
@@ -816,76 +841,115 @@ EigenvalueProblem::plot_dispersion(const std::string& filename)
   bool is_unfolded = (_projection_weights.size() > 0);
   unsigned int mult = is_unfolded ? 2 : 1;
 
-    std::vector<std::string> formats;
-    get_output_format(formats);
+  std::vector<std::string> formats;
+  get_output_format(formats);
+
+  bool has_proj = (_state_projections.size() > 0);
+
+  short kdim =  _kspace->dimension();
+
+  if (_kspace->is_k_path())
+  {
+    formats.resize(1);
+    formats[0] = "grace";
+  }
 
 
-    short kdim =  _kspace->dimension();
 
-    if (_kspace->is_k_path())
+  for(short k = 0; k < formats.size(); k++)
+  {
+
+    std::string format = formats[k];
+
+    if (!(_kspace->is_k_path()) &&
+        (format == "grace") && (kdim > 1))
     {
-      formats.resize(1);
-      formats[0] = "grace";
+      format = "vtk";
     }
 
+    std::vector<double> results;
+    std::vector<std::string> names;
 
+    std::vector<double> results_proj;
+    std::vector<std::string> names_proj;
 
-    for(short k=0; k<formats.size();k++)
+    unsigned int number_of_eigs = _dispersion[0].size();
+    names.resize(mult * number_of_eigs);
+
+    unsigned int number_of_k_points = kmesh->n_nodes();
+
+    results.resize(mult * number_of_eigs * number_of_k_points );
+
+    if (has_proj)
     {
+      names_proj.resize(number_of_eigs * _projection_names.size());
+      results_proj.resize(number_of_k_points * names_proj.size());
+    }
 
-      std::string format = formats[k];
+    for (unsigned int i = 0; i < number_of_eigs ; i++)
+    {
+      std::ostringstream i_str;
+      //The states are numbered starting from 0
+      i_str << "state_number_" << i;
+      names[i] = i_str.str();
 
-      if (!(_kspace->is_k_path()) &&
-          (format == "grace") && (kdim > 1))
-      {
-        format = "vtk";
-      }
+      for (unsigned int j = 0; j < number_of_k_points ; j++)
+        results[mult * number_of_eigs * j + i] = _dispersion[j][i];
 
-      std::vector<double> results;
-      std::vector<std::string> names;
+      if (is_unfolded)
+        for (unsigned int j = 0; j < number_of_k_points ; j++)
+          results[(mult * j + 1) * number_of_eigs + i] =
+              _projection_weights[j][i];
+    }
 
-      unsigned int number_of_eigs = _dispersion[0].size();
-      names.resize(mult * number_of_eigs);
-
-      unsigned int number_of_k_points = kmesh->n_nodes();
-
-      results.resize(mult * number_of_eigs * number_of_k_points );
-
+    if (is_unfolded)
+    {
       for (unsigned int i = 0; i < number_of_eigs ; i++)
       {
         std::ostringstream i_str;
         //The states are numbered starting from 0
-        i_str << "state_number_" << i;
-        names[i] = i_str.str();
-
-        for (unsigned int j = 0; j < number_of_k_points ; j++)
-          results[mult * number_of_eigs * j + i] = _dispersion[j][i];
-
-        if (is_unfolded)
-          for (unsigned int j = 0; j < number_of_k_points ; j++)
-            results[(mult * j + 1) * number_of_eigs + i] =
-                _projection_weights[j][i];
+        i_str << "weight_" << i;
+        names[number_of_eigs + i] = i_str.str();
       }
+    }
 
-      if (is_unfolded)
+    DataOutput data_output(*kmesh, format);
+    data_output.set_output_directory(get_output_directory());
+
+    data_output.write_nodal_data(filename, results, names);
+
+
+    // projected data is written into a second file
+    if (has_proj)
+    {
+      for (unsigned int i = 0; i < number_of_eigs ; i++)
       {
-        for (unsigned int i = 0; i < number_of_eigs ; i++)
+        for (unsigned int n = 0; n < _projection_names.size(); ++n)
         {
-          std::ostringstream i_str;
-          //The states are numbered starting from 0
-          i_str << "weight_" << i;
-          names[number_of_eigs + i] = i_str.str();
+          std::ostringstream ostr;
+          ostr << i << "_" << _projection_names[n];
+          names_proj[i * _projection_names.size() + n] = ostr.str();
         }
       }
 
+      for (unsigned int k = 0; k < number_of_k_points ; k++)
+      {
+        unsigned int I = _state_projections[k].size();
+        for (unsigned int i = 0; i < I; ++i)
+        {
+          unsigned int J = _state_projections[k][i].size();
+          for (unsigned int j = 0; j < J; ++j)
+          {
+            results_proj[k * I * J + i * J + j] = _state_projections[k][i][j];
+          }
+        }
+      }
 
-      DataOutput data_output(*kmesh, format);
-      data_output.set_output_directory(get_output_directory());
-      //data_output.set_filename(filename);
-
-      data_output.write_nodal_data(filename, results, names);
-
+      string fn(filename + "_proj");
+      data_output.write_nodal_data(fn, results_proj, names_proj);
     }
+
+  }
 }
 
 
@@ -947,6 +1011,28 @@ EigenvalueProblem::do_project_to_primitive_cell(
 
 
 void
+EigenvalueProblem::project_on_bases(
+    const vector<string>& bases,
+    const vector<eigen_problem_solution>& states,
+    vector<vector<double>>& projection) const
+{
+  projection.resize(0);
+  projection.resize(states.size(), vector<double>(bases.size(), 0.0));
+
+  do_project_on_bases(bases, states, projection);
+}
+
+
+void
+EigenvalueProblem::do_project_on_bases(
+    const vector<string>&,
+    const vector<eigen_problem_solution>&,
+    vector<vector<double>>&) const
+{
+}
+
+
+void
 EigenvalueProblem::process_element(const Elem* elem, unsigned int entryside,
     vector<vector<eigen_problem_solution>>& ordered_solutions)
 {
@@ -960,7 +1046,7 @@ EigenvalueProblem::process_element(const Elem* elem, unsigned int entryside,
   {
     if (elem->is_node_on_side(n, entryside))
     { 
-      ref_node = elem->node(n);
+      ref_node = elem->node_id(n);
       if (ordered_solutions[ref_node].empty())
       {
         const Point& k_point = elem->point(n);
@@ -983,7 +1069,7 @@ EigenvalueProblem::process_element(const Elem* elem, unsigned int entryside,
 
   for (unsigned int n = 0; n < elem->n_nodes(); ++n)
   {
-    unsigned int node_id = elem->node(n);
+    unsigned int node_id = elem->node_id(n);
     if (ordered_solutions[node_id].empty())
     {
       const Point& k_point = elem->point(n);
@@ -1037,13 +1123,13 @@ EigenvalueProblem::process_element(const Elem* elem, unsigned int entryside,
     {
       if (n != entryside)
       {
-        const Elem* neigh = elem->neighbor(n);
+        const Elem* neigh = elem->neighbor_ptr(n);
         if (neigh != NULL)
         {
           int neigh_entry;
           for (unsigned int ns = 0; ns < neigh->n_sides(); ++ns)
           {
-            if (neigh->neighbor(ns) == elem)
+            if (neigh->neighbor_ptr(ns) == elem)
             {
               neigh_entry = ns;
               break;
@@ -1173,7 +1259,7 @@ void EigenvalueProblem::calculate_dos(void)
     const Elem* kelem = *kit;
 
     fe->reinit(kelem);
-    unsigned int n_eigs = solutions[kelem->node(0)].size();
+    unsigned int n_eigs = solutions[kelem->node_id(0)].size();
 
     for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
     {
@@ -1182,10 +1268,10 @@ void EigenvalueProblem::calculate_dos(void)
       vector<double> energy(n_eigs, 0.0);
       for (unsigned int i = 0; i < kelem->n_nodes(); ++i)
       {
-        unsigned int node = kelem->node(i);
+        unsigned int node = kelem->node_id(i);
         for (unsigned int n = 0; n < n_eigs; ++n)
         {
-          energy[n] += solutions[kelem->node(i)][n].eigen_energy * phi[i][qp];
+          energy[n] += solutions[kelem->node_id(i)][n].eigen_energy * phi[i][qp];
         }
       }
 
@@ -1542,6 +1628,94 @@ EigenvalueProblem::calculate_density_at_k(const Point& k_point,
 }
 
 
+void
+EigenvalueProblem::solve_eigenvalue_problem(unsigned int num_eigenvalues,
+                                            double spectrum_shift)
+{
+
+  EigenSolver::prepare_slepc(get_solver_communicator().get());
+
+  Messages::info("Copying matrices to SLEPc... ", 0);
+  copy_H_to_solver( );
+
+  if (_haveS)  copy_S_to_solver( );
+  Messages::info("done");
+
+  // for practical reasons, we let ev_number always be even
+  //if ((ev_number % 2) == 1)
+  //  ev_number += 1;
+
+  if (num_eigenvalues > get_H_dim())
+    throw SolveFailedException("Number of requested eigenvalues is bigger than the Hamiltonian size");
+
+
+  const ModelOptions& sol_opt = get_solver_options();
+
+  EigenSolver::SLEPCoptions slep_opt;
+
+  slep_opt.solver_type = sol_opt.get_option("solver","krylovshur");
+
+  slep_opt.H_file_name = "H.out";
+
+  slep_opt.S_file_name = "S.out";
+
+  slep_opt.eps_max_it =  sol_opt.get_option("max_iteration_number", 30000);
+
+  slep_opt.spectral_trans = sol_opt.get_option("spectral_transformation","shift_and_invert");
+
+  slep_opt.read_matrix_from_file = false;
+
+  slep_opt.matrix_output = get_option("write_matrices_to_files",false);
+
+  slep_opt.pc_type = sol_opt.get_option("pc_type", "ilu");
+  slep_opt.pc_type = sol_opt.get_option("preconditioner", slep_opt.pc_type);
+
+  slep_opt.st_ksp_type = sol_opt.get_option("ksp_type", "bcgsl");
+
+  if ((this->get_solver_communicator().size() == 1) && (slep_opt.pc_type == "lu"))
+  {
+    slep_opt.st_ksp_type = std::string("preonly");
+  }
+
+  slep_opt.use_deflation_space = sol_opt.get_option("use_deflation_space", true);
+
+
+  slep_opt.monitor = sol_opt.get_option("monitor", false);
+
+  slep_opt.spectrum_inversion_tolerance = sol_opt.get_option("spectrum_inversion_tolerance", 1e-8);
+
+  //EigenSolver::check_matrices(1e-10,true);
+
+  slep_opt.eps_tolerance = sol_opt.get_option("eigen_solver_tolerance", 1e-9);
+
+  slep_opt.ev_number = num_eigenvalues;
+
+  slep_opt.spectrum_shift  = spectrum_shift;
+
+
+  while (slep_opt.ev_number > 0)
+  {
+
+    int result;
+    if (_haveS)
+      result = EigenSolver::eig_value_problem_general(slep_opt);
+    else
+      result = EigenSolver::eig_value_problem(slep_opt);
+
+    if (result !=0 )
+      throw SolveFailedException("Eigensolver problem\n");
+
+    auto n_and_s = read_slepc_solution();
+
+    slep_opt.spectrum_shift = n_and_s.second;
+    slep_opt.ev_number = n_and_s.first;
+  }
+
+
+  int result = EigenSolver::clear_slepc();
+}
+
+
  
 void EigenvalueProblem::solve_for_kpoint(const Point& kpoint)
 {
@@ -1581,7 +1755,7 @@ void EigenvalueProblem::get_eigenvalues(const std::string& particle,
 
   for (unsigned int i = 0; i < n; i++)
   {
-    if(particle.empty() || (_solution[i].particle == particle))
+    if(particle.empty() || (_solution[i].particle == particle) || (particle == "all"))
     {  
       num_st++;
 
@@ -1602,9 +1776,10 @@ unsigned int EigenvalueProblem::get_num_states(void) const
 unsigned int EigenvalueProblem::get_num_states(const std::string& particle) const
 {
   unsigned int num_i_states = 0;
-  for(unsigned int i=0; i<_solution.size(); i++)
+  for(unsigned int i = 0; i < _solution.size(); i++)
   {
-    if(_solution[i].particle == particle) num_i_states++;  
+    if ((_solution[i].particle == particle) || (particle == "all") || (particle.empty()))
+      num_i_states++;
   }
   
   return num_i_states;
@@ -1616,11 +1791,14 @@ EigenvalueProblem::get_state_indices(const std::string& particle) const
   unsigned int num = get_num_states(particle);	
   std::vector<ID> result(num, 0);
 
-  unsigned int num_st=0;
-  for(unsigned int i=0; i<_solution.size(); i++)
+  unsigned int num_st = 0;
+  for (unsigned int i = 0; i < _solution.size(); i++)
   {
-    if(_solution[i].particle == particle)
-      { result[num_st]=i; num_st++; }
+    if ((_solution[i].particle == particle) || (particle == "all") || (particle.empty()))
+    {
+      result[num_st] = i;
+      num_st++;
+    }
   }
   
   return result;
@@ -1637,23 +1815,27 @@ void EigenvalueProblem::get_populations(const std::string& particle,
  
   for (unsigned int i = 0; i < n; i++)
   {
-    if(_solution[i].particle == particle)
+    std::string p(_solution[i].particle);
+
+    if ((p == particle) || (particle == "all") || particle.empty())
     {  
       num_st++;
 
-      if(_solution[i].statistics == "Fermi")
+      if (_solution[i].statistics == "Fermi")
       {      
-	double val = Fermi(_solution[i].eigen_energy, _solution[i].electro_chem_pot, 
+	if (p == "el" || p == "electron")
+	{
+          double val = Fermi(_solution[i].eigen_energy, _solution[i].electro_chem_pot, 
 		       _solution[i].temperature);
 
-	if(particle == "el" || particle == "electron")
-	{
 	  values.push_back(val);	  
 	}	
-	
-	if(particle == "hl" || particle == "hole")
+        else if (p == "hl" || p == "hole")
 	{
-	  values.push_back(1-val);	  
+          double val = Fermi(-_solution[i].eigen_energy, -_solution[i].electro_chem_pot, 
+		       _solution[i].temperature);
+
+	  values.push_back(val);	  
 	}
 
       }
@@ -1681,13 +1863,15 @@ double  EigenvalueProblem::get_population(int i) const
 
   if(_solution[i].statistics == "Fermi")
   {        
-    val = Fermi(_solution[i].eigen_energy, _solution[i].electro_chem_pot,
-        _solution[i].temperature);
-
-
-    if(_solution[i].particle == "hl" || _solution[i].particle == "hole")
+    if(_solution[i].particle == "el" || _solution[i].particle == "electron")
     {
-      val = 1 - val;
+      val = Fermi(_solution[i].eigen_energy, _solution[i].electro_chem_pot,
+                  _solution[i].temperature);
+    }
+    else if(_solution[i].particle == "hl" || _solution[i].particle == "hole")
+    {
+      val = Fermi(-_solution[i].eigen_energy, -_solution[i].electro_chem_pot,
+                  _solution[i].temperature);
     }
 
   }
@@ -1711,7 +1895,7 @@ double  EigenvalueProblem::Fermi(double Energy, double Fermi_energy, double Temp
   
   double occupation;
   
-  if (exp_arg > 35) 
+  if (exp_arg > 35.0)
     occupation = std::exp(-exp_arg);
   else
     occupation = 1.0/(std::exp(exp_arg) + 1.0);
@@ -1727,7 +1911,7 @@ double  EigenvalueProblem::Bose(double Energy, double electro_chem_pot, double T
   
   double bose;
   
-  if (exp_arg > 35) 
+  if (exp_arg > 35.0)
     bose = std::exp(-exp_arg);
   else
     bose = 1.0/(std::exp(exp_arg) - 1.0);

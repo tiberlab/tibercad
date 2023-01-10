@@ -919,29 +919,6 @@ DriftDiffusionProperties::get_coordinates(void) const
 
 
 inline
-double
-DriftDiffusionProperties::get_charge_density(void) const
-{
-  long double dens = 0.0;
-
-  for (auto& cp: _carrier_properties)
-  {
-    if (cp.second->is_dopant())
-      dens -= cp.second->get_charge() * _pd->q_density[cp.first];
-    else
-      dens += cp.second->get_charge() * _pd->q_density[cp.first];
-  }
-
-  dens += static_cast<long double>(_pd->ionized_donor_density) -
-          static_cast<long double>(_pd->ionized_acceptor_density) +
-          static_cast<long double>(_pd->ionized_electron_traps) +
-          static_cast<long double>(_pd->ionized_hole_traps);
-
-  return static_cast<double>(dens);
-}
-
-
-inline
 void
 DriftDiffusionProperties::get_charge_density_derivatives(
     std::vector<double>& derivatives) const

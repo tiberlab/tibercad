@@ -59,7 +59,7 @@ else
 endif
 
 
-INCLUDE  := $(shell export METHOD=$(LIBMESHMETHOD) && $(libmesh_config) --include) -I@LIBMESH_PREFIX@/include/libmesh -I@LIBMESH_PREFIX@/include
+INCLUDE  := $(shell export METHOD=$(LIBMESHMETHOD) && $(libmesh_config) --include) -I@LIBMESH_PREFIX@/include/libmesh -I@LIBMESH_PREFIX@/include  -I@LIBMESH_PREFIX@/contrib/eigen/eigen  -I@LIBMESH_PREFIX@/contrib/timpi/src/parallel/include  -I@LIBMESH_PREFIX@/contrib/timpi/src/utilities/include  -I@LIBMESH_PREFIX@/contrib/timpi/src/algorithms/include 
 #INCLUDE  := -I@LIBMESH_PREFIX@/include/libmesh
 
 NON_TIBER_INCLUDES := @BOOST_CPPFLAGS@ @TAO_INCLUDES@ $(INCLUDE) 

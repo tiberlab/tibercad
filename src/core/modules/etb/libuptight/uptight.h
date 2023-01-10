@@ -537,6 +537,25 @@ inline void f77_upt_get_states (f77_int const* handler, f77_int const& num_ev,
 }
 
 
+extern "C" void upt_set_state_ (f77_int const*, f77_int const&, f77_int const&, 
+    f77_int const&, f77_double const&, f77_complex const*, f77_int const&);
+
+// Corresponding F77 arguments for f77_upt_set_state:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// integer, intent(in) :: num_ev
+// integer, intent(in) :: id
+// integer, intent(in) :: hdim
+// real(dp), intent(in) :: eigenval
+// complex(dp), intent(in) :: eigenstate(hdim)
+// integer, intent(in) :: particle
+inline void f77_upt_set_state (f77_int const* handler, f77_int const& num_ev, 
+    f77_int const& id, f77_int const& hdim, f77_double const& eigenval, 
+    f77_complex const* eigenstate, f77_int const& particle)
+{
+  upt_set_state_ (handler, num_ev, id, hdim, eigenval, eigenstate, particle);
+}
+
+
 extern "C" void upt_get_matel_ (f77_int const*, f77_int const&, f77_int const&, 
     f77_complex&);
 

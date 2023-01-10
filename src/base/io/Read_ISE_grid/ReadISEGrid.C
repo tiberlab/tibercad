@@ -785,20 +785,20 @@ void ReadISEGrid::scan_grid_file(std::istream& ISE_INPUT)
 
       for (unsigned int s = 0; s < elem->n_sides(); s++)
       {
-        UniquePtr<libMesh::Elem> side (elem->build_side(s));
+        std::unique_ptr<const libMesh::Elem> side = elem->build_side_ptr(s);
         std::set<unsigned int> side_nodes;
         std::set<unsigned int>::iterator iter = side_nodes.begin();
 
         // make a set with all nodes from this side
         // this allows for easy comparison
         for (unsigned int ns = 0; ns < side->n_nodes(); ns++)
-          side_nodes.insert(iter, side->node(ns));
+          side_nodes.insert(iter, side->node_id(ns));
 
         // See whether one of the side node occurs in the list
         // of tagged nodes. If we would loop over all side
         // nodes, we would just get multiple hits, so taking
         // node 0 is enough to do the job
-        unsigned int sn = side->node(0);
+        unsigned int sn = side->node_id(0);
         if (node_index.count(sn) > 0)
         {
           // Loop over all tagged ("physical") "sides" which
@@ -851,20 +851,20 @@ void ReadISEGrid::scan_grid_file(std::istream& ISE_INPUT)
 
       for (unsigned int s = 0; s < elem->n_edges(); s++)
       {
-        UniquePtr<libMesh::Elem> edge (elem->build_edge(s));
+        UniquePtr<const libMesh::Elem> edge (elem->build_edge_ptr(s));
         std::set<unsigned int> edge_nodes;
         std::set<unsigned int>::iterator iter = edge_nodes.begin();
 
         // make a set with all nodes from this edge
         // this allows for easy comparison
         for (unsigned int ns = 0; ns < edge->n_nodes(); ns++)
-          edge_nodes.insert(iter, edge->node(ns));
+          edge_nodes.insert(iter, edge->node_id(ns));
 
         // See whether one of the side node occurs in the list
         // of tagged nodes. If we would loop over all edge
         // nodes, we would just get multiple hits, so taking
         // node 0 is enough to do the job
-        unsigned int sn = edge->node(0);
+        unsigned int sn = edge->node_id(0);
         if (node_index.count(sn) > 0)
         {
           // Loop over all tagged ("physical") "edges" which

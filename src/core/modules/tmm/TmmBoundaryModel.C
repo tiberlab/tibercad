@@ -10,7 +10,6 @@ TmmBoundaryModel*
 TmmBoundaryModel::create(const MaterialBoundary* boundary, const ModelOptions& options)
 {
 
-
   std::string type = options.get_option("type", "incidentwave");
   TmmBoundaryModel* mod =
       PhysicalModel::create<TmmBoundaryModel>("tmm_bnd_" + type,
@@ -63,6 +62,7 @@ TmmBoundaryModel::get_element(int elm){
     case 3:
       return(_mmm11);
       break;
+
   }
 }
 

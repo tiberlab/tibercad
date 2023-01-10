@@ -50,35 +50,15 @@ class FEMEigenvalueProblem : public  EigenvalueProblem
 
   struct options
   {
-    std::string solver;                 //!< solver type
-   
-    unsigned int max_iteration_number;  //!< maximum number of iterations for the eigenvalue solver
-    
-    double    eigen_solver_tolerance;   //!< tolerance for eigenvalue solver 
-   
     unsigned int number_of_eigenstates; //!< number of eigenstates to be calculated
     
     Method discretization_method;       //!< box integration or finite element
    
     bool Dirichlet_bc_everywhere;       //!< apply dirichlet boundary conditions at all boundaries
 
-    std::string preconditioner;         //!< preconditioner name
-
     bool periodicity[3];                //!< periodic boundary conditions
   
-    std::string spectral_trans;         //!< spectral transformation
-
     double spectrum_shift;              //!< Spectrum shift 
-
-    std::string st_ksp_type;            //!< Liner system solution method 
-    
-    std::string strategy;               //<! matlab (algorithm used in Matlab) or general (recommended by SLEPC)
-
-    bool monitor;   //<! activates convergence monitor if true
-
-    double spectrum_inversion_tolerance; //<! tolerance for spectrum inversion
-
-    bool dump_on_file;
     
   };
 
@@ -170,9 +150,6 @@ class FEMEigenvalueProblem : public  EigenvalueProblem
   //!updates my_dof_constraints 
   void make_constraints(void);
 
-  //! checks if element lies on boundary
-  bool element_on_boundary(const Elem* element);
-    
   //!creates dirichlet dofs
   void create_dirichlet_dofs(void);
   
@@ -188,14 +165,6 @@ class FEMEigenvalueProblem : public  EigenvalueProblem
   //! Apply bc to eigenvalue problem
   void apply_bc();
                                                                  
-  //!solves eigenvalue problem
-  /*!
-    \param ev_number number of eigenvalues requested
-    \param spectrum_shift additional spectrum shift 
-    \param haveS decides whether it is a generalize eigenproblem
-  */
-  void solve_eigen_value_problem(unsigned int ev_number, double spectrum_shift = 0.0);
-
 
   //!simulation domain boundary
   double min_coord[3];
@@ -217,6 +186,15 @@ class FEMEigenvalueProblem : public  EigenvalueProblem
 
   std::map<unsigned int, Point> _constrained_dof_periodicity;
 
+  //! Implementation for getting csr matrix
+  void get_csr(std::vector<libMesh::Complex>& A,
+               std::vector<int>& JA,
+               std::vector<int>& IA,
+               libMesh::SparseMatrix<Real>* Mr,
+               libMesh::SparseMatrix<Real>* Mi,
+               double scaling = 1.0,
+               const std::vector<unsigned int>& perm
+                          = std::vector<unsigned int>(0)) const;
 
 };
 
@@ -237,39 +215,7 @@ FEMEigenvalueProblem::get_periodicity_vector(unsigned int dof) const
 
 //---------------------------------------------------------------------------------//
 
-inline bool FEMEigenvalueProblem::element_on_boundary(const libMesh::Elem* element)
-{
-  bool result = false;
 
-  
-    
-  unsigned int n_sides ; 
-
-  if ( dim > 1 ) 
-    n_sides = element->n_sides();
-  else
-    n_sides = element->n_nodes();
-
-
-  for (short i = 0; i < n_sides; i++)
-  {
-    Elem* el1 = element->neighbor(i);
-
-    if ( (el1 == NULL)  ) 
-      result = true;
-    else
-      if (!( el1 -> active() ))
-	result = true;
-	  
-    if (result) break;
-	
-      
-  }
-
- 
-  return(result);
-  
-}
 
 
 #endif // _FEMEIGENVALUEPROBLEM_H_

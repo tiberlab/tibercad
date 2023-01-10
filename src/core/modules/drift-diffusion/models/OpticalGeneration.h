@@ -11,6 +11,7 @@
 
 // forward declarations
 class Elem;
+class ExternalProfile;
 
 
 
@@ -41,9 +42,6 @@ class TBDLLOCAL OpticalGeneration : public RecombinationModelInterface
     void get_net_recombination_rate_derivatives(
         std::vector<double>& recomb_e, std::vector<double>& recomb_h);
 
-    //! File to read the external generation
-//    double read_file(char *filename, double p);
-     double read_file(void);
 
   protected:
 
@@ -67,6 +65,9 @@ class TBDLLOCAL OpticalGeneration : public RecombinationModelInterface
 
     //! The solution ID of the generation models variable
     std::vector<ID> _gen_id;
+
+    //! Can use externally generated generation profiles
+    ExternalProfile* _profile;
 
 
 };

@@ -201,7 +201,7 @@ QuantumContact::extend_mesh(void)
       {
         if (elem->is_node_on_side(nde, side))
         {
-          ID nodeid = elem->node(nde);
+          ID nodeid = elem->node_id(nde);
           nodeit = nodemap.find(nodeid);
           
           if(nodeit == nodemap.end())
@@ -247,7 +247,7 @@ QuantumContact::extend_mesh(void)
           {
             if (elem->is_node_on_side(nde, 1))
             {
-              ID nodeid = elem->node(nde);
+              ID nodeid = elem->node_id(nde);
               nodeit = nodemap.find(nodeid);
               
               if(nodeit == nodemap.end())
@@ -372,7 +372,7 @@ QuantumContact::extend_mesh(void)
         //check whether node is on the boundary
         if (elem->is_node_on_side(nde, side))
         {
-          ID nodeid = elem->node(nde);
+          ID nodeid = elem->node_id(nde);
 
           nodeit = nodemap.find(nodeid);
 
@@ -421,7 +421,7 @@ QuantumContact::extend_mesh(void)
 
            if (elem->is_node_on_side(nde, 1))
            {
-            ID nodeid = elem->node(nde);
+            ID nodeid = elem->node_id(nde);
             nodeit = nodemap.find(nodeid);
 
             if(nodeit == nodemap.end())
@@ -475,7 +475,7 @@ QuantumContact::extend_mesh(void)
         //new nodes are added to the mesh and stored in nodevec[]
         if (elem->is_node_on_side(nde, side))
         {
-          ID nodeid = elem->node(nde);
+          ID nodeid = elem->node_id(nde);
 
           nodeit = nodemap.find(nodeid);
 
@@ -573,7 +573,7 @@ QuantumContact::extend_mesh(void)
             // is 4 for Prism6; 5 for Hex8
             if (elem->is_node_on_side(nde, countnodes+1))
             {
-              ID nodeid = elem->node(nde);
+              ID nodeid = elem->node_id(nde);
 
               nodeit = nodemap.find(nodeid);
 
@@ -686,13 +686,13 @@ QuantumContact::write_neighbors(void) const
       std::cout<<elem->id()<<" : " ;
       for (ID nn=0; nn<elem->n_sides() ;nn++)
       {
-        if (elem->neighbor(nn)==NULL)
+        if (elem->neighbor_ptr(nn) == nullptr)
         {
           std::cout<< "0" << ", ";
         }
         else
         {
-          std::cout<< elem->neighbor(nn)->id() << ", ";
+          std::cout<< elem->neighbor_ptr(nn)->id() << ", ";
         }
 
       }

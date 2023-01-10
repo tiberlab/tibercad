@@ -79,6 +79,12 @@ void NegfWrapper::set_verbose(int verbose_lev)
 
 }
 
+void NegfWrapper::print_memory_statistics(void)
+{
+  f77_negf_mem_stats(_handler);
+}
+
+
 double
 NegfWrapper::current(std::string unitsOfH, std::string unitsOfJ)
 {
@@ -155,6 +161,21 @@ NegfWrapper::density(std::vector<double>& density, std::string particle)
    f77_negf_density_efa(_handler, size, density.data(), p);
 }
 
+void
+NegfWrapper::quasi_equilibrium_density(std::vector<double>& density, std::string particle,
+                                       std::vector<double>& Ec, std::vector<double>& Ev,
+                                       std::vector<double>& muN, std::vector<double>& muP)
+{
+
+   int size = density.size();
+   int p = 0;
+
+   if (particle == "el"){ p = +1;}
+   if (particle == "hl"){ p = -1;}
+
+   f77_negf_density_quasi_equilibrium(_handler, size, density.data(), p, Ec.data(),
+       Ev.data(), muN.data(), muP.data());
+}
 
 void
 NegfWrapper::get_ldos(std::vector<std::vector<double>>& ldos)
@@ -267,10 +288,23 @@ NegfWrapper::init_contacts(int n_cont)
 void
 NegfWrapper::init_structure(int ncont, const std::vector<int>& surfstart,
     const std::vector<int>& surfend, const std::vector<int>& contend, int npl,
-    const std::vector<int>& plend)
+    const std::vector<int>& plend,const std::vector<int>& cblks)
 {
   f77_negf_init_structure(_handler, ncont, surfstart.data(),
-      surfend.data(), contend.data(), npl, plend.data());
+      surfend.data(), contend.data(), npl, plend.data(), cblks.data());
+}
+
+std::vector<int>
+NegfWrapper::contact_blocks(int ncont, const std::vector<int>& surfstart,
+    const std::vector<int>& surfend, const std::vector<int>& contend, int npl,
+    const std::vector<int>& plend)
+{
+  std::vector<int> cblks(ncont);
+
+  f77_negf_contact_blocks(_handler, ncont, surfstart.data(),
+      surfend.data(), contend.data(), npl, plend.data(), cblks.data());
+
+  return cblks;
 }
 
 void

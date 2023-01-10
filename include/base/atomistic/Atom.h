@@ -12,7 +12,6 @@
 
 #include "elem.h"
 
-#define ILLEGAL_VALUE 255 
 
 
 
@@ -29,8 +28,10 @@ public:
   typedef unsigned char label_t;
   typedef unsigned char atom_t;
 
+  static const atom_t ILLEGAL_VALUE = 255;
+
   //! Atom constructor
-  Atom();
+  Atom(void);
 
   //! Constructor with specie and position initializations
   Atom(std::string& init_specie, Tensor1& init_position);
@@ -186,13 +187,7 @@ void Atom::set_type(Atom::atom_t fg)
 {
   _virtual_type = fg;
 }
-/*
-inline
-void Atom::set_type(unsigned int fg)
-{
-  _virtual_type = static_cast<Atom::atom_t>(fg);
-}
-*/
+
 
 inline
 Atom::atom_t Atom::get_type() const

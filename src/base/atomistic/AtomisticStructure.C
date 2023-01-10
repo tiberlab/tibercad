@@ -36,7 +36,6 @@ AtomisticStructure::_callback_functions;
 
 AtomisticStructure::AtomisticStructure()
 :_device(NULL),
- _atomistic_structure_options(),
  _scale(1.0),
  _random_alloy(false),
  _N_without_H(0)
@@ -46,7 +45,6 @@ AtomisticStructure::AtomisticStructure()
 
 AtomisticStructure::AtomisticStructure(const std::string& name)
 :_name(name),
- _atomistic_structure_options(),
  _scale(1.0),
  _device(NULL),
  _random_alloy(false),
@@ -57,7 +55,6 @@ AtomisticStructure::AtomisticStructure(const std::string& name)
 AtomisticStructure::AtomisticStructure(const AtomisticStructure& other) :
   AtomisticBasis(other),
   _options(other._options),
-  _atomistic_structure_options(other._atomistic_structure_options),
   _name(other._name),
   _scale(other._scale),
   _IDset(other._IDset),
@@ -77,9 +74,13 @@ AtomisticStructure::~AtomisticStructure(void)
 
 
 AtomisticStructure*
-AtomisticStructure::create()
+AtomisticStructure::create(const std::string& name,
+    const Device* const device, const ModelOptions& options)
 {
   AtomisticStructure* st = new AtomisticStructure();
+
+  st->init(name, device, options);
+
   return st;
 }
 
@@ -91,15 +92,6 @@ AtomisticStructure::create(const AtomisticStructure& as)
   return st;
 }
 
-
-
-AtomisticStructure::AtomisticStructureOptions::AtomisticStructureOptions(void)
-:is_associated(false)
-{}
-
-
-AtomisticStructure::AtomisticStructureOptions::~AtomisticStructureOptions(void)
-{}
 
 
 void
@@ -181,9 +173,7 @@ AtomisticStructure::init(const std::string& name,
     Messages::info("Build Bond Map");
     build_bond_map();
 
-    //Messages::info("Associate elements");
-    if (!_atomistic_structure_options.is_associated)
-      associate_elements();
+    associate_elements();
 
     set_labels();
 
@@ -468,11 +458,6 @@ AtomisticStructure::parse_lattice_vectors(void)
   }
 }
 
-
-void
-AtomisticStructure::init(const std::string& )
-{
-}
 
 
 void
@@ -1215,7 +1200,7 @@ AtomisticStructure::read_tgn(const std::string& path, const Tensor1& transl)
       if (tmp_id == -1) _atoms[i - 1].set_elem(NULL);
       else
         {
-          _atoms[i - 1].set_elem(_device->get_mesh().elem(tmp_id));
+          _atoms[i - 1].set_elem(_device->get_mesh().elem_ptr(tmp_id));
         }
 
 
@@ -1248,7 +1233,6 @@ AtomisticStructure::read_tgn(const std::string& path, const Tensor1& transl)
     }
 
   file.close();
-  _atomistic_structure_options.is_associated = true;
 
 }
 
@@ -1504,6 +1488,10 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
 
   std::set<Utils::Couple<const Material* > > interfaces;
 
+  //
+  // First we write the atom types and the structure including connectivity
+  //
+
   //Standard gen section (modified with material index)
   file << _atoms.size();
   
@@ -1564,8 +1552,10 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
     
   }
   
+  //
+  // Periodicity vectors come after the structure
+  //
 
-  // Periodicity vectors at the bottom
   if (is_periodic())
   {
     
@@ -1585,7 +1575,9 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
     }
   }
   
-  //Information about materials
+  //
+  // Now the information about all materials
+  //
   
 
   std::map<const Material*, unsigned int> n_species_map;
@@ -1697,8 +1689,8 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
         dbA.set_section("valenceband");
         dbB.set_section("valenceband");
     
-        file           << " " << dbA.get("E_v",0.0)
-                       << " " << dbB.get("E_v",0.0);
+        file           << " " << std::setprecision(5) << dbA.get("E_v",0.0)
+                       << " " << std::setprecision(5) << dbB.get("E_v",0.0);
       }
 
       if (alloy_type == "quaternary")
@@ -1721,7 +1713,7 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
            << " " << mat->get_name() << etb_dataset + ".etb";
       if (band_offsets)
       {               
-        file << " " << db.get("E_v",0.0);
+        file << " " << std::setprecision(5) << db.get("E_v",0.0);
       } 
       file << " 0.0  0.0"   << std::endl;
     }
@@ -1733,10 +1725,11 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
 
   file << "#Interfaces " << std::endl;
 
-  //std::set<Utils::Couple<const Material*>>::iterator int_it = interfaces.begin();
-  //for (;int_it != interfaces.end(); ++int_it)
+  // to check for already processed pairs of species
+  multimap<Utils::Couple<ID>, Utils::Couple<Specie>> processed;
 
-  std::multimap<Utils::Couple<ID>, Utils::Couple<Specie>> processed;
+  // to keep all possible interactions for a pair of materials
+  map<Utils::Couple<ID>, pair<vector<string>, vector<double>>> couplings;
 
 
   for (size_t i = 0; i < get_N_atoms(); ++i)
@@ -1783,25 +1776,6 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
 
       processed.insert(make_pair(couple, sp_couple));
 
-      // Put interfaces in increasing order
-      if (material_map[mat1] > material_map[mat2])
-      {
-        swap(mat1, mat2);
-      }
-
-      file << std::setw(3) << material_map[mat1]<<"  "<< material_map[mat2]<<"  ";
-
-      if (mat1->is_alloy() || mat2->is_alloy())
-      {
-        if (is_random_alloy())
-          file <<  " RND";
-        else
-          file <<  " VCA";
-      }
-      else
-      {
-        file <<  " CRY";
-      }
 
       std::vector<std::string> str;
       std::vector<double> frac;
@@ -1810,29 +1784,80 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
       interface_interactions(mat1, mat2, str, frac,
           _atoms[i], _atoms[bondmap[i][j]]);
 
-      unsigned int size1 = str.size();
-      file << " " << size1 << "  ";
 
       interface_interactions(mat2, mat1, str, frac,
           _atoms[bondmap[i][j]], _atoms[i]);
 
-      file << " " << str.size()-size1 << "  ";
+      for (unsigned int i = 0; i < str.size(); i++)
+      {
+        if (find(couplings[couple].first.begin(),
+                 couplings[couple].first.end(), str[i])
+            == couplings[couple].first.end())
+        {
+          couplings[couple].first.push_back(str[i]);
+          couplings[couple].second.push_back(frac[i]);
+        }
+      }
 
-      for (unsigned int i=0; i < str.size(); i++)
-        file <<"  " << str[i];
-
-      for (unsigned int i=0; i < str.size(); i++)
-        file <<"  " << frac[i];
-
-      for (unsigned int i=0; i<str.size(); i++)
-        file <<"  " << str[i]<<etb_dataset<<".etb";
-      //if (check_data_file(Database::get_search_path()+"/"+str[i]+etb_dataset+".etb") )
-      //    file <<"  " << str[i]<<etb_dataset<<".etb";
-      //else
-      //  Messages::error("Database file does not exist"+Database::get_search_path()+"/"+str[i]+etb_dataset+".etb");
-
-      file<<std::endl;
     }
+  }
+
+
+  for (auto& a : couplings)
+  {
+    ID reg_i = a.first.first;
+    ID reg_j = a.first.second;
+    const Material* mat1 = _device->get_material(reg_i);
+    const Material* mat2 = _device->get_material(reg_j);
+
+    // Put interfaces in increasing order
+    if (material_map[mat1] > material_map[mat2])
+    {
+      swap(mat1, mat2);
+    }
+
+    file << std::setw(3) << material_map[mat1]<<"  "<< material_map[mat2]<<"  ";
+
+    if (mat1->is_alloy() || mat2->is_alloy())
+    {
+      if (is_random_alloy())
+        file <<  " RND";
+      else
+        file <<  " VCA";
+    }
+    else
+    {
+      file <<  " RND";
+    }
+
+    unsigned int size = a.second.first.size();
+    file << " " << size << " 0";
+
+    // we need to get the valence band reference energies
+    vector<double> ev = vector<double>(size, 0.0);
+
+    for (unsigned int i = 0; i < size; ++i)
+    {
+      file << "  " << a.second.first[i];
+
+      if (band_offsets)
+      {
+        Database db(a.second.first[i]);
+        db.set_section("valenceband");
+        ev[i] = db.get("E_v", 0.0);
+      }
+    }
+
+    for (unsigned int i = 0; i < size; ++i)
+      file << "  " << a.second.second[i];
+
+    for (unsigned int i = 0; i < size; ++i)
+      file << "  " << a.second.first[i] << etb_dataset << ".etb";
+
+    for (unsigned int i = 0; i < size; ++i)
+      file << "  " << std::setprecision(5) << ev[i];
+
+    file << std::endl;
   }
 
   file.close();
@@ -1920,7 +1945,8 @@ AtomisticStructure::interface_interactions(const Material* mat1,
                                            const Atom& at2)
 {
 
-  str.clear();
+  //str.clear();
+  //frac.clear();
   stringstream ss;
   double conc1, conc2;
 
@@ -2111,6 +2137,10 @@ AtomisticStructure::get_material(const Atom& atom1, const Atom& atom2,
   const Material* mat1 = get_device()->get_material(atom1.get_region_ID());
   const Material* mat2 = get_device()->get_material(atom2.get_region_ID());
 
+  //std::cerr << "Atoms: " << atom1.get_specie() << " " << atom2.get_specie() << std::endl;
+  //std::cerr << "mat1 : " << atom1.get_region_ID() << " -> " << mat1->get_name() << std::endl;
+  //std::cerr << "mat2 : " << atom2.get_region_ID() << " -> " << mat2->get_name() << std::endl;
+
   if (mat1->has_specie(atom1.get_specie()) && mat1->has_specie(atom2.get_specie()))
   {
     // can take it from here
@@ -2136,29 +2166,9 @@ AtomisticStructure::get_material(const Atom& atom1, const Atom& atom2,
 
   // if we didn't find it, we check interface materials (which is created if needed)
 
- //If not, we need to decide based on some other criteria. Up to now we're able to
- //decide only for III-V or II-VI alloys with different cations (eg. Ga-As belong to GaAs)
- //if (mat1->is_cation(atom1.get_specie()))
- //  return get_material(atom1, parent);
- //else if (mat2->is_cation(atom2.get_specie()))
- //  return get_material(atom2, parent);
- //else
- //(Alex) Test using the label on atoms rather than hardcoded CrystalDefs. 
-  /*
- if (atom1.is_cation())
-   return get_material(atom1, parent);
- else if (atom2.is_cation())
-   return get_material(atom2, parent);
- else 
- {
-   //If no value was already returned, throw an exception
-   Messages::error("Material for couple of atoms is decided "
-       "depending on the cation species. I cannot find a valid cation ");
-   throw RuntimeException("Cannot find valid cation");
- }
- */
  return(mat);
 }
+
 
 void
 AtomisticStructure::reorder(const std::vector<unsigned int>& P)
@@ -2320,7 +2330,8 @@ AtomisticStructure::create_conformal_grid(libMesh::UnstructuredMesh& mesh,
     }
   }
 
-  mesh.prepare_for_use(keep_node_order);
+  mesh.allow_renumbering(!keep_node_order);
+  mesh.prepare_for_use();
 
   Messages::info("done");
 #endif
@@ -2568,7 +2579,7 @@ AtomisticStructure::find_nearest_atom(const Elem* elem, const Point& point, doub
         continue;
 
       double dist = Point(center -
-          get_structure_atom(atoms[i]).get_position()).size();
+          get_structure_atom(atoms[i]).get_position()).norm();
       if (dist < min_dist)
       {
         min_dist = dist;
@@ -2604,7 +2615,7 @@ AtomisticStructure::find_nearest_atom(const Elem* elem, const Point& point, doub
             continue;
 
           double dist = Point(center -
-              get_structure_atom(atoms[i]).get_position()).size();
+              get_structure_atom(atoms[i]).get_position()).norm();
 
           if (dist < min_dist)
           {
@@ -2620,12 +2631,12 @@ AtomisticStructure::find_nearest_atom(const Elem* elem, const Point& point, doub
       for (int s = 0; s < next_el->n_sides(); s++)
       {
 
-        const Elem* neigh = next_el->neighbor(s);
+        const Elem* neigh = next_el->neighbor_ptr(s);
 
         if ((neigh != NULL) && //!processed_elems.count(neigh))
             !processed_elems.count(neigh) &&
             !to_process.count(neigh) &&
-            (Point(point - neigh->centroid()).size() <
+            (Point(point - neigh->centroid()).norm() <
                 min_dist / _scale))
         {
           next_to_process.insert(neigh);
@@ -2695,9 +2706,9 @@ AtomisticStructure::extract_alloy_statistics(const ModelOptions& opt)
     libMesh::RealVectorValue a, b, c;
     get_lattice_vectors(a, b, c);
 
-    double x = a.size() / 10;
-    double y = b.size() / 10;
-    double z = c.size() / 10;
+    double x = a.norm() / 10;
+    double y = b.norm() / 10;
+    double z = c.norm() / 10;
 
     string dir = opt.get_option("orientation", "x");
 
@@ -2913,17 +2924,17 @@ AtomisticStructure::extract_alloy_statistics(const ModelOptions& opt)
         {
 
           case 'y':
-            y = b.size() / 10.0;
+            y = b.norm() / 10.0;
             x = z = side;
             break;
 
           case 'z':
-            z = c.size() / 10.0;
+            z = c.norm() / 10.0;
             y = x = side;
             break;
 
           default: // 'x'
-            x = a.size() / 10.0;
+            x = a.norm() / 10.0;
             y = z = side;
             break;
         }
@@ -3058,17 +3069,17 @@ AtomisticStructure::plot_alloy_composition(const ModelOptions& opt)
     {
 
       case 'y':
-        y = b.size() / 10.0;
+        y = b.norm() / 10.0;
         x = z = side;
         break;
 
       case 'z':
-        z = c.size() / 10.0;
+        z = c.norm() / 10.0;
         y = x = side;
         break;
 
       default: // 'x'
-        x = a.size() / 10.0;
+        x = a.norm() / 10.0;
         y = z = side;
         break;
     }
@@ -3108,9 +3119,9 @@ AtomisticStructure::plot_alloy_composition(const ModelOptions& opt)
       {
         for (unsigned int n = 0; n < elem->n_nodes(); ++n)
         {
-          if (!used_nodes.count(elem->node(n)))
+          if (!used_nodes.count(elem->node_id(n)))
           {
-            used_nodes.insert(elem->node(n));
+            used_nodes.insert(elem->node_id(n));
 
             map<Specie, vector<unsigned int>>::iterator it(stats.begin());
             const map<Specie, vector<unsigned int>>::iterator end(stats.end());
@@ -3121,7 +3132,7 @@ AtomisticStructure::plot_alloy_composition(const ModelOptions& opt)
               {
                 SolutionDescriptor& descr = species_to_descr[it->first];
                 // +1 because the first values are the totals !
-                solmap[domain][descr].push_back((it->second)[elem->node(n) + 1]);
+                solmap[domain][descr].push_back((it->second)[elem->node_id(n) + 1]);
               }
             }
           }

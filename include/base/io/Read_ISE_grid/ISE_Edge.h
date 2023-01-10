@@ -1,7 +1,6 @@
 #ifndef ISE_EDGE_H_
 #define ISE_EDGE_H_
 #include "ISE_Vertex.h"
-#include <iostream>
 
 using  namespace  std ;
 
@@ -64,11 +63,8 @@ ISE_Edge::get_vertex(unsigned int  v)
 {
   if  (v==1)
   {return node_1;}
-  else if  (v==2)
+  else
   {return node_2;}
-  else { cerr <<  " Error, no valid vertex in 'get_vertex' method selected "<< endl; }
-	
-	
 }
 
 

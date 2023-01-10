@@ -20,7 +20,7 @@ ExtProfile1D::ExtProfile1D(const ModelOptions& options) :
 {
   get_option("origin", _origin);
   get_option("direction", _direction);
-  _direction /= _direction.size();
+  _direction /= _direction.norm();
   _scale = get_option("length_scaling", _scale);
   _data_scale = get_option("data_scaling", _data_scale);
 
@@ -97,7 +97,7 @@ ExtProfile1D::_read_source(void)
   unsigned int ctr = 0;
   for (unsigned int i = 0; i < N; ++i)
   {
-    double x = _min + i * dx;
+    double x = _x_coord.front() + i * dx;
 
     while ((_x_coord[ctr] < x) && (ctr < _x_coord.size()))
       ++ctr;

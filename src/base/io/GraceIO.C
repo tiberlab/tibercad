@@ -3,8 +3,9 @@
 #include "GraceIO.h"
 #include "RuntimeException.h"
 
-#include "elem.h"
-#include "mesh_base.h"
+#include "libmesh/elem.h"
+#include "libmesh/mesh_base.h"
+#include "libmesh/parallel_implementation.h"
 
 // C++ includes
 #include <fstream>
@@ -434,7 +435,7 @@ GraceIO::do_write(bool force)
         //loop over the nodes
         for (int i = 0; i < 2; i++)
         {
-          const libMesh::Elem* neighbor = elem->neighbor(i);
+          const libMesh::Elem* neighbor = elem->neighbor_ptr(i);
           ID neighbor_id = INVALID_ID;
           if (neighbor != NULL)
             neighbor_id = neighbor->subdomain_id();

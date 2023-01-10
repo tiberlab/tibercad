@@ -53,14 +53,20 @@ class TiberPetscLinearSolver :  public TiberLinearSolver
       solve(const libMesh::ShellMatrix<Number>&,
           const SparseMatrix<Number>&,
           NumericVector<Number>&,
-          NumericVector<Number>&, double, unsigned int) override {};
+          NumericVector<Number>&, double, unsigned int) override
+      {
+        return(std::make_pair(0, 0.0));
+      };
 
 
     //! Dummy implementation
     virtual std::pair<unsigned int, Real>
       solve(const libMesh::ShellMatrix<Number>&,
           NumericVector<Number>&,
-          NumericVector<Number>&, double, unsigned int) override {};
+          NumericVector<Number>&, double, unsigned int) override 
+      {
+        return(std::make_pair(0, 0.0));
+      };
 
 
     //! Return the convergence reason

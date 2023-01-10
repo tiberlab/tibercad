@@ -17,7 +17,6 @@
 #include "EigenSolver.h"
 #include "RotatedCrystal.h"
 #include "Utils.h"
-#include "License.h"
 
 #include "libmesh/mesh.h"
 #include "libmesh/dof_map.h"
@@ -37,6 +36,19 @@ using namespace std;
 using namespace libMesh;
 
 
+namespace
+{
+  bool compare_eigen_energy(const EigenvalueProblem::eigen_state& state1,
+      const EigenvalueProblem::eigen_state& state2)
+  {
+    if ((state1.particle == "hl") && (state1.particle == state2.particle))
+      return (state2.energy < state1.energy);
+
+    return(state1.energy < state2.energy);
+  }
+}
+
+
 //--------------------------------------------------------------
 
 ETB::ETB(const ModelOptions& options)
@@ -48,10 +60,6 @@ ETB::ETB(const ModelOptions& options)
 
 ETB* ETB::create(const ModelOptions& options)
 {
-  if (TiberCad::get_mpi_comm().rank() == 0)
-    License::check_out("etb",
-        TiberCad::major_version(), 0, 1);
-
   return new ETB(options);
 }
 
@@ -72,8 +80,6 @@ ETB::~ETB(void)
   _map_ID_Ecb.clear();
   _ion_num_orbitals.clear();
 
-  if (TiberCad::get_mpi_comm().rank() == 0)
-    License::check_in("etb", 1);
 }
 
 ETB::UptOptions::UptOptions(void)
@@ -122,7 +128,7 @@ ETB::UptOptions::~UptOptions(void)
 }
 
 ETB::UptSolverOptions::UptSolverOptions(void)
-  :solver("upt_lanczos"),
+  :solver("lanczos"),
    start_vb(1),
    start_cb(1),
    n_vb(0),
@@ -566,8 +572,8 @@ ETB::call_uptight(void)
 
   // check unused tags in solver_options
   const ModelOptions& sol_opt = get_solver_options();
-  sol_opt.find_option("simulation"); // remove simulation name
-  sol_opt.check_unused(); 
+  //sol_opt.find_option("simulation"); // remove simulation name
+  //sol_opt.check_unused();
   
   //std::cout << "(ETB) Tight-Binding calculations" << std::endl;
   
@@ -578,7 +584,6 @@ ETB::call_uptight(void)
   if (_assemble && _upt_options.assemble_H) assemble(options);
 
   if (!_upt_options.assemble_H) create_dummy_H(); 
-  //print_H("./");
 
   if (_upt_solver_options.read_states)
   {
@@ -634,117 +639,142 @@ ETB::call_uptight(void)
     }
   }
 
-  if (_upt_solver_options.solver.compare("upt_lanczos") == 0) 
+  string solver_type = get_solver_options().get_option("solver_type", "cpu");
+  if (solver_type.compare("slepc") == 0)
   {
+    Messages::info("Solving Tight Binding with SLEPc eigensolver");
+    initialize_solution_container(_upt_solver_options.n_vb + _upt_solver_options.n_cb);
 
-    Messages::info("\n("+get_name()+") solving using lanczos");
+    // need to set some options for SLEPc eigensolver
+    get_solver_options().set_option("eigen_solver_tolerance", _upt_solver_options.long_tol);
 
-    inst->lanczos_diag(_upt_solver_options.start_vb, _upt_solver_options.start_cb, 
-		                   _upt_solver_options.n_vb, _upt_solver_options.n_cb,
-                       _upt_solver_options.guess_vb, _upt_solver_options.guess_cb,
-                       _upt_solver_options.min_iter, _upt_solver_options.long_iter,
-                       _upt_solver_options.max_iter, _upt_solver_options.fast_tol,
-                       _upt_solver_options.long_tol, _upt_solver_options.ort_tol,
-		                   _upt_solver_options.dynamic, _upt_solver_options.bitoff);
+    solve_eigenvalue_problem(_upt_solver_options.n_vb + _upt_solver_options.n_cb, _upt_solver_options.guess_cb);
+
+    int num_states = _upt_solver_options.n_vb + _upt_solver_options.n_cb;
+
+    for (int i = 0; i < num_states; ++i)
+    {
+      // +1 is electron, -1 is hole
+      int particle = 1;
+      if (_solution[i].particle == "hl")
+        particle = -1;
+
+      inst->set_state(num_states, i, _solution[i].eigen_vector.size(),
+                                     _solution[i].eigen_energy,
+                                     _solution[i].eigen_vector, particle);
+    }
+
+    _solution_size = _solution.size();
   }
-  else if (_upt_solver_options.solver.compare("feast") == 0) 
+  else
   {
+    if ((_upt_solver_options.solver.compare("upt_lanczos") == 0) ||
+        (_upt_solver_options.solver.compare("lanczos") == 0))
+    {
+
+      Messages::info("\n("+get_name()+") solving using lanczos");
+
+      inst->lanczos_diag(_upt_solver_options.start_vb, _upt_solver_options.start_cb,
+          _upt_solver_options.n_vb, _upt_solver_options.n_cb,
+          _upt_solver_options.guess_vb, _upt_solver_options.guess_cb,
+          _upt_solver_options.min_iter, _upt_solver_options.long_iter,
+          _upt_solver_options.max_iter, _upt_solver_options.fast_tol,
+          _upt_solver_options.long_tol, _upt_solver_options.ort_tol,
+          _upt_solver_options.dynamic, _upt_solver_options.bitoff);
+    }
+    else if (_upt_solver_options.solver.compare("feast") == 0)
+    {
       Messages::info("Solving Tight Binding with FEAST eigensolver");
       inst->feast(_upt_solver_options.e_min, _upt_solver_options.e_max, _upt_solver_options.m0);
-  } 
-  else if (_upt_solver_options.solver.compare("jd") == 0)
-  {
-    Messages::info("\n("+get_name()+") solving using Jacobi-Davidson");
-
-    inst->jacobidavidson(_upt_solver_options.start_vb, _upt_solver_options.start_cb, 
-		     _upt_solver_options.n_vb, _upt_solver_options.n_cb,
-                     _upt_solver_options.guess_vb, _upt_solver_options.guess_cb,
-                     _upt_solver_options.long_tol);
-
-  }
-  else if (_upt_solver_options.solver.compare("lapack") == 0)
-  {
-    Messages::info("\n("+get_name()+") solving using LAPACK");
-    inst->lapack(_upt_solver_options.n_vb, _upt_solver_options.n_cb,
-                     _upt_solver_options.guess_vb, _upt_solver_options.guess_cb);
-  }
-  else if (_upt_solver_options.solver.compare("slepc") == 0) 
-  {
-      Messages::info("Solving Tight Binding with SLEPc eigensolver");
-      //copy_H_to_solver();
-
-
-  }
-    
-  Messages::info(" "); 
-  Messages::info("("+get_name()+") copy states from uptight"); 
-
-  int hdim = inst->get_H_dim();
-  int num_vb = _upt_solver_options.n_vb;
-  int num_ev = _upt_solver_options.n_vb + _upt_solver_options.n_cb;
-
-
-  double *eigvals = new double[num_ev];
-  Complex *eigvects = new Complex[hdim*num_ev];
-  int *particles = new int[num_ev];
-  Complex *eigtmp = eigvects;  // walking pointer on eigenvectors array
-
-  inst->get_states(num_ev,hdim,eigvals,eigvects,particles);
-
-  _solution.resize(num_ev);
-
-  //Set _solution_size in base class TightBinding 
-  _solution_size = _solution.size();
-
-  for(int i=0; i< num_ev; i++)
-  {
-
-    _solution[i].statistics = "Fermi";
-    _solution[i].eigen_energy = eigvals[i];
-    _solution[i].temperature = _upt_options.temperature;
-    _solution[i].eigen_vector.resize(hdim);
-
-    eigtmp = eigvects + i*hdim;
-
-    for(int j=0; j<hdim;j++)
-    {
-      _solution[i].eigen_vector[j] = *(eigtmp+j);
     }
-     
-    if(particles[i]==1)
-    { 
-       _solution[i].particle = "el";
-       if (_upt_options.potential_flag)
-       {
-	  _solution[i].electro_chem_pot = calculate_fermi_averaged(i);
-       }
-       else
-       {
+    else if (_upt_solver_options.solver.compare("jd") == 0)
+    {
+      Messages::info("\n("+get_name()+") solving using Jacobi-Davidson");
+
+      inst->jacobidavidson(_upt_solver_options.start_vb, _upt_solver_options.start_cb,
+          _upt_solver_options.n_vb, _upt_solver_options.n_cb,
+          _upt_solver_options.guess_vb, _upt_solver_options.guess_cb,
+          _upt_solver_options.long_tol);
+
+    }
+    else if (_upt_solver_options.solver.compare("lapack") == 0)
+    {
+      Messages::info("\n("+get_name()+") solving using LAPACK");
+      inst->lapack(_upt_solver_options.n_vb, _upt_solver_options.n_cb,
+          _upt_solver_options.guess_vb, _upt_solver_options.guess_cb);
+    }
+
+
+    Messages::info(" ");
+    Messages::info("("+get_name()+") copy states from uptight");
+
+    int hdim = inst->get_H_dim();
+    int num_vb = _upt_solver_options.n_vb;
+    int num_ev = _upt_solver_options.n_vb + _upt_solver_options.n_cb;
+
+
+    double *eigvals = new double[num_ev];
+    Complex *eigvects = new Complex[hdim*num_ev];
+    int *particles = new int[num_ev];
+    Complex *eigtmp = eigvects;  // walking pointer on eigenvectors array
+
+    inst->get_states(num_ev,hdim,eigvals,eigvects,particles);
+
+    _solution.resize(num_ev);
+
+    //Set _solution_size in base class TightBinding
+    _solution_size = _solution.size();
+
+    for(int i=0; i< num_ev; i++)
+    {
+
+      _solution[i].statistics = "Fermi";
+      _solution[i].eigen_energy = eigvals[i];
+      _solution[i].temperature = _upt_options.temperature;
+      _solution[i].eigen_vector.resize(hdim);
+
+      eigtmp = eigvects + i*hdim;
+
+      for(int j=0; j<hdim;j++)
+      {
+        _solution[i].eigen_vector[j] = *(eigtmp+j);
+      }
+
+      if(particles[i]==1)
+      {
+        _solution[i].particle = "el";
+        if (_upt_options.potential_flag)
+        {
+          _solution[i].electro_chem_pot = calculate_fermi_averaged(i);
+        }
+        else
+        {
           _solution[i].electro_chem_pot = _upt_options.el_chem_pot; 	
-       }
-    }
-    else if(particles[i]==-1) 
-    {
-       _solution[i].particle = "hl";
-       if (_upt_options.potential_flag)
-       {
-	  _solution[i].electro_chem_pot = calculate_fermi_averaged(i);
-       }
-       else
-       {
+        }
+      }
+      else if(particles[i]==-1)
+      {
+        _solution[i].particle = "hl";
+        if (_upt_options.potential_flag)
+        {
+          _solution[i].electro_chem_pot = calculate_fermi_averaged(i);
+        }
+        else
+        {
           _solution[i].electro_chem_pot = _upt_options.hl_chem_pot; 	
-       }
-    }
-    else
-    {
-       throw SolveFailedException("ETB: unkown particle type");
+        }
+      }
+      else
+      {
+        throw SolveFailedException("ETB: unkown particle type");
+      }
+
     }
 
+    delete [] eigvals;
+    delete [] eigvects;
+    delete [] particles;
   }
-
-  delete [] eigvals;
-  delete [] eigvects;
-  delete [] particles;
 
 
   // write state infos on screen.
@@ -765,6 +795,255 @@ ETB::call_uptight(void)
   declare_solution(MeshStatesNodes, NTUPLE, NODES, "1"+units, _solution_size);
 
 }
+
+
+std::pair<unsigned int, double>
+ETB::read_slepc_solution(void)
+{
+  //--------------------------------------------------------------------
+  //how many solutions do we have from SLEPC?
+  unsigned int number_of_converged_solutions;
+
+  number_of_converged_solutions = EigenSolver::number_of_converged_eigenvalues();
+
+  unsigned int number_of_eigenstates = _upt_solver_options.n_vb + _upt_solver_options.n_cb;
+  //--------------------------------------------------------------------
+  //read eigenvalues
+  //store also eigenvalue index for sorting
+
+  vector<EigenvalueProblem::eigen_state>  ev(number_of_converged_solutions);
+  double shift = EigenSolver::get_shift();
+
+  // if we have already solutions, we should use their energy levels to discriminate
+  // between el and hl
+  if (_upt_solver_options.n_vb < _solution.size() &&
+      _solution[_upt_solver_options.n_vb].eigen_vector.size() > 0)
+  {
+    shift = _solution[_upt_solver_options.n_vb].eigen_energy;
+  }
+  else if ((_upt_solver_options.n_vb > 0) &&
+           (_solution[_upt_solver_options.n_vb - 1].eigen_vector.size() > 0))
+  {
+    shift = _solution[_upt_solver_options.n_vb - 1].eigen_energy;
+  }
+
+  for (unsigned ind = 0; ind < number_of_converged_solutions; ind++)
+  {
+    ev[ind].energy =  EigenSolver::get_eigenvalue(ind);
+    ev[ind].index = ind;
+
+    if (ev[ind].energy > shift)
+      ev[ind].particle = "el";
+    else
+      ev[ind].particle = "hl";
+  }
+
+  // sorting of the solutions
+  // we sort both electrons and holes by distance from the ground state
+
+  sort(ev.begin(), ev.end(), compare_eigen_energy);
+
+  if (verbose() > 1)
+  {
+    Messages m;
+    ostringstream os;
+    os << "converged eigenenergies (" << number_of_converged_solutions
+        << "):";
+    m.info(os.str());
+    m.indent();
+
+    os.str("");
+    for (unsigned int i = 0; i < number_of_converged_solutions; ++i)
+    {
+      os << ev[i].energy << " ";
+      if (i%8 == 7)
+        os << "\n";
+    }
+    Messages::info(os.str());
+    m.newline();
+  }
+
+
+  // find the first electron state
+
+  unsigned int first_el_index = number_of_converged_solutions;
+  bool finish = false;
+
+  for (unsigned int i = 0; i < number_of_converged_solutions; i++)
+  {
+    if (ev[i].particle == "el")
+    {
+      first_el_index = i;
+      break;
+    }
+  }
+  //--------------------------------------------------------------------
+  //read eigenvectors
+
+  // The idea is that arriving here the _solution structure is set up,
+  // but all eigenvectors are empty or already calculated, valid eigenstates
+
+
+  // the first num_hl_states in _solution are holes, the upper
+  // num_el_states ones are electrons
+
+
+  const int n_states = _solution.size();
+
+  //----------------------------------------------------------------------
+  for (unsigned int i = 0; i < number_of_converged_solutions; i++)
+  {
+    // calculate the index in the final solution structure
+    int index = static_cast<int>(_upt_solver_options.n_vb + i) - first_el_index;
+    if (ev[i].particle == "hl")
+      index = i;
+
+    if (((ev[i].particle == "hl") && (index >= _upt_solver_options.n_vb)) ||
+        ((ev[i].particle == "el") && (index < _upt_solver_options.n_vb)) ||
+        ((index < 0) || (index >= n_states)))
+        continue;
+
+
+    // we need a small delta to decide if two states may be degenerate
+    // TODO adjust it automatically
+    const double delta = 1e-5;
+
+    // look for the first available slot
+    if (ev[i].particle == "el")
+    {
+      while ((index < n_states) &&
+             (_solution[index].eigen_vector.size() > 0))
+      {
+        index++;
+      }
+
+      if (index > _upt_solver_options.n_vb)
+      {
+        if ((index >= n_states) ||
+            (ev[i].energy < (_solution[index - 1].eigen_energy - delta))) // go to the next state
+          continue;
+
+      }
+    }
+    else // if (ev[i].particle == "hl")
+    {
+      while ((index < static_cast<int>(_upt_solver_options.n_vb)) &&
+             (_solution[index].eigen_vector.size() > 0))
+      {
+        index++;
+      }
+
+      if (index > 0)
+      {
+        if ((index >= static_cast<int>(_upt_solver_options.n_vb)) ||
+            (ev[i].energy > _solution[index - 1].eigen_energy + delta)) // go to the next state
+          continue;
+
+      }
+    }
+
+    // we found a (potentially) valid slot and fill it
+    _solution[index].eigen_energy = ev[i].energy;
+    _solution[index].particle = ev[i].particle;
+    _solution[index].statistics = "Fermi";
+    _solution[index].temperature = _upt_options.temperature;
+
+
+    unsigned int solution_number = ev[i].index;
+
+    //EigenSolver::get_eigen_vector(solution_number, temp);
+    EigenSolver::get_eigen_vector(solution_number, _solution[index].eigen_vector);
+
+    this->get_solver_communicator().allgather(_solution[index].eigen_vector);
+
+    if (_upt_options.potential_flag)
+    {
+      _solution[index].electro_chem_pot = calculate_fermi_averaged(index);
+    }
+    else
+    {
+      if (_solution[index].particle == "el")
+        _solution[i].electro_chem_pot = _upt_options.el_chem_pot;
+      else
+        _solution[i].electro_chem_pot = _upt_options.hl_chem_pot;
+    }
+
+    //
+    //normalization
+    //
+    //double norm = eigenstate_norm(index);
+
+    //for (unsigned int j = 0; j < number_of_all_dofs; j++)
+    //  _solution[index].eigen_vector[j] /= Complex(norm, 0.0);
+
+
+
+  }
+
+  // the 1e-5 below is to not make the Hamiltonian singular,
+  // and to be sure to take all states
+
+  double Ec = shift;
+  double Ev = shift;
+
+  double new_shift = shift;
+
+  bool foundall = true;
+
+  // did we find all electron eigenstates?
+  int n_eig = _upt_solver_options.n_vb;
+  for ( ; n_eig < n_states; n_eig++)
+  {
+    if (_solution[n_eig].eigen_vector.size() == 0)
+    {
+      foundall = false;
+      break;
+    }
+    else
+      new_shift = _solution[n_eig].eigen_energy - 1e-5;
+  }
+
+  if (n_eig == _upt_solver_options.n_vb)
+  {
+    // in this case we found no electron state at all, so set shift near Ec
+    new_shift = _upt_solver_options.guess_cb;
+  }
+  // if not all are found, look for so many electron states:
+  number_of_eigenstates = _upt_solver_options.n_cb - (n_eig - _upt_solver_options.n_vb) + 1;
+
+  if (foundall)
+  {
+    new_shift = shift;
+
+    // did we find all hole eigenstates?
+    for (n_eig = static_cast<int>(_upt_solver_options.n_vb) - 1; n_eig >= 0; n_eig--)
+    {
+      if (_solution[n_eig].eigen_vector.size() == 0)
+      {
+        foundall = false;
+        break;
+      }
+      else
+        new_shift = _solution[n_eig].eigen_energy + 1e-5;
+    }
+
+    if (n_eig == static_cast<int>(_upt_solver_options.n_vb) - 1)
+    {
+      // in this case we found no state at all, so set shift near Ev
+      new_shift = _upt_solver_options.guess_vb;
+
+    }
+    number_of_eigenstates = n_eig + 1;
+
+  }
+
+
+  return(make_pair(number_of_eigenstates, new_shift));
+
+}
+
+
+
 
 //-------------------------------------------------------------------------
 void ETB::do_assemble(const ModelOptions& options)
@@ -1059,7 +1338,7 @@ void ETB::parse_options(void)
 
  
   // Solver options: "upt_lanczos"  
-  _upt_solver_options.solver = solopts.get_option("solver", "upt_lanczos");
+  _upt_solver_options.solver = solopts.get_option("solver", "lanczos");
   string solver_type = solopts.get_option("solver_type", "cpu");
   if ( solver_type == "cpu") _upt_solver_options.solver_flag = 0;
   if ( solver_type == "gpu") _upt_solver_options.solver_flag = 1;
@@ -2272,10 +2551,13 @@ void ETB::do_copy_H_to_solver( )
   
   vector<int> non_zeros_number(size_matrix);
   vector<int> offdiag_nnz(0);
+  int nnz = 0;
 
   for (int row = 0 ; row < size_matrix; row++)	
   {
-    non_zeros_number[row] = inst->get_H_row_size(row);	  
+    // nrow + 1 to get Fortran indexing
+    non_zeros_number[row] = inst->get_H_row_size(row + 1);
+    nnz += non_zeros_number[row];
   }
 
 
@@ -2288,16 +2570,16 @@ void ETB::do_copy_H_to_solver( )
   
   for (int row = 0 ; row < size_matrix; row++)
   {
-      int n_cols = 0;
-	
-      vector<unsigned int> column_vector;
-      vector<Complex> row_values;
 
-      n_cols = inst->get_H_row_size(row);
+      // nrow + 1 to get Fortran indexing
+      int n_cols = inst->get_H_row_size(row + 1);
+
+      vector<unsigned int> column_vector(n_cols);
+      vector<Complex> row_values(n_cols);
  
-      inst->get_H_row(row, reinterpret_cast<int*>(column_vector.data()), row_values.data());
+      inst->get_H_row(row + 1, reinterpret_cast<int*>(column_vector.data()), row_values.data());
 
-      EigenSolver::insert_matrix_row('H', row, column_vector, row_values);
+      EigenSolver::insert_matrix_row('H', row, column_vector, row_values, 1);
   }
 
   EigenSolver::finalize_matrix_assembly('H');
@@ -2490,7 +2772,7 @@ ETB::project_densities(const Elem* elem, const Point& point, double cutoff)
 
         default:
         {
-          double factor = normalization * exp(-delta_r.size_sq() / sigma2);
+          double factor = normalization * exp(-delta_r.norm_sq() / sigma2);
           densities.first += _el_atomic_charges[atom_id] * factor;
           densities.second += _hl_atomic_charges[atom_id] * factor;
           //densities.first += _el_atomic_charges[atom_id] * normalization / coordination;

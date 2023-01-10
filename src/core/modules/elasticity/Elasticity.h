@@ -4,16 +4,19 @@
 #define _ELASTICITY_H_
 
 #include "SimulationInterface.h"
-#include "tensor_value.h"
-#include "tensor.h"
+#include "TiberLinearSystem.h"
 #include "tiber_dll.h"
 #include "Device.h"
+
+#include "tensor_value.h"
+#include "tensor.h"
+
+
 /*!
  * 
- * \brief This is an example implementation of the Poisson equation to
- *        help module development.
+ * \brief This implements the linear elasticity model.
  *
- * Illustrates the basic usage of the SimulationInterface API.
+ *
  */
 class TBDLLOCAL Elasticity : public SimulationInterface
 {
@@ -30,6 +33,8 @@ class TBDLLOCAL Elasticity : public SimulationInterface
     //! We need a public static creator function
     static Elasticity* create(const ModelOptions& options);
 
+    //! The assembly function
+    void assemble(void);
 
 
   protected:
@@ -70,6 +75,25 @@ class TBDLLOCAL Elasticity : public SimulationInterface
 
 
   private:
+
+    // A local helper class to be used to access assembly routine
+    class MyAssembly : public TiberLinearSystem::Assembly
+    {
+      public:
+      MyAssembly(Elasticity* obj) : _obj(obj) {};
+
+      void assemble() override
+      {
+        _obj->assemble();
+      }
+
+      private:
+      Elasticity* _obj;
+
+    };
+
+    MyAssembly _my_assembly;
+
 
     //! We need this to store the accumulated elemental strain
     class SymTensor
@@ -185,14 +209,6 @@ class TBDLLOCAL Elasticity : public SimulationInterface
      */
     Elasticity(const ModelOptions& options);
 
-    //! The assembly function
-    static void assemble(libMesh::EquationSystems& es, const std::string& system_name);
-
-    //! The real assembly function
-    void do_assemble(libMesh::EquationSystems& es, const std::string& system_name);
-
-    //! A static pointer to this
-    static Elasticity* _this;
 
     //! Apply the deformation
     void apply_shape_deformation();
@@ -211,11 +227,6 @@ class TBDLLOCAL Elasticity : public SimulationInterface
 };
 
 
-void
-Elasticity::assemble(libMesh::EquationSystems& es, const std::string& system_name)
-{
-  _this->do_assemble(es, system_name);
-}
 
 
 #endif // _ELASTICITY_H_

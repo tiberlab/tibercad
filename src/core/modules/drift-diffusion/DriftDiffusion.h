@@ -784,6 +784,12 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
 // inline member functions
 //
 
+inline
+DriftDiffusion*
+DriftDiffusion::create(const ModelOptions& options)
+{
+  return new DriftDiffusion(options);
+}
 
 
 inline

@@ -249,6 +249,13 @@ void UptWrapper::get_states(int num_ev, int hdim, double* eigenvals,
 }
 
 
+void UptWrapper::set_state(int num_ev, int id, int hdim, double eigval,
+    const std::vector<Complex>& state, int particle)
+{
+  f77_upt_set_state(_handler, num_ev, id+1, hdim, eigval, state.data(), particle);
+}
+
+
 Complex UptWrapper::get_matel(int i, int j)
 {
 

@@ -9,6 +9,7 @@
 
 #include "mesh_base.h"
 #include "quadrature.h"
+#include "enum_quadrature_type.h"
 
 #include "TiberModule.h"
 
@@ -129,7 +130,7 @@ DirectRecombination::do_reinit(void)
 
         unsigned int dim = sim->get_mesh().mesh_dimension();
         libMesh::UniquePtr<libMesh::FEBase> fe(sim->build_finite_element(dim, libMesh::FEType()));
-        libMesh::UniquePtr<libMesh::QBase> qrule(libMesh::QBase::build(libMeshEnums::QGAUSS, dim, libMeshEnums::FIFTH));
+        libMesh::UniquePtr<libMesh::QBase> qrule(libMesh::QBase::build(libMesh::QGAUSS, dim, libMeshEnums::FIFTH));
         fe->attach_quadrature_rule(qrule.get());
 
         const vector<Real>& JxW = fe->get_JxW();

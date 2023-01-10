@@ -1,0 +1,796 @@
+
+Log start: Wed Jun  1 09:40:15 2022
+
+
+tiberCAD release 3.1.0 (rev. 5197, x86_64-linux)
+
+Input file: tut_09.tib
+
+Initialize global simulation options
+  Simulation temperature: 300 K
+  Database search path  : /home/maufder/Work/TiberCAD/3.0/materials
+  Log file              : output_modified/tut_09.log.0
+
+Setup mesh
+  Reading mesh file 'diode.msh ...
+    mesh reading time: 0h 0m 0.034s
+    mesh preparation time: 0h 0m 0.019s
+    bd_regions preparation time: 0h 0m 0.00027s
+
+    mesh units          : 1e-06 m
+    mesh dimension      :       2
+    number of nodes     :    5824
+    number of elements  :    7749
+    number of subdomains:       3
+    number of boundaries:       5
+
+    Using cylinder symmetry (=> 3D simulation)
+Create materials ...
+  Added material Si for region 'n_side' (mesh regions 1)
+    (using datafile /home/maufder/Work/TiberCAD/3.0/materials/Si.dat)
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+  Added material Si for region 'p_side' (mesh regions 2)
+    (using datafile /home/maufder/Work/TiberCAD/3.0/materials/Si.dat)
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+
+*** Warning: found unused options in block : x-growth-direction, y-growth-direction, z-growth-direction
+  Added material Air for region 'air' (mesh regions 3)
+    (using datafile /home/maufder/Work/TiberCAD/3.0/materials/Air.dat)
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+Creation of materials done.
+
+Setting up simulation of type 'driftdiffusion' ...
+  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/driftdiffusion/driftdiffusion.so)
+  Adding boundary 'anode'
+  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/driftdiffusion/ddbnd_ohmic.so)
+  Adding boundary 'cathode'
+Creating bulk models... 
+  Region: n_side
+  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/driftdiffusion/ddbulk_default.so)
+  Region: p_side
+(using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/driftdiffusion/recombination_srh.so)
+
+Setting up simulation of type 'thermal' ...
+  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/thermal/thermal.so)
+  Adding boundary 'dissipator'
+  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/thermal/thermal_bnd_surface_resistance.so)
+Creating bulk models... 
+  Region: n_side
+  Region: p_side
+  Region: air
+
+Setting up simulation of type 'selfconsistent' ...
+
+Setting up simulation of type 'sweep' ...
+
+Setting up bulk models ...
+  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/thermal_conductivity_constant.so)
+  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/heat_source_joule.so)
+  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/permittivity_constant.so)
+  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/driftdiffusion/band_properties.so)
+  (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/driftdiffusion/mobility_doping_dependent.so)
+    (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/density_of_states_bulk.so)
+    (using /home/maufder/Work/TiberCAD/3.0/x86_64-linux/modules/driftdiffusion/mobility_constant.so)
+
+Setting up lower dimensional (boundary) models ...
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for dd (driftdiffusion)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+
+Available solution variables:
+------------------------------------------------------------------
+Name                     Units          Type      Association Plot
+------------------------------------------------------------------
+Ec                       eV             real      nodal       y
+Ev                       eV             real      nodal       y
+eQFermi                  eV             real      nodal       y
+hQFermi                  eV             real      nodal       y
+ElPotential              V              real      nodal       n
+Ec0                      eV             real      nodal       n
+Ev0                      eV             real      nodal       n
+Eg                       eV             real      nodal       n
+ConductionBands          eV             n-tuple   cell        n
+ValenceBands             eV             n-tuple   cell        n
+eDensity                 cm^-3          real      nodal       y
+hDensity                 cm^-3          real      nodal       y
+ChargeDensity            cm^-3          real      nodal       n
+eMobility                cm^2/(V*s)     real      nodal       y
+hMobility                cm^2/(V*s)     real      nodal       y
+eConductivity            S/cm           real      nodal       n
+hConductivity            S/cm           real      nodal       n
+ElField                  V/cm           vector    cell        n
+Polarization             C/m^2          vector    cell        n
+Displacement             C/m^2          vector    cell        n
+CurrentDensity           A/cm^2         vector    cell        n
+eCurrentDensity          A/cm^2         vector    cell        y
+hCurrentDensity          A/cm^2         vector    cell        y
+IonizedDonors            cm^-3          real      nodal       n
+IonizedAcceptors         cm^-3          real      nodal       n
+IonizedElectronTraps     cm^-3          real      nodal       n
+IonizedHoleTraps         cm^-3          real      nodal       n
+eThElPower               eV/K           real      nodal       y
+hThElPower               eV/K           real      nodal       y
+eJoule                   W/cm^3         real      nodal       y
+hJoule                   W/cm^3         real      nodal       y
+ePowerFlux               W/cm^2         vector    nodal       y
+hPowerFlux               W/cm^2         vector    nodal       y
+ePeltier                 W/cm^3         real      nodal       y
+hPeltier                 W/cm^3         real      nodal       y
+RecombHeat               W/cm^3         real      nodal       y
+IQE                                     real      none        n
+ArtificialDiffusion                     real      nodal       n
+eNetRecombination        1/(s*cm^3)     real      nodal       y
+eSRHRecombination        1/(s*cm^3)     real      nodal       y
+hNetRecombination        1/(s*cm^3)     real      nodal       y
+hSRHRecombination        1/(s*cm^3)     real      nodal       y
+anode.current            A              real      none        y
+cathode.current          A              real      none        y
+RegionIDs                               real      cell        n
+------------------------------------------------------------------
+
+Output directory      : output_modified
+Output file format    : vtk
+Output file basename  : dd
+
+
+solving for : poisson electrons holes 
+using local scaling
+
+# Region n_side, Si
+  Conduction band:
+    DOS: bulk
+      band : energy  DOS mass  degeneracy
+      1 : 2.22348  0.320972  12
+    Ec = 2.22348, Nc = 2.73795e+19 cm^-3
+    m_dos = 0.320972, v_th = 2.06151e+07 cm/s
+  Valence band:
+    DOS: bulk
+      band : energy  DOS mass  degeneracy
+      1 : 1.10467  1.63813  2
+    Ev = 1.10467, Nv = 5.26133e+19 cm^-3
+    m_dos = 1.63813, v_th = 9.12524e+06 cm/s
+  Eg = 1.11881, Ef0 = 2.13422, ni = 1.51098e+10
+
+# Region p_side, Si
+  Conduction band:
+    DOS: bulk
+      band : energy  DOS mass  degeneracy
+      1 : 2.22348  0.320972  12
+    Ec = 2.22348, Nc = 2.73795e+19 cm^-3
+    m_dos = 0.320972, v_th = 2.06151e+07 cm/s
+  Valence band:
+    DOS: bulk
+      band : energy  DOS mass  degeneracy
+      1 : 1.10467  1.63813  2
+    Ev = 1.10467, Nv = 5.26133e+19 cm^-3
+    m_dos = 1.63813, v_th = 9.12524e+06 cm/s
+  Eg = 1.11881, Ef0 = 1.20924, ni = 1.51469e+10
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for tt (thermal)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+
+Available solution variables:
+------------------------------------------------------------------
+Name                     Units          Type      Association Plot
+------------------------------------------------------------------
+LatticeTemp              K              real      nodal       y
+ThermalFlux              W/m^2          vector    nodal       y
+HeatSource               W/m^3          real      nodal       y
+ThermCond                W/m K          vector    nodal       y
+MaxTemp                  K              real      none        y
+RegionIDs                               real      cell        n
+------------------------------------------------------------------
+
+Output directory      : output_modified
+Output file format    : vtk
+Output file basename  : tt
+
+
+# Region air, Air
+  Thermal conductivity:
+    Kxx: 0.026 W/(m K)
+    Kyy: 0.026 W/(m K)
+    Kzz: 0.026 W/(m K)
+
+
+# Region n_side, Si
+  Thermal conductivity:
+    Kxx: 150 W/(m K)
+    Kyy: 150 W/(m K)
+    Kzz: 150 W/(m K)
+
+
+# Region p_side, Si
+  Thermal conductivity:
+    Kxx: 150 W/(m K)
+    Kyy: 150 W/(m K)
+    Kzz: 150 W/(m K)
+
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for selfconsistent (selfconsistent)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+
+Output directory      : output_modified
+Output file format    : vtk
+Output file basename  : selfconsistent
+
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for sweep (sweep)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+
+Output directory      : output_modified
+Output file format    : vtk
+Output file basename  : sweep
+
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+We solve: sweep 
+
+>>>>--------------------------------- (sweep) ----------------------------------
+  Ramping to sweep value $Vb = 0
+
+*** Warning: selfconsistent has never been solved before ramping.
+  Trying $Vb = 0
+
+  >>>>---------------------------- (selfconsistent) ----------------------------
+
+    >>>>--------------------------------- (dd) ---------------------------------
+      Setting max_iterations for nonlinear solver to 150
+      Solving equilibrium
+      it 1, |du| = 807.473, |r| = 2561.98  alpha = 0.0078125
+      it 2, |du| = 393.332, |r| = 1347.49  alpha = 0.03125
+      it 3, |du| = 5.70701, |r| = 471.223  alpha = 0.5
+      it 4, |du| = 2.60738, |r| = 61.936  alpha = 1
+      it 5, |du| = 0.143091, |r| = 2.6946  alpha = 1
+      it 6, |du| = 0.0111, |r| = 0.0144916  alpha = 1
+
+      iterations: 7, |du| = 6.12399e-05, |r| = 4.37897e-07
+      Equilibrium done
+
+    Solve time: 0h 0m 6.4s
+    <<<<------------------------------------------------------------------------
+
+    >>>>--------------------------------- (tt) ---------------------------------
+
+      Setup of grid mapper: 0h 0m 0.00084s, memory usage: 0 MB 
+      Maximum temperature : 300 K
+
+    Solve time: 0h 0m 0.69s
+    <<<<------------------------------------------------------------------------
+    selfconsistent (Relaxation): iteration 0
+      correction (max norm):  2.39994e-05
+      relative error (l2)  :  6.83228e-08
+
+  Solve time: 0h 0m 7.1s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.1
+  Trying $Vb = 0.1
+
+  >>>>---------------------------- (selfconsistent) ----------------------------
+
+    >>>>--------------------------------- (dd) ---------------------------------
+      it 1, |du| = 3.86817, |r| = 53.0761  alpha = 1
+      it 2, |du| = 0.96191, |r| = 18.6266  alpha = 1
+      it 3, |du| = 0.900295, |r| = 6.09879  alpha = 1
+      it 4, |du| = 0.754614, |r| = 1.68701  alpha = 1
+      it 5, |du| = 0.477981, |r| = 0.304272  alpha = 1
+      it 6, |du| = 0.157967, |r| = 0.0189252  alpha = 1
+      it 7, |du| = 0.0138542, |r| = 0.000108442  alpha = 1
+
+      iterations: 8, |du| = 9.66807e-05, |r| = 4.69828e-09
+      Surface recombination current = 0
+
+      contact name:       voltage:            current:
+      anode               0.1                -8.82052e-15
+      cathode             0                   8.81853e-15
+
+    Solve time: 0h 0m 6.8s
+    <<<<------------------------------------------------------------------------
+
+    >>>>--------------------------------- (tt) ---------------------------------
+      Maximum temperature : 300 K
+
+    Solve time: 0h 0m 0.68s
+    <<<<------------------------------------------------------------------------
+    selfconsistent (Relaxation): iteration 0
+      correction (max norm):  4.44013e-05
+      relative error (l2)  :  1.31876e-07
+
+  Solve time: 0h 0m 7.5s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.2
+  Trying $Vb = 0.2
+
+  >>>>---------------------------- (selfconsistent) ----------------------------
+
+    >>>>--------------------------------- (dd) ---------------------------------
+      it 1, |du| = 3.86817, |r| = 14.388  alpha = 1
+      it 2, |du| = 3.80021, |r| = 9.6809  alpha = 0.244129
+      it 3, |du| = 1.0132, |r| = 3.64014  alpha = 0.5
+      it 4, |du| = 0.222428, |r| = 0.526982  alpha = 1
+      it 5, |du| = 0.0209413, |r| = 0.00611137  alpha = 1
+
+      iterations: 6, |du| = 0.000214045, |r| = 6.8307e-07
+      Surface recombination current = 0
+
+      contact name:       voltage:            current:
+      anode               0.2                -4.52411e-13
+      cathode             0                   4.52402e-13
+
+    Solve time: 0h 0m 5.6s
+    <<<<------------------------------------------------------------------------
+
+    >>>>--------------------------------- (tt) ---------------------------------
+      Maximum temperature : 300 K
+
+    Solve time: 0h 0m 0.7s
+    <<<<------------------------------------------------------------------------
+    selfconsistent (Relaxation): iteration 0
+      correction (max norm):  2.82429e-05
+      relative error (l2)  :  8.27425e-08
+
+  Solve time: 0h 0m 6.3s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.3
+  Trying $Vb = 0.3
+
+  >>>>---------------------------- (selfconsistent) ----------------------------
+
+    >>>>--------------------------------- (dd) ---------------------------------
+      it 1, |du| = 3.86817, |r| = 29.2358  alpha = 1
+      it 2, |du| = 3.73287, |r| = 16.182  alpha = 0.5
+      it 3, |du| = 0.280638, |r| = 1.99985  alpha = 1
+      it 4, |du| = 0.0356689, |r| = 0.0265425  alpha = 1
+
+      iterations: 5, |du| = 0.00063243, |r| = 5.02987e-06
+      Surface recombination current = 0
+
+      contact name:       voltage:            current:
+      anode               0.3                -2.17238e-11
+      cathode             0                   2.17238e-11
+
+    Solve time: 0h 0m 4.6s
+    <<<<------------------------------------------------------------------------
+
+    >>>>--------------------------------- (tt) ---------------------------------
+      Maximum temperature : 300 K
+
+    Solve time: 0h 0m 0.73s
+    <<<<------------------------------------------------------------------------
+    selfconsistent (Relaxation): iteration 0
+      correction (max norm):  0.000209771
+      relative error (l2)  :  6.31908e-07
+
+  Solve time: 0h 0m 5.3s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.4
+  Trying $Vb = 0.4
+
+  >>>>---------------------------- (selfconsistent) ----------------------------
+
+    >>>>--------------------------------- (dd) ---------------------------------
+      it 1, |du| = 3.86817, |r| = 33.5877  alpha = 1
+      it 2, |du| = 3.72288, |r| = 18.6433  alpha = 0.5
+      it 3, |du| = 0.293111, |r| = 2.09265  alpha = 1
+      it 4, |du| = 0.0330748, |r| = 0.0268686  alpha = 1
+
+      iterations: 5, |du| = 0.000539484, |r| = 4.4864e-06
+      Surface recombination current = 0
+
+      contact name:       voltage:            current:
+      anode               0.4                -1.03829e-09
+      cathode             0                   1.03829e-09
+
+    Solve time: 0h 0m 4.8s
+    <<<<------------------------------------------------------------------------
+
+    >>>>--------------------------------- (tt) ---------------------------------
+      Maximum temperature : 300 K
+
+    Solve time: 0h 0m 0.74s
+    <<<<------------------------------------------------------------------------
+    selfconsistent (Relaxation): iteration 0
+      correction (max norm):  8.20528e-05
+      relative error (l2)  :  2.50345e-07
+
+  Solve time: 0h 0m 5.5s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.5
+  Trying $Vb = 0.5
+
+  >>>>---------------------------- (selfconsistent) ----------------------------
+
+    >>>>--------------------------------- (dd) ---------------------------------
+      it 1, |du| = 3.86817, |r| = 31.6888  alpha = 1
+      it 2, |du| = 3.79873, |r| = 16.7585  alpha = 0.5
+      it 3, |du| = 0.276392, |r| = 2.13735  alpha = 1
+      it 4, |du| = 0.04537, |r| = 0.0337323  alpha = 1
+      it 5, |du| = 0.00104954, |r| = 1.47184e-05  alpha = 1
+
+      iterations: 6, |du| = 5.50882e-07, |r| = 6.2993e-12
+      Surface recombination current = 0
+
+      contact name:       voltage:            current:
+      anode               0.5                -4.96239e-08
+      cathode             0                   4.96239e-08
+
+    Solve time: 0h 0m 5.9s
+    <<<<------------------------------------------------------------------------
+
+    >>>>--------------------------------- (tt) ---------------------------------
+      Maximum temperature : 300 K
+
+    Solve time: 0h 0m 0.72s
+    <<<<------------------------------------------------------------------------
+    selfconsistent (Relaxation): iteration 0
+      correction (max norm):  0.000140141
+      relative error (l2)  :  4.16994e-07
+
+  Solve time: 0h 0m 6.7s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.6
+  Trying $Vb = 0.6
+
+  >>>>---------------------------- (selfconsistent) ----------------------------
+
+    >>>>--------------------------------- (dd) ---------------------------------
+      it 1, |du| = 3.86817, |r| = 22.7398  alpha = 1
+      it 2, |du| = 3.78998, |r| = 14.0861  alpha = 0.5
+      it 3, |du| = 0.272191, |r| = 1.87274  alpha = 1
+      it 4, |du| = 0.043487, |r| = 0.0326974  alpha = 1
+
+      iterations: 5, |du| = 0.00095551, |r| = 1.42442e-05
+      Surface recombination current = 0
+
+      contact name:       voltage:            current:
+      anode               0.6                -2.37085e-06
+      cathode             0                   2.37085e-06
+
+    Solve time: 0h 0m 5s
+    <<<<------------------------------------------------------------------------
+
+    >>>>--------------------------------- (tt) ---------------------------------
+      Maximum temperature : 300 K
+
+    Solve time: 0h 0m 0.86s
+    <<<<------------------------------------------------------------------------
+    selfconsistent (Relaxation): iteration 0
+      correction (max norm):  0.00042394
+      relative error (l2)  :  1.32183e-06
+
+  Solve time: 0h 0m 5.9s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.7
+  Trying $Vb = 0.7
+
+  >>>>---------------------------- (selfconsistent) ----------------------------
+
+    >>>>--------------------------------- (dd) ---------------------------------
+      it 1, |du| = 3.86817, |r| = 23.4463  alpha = 1
+      it 2, |du| = 3.72633, |r| = 13.0697  alpha = 0.5
+      it 3, |du| = 0.256204, |r| = 1.58698  alpha = 1
+      it 4, |du| = 0.0371879, |r| = 0.0228772  alpha = 1
+
+      iterations: 5, |du| = 0.000765989, |r| = 6.63886e-06
+      Surface recombination current = 0
+
+      contact name:       voltage:            current:
+      anode               0.7                -0.000111269
+      cathode             0                   0.000111269
+
+    Solve time: 0h 0m 4.9s
+    <<<<------------------------------------------------------------------------
+
+    >>>>--------------------------------- (tt) ---------------------------------
+      Maximum temperature : 300.017 K
+
+    Solve time: 0h 0m 0.72s
+    <<<<------------------------------------------------------------------------
+    selfconsistent (Relaxation): iteration 0
+      correction (max norm):  0.0162532
+      relative error (l2)  :  5.08236e-05
+
+  Solve time: 0h 0m 5.6s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.8
+  Trying $Vb = 0.8
+
+  >>>>---------------------------- (selfconsistent) ----------------------------
+
+    >>>>--------------------------------- (dd) ---------------------------------
+      it 1, |du| = 3.86817, |r| = 19.7188  alpha = 1
+      it 2, |du| = 1.90202, |r| = 6.01948  alpha = 1
+      it 3, |du| = 0.529529, |r| = 1.09335  alpha = 1
+      it 4, |du| = 0.196641, |r| = 0.108061  alpha = 1
+      it 5, |du| = 0.0211755, |r| = 0.00141301  alpha = 1
+
+      iterations: 6, |du| = 0.000214792, |r| = 1.99312e-07
+      Surface recombination current = 0
+
+      contact name:       voltage:            current:
+      anode               0.8                -0.00329059
+      cathode             0                   0.00329059
+
+    Solve time: 0h 0m 5.3s
+    <<<<------------------------------------------------------------------------
+
+    >>>>--------------------------------- (tt) ---------------------------------
+      Maximum temperature : 300.509 K
+
+    Solve time: 0h 0m 0.71s
+    <<<<------------------------------------------------------------------------
+    selfconsistent (Relaxation): iteration 0
+      correction (max norm):  0.492609
+      relative error (l2)  :  0.00153893
+
+    >>>>--------------------------------- (dd) ---------------------------------
+
+      iterations: 1, |du| = 2.17472e-08, |r| = 6.8195e-13
+      Surface recombination current = 0
+
+      contact name:       voltage:            current:
+      anode               0.8                -0.00329059
+      cathode             0                   0.00329059
+
+    Solve time: 0h 0m 0.9s
+    <<<<------------------------------------------------------------------------
+
+    >>>>--------------------------------- (tt) ---------------------------------
+      Maximum temperature : 300.509 K
+
+    Solve time: 0h 0m 0.71s
+    <<<<------------------------------------------------------------------------
+    selfconsistent (Relaxation): iteration 1
+      correction (max norm):  1.6186e-05
+      relative error (l2)  :  3.81709e-08
+
+  Solve time: 0h 0m 7.6s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.9
+  Trying $Vb = 0.9
+
+  >>>>---------------------------- (selfconsistent) ----------------------------
+
+    >>>>--------------------------------- (dd) ---------------------------------
+      it 1, |du| = 3.86817, |r| = 7.31241  alpha = 1
+      it 2, |du| = 0.621482, |r| = 2.11816  alpha = 1
+      it 3, |du| = 0.191084, |r| = 0.241451  alpha = 1
+      it 4, |du| = 0.0165257, |r| = 0.00191206  alpha = 1
+
+      iterations: 5, |du| = 0.000106378, |r| = 1.29253e-07
+      Surface recombination current = 0
+
+      contact name:       voltage:            current:
+      anode               0.9                -0.0194995
+      cathode             0                   0.0194995
+
+    Solve time: 0h 0m 4.3s
+    <<<<------------------------------------------------------------------------
+
+    >>>>--------------------------------- (tt) ---------------------------------
+      Maximum temperature : 303.421 K
+
+    Solve time: 0h 0m 0.81s
+    <<<<------------------------------------------------------------------------
+    selfconsistent (Relaxation): iteration 0
+      correction (max norm):  2.91138
+      relative error (l2)  :  0.00903791
+
+    >>>>--------------------------------- (dd) ---------------------------------
+
+      iterations: 1, |du| = 6.395e-09, |r| = 7.3692e-13
+      Surface recombination current = 0
+
+      contact name:       voltage:            current:
+      anode               0.9                -0.0194995
+      cathode             0                   0.0194995
+
+    Solve time: 0h 0m 0.94s
+    <<<<------------------------------------------------------------------------
+
+    >>>>--------------------------------- (tt) ---------------------------------
+      Maximum temperature : 303.421 K
+
+    Solve time: 0h 0m 0.74s
+    <<<<------------------------------------------------------------------------
+    selfconsistent (Relaxation): iteration 1
+      correction (max norm):  0.000100847
+      relative error (l2)  :  2.90728e-07
+
+  Solve time: 0h 0m 6.8s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1
+  Trying $Vb = 1
+
+  >>>>---------------------------- (selfconsistent) ----------------------------
+
+    >>>>--------------------------------- (dd) ---------------------------------
+      it 1, |du| = 3.86817, |r| = 1.10168  alpha = 1
+      it 2, |du| = 0.298132, |r| = 0.155494  alpha = 1
+      it 3, |du| = 0.0525984, |r| = 0.00343773  alpha = 1
+      it 4, |du| = 0.00148613, |r| = 3.04769e-06  alpha = 1
+
+      iterations: 5, |du| = 1.16285e-06, |r| = 2.81279e-12
+      Surface recombination current = 0
+
+      contact name:       voltage:            current:
+      anode               1                  -0.044924
+      cathode             0                   0.044924
+
+    Solve time: 0h 0m 4.2s
+    <<<<------------------------------------------------------------------------
+
+    >>>>--------------------------------- (tt) ---------------------------------
+      Maximum temperature : 308.738 K
+
+    Solve time: 0h 0m 0.71s
+    <<<<------------------------------------------------------------------------
+    selfconsistent (Relaxation): iteration 0
+      correction (max norm):  5.31876
+      relative error (l2)  :  0.0162409
+
+    >>>>--------------------------------- (dd) ---------------------------------
+
+      iterations: 1, |du| = 7.32274e-13, |r| = 7.54951e-13
+      Surface recombination current = 0
+
+      contact name:       voltage:            current:
+      anode               1                  -0.044924
+      cathode             0                   0.044924
+
+    Solve time: 0h 0m 0.89s
+    <<<<------------------------------------------------------------------------
+
+    >>>>--------------------------------- (tt) ---------------------------------
+      Maximum temperature : 308.738 K
+
+    Solve time: 0h 0m 0.71s
+    <<<<------------------------------------------------------------------------
+    selfconsistent (Relaxation): iteration 1
+      correction (max norm):  4.1289e-05
+      relative error (l2)  :  1.14845e-07
+
+  Solve time: 0h 0m 6.5s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.1
+  Trying $Vb = 1.1
+
+  >>>>---------------------------- (selfconsistent) ----------------------------
+
+    >>>>--------------------------------- (dd) ---------------------------------
+      it 1, |du| = 3.86817, |r| = 0.454961  alpha = 1
+      it 2, |du| = 0.180437, |r| = 0.0277159  alpha = 1
+      it 3, |du| = 0.0176754, |r| = 0.000158634  alpha = 1
+
+      iterations: 4, |du| = 0.000161219, |r| = 1.76508e-08
+      Surface recombination current = 0
+
+      contact name:       voltage:            current:
+      anode               1.1                -0.07483
+      cathode             0                   0.07483
+
+    Solve time: 0h 0m 3.1s
+    <<<<------------------------------------------------------------------------
+
+    >>>>--------------------------------- (tt) ---------------------------------
+      Maximum temperature : 315.916 K
+
+    Solve time: 0h 0m 0.71s
+    <<<<------------------------------------------------------------------------
+    selfconsistent (Relaxation): iteration 0
+      correction (max norm):  7.17851
+      relative error (l2)  :  0.0214381
+
+    >>>>--------------------------------- (dd) ---------------------------------
+
+      iterations: 1, |du| = 1.31633e-08, |r| = 7.78826e-13
+      Surface recombination current = 0
+
+      contact name:       voltage:            current:
+      anode               1.1                -0.07483
+      cathode             0                   0.07483
+
+    Solve time: 0h 0m 0.89s
+    <<<<------------------------------------------------------------------------
+
+    >>>>--------------------------------- (tt) ---------------------------------
+      Maximum temperature : 315.916 K
+
+    Solve time: 0h 0m 0.71s
+    <<<<------------------------------------------------------------------------
+    selfconsistent (Relaxation): iteration 1
+      correction (max norm):  0.000172916
+      relative error (l2)  :  4.87277e-07
+
+  Solve time: 0h 0m 5.4s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.2
+  Trying $Vb = 1.2
+
+  >>>>---------------------------- (selfconsistent) ----------------------------
+
+    >>>>--------------------------------- (dd) ---------------------------------
+      it 1, |du| = 3.86817, |r| = 0.269997  alpha = 1
+      it 2, |du| = 0.113896, |r| = 0.00906045  alpha = 1
+      it 3, |du| = 0.00664533, |r| = 2.03017e-05  alpha = 1
+
+      iterations: 4, |du| = 2.23733e-05, |r| = 3.07702e-10
+      Surface recombination current = 0
+
+      contact name:       voltage:            current:
+      anode               1.2                -0.107975
+      cathode             0                   0.107975
+
+    Solve time: 0h 0m 3.1s
+    <<<<------------------------------------------------------------------------
+
+    >>>>--------------------------------- (tt) ---------------------------------
+      Maximum temperature : 324.864 K
+
+    Solve time: 0h 0m 0.71s
+    <<<<------------------------------------------------------------------------
+    selfconsistent (Relaxation): iteration 0
+      correction (max norm):  8.94756
+      relative error (l2)  :  0.0260542
+
+    >>>>--------------------------------- (dd) ---------------------------------
+
+      iterations: 1, |du| = 2.52333e-10, |r| = 7.61118e-13
+      Surface recombination current = 0
+
+      contact name:       voltage:            current:
+      anode               1.2                -0.107975
+      cathode             0                   0.107975
+
+    Solve time: 0h 0m 0.89s
+    <<<<------------------------------------------------------------------------
+
+    >>>>--------------------------------- (tt) ---------------------------------
+      Maximum temperature : 324.864 K
+
+    Solve time: 0h 0m 0.71s
+    <<<<------------------------------------------------------------------------
+    selfconsistent (Relaxation): iteration 1
+      correction (max norm):  4.11447e-05
+      relative error (l2)  :  1.15958e-07
+
+  Solve time: 0h 0m 5.4s
+  <<<<--------------------------------------------------------------------------
+
+Solve time: 0h 1m 29s
+<<<<----------------------------------------------------------------------------
+
+Total solve time: 0h 1m 29s
+Simulation finished.
+
+2 warnings during run
+0 errors detected
+
+
+Log end: Wed Jun  1 09:41:44 2022
+
+

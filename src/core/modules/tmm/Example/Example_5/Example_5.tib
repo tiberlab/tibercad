@@ -1,0 +1,322 @@
+Device
+{
+  meshfile = Example_5.msh 
+  mesh_units = 1e-9
+  dimension = 1
+  Region AIR
+  {
+  	Incoherency = 0
+  	material = Air
+  }
+  Region MgF2
+  {
+  	Incoherency = 0
+  	material = MgF2
+  }
+
+  Region Glass 
+  {
+  	Incoherency = 1
+  	material = Glass
+  }
+
+  Region ITO 
+  {
+  	Incoherency= 0
+  	material = ITO
+  }
+
+  Region PTAA 
+  {
+  	Incoherency = 0
+  	material = PTAA
+        Doping {density =5e17  type= acceptor  incomplete_ionization = false }# 0.9e17
+
+
+  }
+
+  Region PSK 
+  {
+  	Incoherency = 0
+  	material = PSK
+	Doping { density= 1E14 type = donor incomplete_ionization = false}
+  }
+
+  Region C60 
+  {
+  	Incoherency = 0
+  	material = C60
+	Doping { density=5e18 type = donor incomplete_ionization = false }	
+  }
+
+  Region Ag
+  {
+  	Incoherency = 0
+  	material = Ag
+  }
+
+
+}
+
+Module tmm
+{ 
+  name = tmm_study 
+  plot = (GenerationRate,Intensity,External_Source_ElectricField, Reflection,Transmission,Absorption)
+
+  back_reflectivity = 0
+  incident_angle = 0
+  wavelength_uper_lim = 950
+  wavelength_lower_lim = 300
+  wavelength_steps = 1
+
+  Physics 
+  {
+
+  }
+  Contact cathode
+  {
+  	type = incident_wave
+  }
+}
+
+
+Module dd_generic
+{ 
+  name = driftdiffusion
+  plot = (RefEnergy, QFermi, Density, Flux, NetRecombination, ContactCurrents, TotalRecombinationHeat)
+  regions = (PTAA,PSK,C60)
+
+Solver {
+   max_iterations = 50
+  }
+
+  Physics
+  {
+
+  
+   
+ 
+    carrier electron
+    {
+      charge = -1
+      regions = PSK
+      density_of_states bulk
+      {
+       level = -3.9 
+      }
+
+      mobility constant
+      {
+		mu = 5
+      }
+
+    }
+     carrier electron
+    {
+      regions = PTAA
+      charge = -1
+      density_of_states bulk
+      {
+ 	level = -3
+      }
+
+      mobility constant
+      {
+	mu = 1e-8
+      }
+
+    }
+
+    carrier electron
+    { 
+      charge = -1
+      regions = C60
+      density_of_states bulk
+      {
+       level = -3.9
+      }
+
+      mobility constant
+      {
+	mu = 1e-2 
+      }
+    }
+
+
+    carrier hole
+    {
+      charge = 1
+      regions = PSK
+      density_of_states bulk
+      {
+       level = -5.6
+      }
+
+      mobility constant
+      {
+		mu = 5
+      }
+
+    }
+
+    carrier hole
+    { 
+      charge = 1
+      regions = PTAA 
+      density_of_states bulk
+      {
+        level = -5.5
+      }
+
+      mobility constant
+      {
+	mu = 1e-4 
+      }
+
+    }
+
+     carrier hole
+    { 
+      charge = 1
+      regions = C60
+      density_of_states bulk
+      {
+       level = -5.9
+      }
+
+      mobility constant
+      {
+	mu = 1e-3
+      }
+
+    }
+
+  recombination srh
+ {
+   regions = (PSK)
+   carriers = (electron, hole)
+   tau_n = 0.5e-9
+   tau_p = 0.5e-9
+}
+ 
+recombination direct
+{
+    regions = (PSK)
+    carriers = (electron,hole)
+    C = 1e-8
+}
+
+recombination direct
+{
+    regions = (PSK/C60)
+    carriers = (electron,hole)
+    C = 5e-21 #1e-17  #5e-17  #5e-15  # best
+}
+
+recombination direct
+{
+    regions = (PSK/PTAA)
+    carriers = (electron,hole)
+    C = 5e-21  #1e-17  #5e-17  #5e-15  # best
+}
+generation optical
+{
+  regions = PSK
+  generation = tmm_study.GenerationRate
+  multiplier = $x[0.0]
+  carriers = (electron,hole)
+  plot_name = gen
+} 
+
+  permittivity constant 
+ {
+   regions = (PSK)
+   permittivity = 22
+}
+
+   permittivity constant 
+ {
+   regions = (C60)
+   permittivity = 5
+}
+
+   permittivity constant 
+  {
+   regions = (PTAA)
+   permittivity = 3.5
+  }
+
+
+}   
+
+
+ 
+  Contact cathode
+  {
+    area_factor = 1e3 # in mA
+    type =schottky
+    metal_fermilevel =  -5.3
+    band =  hole
+    voltage = $Vb
+    isolated_carriers = (electron) 
+  }
+
+  Contact anode
+{
+    area_factor = 1e3 #in mA
+    type = schottky
+    metal_fermilevel =  -4.1
+    band = electron
+    voltage = 0.0
+    isolated_carriers = (hole)
+  }
+}  
+
+Module sweep
+{
+  solve = driftdiffusion
+  variable = $Vb
+  start = 0.0
+  stop = 1.8 # 2.0
+  steps = 18 #20
+  plot_data = true
+}
+
+Module sweep 
+{ 
+ name = sweep_back
+ solve = driftdiffusion
+ variable = $Vb
+ start = 1.8 #2.0
+ stop = 0
+ steps = 72
+ plot_data = true
+}
+ 
+Module sweep
+{
+  name = sweep_gen
+  solve = ( driftdiffusion)
+  variable = $x
+  values = (1e-12 1e-9 1e-6, 1e-4, 1e-2, 1e-1, 0.2, 0.5, 0.75, 1.1)
+  plot_data = true
+ }
+
+
+Simulation
+{
+  temperature = 300
+  solve = (tmm_study, sweep, sweep_gen, sweep_back)
+  #solve = driftdiffusion
+resultpath = output/
+  output_format = grace
+  verbose = 2
+  plot_data = true
+  searchpath = .
+
+}
+
+
+
+
+

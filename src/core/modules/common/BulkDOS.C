@@ -204,13 +204,6 @@ void
 BulkDOS::calculate_density_and_derivative(std::vector<double>& result, double Ef, double Epot,
     double kT, double kTlattice, const Elem* , const Point& ) const
 {
-  return calculate_density_and_derivative(result, Ef, Epot, kT, kTlattice);
-}
-
-void
-BulkDOS::calculate_density_and_derivative(std::vector<double>& result,
-    double Ef, double Epot, double kT, double kTlattice) const
-{
 
   double density = 0.0;
   double derivative = 0.0;

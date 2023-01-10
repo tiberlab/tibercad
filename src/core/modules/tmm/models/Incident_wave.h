@@ -24,6 +24,8 @@ class TBDLLOCAL Incident_wave : public TmmBoundaryModel
     ~Incident_wave(void) {};
 
     //! Creator function
+
+
     static Incident_wave* create(const ModelOptions& options);
     virtual void Calculate_M_Matrix(void);
 

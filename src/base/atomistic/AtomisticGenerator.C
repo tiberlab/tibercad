@@ -132,7 +132,7 @@ AtomisticGenerator::build(void)
     {
       for (unsigned int i = 0; i < elem->n_nodes(); i++)
       {
-        Node* nd = elem->get_node(i);
+        Node* nd = elem->node_ptr(i);
         if ( (*nd)(0) < min_x ) min_x = (*nd)(0);
         if ( (*nd)(0) > max_x ) max_x = (*nd)(0);
         if ( (*nd)(1) < min_y ) min_y = (*nd)(1);
@@ -1712,6 +1712,10 @@ AtomisticGenerator::build_random_alloy()
   num_to_substitute.resize(numregions);
   num_substituted.resize(numregions);
   atm_to_substitute.resize(numregions);
+  // this will be used to decide whether we can exit. done == true means a region/label
+  // has been completely finished. But since not all labels might be present in the
+  // structure (for example for single ML in wurtzite c-plane structures), we first set
+  // all to true, and then invert where necessary
   done.resize(numregions);
 
   for (set<ID>::iterator reg = _as->get_IDset().begin(); reg != _as->get_IDset().end(); ++reg)
@@ -1731,14 +1735,14 @@ AtomisticGenerator::build_random_alloy()
       {
         const specie_fraction& speciemap = alloy->get_species_map(lb);
         frac[*reg][lb] = speciemap;
-        done[*reg][lb] = false; 
+        done[*reg][lb] = true;
       }
     }
     else
     {
       for (unsigned int lb=1; lb<=num_labels; lb++)
       {
-        done[*reg][lb] = false; 
+        done[*reg][lb] = true;
         Material::crystal_species_iterator it = mat->species_begin(lb);
         Material::crystal_species_iterator itend = mat->species_end(lb);
         for ( ; it != itend; ++it)
@@ -1774,7 +1778,7 @@ AtomisticGenerator::build_random_alloy()
 
     atm.set_type(0); 
     unsigned int regid = atm.get_region_ID();
-    done[regid][lb] = true;
+
     // we skip passivation atoms 
     if (lb == 0) continue;
 
@@ -1809,7 +1813,7 @@ AtomisticGenerator::build_random_alloy()
 
   for (set<ID>::iterator reg = _as->get_IDset().begin(); reg != _as->get_IDset().end(); ++reg)
   {
-    for (unsigned int lb=1; lb < atm_to_substitute[*reg].size(); ++lb)
+    for (unsigned int lb = 1; lb < atm_to_substitute[*reg].size(); ++lb)
     {
       if (atm_to_substitute[*reg][lb] > 0)
       {

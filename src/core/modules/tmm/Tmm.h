@@ -35,14 +35,21 @@ class TBDLLOCAL Tmm : public SimulationInterface
     static Tmm* create(const ModelOptions& options);
 
 
+
   class Matrix_2by2 {
     public:
 
     Matrix_2by2();
-    Matrix_2by2(double, double, double, double);
+    Matrix_2by2(double, double,double,double);
 
     //! defining operator  for two matrics product
     Matrix_2by2 operator*(Matrix_2by2 const & old_Matrix_2by2);
+
+
+    void inv();
+
+    void unit_matrix();
+
 
 
     //! defining a function to print matrix elements
@@ -79,6 +86,8 @@ class TBDLLOCAL Tmm : public SimulationInterface
 };
 
 
+
+
   //! defining a function to return M matrix
   /*!
   * "n_real" is real part of refractive index
@@ -89,6 +98,7 @@ class TBDLLOCAL Tmm : public SimulationInterface
   */
   Tmm::Matrix_2by2 get_M(double n_real,double n_imag,double length,double lambda, double theta, double phase);
 
+  Tmm::Matrix_2by2 Determinal_Matrix (Tmm::Matrix_2by2 MAT);
 
   //! defining a function to return D matrix
   /*!
@@ -105,7 +115,8 @@ class TBDLLOCAL Tmm : public SimulationInterface
 
   protected:
 
-    
+
+  virtual void plot_globaldata(void);
 
 
     //! The initialization
@@ -142,6 +153,9 @@ class TBDLLOCAL Tmm : public SimulationInterface
         std::map<ID, std::vector<double> >& values,
         const std::vector<Point>& p);
 
+    //! Get a mesh independent solution variable
+  //  virtual void get_solution_secure(std::map<ID, std::vector<double> >& values);
+
 
 
   private:
@@ -168,12 +182,29 @@ class TBDLLOCAL Tmm : public SimulationInterface
      */
     enum Solutions
     {
-      //EField,
-     // HField,
+      GenerationRate,
       Intensity,
-      GenerationRate
+      External_Source_ElectricField,
+      Internal_Source_ElectricField,
+      Transmission,
+      Reflection,
+      Absorption
     };
+
+    std::vector<double> _Transmission;
+    std::vector<double> _Reflection;
+    std::vector<double> _Absorption;
+
+    std::vector<double> _Intensity;
+    std::vector<double> _External_Source_ElectricField;
+    std::vector<double> _Wavelength;
+    std::vector<double> _Generation_rate;
+    std::vector<double> _Internal_Source_ElectricField;
+
+
     
+
+
     /*!
      * \brief Constructor
      *
@@ -188,11 +219,15 @@ class TBDLLOCAL Tmm : public SimulationInterface
     /*!
      * \brief The incident angle
      */
-    std::vector<double> _incident_angle;
+    double _incident_angle;
+    double _reflectivity;
+    double _up_lambda;
+    double _down_lambda;
+    double _wavelength_steps;
+    double _dipole_loc;
 
-    std::vector<double> _reflectivity;
-    std::vector<double> _up_lambda;
-    std::vector<double> _down_lambda;
+
+    std::vector<double> _wavelength_vector;
 
 
 

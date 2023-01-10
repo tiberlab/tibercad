@@ -4,7 +4,6 @@ Device
   material = Si
   
   meshfile = tut_09.msh
-  dimension = 2
   symmetry = cylindrical
 
   Region n_side{
@@ -36,7 +35,7 @@ Module driftdiffusion
    plot = (Ec, Ev, eQFermi, hQFermi, eDensity, hDensity,
           eMobility, hMobility, NetRecombination, Pn, Pp,
           RecombHeat, ePeltier, hPeltier, eJoule, hJoule,
-          ePowerFlux, hPowerFlux, ContactCurrents)
+          ePowerFlux, hPowerFlux, ContactCurrents, eCurrentDensity, hCurrentDensity)
 
 
   regions = (n_side,p_side)
@@ -45,10 +44,10 @@ Module driftdiffusion
   Physics
   {
     
-    thermal_simulation = tt
-    recombination srh{}
-    thermoelectric_power diffusivity_model{}
-    mobility doping_dependent{}
+    #thermal_simulation = tt
+    recombination srh {}
+    #thermoelectric_power diffusivity_model {}
+    mobility doping_dependent {}
   }  
 
   Contact anode
@@ -72,21 +71,27 @@ Module thermal
 
    plot = (  LatticeTemp, ThermalFlux, HeatSource,ThermCond,MaxTemp)
 
+   Solver
+   {
+     #monitor = true
+     relative_tolerance = 1e-9
+   }
 
    Physics   
    {
       heat_source joule {transport_simulation = dd}
    }
 
-   Contact reservoir
-   {
-     type = heat_reservoir
-     temperature = 300
-   }
+   # we assume zero flux at outer domain boundary (air)
+   #Contact reservoir
+   #{
+   #  type = heat_reservoir
+   #  temperature = 300
+   #}
 
    Contact dissipator
    {
-     r_surf = 0.5
+     r_surf = 1.3e-5
      type = surface_resistance
      temperature = 300
   }
@@ -116,6 +121,5 @@ Simulation
   verbose = 3
   solve = (sweep)
   resultpath = output
-  output_format = vtk
 }
 

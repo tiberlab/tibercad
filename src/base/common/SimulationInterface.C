@@ -10,6 +10,7 @@
 #include "TiberLinearSystem.h"
 #include "Material.h"
 #include "Atom.h"
+#include "Boundary.h"
 #include "MaterialBoundary.h"
 #include "PhysicalModel.h"
 #include "EdgeObject.h"
@@ -42,7 +43,7 @@
 #include "libmesh/system.h"
 #include "libmesh/elem.h"
 #include "libmesh/fe_interface.h"
-#include "periodic_boundary.h"
+#include "libmesh/periodic_boundary.h"
 //#include "libmesh/elem.h"
 
 #include <sstream>
@@ -134,7 +135,7 @@ SimulationInterface*
 SimulationInterface::create(const string& type,
                             const ModelOptions& options)
 {
-  SimulationInterface* sim = NULL;
+  SimulationInterface* sim = nullptr;
 
   string type_name(type);
   string flavour = options.get_option("module_subtype", "");
@@ -156,7 +157,7 @@ SimulationInterface::create(const string& type,
   else if (type_name == "opticstb")
     sim = OpticsTB::create(options);
 
-  if (sim == NULL)
+  if (sim == nullptr)
   {
     // try first without a module directory
     if ((sim = create_from_library<SimulationInterface>(type_name, options)) == 0)
@@ -165,7 +166,7 @@ SimulationInterface::create(const string& type,
     }
   }
 
-  if (sim != NULL)
+  if (sim != nullptr)
   {
 
     // we let it know what's its identifier
@@ -190,6 +191,163 @@ SimulationInterface::create(const string& type,
   }
 
   return sim;
+}
+
+
+
+void
+SimulationInterface::create_boundary(const ModelOptions& opts)
+{
+  if (is_task()) return;
+
+  SimulationEnvironment* env = &(get_environment());
+
+  if (env == nullptr)
+    throw InitFailedException("Simulation which is not a task "
+        "must have environment associated.");
+
+  Device& device = env->get_device();
+
+  // first get region names
+  string id_str = opts.get_option("regions", "");
+  vector<string> ids_strings;
+  Utils::extract_vector(id_str, ids_strings);
+
+  string boundary_name = opts.get_name();
+
+  // for the numeric IDs
+  vector<ID> ids;
+
+  unsigned int n_ids = ids_strings.size();
+  // if no numbers are specified we try to get them from the region name
+  if (n_ids == 0)
+    device.get_boundary_region_ids(boundary_name, ids);
+  else
+  {
+    vector<ID> tmp_id;
+    for (unsigned int i = 0; i < n_ids; i++)
+    {
+      // either it is a name or a number
+      // try first name
+      device.get_boundary_region_ids(ids_strings[i], tmp_id);
+      if (tmp_id.size() == 0)
+      {
+        ostringstream s;
+        s << "Physical region \'" << ids_strings[i]
+          << "\' (in boundary  \'" << boundary_name
+          << "\') does not exist in mesh.";
+        throw InitFailedException(s.str());
+      }
+      ids.insert(ids.end(), tmp_id.begin(), tmp_id.end());
+    }
+  }
+
+  if (ids.size() == 0)
+  {
+    ostringstream s;
+    s << "Boundary region \'" << boundary_name <<
+        "\' is not consistent with mesh.";
+    throw InitFailedException(s.str());
+  }
+
+  {
+    ostringstream os;
+    os << "Adding boundary \'" << boundary_name << "\'";
+    Messages::info(os.str());
+  }
+
+
+  Boundary* bnd = env->get_boundary(boundary_name);
+  if (bnd == NULL)
+  {
+    bnd = new Boundary(boundary_name, opts);
+    bnd->set_region_ids(ids);
+    env->add_boundary(bnd);
+  }
+
+
+  for (unsigned int i = 0; i < ids.size(); i++)
+  {
+
+    bool found = false;
+
+    MaterialBoundary* bd;
+    if ((bd = device.get_boundary_object(ids[i])) != NULL)
+    {
+      PhysicalModel* pm = bd->get_model(get_id());
+      if (pm != NULL)
+      {
+        ostringstream os;
+        os << "Trying to add already existing boundary \'"
+            << boundary_name << "\' for module "
+            << get_name();
+        throw InitFailedException(os.str());
+      }
+
+      ID ida = bd->get_id_A();
+      ID idb = bd->get_id_B();
+      if (!includes_region(ida) && !includes_region(idb))
+      {
+        continue;
+
+        Messages::warning("At least part of boundary \'" + boundary_name +
+            "\' does not touch any region of simulation \'" +
+            get_name() + "\'");
+      }
+
+      pm = new_boundary_model(opts, bd);
+      bd->add_model(pm, get_id());
+      bnd->add_model(ids[i], pm);
+      found = true;
+    }
+
+    EdgeObject* eo;
+    if ((eo = device.get_edge_object(ids[i])) != NULL)
+    {
+      PhysicalModel* pm = eo->get_model(get_id());
+      if (pm != NULL)
+      {
+        ostringstream os;
+        os << "Trying to add already existing boundary \'"
+            << boundary_name << "\' for module "
+            << get_name();
+        throw InitFailedException(os.str());
+      }
+
+      pm = new_edge_model(opts, eo);
+      eo->add_model(pm, get_id());
+      bnd->add_model(ids[i], pm);
+      found = true;
+    }
+
+    NodeObject* no;
+    if ((no = device.get_node_object(ids[i])) != NULL)
+    {
+      PhysicalModel* pm = no->get_model(get_id());
+      if (pm != NULL)
+      {
+        ostringstream os;
+        os << "Trying to add already existing boundary \'"
+            << boundary_name << "\' for module "
+            << get_name();
+        throw InitFailedException(os.str());
+      }
+
+      pm = new_node_model(opts, no);
+      no->add_model(pm, get_id());
+      bnd->add_model(ids[i], pm);
+      found = true;
+    }
+
+    if (!found)
+    {
+      ostringstream os;
+      os << "Boundary \'" << boundary_name
+                  << "\' does not exist.";
+      throw InitFailedException(os.str());
+    }
+
+  }
 }
 
 
@@ -301,8 +459,8 @@ SimulationInterface::find_excluded_dofs(const std::set<ID>& ids,
   TiberEqSystem& tiber_sys = get_equation_system<TiberEqSystem>();
   libMesh::System* system = tiber_sys.get_libmesh_system();
 
-  // In the remote case that system is NULL we return immediately
-  if (system == NULL)
+  // In the remote case that system is nullptr we return immediately
+  if (system == nullptr)
     return;
 
 
@@ -402,7 +560,7 @@ SimulationInterface::new_bulk_model(const ModelOptions& options,
 {
   PhysicalModel* pm = create_bulk_model(options, material);
 
-  if (pm != NULL)
+  if (pm != nullptr)
     _physical_models.insert(pm);
 
   return pm;
@@ -424,7 +582,7 @@ SimulationInterface::new_boundary_model(const ModelOptions& options,
 {
   PhysicalModel* pm = create_boundary_model(options, boundary);
 
-  if (pm != NULL)
+  if (pm != nullptr)
     _boundary_models.insert(pm);
 
   return pm;
@@ -437,7 +595,7 @@ SimulationInterface::new_edge_model(const ModelOptions& options,
 {
   PhysicalModel* pm = create_edge_model(options, edge);
 
-  //if (pm != NULL)
+  //if (pm != nullptr)
   //  _edge_models.insert(pm);
 
   return pm;
@@ -450,7 +608,7 @@ SimulationInterface::new_node_model(const ModelOptions& options,
 {
   PhysicalModel* pm = create_node_model(options, node);
 
-  //if (pm != NULL)
+  //if (pm != nullptr)
   //  _node_models.insert(pm);
 
   return pm;
@@ -471,9 +629,9 @@ SimulationInterface::get_material(const Elem* elem) const
 PhysicalModel*
 SimulationInterface::_get_bulk_model(const Elem* elem) const
 {
-  PhysicalModel* mod = NULL;
+  PhysicalModel* mod = nullptr;
   const Material* mat = get_environment().get_device().get_material(elem);
-  if (mat != NULL)
+  if (mat != nullptr)
     mod = mat->get_model(get_id());
 
   return mod;
@@ -484,9 +642,9 @@ SimulationInterface::_get_bulk_model(const Elem* elem) const
 PhysicalModel*
 SimulationInterface::_get_bulk_model(const Atom& atom, bool parent) const
 {
-  PhysicalModel* mod = NULL;
+  PhysicalModel* mod = nullptr;
   const Material* mat = get_atomistic_structure()->get_material(atom, parent);
-  if (mat != NULL)
+  if (mat != nullptr)
     mod = mat->get_model(get_id());
  
   return mod;
@@ -497,14 +655,11 @@ PhysicalModel*
 SimulationInterface::_get_bulk_model(const Atom& atom1, const Atom& atom2,
     bool parent) const
 {
-  PhysicalModel* mod = NULL;
+  PhysicalModel* mod = nullptr;
   const Material* mat = get_atomistic_structure()->get_material(atom1, atom2, parent);
 
-  if (mat != NULL) mod = mat->get_model(get_id());
-  else
-  {
-    std::cerr<<"ERROR: NULL Material"<<std::endl;
-  }
+  if (mat != nullptr) mod = mat->get_model(get_id());
+
   return mod;
 }
 
@@ -512,13 +667,13 @@ SimulationInterface::_get_bulk_model(const Atom& atom1, const Atom& atom2,
 PhysicalModel*
 SimulationInterface::_get_interface_model(const Elem* elem, int side) const
 {
-  PhysicalModel* mod = NULL;
+  PhysicalModel* mod = nullptr;
   MaterialBoundary* mb =
       get_environment().get_device().get_boundary_object(elem, side);
-  if (mb != NULL)
+  if (mb != nullptr)
     mod = mb->get_model(get_id());
 
-  if (mod != NULL)
+  if (mod != nullptr)
     mod->set_material(get_material(elem));
 
   return mod;
@@ -529,13 +684,13 @@ SimulationInterface::_get_interface_model(const Elem* elem, int side) const
 PhysicalModel*
 SimulationInterface::_get_edge_model(const Elem* elem, int edge) const
 {
-  PhysicalModel* mod = NULL;
+  PhysicalModel* mod = nullptr;
   EdgeObject* eo =
       get_environment().get_device().get_edge_object(elem, edge);
-  if (eo != NULL)
+  if (eo != nullptr)
     mod = eo->get_model(get_id());
 
-  if (mod != NULL)
+  if (mod != nullptr)
     mod->set_material(get_material(elem));
 
   return mod;
@@ -546,13 +701,13 @@ SimulationInterface::_get_edge_model(const Elem* elem, int edge) const
 PhysicalModel*
 SimulationInterface::_get_node_model(const Elem* elem, int node) const
 {
-  PhysicalModel* mod = NULL;
+  PhysicalModel* mod = nullptr;
   NodeObject* no =
       get_environment().get_device().get_node_object(elem, node);
-  if (no != NULL)
+  if (no != nullptr)
     mod = no->get_model(get_id());
 
-  if (mod != NULL)
+  if (mod != nullptr)
     mod->set_material(get_material(elem));
 
   return mod;
@@ -562,14 +717,14 @@ SimulationInterface::_get_node_model(const Elem* elem, int node) const
 libMesh::MeshBase::const_element_iterator
 SimulationInterface::active_local_elements_begin(void) const
 {
-  return(this->get_mesh().active_local_subdomains_elements_begin(
+  return(this->get_mesh().active_local_subdomain_set_elements_begin(
       this->get_environment().get_region_ids()));
 }
 
 libMesh::MeshBase::const_element_iterator
 SimulationInterface::active_local_elements_end(void) const
 {
-  return(this->get_mesh().active_local_subdomains_elements_end(
+  return(this->get_mesh().active_local_subdomain_set_elements_end(
       this->get_environment().get_region_ids()));
 }
 
@@ -578,14 +733,14 @@ SimulationInterface::active_local_elements_end(void) const
 libMesh::MeshBase::element_iterator
 SimulationInterface::active_local_elements_begin(void)
 {
-  return(this->get_mesh().active_local_subdomains_elements_begin(
+  return(this->get_mesh().active_local_subdomain_set_elements_begin(
       this->get_environment().get_region_ids()));
 }
 
 libMesh::MeshBase::element_iterator
 SimulationInterface::active_local_elements_end(void)
 {
-  return(this->get_mesh().active_local_subdomains_elements_end(
+  return(this->get_mesh().active_local_subdomain_set_elements_end(
       this->get_environment().get_region_ids()));
 }
 
@@ -600,12 +755,295 @@ SimulationInterface::get_mesh_units(void) const
 void
 SimulationInterface::prepare(void)
 {
-  // prepare some of the environments internals (lists of elements etc.)
-  if (_environment != NULL) _environment->prepare();
+
+  Messages m;
+
+  //m.newline();
+  //m.info("Setting up simulation of type \'"
+  //    + get_name() + "\' ...");
+  m.indent();
+
+
+  // the following stuff does not need to be done if the simulation is a task
+  if (!is_task())
+  {
+
+    SimulationEnvironment* env = &get_environment();
+    Device& device = env->get_device();
+
+    IDSet phys_regions;
+    string physreg = get_option("regions", "all");
+    device.extract_physical_regions(physreg, phys_regions);
+
+
+    //
+    // and now... the boundary conditions
+    //
+
+    // we accept the following keywords for boundaries:
+    //   Contact, Boundary, Interface
+    vector<string> keys(4);
+    keys[0] = "Contact";
+    keys[1] = "Boundary";
+    keys[2] = "Interface";
+    keys[3] = "BoundaryCondition";
+
+    for (size_t i = 0; i < keys.size(); ++i)
+    {
+      ModelOptions::const_submodel_iterator it =
+          get_options().submodels_begin(keys[i]);
+      const ModelOptions::const_submodel_iterator end =
+          get_options().submodels_end(keys[i]);
+
+      for ( ; it != end; ++it)
+        create_boundary(it->second);
+
+      // we remove them, so in the following we have only models
+      //physopts.delete_submodels(keys[i]);
+    }
+
+
+
+
+    // the bulk physical models, all together
+    ModelOptions bulk_opts;
+
+
+    //
+    // Next, we create all lower dimensional submodels
+    // At the same time, we put all bulk Physics blocks together
+    //
+    // NOTE: only definitions with correct space dimensions will be
+    //       added to the different PhysicalObject instances
+
+    ModelOptions::const_submodel_iterator ph_it =
+        get_options().submodels_begin("Physics");
+    const ModelOptions::const_submodel_iterator ph_end =
+        get_options().submodels_end("Physics");
+
+    for ( ; ph_it != ph_end; ++ph_it)
+    {
+      ModelOptions physopts = ph_it->second;
+
+      ModelOptions::submodel_iterator it = physopts.submodels_begin();
+      const ModelOptions::submodel_iterator end = physopts.submodels_end();
+      while (it != end)
+      {
+        ModelOptions::submodel_iterator tmpit(it);
+        ++it;
+
+        const ModelOptions& bdopts = tmpit->second;
+
+        string physreg = bdopts.get_option("regions", "all");
+
+        // if "all", it cannot be a lower dimensional region
+        if (physreg == "all")
+          continue;
+
+        bool add = false;
+
+        // It might be some lower dim model
+
+        vector<string> ids_strings;
+        Utils::extract_vector(physreg, ids_strings);
+
+        for (unsigned int i = 0; i < ids_strings.size(); i++)
+        {
+          vector<ID> region_ids;
+          device.get_boundary_region_ids(ids_strings[i], region_ids);
+
+          // if it is no boundary region, we continue to the next region name
+          if (region_ids.size() == 0)
+          {
+            // it could be the name of the Boundary object
+            Boundary* bnd = env->get_boundary(ids_strings[i]);
+            if (bnd != NULL)
+              bnd->get_region_ids(region_ids);
+          }
+
+          if (region_ids.size() == 0)
+            continue;
+
+          // now it must be a lower dim model
+          add = true;
+
+          // NOTE: the model will only be added if a corresponding boundary ID
+          // has been found
+          for (unsigned int reg = 0; reg < region_ids.size(); reg++)
+          {
+            ID id = region_ids[reg];
+
+            MaterialBoundary* bd;
+            if ((bd = device.get_boundary_object(id)) != NULL)
+            {
+              PhysicalModel* pm = bd->get_model(get_id());
+              if (pm == NULL)
+              {
+                // create the default model on the fly
+                pm = new_boundary_model(ModelOptions(), bd);
+                bd->add_model(pm, get_id());
+              }
+
+              // now it's there
+              pm->get_options().add_submodel(tmpit->first, bdopts);
+            }
+
+            EdgeObject* eo;
+            if ((eo = device.get_edge_object(id)) != NULL)
+            {
+              PhysicalModel* pm = eo->get_model(get_id());
+              if (pm == NULL)
+              {
+                // create the default model on the fly
+                pm = new_edge_model(ModelOptions(), eo);
+                eo->add_model(pm, get_id());
+              }
+
+              // now it's there
+              pm->get_options().add_submodel(tmpit->first, bdopts);
+            }
+
+            NodeObject* no;
+            if ((no = device.get_node_object(id)) != NULL)
+            {
+              PhysicalModel* pm = no->get_model(get_id());
+              if (pm == NULL)
+              {
+                // create the default model on the fly
+                pm = new_node_model(ModelOptions(), no);
+                no->add_model(pm, get_id());
+              }
+
+              // now it's there
+              pm->get_options().add_submodel(tmpit->first, bdopts);
+            }
+          }
+        }
+
+        // remove it from the map
+        // NOTE: this means, we cannot specify the same model for bulk
+        //       boundaries in a single block
+        // TODO: maybe this can be relaxed?
+        if (add)
+          physopts.delete_submodel(tmpit);
+      }
+
+      // now add the remaining content to the common Physics options
+      bulk_opts += physopts;
+      bulk_opts.set_key((ph_it->second).get_key());
+    }
+    m.unindent();
+
+
+    //
+    // now we have to create the bulk models
+    //
+    //m.newline();
+    m.info("Creating bulk models... ");
+    m.indent();
+
+    // we have to do this for each material!
+    IDSet::iterator reg_it(phys_regions.begin());
+    const IDSet::iterator reg_end(phys_regions.end());
+    for ( ; reg_it != reg_end; ++reg_it)
+    {
+      ID reg_id = *reg_it;
+      Material* mat = device.get_material(reg_id);
+
+      m.info("Region: "+device.get_region_name(reg_id));
+      if (mat == NULL)
+      {
+        ostringstream s;
+        s << "Physical region " << device.get_region_name(reg_id) <<
+            " has no material associated!";
+        Messages::warning(s.str());
+        continue;
+        //throw InitFailedException(s.str());
+      }
+
+      // we only continue if the model has not already been added
+      // this is important as a material can be assigned to different
+      // regions
+      // TODO (Is this true ??)
+      if (mat->get_model(get_id()) == NULL)
+      {
+
+        // the crystal structure
+        //string crystal_structure(mat->get_structure());
+
+        // we make a copy so we can safely delete submodels
+        ModelOptions opts(bulk_opts);
+
+        // we add the crystal structure for bulk materials as this could
+        // lead to different model implementations
+        //opts["crystal_structure"] = crystal_structure;
+
+        // recursively eliminate all models not defined on the current region
+        _eliminate_unneeded_submodels(opts, reg_id);
+
+
+        // here we actually create the model
+        PhysicalModel* model = new_bulk_model(opts, mat);
+
+        // NOTE: model could be NULL, but we don't care about. Who tells us that
+        // every simulation necessarily needs a model?
+        mat->add_model(model, get_id());
+      }
+    }
+    m.unindent();
+
+    // prepare some of the environments internals (lists of elements etc.)
+    _environment->prepare();
+  }
+
 
   // setup the solution variables
   setup_solution_variables();
 }
+
+
+void
+SimulationInterface::_eliminate_unneeded_submodels(ModelOptions& opts, ID reg_id) const
+{
+  const Device& device = get_environment().get_device();
+
+  auto it = opts.submodels_begin();
+  const auto end = opts.submodels_end();
+  for ( ; it != end; )
+  {
+    auto current = it++;
+    // shall we delete the block?
+    bool del = false;
+
+    const ModelOptions& modopts = current->second;
+
+    // we have to check if it should be built for the current region
+    // TODO to not allow for errors
+
+    IDSet regs;
+    string physreg = modopts.get_option("regions", "all");
+    device.extract_physical_regions(physreg, regs);
+
+    if (regs.count(reg_id) == 0) del = true;
+
+
+    if (del)
+    {
+      // we add the crystal structure for bulk materials as this could
+      // lead to different model implementations
+      //modopts.set_option("crystal_structure", crystal_structure);
+
+      // we set the name to the model type if not explicitly
+      // given by user
+      //if (!(mapit->second).find_option("name"))
+      //  (mapit->second)["name"] = mapit->first;
+      opts.delete_submodel(current);
+    }
+    else
+      _eliminate_unneeded_submodels(current->second, reg_id);
+  }
+}
+
 
 
 
@@ -615,7 +1053,7 @@ SimulationInterface::setup_environment(Device& device, const set<ID>& region_num
 {
   if (!is_task())
   {
-    if (_environment != NULL) delete _environment;
+    if (_environment != nullptr) delete _environment;
     _environment = new SimulationEnvironment(device, region_numbers);
 
     this->set_communicator(device.get_communicator());
@@ -625,7 +1063,7 @@ SimulationInterface::setup_environment(Device& device, const set<ID>& region_num
 
     // get the mesh pointer
     setup_mesh();
-    if (_mesh == NULL)
+    if (_mesh == nullptr)
       throw InitFailedException("No simulation mesh provided for \'" + get_name() + "\'");
 
   }
@@ -647,7 +1085,7 @@ SimulationInterface::setup_mesh(void)
   if (get_option("atomistic_mesh", false))
   {
     libMesh::UnstructuredMesh* mesh = new Mesh(get_solver_communicator(), 3);
-    if (get_atomistic_structure() == NULL)
+    if (get_atomistic_structure() == nullptr)
       throw InitFailedException(get_name() + ": could not find atomistic structure");
 
     get_atomistic_structure()->create_conformal_grid(*mesh);
@@ -665,7 +1103,7 @@ SimulationInterface::setup_atomistic_structure(void)
   if (!name.empty())
   {
     _atomistic_structure = get_environment().get_device().get_atomistic_structure(name);
-    if (_atomistic_structure == NULL)
+    if (_atomistic_structure == nullptr)
       throw InitFailedException("No atomistic structure \'" + name + "\' found "
           "for simulation \'" + get_name());
 
@@ -701,7 +1139,7 @@ SimulationInterface::setup_mpi_comm(void)
   {
 
     // this is just a guess
-    if (_atomistic_structure != NULL)
+    if (_atomistic_structure != nullptr)
       this->set_solver_communicator(this->get_communicator());
     else
       this->set_solver_communicator(this->get_mesh().comm());
@@ -762,7 +1200,7 @@ SimulationInterface::init(void)
     // build name for equation systems
     create_equation_system_name();
 
-    if (_environment != NULL)
+    if (_environment != nullptr)
     {
       _environment->prepare_for_solve();
       _scaling.set_calc_mesh_units(get_mesh_units());
@@ -854,7 +1292,7 @@ SimulationInterface::init(void)
         const Material* mat = dev.get_material(*ids.begin());
         PhysicalModel* mod =
             mat->get_model(get_id());
-        if (mod != NULL)
+        if (mod != nullptr)
         {
           ostringstream os;
           os << "# Region " << *it << ", " << mat->get_name();
@@ -912,7 +1350,7 @@ SimulationInterface::get_default_name(void) const
 SimulationInterface*
 SimulationInterface::find_simulation(const string& name)
 {
-  SimulationInterface* sim = NULL;
+  SimulationInterface* sim = nullptr;
 
   SimulationMap::iterator it(_simulation_map.begin());
   SimulationMap::iterator end(_simulation_map.end());
@@ -952,7 +1390,7 @@ SolutionProvider
 SimulationInterface::find_solution_provider(const string& simulation,
     const string& solution)
 {
-  SolutionProvider result(NULL, INVALID_ID);
+  SolutionProvider result(nullptr, INVALID_ID);
 
   if (!simulation.empty())
   {
@@ -961,7 +1399,7 @@ SimulationInterface::find_solution_provider(const string& simulation,
     Utils::tokenize(simulation, tokens, ".");
 
     result.first = find_simulation(tokens[0]);
-    if (result.first != NULL)
+    if (result.first != nullptr)
     {
       if (tokens.size() > 1)
         result.second = result.first->get_solution_id(tokens[1]);
@@ -1105,7 +1543,7 @@ SimulationInterface::solve_equilibrium(void)
 
     assert(is_initialized());
 
-    if (_environment != NULL)
+    if (_environment != nullptr)
       _environment->prepare_for_solve();
 
 
@@ -1175,7 +1613,7 @@ SimulationInterface::solve(void)
 
   m.indent();
 
-  if (_environment != NULL)
+  if (_environment != nullptr)
     _environment->prepare_for_solve();
 
   // call reinitialization
@@ -1317,7 +1755,7 @@ PhysicalModel*
 SimulationInterface::create_bulk_model(const ModelOptions&,
     const Material*) const
 {
-  return NULL;
+  return nullptr;
 }
 
 
@@ -1326,7 +1764,7 @@ PhysicalModel*
 SimulationInterface::create_boundary_model(const ModelOptions&,
     const MaterialBoundary*) const
 {
-  return NULL;
+  return nullptr;
 }
 
 
@@ -1335,7 +1773,7 @@ PhysicalModel*
 SimulationInterface::create_edge_model(const ModelOptions&,
     const EdgeObject*) const
 {
-  return NULL;
+  return nullptr;
 }
 
 
@@ -1344,7 +1782,7 @@ PhysicalModel*
 SimulationInterface::create_node_model(const ModelOptions&,
 const NodeObject*) const
 {
-  return NULL;
+  return nullptr;
 }
 
 
@@ -1353,7 +1791,7 @@ void
 SimulationInterface::get_integrated_quantities(std::vector<double>& values)
 {
 
-  if (_environment != NULL)
+  if (_environment != nullptr)
     get_environment().prepare_for_solve();
 
   values.resize(0);
@@ -1365,7 +1803,7 @@ SimulationInterface::get_integrated_quantities(std::vector<double>& values)
 void
 SimulationInterface::plot(void)
 {
-  if (_environment != NULL)
+  if (_environment != nullptr)
     get_environment().prepare_for_solve();
 
   do_plot();
@@ -1496,13 +1934,13 @@ SimulationInterface::plot_meshdata(void)
 
       for (unsigned int n = 0; n < elem->n_nodes(); ++n)
       {
-        if (node_conn[subdomain].count(elem->node(n)) == 0)
+        if (node_conn[subdomain].count(elem->node_id(n)) == 0)
         {
           unsigned int nodeid = node_conn[subdomain].size();
-          node_conn[subdomain][elem->node(n)] = make_pair(nodeid, 1);
+          node_conn[subdomain][elem->node_id(n)] = make_pair(nodeid, 1);
         }
         else
-          (node_conn[subdomain][elem->node(n)].second)++;
+          (node_conn[subdomain][elem->node_id(n)].second)++;
       }
     }
   }
@@ -1592,8 +2030,8 @@ SimulationInterface::plot_meshdata(void)
           {
             unsigned int ncomp = descr.n_components();
             unsigned int index =
-              ncomp * node_conn[subdomain][elem->node(n)].first;
-            unsigned short w = node_conn[subdomain][elem->node(n)].second;
+              ncomp * node_conn[subdomain][elem->node_id(n)].first;
+            unsigned short w = node_conn[subdomain][elem->node_id(n)].second;
             for (unsigned int i = 0; i < ncomp; i++)
               vec[index + i] += sol[ncomp * n + i] / w;
 
@@ -1613,7 +2051,7 @@ SimulationInterface::plot_meshdata(void)
   for (unsigned int i = 0; i < formats.size(); i++)
   {
     unique_ptr<DataOutput> writer(DataOutput::create(formats[i]));
-    if ((writer.get() != NULL) && (data.size() > 0))
+    if ((writer.get() != nullptr) && (data.size() > 0))
     {
       writer->set_output_directory(get_output_directory());
       writer->set_filename(get_output_filename());
@@ -2069,7 +2507,7 @@ SimulationInterface::do_delete_remembered_solution(ID id)
 libMesh::NumericVector<double>*
 SimulationInterface::get_remembered_solution(ID id)
 {
-  libMesh::NumericVector<double>* vec = NULL;
+  libMesh::NumericVector<double>* vec = nullptr;
 
   map<ID, libMesh::NumericVector<double>*>::iterator end(_remembered_solutions.end());
   map<ID, libMesh::NumericVector<double>*>::iterator it(_remembered_solutions.find(id));
@@ -2211,9 +2649,9 @@ SimulationInterface::build_finite_element(unsigned int dim, libMesh::FEType type
       break;
 
     default:
-      fe = NULL;
+      fe = nullptr;
   }
-  assert(fe != NULL);
+  assert(fe != nullptr);
 
   return libMesh::UniquePtr<libMesh::FEBase>(fe);
 }
@@ -2319,7 +2757,7 @@ SimulationInterface::get_solution(const libMesh::Elem* elem,
 
   // perhaps is in a quantum_contact ?
   QuantumContact* qc = get_environment().get_device().get_quantum_contact(elem);
-  if (qc != NULL)
+  if (qc != nullptr)
   {
     if (local_coord)
     {
@@ -2411,10 +2849,10 @@ SimulationInterface::get_solution(const libMesh::Elem* elem,
       // perhaps the parent is?
       const Elem* parent = elem->parent();
 
-      while ((parent != NULL) && (!env.contains_element(parent)))
+      while ((parent != nullptr) && (!env.contains_element(parent)))
         parent = parent->parent();
 
-      el = parent; // is NULL if no parent
+      el = parent; // is nullptr if no parent
 
       if (el != nullptr)
       {
@@ -2641,7 +3079,7 @@ SimulationInterface::get_solution(const Atom* atom, map<ID, vector<double> >& va
 
   bool ret = false;
 
-  if (_atomistic_structure != NULL)
+  if (_atomistic_structure != nullptr)
   {
     get_solution_secure(atom, values);
     ret = true;
@@ -2855,8 +3293,8 @@ SimulationInterface::create_embracing_region(
     SimulationInterface* other_simulation,
     const ModelOptions& options, bool need_mixing_coeff)
 {
-  Embracing* emb = NULL;
-  if (other_simulation != NULL)
+  Embracing* emb = nullptr;
+  if (other_simulation != nullptr)
   {
     if (_embracings.find(other_simulation) != _embracings.end())
       emb = _embracings[other_simulation];
@@ -3027,7 +3465,7 @@ SimulationInterface::build_map_elem_atoms(double sigma, double cutoff)
       {     
         unsigned int iatm = cells[c1][i];
 
-        if (structure[iatm].get_elem() == NULL ) continue;
+        if (structure[iatm].get_elem() == nullptr ) continue;
 
         Point delta_r(structure[iatm].get_position() - pc);
         
@@ -3232,7 +3670,7 @@ SimulationInterface::project_on_tensor_grid(void)
     {
       solutions[*idit].clear();
       int ncomp = descr.n_components();
-      fstreams[*idit].resize(ncomp, NULL);
+      fstreams[*idit].resize(ncomp, nullptr);
 
       vector<string> comp(ncomp, "");
       if (ncomp == 3)
@@ -3315,7 +3753,7 @@ SimulationInterface::project_on_tensor_grid(void)
 
       const Elem* elem = MeshUtils::search_element(&get_mesh(), p);
 
-      if ((elem == NULL) || !get_solution(elem, solutions, vector<Point>(1, p)))
+      if ((elem == nullptr) || !get_solution(elem, solutions, vector<Point>(1, p)))
       {
         for (mit = solutions.begin(); mit != mend; ++mit)
         {

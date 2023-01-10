@@ -1,0 +1,14 @@
+
+[permittivity] # [3]
+permittivity = 3
+
+optical_epsilon = 3
+optical_data = optics/PTAA_Santbergen.dat
+
+[mobility/constant]
+mu_max   = (1e-8,   1e-4)
+
+
+
+
+

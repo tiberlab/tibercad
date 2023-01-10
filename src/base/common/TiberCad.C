@@ -4,7 +4,6 @@
 #include "tiber_version.h"
 #include "svnrevision.h"
 #include "TiberCad.h"
-#include "License.h"
 #include "Control.h"
 #include "EigenSolver.h"
 #include "Database.h"
@@ -13,8 +12,9 @@
 #include "Messages.h"
 #include "InitFailedException.h"
 
-#include "libmesh.h"
+#include "libmesh/libmesh.h"
 #include "petscsys.h"
+
 #include "petscerror.h"
 
 #ifdef _WIN32
@@ -82,7 +82,7 @@ TiberCad::TiberCad(MPI_Comm mpi_comm) :
 
   _object_counter++;
 
-  _mpi_comm = mpi_comm;
+  _mpi_comm.duplicate(mpi_comm);
 }
 
 
@@ -165,10 +165,6 @@ TiberCad::init(const std::string& inputfile)
 {
   if (_is_initialized)
     return;
-
-  License::init();
-  if (_mpi_comm.rank() == 0)
-    License::check_out("core", major_version(), 0, 1);
 
   // read TIBERCADROOT from environment
   char* root = getenv("TIBERCADROOT");
@@ -257,11 +253,6 @@ TiberCad::cleanup(void)
 {
   if (!_is_initialized)
     return;
-
-  if (_mpi_comm.rank() == 0)
-    License::check_in("core");
-
-  License::close();
 
   // close EigenSolver
   EigenSolver::slepc_done();

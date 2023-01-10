@@ -5,7 +5,8 @@
 
 #include "libmesh/elem.h"
 #include "libmesh/mesh_base.h"
-#include "mesh_base.h"
+#include "libmesh/mesh_base.h"
+#include "libmesh/boundary_info.h"
 
 #include <algorithm>
 
@@ -22,7 +23,7 @@ BoundaryRegions::add_side(const Elem* elem, unsigned int side, ID id)
 
     IDSet cont_ids;
     cont_ids.insert(elem->subdomain_id());
-    const Elem* neighbor = elem->neighbor(side);
+    const Elem* neighbor = elem->neighbor_ptr(side);
     if (neighbor != NULL)
       cont_ids.insert(neighbor->subdomain_id());
     else
@@ -62,7 +63,7 @@ BoundaryRegions::prepare_for_use(void)
 
     IDSet cont_ids;
     cont_ids.insert(elem->subdomain_id());
-    const Elem* neighbor = elem->neighbor(side);
+    const Elem* neighbor = elem->neighbor_ptr(side);
     if (neighbor != NULL)
       cont_ids.insert(neighbor->subdomain_id());
     else
@@ -153,11 +154,11 @@ BoundaryRegions::get_bc_node_map(std::map<ID, std::vector<unsigned int> >& nodem
     ID id = it->second;
     const Elem* elem = (it->first).elem();
     unsigned int s = (it->first).side();
-    libMesh::UniquePtr<Elem> side(elem->build_side(s));
+    std::unique_ptr<const Elem> side(elem->build_side_ptr(s));
 
     for (size_t i = 0; i < side->n_nodes(); i++)
     {
-      unsigned int s_id = side->node(i);
+      unsigned int s_id = side->node_id(i);
       if (std::find(nodemap[id].begin(), nodemap[id].end(), s_id) == nodemap[id].end())
         nodemap[id].push_back(s_id);
     }
@@ -380,7 +381,7 @@ BoundaryRegions::do_broadcast(void)
 
     for (size_t i = 0; i < elem_ids.size(); ++i)
     {
-      add_side(mesh.elem(elem_ids[i]), elem_sides[i], ids[i]);
+      add_side(mesh.elem_ptr(elem_ids[i]), elem_sides[i], ids[i]);
     }
   }
 
@@ -416,7 +417,7 @@ BoundaryRegions::do_broadcast(void)
 
     for (size_t i = 0; i < elem_ids.size(); ++i)
     {
-      add_edge(mesh.elem(elem_ids[i]), elem_sides[i], ids[i]);
+      add_edge(mesh.elem_ptr(elem_ids[i]), elem_sides[i], ids[i]);
     }
   }
 

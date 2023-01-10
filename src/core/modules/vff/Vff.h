@@ -5,7 +5,7 @@
 #include "SimulationInterface.h"
 #include "StrainLattice.h"
 
-
+class VffModel;
 
 class TBDLLOCAL Vff : public SimulationInterface
 {
@@ -58,40 +58,40 @@ public:
 protected:
 
   //! The initialization
-  virtual void do_init(void);
+  virtual void do_init(void) final;
 
 
   //! Parse the options from the input file
-  virtual void parse_options(void);
+  virtual void parse_options(void) final;
 
 
   //! Setup the available variables
-  virtual void do_setup_solution_variables(void);
+  virtual void do_setup_solution_variables(void) final;
 
 
   //! Solve the MyPoisson equation
-  virtual void do_solve(void);
+  virtual void do_solve(void) final;
 
 
   // ! Print some useful information
   //virtual void do_print_info(void){};
 
   //! Print some useful information
-  virtual void plot_globaldata(void);
+  virtual void plot_globaldata(void) final;
 
   //! We need to create a physical model
   virtual PhysicalModel* create_bulk_model(const ModelOptions& options,
-      const Material* mat) const;
+      const Material* mat) const final;
 
   // ! We need to create boundary condition model
-//  virtual PhysicalModel* create_boundary_model(const ModelOptions& options,
-//      const Material* material_A, const Material* material_B) const{};
+  //  virtual PhysicalModel* create_boundary_model(const ModelOptions& options,
+  //      const Material* material_A, const Material* material_B) const{};
 
 
   //! We have to provide somehow our solution variables
   virtual void get_solution_secure(const libMesh::Elem* elem,
       std::map<ID, std::vector<double> >& values,
-      const std::vector<libMesh::Point>& p);
+      const std::vector<libMesh::Point>& p) final;
 
 
 
@@ -105,8 +105,6 @@ private:
    */
   Vff(const ModelOptions& options);
 
-  //! A static pointer to this
-  static Vff* _this;
 
   class Options
   {
@@ -135,8 +133,19 @@ private:
 
   Options& get_my_options(void);
 
-  void
-  set_boundary(void);
+  VffModel* get_model(const Atom& at1, const Atom& at2,
+                      bool create_missing = false) const;
+
+  void set_boundary(void);
+
+  //! Association between interface atom type pairs and materials
+  /*!
+   * This structure is set up during initialisation, by identifying
+   * materials for atom pairs across material interfaces.
+   */
+  std::map<Utils::Couple<ID>,
+           std::map<Utils::Couple<Specie>,
+                    Material*>> _interface_materials;
 
   std::vector<unsigned int> _free_atoms;
   std::vector<unsigned int>& get_free_atoms(void);
@@ -154,16 +163,14 @@ private:
   //Initial coordinates. To keep track of hydrogen displacement
   std::vector<double> _initial_coords;
 
-  void
-  check_structure(void);
+  void check_structure(void);
 
   std::vector<std::vector<double>> _alpha;
   std::vector<std::vector<std::vector<double> > > _beta;
   std::vector<std::vector<double> > _d;
   std::vector<std::vector<std::vector<double> > > _teta;
 
-  void
-  resize_parameters(void);
+  void resize_parameters(void);
 
   //! This setup all the arrays of parameters (alpha, beta, d0, teta0)
   void build_parameters(void);
@@ -172,7 +179,7 @@ private:
   double keating_potential(void);
 
   //!Routine to calculate analytical gradient of Keating potential
-  std::vector<double> keating_gradient(void);
+  void keating_gradient(double* grad_dof);
 
 
   void optimize(void);
@@ -189,6 +196,10 @@ private:
 
   //! Prepare stuff which will be needed for the solutions
   void prepare_solutions(void);
+
+  //! A map with
+  //! Handle interfaces with non common atoms
+  void handle_interface(void);
 
   //! Contains a map of solution for any active element, to speed up the get_element
   std::map<Elem*, Tensor2Gen> _elem_strain_map;

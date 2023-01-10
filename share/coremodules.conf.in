@@ -46,8 +46,7 @@ Library tibercad
     core/eigenvalue,
     utils/Tensor,
     utils/SLEPC,
-    utils/FADBAD++,
-    utils/license
+    utils/FADBAD++
   )
   libpath = @ARCH/lib
   linker_flags = -ltibercad
@@ -65,9 +64,9 @@ Library boost
 Library libmesh
 {
   path = @LIBMESH_PREFIX@
-  includes = (., libmesh)
+  includes = (., libmesh, ../contrib/eigen/eigen, ../contrib/timpi/src/parallel/include, ../contrib/timpi/src/utilities/include, ../contrib/timpi/src/algorithms/include )
   libpath = @LIBMESH_PETSC_LIBDIR@
-  linker_flags = -lmesh
+  linker_flags = -lmesh_@METHOD
 }
 
 

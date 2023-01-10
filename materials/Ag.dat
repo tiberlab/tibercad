@@ -1,0 +1,8 @@
+
+[permittivity] # [3]
+permittivity = 11.7
+
+optical_epsilon = 11.85
+optical_data = optics/Ag_book.dat
+
+

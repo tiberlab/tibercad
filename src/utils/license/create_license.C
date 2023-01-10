@@ -1,0 +1,109 @@
+// $Id$
+
+#include "License.h"
+#include "tiber_config.h"
+
+#include <getopt.h>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <cstdlib>
+
+
+
+using namespace std;
+
+
+const char* private_key = "30820273020100300D06092A864886F70D01010105000482025D30820259020100028181008B2D541C099BD67293B49C95220379A4B50DAA85897C733D61C8E5892E173F34166C92D7D0365CCFFA76F7BA72E84DC97002AD39F5E1351AA68DC23F22EBFD0F2B494B7DB0088ADFE688B3F8967CB43917B5DAA4419B3C7A277671AD1CC01FC1E08EC76549C8A60369B4FCA4ECB256F342285195AA52B3870DF8D948D7F99B01020111028180188F87503DEE5305291FDF659C973395895CC3BD366141834D7DCE27445E7490B8A9BF8F7F18A6F7868D7702C8FBD17DE6970F82B2EB81D786CDB8DDF71A961179B6368E7614FB425D8D6EDB7AC98BC49CFD424FC3BC454150CD473785275BF09EEE4B313261E97BF9C890EB83A564997A06C9D94B68D6F30CA80E1A0E72FE3D024100C0785FA4D1E1E1F5FA0452EC3A44931630B96DDEE7F32BC490480CDD9131B8FA2981869D1F170612740FCDD368126028BBA905FFBFF8861CBF4BD2CE4D3F307F024100B91DB6B1965A6E71DA62ECDB4F175E736D614A56AF27DD98CD4DD13F9904B31EDD1C415C0D3174DD18DF4EF0454C120F7DAE291BE9B2C0B3B19F613C38D9747F024016A4BFF545DE56D1A4F1732AD9ADB6F38D42FDDDFD2BAACBD4BD2EB0A7AB7F2C7D5A884EB85D0FC5EF896382487AA1E6ACAA792D25A4C47BDA4527DC09167E2D02404C3969582ED9F13DF083163C2FA035F34B280F8D1AF24C2FDC10FBCEE4A7950CB565FCCB8CF63F2DDD10A8089501349CF783F2CF421C6D772B056445F94A7B43024004F1A62809B09E2FA59BCD45DF226221F89634980862DFE0A40A33BA545346D6D805738765ED53CB2F25E6BA7365E89268C9F2AD7F61114F0A2161F48BD8AB41";
+
+
+void usage(void);
+
+/*
+ * Create a license file
+ */
+int main(int argc, char** argv)
+{
+  if (argc == 1)
+  {
+    usage();
+    exit(0);
+  }
+
+  string filename("tibercad.lic");
+
+  int c;
+  extern char *optarg;
+  extern int optind, optopt;
+  while ((c = getopt(argc, argv, "f:")) != -1)
+  {
+    switch(c)
+    {
+      case 'f':
+        filename = optarg;
+        break;
+
+      case '?':
+      case ':':
+        usage();
+        break;
+    }
+  }
+  
+  // we need two obligatory arguments
+  if (argc < optind + 2)
+  {
+    usage();
+    exit(1);
+  }
+
+  string holder(argv[optind]);
+  string expiry(argv[optind + 1]);
+
+
+  if (!License::create_license(filename, holder, expiry, private_key))
+  {
+    cerr << "License creation failed" << endl;
+    exit(1);
+  }
+
+  
+  char* licfile = getenv("TIBERLICENSEFILE");
+#ifdef HAVE_SETENV
+  setenv("TIBERLICENSEFILE", filename.c_str(), 1);
+#else
+  {
+    string tmp("TIBERLICENSEFILE=" + filename);
+    putenv(tmp.c_str());
+  }
+#endif
+  if (!License::check_license())
+  {
+    cerr << "Ouch... something went wrong, could not successfully "
+      << "verify signature." << endl
+      << "Or did you set the expiry date in the past?" << endl;
+    exit(1);
+  }
+
+
+  return 0;
+}
+  
+
+void usage(void)
+{
+  cout << "Usage:" << endl
+       << endl
+       << "       create_license [-f filename] holder expiry_date" << endl
+       << endl
+       << "       Format for expiry date: YYYY-MM-DD" << endl
+       << "       holder has to be quoted if containing spaces" << endl
+       << endl
+       << "       Default filename is 'tibercad.lic'" << endl
+       << "       NOTE: existing files will be overwritten without warning!" << endl
+       << endl
+       << "       Example:" << endl
+       << "           $ create_license \"University of Rome\" 2008-08-31" << endl
+       << endl;
+}
+

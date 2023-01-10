@@ -6,7 +6,6 @@
 #include "Messages.h"
 #include "SimulationOptions.h"
 #include "ModelOptions.h"
-#include "License.h"
 
 
 #include "libmesh/equation_systems.h"
@@ -41,9 +40,6 @@ Thermal::create(const ModelOptions& options)
 {
   // we could use the options to create different implementations
   // or something like that.
-  if (TiberCad::get_mpi_comm().rank() == 0)
-    License::check_out("thermal",
-        TiberCad::major_version(), 0, 1);
 
   return new Thermal(options);
 }
@@ -81,9 +77,6 @@ Thermal::do_init(void)
 //-------------------------------------------------------------------------//
 Thermal::~Thermal()
 {
-  if (TiberCad::get_mpi_comm().rank() == 0)
-      License::check_in("thermal", 1);
-
 }
 
 

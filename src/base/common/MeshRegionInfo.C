@@ -2,7 +2,8 @@
 
 #include "MeshRegionInfo.h"
 
-#include "mesh_base.h"
+#include "libmesh/mesh_base.h"
+#include "libmesh/parallel_implementation.h"
 
 #include <cassert>
 

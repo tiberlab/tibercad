@@ -1,6 +1,6 @@
 #!/bin/bash
 
-GMSHVER=3.0.6
+GMSHVER=4.8.3
 
 make_windows_package () {
 
@@ -43,6 +43,7 @@ make_windows_package () {
   cp ${topdir}/materials/*.txt ${files}/materials
   cp ${topdir}/materials/*.dat ${files}/materials
   cp ${topdir}/materials/*.etb ${files}/materials
+  cp -r ${topdir}/materials/optics ${files}/materials
 
   unix2dos=`which unix2dos`
   [ "x$unix2dos" == "x" ] && unix2dos=`which todos` ;
@@ -196,8 +197,10 @@ prepare_linux_package () {
   libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep petsc | awk '{print $3}'`"
   libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep slepc | awk '{print $3}'`"
   libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep libz | awk '{print $3}'`"
+  libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep libnetcdf | awk '{print $3}'`"
   libs="$libs `ldd ${topdir}/SDK/${ARCH}/bin/mpiexec.hydra | grep libnuma | awk '{print $3}'`"
-  cp /usr/pack/intel_mkl-11.2-ma/mkl/lib/intel64/libmkl_def.so ${files}/${ARCH}/lib
+  #cp /usr/pack/intel_mkl-11.2-ma/mkl/lib/intel64/libmkl_def.so ${files}/${ARCH}/lib
+  cp /usr/pack/intel_oneapi-2021-ma/mkl/latest/lib/intel64/libmkl_def.so.1 ${files}/${ARCH}/lib
   cp $libs ${files}/${ARCH}/lib
   cp ${topdir}/SDK/${ARCH}/bin/hydra_pmi_proxy ${files}/${ARCH}/bin
   cp ${topdir}/SDK/${ARCH}/bin/mpiexec.hydra ${files}/${ARCH}/bin
@@ -205,6 +208,10 @@ prepare_linux_package () {
   cp ${topdir}/SDK/bin/mpiexec.hydra ${files}/${ARCH}/bin
   cp ${topdir}/${ARCH}/bin/tibercad ${files}/${ARCH}/bin/tibercad
   cp ${topdir}/${ARCH}/lib/lib*.so* ${files}/${ARCH}/lib
+
+  cp /usr/pack/tibercad_dev-3.3-ma/SDK/${ARCH}/bin/mpiexec.hydra ${files}/${ARCH}/bin
+  cp /usr/pack/tibercad_dev-3.3-ma/SDK/${ARCH}/bin/hydra_pmi_proxy ${files}/${ARCH}/bin
+
   #
   # adjust rpath
   #
@@ -255,6 +262,7 @@ prepare_linux_package () {
   cp ${topdir}/materials/*.txt ${files}/materials
   cp ${topdir}/materials/*.dat ${files}/materials
   cp ${topdir}/materials/*.etb ${files}/materials
+  cp -r ${topdir}/materials/optics ${files}/materials
 
   if [ ! -d ${topdir}/contrib/gmsh-${GMSHVER}-Linux64 ]
   then
@@ -274,13 +282,13 @@ prepare_linux_package () {
     chmod a+x ${files}/tools/gmsh/bin/gmsh
   fi
 
-  lmx_dir=/home/maufder/Projects/TIBERCAD/LM-X/lmx-sdk-4.9.8
-  lmx_enduser=${lmx_dir}/lmx-enduser-tools_v4.9.8_linux_x64.sh
-  if test -f $lmx_enduser
-  then
-    cp $lmx_enduser ${files}/license
-    cp ${lmx_dir}/linux_x64/liblmxvendor.so ${files}/license
-  fi
+  #lmx_dir=/home/maufder/Projects/TIBERCAD/LM-X/lmx-sdk-4.9.8
+  #lmx_enduser=${lmx_dir}/lmx-enduser-tools_v4.9.8_linux_x64.sh
+  #if test -f $lmx_enduser
+  #then
+  #  cp $lmx_enduser ${files}/license
+  #  cp ${lmx_dir}/linux_x64/liblmxvendor.so ${files}/license
+  #fi
 
 
   chmod -R a+r ${files}
@@ -290,7 +298,7 @@ prepare_linux_package () {
   cd ${files}
   tar --group 0 --owner 0 $MODE $ARCHIVE * 
   cd $CWDIR
-  rm -rf $files
+  #rm -rf $files
 
   return
 }

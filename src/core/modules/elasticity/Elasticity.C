@@ -12,7 +12,6 @@
 #include "AtomisticStructure.h"
 #include "QuantumContact.h"
 #include "DataOutput.h"
-#include "License.h"
 
 #include "libmesh/equation_systems.h"
 #include "libmesh/dof_map.h"
@@ -31,13 +30,12 @@
 using namespace std;
 using namespace libMesh;
 
-Elasticity*
-Elasticity::_this = NULL;
 
 
 
 Elasticity::Elasticity(const ModelOptions& options) :
-  SimulationInterface(options)
+  SimulationInterface(options),
+  _my_assembly(this)
 {
   // there's nothing to be done
 }
@@ -45,8 +43,6 @@ Elasticity::Elasticity(const ModelOptions& options) :
 
 Elasticity::~Elasticity(void)
 {
-  if (TiberCad::get_mpi_comm().rank() == 0)
-      License::check_in("elasticity", 1);
 }
 
 
@@ -55,9 +51,6 @@ Elasticity::create(const ModelOptions& options)
 {
   // we could use the options to create different implementations
   // or something like that.
-  if (TiberCad::get_mpi_comm().rank() == 0)
-    License::check_out("elasticity",
-        TiberCad::major_version(), 0, 1);
 
   return new Elasticity(options);
 }
@@ -91,7 +84,7 @@ Elasticity::do_init(void)
   uvar[2] =  system.variable_number("uz");
 
 
-  system.attach_assemble_function(assemble);
+  system.attach_assemble_object(_my_assembly);
   system.init();
 
   int n_elem = 0;
@@ -133,9 +126,8 @@ Elasticity::do_setup_solution_variables(void)
   declare_solution(RelativeStrain, TENSOR, NODES, "");
   declare_solution(StrainCell, TENSOR, CELL, "");
   declare_solution(StrainCrystal, TENSOR, NODES, "");
-  //declare_solution(Energy, REAL, NODES, "Joule");
   declare_solution(Stress, TENSOR, NODES, "GPa");
-  declare_solution(StressCrystal, TENSOR, NODES, "");
+  declare_solution(StressCrystal, TENSOR, NODES, "GPa");
   declare_solution(Displacement, VECTOR, NODES, "m");
   declare_solution(StrainSource, TENSOR, NODES, "");
   declare_solution(StressSource, TENSOR, NODES, "GPa");
@@ -149,7 +141,6 @@ Elasticity::do_setup_solution_variables(void)
 void
 Elasticity::do_solve(void)
 {
-  _this = this;
 
   TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
 
@@ -622,7 +613,7 @@ Elasticity::compute_elastic_energy(void)
 
 
 void
-Elasticity::do_assemble(libMesh::EquationSystems& es, const std::string& system_name)
+Elasticity::assemble(void)
 {
 
 
@@ -875,9 +866,6 @@ Elasticity::apply_shape_deformation()
   TiberLinearSystem* system = &get_equation_system<TiberLinearSystem>();
   const unsigned int system_number = system->number();
   
-  // TODO CHECK THIS! It seems that this was terribly wrong and worked only
-  // for one deformation step
-  //const NumericVector<Number>& solution = *sol;
   const libMesh::NumericVector<Number>& solution = system->get_solution_vector();
   const unsigned int dim = get_mesh().mesh_dimension();
   const libMesh::DofMap& dof_map = system->get_dof_map();
@@ -929,7 +917,7 @@ Elasticity::apply_shape_deformation()
       vector<Point> p_ref(1, old_pos);
 
       const Elem* elem = structure[na].get_elem();
-      if (elem == NULL)
+      if (elem == nullptr)
       {
         // here we may arrive when the atom is a passivation atom
         // we simply take the displacement at the neighbour atom
@@ -940,7 +928,7 @@ Elasticity::apply_shape_deformation()
 
         elem = structure[neighbor].get_elem();
 
-        if (elem == NULL)
+        if (elem == nullptr)
           throw RuntimeException("Found atom with no neighbour inside the mesh!");
 
         p_ref[0] = structure[neighbor].get_position() / scale;
@@ -968,13 +956,13 @@ Elasticity::apply_shape_deformation()
 
       fe->reinit(elem, &p_ref);
 
-      for (unsigned int i = 0; i< 3 ; i++)
-	dof_map.dof_indices(elem, dof_indices[i], uvar[i]);
+      for (unsigned int i = 0; i < 3 ; i++)
+        dof_map.dof_indices(elem, dof_indices[i], uvar[i]);
   
       Point displ(0);
-      for (unsigned int i = 0;i<3; i ++)
-	for (unsigned int alpha = 0; alpha < dof_indices[i].size(); alpha++)
-	  displ(i) += (solution)(dof_indices[i][alpha]) * phi[alpha][0];
+      for (unsigned int i = 0; i < 3; i++)
+        for (unsigned int alpha = 0; alpha < dof_indices[i].size(); alpha++)
+          displ(i) += (solution)(dof_indices[i][alpha]) * phi[alpha][0];
         
       //displ /= get_scaling().get_calc_mesh_units();
 
@@ -1052,7 +1040,9 @@ Elasticity::apply_shape_deformation()
         const Elem* elem = cel->first;
         for (unsigned int n = 0; n < elem->n_nodes(); ++n)
         {
-          Node* node = elem->get_node(n);
+          // we require this to be non-const, because we want to
+          // displace the coordinates
+          Node* node = const_cast<Node*>(elem->node_ptr(n));
           if ((node->n_dofs(system_number, uvar[0]) != 0) ||
               visited.count(node))
           {
@@ -1102,12 +1092,12 @@ Elasticity::apply_shape_deformation()
       continue;
 
     Point pos;
-    for(unsigned int i = 0; i<dim; i++)
+    for(unsigned int i = 0; i < dim; i++)
       pos(i) = (*node)(i);
 
     for (unsigned int i = 0; i < dim; i++)
     {
-      const unsigned int  n_dof = node->dof_number(system_number,uvar[i],0);
+      const unsigned int  n_dof = node->dof_number(system_number, uvar[i], 0);
       pos(i) += (solution)(n_dof);
     }
 

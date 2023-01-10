@@ -9,7 +9,7 @@
 #include <string>
 #include <list>
 
-#include "parallel.h"
+#include "libmesh/parallel.h"
 
 class Control;
 
@@ -146,6 +146,9 @@ class TiberCad
      */
     static const std::string& get_output_format(void);
 
+
+    //! Get our MPI Communicator
+    //static const libMesh::Parallel::Communicator& get_mpi_comm(void);
 
     //! Get our MPI Communicator
     static libMesh::Parallel::Communicator& get_mpi_comm(void);

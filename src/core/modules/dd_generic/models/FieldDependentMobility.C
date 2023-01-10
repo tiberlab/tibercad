@@ -131,7 +131,7 @@ FieldDependentMobility::get_mobility(void)
     E = grad_fermi.norm();
   else if (_force == EFIELD)
   {
-    E = grad_fermi.size();
+    E = grad_fermi.norm();
     if (E > 1e-6)
       E = std::fabs(grad_fermi * get_driftdiffusionproperties().get_electric_field()) / E;
     else

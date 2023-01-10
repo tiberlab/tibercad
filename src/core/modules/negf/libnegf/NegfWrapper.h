@@ -69,6 +69,11 @@ public:
   //!Compute charge density
   void density(std::vector<double>& density, std::string particle);
 
+  //!Compute charge density, using quasi-equilibrium approximation
+  void quasi_equilibrium_density(std::vector<double>& density, std::string particle,
+                                 std::vector<double>& Ec, std::vector<double>& Ev,
+                                 std::vector<double>& muN, std::vector<double>& muP);
+
   //! Return the LDOS in matrix form
   void get_ldos(std::vector<std::vector<double>>& ldos);
 
@@ -128,7 +133,12 @@ public:
   //! Initialize structure
   void init_structure(int ncont, const std::vector<int>& surfstart,
     const std::vector<int>& surfend, const std::vector<int>& contend,
-    int npl, const std::vector<int>& plend);
+    int npl, const std::vector<int>& plend, const std::vector<int>& cblks);
+
+  //! Find indices contact blocks
+  std::vector<int> contact_blocks(int ncont, const std::vector<int>& surfstart,
+      const std::vector<int>& surfend, const std::vector<int>& contend, int npl,
+      const std::vector<int>& plend);
 
   //! Get library version
   void get_version(void);
@@ -147,6 +157,9 @@ public:
 
   //! Print matrix
   void print_mat(void);
+
+  //! Print memory statistics
+  void print_memory_statistics(void);
 
 private:
   int _handler[NEGF_HSIZE];

@@ -181,7 +181,6 @@ void  ISE_Element_3D::check_orientation_3D()
 
 
   ISE_Vertex*  temp;
-  ISE_Vertex*  temp_list[3];
 
   bool swap;
   swap = false;
@@ -326,8 +325,9 @@ void  ISE_Element_3D::check_orientation_3D()
       break;
 
     case 7: // ISE  PRISM6
+    {
 
-      // temp_list[3];
+      ISE_Vertex*  temp_list[3];
 
       // swap   (0 1 2) -> (3 4 5 )
 
@@ -353,9 +353,12 @@ void  ISE_Element_3D::check_orientation_3D()
       }
 
       break;
+    }
 
     case 8 : // ISE HEX8
+    {
 
+      ISE_Vertex*  temp_list[4];
       // swap   (0 1 2 3) -> ( 4 5  6  7  )
 
       for (unsigned int i=0; i<4; i++)
@@ -380,6 +383,7 @@ void  ISE_Element_3D::check_orientation_3D()
 
 
       break;
+    }
 	   
       // 
 

@@ -8,8 +8,8 @@ fi
 
 . common.sh
 
-#TIBEROPTS=${TIBEROPTS:-"--enable-uptight --enable-license-check --disable-hetero"}
-TIBEROPTS=${TIBEROPTS:-"--enable-uptight --disable-license-check --disable-hetero"}
+TIBEROPTS=${TIBEROPTS:-"--enable-uptight --enable-license-check --disable-hetero"}
+#TIBEROPTS=${TIBEROPTS:-"--enable-uptight --disable-license-check --disable-hetero"}
 
 if [ "$MKL" = y ]; then
 TIBEROPTS="${TIBEROPTS} --with-mkl=${MKLDIR}"
@@ -41,14 +41,14 @@ export CXXFLAGS="$CXXFLAGS -fopenmp"
 export LDFLAGS="$LDFLAGS -fopenmp"
 
 ./configure \
-  --with-cuda=/usr/pack/cudatoolkit-5.5.11-ma \
+  --with-cuda=${CUDADIR} \
   --with-petsc-prefix=${BUILDDIR}/petsc-${PETSCVERSION}${PETSCPATCHLEVEL} \
   --with-petsc-arch=${TCHOST} \
   --with-mpiexec=${MPIEXEC} \
   --with-slepc-prefix=${BUILDDIR}/slepc-${PETSCVERSION}${SLEPCPATCHLEVEL} \
   $TIBEROPTS \
   --with-libmesh-prefix=${BUILDDIR}/libmesh-${LIBMESHVERSION}-${TCHOST} \
-  --with-libmesh-petsc-libdir=${TOPDIR}/${TCHOST}/lib \
+  --with-libmesh-petsc-libdir=${SDKDIR}/${TCHOST}/lib \
   --with-boost-prefix=${SDKDIR} --with-boost-libdir=${TOPDIR}/${TCHOST}/lib \
   --host=$HOST --build=$BUILD
 
@@ -57,7 +57,7 @@ export LDFLAGS="$LDFLAGS -fopenmp"
 
 make METHOD=opt
 
-if test ! "${MPIDIR}" -ne "${SDKDIR}"
+if test "${MPIDIR}" != "${SDKDIR}"
 then
   mkdir -p SDK/bin
   cp ${MPIDIR}/bin/mpiexec.hydra SDK/bin

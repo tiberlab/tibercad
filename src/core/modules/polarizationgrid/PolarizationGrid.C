@@ -532,7 +532,7 @@ PolarizationGrid::energy2(unsigned int i)
 
         // note: distance also works for folded cells
         Point rr = grid.distance(ii[0],ii[1],ii[2], k1,l1,m1);
-        double dd = rr.size();
+        double dd = rr.norm();
         rr /= dd; 
 
         // fold to central cell (nx folds to 0 and so on)
@@ -584,7 +584,7 @@ PolarizationGrid::dot_product(unsigned int i, std::vector<double>& bins, double 
       {
         // note: distance also works for folded cells
         Point rr = grid.distance(ii[0],ii[1],ii[2], k1,l1,m1);
-        double dd = rr.size();
+        double dd = rr.norm();
 
         if (dd < 0.2){ continue; }
         // fold to central cell (nx folds to 0 and so on)
@@ -596,7 +596,7 @@ PolarizationGrid::dot_product(unsigned int i, std::vector<double>& bins, double 
         // define the proper bin 
         int kk = (int) (dd/dr);
 
-        bins[kk] += (pp[i]*pp[j]) /(pp[i].size()*pp[j].size());
+        bins[kk] += (pp[i]*pp[j]) /(pp[i].norm()*pp[j].norm());
         
         //cout<<dd<<"  "<<kk<<"  "<<bins[kk]<<endl;
 
@@ -660,15 +660,15 @@ PolarizationGrid::autocorrelation(int dir, unsigned int l1, unsigned int l2, vec
        {
         case 0:
           j = grid.index_to_element(k1,ii[1],ii[2]);
-          c[kk] += (pp[i](0)*pp[j](0)) / (pp[i].size()*pp[j].size());
+          c[kk] += (pp[i](0)*pp[j](0)) / (pp[i].norm()*pp[j].norm());
           break;
         case 1:
           j = grid.index_to_element(ii[0],k1,ii[2]);
-          c[kk] += (pp[i](1)*pp[j](1)) / (pp[i].size()*pp[j].size());
+          c[kk] += (pp[i](1)*pp[j](1)) / (pp[i].norm()*pp[j].norm());
           break;
         case 2:
           j = grid.index_to_element(ii[0],ii[1],k1);
-          c[kk] += (pp[i]*pp[j]) / (pp[i].size()*pp[j].size());
+          c[kk] += (pp[i]*pp[j]) / (pp[i].norm()*pp[j].norm());
        }
 
           

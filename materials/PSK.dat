@@ -1,0 +1,13 @@
+
+[permittivity] # [3]
+permittivity = 25.5
+
+optical_epsilon = 25.5
+optical_data = optics/MAPb(Br0.25I0.75)3_book.dat
+
+# mobility
+[mobility/constant] #[2] 
+mu_max   = (5.0, 5.0)
+
+
+

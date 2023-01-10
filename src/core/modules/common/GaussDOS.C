@@ -216,16 +216,12 @@ double GaussDOS::K(double x, double h) const
 
 void
 GaussDOS::calculate_density_and_derivative(std::vector<double>& result, double Ef, double Epot,
-    double kT, double kTlattice, const Elem* , const Point& ) const
+    double kT, double, const Elem* elem, const Point& p) const
 {
-  return calculate_density_and_derivative(result, Ef, Epot, kT, kTlattice);
-}
 
-void
-GaussDOS::calculate_density_and_derivative(std::vector<double>& result,
-    double Ef, double Epot, double kT, double ) const
-{
   double dens, der, der2;
+
+  double N0 = get_effective_dos(elem, p);
 
   double ref_en = get_reference_energy()[0];
   if (get_particle() == 'h') ref_en *= -1.0;
@@ -244,7 +240,7 @@ GaussDOS::calculate_density_and_derivative(std::vector<double>& result,
     double ks;
     ks = K(s, hs);
     espf = exp( ks * (z + s*s));
-    dens = _N0 * exp(z + 0.5 *s*s) / (espf + 1.0);	
+    dens = N0 * exp(z + 0.5 *s*s) / (espf + 1.0);
     if (result.size() > 1)
       der = dens * (1.0 - (ks * espf / (espf + 1.0) ) ) / kT;
     if (result.size() > 2)
@@ -255,9 +251,9 @@ GaussDOS::calculate_density_and_derivative(std::vector<double>& result,
   }
   else
   {
-    dens = _N0 * 0.5 * erfc(-1.0 * hs * z / (s * sqrt(2.0)) );
+    dens = N0 * 0.5 * erfc(-1.0 * hs * z / (s * sqrt(2.0)) );
     if (result.size() > 1)
-      der = _N0 * hs * exp(-0.5 * hs * hs * z * z / (s*s)) / (s * sqrt(2.0*M_PI) * kT);
+      der = N0 * hs * exp(-0.5 * hs * hs * z * z / (s*s)) / (s * sqrt(2.0*M_PI) * kT);
     if (result.size() > 2)
       der2 = der * (- hs * hs * z / (s*s))/kT;
 

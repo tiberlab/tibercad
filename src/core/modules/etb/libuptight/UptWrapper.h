@@ -16,12 +16,12 @@ class UptWrapper
 
 public:
 
-  //!Wrapper class for callings to DFTB+ library (libdftbp.so)
+  //!Wrapper class for callings to uptight library
 
 
 
   //!Constructor
-  /*!Assign an handler to DFTB+ instance, transparent to programmer
+  /*!Assign an handler to uptight instance, transparent to programmer
    *
    */
   UptWrapper();
@@ -189,6 +189,10 @@ public:
   //! get computed states
   void get_states(int num_ev, int hdim, double* eigenvals,
                   Complex* states, int* particles); 
+
+  //! set a state in uptight
+  void set_state(int num_ev, int id, int hdim, double eigval,
+      const std::vector<Complex>& state, int particle);
 
   Complex get_matel(int i, int j);
 

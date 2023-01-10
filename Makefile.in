@@ -15,7 +15,7 @@ MODULE_LIBS := -leigen_solver
 # MODULE_LIBS += -lmkl_core
 #endif
 
-MODULE_LIBS += $(topdir)/src/utils/license/.$(ARCH)/liblicense.a
+
 
 export MODULE_LIBS
 

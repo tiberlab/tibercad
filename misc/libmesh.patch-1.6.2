@@ -1,0 +1,112 @@
+--- ./include/mesh/distributed_mesh.h.orig	2021-11-05 14:51:35.227212403 +0100
++++ ./include/mesh/distributed_mesh.h	2021-11-05 14:53:08.327159165 +0100
+@@ -432,6 +432,11 @@
+   virtual const_element_iterator active_subdomain_set_elements_begin (std::set<subdomain_id_type> ss) const override;
+   virtual const_element_iterator active_subdomain_set_elements_end (std::set<subdomain_id_type> ss) const override;
+ 
++  virtual element_iterator active_local_subdomain_set_elements_begin (std::set<subdomain_id_type> ss) override;
++  virtual element_iterator active_local_subdomain_set_elements_end (std::set<subdomain_id_type> ss) override;
++  virtual const_element_iterator active_local_subdomain_set_elements_begin (std::set<subdomain_id_type> ss) const override;
++  virtual const_element_iterator active_local_subdomain_set_elements_end (std::set<subdomain_id_type> ss) const override;
++
+   virtual element_iterator ghost_elements_begin () override;
+   virtual element_iterator ghost_elements_end () override;
+   virtual const_element_iterator ghost_elements_begin () const override;
+--- ./include/mesh/mesh_base.h.orig	2020-10-12 18:44:27.000000000 +0200
++++ ./include/mesh/mesh_base.h	2021-11-05 14:51:35.227212403 +0100
+@@ -1205,6 +1205,11 @@
+   virtual const_element_iterator active_local_subdomain_elements_begin (subdomain_id_type subdomain_id) const = 0;
+   virtual const_element_iterator active_local_subdomain_elements_end (subdomain_id_type subdomain_id) const = 0;
+ 
++  virtual element_iterator active_local_subdomain_set_elements_begin (std::set<subdomain_id_type> ss) = 0;
++  virtual element_iterator active_local_subdomain_set_elements_end (std::set<subdomain_id_type> ss) = 0;
++  virtual const_element_iterator active_local_subdomain_set_elements_begin (std::set<subdomain_id_type> ss) const = 0;
++  virtual const_element_iterator active_local_subdomain_set_elements_end (std::set<subdomain_id_type> ss) const = 0;
++
+   virtual element_iterator local_level_elements_begin (unsigned int level) = 0;
+   virtual element_iterator local_level_elements_end (unsigned int level) = 0;
+   virtual const_element_iterator local_level_elements_begin (unsigned int level) const = 0;
+--- ./include/mesh/replicated_mesh.h.orig	2021-11-05 14:51:35.227212403 +0100
++++ ./include/mesh/replicated_mesh.h	2021-11-05 14:53:54.943132319 +0100
+@@ -373,6 +373,11 @@
+   virtual const_element_iterator active_subdomain_set_elements_begin (std::set<subdomain_id_type> ss) const override;
+   virtual const_element_iterator active_subdomain_set_elements_end (std::set<subdomain_id_type> ss) const override;
+ 
++  virtual element_iterator active_local_subdomain_set_elements_begin (std::set<subdomain_id_type> ss) override;
++  virtual element_iterator active_local_subdomain_set_elements_end (std::set<subdomain_id_type> ss) override;
++  virtual const_element_iterator active_local_subdomain_set_elements_begin (std::set<subdomain_id_type> ss) const override;
++  virtual const_element_iterator active_local_subdomain_set_elements_end (std::set<subdomain_id_type> ss) const override;
++
+   virtual element_iterator ghost_elements_begin () override;
+   virtual element_iterator ghost_elements_end () override;
+   virtual const_element_iterator ghost_elements_begin () const override;
+--- ./include/base/multi_predicates.h.orig	2020-10-12 17:00:40.000000000 +0200
++++ ./include/base/multi_predicates.h	2021-11-05 14:51:35.231212400 +0100
+@@ -644,6 +644,25 @@
+ };
+ 
+ 
++/**
++ * Used to iterate over non-NULL, active elements whose
++ * subdomains are in a user-specified set.
++ */
++template <typename T>
++struct ActiveLocalSubdomainSet : abstract_multi_predicate<T>
++{
++  ActiveLocalSubdomainSet(processor_id_type my_pid,
++                          std::set<subdomain_id_type> sset)
++  {
++    this->_predicates.push_back(new not_null<T>);
++    this->_predicates.push_back(new active<T>);
++    this->_predicates.push_back(new pid<T>(my_pid));
++    this->_predicates.push_back(new subdomain_set<T>(sset));
++  }
++};
++
++
++
+ 
+ /**
+  * Used to iterate over non-nullptr, active elements on a given
+@@ -679,6 +698,7 @@
+ 
+ 
+ 
++
+ /**
+  * Used to iterate over non-nullptr elements not owned by a given
+  * processor but semi-local to that processor, i.e. ghost elements.
+--- ./src/mesh/mesh_iterators.C.orig	2021-11-05 16:02:26.988355101 +0100
++++ ./src/mesh/mesh_iterators.C	2021-11-05 16:14:38.319881380 +0100
+@@ -168,6 +168,7 @@
+ INSTANTIATE_ELEM_ACCESSORS(local_level_elements,            LocalLevel,           unsigned int level,             this->processor_id(), level)
+ INSTANTIATE_ELEM_ACCESSORS(local_not_level_elements,        LocalNotLevel,        unsigned int level,             this->processor_id(), level)
+ INSTANTIATE_ELEM_ACCESSORS(active_local_subdomain_elements, ActiveLocalSubdomain, subdomain_id_type subdomain_id, this->processor_id(), subdomain_id)
++INSTANTIATE_ELEM_ACCESSORS(active_local_subdomain_set_elements,   ActiveLocalSubdomainSet,   std::set<subdomain_id_type> ss, this->processor_id(), ss)
+ 
+ // Instantiate various node iterator accessor functions.
+ INSTANTIATE_NODE_ACCESSORS(nodes,        NotNull, EMPTY,                               EMPTY)
+--- ./src/base/libmesh.C.orig	2020-10-12 18:44:27.000000000 +0200
++++ ./src/base/libmesh.C	2021-11-05 14:51:35.263212382 +0100
+@@ -684,21 +684,6 @@
+   ReferenceCounter::print_info ();
+ 
+ 
+-  // Print an informative message if we detect a memory leak
+-  if (ReferenceCounter::n_objects() != 0)
+-    {
+-      libMesh::err << "Memory leak detected!"
+-                   << std::endl;
+-
+-#if !defined(LIBMESH_ENABLE_REFERENCE_COUNTING) || defined(NDEBUG)
+-
+-      libMesh::err << "Compile in DEBUG mode with --enable-reference-counting"
+-                   << std::endl
+-                   << "for more information"
+-                   << std::endl;
+-#endif
+-
+-    }
+ 
+   //  print the perflog to individual processor's file.
+   libMesh::perflog.print_log();
