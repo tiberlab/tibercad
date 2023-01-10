@@ -197,6 +197,7 @@ prepare_linux_package () {
   libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep petsc | awk '{print $3}'`"
   libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep slepc | awk '{print $3}'`"
   libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep libz | awk '{print $3}'`"
+  libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep libnetcdf | awk '{print $3}'`"
   libs="$libs `ldd ${topdir}/SDK/${ARCH}/bin/mpiexec.hydra | grep libnuma | awk '{print $3}'`"
   #cp /usr/pack/intel_mkl-11.2-ma/mkl/lib/intel64/libmkl_def.so ${files}/${ARCH}/lib
   cp /usr/pack/intel_oneapi-2021-ma/mkl/latest/lib/intel64/libmkl_def.so.1 ${files}/${ARCH}/lib
