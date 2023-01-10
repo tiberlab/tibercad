@@ -18,7 +18,7 @@ export CUDADIR=/usr/pack/cudatoolkit-11.4-ma
 
 export MPI=y
 #export MPIDIR="$(dirname `pwd`)/SDK"
-export MPIDIR=/usr/pack/tibercad_dev-3.3-ma/SDK
+export MPIDIR=/usr/pack/tibercad_dev-3.2-ma/SDK
 
 export FORTRANDIR=/usr/pack/intel_oneapi-2021-ma/compiler/latest/linux/compiler
 

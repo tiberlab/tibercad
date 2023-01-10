@@ -105,12 +105,11 @@ METHOD=devel
     --disable-strict-lgpl \
     --enable-second --enable-exceptions --disable-laspack --disable-sfc \
     --disable-gzstreams --disable-bzip2 --disable-vtk \
-    --disable-tecplot --disable-netcdf --disable-netcdf-4 --disable-exodus --disable-nemesis \
+    --disable-tecplot --disable-netcdf-4 --disable-exodus --disable-nemesis \
     --disable-libHilbert --disable-perflog  --disable-gmv \
     --disable-reference-counting --disable-legacy-using-namespace --enable-unique-ptr \
     --disable-deprecated \
     --disable-metaphysicl \
-    --disable-hdf5 \
     --with-subdomain-id-bytes=2 \
     --disable-fparser \
     --with-methods="$METHOD" \

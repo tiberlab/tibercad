@@ -19,13 +19,12 @@ make_slepc()
 
   export SLEPC_DIR=${PWD}
 
-  export PETSC_DIR=${BUILDDIR}/petsc-${PETSCVERSION}${PETSCPATCHLEVEL}
+  export PETSC_DIR=${BUILDDIR}/petsc-${SLEPCVERSION}${PETSCPATCHLEVEL}
 
   export PETSC_ARCH=${TCHOST}
   [ "$datatype" == "complex" ] && export PETSC_ARCH=${TCHOST}-complex
 
   echo "Building with PETSC_ARCH=${PETSC_ARCH} ..."
-  echo "PETSC_DIR: $PETSC_DIR"
 
   if [ "x$LINKONLY" == "x" ]
   then
