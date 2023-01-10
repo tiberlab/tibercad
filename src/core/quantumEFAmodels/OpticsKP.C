@@ -59,8 +59,6 @@ PhysicalModel* OpticsKP::create_bulk_model(const ModelOptions& options,
 OpticsKP::OpticsKP(const ModelOptions& options)
  : Optics(options)
 {
-  initial_state_model = NULL;
-  final_state_model = NULL;
  
   has_solution_vector(false);
 }
@@ -72,6 +70,8 @@ void OpticsKP::do_init()
 {
 
   Optics::do_init(); 
+
+  _compute_intraband_terms = get_option("compute_intraband_terms", _compute_intraband_terms);
 
   // we need to remap some pointers in order to access some EFA stuff.
   initial_state_model = static_cast<EnvelopFunctionApprox*> (_initial_state_model); 
@@ -277,8 +277,6 @@ void OpticsKP::calculate_matrix_bulk(void)
 void OpticsKP::do_assemble(const ModelOptions& opts)
 {
 
-  bool intraband = get_option("calculate_intraband_term", false);
-
   const MeshBase* mesh = &get_mesh();
   unsigned int dim = mesh->mesh_dimension();
 
@@ -427,7 +425,7 @@ void OpticsKP::do_assemble(const ModelOptions& opts)
                 value[pol] += temp * P[pol][band1][band2].constant ;
 
               // intraband part
-              if (intraband && (band1 == band2))
+              if (_compute_intraband_terms && (band1 == band2))
               {
                 libMesh::Complex val(0.0, -JxW[qp] * phi[p1][qp]);
                 value[0] += val * dphi[p2][qp](0);
@@ -628,121 +626,6 @@ std::vector<libMesh::Complex> OpticsKP::calculate_matrix_element(unsigned int i,
 
     result[pol] = libMesh::Complex(mme_r, mme_i);
   }
-
-/*
-  for (short pol = 0; pol < 3; pol++)
-  {//polarization
-    for (int row = 0 ; row < size_matrix; row++)
-    {//rows of P matrix
-
-      //! This compute the band index of a given row
-      short band_number1 = row/number_of_nodes;
-
-      band_it = kp_bands_map_in.find( band_number1 );
-
-
-      if (band_it != kp_bands_map_in.end())
-      {//band exists in kp model of the initial state
-
-        unsigned int dof_in_initial_eigenvector = band_it->second * number_of_nodes + row%number_of_nodes;
-        int ierr = 0;
-        const  PetscScalar *petsc_row_vals_real;
-        const  PetscInt *petsc_cols_real;
-        int n_cols_real = 0;
-
-        const  PetscScalar *petsc_row_vals_imag;
-        const  PetscInt *petsc_cols_imag;
-        int n_cols_imag = 0;
-
-
-        map<int,double> real_values, imag_values;
-        map<int, double>::iterator  position;
-
-
-        set<int> real_column, imag_column, complex_column;
-        set<int>::iterator com_col_it;
-
-        insert_iterator<set<int> >  com_ins(complex_column,complex_column.begin() );
-
-
-        ierr = MatGetRow(P_real_p[pol]->mat(), row ,&n_cols_real, &petsc_cols_real,&petsc_row_vals_real);
-        CHKERRABORT(libMesh::COMM_WORLD,ierr);
-        real_column.clear();
-
-        for (int i = 0; i < n_cols_real; i++)
-          if (petsc_row_vals_real[i] != 0.0)
-          {
-            real_column.insert(petsc_cols_real[i]);
-
-            real_values.insert(make_pair(petsc_cols_real[i],petsc_row_vals_real[i] ));
-          }
-
-
-        ierr = MatGetRow(P_imag_p[pol]->mat(), row ,&n_cols_imag, &petsc_cols_imag,&petsc_row_vals_imag);
-        CHKERRABORT(libMesh::COMM_WORLD,ierr);
-        imag_column.clear();
-
-
-        for (int i = 0; i < n_cols_real; i++)
-          if (petsc_row_vals_imag[i] != 0.0)
-          {
-            imag_column.insert(petsc_cols_imag[i]);
-            imag_values.insert(make_pair(petsc_cols_imag[i],petsc_row_vals_imag[i] ));
-          }
-
-
-        set_union(real_column.begin(), real_column.end(), imag_column.begin(), imag_column.end(), com_ins);
-
-        for (com_col_it = complex_column.begin(); com_col_it != complex_column.end(); com_col_it++)
-        {
-          int n1 = *com_col_it;
-
-          short band_number2  = n1/number_of_nodes;
-
-          band_it = kp_bands_map_fi.find(band_number2 );
-
-          if (band_it != kp_bands_map_fi.end())
-          {//band exists in kp model of the final state
-            double value_real;
-            double value_imag;
-
-            //real part------
-            position = real_values.find(n1);
-            if (position != real_values.end())
-              value_real = position->second;
-            else
-              value_real = 0.0;
-
-            //imag part
-            position = imag_values.find(n1);
-            if (position != imag_values.end())
-              value_imag = position->second;
-            else
-              value_imag = 0.0;
-
-            libMesh::Complex value_complex = libMesh::Complex(value_real, value_imag);
-
-
-            unsigned int dof_in_final_eigenvector = band_it->second * number_of_nodes + n1%number_of_nodes;
-
-
-            result[pol] += value_complex * conj(eigen_vector_i[dof_in_initial_eigenvector]) * 
-                                                eigen_vector_f[dof_in_final_eigenvector];
-
-
-          }
-        }
-
-
-        ierr = MatRestoreRow(P_real_p[pol]->mat(), row ,&n_cols_real, &petsc_cols_real,&petsc_row_vals_real);
-        CHKERRABORT(libMesh::COMM_WORLD,ierr);
-
-        ierr = MatRestoreRow(P_imag_p[pol]->mat(), row ,&n_cols_imag, &petsc_cols_imag,&petsc_row_vals_imag);
-        CHKERRABORT(libMesh::COMM_WORLD,ierr);
-      }
-    }
-  }
-  */
 
   return(result);
 }

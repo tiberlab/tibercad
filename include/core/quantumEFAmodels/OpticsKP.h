@@ -55,17 +55,17 @@ class OpticsKP: public Optics
 
 
   //!system that we add to the equation systems
-  libMesh::LinearImplicitSystem* system;
+  libMesh::LinearImplicitSystem* system{nullptr};
 
   std::vector<unsigned int> psivar;
   
 
   //!pointer to the EFA for initial states to access its class members
-  EnvelopFunctionApprox* initial_state_model;
+  EnvelopFunctionApprox* initial_state_model{nullptr};
 
 
   //!pointer to the EFA for initial states to access its class members 
-  EnvelopFunctionApprox* final_state_model;
+  EnvelopFunctionApprox* final_state_model{nullptr};
 
 
   //!map that contains pointers to bulk Hamiltoninas
@@ -73,23 +73,34 @@ class OpticsKP: public Optics
 
   
   //!pointer to the real part of  Px matrix
-  libMesh::SparseMatrix<Number>* Px_matr_real;
+  libMesh::SparseMatrix<Number>* Px_matr_real{nullptr};
 
   //!pointer to the imaginary part of  Px matrix
-  libMesh::SparseMatrix<Number>* Px_matr_imag;
+  libMesh::SparseMatrix<Number>* Px_matr_imag{nullptr};
 
   //!pointer to the real part of  Py matrix
-  libMesh::SparseMatrix<Number>* Py_matr_real;
+  libMesh::SparseMatrix<Number>* Py_matr_real{nullptr};
  
   //!pointer to the imaginary part of  Py matrix
-  libMesh::SparseMatrix<Number>* Py_matr_imag;
+  libMesh::SparseMatrix<Number>* Py_matr_imag{nullptr};
  
   //!pointer to the real part of  Pz matrix
-  libMesh::SparseMatrix<Number>* Pz_matr_real;
+  libMesh::SparseMatrix<Number>* Pz_matr_real{nullptr};
 
   //!pointer to the imaginary part of  Pz matrix
-  libMesh::SparseMatrix<Number>* Pz_matr_imag;
+  libMesh::SparseMatrix<Number>* Pz_matr_imag{nullptr};
   
+  /*!
+   * \brief Whether or not to compute the envelope
+   *        contribution to the optical matrix element
+   *
+   * As default, we include both the overlap and the momentum
+   * matrix element of the envelope functions, as it is no
+   * large computational overhead.
+   */
+  bool _compute_intraband_terms{true};
+
+
 
 
   //!calculate P-vector matrix element between states i and j
