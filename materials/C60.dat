@@ -1,12 +1,24 @@
+[valenceband]
+E_v = -5.9
+
+m_dos = 2.5
+
+
+[conductionband]
+m_G = 2.5
+m_dos = 2.5
+
+[bandgap]
+Eg_G = 2
 
 [permittivity] # [3]
-permittivity = 3
+permittivity = 5
 
 optical_epsilon = 3
-optical_data = optics/PTAA_Santbergen.dat
+optical_data = optics/C60.nk
 
 [mobility/constant]
-mu_max   = (1e-8,   1e-4)
+mu_max   = (1e-2,   1e-3)
 
 
 
