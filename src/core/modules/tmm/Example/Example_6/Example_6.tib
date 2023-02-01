@@ -16,7 +16,7 @@ Device
 
   Region Glass 
   {
-  	Incoherency = 0
+  	Incoherency = 1
   	material = Glass
   }
 

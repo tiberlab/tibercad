@@ -32,7 +32,7 @@ Module tmm
   incident_angle = 0
   wavelength_uper_lim = 950
   wavelength_lower_lim = 300
-  wavelength_steps = 10
+  wavelength_steps = 1
 
   Physics 
   {

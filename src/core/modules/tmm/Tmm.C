@@ -590,6 +590,8 @@ Tmm::do_solve(void)
            E_F.push_back(1);
            E_B.push_back(0);
 
+           //T = get_M(n_real[n_real.size()-N0-2],n_imag[n_real.size()-N0-2],l[n_real.size()-N0-2],lambda,theta[n_real.size()-N0-2],0);
+
            for (int k = n_real.size()-N0-2 ;k >= 0 ; --k)
            {
              DD = get_D(n_real[k],-n_imag[k],n_real[k+1],-n_imag[k+1],theta[k],theta[k+1]);
@@ -607,8 +609,8 @@ Tmm::do_solve(void)
              E_F.push_back(E_I.get(0)) ;
              E_B.push_back(E_I.get(2));
            }
-           std::cout<<"TMM IS "<<std::endl;
-           T.print();
+           //std::cout<<"TMM IS "<<std::endl;
+           //T.print();
            //****************************************************************************
            //***************normalizing electric field matrix****************************
            vector<complex<double>> E_F_NORM(n_real.size());
