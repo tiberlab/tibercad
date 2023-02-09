@@ -1,0 +1,5 @@
+[permittivity] 
+permittivity = 22
+
+optical_epsilon = 6.5
+optical_data = optics/GaN.nk

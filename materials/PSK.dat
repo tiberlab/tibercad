@@ -1,5 +1,5 @@
 [valenceband]
-E_v = -5.47
+E_v = -5.57
 
 m_dos = 0.13
 
@@ -15,12 +15,12 @@ Eg_G = 1.67
 [permittivity] 
 permittivity = 22
 
-optical_epsilon = 25.5
+optical_epsilon = 6.5
 optical_data = optics/pero.nk
 
 # mobility
 [mobility/constant] 
-mu_max   = (5.0, 5.0)
+mu_max   = (4500.0, 4500.0)
 
 
 

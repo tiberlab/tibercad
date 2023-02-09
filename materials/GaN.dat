@@ -1,5 +1,8 @@
 # GaN
 
+[permittivity]
+optical_data = optics/FTO-TEC15_book.dat
+
 structure = wz
 
 [lattice]
@@ -9,6 +12,8 @@ u = 0.3768
 
 thermal_coefficient = (5.59e-6, 3.17e-6)
 
+
+optical_data = optics/GaN.nk
 
 [valenceband]
 #E_v = -2.64
