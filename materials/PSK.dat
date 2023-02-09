@@ -20,7 +20,7 @@ optical_data = optics/pero.nk
 
 # mobility
 [mobility/constant] 
-mu_max   = (4500.0, 4500.0)
+mu_max   = (5.0, 5.0)
 
 
 
