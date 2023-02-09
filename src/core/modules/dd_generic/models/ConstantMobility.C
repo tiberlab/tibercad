@@ -33,6 +33,7 @@ ConstantMobility::do_init(void)
 {
   get_parameter("mu", mu0_);
   get_parameter("mu0", mu0_);
+  get_parameter("exponent", exp_);
   // we allow also mu_e and mu_h
   get_parameter(std::string("mu_") + get_carrier_type(), mu0_);
 }

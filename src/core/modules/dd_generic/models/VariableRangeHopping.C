@@ -12,6 +12,32 @@
 
 
 
+VariableRangeHopping::VariableRangeHopping(const ModelOptions& options)
+ : MobilityModelInterface(options),
+   _mu_0(100.0),
+  _gamma(1.0/3.0),
+  _hopping_distance(1.0e-6),
+  _temp_hopping_conduction(1200.0)
+{
+}
+
+
+
+VariableRangeHopping*
+VariableRangeHopping::create (const ModelOptions& options)
+{
+  return new VariableRangeHopping(options);
+}
+
+
+
+
+VariableRangeHopping::~VariableRangeHopping(void)
+{
+}
+
+
+
 
 
 

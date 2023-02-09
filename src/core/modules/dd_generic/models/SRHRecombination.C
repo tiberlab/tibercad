@@ -364,12 +364,16 @@ SRHRecombination::calculate_rate_and_derivatives(std::vector<double>& R, std::ve
   double deriv_gc = -deriv_e / (f_e * f_e);
   double deriv_gv =  deriv_h / ((1 - f_h) * (1 - f_h));
 
-  //if (arg_e / kT_e > 50)
+  if (arg_e / kT_e > 50)
+  {
     gc = exp(arg_e / kT_e);
     deriv_gc = -gc / kT_e;
-  //if (arg_e / kT_e < -50)
+  }
+  if (arg_e / kT_e < -50)
+  {
     gv = exp(-arg_h / kT_h);
     deriv_gv = gv / kT_h;
+  }
 
 
 
@@ -387,6 +391,7 @@ SRHRecombination::calculate_rate_and_derivatives(std::vector<double>& R, std::ve
   double rec = nom / denom;
   R[id1] = rec;
   R[id2] = rec;
+
 
 
   long double denom2 = denom * denom;
