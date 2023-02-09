@@ -264,12 +264,14 @@ DriftDiffusionProperties::do_init(void)
   _acceptor_reference_carrier = this->get_carrier_id(acceptor_ref);
 
   if ((_donor_reference_carrier == unknown_carrier_id) &&
-      (get_material()->donors_begin() != get_material()->donors_end()))
+      (get_material()->donors_begin() != get_material()->donors_end()) &&
+       !(*get_material()->donors_begin())->get_options().find_option("reference_carrier"))
   {
     throw InitFailedException("No valid carrier specified as reference for donors.");
   }
   if ((_acceptor_reference_carrier == unknown_carrier_id) &&
-      (get_material()->acceptors_begin() != get_material()->acceptors_end()))
+      (get_material()->acceptors_begin() != get_material()->acceptors_end()) &&
+       !(*get_material()->acceptors_begin())->get_options().find_option("reference_carrier"))
   {
     throw InitFailedException("No valid carrier specified as reference for acceptors.");
   }
