@@ -1,0 +1,129 @@
+
+Log start: Mon Feb 13 18:59:16 2023
+
+
+Writing log to output//Example_7.log.0
+tiberCAD release 3.2.0 (rev. 5261, x86_64-linux)
+
+Input file: Example_7.tib
+
+Initialize global simulation options
+  Simulation temperature: 300 K
+  Database search path  : /home/pamiri/TiberCAD/materials
+  Log file              : output//Example_7.log.0
+
+Setup mesh
+  Reading mesh file 'Example_7.msh ...
+    mesh reading time: 0h 0m 0.0032s
+    mesh preparation time: 0h 0m 0.0013s
+    bd_regions preparation time: 0h 0m 2.9e-05s
+
+    mesh units          : 1e-09 m
+    mesh dimension      :       1
+    number of nodes     :    1221
+    number of elements  :    1220
+    number of subdomains:       4
+    number of boundaries:       1
+
+Create materials ...
+
+*** Warning: found unused options in block : x-growth-direction, y-growth-direction, z-growth-direction
+  Added material Air for region 'AIR' (mesh regions 1)
+    (using datafile /home/pamiri/TiberCAD/materials/Air.dat)
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+  Added material Ag for region 'Ag' (mesh regions 2)
+    (using datafile /home/pamiri/TiberCAD/materials/Ag.dat)
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+  Added material GaN_optic for region 'GaN' (mesh regions 3)
+    (using datafile /home/pamiri/TiberCAD/materials/GaN_optic.dat)
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+  Added material Sapphire for region 'Sapphire' (mesh regions 4)
+    (using datafile /home/pamiri/TiberCAD/materials/Sapphire.dat)
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+Creation of materials done.
+
+Setting up simulation of type 'tmm' ...
+  (using /home/pamiri/TiberCAD/x86_64-linux/modules/tmm/tmm.so)
+    Adding boundary 'dipole'
+    (using /home/pamiri/TiberCAD/x86_64-linux/modules/tmm/tmm_bnd_dipole_source.so)
+  Creating bulk models... 
+    Region: AIR
+    Region: Ag
+    Region: GaN
+    Region: Sapphire
+
+Setting up bulk models ...
+
+Setting up lower dimensional (boundary) models ...
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for tmm_study (tmm)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+
+Available solution variables:
+------------------------------------------------------------------
+Name                     Units          Type      Association Plot
+------------------------------------------------------------------
+GenerationRate           cm^3           real      cell        n
+Intensity                mW/cm^3nm^-1   real      cell        n
+External_Source_ElectricFieldV/cm       real      cell        n
+Internal_Source_ElectricFieldV/cm       real      cell        y
+Internal_Intensity       a.u.           real      cell        y
+Transmission             1              real      none        n
+Reflection               1              real      none        n
+Absorption               1              real      none        n
+RegionIDs                               real      cell        n
+------------------------------------------------------------------
+
+Output directory      : output/
+Output file format    : grace
+Output file basename  : tmm_study
+
+1D TMM
+
+# Region AIR, Air
+  Reading optical data from /home/pamiri/TiberCAD/materials/optics/Air_book.dat
+  wavelength range: 300 - 1000 nm
+
+# Region Ag, Ag
+  Reading optical data from /home/pamiri/TiberCAD/materials/optics/Ag.nk
+  wavelength range: 200 - 2000 nm
+
+# Region GaN, GaN_optic
+  Reading optical data from /home/pamiri/TiberCAD/materials/optics/GaN.nk
+  wavelength range: 300 - 2001 nm
+
+# Region Sapphire, Sapphire
+  Reading optical data from /home/pamiri/TiberCAD/materials/optics/Sapphire.nk
+  wavelength range: 200 - 100 nm
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+We solve: tmm_study 
+
+>>>>------------------------------- (tmm_study) --------------------------------
+  ----------------------------------------
+  solving condition :  Lambda is : 300nm
+
+Solve time: 0h 0m 0.086s
+<<<<----------------------------------------------------------------------------
+
+Total solve time: 0h 0m 0.11s
+Simulation finished.
+
+1 warnings during run
+0 errors detected
+
+
+Log end: Mon Feb 13 18:59:16 2023
+
+

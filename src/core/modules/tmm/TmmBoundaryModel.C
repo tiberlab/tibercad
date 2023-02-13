@@ -44,6 +44,11 @@ TmmBoundaryModel::set_elements(double a0, double a1, double a2, double a3){
   _mmm11 = a3;
 }
 
+void
+TmmBoundaryModel::set_dipole_elements(double a0, double a1){
+  __kr = a0;
+  __steps = a1;
+}
 
 
 double
@@ -62,7 +67,18 @@ TmmBoundaryModel::get_element(int elm){
     case 3:
       return(_mmm11);
       break;
+    default:
+      return(0);
+      break;
 
   }
+}
+double
+TmmBoundaryModel::get_kr(){
+return(__kr);
+}
+double
+TmmBoundaryModel::get_steps(){
+return(__steps);
 }
 

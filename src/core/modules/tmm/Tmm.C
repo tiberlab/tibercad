@@ -116,20 +116,22 @@ std::complex<double> Tmm::Matrix_2by2::get(int elm)
 }
 
 
-
-
-Tmm::Matrix_2by2 Tmm::get_M(double n_real,double n_imag,double lenght,double lambda, double theta, double phase)
+Tmm::Matrix_2by2 Tmm::get_M(double n_real,double n_imag,double lenght,double lambda, double kr, double phase)
 {
   Tmm::Matrix_2by2 new_Matrix_2by2;
-  complex<double> bi ((2*M_PI*n_imag*lenght)/lambda , (2*M_PI*n_real*lenght)/lambda);
-  bi=bi* cos(theta*M_PI/180);
- //std::cout<<"bi is " <<bi<<" and " <<exp(bi)<<std::endl;
+  complex<double> j (0,1);
+  complex<double> ki ((2*M_PI*n_real*lenght)/lambda , (2*M_PI*n_imag*lenght)/lambda);
+  //std::cout<<" kr is " << kr <<"  ki is " << ki;
+  ki = ki * sqrt(1-(pow(kr,2)/pow(ki,2)));
+  //bi=bi* cos(kr*M_PI/180);
+ //std::cout<<"  kzi is " <<ki<<" and " <<exp(-j * ki)<<std::endl;
   complex<double> ps (0,phase);
 
-  new_Matrix_2by2.set(0,exp(bi + ps));
+
+  new_Matrix_2by2.set(0,exp((-j * ki) + ps));
   new_Matrix_2by2.set(1,0);
   new_Matrix_2by2.set(2,0);
-  new_Matrix_2by2.set(3,exp(-bi - ps));
+  new_Matrix_2by2.set(3,exp((j * ki) - ps));
 
 
   return(new_Matrix_2by2);
@@ -324,6 +326,7 @@ Tmm::do_setup_solution_variables(void)
   declare_solution(Intensity, REAL, CELL, "mW/cm^3nm^-1");
   declare_solution(External_Source_ElectricField, REAL, CELL, "V/cm");
   declare_solution(Internal_Source_ElectricField, REAL, CELL, "V/cm");
+  declare_solution(Internal_Intensity, REAL, CELL, "a.u.");
 
   declare_solution(Transmission, REAL, GLOBAL, "1");
   declare_solution(Reflection, REAL, GLOBAL, "1");
@@ -375,6 +378,7 @@ Tmm::do_solve(void)
   vector<double> sun_interp;
 
   double external_source_simulation=0;
+  double internal_source_simulation=0;
   vector<complex<double>> Ki;
 
   if (_wavelength_vector.empty())
@@ -392,7 +396,6 @@ Tmm::do_solve(void)
     ostringstream os;
     os << "----------------------------------------"<<"\n" << "solving condition :  " ;
     os << "Lambda is : " << lambda_interp[i] << "nm" << "\n" ;
-    os << "Radiation intensity is : " << sun_interp[i]<< "mW m^-2 nm^-1" <<"\n" ;
     Messages::info(os.str());
 
     double lambda = lambda_interp[i];
@@ -410,12 +413,17 @@ Tmm::do_solve(void)
     double E = 1.0;
     double incoming_angle=_incident_angle;
 
-    double c0 = 2.998e8 * 1e9;              // Speed of light [nm/s]
-    double e0 = 8.85e-12;                   // Vacuum permittivity  [F/m]
-    double radiation = sun_interp[i] / 1e3;                   //[W/(m^2*nm)]
-    double Esun2 = 2 * radiation / (c0 * 1e-9 * e0); // E^2 Electric Field [V^2 / (m^2 * nm)]
-    double w = 2 * M_PI * c0 / lambda;                               // Frequency [1/s]
+    double c0 = 2.998e8 * 1e9;
+    double e0 = 8.85e-12;
+    double radiation = sun_interp[i] / 1e3;
+    double Esun2 = 2 * radiation / (c0 * 1e-9 * e0);
+    double w = 2 * M_PI * c0 / lambda;
     double plank_const = 1.055e-34;
+
+
+    double kr_ratio =0;
+    double steps =1;
+
 
     // TODO reserve space
     vector<double> n_real;
@@ -460,6 +468,15 @@ Tmm::do_solve(void)
            get_interface_model<TmmBoundaryModel>(elem, s);
          if (mod_int != NULL)
          {
+           if (internal_source_simulation==0 && mod_int->read_type() == "Dipole Source"){
+             internal_source_simulation = 1;
+             kr_ratio = mod_int->get_kr();
+             steps = mod_int->get_steps();
+             if (steps == 0)
+               steps = 1;
+             for (double nm =0; nm<l_init.size();nm++)
+               _dipole_loc += l_init[nm];
+           }
            if (mod_int->read_type() == "Mirror"){
              mod_int->Calculate_M_Matrix();
              BC_check_init.push_back(1);
@@ -483,6 +500,7 @@ Tmm::do_solve(void)
          }
            if (mod_int == NULL)
            {
+             //std::cout<<"no boundry condition found" <<std::endl;
              BC_check_init.push_back(0);
            }
        }
@@ -512,8 +530,6 @@ Tmm::do_solve(void)
         Incoh.push_back(Incoh_init[uu]);
       }
     }
-    
-
     if (external_source_simulation)
     {
       std::cout<< "Solving for External Source"<<std::endl;
@@ -711,97 +727,144 @@ Tmm::do_solve(void)
 
     //****************************************************************************
     //*****************************dipole simulation******************************
-    if (_dipole_loc != 0)
+    //_dipole_loc = 450;
+    //internal_source_simulation=1;
+    //std::cout<<"dipole loc is "<<_dipole_loc<<std::endl;
+    if (internal_source_simulation)
     {
       double dipole_loc = _dipole_loc;
       std::cout<<"Solving for internal source --> dipole loc is "<<dipole_loc<<std::endl;
-      double A_P = -sqrt(3/(16 * M_PI));
+          double A_P = -sqrt(3/(16 * M_PI));
       double A_N =  sqrt(3/(16 * M_PI));
-      Tmm::Matrix_2by2 Es(A_P,0,A_N,0);
-      Tmm::Matrix_2by2 DD(1,0,0,1);
-      Tmm::Matrix_2by2 MM(0,0,0,0);
-      Tmm::Matrix_2by2 TT_load(0,0,0,0);
-      Tmm::Matrix_2by2 T_RIGHT(1,0,0,1);
-      Tmm::Matrix_2by2 T_LEFT(1,0,0,1);
-      Tmm::Matrix_2by2 T_TOTAL(1,0,0,1);
-      Tmm::Matrix_2by2 AA(0,0,0,1);
-        for (double k = n_real.size()-1; k >dipole_loc; --k)
-        {
-          if (k < n_real.size()-1)
-            DD = get_D(n_real[k],n_imag[k],n_real[k+1],n_imag[k+1],0,0);
-
-          MM = get_M(n_real[k],n_imag[k],l[k],lambda,0,0);
-          TT_load = DD * T_RIGHT;
-          T_RIGHT = MM* TT_load;
-        }
-        MM = get_M(n_real[dipole_loc],n_imag[dipole_loc],l[dipole_loc]/2,lambda,0,0);
-        DD = get_D(n_real[dipole_loc],n_imag[dipole_loc],n_real[dipole_loc+1],n_imag[dipole_loc+1],0,0);
-        TT_load = DD * T_RIGHT;
-        T_RIGHT = MM* TT_load;
-        T_LEFT = MM;
-        for (double k = dipole_loc-2; k >=0; --k)
-        {
-          DD = get_D(n_real[k],n_imag[k],n_real[k+1],n_imag[k+1],0,0);
-          MM = get_M(n_real[k],n_imag[k],l[k],lambda,0,0);
-          TT_load = DD * T_LEFT;
-          T_LEFT = MM* TT_load;
-        }
-        T_TOTAL = T_LEFT * T_RIGHT;
-        AA.set(0, -T_TOTAL.get(0));
-        AA.set(2, -T_TOTAL.get(2));
-        AA.inv();
-        TT_load = T_LEFT * Es;
-        TT_load = AA * TT_load;
-
-        /////////////////////////////////////////////////////////////////////////////////
-        vector<complex<double>> E_int_f_r(n_real.size()+1);
-        vector<complex<double>> E_int_b_r(n_real.size()+1);
-        vector<complex<double>> E_int_f_l(n_real.size()+1);
-        vector<complex<double>> E_int_b_l(n_real.size()+1);
-        vector<complex<double>> E_int(n_real.size()+1);
-
-        E_int_f_r[n_real.size()] = TT_load.get(0);
-        E_int_b_r[n_real.size()] = 0;
-        E_int_f_l [0] = 0;
-        E_int_b_l [0] = TT_load.get(2);
-        Tmm::Matrix_2by2 E_N(1,0,0,0);
-        Tmm::Matrix_2by2 E_I(0,0,0,0);
-        E_N.set(0,E_int_f_r[n_real.size()]);
-        E_N.set(2,E_int_b_r[n_real.size()]);
-        T_RIGHT.unit_matrix();
-        DD.unit_matrix();
-        for (double k = n_real.size()-1; k >=dipole_loc; --k)
-        {
-          if (k < n_real.size()-1)
-            DD = get_D(n_real[k],n_imag[k],n_real[k+1],n_imag[k+1],0,0);
-          MM = get_M(n_real[k],n_imag[k],l[k],lambda,0,0);
-          TT_load = DD * T_RIGHT;
-          T_RIGHT = MM* TT_load;
-          E_I = T_RIGHT * E_N;
-          E_int_f_r[k] = (E_I.get(2)) ;
-          E_int_b_r[k] = (E_I.get(0));
-        }
-        T_LEFT.unit_matrix();
-        E_N.set(2,E_int_f_l[0]);
-        E_N.set(0,E_int_b_l[0]);
-        DD.unit_matrix();
-        for (double k = 0; k <= dipole_loc-1; ++k)
-        {
-          if (k > 0)
-            DD = get_D(n_real[k],n_imag[k],n_real[k-1],n_imag[k-1],0,0);
-          MM = get_M(n_real[k],n_imag[k],l[k],lambda,0,0);
-          TT_load = DD * T_LEFT;
-          T_LEFT = MM* TT_load;
-          E_I = T_LEFT * E_N;
-          E_int_f_l[k+1] = (E_I.get(0)) ;
-          E_int_b_l[k+1] = (E_I.get(2));
-        }
-        for (double nm = 0; nm<E_int_f_r.size();nm++)
-          if (nm != dipole_loc)
+      double ks = 2*M_PI*n_real[dipole_loc]/lambda;
+      for (double kr = 0; kr <= ks*kr_ratio; kr = kr + ks*kr_ratio/steps)
+      {
+        Tmm::Matrix_2by2 Es(A_P,0,A_N,0);
+        Tmm::Matrix_2by2 DD(1,0,0,1);
+        Tmm::Matrix_2by2 MM(0,0,0,0);
+        Tmm::Matrix_2by2 TT_load(0,0,0,0);
+        Tmm::Matrix_2by2 T_RIGHT(1,0,0,1);
+        Tmm::Matrix_2by2 T_LEFT(1,0,0,1);
+        Tmm::Matrix_2by2 T_TOTAL(1,0,0,1);
+        Tmm::Matrix_2by2 AA(0,0,0,1);
+          for (double k = n_real.size()-1; k >dipole_loc; --k)
           {
-              E_int[nm] = E_int_f_r[nm]+E_int_b_r[nm]+E_int_f_l[nm]+E_int_b_l[nm];
-              _Internal_Source_ElectricField.push_back(real(E_int_f_r[nm]+E_int_b_r[nm]+E_int_f_l[nm]+E_int_b_l[nm]));
+            if (k < n_real.size()-1)
+              DD = get_D(n_real[k],n_imag[k],n_real[k+1],n_imag[k+1],0,0);
+
+            MM = get_M(n_real[k],n_imag[k],l[k],lambda,kr,0);
+            TT_load = DD * T_RIGHT;
+            T_RIGHT = MM* TT_load;
           }
+          MM = get_M(n_real[dipole_loc],n_imag[dipole_loc],l[dipole_loc]/2,lambda,kr,0);
+          DD = get_D(n_real[dipole_loc],n_imag[dipole_loc],n_real[dipole_loc+1],n_imag[dipole_loc+1],0,0);
+          TT_load = DD * T_RIGHT;
+          T_RIGHT = MM* TT_load;
+          T_LEFT = MM;
+          for (double k = dipole_loc-2; k >=0; --k)
+          {
+            DD = get_D(n_real[k],n_imag[k],n_real[k+1],n_imag[k+1],0,0);
+            MM = get_M(n_real[k],n_imag[k],l[k],lambda,kr,0);
+            TT_load = DD * T_LEFT;
+            T_LEFT = MM* TT_load;
+          }
+          T_TOTAL = T_LEFT * T_RIGHT;
+          AA.set(0, -T_TOTAL.get(0));
+          AA.set(2, -T_TOTAL.get(2));
+          AA.inv();
+          TT_load = T_LEFT * Es;
+          TT_load = AA * TT_load;
+
+          /////////////////////////////////////////////////////////////////////////////////
+          vector<complex<double>> E_int_f_r(n_real.size()+1);
+          vector<complex<double>> E_int_b_r(n_real.size()+1);
+          vector<complex<double>> E_int_f_l(n_real.size()+1);
+          vector<complex<double>> E_int_b_l(n_real.size()+1);
+          vector<complex<double>> E_int_f(n_real.size()+1);
+          vector<complex<double>> E_int_b(n_real.size()+1);
+          vector<complex<double>> E_int(n_real.size()+1);
+          vector<complex<double>> cos_phi;
+
+          E_int_f_r[n_real.size()] = TT_load.get(0);
+          E_int_b_r[n_real.size()] = 0;
+          E_int_f_l [0] = 0;
+          E_int_b_l [0] = TT_load.get(2);
+          Tmm::Matrix_2by2 E_N(1,0,0,0);
+          Tmm::Matrix_2by2 E_I(0,0,0,0);
+          E_N.set(0,E_int_f_r[n_real.size()]);
+          E_N.set(2,E_int_b_r[n_real.size()]);
+          T_RIGHT.unit_matrix();
+          DD.unit_matrix();
+          for (double k = n_real.size()-1; k >=dipole_loc; --k)
+          {
+            if (k < n_real.size()-1)
+              DD = get_D(n_real[k],n_imag[k],n_real[k+1],n_imag[k+1],0,0);
+            MM = get_M(n_real[k],n_imag[k],l[k],lambda,kr,0);
+            TT_load = DD * T_RIGHT;
+            T_RIGHT = MM* TT_load;
+            E_I = T_RIGHT * E_N;
+            E_int_f_r[k] = (E_I.get(0)) ;
+            E_int_b_r[k] = (E_I.get(2));
+          }
+          T_LEFT.unit_matrix();
+          E_N.set(2,E_int_f_l[0]);
+          E_N.set(0,E_int_b_l[0]);
+          DD.unit_matrix();
+          for (double k = 0; k <= dipole_loc-1; ++k)
+          {
+            if (k > 0)
+              DD = get_D(n_real[k],n_imag[k],n_real[k-1],n_imag[k-1],0,0);
+            MM = get_M(n_real[k],n_imag[k],l[k],lambda,kr,0);
+            TT_load = DD * T_LEFT;
+            T_LEFT = MM* TT_load;
+            E_I = T_LEFT * E_N;
+            E_int_f_l[k+1] = (E_I.get(2)) ;
+            E_int_b_l[k+1] = (E_I.get(0));
+          }
+
+          for (double nm = 0; nm<E_int_f_r.size();nm++)
+            if (nm != dipole_loc)
+            {
+                E_int[nm] = E_int_f_r[nm]+E_int_b_r[nm]+E_int_f_l[nm]+E_int_b_l[nm];
+                if (kr == 0)
+                {
+                _Internal_Source_ElectricField.push_back(real(E_int[nm]));
+                _Internal_Intensity.push_back(n_real[nm] * pow(abs(E_int[nm]), 2));
+                }
+            }
+          if (kr == 0)
+          {
+            _Internal_Source_ElectricField.insert(_Internal_Source_ElectricField.begin()+dipole_loc,((_Internal_Source_ElectricField[dipole_loc]+_Internal_Source_ElectricField[dipole_loc-1])/2));
+            _Internal_Intensity.insert(_Internal_Intensity.begin()+dipole_loc,((_Internal_Intensity[dipole_loc]+_Internal_Intensity[dipole_loc-1])/2));
+          }
+         // for (int yy =0; yy <E_int.size();++yy)
+            //std::cout << yy << "   " << E_int[yy] << std::endl;
+
+           // _Output_Front.push_back(n_real[0] * pow(abs(E_int[0]), 2));
+            //_Output_back.push_back(n_real[n_real.size()-1] * pow(abs(E_int[E_int.size()-1]), 2));
+          vector<double> total_internal_intesity;
+          for (double nm = 0; nm<E_int_f_r.size();nm++)
+          {
+            E_int_f[nm] = E_int_f_l[nm] + E_int_f_r[nm];
+            E_int_b[nm] = E_int_b_l[nm] + E_int_b_r[nm];
+          }
+          E_int_f.erase(E_int_f.begin()+dipole_loc);
+          E_int_b.erase(E_int_b.begin()+dipole_loc);
+          for (double nm = 0; nm<n_real.size();nm++)
+          {
+            complex<double> ki ((2*M_PI*n_real[nm]*l[nm])/lambda , (2*M_PI*n_imag[nm]*l[nm])/lambda);
+            complex<double> kzi (1,0);
+            kzi = ki * sqrt(1-(pow(kr,2)/pow(ki,2)));
+            cos_phi.push_back(kzi/ki);
+            complex<double> Ni (n_real[nm], n_imag[nm]);
+            total_internal_intesity.push_back(real(Ni*cos_phi[nm]*conj(E_int_f[nm]+E_int_b[nm])*(E_int_f[nm]-E_int_b[nm])));
+          }
+         // std::cout<<"cos phi is "<<cos_phi[0] <<" and " <<cos_phi[total_internal_intesity.size()-1]<<std::endl;
+            _Output_Front_angle.push_back(acos(real(cos_phi[0])));
+            _Output_Front.push_back(total_internal_intesity[0]);
+            _Output_back_angle.push_back(acos(real(cos_phi[total_internal_intesity.size()-1])));
+            _Output_back.push_back(total_internal_intesity[total_internal_intesity.size()-1]);
+      }
     }// end of loop of dipole simulation
 
 
@@ -840,7 +903,6 @@ Tmm::create_boundary_model(const ModelOptions& options,
 void
 Tmm::plot_globaldata(void)
 {
-
   string outdir = get_output_directory();
 
   string filename(outdir + "/" + get_output_filename() + ".dat");
@@ -864,6 +926,20 @@ Tmm::plot_globaldata(void)
              << _Absorption[i] << "\n";
     }
   }
+
+  file.close();
+
+    string polar_file(outdir + "/" + get_output_filename() + "_polar.dat");
+    ofstream polar;
+    polar.open(polar_file.c_str());
+    if (polar.good())
+      polar << '#' << get_type() << " Polar radiation pattern (" << get_name() << ")\n"
+            << "# front_angle[deg] " <<  " front_Intensity[a.u.] "
+            << "# back_angle[deg] " <<  " back_Intensity[a.u.] " << "\n";
+    for (double i = 0; i < _Output_Front.size(); ++i)
+      polar << _Output_Front_angle[i] << "   " << _Output_Front[i] << "      " << _Output_back_angle[i]<< "      " <<_Output_back[i] << "\n";
+
+    polar.close();
 
 }
 
@@ -903,6 +979,10 @@ Tmm::get_solution_secure(const Elem* elem,
   RealGradient field(0);
   TmmBulkModel& mod = *get_bulk_model<TmmBulkModel>(elem);
 
+  if (solutions.count(Internal_Intensity))
+  {
+    solutions[Internal_Intensity][0]= _Internal_Intensity[dof_indices[0]];
+  }
   if (solutions.count(Internal_Source_ElectricField))
   {
     solutions[Internal_Source_ElectricField][0]= _Internal_Source_ElectricField[dof_indices[0]];

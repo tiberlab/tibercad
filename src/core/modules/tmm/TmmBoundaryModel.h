@@ -28,7 +28,10 @@ class TmmBoundaryModel : public  PhysicalModel
 
     virtual void Calculate_M_Matrix (void) = 0;
     void set_elements(double, double, double, double);
-    double get_element(int);
+    virtual double get_element(int);
+    virtual double get_kr(void);
+    virtual double get_steps(void);
+    void set_dipole_elements(double, double);
     std::string read_type(void);
 
 
@@ -54,6 +57,8 @@ class TmmBoundaryModel : public  PhysicalModel
     double _mmm01;
     double _mmm10;
     double _mmm11;
+    double __kr;
+    double __steps;
 
 
 

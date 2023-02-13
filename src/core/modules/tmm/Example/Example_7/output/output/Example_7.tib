@@ -1,0 +1,54 @@
+Device
+{
+  meshfile = Example_7.msh 
+  mesh_units = 1e-9
+  dimension = 1
+  Region Ag
+  {
+  Incoherency = 0
+  material = Ag
+  }
+
+  Region GaN
+  {
+  Incoherency = 0
+  material = GaN_optic
+  }
+
+}
+
+
+Module tmm
+{ 
+  
+  name = tmm_study 
+  plot = (Internal_Source_ElectricField,Internal_Intensity)
+
+  #wavelength_uper_lim = 300
+  #wavelength_lower_lim = 300
+  #wavelength_steps = 10
+  wavelengths = 300
+  dipole_loc = 700
+
+  Physics 
+  {
+
+  }
+
+}
+
+
+
+Simulation
+{
+  verbose = 2
+  solve = tmm_study
+resultpath = output/
+
+
+}
+
+
+
+
+

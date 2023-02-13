@@ -96,7 +96,7 @@ class TBDLLOCAL Tmm : public SimulationInterface
   * "lambda" is the light's wavelength
   * "theta" is the light's traveling angle(normal incident is equal to '0')
   */
-  Tmm::Matrix_2by2 get_M(double n_real,double n_imag,double length,double lambda, double theta, double phase);
+  Tmm::Matrix_2by2 get_M(double n_real,double n_imag,double length,double lambda, double kr, double phase);
 
   Tmm::Matrix_2by2 Determinal_Matrix (Tmm::Matrix_2by2 MAT);
 
@@ -186,6 +186,7 @@ class TBDLLOCAL Tmm : public SimulationInterface
       Intensity,
       External_Source_ElectricField,
       Internal_Source_ElectricField,
+      Internal_Intensity,
       Transmission,
       Reflection,
       Absorption
@@ -200,6 +201,12 @@ class TBDLLOCAL Tmm : public SimulationInterface
     std::vector<double> _Wavelength;
     std::vector<double> _Generation_rate;
     std::vector<double> _Internal_Source_ElectricField;
+    std::vector<double> _Internal_Intensity;
+
+    std::vector<double> _Output_Front;
+    std::vector<double> _Output_back;
+    std::vector<double> _Output_Front_angle;
+    std::vector<double> _Output_back_angle;
 
 
     

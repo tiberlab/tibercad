@@ -27,7 +27,7 @@ class TBDLLOCAL Mirror : public TmmBoundaryModel
     static Mirror* create(const ModelOptions& options);
 
 
-    virtual void Calculate_M_Matrix(void);
+    void Calculate_M_Matrix(void);
 
   protected:
 
