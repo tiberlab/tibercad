@@ -26,8 +26,8 @@ Device
 
 Module tmm
 { 
+ name = tmm_study
   plot = (GenerationRate,Intensity,External_Source_ElectricField, Reflection,Transmission,Absorption)
-
   back_reflectivity = 0
   incident_angle = 0
   wavelength_uper_lim = 950
@@ -48,7 +48,7 @@ Module tmm
 Simulation
 {
   verbose = 2
-  solve = tmm
+  solve = tmm_study
   resultpath = output
 
 
