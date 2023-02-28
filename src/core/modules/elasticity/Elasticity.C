@@ -995,11 +995,17 @@ Elasticity::apply_shape_deformation()
     // the old bounding box
     xmax -= xmin;
 
+    // lattice vectors might be non-orthogonal, but
+    // we assume them to be compatible with the
+    // coordinate system, at least
     RealVectorValue a, b, c;
     atom_structures[ns]->get_lattice_vectors(a, b, c);
-    a *= xmax_n(0) / xmax(0);
-    b *= xmax_n(1) / xmax(1);
-    c *= xmax_n(2) / xmax(2);
+    for (unsigned int i = 0; i < 3; ++i)
+    {
+      a(i) *= xmax_n(i) / xmax(i);
+      b(i) *= xmax_n(i) / xmax(i);
+      c(i) *= xmax_n(i) / xmax(i);
+    }
     atom_structures[ns]->set_lattice_vectors(a, b, c);
 
 
