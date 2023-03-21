@@ -16,7 +16,7 @@ Device
 }
 
 
-Module poisson_example
+Module poisson
 { 
 
   name = poisson
@@ -61,7 +61,6 @@ Simulation
   solve = poisson
   
   resultpath = output2D
-  output_format = vtk
 }
 
 

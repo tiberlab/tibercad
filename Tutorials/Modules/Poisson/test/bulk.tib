@@ -16,7 +16,7 @@ Device
 }
 
 
-Module poisson_example
+Module poisson
 { 
 
   name = poisson

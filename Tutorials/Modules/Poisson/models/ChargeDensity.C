@@ -1,6 +1,7 @@
 // $Id: ConstantChargeDensity.C 3864 2014-06-13 10:24:26Z maufder $
 
 #include "ChargeDensity.h"
+#include "SimulationInterface.h"
 
 #include "TiberModule.h"
 

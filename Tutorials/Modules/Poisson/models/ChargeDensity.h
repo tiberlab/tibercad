@@ -4,7 +4,7 @@
 #define _CONSTANTCHARGEDENSITY_H_
 
 #include "ChargeDensityModel.h"
-#include "SimulationInterface.h"
+#include "SolutionProvider.h"
 
 class Elem;
 class Point;
@@ -31,11 +31,8 @@ class ChargeDensity : public ChargeDensityModel
   private:
 
     double _charge_density;
-
-    //std::vector<SimulationInterface*> _charge_density_model;
-    //std::vector<ID> _chdens_id;
    
-    std::vector<SimulationInterface::SolutionProvider> _charge_density_sim;
+    std::vector<SolutionProvider> _charge_density_sim;
 };
 
 
