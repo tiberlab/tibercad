@@ -275,6 +275,7 @@ Poisson::assemble(void)
   
   DofMap& dof_map =  system.get_dof_map();
 
+  /*
   const unsigned int uvar = system.variable_number("u");
 
   FEType fe_type = dof_map.variable_type(uvar);
@@ -299,8 +300,7 @@ Poisson::assemble(void)
   const vector<vector<Real> >&  phi_face = fe_face->get_phi();
   const vector<vector<RealGradient> >& dphi_face = fe->get_dphi();
   const vector<Point>& normal = fe_face->get_normals();
-
-  vector<unsigned int> dof_indices;
+  */
 
   DenseMatrix<Number> Ke;
   DenseVector<Number> Fe;
@@ -319,9 +319,14 @@ Poisson::assemble(void)
     // list of neighbor element pointers
     std::vector<const Elem*> neighbors(n_neigh, nullptr);
 
+    // all DoF indices in the current block
+    vector<unsigned int> dof_indices;
+
+    // only DoFs of the current element
     vector<unsigned int> rows;
+
     dof_map.dof_indices(elem, rows);
-    // NOTE: as we hardcoded 0th order monomials this will
+    // NOTE: as we hardcoded 0th order monomials rows will
     // always be of size 1
     dof_indices.push_back(rows[0]);
 
