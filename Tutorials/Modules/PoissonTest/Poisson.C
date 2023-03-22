@@ -362,7 +362,9 @@ Poisson::assemble(void)
 
     const RealTensor& eps_i = mod.get_permittivity()*Constants::e0;
     const RealVectorValue& pol_i = mod.get_polarization();
+
     double rho =  mod.get_charge_density() * Lambda;
+    Fe(0) += rho * elem->volume();
 
     // loop over the neighbors
     for (unsigned int k = 0; k < n_neigh; ++k)
@@ -385,9 +387,37 @@ Poisson::assemble(void)
       const RealTensor &eps_k = mod.get_permittivity() * Constants::e0;
       const RealVectorValue &pol_k = mod.get_polarization();
 
+      // now we need the distance from the element interface from both sides,
+      // and the area of the side
+      // In the following m indicates the middle = interface
+
+      double h_im, h_mk;
+      double A_ik = 1;
+
+      if (dim == 1)
+      {
+        Point d(elem->point(k));
+        d -= x_i;
+        h_im = d.norm();
+
+        d = x_k;
+        d -= elem->point(k);
+        h_mk = d.norm();
+        
+      }
+
+      if (dim == 2)
+      {
+        // get the projection onto a side
+      }
+
+      if (dim == 3)
+      {
+        // get the projection onto a side
+      }
+
       Ke(0, 0) += 1;
 
-      Fe(0) += 0;
     }
 
       //PoissonBoundaryModel* mod_int =
