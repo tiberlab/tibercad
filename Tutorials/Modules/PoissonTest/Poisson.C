@@ -101,11 +101,11 @@ void
 Poisson::do_setup_solution_variables(void)
 {
   // we declare our solution variables
-  declare_solution(Potential, REAL, NODES, "V");
+  declare_solution(Potential, REAL, CELL, "V");
   declare_solution(ElField, VECTOR, CELL, "V/cm");
   declare_solution(Displacement, VECTOR, CELL, "C/cm^2");
   declare_solution(Polarization, VECTOR, CELL, "C/cm^2");
-  declare_solution(ChargeDensity, REAL, NODES, "C/cm^3");
+  declare_solution(ChargeDensity, REAL, CELL, "C/cm^3");
 
   // we can define aliases (but the association name -> id
   // has to be surjective)
@@ -276,33 +276,6 @@ Poisson::assemble(void)
   
   DofMap& dof_map =  system.get_dof_map();
 
-  /*
-  const unsigned int uvar = system.variable_number("u");
-
-  FEType fe_type = dof_map.variable_type(uvar);
-
-  // the finite element
-  UniquePtr<FEBase> fe(build_finite_element(dim, fe_type, true));
-  UniquePtr<QBase> qrule(QBase::build(myopts.quadrature_type, dim, myopts.integration_order));
-  fe->attach_quadrature_rule(qrule.get());
-
-  const vector<Real>& JxW = fe->get_JxW();
-  const vector<Point>& q_point = fe->get_xyz();
-  const vector<vector<Real> >& phi = fe->get_phi();
-  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
-
-  // the surface finite element
-  UniquePtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
-  UniquePtr<QBase> qface(QBase::build(myopts.quadrature_type, dim-1, myopts.integration_order));
-  fe_face->attach_quadrature_rule(qface.get());
-
-  const vector<Real>& JxW_face = fe_face->get_JxW();
-  const vector<Point>& qface_point = fe_face->get_xyz();
-  const vector<vector<Real> >&  phi_face = fe_face->get_phi();
-  const vector<vector<RealGradient> >& dphi_face = fe->get_dphi();
-  const vector<Point>& normal = fe_face->get_normals();
-  */
-
   DenseMatrix<Number> Ke;
   DenseVector<Number> Fe;
 
@@ -403,6 +376,25 @@ Poisson::assemble(void)
       if (dim == 2)
       {
         // get the projection onto a side
+        // we need the side
+        // NOTE: should be adapted for any orientation in 3D
+        auto side = elem->side_ptr(k);
+        Point x1(side->point(0));
+        Point x2(side->point(1));
+
+        Point d(x2 - x1);
+        Point(y) = x1 - x_i;
+
+        double det = -(d(0)*d(0) + d(1)*d(1));
+        double t = (d(1)*y(0) - d(0)*y(1)) / det;
+
+        n_ik(0) =  d(1);
+        n_ik(1) = -d(0);
+        n_ik *= t;
+        h_im = n_ik.norm();
+        n_ik = n_ik / h_im;
+
+        A_ik = side->volume();
       }
 
       if (dim == 3)
@@ -435,6 +427,23 @@ Poisson::assemble(void)
          if (dim == 2)
          {
            // get the projection onto a side
+           // we need the side
+           // NOTE: should be adapted for any orientation in 3D
+           auto side = elem->side_ptr(k);
+           Point x1(side->point(0));
+           Point x2(side->point(1));
+
+           Point d(x2 - x1);
+           Point(y) = x1 - x_k;
+
+           double det = -(d(0) * d(0) + d(1) * d(1));
+           double t = (d(1) * y(0) - d(0) * y(1)) / det;
+
+           Point n_ki;
+           n_ki(0) = d(1);
+           n_ki(1) = -d(0);
+           n_ki *= t;
+           h_mk = n_ki.norm();
          }
 
          if (dim == 3)
@@ -518,9 +527,9 @@ Poisson::assemble(void)
     system.rhs->add_vector(Fe, rows);
 
   }
-  system.matrix->close();
-  system.matrix->print_matlab("K.m");
-  system.rhs->close();
-  system.rhs->print_matlab("F.m");
+  //system.matrix->close();
+  //system.matrix->print_matlab("K.m");
+  //system.rhs->close();
+  //system.rhs->print_matlab("F.m");
 
 }
