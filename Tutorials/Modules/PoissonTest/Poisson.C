@@ -270,8 +270,9 @@ Poisson::assemble(void)
   const MeshBase& mesh = get_mesh();
   const unsigned int dim = mesh.mesh_dimension();
   
-  get_scaling().set_length_scaling(1.0);
-  double Lambda = Constants::e * 1e6;
+  get_scaling().set_length_scaling(get_mesh_units());
+  double x0 = get_mesh_units(); 
+  double Lambda = Constants::e * 1e6 * x0*x0;
   
   DofMap& dof_map =  system.get_dof_map();
 
@@ -316,9 +317,6 @@ Poisson::assemble(void)
     // number of neighbors (= number of sides, usually)
     unsigned int n_neigh = elem->n_neighbors();
 
-    // list of neighbor element pointers
-    std::vector<const Elem*> neighbors(n_neigh, nullptr);
-
     // all DoF indices in the current block
     vector<unsigned int> dof_indices;
 
@@ -338,7 +336,6 @@ Poisson::assemble(void)
 
       if (neigh != nullptr)
       {
-        neighbors[i] = neigh;
         dof_map.dof_indices(neigh, tmpdofs);
         dof_indices.push_back(tmpdofs[0]);
       }
@@ -357,53 +354,50 @@ Poisson::assemble(void)
     // calculate parameters we need from this element
     Point x_i(elem->centroid());
 
+    double vol_i = elem->volume();
+
     mod.set_point(x_i);
     mod.calculate();
 
+    // permittivity
     const RealTensor& eps_i = mod.get_permittivity()*Constants::e0;
+    // for now assume eps_k = e_i * I
+    double e_i = eps_i.tr() / 3.0;
+
+    // polarization
     const RealVectorValue& pol_i = mod.get_polarization();
 
     double rho =  mod.get_charge_density() * Lambda;
-    Fe(0) += rho * elem->volume();
+    Fe(0) += rho * vol_i;
 
     // loop over the neighbors
-    for (unsigned int k = 0; k < n_neigh; ++k)
+    // j is used as column index in the Ke matrix
+    for (unsigned int k = 0, j = 0; k < n_neigh; ++k)
     {
       const Elem* neigh = elem->neighbor_ptr(k);
 
-      if (neigh == nullptr)
-        continue;
-
-      PoissonModel &mod = *get_bulk_model<PoissonModel>(neigh);
-
-      mod.set_element(neigh);
-
-      // calculate parameters we need from this element
-      Point x_k(neigh->centroid());
-
-      mod.set_point(x_k);
-      mod.calculate();
-
-      const RealTensor &eps_k = mod.get_permittivity() * Constants::e0;
-      const RealVectorValue &pol_k = mod.get_polarization();
-
-      // now we need the distance from the element interface from both sides,
-      // and the area of the side
+      // First set up some geometric quantities.
+      //
+      // We need the distance from the element interface
+      // (from both sides), and the area of the side,
+      // and the projection on the side.
       // In the following m indicates the middle = interface
-
-      double h_im, h_mk;
+      Point x_m;
+      Point x_k;
+      double h_im, h_mk = 0.0;
       double A_ik = 1;
+
+      // the normal, pointing out of the current element (i)
+      Point n_ik;
 
       if (dim == 1)
       {
-        Point d(elem->point(k));
+        x_m = elem->point(k);
+        Point d(x_m);
         d -= x_i;
         h_im = d.norm();
 
-        d = x_k;
-        d -= elem->point(k);
-        h_mk = d.norm();
-        
+        n_ik = d / h_im;
       }
 
       if (dim == 2)
@@ -416,15 +410,108 @@ Poisson::assemble(void)
         // get the projection onto a side
       }
 
-      Ke(0, 0) += 1;
+      // interface model if present
+      PoissonBoundaryModel* mod_int =
+        get_interface_model<PoissonBoundaryModel>(elem, k);
+
+
+      if (neigh != nullptr)
+      {
+         // advance index counter
+         ++j;
+
+         // calculate the remaining geometric parameters
+         // related to the neighbor element
+
+         x_k = neigh->centroid();
+
+         if (dim == 1)
+         {
+           Point d(x_k);
+           d -= x_m;
+           h_mk = d.norm();
+         }
+
+         if (dim == 2)
+         {
+           // get the projection onto a side
+         }
+
+         if (dim == 3)
+         {
+           // get the projection onto a side
+         }
+      }
+      else if (mod_int == nullptr)
+      {
+        // in this case there is nothing to be done
+        // (natural boundary conditions)
+        continue;
+      }
+
+      double a = 0.0, b = 0.0, c = 0.0;
+      if (mod_int != nullptr)
+      {
+        mod_int->calculate(elem, k, x_m);
+        mod_int->get_coefficients(a, b, c);
+      }
+
+      // phi_m is linear function in phi_i and phi_k:
+      // phi_m = c_i * phi_i + c_k * phi_k + f
+      double c_i = 0;
+      double c_k = 0;
+      double f = 0;
+
+
+      // interface charge, if present
+      double sigma_int = 0.0;
+
+
+      if ((b == 0.0) && (a != 0.0))
+      {
+        // this is a Dirichlet BC
+        f = c / a;
+      }
+      else if (neigh != nullptr)
+      {
+
+        PoissonModel &mod = *get_bulk_model<PoissonModel>(neigh);
+
+        mod.set_element(neigh);
+
+        mod.set_point(x_k);
+        mod.calculate();
+
+        const RealTensor &eps_k = mod.get_permittivity() * Constants::e0;
+        // for now assume eps_k = e_k * I
+        double e_k = eps_k.tr() / 3.0;
+        const RealVectorValue &pol_k = mod.get_polarization();
+
+        // polarization induced interface charge density
+        double sigma_pol = (pol_k - pol_i) * n_ik;
+
+        // interface potential discontinuity (due to e.g. dipole)
+        // double delta_phi = 0.0;
+
+        double denom = h_mk * e_i + h_im * e_k;
+        c_i = h_mk * e_i / denom;
+        c_k = h_im * e_k / denom;
+        f = /* -h_im*e_k / denom * delta_phi */
+            -h_im * h_mk / denom * (sigma_pol + sigma_int);
+
+      }
+
+
+      // now we use
+      //   D_i = -e_i * (phi_m - phi_i) / h_im + P_i*n_ik - 0.5*sigma_int;
+      Ke(0, 0) += e_i / h_im * (1 - c_i) * A_ik;
+
+      if (neigh != nullptr)
+        Ke(0, j) -= e_i / h_im * c_k * A_ik;
+
+      Fe(0) -= (pol_i * n_ik - 0.5 * sigma_int - e_i / h_im * f) * A_ik;
 
     }
-
-      //PoissonBoundaryModel* mod_int =
-       // get_interface_model<PoissonBoundaryModel>(elem, s);
-
-      //if (mod_int != NULL)
- 
 
     //dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
     system.matrix->add_matrix(Ke, rows, dof_indices);
@@ -433,7 +520,7 @@ Poisson::assemble(void)
   }
   system.matrix->close();
   system.matrix->print_matlab("K.m");
-  //system.rhs->close();
-  //system.rhs->print_matlab("F.m");
+  system.rhs->close();
+  system.rhs->print_matlab("F.m");
 
 }
