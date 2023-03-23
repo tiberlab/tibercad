@@ -17,6 +17,7 @@
 #include "libmesh/dense_subvector.h"
 #include "libmesh/tensor_value.h"
 #include "libmesh/vector_value.h"
+#include "libmesh/plane.h"
 
 // This is needed in order to create the shared module library
 #include "TiberModule.h"
@@ -349,6 +350,10 @@ Poisson::assemble(void)
     {
       const Elem* neigh = elem->neighbor_ptr(k);
 
+      // interface model if present
+      PoissonBoundaryModel* mod_int =
+        get_interface_model<PoissonBoundaryModel>(elem, k);
+
       // First set up some geometric quantities.
       //
       // We need the distance from the element interface
@@ -363,6 +368,22 @@ Poisson::assemble(void)
       // the normal, pointing out of the current element (i)
       Point n_ik;
 
+
+      if (neigh != nullptr)
+      {
+         // advance index counter
+         ++j;
+
+         x_k = neigh->centroid();
+
+      }
+      else if (mod_int == nullptr)
+      {
+        // in this case there is nothing to be done
+        // (natural boundary conditions)
+        continue;
+      }
+
       if (dim == 1)
       {
         x_m = elem->point(k);
@@ -371,6 +392,13 @@ Poisson::assemble(void)
         h_im = d.norm();
 
         n_ik = d / h_im;
+
+        if (neigh != nullptr)
+        {
+          Point d(x_k);
+          d -= x_m;
+          h_mk = d.norm();
+        }
       }
 
       if (dim == 2)
@@ -383,7 +411,7 @@ Poisson::assemble(void)
         Point x2(side->point(1));
 
         Point d(x2 - x1);
-        Point(y) = x1 - x_i;
+        Point y = x1 - x_i;
 
         double det = -(d(0)*d(0) + d(1)*d(1));
         double t = (d(1)*y(0) - d(0)*y(1)) / det;
@@ -395,46 +423,10 @@ Poisson::assemble(void)
         n_ik = n_ik / h_im;
 
         A_ik = side->volume();
-      }
 
-      if (dim == 3)
-      {
-        // get the projection onto a side
-      }
-
-      // interface model if present
-      PoissonBoundaryModel* mod_int =
-        get_interface_model<PoissonBoundaryModel>(elem, k);
-
-
-      if (neigh != nullptr)
-      {
-         // advance index counter
-         ++j;
-
-         // calculate the remaining geometric parameters
-         // related to the neighbor element
-
-         x_k = neigh->centroid();
-
-         if (dim == 1)
-         {
-           Point d(x_k);
-           d -= x_m;
-           h_mk = d.norm();
-         }
-
-         if (dim == 2)
-         {
-           // get the projection onto a side
-           // we need the side
-           // NOTE: should be adapted for any orientation in 3D
-           auto side = elem->side_ptr(k);
-           Point x1(side->point(0));
-           Point x2(side->point(1));
-
-           Point d(x2 - x1);
-           Point(y) = x1 - x_k;
+        if (neigh != nullptr)
+        {
+           y = x1 - x_k;
 
            double det = -(d(0) * d(0) + d(1) * d(1));
            double t = (d(1) * y(0) - d(0) * y(1)) / det;
@@ -444,19 +436,38 @@ Poisson::assemble(void)
            n_ki(1) = -d(0);
            n_ki *= t;
            h_mk = n_ki.norm();
-         }
+        }
+      }
 
-         if (dim == 3)
-         {
-           // get the projection onto a side
-         }
-      }
-      else if (mod_int == nullptr)
+      if (dim == 3)
       {
-        // in this case there is nothing to be done
-        // (natural boundary conditions)
-        continue;
+        // get the projection onto a side
+        // we need the side
+        auto side = elem->side_ptr(k);
+        Point x1(side->point(0));
+        Point x2(side->point(1));
+        Point x3(side->point(2));
+
+        libMesh::Plane p(x1, x2, x3);
+        Point pp = p.closest_point(x_i);
+
+        n_ik = pp - x_i;
+        
+        h_im = n_ik.norm();
+        n_ik = n_ik / h_im;
+
+        A_ik = side->volume();
+
+        if (neigh != nullptr)
+        {
+          pp = p.closest_point(x_k);
+
+          Point n_ki = pp - x_k;
+        
+          h_mk = n_ki.norm();
+        }
       }
+
 
       double a = 0.0, b = 0.0, c = 0.0;
       if (mod_int != nullptr)

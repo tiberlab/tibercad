@@ -1,8 +1,9 @@
+@define DIM 3D
 
 # Description of  the  device physical regions
 Device
 {
-   meshfile = bulk.msh
+   meshfile = "bulk"DIM".msh"
 
    Region bulk 
    {
@@ -54,14 +55,13 @@ Simulation
   verbose = 2
 
   # look here first for modules
-  modellibpath = ..
+  modellibpath = .. 
 
   temperature = 300
   
   solve = poisson
   
-  resultpath = output
-  output_format = dat
+  resultpath = "output"DIM
 }
 
 
