@@ -326,7 +326,24 @@ Poisson::assemble(void)
     mod.set_element(elem);
 
     // calculate parameters we need from this element
-    Point x_i(elem->centroid());
+    Point x_i;
+    if (dim == 2)
+    {
+      Point a(elem->point(0));
+      Point b(elem->point(1));
+      Point c(elem->point(2));
+
+      double d = 2*(a(0)*(b(1)-c(1)) + b(0)*(c(1) - a(1)) + c(0)*(a(1) - b(1)));
+
+      x_i(0) = a.norm_sq()*(b(1) - c(1)) + b.norm_sq()*(c(1) - a(1))
+             + c.norm_sq()*(a(1) - b(1));
+      x_i(1) = a.norm_sq()*(b(0) - c(0)) + b.norm_sq()*(c(0) - a(0))
+             + c.norm_sq()*(a(0) - b(0));
+      x_i(1) *= -1;
+      x_i /= d;
+    }
+    else
+      x_i = elem->centroid();
 
     double vol_i = elem->volume();
 
@@ -368,13 +385,32 @@ Poisson::assemble(void)
       // the normal, pointing out of the current element (i)
       Point n_ik;
 
+      // the cos of the angle between the outer normal and
+      // the connection from i to k
+      double cosphi = 1.0;
 
       if (neigh != nullptr)
       {
-         // advance index counter
-         ++j;
+        // advance index counter
+        ++j;
 
-         x_k = neigh->centroid();
+        if (dim == 2)
+        {
+          Point a(neigh->point(0));
+          Point b(neigh->point(1));
+          Point c(neigh->point(2));
+
+          double d = 2 * (a(0) * (b(1) - c(1)) + b(0) * (c(1) - a(1)) + c(0) * (a(1) - b(1)));
+
+          x_k(0) = a.norm_sq() * (b(1) - c(1)) + b.norm_sq() * (c(1) - a(1))
+                 + c.norm_sq() * (a(1) - b(1));
+          x_k(1) = a.norm_sq() * (b(0) - c(0)) + b.norm_sq() * (c(0) - a(0))
+                 + c.norm_sq() * (a(0) - b(0));
+          x_k(1) *= -1;
+          x_k /= d;
+        }
+        else
+          x_k = neigh->centroid();
 
       }
       else if (mod_int == nullptr)
@@ -414,7 +450,7 @@ Poisson::assemble(void)
         Point y = x1 - x_i;
 
         double det = -(d(0)*d(0) + d(1)*d(1));
-        double t = (d(1)*y(0) - d(0)*y(1)) / det;
+        double t = (-d(1)*y(0) + d(0)*y(1)) / det;
 
         n_ik(0) =  d(1);
         n_ik(1) = -d(0);
@@ -422,21 +458,25 @@ Poisson::assemble(void)
         h_im = n_ik.norm();
         n_ik = n_ik / h_im;
 
-        A_ik = side->volume();
-
         if (neigh != nullptr)
         {
-           y = x1 - x_k;
+          y = x1 - x_k;
 
-           double det = -(d(0) * d(0) + d(1) * d(1));
-           double t = (d(1) * y(0) - d(0) * y(1)) / det;
+          double t = (-d(1) * y(0) + d(0) * y(1)) / det;
 
-           Point n_ki;
-           n_ki(0) = d(1);
-           n_ki(1) = -d(0);
-           n_ki *= t;
-           h_mk = n_ki.norm();
+          Point n_ki;
+          n_ki(0) =  d(1);
+          n_ki(1) = -d(0);
+          n_ki *= t;
+          h_mk = n_ki.norm();
+
+          Point r_ik(x_k - x_i);
+          cosphi = (r_ik * n_ik) / r_ik.norm();
+          h_im /= cosphi;
+          h_mk /= cosphi;
         }
+        
+        A_ik = side->volume() * cosphi;
       }
 
       if (dim == 3)
