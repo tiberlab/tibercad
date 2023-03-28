@@ -106,16 +106,15 @@ class TBDLLOCAL Poisson : public SimulationInterface
     class MyAssembly : public TiberLinearSystem::Assembly
     {
       public:
-      MyAssembly(Poisson* obj) : _obj(obj) {};
+        MyAssembly(Poisson* obj) : _obj(obj) {};
 
-      void assemble() override
-      {
-        _obj->assemble();
-      }
+        void assemble() override
+        {
+          _obj->assemble();
+        }
 
       private:
-      Poisson* _obj;
-
+        Poisson *_obj;
     };
 
     MyAssembly _my_assembly;
@@ -136,6 +135,41 @@ class TBDLLOCAL Poisson : public SimulationInterface
 
     Options myopts;
 
+    //! Circumcenter
+    /*!
+     * \param elem the element
+     * \param s the side of interest (if any)
+     * 
+     * If s is provided, the circle will be constructed
+     * such that the points of side \c s are lying on it.
+     */
+    libMesh::Point circumcenter(const libMesh::Elem* elem,
+                                int s = -1);
+    
+    //! Get the geometric parameters for the coupling
+    /*!
+     * \param elem [in] the current element worked on
+     * \param k [in] the index of the side of interest
+     * \param x_i [in/out] the circumcenter of \c elem
+     * \param x_k [out] the circumcenter of the neighbor
+     * \param n_ik [out] the outpointing normal
+     * \param x_m [out] the projection of x_i on the side
+     * \param h_im [out] the distance \c x_i to \c x_m
+     * \param h_mk [out] the distance \c x_m to \c x_k
+     * \param A_ik [out] the volume of side \c k
+     * 
+     * NOTE: \c x_i can be changed in the method if \c elem
+     * is not a triangle. In that case, a suitable center will
+     * be calculated using three points including side \c k.
+     */
+    void geometry_params(const libMesh::Elem *elem,
+                         unsigned int k,
+                         libMesh::Point &x_i,
+                         libMesh::Point &x_k,
+                         libMesh::Point &n_ik,
+                         libMesh::Point &x_m,
+                         double &h_im, double &h_mk,
+                         double &A_ik);
 };
 
 

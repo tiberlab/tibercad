@@ -263,6 +263,184 @@ Poisson::get_solution_secure(const Elem* elem,
 
 
 
+libMesh::Point
+Poisson::circumcenter(const libMesh::Elem* elem, int s)
+{
+  Point x_i(0.0);
+
+  unsigned int dim = elem->dim();
+
+  // (It seems the centroid works better for quadrangles)
+  //if (dim == 2)
+  if ((dim == 2) && (elem->n_nodes() == 3))
+  {
+    Point a, b, c;
+    
+    /*
+    if ((s >= 0) && (elem->n_nodes() > 3))
+    {
+      auto side = elem->side_ptr(s);
+      a = side->point(0);
+      b = side->point(1);
+      Point v1(b - a);
+
+      // look for adjacent side that makes smallest angle
+      unsigned int ns = elem->n_sides();
+
+      auto s2 = elem->side_ptr((s+1)%ns);
+      Point v2(s2->point(1) - s2->point(0));
+
+      auto s3 = elem->side_ptr((s-1)%ns);
+      Point v3(s3->point(0) - s3->point(1));
+
+      double cosa = -(v1 * v2) / (v1.norm() * v2.norm());
+      double cosb =  (v1 * v3) / (v1.norm() * v3.norm());
+
+      if (cosa > cosb)
+        c = b + v2;
+      else
+        c = a + v3;
+      
+    }*/
+    //else
+    {
+      a = elem->point(0);
+      b = elem->point(1);
+      c = elem->point(2);
+    }
+
+    double d = 2 * (a(0) * (b(1) - c(1)) +
+                    b(0) * (c(1) - a(1)) + c(0) * (a(1) - b(1)));
+
+    x_i(0) = a.norm_sq() * (b(1) - c(1)) + b.norm_sq() * (c(1) - a(1)) +
+             c.norm_sq() * (a(1) - b(1));
+    x_i(1) = a.norm_sq() * (b(0) - c(0)) + b.norm_sq() * (c(0) - a(0)) +
+             c.norm_sq() * (a(0) - b(0));
+    x_i(1) *= -1;
+    x_i /= d;
+  }
+  else
+    x_i = elem->centroid();
+
+  return(x_i);
+}
+
+void
+Poisson::geometry_params(const libMesh::Elem* elem,
+                         unsigned int k,
+                         libMesh::Point& x_i,
+                         libMesh::Point& x_k,
+                         libMesh::Point& n_ik,
+                         libMesh::Point& x_m,
+                         double& h_im, double& h_mk,
+                         double& A_ik)
+{
+
+  unsigned int dim = elem->dim();
+  const Elem *neigh = elem->neighbor_ptr(k);
+
+  // for a quadrangle, recalculate x_i
+  // see note in circumcenter()
+  //if ((dim == 2) && (elem->n_nodes() == 4))
+  //{
+  //  x_i = circumcenter(elem, k);
+  //}
+
+  if (neigh != nullptr)
+  {
+    unsigned int n = 0;
+    for ( ; neigh->neighbor_ptr(n) != elem; ++n) {}
+
+    x_k = circumcenter(neigh, n);
+  }
+
+  // 1D is simple 
+  if (dim == 1)
+  {
+    x_m = elem->point(k);
+    Point d(x_m);
+    d -= x_i;
+    h_im = d.norm();
+
+    n_ik = d / h_im;
+
+    if (neigh != nullptr)
+    {
+      Point d(x_k);
+      d -= x_m;
+      h_mk = d.norm();
+    }
+  }
+
+  if (dim == 2)
+  {
+    // we need the side
+    // NOTE: should be adapted for any orientation in 3D
+    auto side = elem->side_ptr(k);
+    Point x1(side->point(0));
+    Point x2(side->point(1));
+
+    x_m = 0.5*(x1 + x2);
+
+    // get the projection of x_i onto side k
+    Point d(x2 - x1);
+    Point y = x1 - x_i;
+
+    double det = -(d(0) * d(0) + d(1) * d(1));
+    double t = (-d(1) * y(0) + d(0) * y(1)) / det;
+
+    n_ik(0) = d(1);
+    n_ik(1) = -d(0);
+    n_ik *= t;
+    h_im = n_ik.norm();
+    n_ik = n_ik / h_im;
+
+    if (neigh != nullptr)
+    {
+      y = x1 - x_k;
+
+      double t = (-d(1) * y(0) + d(0) * y(1)) / det;
+
+      Point n_ki;
+      n_ki(0) = d(1);
+      n_ki(1) = -d(0);
+      n_ki *= t;
+      h_mk = n_ki.norm();
+    }
+
+    A_ik = side->volume();
+  }
+
+  if (dim == 3)
+  {
+    // get the projection onto a side
+    // we need the side
+    auto side = elem->side_ptr(k);
+    Point x1(side->point(0));
+    Point x2(side->point(1));
+    Point x3(side->point(2));
+
+    libMesh::Plane p(x1, x2, x3);
+    x_m = p.closest_point(x_i);
+
+    n_ik = x_m - x_i;
+
+    h_im = n_ik.norm();
+    n_ik = n_ik / h_im;
+
+    A_ik = side->volume();
+
+    if (neigh != nullptr)
+    {
+      Point pp = p.closest_point(x_k);
+
+      Point n_ki = pp - x_k;
+
+      h_mk = n_ki.norm();
+    }
+  }
+}
+
 void
 Poisson::assemble(void)
 {
@@ -326,24 +504,8 @@ Poisson::assemble(void)
     mod.set_element(elem);
 
     // calculate parameters we need from this element
-    Point x_i;
-    if (dim == 2)
-    {
-      Point a(elem->point(0));
-      Point b(elem->point(1));
-      Point c(elem->point(2));
+    Point x_i(circumcenter(elem));
 
-      double d = 2*(a(0)*(b(1)-c(1)) + b(0)*(c(1) - a(1)) + c(0)*(a(1) - b(1)));
-
-      x_i(0) = a.norm_sq()*(b(1) - c(1)) + b.norm_sq()*(c(1) - a(1))
-             + c.norm_sq()*(a(1) - b(1));
-      x_i(1) = a.norm_sq()*(b(0) - c(0)) + b.norm_sq()*(c(0) - a(0))
-             + c.norm_sq()*(a(0) - b(0));
-      x_i(1) *= -1;
-      x_i /= d;
-    }
-    else
-      x_i = elem->centroid();
 
     double vol_i = elem->volume();
 
@@ -385,33 +547,11 @@ Poisson::assemble(void)
       // the normal, pointing out of the current element (i)
       Point n_ik;
 
-      // the cos of the angle between the outer normal and
-      // the connection from i to k
-      double cosphi = 1.0;
 
       if (neigh != nullptr)
       {
         // advance index counter
         ++j;
-
-        if (dim == 2)
-        {
-          Point a(neigh->point(0));
-          Point b(neigh->point(1));
-          Point c(neigh->point(2));
-
-          double d = 2 * (a(0) * (b(1) - c(1)) + b(0) * (c(1) - a(1)) + c(0) * (a(1) - b(1)));
-
-          x_k(0) = a.norm_sq() * (b(1) - c(1)) + b.norm_sq() * (c(1) - a(1))
-                 + c.norm_sq() * (a(1) - b(1));
-          x_k(1) = a.norm_sq() * (b(0) - c(0)) + b.norm_sq() * (c(0) - a(0))
-                 + c.norm_sq() * (a(0) - b(0));
-          x_k(1) *= -1;
-          x_k /= d;
-        }
-        else
-          x_k = neigh->centroid();
-
       }
       else if (mod_int == nullptr)
       {
@@ -420,93 +560,8 @@ Poisson::assemble(void)
         continue;
       }
 
-      if (dim == 1)
-      {
-        x_m = elem->point(k);
-        Point d(x_m);
-        d -= x_i;
-        h_im = d.norm();
-
-        n_ik = d / h_im;
-
-        if (neigh != nullptr)
-        {
-          Point d(x_k);
-          d -= x_m;
-          h_mk = d.norm();
-        }
-      }
-
-      if (dim == 2)
-      {
-        // get the projection onto a side
-        // we need the side
-        // NOTE: should be adapted for any orientation in 3D
-        auto side = elem->side_ptr(k);
-        Point x1(side->point(0));
-        Point x2(side->point(1));
-
-        Point d(x2 - x1);
-        Point y = x1 - x_i;
-
-        double det = -(d(0)*d(0) + d(1)*d(1));
-        double t = (-d(1)*y(0) + d(0)*y(1)) / det;
-
-        n_ik(0) =  d(1);
-        n_ik(1) = -d(0);
-        n_ik *= t;
-        h_im = n_ik.norm();
-        n_ik = n_ik / h_im;
-
-        if (neigh != nullptr)
-        {
-          y = x1 - x_k;
-
-          double t = (-d(1) * y(0) + d(0) * y(1)) / det;
-
-          Point n_ki;
-          n_ki(0) =  d(1);
-          n_ki(1) = -d(0);
-          n_ki *= t;
-          h_mk = n_ki.norm();
-
-          Point r_ik(x_k - x_i);
-          cosphi = (r_ik * n_ik) / r_ik.norm();
-          h_im /= cosphi;
-          h_mk /= cosphi;
-        }
-        
-        A_ik = side->volume() * cosphi;
-      }
-
-      if (dim == 3)
-      {
-        // get the projection onto a side
-        // we need the side
-        auto side = elem->side_ptr(k);
-        Point x1(side->point(0));
-        Point x2(side->point(1));
-        Point x3(side->point(2));
-
-        libMesh::Plane p(x1, x2, x3);
-        Point pp = p.closest_point(x_i);
-
-        n_ik = pp - x_i;
-        
-        h_im = n_ik.norm();
-        n_ik = n_ik / h_im;
-
-        A_ik = side->volume();
-
-        if (neigh != nullptr)
-        {
-          pp = p.closest_point(x_k);
-
-          Point n_ki = pp - x_k;
-        
-          h_mk = n_ki.norm();
-        }
-      }
+      geometry_params(elem, k, x_i, x_k, n_ik, x_m,
+                      h_im, h_mk, A_ik);
 
 
       double a = 0.0, b = 0.0, c = 0.0;
