@@ -384,28 +384,21 @@ Poisson::geometry_params(const libMesh::Elem* elem,
 
     // get the projection of x_i onto side k
     Point d(x2 - x1);
-    Point y = x1 - x_i;
-
-    double det = -(d(0) * d(0) + d(1) * d(1));
-    double t = (-d(1) * y(0) + d(0) * y(1)) / det;
 
     n_ik(0) = d(1);
     n_ik(1) = -d(0);
-    n_ik *= t;
-    h_im = n_ik.norm();
-    n_ik = n_ik / h_im;
+    n_ik /= n_ik.norm();
+
+    Point y = x1 - x_i;
+
+    double det = (d(0) * n_ik(1) - d(1) * n_ik(0));
+    h_im = (d(0) * y(1) - d(1) * y(0)) / det;
 
     if (neigh != nullptr)
     {
       y = x1 - x_k;
 
-      double t = (-d(1) * y(0) + d(0) * y(1)) / det;
-
-      Point n_ki;
-      n_ki(0) = d(1);
-      n_ki(1) = -d(0);
-      n_ki *= t;
-      h_mk = n_ki.norm();
+      h_mk = -(d(0) * y(1) - d(1) * y(0)) / det;
     }
 
     A_ik = side->volume();
@@ -439,6 +432,9 @@ Poisson::geometry_params(const libMesh::Elem* elem,
       h_mk = n_ki.norm();
     }
   }
+
+  if (abs(h_im) < 1e-9)
+    h_im = 1e-9;
 }
 
 void
@@ -572,10 +568,14 @@ Poisson::assemble(void)
       }
 
       // phi_m is linear function in phi_i and phi_k:
-      // phi_m = c_i * phi_i + c_k * phi_k + f
-      double c_i = 0;
+      // phi_m = ((1 - c_i) * phi_i + c_k * phi_k + f) * h_im
+      // NOTE: in case h_im = 0, h_im = 1e-9 is used, which
+      // results in a penalty approach for the boundary condition.
+      // Distinctiomn between c_i and c_k is only needed for
+      // boundary conditions.
+      double c_i = 1.0 / h_im;
       double c_k = 0;
-      double f = 0;
+      double f_i = 0;
 
 
       // interface charge, if present
@@ -585,7 +585,7 @@ Poisson::assemble(void)
       if ((b == 0.0) && (a != 0.0))
       {
         // this is a Dirichlet BC
-        f = c / a;
+        f_i = c / a / h_im;
       }
       else if (neigh != nullptr)
       {
@@ -609,22 +609,26 @@ Poisson::assemble(void)
         // double delta_phi = 0.0;
 
         double denom = h_mk * e_i + h_im * e_k;
-        c_i = h_mk * e_i / denom;
-        c_k = h_im * e_k / denom;
-        f = /* -h_im*e_k / denom * delta_phi */
-            -h_im * h_mk / denom * (sigma_pol + sigma_int);
+        c_i = e_k / denom;
+        c_k = c_i;
+        f_i = /* -e_k / denom * delta_phi */
+            -h_mk / denom * (sigma_pol + sigma_int);
 
       }
 
 
-      // now we use
+      // now we use:
+      // NOTE: the divison by h_im is included in the coefficients,
+      // this eliminates all potential undefined cases (0/0)
+      //
       //   D_i = -e_i * (phi_m - phi_i) / h_im + P_i*n_ik - 0.5*sigma_int;
-      Ke(0, 0) += e_i / h_im * (1 - c_i) * A_ik;
+      //
+      Ke(0, 0) += e_i * c_i * A_ik;
 
       if (neigh != nullptr)
-        Ke(0, j) -= e_i / h_im * c_k * A_ik;
+        Ke(0, j) -= e_i * c_k * A_ik;
 
-      Fe(0) -= (pol_i * n_ik - 0.5 * sigma_int - e_i / h_im * f) * A_ik;
+      Fe(0) -= (pol_i * n_ik - 0.5 * sigma_int - e_i * f_i) * A_ik;
 
     }
 
