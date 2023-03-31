@@ -319,6 +319,33 @@ Poisson::circumcenter(const libMesh::Elem* elem, int s)
     x_i(1) *= -1;
     x_i /= d;
   }
+  /*else if ((dim == 3) && (elem->n_nodes() == 4))
+  {
+    // tetrahedron
+    // circumcenter
+    Point u1(elem->point(1) - elem->point(0));
+    Point u2(elem->point(2) - elem->point(0));
+    Point u3(elem->point(3) - elem->point(0));
+
+    double l1 = u1.norm_sq();
+    double l2 = u2.norm_sq();
+    double l3 = u3.norm_sq();
+
+    x_i = u2.cross(u3);
+    double den = 2 * u1 * x_i;
+
+    x_i *= l1;
+    x_i += l2 * u3.cross(u1) + l3 * u1.cross(u2);
+
+    x_i /= den;
+
+    x_i += elem->point(0);
+
+    if (!elem->contains_point(x_i))
+    {
+      x_i = elem->centroid();
+    }
+  }*/
   else
     x_i = elem->centroid();
 
@@ -413,13 +440,22 @@ Poisson::geometry_params(const libMesh::Elem* elem,
     Point x2(side->point(1));
     Point x3(side->point(2));
 
+    // the outer normal
+    // NOTE: this assumes that the side elements
+    // are ordered specifically
+    n_ik = x2 - x1;
+    n_ik = n_ik.cross(x3 - x1);
+    n_ik /= n_ik.norm();
+
     libMesh::Plane p(x1, x2, x3);
     x_m = p.closest_point(x_i);
 
-    n_ik = x_m - x_i;
+    //Point c(x_m - elem->centroid());
+    //double s = n_ik * c;
+    //if (s <= 0)
+    //  cerr << "n is pointing inwards\n";
 
-    h_im = n_ik.norm();
-    n_ik = n_ik / h_im;
+    h_im = abs(n_ik * (x_m - x_i));
 
     A_ik = side->volume();
 
@@ -427,12 +463,11 @@ Poisson::geometry_params(const libMesh::Elem* elem,
     {
       Point pp = p.closest_point(x_k);
 
-      Point n_ki = pp - x_k;
-
-      h_mk = n_ki.norm();
+      h_mk = abs(n_ik * (x_k - pp));
     }
   }
 
+  // = 0 is not admissible, as we will divide by h_im
   if (abs(h_im) < 1e-9)
     h_im = 1e-9;
 }
@@ -560,6 +595,7 @@ Poisson::assemble(void)
                       h_im, h_mk, A_ik);
 
 
+
       double a = 0.0, b = 0.0, c = 0.0;
       if (mod_int != nullptr)
       {
@@ -573,7 +609,7 @@ Poisson::assemble(void)
       // results in a penalty approach for the boundary condition.
       // Distinctiomn between c_i and c_k is only needed for
       // boundary conditions.
-      double c_i = 1.0 / h_im;
+      double c_i = 1.0 / abs(h_im);
       double c_k = 0;
       double f_i = 0;
 
@@ -585,7 +621,7 @@ Poisson::assemble(void)
       if ((b == 0.0) && (a != 0.0))
       {
         // this is a Dirichlet BC
-        f_i = c / a / h_im;
+        f_i = c / a / abs(h_im);
       }
       else if (neigh != nullptr)
       {
@@ -637,8 +673,8 @@ Poisson::assemble(void)
     system.rhs->add_vector(Fe, rows);
 
   }
-  //system.matrix->close();
-  //system.matrix->print_matlab("K.m");
+  system.matrix->close();
+  system.matrix->print_matlab("K.m");
   //system.rhs->close();
   //system.rhs->print_matlab("F.m");
 
