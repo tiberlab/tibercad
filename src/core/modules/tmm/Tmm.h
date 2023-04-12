@@ -100,6 +100,9 @@ class TBDLLOCAL Tmm : public SimulationInterface
 
   Tmm::Matrix_2by2 Determinal_Matrix (Tmm::Matrix_2by2 MAT);
 
+
+  std::complex<double> cmlx_sqrt(std::complex<double> in);
+
   //! defining a function to return D matrix
   /*!
   * "n1_real" is first layer real part of the refractive index
@@ -109,7 +112,7 @@ class TBDLLOCAL Tmm : public SimulationInterface
   * "theta_layer1" is the first layer light's traveling angle(normal incident is equal to '0')
   * "theta_layer2" is the second layer light's traveling angle(normal incident is equal to '0')
   */
-  Tmm::Matrix_2by2 get_D(double n1_real,double n1_imag,double n2_real,double n2_imag,double theta_layer1, double theta_layer2);
+  Tmm::Matrix_2by2 get_D(double n1_real,double n1_imag,double n2_real,double n2_imag, double kr, double lambda,double mode);
 
   vector<double> linear_interpolation1 (vector<double> xData, vector<double> yData, vector<double> x_interp);
 
@@ -186,7 +189,10 @@ class TBDLLOCAL Tmm : public SimulationInterface
       Intensity,
       External_Source_ElectricField,
       Internal_Source_ElectricField,
+      Internal_Poynting,
+      Internal_Power,
       Internal_Intensity,
+      Internal_Absorption,
       Transmission,
       Reflection,
       Absorption
@@ -201,12 +207,19 @@ class TBDLLOCAL Tmm : public SimulationInterface
     std::vector<double> _Wavelength;
     std::vector<double> _Generation_rate;
     std::vector<double> _Internal_Source_ElectricField;
+    std::vector<double> _Internal_Poynting;
+    std::vector<double> _Internal_Power;
+    std::vector<double> _Internal_Absorption;
     std::vector<double> _Internal_Intensity;
 
-    std::vector<double> _Output_Front;
-    std::vector<double> _Output_back;
-    std::vector<double> _Output_Front_angle;
-    std::vector<double> _Output_back_angle;
+    std::vector<double> _angle;
+    std::vector<double> _Poynting_front;
+    std::vector<double> _Poynting_back;
+    // std::vector<double> _Fraction_front;
+    // std::vector<double> _Fraction_back;
+    std::vector<double> _Fraction_ratio;
+    std::vector<double> _kr;
+    //std::vector<double> _Output_back_angle;
 
 
     
@@ -233,8 +246,18 @@ class TBDLLOCAL Tmm : public SimulationInterface
     double _wavelength_steps;
     double _dipole_loc;
 
+    double _polarization;
+    double _orientation;
+    vector<double> _polarization_vec;
+    vector<double> _oraintation_vec;
+
+    double _steps;
+    std::vector<double> _ratio;
+    std::vector<double> _dipole_power;
+
 
     std::vector<double> _wavelength_vector;
+    std::vector<double> _dipole_coordinate;
 
 
 

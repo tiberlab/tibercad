@@ -3,7 +3,7 @@ $MeshFormat
 $EndMeshFormat
 $PhysicalNames
 1
-1 1 "Air"
+1 1 "GaN"
 $EndPhysicalNames
 $Entities
 2 1 0 0

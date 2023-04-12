@@ -1,2 +1,2 @@
-Example 5: Optical modelling of GaN LED
+Example 5: Dipole Emission in Air TM Mode Vertical 
 

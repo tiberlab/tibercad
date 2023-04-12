@@ -1,20 +1,13 @@
 Device
 {
-  meshfile = Example_7.msh 
+  meshfile = Example_8.msh 
   mesh_units = 1e-9
   dimension = 1
-  Region Ag
-  {
-  Incoherency = 0
-  material = Ag
-  }
-
   Region GaN
   {
   Incoherency = 0
   material = GaN_optic
   }
-
 }
 
 
@@ -22,13 +15,14 @@ Module tmm
 { 
   
   name = tmm_study 
-  plot = (Internal_Source_ElectricField,Internal_Intensity)
-
-  #wavelength_uper_lim = 300
-  #wavelength_lower_lim = 300
-  #wavelength_steps = 10
+  plot = (Internal_Source_ElectricField,Internal_Poynting,Internal_Power,Internal_Absorption)
   wavelengths = 300
-  dipole_loc = 700
+  dipole_steps = 200
+  dipole_ratio = 1
+  polarization = 1
+  orientation = 0
+  dipole_power = 0.2
+  dipole_coordinate = 500
 
   Physics 
   {

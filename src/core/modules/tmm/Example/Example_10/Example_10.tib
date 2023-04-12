@@ -1,33 +1,24 @@
 Device
 {
-  meshfile = Example_7.msh 
+  meshfile = Example_10.msh 
   mesh_units = 1e-9
   dimension = 1
 
-  Region AIR
+  Region Air
   {
   Incoherency = 0
   material = Air
   }
-
-  Region Ag
-  {
-  Incoherency = 0
-  material = Ag
-  }
-
   Region GaN
   {
   Incoherency = 0
   material = GaN_optic
   }
-
-  Region Sapphire
+  Region Ag
   {
   Incoherency = 0
-  material = Sapphire
+  material = Ag
   }
-
 }
 
 
@@ -35,15 +26,14 @@ Module tmm
 { 
   
   name = tmm_study 
-  plot = (Internal_Source_ElectricField,Internal_Intensity)
-  wavelengths = 300
-
-  Contact dipole
-  {
-  type = dipole_source
-  kr_ratio = 1
-  steps = 100
-  }
+  plot = (Internal_Source_ElectricField,Internal_Poynting,Internal_Power,Internal_Absorption)
+  wavelengths = 800
+  dipole_steps = 300
+  polarization = 0
+  orientation = 0
+  dipole_ratio = 1
+  dipole_power = 0.2
+  dipole_coordinate = 350
 
   Physics 
   {

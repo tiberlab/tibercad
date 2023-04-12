@@ -3,6 +3,6 @@ Example 2: Optical modeling of the Incoherence Glass
 Example 3: Optical Modeling of the Perovskite Solar cell
 Example 4: Optical Modeling of the Silicon Solar cell
 Example 5: Optical and Electrical Modeling of the Perovskite Solar cell
-Example 5: Optical and Electrical Modeling of the Perovskite Solar cell
-Example 5: Optical modelling of a dipole inside a cavity
+Example 6: Optical and Electrical Modeling of the Perovskite Solar cell
+Example 7: Optical modelling of a dipole inside a cavity
 
