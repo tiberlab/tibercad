@@ -19,10 +19,10 @@ Module tmm
   name = tmm_study 
   plot = (Internal_Source_ElectricField,Internal_Poynting,Internal_Power,Internal_Absorption)
   wavelengths = 450
-  dipole_steps = 200
-  polarization = 1
-  orientation = 1
-  dipole_ratio = 1
+  wave_number_steps = 200
+  polarization = TM
+  orientation = V
+  wave_number_ratio = 1
   dipole_power = 0.2
   dipole_coordinate = 500
 

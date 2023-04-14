@@ -5,4 +5,4 @@
 # 3 Power flow back
 #  Powerflow front
 # ratio  kr  Emission_angle  Power_back  Power_front
-0.5  0.0173643  0.523599  6.77626e-22  0.0415772
+0.5  0.0173643  0.523599  0  0.0385609

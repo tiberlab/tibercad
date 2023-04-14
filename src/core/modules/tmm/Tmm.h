@@ -103,6 +103,8 @@ class TBDLLOCAL Tmm : public SimulationInterface
 
   std::complex<double> cmlx_sqrt(std::complex<double> in);
 
+  bool cmp_string(const std::string& a, const std::string& b);
+
   //! defining a function to return D matrix
   /*!
   * "n1_real" is first layer real part of the refractive index
@@ -202,6 +204,9 @@ class TBDLLOCAL Tmm : public SimulationInterface
     std::vector<double> _Reflection;
     std::vector<double> _Absorption;
 
+    std::vector<vector<double>> _Electric_Field_External;
+    std::vector<vector<double>> _Electric_Field_Internal;
+
     std::vector<double> _Intensity;
     std::vector<double> _External_Source_ElectricField;
     std::vector<double> _Wavelength;
@@ -246,10 +251,10 @@ class TBDLLOCAL Tmm : public SimulationInterface
     double _wavelength_steps;
     double _dipole_loc;
 
-    double _polarization;
-    double _orientation;
-    vector<double> _polarization_vec;
-    vector<double> _oraintation_vec;
+    std::string _polarization;
+    std::string _orientation;
+    std::vector<double> _polarization_vec;
+    std::vector<double> _oraintation_vec;
 
     double _steps;
     std::vector<double> _ratio;
