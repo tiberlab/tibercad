@@ -14,7 +14,8 @@ Theory
 ------------
 
 TMM modules is a Finite Element solver for analysis propagation of the light in the multi-layer
-strucrue, and calculating generation rate, Intensity and Electric Field inside the layers. 
+strucrue, and calculating generation rate, Intensity and Electric Field inside the layers. Ligth source can be either external source
+or internal emission fo the dipole.
 Combination of TMM and Drift and Difution modules Could be used in the Electro-Optical simulation of the Solar cells. 
 It can also be used to calculate Reflection, Transmision and absorbtion of the multi-layer structures.
 
@@ -41,9 +42,12 @@ Physics section
 
 In the following we will describe all the physical models. As mentioned in the Introduction in section :ref:`InputFileGetting`, submodels can be restricted to a subset of simulation regions.
 
-Incident wave
+
+
+
+Incident wave (External source)
 ---------------
-Incident wave boundry condition should be used to determin incoming wave point. It should be note that this point shouldn't be at the middle of the geometry. 
+Incident wave boundry condition(external source) should be used to determin incoming wave point. It should be note that this point shouldn't be at the middle of the geometry. 
 
   		Contact point1
   		{
@@ -51,34 +55,101 @@ Incident wave boundry condition should be used to determin incoming wave point. 
   		}
 
 
-reflectivity
+Dipole Coordinate (Internal source)
+---------------
+With this parameter one can specify coordinate of the dipoles, the value should mesh based (similer to geometry).
+it is possiable to solve for both external source and
+
+	dipole_coordinate = 200
+
+Or
+
+
+	dipole_coordinate = ( 100 200 300)
+
+
+
+Dipole Modes (Internal source)
+---------------
+Dipoles polarization can be 'TE' or 'TM', one can solve for both polarizations by typing 'TEM'.
+Dipole orientation can be 'V' or 'H', it would be possiable to solve for both of these two modes by specifying 'VH'.
+
+examples of TM mode with Horizental dirrection:
+
+  polarization = TM
+  orientation = H
+
+Solving for TE and TM mode with both horizental and vertical dirrection:
+
+  polarization = TEM
+  orientation = VH
+
+Dipole Power ( Used only for Internal source)
+---------------
+This parmeter specify the power of the Dipole. in the case of multiple dipole, by specifying the scaler dipole power, power of all
+dipoles would be identical, but it is possiable to defing non uniform power.
+
+Uniform emission:
+	  dipole_power = 0.2
+	  dipole_coordinate = ( 100 200 300)
+
+Non-Uniform emission:
+	  dipole_power = (0.2 0.3 0.4)
+	  dipole_coordinate = ( 100 200 300)
+
+Dipole Radial Wave Number ( Used only for Internal source)
+---------------
+Emission of the dipole angle can be studied by varying radial wave number of the dipole emission.  And instead of giving the exact value
+of the radial wave number, one could specify the ratio of the radial wave number('x' component) with respect to wave number in the dipole layer
+('z' componenet). in this way ratio of '0' equal to normal incident and ratio of '1' means 90[deg] emission angle.
+
+Solving for single angle:
+	
+	  dipole_steps = 0
+	  dipole_ratio = 0 // solving only for 0[deg] emission
+
+Solving for a range of angles:  
+	  dipole_steps = 100
+	  dipole_ratio = 1 // solving from 0[deg] to 90[deg] emission angle with 100 steps
+
+reflectivity ( Used only for External source)
 ---------------
 this parameter indicate reflectivity at the other side of Incoming wave. 
 back_reflectivity = 1 is equal to total reflection at the end of the geometry.
 
 		back_reflectivity = 0
 
-incident angle
+incident angle ( Used only for External source)
 ---------------
-This parameter determin angle of the incoming wave. The value should be less than 90[deg].
+This parameter determin angle of the incoming external wave. The value should be less than 90[deg].
 
 		incident_angle = 0
 
-down_lambda & up_lambda
+Wave Length ( Used for External source as well as Internal source)
 ---------------
-These two parameter will detrmin range of wavelength which will be used in the calculations.
-Usauly it should be from 300 to 1000(nm)
+There are two ways to specify emission angle of the external and internal source.
+First by giving exact value of the Wave length in form of scaler or vector in "nm" unit:
+
+	wavelengths = 450
+
+Or
+	
+	wavelengths = (300 400 500)
+	
+Secondly it is possiable to define a range of wavelengths and steps of the wave lengths:
 
   wavelength_lower_lim = 300
-  wavelength_steps = 10
-  wavelength_uper_lim = 1000
+  wavelength_steps = 1
+  wavelength_uper_lim = 950
+  
 
 
 
-Incoherency
+Incoherency ( Used only for External source)
 ---------------
 for Coherence layers this parameter should be zero. by setting this parameter to one, corresponding layer will be considered
-as an Incoherent layer. This feature is usfull for simulation of thick layers such as Glass.
+as an Incoherent layer. This feature is usfull for simulation of thick layers such as Glass. Thisfeatre is only applied for external source
+calculations.
 
   		Region Glass 
   		{
@@ -298,7 +369,28 @@ TMM Module configuration is:
 
 
 
- 
+ Example 4
+------------
+This example solve for TE mode with H orientation for 0[deg] up to 90[deg] emission angle with dipole power of 0.2. Dipole located at coordinate 500.
 
+Module tmm
+{ 
+  
+  name = tmm_study 
+  plot = (Internal_Source_ElectricField,Internal_Poynting,Internal_Power,Internal_Absorption)
+  wavelengths = 300
+  dipole_steps = 200
+  dipole_ratio = 1
+  polarization = 1
+  orientation = 0
+  dipole_power = 0.2
+  dipole_coordinate = 500
+
+  Physics 
+  {
+
+  }
+
+}
 
 
