@@ -1558,42 +1558,42 @@ Tmm::get_solution_secure(const Elem* elem,
   RealGradient field(0);
   TmmBulkModel& mod = *get_bulk_model<TmmBulkModel>(elem);
 
-  if (solutions.count(Internal_Intensity))
+  if (!_Internal_Intensity.empty())
   {
     solutions[Internal_Intensity][0]= _Internal_Intensity[dof_indices[0]];
   }
 
-  if (solutions.count(Internal_Absorption))
+  if (!_Internal_Absorption.empty())
   {
     solutions[Internal_Absorption][0]= _Internal_Absorption[dof_indices[0]];
   }
 
-  if (solutions.count(Internal_Poynting))
+  if (!_Internal_Poynting.empty())
   {
     solutions[Internal_Poynting][0]= _Internal_Poynting[dof_indices[0]];
   }
 
-  if (solutions.count(Internal_Power))
+  if (!_Internal_Power.empty())
   {
     solutions[Internal_Power][0]= _Internal_Power[dof_indices[0]];
   }
 
-  if (solutions.count(Internal_Source_ElectricField))
+  if (!_Internal_Source_ElectricField.empty())
   {
     solutions[Internal_Source_ElectricField][0]= _Internal_Source_ElectricField[dof_indices[0]];
   }
 
-  if (solutions.count(External_Source_ElectricField))
+  if (!_External_Source_ElectricField.empty())
   {
     solutions[External_Source_ElectricField][0]= _External_Source_ElectricField[dof_indices[0]];
   }
 
-  if (solutions.count(Intensity))
+  if (!_Intensity.empty())
   {
     solutions[Intensity][0]= _Intensity[dof_indices[0]];
   }
 
-  if (solutions.count(GenerationRate))
+  if (!_Generation_rate.empty())
   {
     solutions[GenerationRate][0] =_Generation_rate[dof_indices[0]];
   }
