@@ -116,6 +116,12 @@ class TBDLLOCAL Tmm : public SimulationInterface
   */
   Tmm::Matrix_2by2 get_D(double n1_real,double n1_imag,double n2_real,double n2_imag, double kr, double lambda,double mode);
 
+  void dipole_source(double & A_P, double & A_N, double Mode, double Oraintation, double lambda, double cos_phi_inter);
+
+  void solving_internal_source(vector<complex<double>> & E_int_f, vector<complex<double>> & E_int_b ,const vector<double> & n_real,
+     const vector<double> & n_imag, const vector<double> & l, double lambda, double dipole_loc, double kr, double Mode, double A_P, double phase);
+
+
   vector<double> linear_interpolation1 (vector<double> xData, vector<double> yData, vector<double> x_interp);
 
   protected:
@@ -177,6 +183,9 @@ class TBDLLOCAL Tmm : public SimulationInterface
     vector<double> theta_cal(vector<double> n_real , double incident_angle);
 
 
+    Device* _device;
+
+    SimulationEnvironment* _env;
 
     //! defining a class to work with 2*2 matrics 
 
@@ -206,6 +215,8 @@ class TBDLLOCAL Tmm : public SimulationInterface
 
     std::vector<vector<double>> _Electric_Field_External;
     std::vector<vector<double>> _Electric_Field_Internal;
+    std::vector<vector<double>> _Generation_regions;
+    std::vector<std::string> _regions_name;
 
     std::vector<double> _Intensity;
     std::vector<double> _External_Source_ElectricField;
@@ -250,6 +261,8 @@ class TBDLLOCAL Tmm : public SimulationInterface
     double _down_lambda;
     double _wavelength_steps;
     double _dipole_loc;
+
+    double _coh_mod;
 
     std::string _polarization;
     std::string _orientation;
