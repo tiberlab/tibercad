@@ -1337,7 +1337,7 @@ Tmm::plot_globaldata(void)
 
     if (file.good())
     {
-      file << "# " << get_type() << " Generation_Regions (" << get_name() << ")\n";
+      file << "# " << get_type() << " Absorption_Regions (" << get_name() << ")\n";
       file << "# " << 0 << " WaveLength [nm]" << "\n";
       for (double i = 0; i < _regions_name.size(); ++i)
       {
