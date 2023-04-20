@@ -1330,7 +1330,7 @@ Tmm::plot_globaldata(void)
   {
 
 
-    string filename(outdir + "/" + get_output_filename() + "_Generation_Regions.dat");
+    string filename(outdir + "/" + get_output_filename() + "_Absorption_Regions.dat");
 
     ofstream file;
     file.open(filename.c_str());
