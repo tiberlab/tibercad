@@ -1276,6 +1276,7 @@ Tmm::do_solve(void)
                   _Internal_Power[nm] += real( (2*M_PI) * (poynting[nm]* coefficient) * kr * dkr / Ns / pow(kzs,2) ) ;
                 ++cnt;
 
+
             } // end of radial wave numbers loop
 
           } // end of number of dipoles loop
@@ -1286,7 +1287,6 @@ Tmm::do_solve(void)
 
 
     }// end of dipole simulation
-
 
   }// end of loop of wavelength
   solution.close();
@@ -1324,7 +1324,6 @@ Tmm::plot_globaldata(void)
 {
   
   string outdir = get_output_directory();
-
 
   if (!_Generation_regions.empty())
   {
@@ -1415,7 +1414,6 @@ Tmm::plot_globaldata(void)
     }
     file.close();
   }
-
 if (!_Electric_Field_Internal.empty())
   {
     string filename(outdir + "/" + get_output_filename() + "_electric_field_inernal.dat");
@@ -1467,7 +1465,6 @@ if (!_Electric_Field_Internal.empty())
     file.close();
   }
 
-
   if (!_Electric_Field_External.empty())
   {
     string filename(outdir + "/" + get_output_filename() + ".dat");
@@ -1495,7 +1492,6 @@ if (!_Electric_Field_Internal.empty())
     file.close();
   }
 
-
   if (!_Fraction_ratio.empty())
   {
     string polar_file(outdir + "/" + get_output_filename() + "_polar.dat");
@@ -1520,6 +1516,7 @@ if (!_Electric_Field_Internal.empty())
 
     polar.close();
   }
+
 }
 
 void
@@ -1527,6 +1524,7 @@ Tmm::get_solution_secure(const Elem* elem,
     std::map<ID, std::vector<double> >& solutions,
     const std::vector<Point>& p)
 {
+
   unsigned int np = p.size();
 
   TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
@@ -1558,42 +1556,42 @@ Tmm::get_solution_secure(const Elem* elem,
   RealGradient field(0);
   TmmBulkModel& mod = *get_bulk_model<TmmBulkModel>(elem);
 
-  if (!_Internal_Intensity.empty())
+  if (solutions.count(Internal_Intensity))
   {
     solutions[Internal_Intensity][0]= _Internal_Intensity[dof_indices[0]];
   }
 
-  if (!_Internal_Absorption.empty())
+  if (solutions.count(Internal_Absorption))
   {
     solutions[Internal_Absorption][0]= _Internal_Absorption[dof_indices[0]];
   }
 
-  if (!_Internal_Poynting.empty())
+  if (solutions.count(Internal_Poynting))
   {
     solutions[Internal_Poynting][0]= _Internal_Poynting[dof_indices[0]];
   }
 
-  if (!_Internal_Power.empty())
+  if (solutions.count(Internal_Power))
   {
     solutions[Internal_Power][0]= _Internal_Power[dof_indices[0]];
   }
 
-  if (!_Internal_Source_ElectricField.empty())
+  if (solutions.count(Internal_Source_ElectricField))
   {
     solutions[Internal_Source_ElectricField][0]= _Internal_Source_ElectricField[dof_indices[0]];
   }
 
-  if (!_External_Source_ElectricField.empty())
+  if (solutions.count(External_Source_ElectricField))
   {
     solutions[External_Source_ElectricField][0]= _External_Source_ElectricField[dof_indices[0]];
   }
 
-  if (!_Intensity.empty())
+  if (solutions.count(Intensity))
   {
     solutions[Intensity][0]= _Intensity[dof_indices[0]];
   }
 
-  if (!_Generation_rate.empty())
+  if (solutions.count(GenerationRate))
   {
     solutions[GenerationRate][0] =_Generation_rate[dof_indices[0]];
   }
