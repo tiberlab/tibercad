@@ -375,10 +375,11 @@ Poisson::geometry_params(const libMesh::Elem* elem,
 
   if (neigh != nullptr)
   {
-    unsigned int n = 0;
-    for ( ; neigh->neighbor_ptr(n) != elem; ++n) {}
-
-    x_k = circumcenter(neigh, n);
+  //  unsigned int n = 0;
+  //  for ( ; neigh->neighbor_ptr(n) != elem; ++n) {}
+  //
+  //  x_k = circumcenter(neigh, n);
+    x_k = neigh->centroid();
   }
 
   // 1D is simple 
@@ -409,6 +410,9 @@ Poisson::geometry_params(const libMesh::Elem* elem,
 
     x_m = 0.5*(x1 + x2);
 
+    A_ik = side->volume();
+
+    ///*
     // get the projection of x_i onto side k
     Point d(x2 - x1);
 
@@ -420,15 +424,20 @@ Poisson::geometry_params(const libMesh::Elem* elem,
 
     double det = (d(0) * n_ik(1) - d(1) * n_ik(0));
     h_im = (d(0) * y(1) - d(1) * y(0)) / det;
+    //*/
+
+    // the height over the relevant edge
+    //h_im = 2.0 / 3.0 * elem->volume() / A_ik;
 
     if (neigh != nullptr)
     {
       y = x1 - x_k;
 
       h_mk = -(d(0) * y(1) - d(1) * y(0)) / det;
+      //h_mk = 2.0 / 3.0 * neigh->volume() / A_ik;
     }
+    
 
-    A_ik = side->volume();
   }
 
   if (dim == 3)
@@ -535,7 +544,8 @@ Poisson::assemble(void)
     mod.set_element(elem);
 
     // calculate parameters we need from this element
-    Point x_i(circumcenter(elem));
+    //Point x_i(circumcenter(elem));
+    Point x_i(elem->centroid());
 
 
     double vol_i = elem->volume();
@@ -633,6 +643,9 @@ Poisson::assemble(void)
         mod.set_point(x_k);
         mod.calculate();
 
+        //Point d = x_k - x_i;
+        //double cosphi = d * n_ik / norm(d);
+
         const RealTensor &eps_k = mod.get_permittivity() * Constants::e0;
         // for now assume eps_k = e_k * I
         double e_k = eps_k.tr() / 3.0;
@@ -645,10 +658,13 @@ Poisson::assemble(void)
         // double delta_phi = 0.0;
 
         double denom = h_mk * e_i + h_im * e_k;
+        //double denom = e_i * neigh->volume() + e_k * elem->volume();
+        //c_i = e_k * 3 * A_ik * cosphi / denom;
         c_i = e_k / denom;
         c_k = c_i;
         f_i = /* -e_k / denom * delta_phi */
             -h_mk / denom * (sigma_pol + sigma_int);
+            //  -3 * A_ik / denom * (sigma_pol + sigma_int);
 
       }
 
