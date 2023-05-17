@@ -1278,26 +1278,6 @@ DriftDiffusion::guess_equilibrium(void)
 //
 //  }
 
-  // for conserved particles, we put a chemical potential based on the
-  // prescribed density and the volume
-//  for (auto&& scalar : _conservation)
-//  {
-//    unsigned int dof = scalar.first;
-//    vector<dof_id_type> dof_ids;
-//    dof_map.local_variable_indices(dof_ids, mesh, scalar.first);
-//
-//  }
-
-  // for conserved particles, we put a chemical potential based on the
-  // prescribed density and the volume
-//  for (auto&& scalar : _conservation)
-//  {
-//    unsigned int dof = scalar.first;
-//    vector<dof_id_type> dof_ids;
-//    dof_map.local_variable_indices(dof_ids, mesh, scalar.first);
-//
-//  }
-
   // guess is checked: ok
   solution_u.close();
   poisson.update();
@@ -3154,6 +3134,9 @@ DriftDiffusion::calculate_currents_rstf_compact(void)
   {
     const Elem* elem = *el;
     //const Elem* top_parent = elem->top_parent();
+
+    if (!this->includes_region(elem->subdomain_id()))
+      continue;
 
     const Boundary* boundary = el.get_boundary();
 
