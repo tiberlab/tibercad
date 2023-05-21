@@ -925,6 +925,9 @@ void AtomisticGenerator::minimal_conv_cell()
       v1 = rotated_prim_vec * prim_pos1;
       F1 = norm(v1);
 
+      if (abs(F1) < 1e-6)
+          continue;
+
       for (int k = lower_2 ; k <= upper_2  ; k++)
       {
         for (int l = lower_3 ; l <= upper_3  ; l++)
@@ -935,9 +938,15 @@ void AtomisticGenerator::minimal_conv_cell()
           
           v2 = rotated_prim_vec * prim_pos2;
           F2 = norm(v2);
+          
+          if (abs(F2) < 1e-6)
+            continue;
+
           vF = v1^v2;
           F = norm(vF);
-          Ang = asin(F/(F1*F2));
+          double arg = F / (F1 * F2);
+          arg = max(-1.0, min(1.0, arg));
+          Ang = asin(arg);
 
           if (vF(1)>0)
           {
@@ -972,6 +981,8 @@ void AtomisticGenerator::minimal_conv_cell()
   _conv_vect(1,2) = v1(1); _conv_vect(2,2) = v1(2); _conv_vect(3,2) = v1(3); 
   _conv_vect(1,3) = v2(1); _conv_vect(2,3) = v2(2); _conv_vect(3,3) = v2(3); 
 
+  //cerr << "conv_vect at end:\n";
+  //cerr << _conv_vect << endl;
 }
 
 void AtomisticGenerator::make_conv_lattice()
