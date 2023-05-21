@@ -1039,7 +1039,7 @@ void AtomisticGenerator::make_conv_lattice()
     upper[i] = int( *max_element(vals, vals+5) );
   }
   
-  double tol = 1e-4;
+  double tol = 0.0;
   Point orig(-tol,-tol,-tol);
 
   for (int i = lower[1]; i <= upper[1]; i++){
@@ -1055,6 +1055,7 @@ void AtomisticGenerator::make_conv_lattice()
         if (fold_in_cell(p, orig, a1, a2, a3, false))
         {
           _conv_lattice.push_back(tmp_position);
+          //cerr << p << endl;
         }
 
       }
@@ -1151,7 +1152,8 @@ bool AtomisticGenerator::fold_in_cell(Point& position,
   bool pfold;
   // The planes vectors are oriented to point outside the cell
   // NOTE: below_surface() includes on the surface
-  Point origin(orig);
+  Point origin(orig - 1e-2*Point(1, 1, 1));
+  //Point origin(orig);
 
   libMesh::Plane p(origin, origin + a2, origin + a1);
   pfold = p.below_surface(position);
@@ -1168,7 +1170,8 @@ bool AtomisticGenerator::fold_in_cell(Point& position,
   if (!pfold && fold) position += a2;
   is_inside &= pfold;
 
-  Point corner(origin + a1 + a2 + a3);
+  Point corner(orig + a1 + a2 + a3 - 1e-2*Point(1, 1, 1));
+  //Point corner(orig + a1 + a2 + a3);
 
   p.create_from_three_points(corner, corner + a1, corner + a2);
   pfold = p.below_surface(position);
