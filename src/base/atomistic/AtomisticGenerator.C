@@ -988,7 +988,7 @@ void AtomisticGenerator::minimal_conv_cell()
 void AtomisticGenerator::make_conv_lattice()
 {
   //Fill the conventional growth cell with atomic basis
-  int lower[4],upper[4],i;
+  
   Tensor1 prim_position, tmp_position;
   Tensor2Gen rotated_prim_vec = _bulk->get_rotated_prim_vec();
   //cerr << "rotated prim vec : " << rotated_prim_vec << endl;
@@ -1019,7 +1019,7 @@ void AtomisticGenerator::make_conv_lattice()
   vect(3) = _conv_vect(3,1)+_conv_vect(3,2)+_conv_vect(3,3);
   Tensor1 indxs = inv(rotated_prim_vec) * vect;
 
-  Point a1,a2,a3,orig(-tol,-tol,-tol);
+  Point a1, a2, a3; 
   a1(0) = _conv_vect(1,1); a1(1) = _conv_vect(2,1); a1(2) = _conv_vect(3,1);
   a2(0) = _conv_vect(1,2); a2(1) = _conv_vect(2,2); a2(2) = _conv_vect(3,2);
   a3(0) = _conv_vect(1,3); a3(1) = _conv_vect(2,3); a3(2) = _conv_vect(3,3);
@@ -1029,13 +1029,19 @@ void AtomisticGenerator::make_conv_lattice()
   //cout<<a3<<endl;
   //Define a box including conventional cell
  
-  for (i=1; i<=3; i++)
+  // will use indices 1-3, instead of 0-2
+  int lower[4], upper[4];
+
+  for (int i = 1; i <= 3; i++)
   {
-    double vals[]={0.0, indxs(i), _conv_prim(i,1), _conv_prim(i,2), _conv_prim(i,3)};
+    double vals[] = {0.0, indxs(i), _conv_prim(i,1), _conv_prim(i,2), _conv_prim(i,3)};
     lower[i] = int( *min_element(vals, vals+5) );
     upper[i] = int( *max_element(vals, vals+5) );
   }
   
+  double tol = 1e-4;
+  Point orig(-tol,-tol,-tol);
+
   for (int i = lower[1]; i <= upper[1]; i++){
     for (int j = lower[2]; j <= upper[2]; j++){
       for (int l = lower[3]; l <= upper[3]; l++){
@@ -1046,8 +1052,9 @@ void AtomisticGenerator::make_conv_lattice()
         tmp_position = rotated_prim_vec * prim_position;
         Point p(tmp_position(1), tmp_position(2), tmp_position(3));
 
-        if (fold_in_cell(p,orig,a1,a2,a3,false)){
-           _conv_lattice.push_back(tmp_position);
+        if (fold_in_cell(p, orig, a1, a2, a3, false))
+        {
+          _conv_lattice.push_back(tmp_position);
         }
 
       }
@@ -1140,7 +1147,7 @@ void AtomisticGenerator::make_conv_basis()
 bool AtomisticGenerator::fold_in_cell(Point& position,
     const Point& orig, const Point& a1, const Point& a2, const Point& a3, bool fold)
 {
-  bool is_inside=true;
+  bool is_inside = true;
   bool pfold;
   // The planes vectors are oriented to point outside the cell
   // NOTE: below_surface() includes on the surface
