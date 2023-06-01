@@ -70,11 +70,12 @@ Utils::Timer::elapsed_string(void)
 }
 
 
-Utils::Progress::Progress(const string message, const unsigned int max_size)
+Utils::Progress::Progress(const string message, unsigned int max_size,
+    unsigned int step_size)
 {  
   _message = message;
   _progress_size = max_size;
-  _progress_step = max_size;
+  _progress_step = step_size;
   _progress_counter = 0;
   //_progress_step = (max_size > 100) ? max_size*2 : 100;
  
@@ -92,7 +93,7 @@ Utils::Progress::~Progress(void)
 void
 Utils::Progress::progress_message(unsigned int progress_counter)
 {
-  if ( (progress_counter * 100) % _progress_step == 0 )
+  if ( progress_counter % _progress_step == 0 )
   {
     //ostringstream os;
     //os << "\b\b\b\b\b\b\b\b" << setw(3) <<

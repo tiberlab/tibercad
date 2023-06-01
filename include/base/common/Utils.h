@@ -241,7 +241,9 @@ class Utils
       public:
 
         //! Constructor with message line and max size
-        Progress(const std::string message, const unsigned int max_size);
+        Progress(const std::string message, unsigned int max_size,
+            unsigned int step_size = 1);
+
         ~Progress(void);
         
         //void first_message(void);
