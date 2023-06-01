@@ -554,20 +554,21 @@ Tmm::parse_options(void)
      else
       Messages::warning("The size of dipole_power and dipole_coordinate vectors don't match!");
 
-  get_option("wavelengths",_wavelength_vector );
+  get_option("wavelengths", _wavelength_vector);
   if (_wavelength_vector.empty())
   {
       _up_lambda = get_option("wavelength_uper_lim", 0 );
       if (_up_lambda == 0)
       {
-        Messages::warning("You did not provide any up_lambda for TMM.");
+        Messages::warning("You did not provide any upper wavelength limit for TMM.");
       }
       _down_lambda = get_option("wavelength_lower_lim", 0);
       if (_down_lambda == 0)
       {
-        Messages::warning("You did not provide any down_lambda for TMM.");
+        Messages::warning("You did not provide any lower wavelength limit for TMM.");
       }
-      _wavelength_steps = get_option("wavelength_steps",1);
+
+      _wavelength_steps = get_option("wavelength_steps", 1);
   }
 
 
@@ -689,13 +690,15 @@ Tmm::do_solve(void)
 
   sun_interp = Tmm::linear_interpolation1(_lambda,_spectrum,lambda_interp);
 
+  Utils::Progress progress("Sweeping wavelength: ", lambda_interp.size());
 
   for (unsigned int i = 0; i < lambda_interp.size(); ++i)   //loop over wavelength
   {
-    ostringstream os;
-    os << "----------------------------------------"<<"\n" << "solving condition :  " ;
-    os << "Lambda is : " << lambda_interp[i] << "nm" << "\n" ;
-    Messages::info(os.str());
+    //ostringstream os;
+    //os << "----------------------------------------"<<"\n" << "solving condition :  " ;
+    //os << "Lambda is : " << lambda_interp[i] << "nm" << "\n" ;
+    //Messages::info(os.str());
+    progress.progress_message();
 
     double lambda = lambda_interp[i];
     _Wavelength.push_back(lambda);
