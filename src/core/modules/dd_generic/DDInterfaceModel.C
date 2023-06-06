@@ -438,10 +438,11 @@ DDInterfaceModel::compute()
   {
     calculate_net_recombination_rates();
 
-    // 2022-10-17, maybe this is actually not reasonable.
-    // at least it leads to discrepancy with other tools
-    //int div = is_internal_boundary() ? 2 : 1;
-    int div = 1.0;
+    // 2023-06-06, there is some uncertainty to whether a
+    // factor of 1/2 should be used for internal boundaries.
+    // We should check if it is actually counted two times in
+    // assembly.
+    int div = is_internal_boundary() ? 2 : 1;
 
     for (unsigned int i = 0; i < n_known_carriers(); i++)
     {
