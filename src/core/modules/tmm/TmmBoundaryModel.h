@@ -73,4 +73,4 @@ TmmBoundaryModel::TmmBoundaryModel(const ModelOptions& options) :
 
 
 
-#endif // _THERMALBOUNDARYMODEL_H_
+#endif // _TMMBOUNDARYMODEL_H_

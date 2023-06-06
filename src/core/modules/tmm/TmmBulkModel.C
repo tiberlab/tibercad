@@ -3,7 +3,6 @@
 #include "TmmBulkModel.h"
 #include "Database.h"
 #include "Messages.h"
-//#include "InCoherentModel.h"
 
 #include <boost/filesystem/operations.hpp>
 

@@ -94,7 +94,7 @@ class TmmBulkModel : public PhysicalModel
     //! An addressing array for faster access during interpolation
     std::vector<int> _addressing;
 
-    double _incoherent_index;
+    double _incoherent_index {0};
 
 
 
