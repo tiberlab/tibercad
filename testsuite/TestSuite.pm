@@ -519,8 +519,10 @@ sub compare_results_with_reference($$$) {
 
       @data2 = &$extract_func($variable, $reffile);
 
-      ($#data2 >= 0) ||
-        die "Variable $variable seems to not exist in $reffile";
+      if ($#data2 < 0) {
+        print "Variable $variable seems to not exist in $reffile\n";
+        return 1;
+      }
 
       @data1 = &$extract_func($variable, $datafile);
 
