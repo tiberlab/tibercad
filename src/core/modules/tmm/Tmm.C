@@ -620,12 +620,17 @@ Tmm::do_setup_solution_variables(void)
   declare_solution(GenerationRate, REAL, CELL, "cm^3");
   declare_solution(Intensity, REAL, CELL, "mW/cm^3nm^-1");
   declare_solution(External_Source_ElectricField, REAL, CELL, "V/cm");
+  declare_solution(External_Source_Poynting, REAL, CELL, "V/cm");
 
   declare_solution(Internal_Source_ElectricField, REAL, CELL, "V/cm");
   declare_solution(Internal_Poynting, REAL, CELL, "a.u.");
   declare_solution(Internal_Power, REAL, CELL, "a.u.");
   declare_solution(Internal_Absorption, REAL, CELL, "a.u.");
   declare_solution(Internal_Intensity, REAL, CELL, "a.u.");
+
+  declare_solution(Internal_Energy_Loss, REAL, CELL, "a.u.");
+  declare_solution(External_Energy_Loss, REAL, CELL, "a.u.");
+  
 
   declare_solution(Transmission, REAL, GLOBAL, "1");
   declare_solution(Reflection, REAL, GLOBAL, "1");
@@ -672,6 +677,8 @@ Tmm::do_solve(void)
   vector<double> intensity_integral;
   vector<double> Electric_Field_integral;
   vector<double> generation_rate_integral;
+  vector<double> poynting_external_integral;
+  vector<double> energy_loss_integral;
   vector<double> gen;
   vector<double> lambda_interp;
   vector<double> sun_interp;
@@ -733,6 +740,10 @@ Tmm::do_solve(void)
     vector<double> l;
     vector<double> Incoh;
     vector<double> elem_coordinate;;
+    vector<double> eps_real;
+    vector<double> eps_imag;
+
+
 
 
     vector<double> n_real_init;
@@ -740,6 +751,8 @@ Tmm::do_solve(void)
     vector<double> l_length_init;
     vector<double> l_init;
     vector<double> Incoh_init;
+    vector<double> eps_real_init;
+    vector<double> eps_imag_init;
 
     vector<std::string> Names;
     
@@ -778,6 +791,8 @@ Tmm::do_solve(void)
       Incoh_init.push_back(mod.get_coherent_index());
       n_real_init.push_back(real(nk));
       n_imag_init.push_back(imag(nk));
+      eps_imag_init.push_back(2*real(nk)*imag(nk)); //imaginary part of the epsilon
+      eps_real_init.push_back(real(nk)*real(nk) - imag(nk)*imag(nk)); //imaginary part of the epsilon
       l_init.push_back(elem->volume()*(mesh_units/1e-9));
        for (unsigned int s = 0; s < elem->n_sides(); s++)
        {
@@ -834,6 +849,8 @@ Tmm::do_solve(void)
         n_real.push_back(n_real_init[uu]);
         n_imag.push_back(n_imag_init[uu]);
         l.push_back(l_init[uu]);
+        eps_imag.push_back(eps_imag_init[uu]);
+        eps_real.push_back(eps_real_init[uu]);
         Incoh.push_back(Incoh_init[uu]);
       }
 
@@ -846,6 +863,8 @@ Tmm::do_solve(void)
         n_real.push_back(n_real_init[uu]);
         n_imag.push_back(n_imag_init[uu]);
         l.push_back(l_init[uu]);
+        eps_imag.push_back(eps_imag_init[uu]);
+        eps_real.push_back(eps_real_init[uu]);
         Incoh.push_back(Incoh_init[uu]);
       }
     }
@@ -872,13 +891,17 @@ Tmm::do_solve(void)
       double rnd = 1;
       double phase_step;
       vector<double> Generation_rate_avg(n_real.size());
+      vector<double> poynting_external_avg(n_real.size());
       vector<double> Intensity_avg(n_real.size());
       vector<double> Electric_Field_avg(n_real.size());
+      vector<double> energy_loss_avg(n_real.size());
       for(int nm=0; nm<Intensity_avg.size();++nm)
       {
-        Intensity_avg[nm] = 0;
-        Generation_rate_avg [nm] = 0;
-        Electric_Field_avg [nm] = 0;
+        Intensity_avg[nm]         = 0;
+        Generation_rate_avg [nm]  = 0;
+        Electric_Field_avg [nm]   = 0;
+        poynting_external_avg[nm] = 0;
+        energy_loss_avg[nm]       = 0;
       }
 
       double avg_reflection = 0;
@@ -1015,16 +1038,28 @@ Tmm::do_solve(void)
         vector<complex<double>> Intensity;
         vector<complex<double>> Generation_rate;
         vector<double> Generation_rate_real;
+        vector<double> poynting_external;
+        vector<double> energy_loss;
+        
 
         for (int nm=0 ; nm < n_real.size() ; ++nm)
         {
           Etot[nm] = E_F_NORM[nm] + E_B_NORM[nm];
           Electric_Field_avg[nm] =  Electric_Field_avg[nm] + real(Etot[nm])/rnd;
+
           Intensity.push_back(0.5 * c0 * 1e-9 * e0 * n_real[nm] * Esun2* pow(abs(Etot[nm]), 2));
           Intensity_avg[nm] = Intensity_avg[nm] + real(Intensity[nm])/rnd;
+
           Generation_rate.push_back(1 / (plank_const* w) * (4 * M_PI * n_imag[nm] * 1e7/(lambda)) * real(Intensity[nm])/ 1e4 );
           Generation_rate_real.push_back(real(Generation_rate[nm]));
           Generation_rate_avg[nm] = Generation_rate_avg[nm] + Generation_rate_real[nm]/rnd;
+
+          complex<double> N_i(n_real[nm],n_imag[nm]);
+          poynting_external.push_back(real(N_i * conj(E_F_NORM[nm]+E_B_NORM[nm]) * (E_F_NORM[nm]-E_B_NORM[nm]) ));
+          poynting_external_avg[nm] = poynting_external_avg[nm] + poynting_external[nm]/rnd;
+
+          energy_loss.push_back(0.5 * (c0 / lambda) * eps_imag[nm] * pow(abs(Etot[nm]),2) );
+          energy_loss_avg[nm] = energy_loss_avg[nm] + energy_loss[nm]/rnd;
         }
       }
       // std::cout<<"Totla T  is : "<<avg_transmission<<std::endl;
@@ -1055,6 +1090,49 @@ Tmm::do_solve(void)
 
       //****************************************************************************
       //*******************Calculating integral over wavelengths********************
+      double delta_wl;
+      if (i == 0) // first wavelength
+      {
+        if (lambda_interp.size() > 1 )
+          delta_wl = (lambda_interp[i+1]-lambda_interp[i] )/2; //first wavlength
+        else
+          delta_wl =  1;
+
+        Electric_Field_integral.resize(n_real.size());
+        intensity_integral.resize(n_real.size());
+        generation_rate_integral.resize(n_real.size());
+        poynting_external_integral.resize(n_real.size());
+        energy_loss_integral.resize(n_real.size());
+      }
+      else
+      {
+        if (i == lambda_interp.size()-1) 
+          delta_wl = (lambda_interp[i]-lambda_interp[i-1] )/2; //last wavelength
+        else
+          delta_wl = (lambda_interp[i+1] - lambda_interp[i-1] )/2; //midle wavelengths
+      }
+      for (double km = 0 ; km<n_real.size(); km++)
+      {
+        Electric_Field_integral[km]    += Electric_Field_avg[km]    * delta_wl;
+        intensity_integral[km]         += Intensity_avg[km]         * delta_wl;
+        generation_rate_integral[km]   += Generation_rate_avg[km]   * delta_wl;
+        poynting_external_integral[km] += poynting_external_avg[km] * delta_wl;
+        energy_loss_integral[km]       += energy_loss_avg[km]       * delta_wl;
+      }
+
+
+      if( i == lambda_interp.size()-1)                   //last wavelength
+        for(double nm=0; nm < l_length.size() ; ++nm)
+        {
+          _Generation_rate.push_back(generation_rate_integral[nm]);
+          _Poynting_external.push_back(poynting_external_integral[nm]);
+          _Intensity.push_back(intensity_integral[nm]);
+          _External_Source_ElectricField.push_back(Electric_Field_integral[nm]);
+          _Energy_loss_external.push_back(energy_loss_integral[nm]);
+        }
+
+
+      /*
       if (i == 0) // first wavelength
       {
 
@@ -1067,33 +1145,52 @@ Tmm::do_solve(void)
         generation_rate_integral.resize(n_real.size());
         generation_rate_integral = Generation_rate_avg;
 
+        poynting_external_integral.resize(n_real.size());
+        poynting_external_integral = poynting_external_avg;
+
+        energy_loss_integral.resize(n_real.size());
+        energy_loss_integral = energy_loss_avg;
+
+
+
       }else // middle wavelengths
       {
         for (int nm =0; nm< n_real.size();nm++)
         {
-          generation_rate_integral[nm] +=  Generation_rate_avg[nm];
-          intensity_integral[nm] += Intensity_avg[nm];
-          Electric_Field_integral[nm] += Electric_Field_avg[nm];
+          generation_rate_integral[nm]   += Generation_rate_avg[nm];
+          intensity_integral[nm]         += Intensity_avg[nm];
+          Electric_Field_integral[nm]    += Electric_Field_avg[nm];
+          poynting_external_integral[nm] += poynting_external_avg[nm]; 
+          energy_loss_integral[nm]       += energy_loss_avg[nm];
         }
       }
+      
+
       if( i == lambda_interp.size()-1) //last wavelength
       {
          i++ ;
         for (int nm =0; nm< n_real.size();nm++)
         {
           if (i !=1)
-          generation_rate_integral[nm] *= (lambda_interp[lambda_interp.size()-1]-lambda_interp[0])/(i);
-
-          intensity_integral[nm] *= 1.0/i;
-          Electric_Field_integral[nm] *= 1.0/i;
+            generation_rate_integral[nm]   *= (lambda_interp[lambda_interp.size()-1]-lambda_interp[0])/(i);
+          poynting_external_integral[nm] *= 1.0/i;
+          intensity_integral[nm]         *= 1.0/i;
+          Electric_Field_integral[nm]    *= 1.0/i;
+          energy_loss_integral[nm]       *= 0.5/i;
         }
-        for(double nm=0; nm < l_length.size() ; ++nm){
+        for(double nm=0; nm < l_length.size() ; ++nm)
+        {
           _Generation_rate.push_back(generation_rate_integral[nm]);
+          _Poynting_external.push_back(poynting_external_integral[nm]);
           _Intensity.push_back(intensity_integral[nm]);
           _External_Source_ElectricField.push_back(Electric_Field_integral[nm]);
+          _Energy_loss_external.push_back(energy_loss_integral[nm]);
         }
       }
+      */
     }
+    //for (double hk = 0; hk <_Energy_loss_external.size(),hk++)
+      //std::cout<<hk<<"   " <<_Energy_loss_external[hk]<<std::cout;
     //*****************************End of External_source_simulation******************************
 
     //****************************************************************************
@@ -1145,6 +1242,7 @@ Tmm::do_solve(void)
       _Internal_Power.resize(n_real.size());
       _Internal_Absorption.resize(n_real.size());
       _Internal_Intensity.resize(n_real.size());
+      _Energy_loss_internal.resize(n_real.size());
       _Fraction_ratio.resize(_steps);
       _kr.resize(_steps);
       _angle.resize(_steps);
@@ -1218,11 +1316,8 @@ Tmm::do_solve(void)
               coefficient = _dipole_power[dipole_num]/_steps/lambda_interp.size()/_oraintation_vec.size()/_polarization_vec.size();
               for (double nm =0; nm < E_int_f.size(); ++nm)
               {
-                // E_int_f[nm] /= rnd;
-                // E_int_b[nm] /= rnd;
-                // E_int[nm] = E_int_f[nm]+E_int_b[nm];
                 _Internal_Source_ElectricField[nm] += real(E_int[nm])         * coefficient;
-                _Internal_Intensity[nm] += n_real[nm] * abs(pow(E_int[nm],2)) * coefficient;
+                _Internal_Intensity[nm] +=  0.5 * c0 * 1e-9 * e0 * n_real[nm] * pow(abs(E_int[nm]), 2) * coefficient;
               }
 
 
@@ -1237,6 +1332,7 @@ Tmm::do_solve(void)
 
                 //**************a loop to calculate Poynting Vector from electric field******************************
                 vector<double> poynting(n_real.size());
+                vector<double> energy_loss(n_real.size());
                 for (double nm = 0; nm<E_int.size();nm++)
                   {
                       complex<double> ki ((2*M_PI*n_real[nm])/lambda , (2*M_PI*n_imag[nm])/lambda);
@@ -1251,6 +1347,11 @@ Tmm::do_solve(void)
                         poynting[nm] = real(Ni*cos_phi      *conj(E_int_f[nm]+E_int_b[nm])*(E_int_f[nm]-E_int_b[nm]));
                       else    //TM Mode
                         poynting[nm] = real(Ni*conj(cos_phi)*conj(E_int_f[nm]+E_int_b[nm])*(E_int_f[nm]-E_int_b[nm]));
+
+
+
+                      energy_loss[nm] = (0.5 * (c0 / lambda) * eps_imag[nm] * pow(abs(E_int[nm]),2) );
+
                   }
 
                 //*****************************Assigning Output Power of two ends of the device ******************************
@@ -1264,8 +1365,9 @@ Tmm::do_solve(void)
                 for (double nm = 0; nm < poynting.size(); ++nm)
                 {
                   if (nm < dipole_loc-1 || nm > dipole_loc+1 )
-                    _Internal_Absorption[nm] += real(1 / (plank_const* w) * (4 * M_PI * n_imag[nm] * 1e7/(lambda)) * (abs(poynting[nm])/ 1e4));
+                    _Internal_Absorption[nm] += real(1 / (plank_const* w) * (4 * M_PI * n_imag[nm] * 1e7/(lambda)) * (abs(poynting[nm])/ 1e4))* coefficient;
                   _Internal_Poynting  [nm] += poynting[nm] * coefficient;
+                  _Energy_loss_internal[nm] += energy_loss[nm];
                 }
                 
 
@@ -1278,6 +1380,7 @@ Tmm::do_solve(void)
                 for (double nm = 0; nm < n_real.size(); ++nm)
                   _Internal_Power[nm] += real( (2*M_PI) * (poynting[nm]* coefficient) * kr * dkr / Ns / pow(kzs,2) ) ;
                 ++cnt;
+               // std::cout<<n_real.size()<<std::endl;
 
 
             } // end of radial wave numbers loop
@@ -1292,6 +1395,9 @@ Tmm::do_solve(void)
     }// end of dipole simulation
 
   }// end of loop of wavelength
+  std::cout<<"Optical simulation is over"<<std::endl;
+ // for (double nm = 0;nm<_Energy_loss_internal.size();nm++)
+   // std::cout<<nm<< "   "<<_Energy_loss_internal[nm]<<std::endl;
   solution.close();
   system.update();
 
@@ -1589,6 +1695,14 @@ Tmm::get_solution_secure(const Elem* elem,
     solutions[External_Source_ElectricField][0]= _External_Source_ElectricField[dof_indices[0]];
   }
 
+  if (solutions.count(External_Energy_Loss))
+  {
+    solutions[External_Energy_Loss][0]= _Energy_loss_external[dof_indices[0]];
+  }
+  if (solutions.count(Internal_Energy_Loss))
+  {
+    solutions[Internal_Energy_Loss][0]= _Energy_loss_internal[dof_indices[0]];
+  }
   if (solutions.count(Intensity))
   {
     solutions[Intensity][0]= _Intensity[dof_indices[0]];
@@ -1598,6 +1712,11 @@ Tmm::get_solution_secure(const Elem* elem,
   {
     solutions[GenerationRate][0] =_Generation_rate[dof_indices[0]];
   }
+  if (solutions.count(External_Source_Poynting))
+  {
+    solutions[External_Source_Poynting][0] = _Poynting_external[dof_indices[0]];
+  }
+  
 
 }
 

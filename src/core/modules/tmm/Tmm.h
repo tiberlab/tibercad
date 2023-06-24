@@ -198,9 +198,12 @@ class TBDLLOCAL Tmm : public SimulationInterface
     {
       GenerationRate,
       Intensity,
+      External_Source_Poynting,
       External_Source_ElectricField,
       Internal_Source_ElectricField,
       Internal_Poynting,
+      Internal_Energy_Loss,
+      External_Energy_Loss,
       Internal_Power,
       Internal_Intensity,
       Internal_Absorption,
@@ -222,6 +225,10 @@ class TBDLLOCAL Tmm : public SimulationInterface
     std::vector<double> _External_Source_ElectricField;
     std::vector<double> _Wavelength;
     std::vector<double> _Generation_rate;
+    std::vector<double> _Poynting_external;
+    std::vector<double> _Energy_loss_external;
+    std::vector<double> _Energy_loss_internal;
+    
     std::vector<double> _Internal_Source_ElectricField;
     std::vector<double> _Internal_Poynting;
     std::vector<double> _Internal_Power;
