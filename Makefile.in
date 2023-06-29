@@ -26,12 +26,11 @@ endif
 
 all: core modules
 
-
+. PHONY: core
 core: $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext)
 	@$(MAKE) --no-print-directory -C src/tibercad tibercad
 
 
-.PHONY: $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext)
 $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext): src
 	@echo "Linking $(dll_prefix)$(TIBERLIBNAME)$(shared_libext) ..."
 	@$(CXX) -shared $(TIBER_OBJECTS) \
@@ -46,12 +45,20 @@ $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext): src
 		&& ln -f -s libtibercad.so.0 libtibercad.so && cd ..
 
 
+.PHONY: modules
+
 ifeq ($(build_modules),yes)
 modules: $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext)
-	@$(MAKE) --no-print-directory -C src/SDK $(MAKECMDGOALS)
-	@$(MAKE) --no-print-directory -C src/core/modules $(MAKECMDGOALS)
+	@$(MAKE) --no-print-directory -C src/SDK
+	@$(MAKE) --no-print-directory -C src/core/modules
+
+modules-clean:
+	@$(MAKE) --no-print-directory -C src/SDK clean
+	@$(MAKE) --no-print-directory -C src/core/modules clean
 else
 modules:
+
+modules-clean:
 endif
 
 
@@ -61,25 +68,25 @@ $(libdir)/libdl.a:
 	@cp contrib/dlfcn-win32-r19/libdl.a $(libdir)
 
 
-clean: src
-	@$(MAKE) --no-print-directory -C src/tibercad clean
-	@$(MAKE) --no-print-directory -C src/SDK clean
-	@$(MAKE) --no-print-directory -C src/core/modules clean
+clean: clean-src clean-doc
+	@$(MAKE) --no-print-directory -C src/tibercad $(MAKECMDGOALS)
+	@$(MAKE) --no-print-directory -C src/SDK $(MAKECMDGOALS)
+	@$(MAKE) --no-print-directory -C src/core/modules $(MAKECMDGOALS)
 
 
 
-distclean: src doc
-	@$(MAKE) --no-print-directory -C manual distclean
-	@$(MAKE) --no-print-directory -C src/tibercad distclean
-	@$(MAKE) --no-print-directory -C src/SDK distclean
-	@$(MAKE) --no-print-directory -C src/core/modules distclean
+distclean: clean-src clean-doc
+	@$(MAKE) --no-print-directory -C manual $(MAKECMDGOALS)
+	@$(MAKE) --no-print-directory -C src/tibercad $(MAKECMDGOALS)
+	@$(MAKE) --no-print-directory -C src/SDK $(MAKECMDGOALS)
+	@$(MAKE) --no-print-directory -C src/core/modules $(MAKECMDGOALS)
 	@rm -rf $(ARCH)
 
 
 
 .PHONY: src
 src:
-	@$(MAKE) --no-print-directory -C src $(MAKECMDGOALS)
+	@$(MAKE) --no-print-directory -C src all
 
 #	@mkdir -p $(ARCH)/bin
 #	@if test -d extern/$(ARCH); then rm -f $(ARCH)/extern && cd $(ARCH) && ln -s ../extern/$(ARCH) extern; fi
@@ -88,11 +95,16 @@ src:
 #	@$(MAKE) --no-print-directory -C src/core/modules $(MAKECMDGOALS)
 #endif
 
+clean-src:
+	@$(MAKE) --no-print-directory -C src $(MAKECMDGOALS)
+
+clean-doc:
+	@$(MAKE) --no-print-directory -C src $(MAKECMDGOALS)
 
 
 .PHONY: doc
 doc:
-	@$(MAKE) --no-print-directory -C doc $(MAKECMDGOALS)
+	@$(MAKE) --no-print-directory -C doc
 
 
 
@@ -100,9 +112,6 @@ run_tests:
 	@cd testsuite && ./run_tests -t all -v -i
 
 
-
-gettingstarted:
-	@$(MAKE) --no-print-directory -C manual/Sphinx/GettingStarted latexpdf
 
 completemanual:
 	@$(MAKE) --no-print-directory -C manual/Sphinx/Complete latexpdf
