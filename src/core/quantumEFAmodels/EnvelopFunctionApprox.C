@@ -1287,6 +1287,15 @@ void EnvelopFunctionApprox::do_solve_for_kpoint(const Point& k_point)
 
   if ( _job == BULKEIGENSTATES )
   {
+    if (verbose() > 0)
+    {
+      ostringstream os;
+      os << "(EFA) bulk calculation in p = (";
+      _bulk_point.write_unformatted(os, false);
+      os << ")";
+      Messages::info(os.str());
+    }
+
     solve_bulk();
   }
   else
