@@ -4,13 +4,13 @@ topdir := ../../..
 
 include $(topdir)/Make.common
 
-all: svnrevision.h
+all: svnrevision
 
 
-.PHONY: svnrevision.h
-svnrevision.h:
-	@if test ! -e $@; then echo "#define SVNREVISION $(SVNREVISION)" > $@; fi; 
-	@if test `awk '{print $$3}' $@` -ne $(SVNREVISION); then echo "#define SVNREVISION $(SVNREVISION)" > $@; fi
+.PHONY: svnrevision
+svnrevision:
+	@if test ! -e $@.h; then echo "#define SVNREVISION $(SVNREVISION)" > $@.h; fi; 
+	@if test `awk '{print $$3}' $@.h` -ne $(SVNREVISION); then echo "#define SVNREVISION $(SVNREVISION)" > $@.h; fi
 
 
 
