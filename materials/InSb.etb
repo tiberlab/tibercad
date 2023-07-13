@@ -1,0 +1,98 @@
+# Tight binding parameters (c) Jean Marc Jancu
+
+# material type : 'simple' / 'binary' / 'ternary' / 'quaternary'
+
+material type = 'binary'
+
+# lattice type : 'face centered cubic' / 'hexagonal'
+
+lattice type = 'face centered cubic'
+
+# lattice parameters ( in Angtroms )
+
+lattice parameters =   6.4794D0   6.4794D0   6.4794D0
+
+# 0 = no internal strain / 1 = maximal internal strain
+
+#internal strain parameter = 0.60D0
+internal strain parameter = 0.17D0
+# follow Cousins1991
+
+
+# basis type : 'zinc-blende' / 'wurtzite'
+
+basis type = 'zinc-blende'
+
+number of ions = 2
+ions = 'In' 'Sb'
+In valence = 4
+Sb valence = 4
+
+# spin orbit
+
+number of spin-orbit parameters per ion = 2 2
+
+In spin orbit
+'p' 0.1230D0
+'d' 0.0000D0
+
+Sb spin orbit
+'p' 0.4495D0
+'d' 0.0000D0
+
+# onsite ETB
+
+number of orbitals per ion = 4 4
+	
+In onsite
+'s'     0.3389D0   1
+'p'     6.4919D0   3
+'s*'   16.1664D0   1
+'d'    11.2647D0   5
+
+Sb onsite
+'s'    -4.9527D0   1
+'p'     4.0797D0   3
+'s*'   16.1664D0   1
+'d'    11.2647D0   5
+
+In offset = 0.0D0
+Sb offset = 0.0D0
+
+
+# strain coefficient for the d orbitals
+In b_d parameter = 0.302D0
+Sb b_d parameter = 0.302D0
+
+# ETB couplings
+
+number of pairs = 1
+
+pair 1 = 'Sb' 'In' 21 1
+
+Sb In coupling 1
+'sss'     -1.1290D0    3.991D0
+'sps'      2.5362D0    3.671D0
+'ss*s'    -1.8819D0    0.000D0
+'sds'     -2.5635D0    1.778D0
+'pss'      2.6980D0    3.671D0
+'pps'      4.1830D0    1.348D0
+'ps*s'     2.3471D0    1.755D0
+'pds'     -2.1487D0    1.734D0
+'s*ss'    -2.0042D0    0.000D0
+'s*ps'     2.7380D0    1.755D0
+'s*s*s'   -3.2248D0    0.000D0
+'s*ds'    -0.7371D0    2.000D0
+'dss'     -2.3085D0    1.778D0
+'dps'     -2.1652D0    1.734D0
+'ds*s'    -0.8144D0    2.000D0
+'dds'     -1.3052D0    2.000D0
+'ppp'     -1.4688D0    4.297D0
+'pdp'      1.8462D0    1.675D0
+'dpp'      1.8491D0    1.675D0
+'ddp'      2.0784D0    2.000D0
+'ddd'     -1.4118D0    2.000D0   
+
+Sb In pair reference distance 1 = 2.8056625D0
+
+

@@ -1,0 +1,105 @@
+# Tight binding parameters (c) Jean Marc Jancu (Jancu1998PRB)
+
+# material type : 'simple' / 'binary' / 'ternary' / 'quaternary'
+
+material type = 'binary'
+
+# lattice type : 'face centered cubic' / 'hexagonal'
+
+lattice type = 'face centered cubic'
+
+# lattice parameters ( in Angtroms )
+
+lattice parameters =   6.1355D0   6.1355D0   6.1355D0
+
+# 0 = no internal strain / 1 = maximal internal strain
+
+#internal strain parameter = 0.60D0
+internal strain parameter = 0.00D0
+
+
+# basis type : 'zinc-blende' / 'wurtzite'
+
+basis type = 'zinc-blende'
+
+number of ions = 2
+ions = 'Al' 'Sb'
+Al valence = 4
+Sb valence = 4
+
+# spin orbit
+
+number of spin-orbit parameters per ion = 2 2
+
+Al spin orbit
+'p' 0.0079D0
+'d' 0.0000D0
+
+Sb spin orbit
+'p' 0.3912D0
+'d' 0.0000D0
+
+# onsite ETB
+
+number of orbitals per ion = 4 4
+
+# name  energy  number_of_orbitals_each_type, from Table III
+Al onsite
+'s'     0.9521D0   1
+'p'     6.3386D0   3
+'s*'   16.4173D0   1
+'d'    11.4691D0   5
+
+Sb onsite
+'s'    -4.9565D0   1
+'p'     4.0739D0   3
+'s*'   16.4173D0   1
+'d'    11.4691D0   5
+
+Al offset = 0.0D0
+Sb offset = 0.0D0
+
+
+# strain coefficient for the d orbitals
+Al b_d parameter = 0.420D0
+Sb b_d parameter = 0.420D0
+
+# ETB couplings
+
+number of pairs = 1
+
+pair 1 = 'Sb' 'Al' 21 1 # 21 parameters, 1 not know
+
+# bond  energy  n_{ijk} from Table IX
+Sb Al coupling 1
+'sss'     -1.6179D0    3.245D0
+'sps'      2.5918D0    3.702D0
+'ss*s'    -1.2097D0    0.000D0
+'sds'     -2.7920D0    1.721D0
+'pss'      2.9334D0    3.702D0
+'pps'      4.1042D0    1.763D0
+'ps*s'     1.8889D0    1.772D0
+'pds'     -1.9819D0    1.797D0
+'s*ss'    -1.6983D0    0.000D0
+'s*ps'     2.4649D0    1.772D0
+'s*s*s'   -3.3145D0    0.000D0
+'s*ds'    -0.7307D0    2.000D0
+'dss'     -2.0008D0    1.721D0
+'dps'     -1.9726D0    1.797D0
+'ds*s'    -0.7878D0    2.000D0
+'dds'     -1.1395D0    2.000D0
+'ppp'     -1.5273D0    4.152D0
+'pdp'      2.1292D0    1.557D0
+'dpp'      1.8364D0    1.557D0
+'ddp'      2.1206D0    2.000D0
+'ddd'     -1.7260D0    2.000D0   
+
+Sb Al pair reference distance 1 = 2.656749D0
+
+# dangling bonds saturation
+
+#saturated bond length
+#0.1D0
+
+#onsite H energy
+#-200.0D0 
