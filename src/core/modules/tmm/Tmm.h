@@ -202,19 +202,20 @@ class TBDLLOCAL Tmm : public SimulationInterface
       External_Source_ElectricField,
       Internal_Source_ElectricField,
       Internal_Poynting,
-      Internal_Energy_Loss,
-      External_Energy_Loss,
+      Energy_Loss,
       Internal_Power,
       Internal_Intensity,
       Internal_Absorption,
       Transmission,
       Reflection,
-      Absorption
+      Absorption,
+      AVT
     };
 
     std::vector<double> _Transmission;
     std::vector<double> _Reflection;
     std::vector<double> _Absorption;
+    double _AVT = 0;
 
     std::vector<vector<double>> _Electric_Field_External;
     std::vector<vector<double>> _Electric_Field_Internal;
@@ -269,6 +270,7 @@ class TBDLLOCAL Tmm : public SimulationInterface
     double _wavelength_steps;
     double _dipole_loc;
 
+
     double _coh_mod;
 
     std::string _polarization;
@@ -293,6 +295,9 @@ class TBDLLOCAL Tmm : public SimulationInterface
 
     //! The solar spectrum
     std::vector<double> _spectrum;
+
+    std::vector<double> _eye_value;
+    std::vector<double> _eye_wl;
 
 
 
