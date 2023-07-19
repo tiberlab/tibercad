@@ -1,8 +1,23 @@
+[valenceband]
+E_v = -7
+
+m_dos = 2.5
+
+
+[conductionband]
+m_G = 2.5
+m_dos = 2.5
+
+[bandgap]
+Eg_G = 3.5
 
 [permittivity] # [3]
 permittivity = 11.7
 
 optical_epsilon = 11.85
-optical_data = optics/BCP_Datta.dat
+optical_data = optics/BCP_Datta.nk
+
+[mobility/constant]
+mu_max   = (1e-2,   1e-3)
 
 

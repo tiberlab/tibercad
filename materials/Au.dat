@@ -25,5 +25,9 @@ young = 79
 [thermal_conductivity/constant]
 ThermCond = 318
 
+[permittivity] # [3]
+permittivity = 11.7
 
+optical_epsilon = 11.85
+optical_data = optics/Au_book.dat
 
