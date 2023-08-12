@@ -115,6 +115,8 @@ Module empirical_tb
     relativistic = false 
     #verbose = 9
 
+    dataset = 2D
+
     plot = (tbstates)
     
     Dispersion
