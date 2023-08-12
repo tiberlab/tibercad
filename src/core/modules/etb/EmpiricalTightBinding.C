@@ -192,49 +192,63 @@ ETB::do_init(void){
 
 
   // Get database path from Database class
-  //  std::string database_path = Database::get_default_search_path();
-  std::string default_path = get_option("default_path",Database::get_default_search_path());
-  std::string database_path = get_option("database_path",Database::get_search_path());
-  std::string work_path = get_output_directory();
-  std::string gen_outfile = "out.gen";
-  std::string out_path = get_output_directory();
+  //std::string default_path = get_option("default_path", Database::get_default_search_path());
+  std::string default_path = Database::get_default_search_path();
+  // alternatively, one can provide the path explicitly
+  std::string database_path = get_option("database_path", Database::get_search_path());
+  // our default dataset is Jancu (sp3d5s*). For the datasets in materials directory, the default
+  // path becomes materials/ETB/Jancu, in this case
+  std::string dataset = get_option("dataset", "Jancu");
 
-  if (database_path.size() > UPT_LC - 1)
-           throw InitFailedException("ETB: database search path too long");
+  // this is a quirk, but for now there is no more elegant way
+  if (database_path == default_path)
+  {
+    database_path += "/ETB/" + dataset;
+  }
+  else
+  {
+    if (database_path.back() != '/')
+      database_path += "/";
 
+    database_path += ":" + default_path + "/ETB/" + dataset;
+  }
 
-  std::size_t length = 0;
-  length = default_path.copy(_upt_options.default_path, default_path.size() );
-  length = database_path.copy(_upt_options.database_path, database_path.size() );
-  length = work_path.copy(_upt_options.work_path, work_path.size() );
-  length = gen_outfile.copy(_upt_options.gen_outfile, gen_outfile.size() );
-  length = out_path.copy(_upt_options.out_path, out_path.size() );
+    std::string work_path = get_output_directory();
+    std::string gen_outfile = "out.gen";
+    std::string out_path = get_output_directory();
 
-  _dim = get_mesh().mesh_dimension();
+    if (database_path.size() > UPT_LC - 1)
+      throw InitFailedException("ETB: database search path too long");
 
-  Messages::info("("+get_name()+") creating map elem->atoms");
+    std::size_t length = 0;
+    length = default_path.copy(_upt_options.default_path, default_path.size());
+    length = database_path.copy(_upt_options.database_path, database_path.size());
+    length = work_path.copy(_upt_options.work_path, work_path.size());
+    length = gen_outfile.copy(_upt_options.gen_outfile, gen_outfile.size());
+    length = out_path.copy(_upt_options.out_path, out_path.size());
 
-  build_map_elem_atoms(_upt_options.projection_length);
+    _dim = get_mesh().mesh_dimension();
 
-  cerr << "done\n";
+    Messages::info("(" + get_name() + ") creating map elem->atoms");
 
-  Messages::info("("+get_name()+") database path: "+database_path);
-  Messages::info("("+get_name()+") default  path: "+default_path);
-  Messages::info("("+get_name()+") work path: "+work_path);
-  Messages::info("("+get_name()+") output path: "+out_path);
-  
+    build_map_elem_atoms(_upt_options.projection_length);
 
-  _init = true;      // initialization must be called
-  _assemble = true;  // matrix assemble must be done
+    cerr << "done\n";
 
+    Messages::info("(" + get_name() + ") database path: " + database_path);
+    Messages::info("(" + get_name() + ") default  path: " + default_path);
+    Messages::info("(" + get_name() + ") work path: " + work_path);
+    Messages::info("(" + get_name() + ") output path: " + out_path);
 
+    _init = true;     // initialization must be called
+    _assemble = true; // matrix assemble must be done
 
-  // We add a second system just to contain the density
-  create_equation_system("linear");
-  TiberLinearSystem& linsys = get_equation_system<TiberLinearSystem>(0);
-  linsys.add_variable("edens", libMeshEnums::FIRST, &(this->get_region_ids()));
-  linsys.add_variable("hdens", libMeshEnums::FIRST, &(this->get_region_ids()));
-  linsys.init();
+    // We add a second system just to contain the density
+    create_equation_system("linear");
+    TiberLinearSystem &linsys = get_equation_system<TiberLinearSystem>(0);
+    linsys.add_variable("edens", libMeshEnums::FIRST, &(this->get_region_ids()));
+    linsys.add_variable("hdens", libMeshEnums::FIRST, &(this->get_region_ids()));
+    linsys.init();
 
 }
 
@@ -1252,7 +1266,7 @@ void ETB::parse_options(void)
 
   _upt_options.verbose = get_option("verbose", SimulationOptions::verbose());
 
-  _upt_options.etb_dataset = get_option("dataset","");
+  _upt_options.etb_dataset = get_option("dataset", "");
   _upt_options.max_TB_order = get_option("max_TB_order", 2);
 
   std::string sparse_fmt = get_option("sparse_format", "full");

@@ -18,7 +18,8 @@ CXXFLAGS = -fPIC
 
 UPTREV=HEAD 
 #UPTREV=257
-UPTREPO=https://afrodite.eln.uniroma2.it/svn/uptight/branches/tibercad/src
+#UPTREPO=https://afrodite.eln.uniroma2.it/svn/uptight/branches/tibercad/src
+UPTREPO=https://afrodite.eln.uniroma2.it/svn/uptight/branches/tibercad_mixing/src
 
 target := libuptight$(shared_libext)
 
