@@ -68,7 +68,7 @@ public:
    */
   void set_output(int out_format, double scale);
 
-  void set_paths(const char* defaultPath, const char* databasePath, 
+  void set_paths(const char* databasePath, 
                  const char* workPath, const char* outPath); 
 
   //! set workpath

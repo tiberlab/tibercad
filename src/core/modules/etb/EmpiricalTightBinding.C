@@ -101,7 +101,6 @@ ETB::UptOptions::UptOptions(void)
   c_axis[0]=0.0; c_axis[1]=0.0; c_axis[2]=1.0;
   //k_point.reserve(3);
   k_point[0]=0.0; k_point[1]=0.0; k_point[2]=0.0;
-  default_path = new char[UPT_LC];  memset(default_path, UPT_PADCHAR, UPT_LC);
   database_path = new char[UPT_LC]; memset(database_path, UPT_PADCHAR, UPT_LC);
   work_path = new char[UPT_LC];     memset(work_path, UPT_PADCHAR, UPT_LC);
   load_path = new char[UPT_LC];     memset(load_path, UPT_PADCHAR, UPT_LC);
@@ -124,7 +123,6 @@ ETB::UptOptions::~UptOptions(void)
   delete[] sparse_fmt;
   //delete[] out_format;
   delete[] database_path;
-  delete[] default_path;
 }
 
 ETB::UptSolverOptions::UptSolverOptions(void)
@@ -221,7 +219,6 @@ ETB::do_init(void){
       throw InitFailedException("ETB: database search path too long");
 
     std::size_t length = 0;
-    length = default_path.copy(_upt_options.default_path, default_path.size());
     length = database_path.copy(_upt_options.database_path, database_path.size());
     length = work_path.copy(_upt_options.work_path, work_path.size());
     length = gen_outfile.copy(_upt_options.gen_outfile, gen_outfile.size());
@@ -236,7 +233,6 @@ ETB::do_init(void){
     cerr << "done\n";
 
     Messages::info("(" + get_name() + ") database path: " + database_path);
-    Messages::info("(" + get_name() + ") default  path: " + default_path);
     Messages::info("(" + get_name() + ") work path: " + work_path);
     Messages::info("(" + get_name() + ") output path: " + out_path);
 
@@ -372,7 +368,7 @@ void ETB::do_reinit(void)
     //Messages::info("("+get_name()+") printing structure "+upt_filename);
 
     if (get_communicator().rank() == 0)
-      get_atomistic_structure()->print_upg(upt_filename, _upt_options.etb_dataset,
+      get_atomistic_structure()->print_upg(upt_filename, "",
                                                       !_upt_options.band_shift_flag);
     get_communicator().barrier();
 
@@ -395,7 +391,7 @@ void ETB::do_reinit(void)
   
 
   //  Set parameters for Uptight instance
-  inst->set_paths(_upt_options.default_path, _upt_options.database_path, 
+  inst->set_paths(_upt_options.database_path, 
                   _upt_options.work_path, _upt_options.out_path);
   
   std::cout << "("+get_name()+") fill parameter " << std::endl;
