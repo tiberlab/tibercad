@@ -3157,7 +3157,7 @@ AtomisticStructure::radial_distribution(std::string suffix)
   vector<string> species;
   opt.get_option("species",species);
 
-  Messages::info("output g(r)");
+  Messages::info("calculate radial distribution function g(r)");
   std::set<ID> reg_ids(get_IDset());
   // get total volume
   MeshBase::element_iterator el(_device->get_mesh().elements_begin());
