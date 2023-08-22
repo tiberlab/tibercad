@@ -1,3 +1,6 @@
+Version 3.3.0
+-------------
+
 Version 3.2.0
 -------------
 
@@ -7,6 +10,9 @@ New features:
 	- added some features for k-space and crystal symmetries
 	- new module for TMM
 	- added interfacing to SLEPc in ETB module (solver = slepc)
+	- intraband terms now included in kp optical calculations
+	- in kp, can now project solutions onto basis states to get
+	  composition
 
 Version 3.1.0
 -------------
