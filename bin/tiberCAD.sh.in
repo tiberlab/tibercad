@@ -39,7 +39,9 @@ export TIBERCADROOT
 
 
 # stack size limit / VM may be too small 
-ulimit -v unlimited -s unlimited -c 0
+ulimit -v unlimited
+ulimit -s unlimited
+ulimit -c 0
 
 
 if [ -x $executable ]
