@@ -21,8 +21,13 @@ while getopts $opts flag
 do
   case "$flag" in
     d) executable=tibercad_dbg ;;
+
     g) usegdb=1 ;;
-    n) n_mpi_procs=${OPTARG}; export OMP_NUM_THREADS=1 ;;
+
+    n) n_mpi_procs=${OPTARG};
+      : $(OMP_NUM_THREADS:-1);
+      export OMP_NUM_THREADS ;;
+
     *) OPTIND=$(( $OPTIND - 1 )); break ;;
   esac
 done
@@ -52,7 +57,9 @@ then
 fi
 
 # stack size limit / VM may be too small ?
-ulimit -v unlimited -s unlimited -c 0
+ulimit -v unlimited
+ulimit -s unlimited
+ulimit -c 0
 
 
 if [ $usegdb -eq 1 ]
