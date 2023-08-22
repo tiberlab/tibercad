@@ -476,6 +476,10 @@ The main parameters are:
 
     *matrix_elements* to  select calculation of  the optical matrix elements 
 
+    *EigenStates* all eigenstates at all k-points
+
+    *Eigenstates_k_0* eigenstates only at *k=0*
+
 The spontaneous recombination rate is calculated according to
 
 .. math::
