@@ -192,7 +192,7 @@ ETB::do_init(void){
   // Get database path from Database class
   //std::string default_path = get_option("default_path", Database::get_default_search_path());
   std::string default_path = Database::get_default_search_path();
-  // alternatively, one can provide the path explicitly
+  // alternatively, one can provide the path explicitly (accepts colon-separated list)
   std::string database_path = get_option("database_path", Database::get_search_path());
   // our default dataset is Jancu (sp3d5s*). For the datasets in materials directory, the default
   // path becomes materials/ETB/Jancu, in this case
@@ -1098,6 +1098,7 @@ void ETB::do_assemble(const ModelOptions& options)
     }
 
     inst->compute_H(_upt_options.sparse_fmt);
+    //print_H("./");
 
   }
 
