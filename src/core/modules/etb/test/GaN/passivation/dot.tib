@@ -1,0 +1,57 @@
+Device
+{
+  meshfile = dot.msh 
+  mesh_units = 1e-9
+
+  x-growth-direction = (0, 0, 0, 1)
+  y-growth-direction = (1,0,-1,0)
+  z-growth-direction = (-1,2,-1,0)
+
+  material = GaN
+
+
+  Region dot
+  {
+  }
+
+  Atomistic tb
+  {
+    reference_region = dot
+    regions = dot
+    passivation = yes
+    periodicity = (0, 0, 0)
+    print = (xyz)
+  }
+
+}
+
+
+ 
+Module empirical_tb
+{
+  regions = dot
+  name = tb
+  atomistic_structure = tb
+  Harrison_scaling = true
+  relativistic = true
+  
+  plot = (tbstates)
+
+
+  Solver
+  {
+    guess_valence = 0.0
+    guess_conduction = 0.5
+    num_valence_eigenvalues = 6
+    num_conduction_eigenvalues = 4
+  }
+
+}
+
+
+Simulation
+{
+  solve = (tb)
+  resultpath =  output
+
+}

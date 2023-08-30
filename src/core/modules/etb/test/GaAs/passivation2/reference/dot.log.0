@@ -1,0 +1,147 @@
+
+Log start: Tue Aug 29 19:32:48 2023
+
+
+Writing log to output/dot.log.0
+tiberCAD release 3.3.0 (rev. 5434, x86_64-linux)
+
+Input file: dot.tib
+
+Initialize global simulation options
+  Simulation temperature: 300 K
+  Database search path  : /home/maufder/Work/TiberCAD/3.2/materials
+  Log file              : output/dot.log.0
+
+Setup mesh
+  Reading mesh file 'dot.msh ...
+    mesh reading time: 0h 0m 0.0041s
+    mesh preparation time: 0h 0m 0.0057s
+    bd_regions preparation time: 0h 0m 6e-06s
+
+    mesh units          : 1e-09 m
+    mesh dimension      :       3
+    number of nodes     :     340
+    number of elements  :    1136
+    number of subdomains:       1
+    number of boundaries:       0
+
+Create materials ...
+  Added material GaAs for region 'dot' (mesh regions 1)
+    (using datafile /home/maufder/Work/TiberCAD/3.2/materials/GaAs.dat)
+    x growth direction : (1, 0, 0)
+    y growth direction : (0, 1, 0)
+    z growth direction : (0, 0, 1)
+Creation of materials done.
+
+Building Atomistic Structure tb
+  Create reference lattice: GaAs
+  BondMap progress  done.
+  Build a first oversized structure
+  Make conventional cell
+  Relative origin of atomic structure: 1e-06 1e-06 1e-06
+  Conventional cells along x, y, z: 2 2 2
+
+  Setup of grid mapper: 0h 0m 0.1s, memory usage: 8 MB 
+  Assign elements progress  done.
+  Assign Species progress  done.
+  Check periodicity ... 
+    BondMap progress  done.
+  done
+  Starting passivation...
+  Cut & Passivation done
+  Atomistic structure build time: 0h 0m 0.15s
+
+  Atomistic Structure containing 148 atoms has been built. 
+  Size not counting passivation hydrogens: 64
+  Supercell structure
+  Lattice vectors (A):
+    a1 = (33.9195 0.00000 0.00000 )
+    a2 = (0.00000 33.9195 0.00000 )
+    a3 = (0.00000 0.00000 33.9195 )
+    Output structure(s)
+    print structure file tb.xyz
+
+Setting up simulation of type 'empirical_tb' ...
+  (using /home/maufder/Work/TiberCAD/3.2/x86_64-linux/modules/empirical_tb/empirical_tb.so)
+  Creating bulk models... 
+    Region: dot
+
+Setting up bulk models ...
+
+Setting up lower dimensional (boundary) models ...
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for tb (empirical_tb)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+Symmetry of k space: Gamma
+k-space initialized
+
+*** Warning: Empirical tight binding calculations are preformed at T=0
+
+*** Warning: Neither potential_simulation nor el_qfermi_level have been specified
+
+*** Warning: Neither potential_simulation nor hl_qfermi_level have been specified
+(tb) creating map elem->atoms
+(tb) database path: /home/maufder/Work/TiberCAD/3.2/materials/ETB/Jancu
+(tb) work path: output
+(tb) output path: output
+
+*** Warning: found unused options in block Solver: guess_conduction, guess_valence, num_conduction_eigenvalues, num_valence_eigenvalues
+
+Available solution variables:
+------------------------------------------------------------------
+Name                     Units          Type      Association Plot
+------------------------------------------------------------------
+MeshStates               1/cm^3         n-tuple   cell        n
+MeshStatesNodes          1/cm^3         n-tuple   nodal       n
+eDensity                 q/cm^3         real      nodal       n
+hDensity                 q/cm^3         real      nodal       n
+RegionIDs                               real      cell        n
+------------------------------------------------------------------
+
+Output directory      : output
+Output file format    : vtk
+Output file basename  : tb
+
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+We solve: tb 
+
+>>>>----------------------------------- (tb) -----------------------------------
+  Assign Virtual Species
+  Printing upg file
+  (tb) solving using lanczos
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -2.13135 Fermi          0 1.56681e-36
+  1 hl -2.13135 Fermi          0 1.56681e-36
+  2 hl -2.16865 Fermi          0 3.70166e-37
+  3 hl -2.16865 Fermi          0 3.70166e-37
+  4 hl -2.20153 Fermi          0 1.03733e-37
+  5 hl -2.20153 Fermi          0 1.03733e-37
+  6 el 1.86136 Fermi          0 5.3763e-32
+  7 el 1.86136 Fermi          0 5.3763e-32
+  8 el 2.0017 Fermi          0 2.36043e-34
+  9 el 2.0017 Fermi          0 2.36043e-34
+
+
+Solve time: 0h 0m 6.3s
+<<<<----------------------------------------------------------------------------
+(tb) compute atom-projected charges
+(tb) print atom-projected charges on files
+(tb) write wave functions on files
+
+Total solve time: 0h 0m 6.4s
+Simulation finished.
+
+4 warnings during run
+0 errors detected
+
+
+Log end: Tue Aug 29 19:32:55 2023
+
+
