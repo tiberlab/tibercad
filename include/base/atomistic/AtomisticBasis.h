@@ -138,6 +138,10 @@ class AtomisticBasis
   //! Set periodicity information
   void set_periodicity(bool, bool, bool);
 
+  //! Get periodicity vectors for the structure:
+  std::vector<libMesh::RealVectorValue>&
+    get_lattice_vectors(void);
+
   //! Ask for periodicity along coordinate axes
   /*!
    * 0 = x, 1 = y, 2 = z
@@ -191,10 +195,6 @@ class AtomisticBasis
 
   //! Copy constructor
   AtomisticBasis(const AtomisticBasis& other);
-
-  //! Get periodicity vectors for the structure:
-  std::vector<libMesh::RealVectorValue>&
-    get_lattice_vectors(void);
 
     
   //! Bond Map object pointer

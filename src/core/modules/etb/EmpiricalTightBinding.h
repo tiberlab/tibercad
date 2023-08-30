@@ -219,6 +219,9 @@ class ETB : public TightBinding
   //! Print all _dftb_options for debugging purposes
   void print_upt_options(void);
 
+  //! Print upg file (etb_dataset may be changed into type options)
+  void print_upg(const std::string &path, bool band_offsets = false);
+
   //! Prepare and call uptight
   void call_uptight(void);
 
