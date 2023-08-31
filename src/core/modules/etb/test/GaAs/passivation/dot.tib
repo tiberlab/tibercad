@@ -50,10 +50,29 @@ Module empirical_tb
 
 }
 
+Module opticstb
+{
+  name = opt
+  regions = dot 
+
+  initial_state_model = tb
+  final_state_model = tb
+
+  skip_solve = true
+  
+  plot = (matrix_elements, optical_spectrum_k_0)
+  output_format = grace
+
+  Emin = 0.2
+  Emax = 3.0
+  dE = 0.001
+
+}
+
 
 Simulation
 {
-  solve = (tb)
+  solve = (tb, opt)
   resultpath =  output
 
 }
