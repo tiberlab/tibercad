@@ -4,9 +4,10 @@
 #define _TMMBULKMODEL_H_
 
 #include "PhysicalModel.h"
-#include "Tmm.h"
+#include "TmmDipoleSource.h"
+// #include "Tmm.h"
 
-
+// class TmmDipoleSource
 
 //! This is the base class for the TMM bulk physical model
 class TmmBulkModel : public PhysicalModel
@@ -20,6 +21,8 @@ class TmmBulkModel : public PhysicalModel
 
     //! Creator function
     static TmmBulkModel* create(const Material* mat, const ModelOptions& options);
+	
+    void  calculate(const libMesh::Elem* elem, const libMesh::Point& point, double lambda);
 
 
     //! Get the relative permittivity at a given wavelength
@@ -30,6 +33,9 @@ class TmmBulkModel : public PhysicalModel
     libMesh::Complex get_refractive_index(double lambda) const;
 
     double get_coherent_index(void) const;
+	
+	
+    double get_emission_power(void) const;
 
 
 
@@ -95,6 +101,10 @@ class TmmBulkModel : public PhysicalModel
     std::vector<int> _addressing;
 
     double _incoherent_index {0};
+	
+	std::vector<TmmDipoleSource* > _DS;
+	
+	double _emission_power;
 
 
 

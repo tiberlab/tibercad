@@ -7,7 +7,7 @@ Device
   Region Air
   {
   Incoherency = 0
-  material = Air
+  material = GaN_optic
   }
 
 }
@@ -17,13 +17,13 @@ Module tmm
 { 
   
   name = tmm_study 
-  plot = (Internal_Source_ElectricField,Internal_Poynting,Internal_Power,Internal_Absorption)
+  plot = (Internal_Source_ElectricField,Internal_Poynting,Internal_Power,Internal_Absorption,Internal_Intensity)
   wavelengths = 450
-  wave_number_steps = 200
+  wave_number_steps = 1
   polarization = TM
-  orientation = V
-  wave_number_ratio = 1
-  dipole_power = 0.2
+  orientation = H
+  wave_number_ratio = 0
+  dipole_power = 1
   dipole_coordinate = 500
 
   Physics 

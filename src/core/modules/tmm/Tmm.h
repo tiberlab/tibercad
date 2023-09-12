@@ -104,6 +104,9 @@ class TBDLLOCAL Tmm : public SimulationInterface
   std::complex<double> cmlx_sqrt(std::complex<double> in);
 
   bool cmp_string(const std::string& a, const std::string& b);
+  
+  
+  void reset_global_variables(void);
 
   //! defining a function to return D matrix
   /*!
@@ -209,6 +212,8 @@ class TBDLLOCAL Tmm : public SimulationInterface
       Transmission,
       Reflection,
       Absorption,
+	  Generation_regions,
+	  Polar,
       AVT
     };
 
@@ -229,11 +234,13 @@ class TBDLLOCAL Tmm : public SimulationInterface
     std::vector<double> _Poynting_external;
     std::vector<double> _Energy_loss_external;
     std::vector<double> _Energy_loss_internal;
-    
+	
+    std::vector<double> _Internal_Wavelength;
     std::vector<double> _Internal_Source_ElectricField;
     std::vector<double> _Internal_Poynting;
     std::vector<double> _Internal_Power;
     std::vector<double> _Internal_Absorption;
+	std::vector<double> _Abs;
     std::vector<double> _Internal_Intensity;
 
     std::vector<double> _angle;
@@ -282,7 +289,6 @@ class TBDLLOCAL Tmm : public SimulationInterface
     std::vector<double> _ratio;
     std::vector<double> _dipole_power;
 
-
     std::vector<double> _wavelength_vector;
     std::vector<double> _dipole_coordinate;
 
@@ -298,6 +304,8 @@ class TBDLLOCAL Tmm : public SimulationInterface
 
     std::vector<double> _eye_value;
     std::vector<double> _eye_wl;
+	
+	std::map<ID, std::vector<double> > _solutions;
 
 
 

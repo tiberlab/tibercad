@@ -127,8 +127,14 @@ TmmBulkModel::get_coherent_index(void) const
   return(ri);
 }
 
+double
+TmmBulkModel::get_emission_power(void) const
+{
 
+  double ri= _emission_power;
 
+  return(ri);
+}
 
 
 
@@ -233,6 +239,10 @@ TmmBulkModel::do_init(void)
   //InCoherentModel* pm =  dynamic_cast<InCoherentModel*>(it->second);
   //_incoherent_index = pm->get_InCoherent_Index();
   get_parameter("Incoherency", _incoherent_index);
+  // string gen_str(get_option("generation", "0"));
+  // istringstream is(gen_str);
+  // std::cout<<"gen_str is :"<<gen_str<<std::endl;
+  // std::cout<<"is is :"<<is<<std::endl;
 
 }
 
@@ -241,7 +251,6 @@ void
 TmmBulkModel::do_print_info(void)
 {
   Messages::info("Reading optical data from " + _datafile);
-
   std::ostringstream os;
   os << "wavelength range: " << _wavelengths.front() << " - " << _wavelengths.back() << " nm";
   Messages::info(os.str());
@@ -250,23 +259,20 @@ TmmBulkModel::do_print_info(void)
 
 void
 TmmBulkModel::prepare_submodels(void)
+{  
+
+   create_submodels(_DS, "dipole_source");
+}
+
+
+void
+TmmBulkModel::calculate(const libMesh::Elem* elem, const libMesh::Point& point, double lambda)
 {
+  _emission_power = 0;
+  for (ID n = 0 ; n <_DS.size() ; n++)
+  {
+    _DS[n]->calculate(elem,point,lambda);
+	_emission_power  +=  _DS[n]->get_emission_power();
+  }
 
- // InCoherentModel* pm = NULL;
-  //ModelOptions opts;
-  //opts.set_option("type", "constant");
-  //create_submodel(pm, "InCoherent", opts);
-
-  // Maybe it would be more elegant to extend the existing
-  // permittivity model implementation
-  //ModelOptions opts;
-  //opts.set_option("type", "constant");
-  //create_submodel(_permittivity_model, "permittivity", opts);
-  
-  // alternative way to create internal submodels:
-  //
-  // PermittivityModel* mod = PhysicalModel::create("permittivity", opts);
-  // add_submodel("permittivity", mod)
-
-  // NOTE: all submodels are initialized automatically before calling do_init()
 }
