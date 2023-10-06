@@ -8,7 +8,7 @@ comp_B = GaN
 
 
 [bandgap]
-bow_Eg_G = 1.4
+bow_Eg_G = 1.4  # newer sources suggest 1.7
 bow_Eg_X = 0.69
 bow_Eg_L = 1.84
 

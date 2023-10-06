@@ -8,14 +8,12 @@ subdirs += common signals
 subdirs += thermal drift-diffusion elasticity
 subdirs += vff etb 
 subdirs += dd_generic
-#subdirs += interpolation
 subdirs += quantumespresso
 subdirs += data_importer
 subdirs += imagereader
 subdirs += polarizationgrid 
 subdirs += negf 
 subdirs += tmm 
-#subdirs += maxwell maxwellabsorption 
 
 .IGNORE:
 

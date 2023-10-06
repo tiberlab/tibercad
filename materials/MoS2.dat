@@ -9,6 +9,25 @@ a = 0.316
 c = 1.0 
 
 
+# all band paramters need to be adjusted, only gap is ok
+[valenceband]
+E_v = 0
+
+m_HH = 0.49
+m_LH = 0.16
+
+m_dos = 1.63813
+
+
+[conductionband]
+m_G = 0.156
+
+
+[bandgap]
+# T=0 K
+Eg_G = 2.27
+
+
 [permittivity]
 permittivity = (7, 7, 3.2)
 

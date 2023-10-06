@@ -40,7 +40,6 @@ class ETB : public TightBinding
     std::string potential_sim;
     std::string strain_sim;
     std::string etb_dataset;
-    char* default_path;
     char* database_path;
     char* work_path;
     char* out_path;
@@ -219,6 +218,9 @@ class ETB : public TightBinding
 
   //! Print all _dftb_options for debugging purposes
   void print_upt_options(void);
+
+  //! Print upg file (etb_dataset may be changed into type options)
+  void print_upg(const std::string &path, bool band_offsets = false);
 
   //! Prepare and call uptight
   void call_uptight(void);

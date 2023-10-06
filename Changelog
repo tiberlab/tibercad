@@ -1,5 +1,9 @@
 Version 3.3.0
 -------------
+	- implemented Tan scheme in uptight
+	- ETB parameters are organized in subdirectories for different schemes
+	- TMM has now internal source, can be coupled to DD
+	- NEGF module can use the new quasi-equilibrium density calculation
 
 Version 3.2.0
 -------------

@@ -113,6 +113,8 @@ Module empirical_tb
   Harrison_scaling = false
   potential_simulation = driftdiffusion
 
+  dataset = Jancu
+
 	  
   plot = (tbstates)
 

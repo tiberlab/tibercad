@@ -26,11 +26,11 @@ UptWrapper* UptWrapper::create()
 }
 
 
-void UptWrapper::set_paths(const char* defaultPath, const char* databasePath, 
+void UptWrapper::set_paths(const char* databasePath, 
                           const char* workPath, const char* outPath) 
 {
 
-   f77_upt_set_paths(_handler, defaultPath, databasePath, workPath, outPath);
+   f77_upt_set_paths(_handler, databasePath, workPath, outPath);
 }
 
 void UptWrapper::fill_param(int verbose_lev,  

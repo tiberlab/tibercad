@@ -101,7 +101,6 @@ ETB::UptOptions::UptOptions(void)
   c_axis[0]=0.0; c_axis[1]=0.0; c_axis[2]=1.0;
   //k_point.reserve(3);
   k_point[0]=0.0; k_point[1]=0.0; k_point[2]=0.0;
-  default_path = new char[UPT_LC];  memset(default_path, UPT_PADCHAR, UPT_LC);
   database_path = new char[UPT_LC]; memset(database_path, UPT_PADCHAR, UPT_LC);
   work_path = new char[UPT_LC];     memset(work_path, UPT_PADCHAR, UPT_LC);
   load_path = new char[UPT_LC];     memset(load_path, UPT_PADCHAR, UPT_LC);
@@ -124,7 +123,6 @@ ETB::UptOptions::~UptOptions(void)
   delete[] sparse_fmt;
   //delete[] out_format;
   delete[] database_path;
-  delete[] default_path;
 }
 
 ETB::UptSolverOptions::UptSolverOptions(void)
@@ -192,49 +190,61 @@ ETB::do_init(void){
 
 
   // Get database path from Database class
-  //  std::string database_path = Database::get_default_search_path();
-  std::string default_path = get_option("default_path",Database::get_default_search_path());
-  std::string database_path = get_option("database_path",Database::get_search_path());
-  std::string work_path = get_output_directory();
-  std::string gen_outfile = "out.gen";
-  std::string out_path = get_output_directory();
+  //std::string default_path = get_option("default_path", Database::get_default_search_path());
+  std::string default_path = Database::get_default_search_path();
+  // alternatively, one can provide the path explicitly (accepts colon-separated list)
+  std::string database_path = get_option("database_path", Database::get_search_path());
+  // our default dataset is Jancu (sp3d5s*). For the datasets in materials directory, the default
+  // path becomes materials/ETB/Jancu, in this case
+  std::string dataset = get_option("dataset", "Jancu");
 
-  if (database_path.size() > UPT_LC - 1)
-           throw InitFailedException("ETB: database search path too long");
+  // this is a quirk, but for now there is no more elegant way
+  if (database_path == default_path)
+  {
+    database_path += "/ETB/" + dataset;
+  }
+  else
+  {
+    if (database_path.back() != '/')
+      database_path += "/";
 
+    database_path += ":" + default_path + "/ETB/" + dataset;
+  }
 
-  std::size_t length = 0;
-  length = default_path.copy(_upt_options.default_path, default_path.size() );
-  length = database_path.copy(_upt_options.database_path, database_path.size() );
-  length = work_path.copy(_upt_options.work_path, work_path.size() );
-  length = gen_outfile.copy(_upt_options.gen_outfile, gen_outfile.size() );
-  length = out_path.copy(_upt_options.out_path, out_path.size() );
+    std::string work_path = get_output_directory();
+    std::string gen_outfile = "out.gen";
+    std::string out_path = get_output_directory();
 
-  _dim = get_mesh().mesh_dimension();
+    if (database_path.size() > UPT_LC - 1)
+      throw InitFailedException("ETB: database search path too long");
 
-  Messages::info("("+get_name()+") creating map elem->atoms");
+    std::size_t length = 0;
+    length = database_path.copy(_upt_options.database_path, database_path.size());
+    length = work_path.copy(_upt_options.work_path, work_path.size());
+    length = gen_outfile.copy(_upt_options.gen_outfile, gen_outfile.size());
+    length = out_path.copy(_upt_options.out_path, out_path.size());
 
-  build_map_elem_atoms(_upt_options.projection_length);
+    _dim = get_mesh().mesh_dimension();
 
-  cerr << "done\n";
+    Messages::info("(" + get_name() + ") creating map elem->atoms");
 
-  Messages::info("("+get_name()+") database path: "+database_path);
-  Messages::info("("+get_name()+") default  path: "+default_path);
-  Messages::info("("+get_name()+") work path: "+work_path);
-  Messages::info("("+get_name()+") output path: "+out_path);
-  
+    build_map_elem_atoms(_upt_options.projection_length);
 
-  _init = true;      // initialization must be called
-  _assemble = true;  // matrix assemble must be done
+    cerr << "done\n";
 
+    Messages::info("(" + get_name() + ") database path: " + database_path);
+    Messages::info("(" + get_name() + ") work path: " + work_path);
+    Messages::info("(" + get_name() + ") output path: " + out_path);
 
+    _init = true;     // initialization must be called
+    _assemble = true; // matrix assemble must be done
 
-  // We add a second system just to contain the density
-  create_equation_system("linear");
-  TiberLinearSystem& linsys = get_equation_system<TiberLinearSystem>(0);
-  linsys.add_variable("edens", libMeshEnums::FIRST, &(this->get_region_ids()));
-  linsys.add_variable("hdens", libMeshEnums::FIRST, &(this->get_region_ids()));
-  linsys.init();
+    // We add a second system just to contain the density
+    create_equation_system("linear");
+    TiberLinearSystem &linsys = get_equation_system<TiberLinearSystem>(0);
+    linsys.add_variable("edens", libMeshEnums::FIRST, &(this->get_region_ids()));
+    linsys.add_variable("hdens", libMeshEnums::FIRST, &(this->get_region_ids()));
+    linsys.init();
 
 }
 
@@ -355,11 +365,10 @@ void ETB::do_reinit(void)
     upt_filename = get_output_directory() + "/" +
         get_atomistic_structure()->get_name() + ".upg";
 
-    //Messages::info("("+get_name()+") printing structure "+upt_filename);
 
     if (get_communicator().rank() == 0)
-      get_atomistic_structure()->print_upg(upt_filename, _upt_options.etb_dataset,
-                                                      !_upt_options.band_shift_flag);
+      print_upg(upt_filename, !_upt_options.band_shift_flag);
+
     get_communicator().barrier();
 
 
@@ -381,7 +390,7 @@ void ETB::do_reinit(void)
   
 
   //  Set parameters for Uptight instance
-  inst->set_paths(_upt_options.default_path, _upt_options.database_path, 
+  inst->set_paths(_upt_options.database_path, 
                   _upt_options.work_path, _upt_options.out_path);
   
   std::cout << "("+get_name()+") fill parameter " << std::endl;
@@ -1088,6 +1097,7 @@ void ETB::do_assemble(const ModelOptions& options)
     }
 
     inst->compute_H(_upt_options.sparse_fmt);
+    //print_H("./");
 
   }
 
@@ -1252,7 +1262,7 @@ void ETB::parse_options(void)
 
   _upt_options.verbose = get_option("verbose", SimulationOptions::verbose());
 
-  _upt_options.etb_dataset = get_option("dataset","");
+  _upt_options.etb_dataset = get_option("dataset", "");
   _upt_options.max_TB_order = get_option("max_TB_order", 2);
 
   std::string sparse_fmt = get_option("sparse_format", "full");
@@ -2786,4 +2796,432 @@ ETB::project_densities(const Elem* elem, const Point& point, double cutoff)
   }
 
   return densities;
+}
+
+
+
+void
+ETB::print_upg(const std::string& path, bool band_offsets)
+{
+  auto& device = get_environment().get_device();
+
+  AtomisticStructure* as = get_atomistic_structure();
+
+  // assign virtual species (essentially setup _virtual_atom_types)
+  as->assign_virtual_species();
+  auto virtual_atom_types = as->get_virtual_species();
+
+  auto atoms = as->get_structure_atoms();
+
+  std::ofstream file, os;
+
+  const BondMap& bondmap = as->get_bond_map();
+
+  Messages::info("Printing upg file");
+
+  // Recognize type of input file and print it properly
+  std::string extension = path.substr(path.size()-4);
+  //Gen format modified for uptight input
+
+  file.open(path.c_str());
+  
+  //Material -> index 
+  std::map<const Material*, unsigned int> material_map;
+  
+  // Create Material map--------------------------------------
+  std::set<ID>::iterator ID_it;
+  
+  unsigned int id = 1;
+  const Material* mat = NULL;
+  
+  for (ID_it = as->get_IDset().begin(); ID_it != as->get_IDset().end(); ++ID_it)
+  {
+    mat = device.get_material(*ID_it);
+    material_map.insert(std::pair<const Material*, unsigned int>(mat, id));
+    id++;
+  }
+  //-----------------------------------------------------------
+
+  // too keep track of actually used materials
+  std::set<const Material*> used_materials;
+
+  std::set<Utils::Couple<const Material* > > interfaces;
+
+  //
+  // First we write the atom types and the structure including connectivity
+  //
+
+  //Standard gen section (modified with material index)
+  file << atoms.size();
+  
+  if (as->is_periodic()) file << std::setw(10) << "S \n";
+  else file << std::setw(10) << "C \n";
+  
+  for (unsigned int i = 0; i < virtual_atom_types.size(); i++)
+  {
+    file << std::setw(7) << virtual_atom_types[i];
+  }
+  file << std::endl;
+  
+  for (unsigned int i = 0; i < atoms.size(); i++)
+  {
+    const Material *mati = NULL;
+    const Material *matj = NULL;
+
+    file << std::setw(10);
+    if (atoms[i].get_elem() ==  NULL)
+    {
+      mati = device.get_material(atoms[bondmap[i][0]].get_region_ID()); 
+      file << material_map[mati];
+      used_materials.insert(mati);
+    }
+    else
+    {
+      mati = device.get_material(atoms[i].get_region_ID()); 
+      file << material_map[ mati ];
+      used_materials.insert(mati);
+    }
+
+    file << std::setw(5) << static_cast<unsigned int>(atoms[i].get_type());
+
+    file << std::setw(20) << std::setprecision(10)
+    << std::fixed << double(atoms[i].get_position(0))
+    << std::setw(20) << std::setprecision(10)
+    << std::fixed  << double(atoms[i].get_position(1))
+    << std::setw(20) << std::setprecision(10)
+    << std::fixed  << double(atoms[i].get_position(2));
+
+    
+    file << std::setw(5) << bondmap[i].size();
+    
+    // N.B. Indexing is in Fortran notation (first atom is labelled as 1) !
+    for (unsigned int j = 0; j < bondmap[i].size(); j++)
+    {
+      file << std::setw(10) << bondmap[i][j] + 1;
+   
+      if(atoms[bondmap[i][j]].get_elem() != NULL)
+      {
+        matj = device.get_material(atoms[bondmap[i][j]].get_region_ID()); 
+        if (mati != matj)
+          interfaces.insert( Utils::Couple<const Material*>(mati,matj) );
+      }
+    }
+    
+    file << std::endl;
+    
+  }
+  
+  //
+  // Periodicity vectors come after the structure
+  //
+
+  if (as->is_periodic())
+  {
+    
+    //A line of zeros is put here (coordinates origin)
+    file <<  std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0)
+         << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0)
+         << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) << "\n";
+    
+    for (unsigned int i = 0; i < 3; i++)
+    {
+      for (unsigned int j = 0; j < 3; j++)
+      {
+        file << std::setw(20) << std::setprecision(10) << std::fixed <<
+          as->get_lattice_vectors()[i](j);
+      }
+      file << std::endl;
+    }
+  }
+  
+  //
+  // Now the information about all materials
+  //
+  
+
+  std::map<const Material*, unsigned int> n_species_map;
+
+  // to get them ordered correctly
+  std::map<unsigned int, const Material*> inv_material_map;
+  {
+    std::map<const Material*, unsigned int>::iterator mat_it = material_map.begin();
+    for ( ; mat_it != material_map.end(); ++mat_it)
+    {
+      if (used_materials.count(mat_it->first))
+        inv_material_map[mat_it->second] = mat_it->first;
+    }
+  }
+
+  file << "#Materials " << inv_material_map.size() << std::endl;
+
+  std::map<unsigned int, const Material*>::iterator mat_it = inv_material_map.begin();
+  for ( ; mat_it != inv_material_map.end(); ++mat_it)
+  {
+    const Material* mat = (*mat_it).second;
+    
+    Database db = mat->get_database();
+    db.set_section("atomistic_structure");
+    db.set_alloy_mixing(Database::NONE);
+    n_species_map[mat] =  db.get("n_basis_specie", 0);
+
+    std::string alloy_type("");
+    
+    if      ( n_species_map[mat] == 1 ){ alloy_type = "simple";}
+    else if ( n_species_map[mat] == 2 ){ alloy_type = "binary";}
+    else if ( n_species_map[mat] == 3 ){ alloy_type = "ternary";}
+
+    if (mat->is_alloy())
+    {
+      db.set_section("");
+      alloy_type = db.get("alloy_type", "ternary");
+    } 
+    if (alloy_type == "")
+      Messages::error("Could not define alloy_type in AtomisticStructure.C");
+
+    std::vector<double> Ev(2,0.0);
+    
+    if (mat->is_alloy())
+    {
+
+      file << (*mat_it).first
+           << " " << mat->get_name()
+           << " " << mat->get_structure()
+           << " " << alloy_type << " ";
+
+      if (alloy_type == "binary")
+        file << 2;
+      else if (alloy_type == "ternary")
+        file << 2;
+      else if (alloy_type == "quaternary")
+        file << 4;
+
+      if (as->is_random_alloy())
+        file << " RND";
+      else
+        file << " VCA";
+
+      std::string nameA = (static_cast<const Alloy*>(mat))->get_name_A();
+      std::string nameB = (static_cast<const Alloy*>(mat))->get_name_B();
+      const Material* matA = (static_cast<const Alloy*>(mat))->get_component_A();	  
+      const Material* matB = (static_cast<const Alloy*>(mat))->get_component_B();	
+      double x =  (static_cast<const Alloy*>(mat))->get_molar_fraction();
+
+      if (alloy_type == "binary" || alloy_type == "ternary")
+      {
+        file << " "  << nameA
+             << " "  << nameB
+             << " "  << std::setprecision(3) << x
+             << " "  << std::setprecision(3) << 1.0 - x
+             << " "  << nameA << ".etb"
+             << " "  << nameB << ".etb";
+      }
+
+      if (alloy_type=="binary")
+      {
+        file << " " << nameA << nameB << ".etb";
+      }
+    
+      if (alloy_type == "quaternary")
+      {
+        db.set_section("");
+        double x_A = db.get("x_A",1.0);
+        double x_B = db.get("x_B",1.0);
+
+        file << " "  << (static_cast<const Alloy*>(matA))->get_name_A()
+             << " "  << (static_cast<const Alloy*>(matA))->get_name_B()
+             << " "  << (static_cast<const Alloy*>(matB))->get_name_A()
+             << " "  << (static_cast<const Alloy*>(matB))->get_name_B()
+             << " "  <<  std::setprecision(3) <<  x*x_A
+             << " "  <<  std::setprecision(3) <<  x*(1-x_A)
+             << " "  <<  std::setprecision(3) <<  (1-x)*x_B
+             << " "  <<  std::setprecision(3) <<  (1-x)*(1-x_B)
+             << " "  << (static_cast<const Alloy*>(matA))->get_name_A() << ".etb"
+             << " "  << (static_cast<const Alloy*>(matA))->get_name_B() << ".etb"
+             << " "  << (static_cast<const Alloy*>(matB))->get_name_A() << ".etb"
+             << " "  << (static_cast<const Alloy*>(matB))->get_name_B() << ".etb";
+      }
+
+      if (band_offsets)
+      { 
+        const Database& dbA = matA->get_database();
+        const Database& dbB = matB->get_database();
+        dbA.set_section("valenceband");
+        dbB.set_section("valenceband");
+    
+        file           << " " << std::setprecision(5) << dbA.get("E_v",0.0)
+                       << " " << std::setprecision(5) << dbB.get("E_v",0.0);
+      }
+
+      if (alloy_type == "quaternary")
+        file                          << " 0.0  0.0";
+
+      file                            << " 0.0  0.0"
+                                      << " 0.0  0.0" << std::endl;
+    }
+    else
+    {
+      db.set_section("valenceband");
+      file << (*mat_it).first
+           << " " << mat->get_name()
+           << " " << mat->get_structure()
+           << " " << alloy_type
+           << " " << 1
+           << " " << "CRY"
+           << " " << mat->get_name()
+           << " " << std::setprecision(3) << 1.0
+           << " " << mat->get_name() << ".etb";
+      if (band_offsets)
+      {               
+        file << " " << std::setprecision(5) << db.get("E_v",0.0);
+      } 
+      file << " 0.0  0.0"   << std::endl;
+    }
+
+  }
+ 
+  //std::cout<<"Print interfaces: "<<interfaces.size()<<std::endl;
+  
+
+  file << "#Interfaces " << std::endl;
+
+  // to check for already processed pairs of species
+  multimap<Utils::Couple<ID>, Utils::Couple<Specie>> processed;
+
+  // to keep all possible interactions for a pair of materials
+  map<Utils::Couple<ID>, pair<vector<string>, vector<double>>> couplings;
+
+
+  for (size_t i = 0; i < atoms.size(); ++i)
+  {
+    ID reg_i = atoms[i].get_region_ID();
+
+    if (reg_i == INVALID_ID)
+      continue;
+
+    for (unsigned int j = 0; j < bondmap[i].size(); ++j)
+    {
+      ID reg_j = atoms[bondmap[i][j]].get_region_ID();
+
+      if ((reg_j == INVALID_ID) ||
+          (reg_i == reg_j))
+        continue;
+
+      const Material* mat1 = device.get_material(reg_i);
+      const Material* mat2 = device.get_material(reg_j);
+
+      // TODO
+      // we assume here that only couplings foreseen in the material can appear
+      if (mat1->get_name() == mat2->get_name())
+        continue;
+
+      Utils::Couple<ID> couple(reg_i, reg_j);
+      Utils::Couple<Specie> sp_couple(atoms[i].get_specie(),
+          atoms[bondmap[i][j]].get_specie());
+      if(processed.count(couple))
+      {
+        auto range = processed.equal_range(couple);
+        //auto it = find(range.first, range.second,
+        //    make_pair(couple, sp_couple));
+        bool found = false;
+        for (auto& it = range.first; it != range.second; ++it)
+        {
+          if (it->second == sp_couple)
+            found = true;
+        }
+
+        if (found)
+          continue;
+      }
+
+      processed.insert(make_pair(couple, sp_couple));
+
+
+      std::vector<std::string> str;
+      std::vector<double> frac;
+      str.reserve(8); frac.reserve(8);
+
+      as->interface_interactions(mat1, mat2, str, frac,
+          atoms[i], atoms[bondmap[i][j]]);
+
+
+      as->interface_interactions(mat2, mat1, str, frac,
+          atoms[bondmap[i][j]], atoms[i]);
+
+      for (unsigned int i = 0; i < str.size(); i++)
+      {
+        if (find(couplings[couple].first.begin(),
+                 couplings[couple].first.end(), str[i])
+            == couplings[couple].first.end())
+        {
+          couplings[couple].first.push_back(str[i]);
+          couplings[couple].second.push_back(frac[i]);
+        }
+      }
+
+    }
+  }
+
+
+  for (auto& a : couplings)
+  {
+    ID reg_i = a.first.first;
+    ID reg_j = a.first.second;
+    const Material* mat1 = device.get_material(reg_i);
+    const Material* mat2 = device.get_material(reg_j);
+
+    // Put interfaces in increasing order
+    if (material_map[mat1] > material_map[mat2])
+    {
+      swap(mat1, mat2);
+    }
+
+    file << std::setw(3) << material_map[mat1]<<"  "<< material_map[mat2]<<"  ";
+
+    if (mat1->is_alloy() || mat2->is_alloy())
+    {
+      if (as->is_random_alloy())
+        file <<  " RND";
+      else
+        file <<  " VCA";
+    }
+    else
+    {
+      file <<  " RND";
+    }
+
+    unsigned int size = a.second.first.size();
+    file << " " << size << " 0";
+
+    // we need to get the valence band reference energies
+    vector<double> ev = vector<double>(size, 0.0);
+
+    for (unsigned int i = 0; i < size; ++i)
+    {
+      file << "  " << a.second.first[i];
+
+      if (band_offsets)
+      {
+        Database db(a.second.first[i]);
+        db.set_section("valenceband");
+        ev[i] = db.get("E_v", 0.0);
+      }
+    }
+
+    for (unsigned int i = 0; i < size; ++i)
+      file << "  " << a.second.second[i];
+
+    for (unsigned int i = 0; i < size; ++i)
+      file << "  " << a.second.first[i] << ".etb";
+
+    for (unsigned int i = 0; i < size; ++i)
+      file << "  " << std::setprecision(5) << ev[i];
+
+    file << std::endl;
+  }
+
+  file.close();
+
+
+  Messages::debug("upg file printed");
+
 }

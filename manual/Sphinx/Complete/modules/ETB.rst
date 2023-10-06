@@ -244,6 +244,7 @@ A typical example of tight-bind calculations is the following  ::
     strain_simulation = strain
     potential_simulation =  driftdiffusion
 
+    dataset = Jancu
   
  
     plot = (tbstates)
@@ -316,8 +317,11 @@ The following options influence the behaviour of the **Module**  ``empirical_tb`
     if  **true** , scaling  of  ETB  parameters is  applied (usually in  presence  of  material  deformation which  causes atom  displacement  from  equilibrium  position).
     This  option is  by deafult  set to **true**   whenever  a  strain  simulation is  performed on  the  system, otherwise is  by  default  **false**.
 
+ ``database_path`` : string
+   the path(s) to llok for parameter files. It can be a colon-separated list of path, with absolute paths of relative to the directory of the input file.
 
-
+ ``dataset`` : string
+    a non-empty string will be interpreted as subdirectory where the parameter files are searched for. This allows to keep differetn parameter sets separated.
 
 
 

@@ -26,39 +26,36 @@ namespace libMesh
  *built, containing atom positions and other informations
  *needed by any atomistic physical model.
  */
-class AtomisticStructure: public AtomisticBasis
+class AtomisticStructure : public AtomisticBasis
 {
 public:
-
-
   //! Destructor for AtomisticStructure class object
   ~AtomisticStructure(void);
 
   //! Create an atomistic structure accoridng to given options
-  static AtomisticStructure* create(const std::string& name,
-      const Device* const device, const ModelOptions& options);
+  static AtomisticStructure *create(const std::string &name,
+                                    const Device *const device, const ModelOptions &options);
 
   //! Create a copy of an atomistic structure
-  static AtomisticStructure* create(const AtomisticStructure& as);
+  static AtomisticStructure *create(const AtomisticStructure &as);
 
   //! Get the structure options
-  ModelOptions& get_options(void);
+  ModelOptions &get_options(void);
 
   //! Get the structure options
-  const ModelOptions& get_options(void) const;
+  const ModelOptions &get_options(void) const;
 
   //! Get the structure name
-  const std::string& get_name(void) const;
-
+  const std::string &get_name(void) const;
 
   //! Get set of regions covered by atomistic structure (IDs)
-  const std::set<ID>& get_IDset(void) const;
+  const std::set<ID> &get_IDset(void) const;
 
-   //! Set the device we're working with
-  void set_device(const Device* const device);
+  //! Set the device we're working with
+  void set_device(const Device *const device);
 
   //! Get Device reference
-  const Device*  get_device(void) const;
+  const Device *get_device(void) const;
 
   //! Create a grid aligned on the atoms
   /*!
@@ -68,27 +65,18 @@ public:
    * \param labels the atoms inside the basis to include in the mesh
    * \param keep_node_order if true, the nodes will be ordered in the same way as the atoms
    */
-  void create_conformal_grid(libMesh::UnstructuredMesh& mesh,
-      std::set<ID> labels = std::set<ID>(),
-      bool keep_node_order = false) const;
-
+  void create_conformal_grid(libMesh::UnstructuredMesh &mesh,
+                             std::set<ID> labels = std::set<ID>(),
+                             bool keep_node_order = false) const;
 
   //! Get scale factor (from mesh_units to amstrong mesh_units/1e-10)
-  const double& get_scale(void) const;
-
-
+  const double &get_scale(void) const;
 
   //! Print structure to file (format depends on extension used)
-  void print_structure(const std::string& path);
+  void print_structure(const std::string &path);
 
   //! A tool for printing atomic charges on output
-  void print_structure(const std::string& path, double const* const charges);
-
-
-
-  //! Print upg file (etb_dataset may be changed into type options)
-  void print_upg(const std::string& path, const std::string& etb_dataset,
-                                          bool band_offsets = false);
+  void print_structure(const std::string &path, double const *const charges);
 
   //! extract alloy distribution statistics
   /*!
@@ -99,10 +87,10 @@ public:
    * \param z together with y defines the control cube
    * \param atomlist (optional) will be filled with all atoms in the control volume
    */
-  void extract_statistics(std::map<Specie, std::vector<unsigned int>>& stats,
-      const std::set<ID>& regions, double cutoff = 0.5,
-      double y = 0, double z = 0,
-      const ModelOptions& opt = ModelOptions()) const;
+  void extract_statistics(std::map<Specie, std::vector<unsigned int>> &stats,
+                          const std::set<ID> &regions, double cutoff = 0.5,
+                          double y = 0, double z = 0,
+                          const ModelOptions &opt = ModelOptions()) const;
 
   //! Extract statistics in volume around a single atom
   /*!
@@ -111,9 +99,8 @@ public:
    * \param regions the regions to be used
    * \param cutoff the cutoff radius in nm (default 0.5 nm)
    */
-  void extract_statistics(unsigned int atom, std::map<Specie, unsigned int>& counts,
-      const std::set<ID>& regions, double cutoff) const;
-
+  void extract_statistics(unsigned int atom, std::map<Specie, unsigned int> &counts,
+                          const std::set<ID> &regions, double cutoff) const;
 
   //! Get number of non hydrogen atoms
   unsigned int get_N_without_H(void) const;
@@ -125,16 +112,16 @@ public:
   /*!
    * Will return -1 if no atom can be found up to a distance of \c cutoff nm
    */
-  int find_nearest_atom(const Elem* elem, const Point& point, double cutoff);
+  int find_nearest_atom(const Elem *elem, const Point &point, double cutoff);
 
   //! Set the model options
-  void set_options(const ModelOptions& options);
+  void set_options(const ModelOptions &options);
 
   //! Get specie of atom i
-  const Specie& get_specie(unsigned int i) const;
+  const Specie &get_specie(unsigned int i) const;
 
   //! Get atom Material
-  const Material* get_material(const Atom& atom, bool parent = false) const;
+  const Material *get_material(const Atom &atom, bool parent = false) const;
 
   //! Get bond Material
   /*
@@ -144,66 +131,64 @@ public:
    * and Arsenides). With additional information in Material class, this can be made
    * more generic.
    */
-  const Material* get_material(const Atom& atom1, const Atom& atom2,
-      bool parent = false) const;
+  const Material *get_material(const Atom &atom1, const Atom &atom2,
+                               bool parent = false) const;
 
   //! Tells if random alloy approximation is used
   bool is_random_alloy(void);
 
   // ! Get the reference material
-  //const Material* get_reference_material(void) const;
+  // const Material* get_reference_material(void) const;
 
   //! Apply reordering to atoms
-  void reorder(const std::vector<unsigned int>& P);
+  void reorder(const std::vector<unsigned int> &P);
 
   //! Restrict the atomistic structure to given sub-regions
-  void dorestrict(const std::set<ID>& rgn_ids);
+  void dorestrict(const std::set<ID> &rgn_ids);
 
-   //! Get the atoms in a given mesh element
-  const std::vector<unsigned int>& get_atoms_in_elem(const Elem* element) const;
+  //! Get the atoms in a given mesh element
+  const std::vector<unsigned int> &get_atoms_in_elem(const Elem *element) const;
 
-  
-  //! Used to set the virtual types. 
-  void set_virtual_types(const std::set<std::string>& types);
+  //! Used to set the virtual types.
+  void set_virtual_types(const std::set<std::string> &types);
 
   //! clear the atom_type set
-  void clear_virtual_types(){_virtual_atom_types.clear();};
+  void clear_virtual_types() { _virtual_atom_types.clear(); };
 
   //! Get atom type index (types are stored in _virtual_atom_types)
-  unsigned int get_virtual_type_index(const std::string &  type) const;
-  
+  unsigned int get_virtual_type_index(const std::string &type) const;
+
   //! used by print upg (temporarily here)
   void assign_virtual_species(void);
+
+  //! Get the vector with virtual types
+  const std::vector<std::string>& get_virtual_species(void) const;
 
   //! Register a callback to be executed after structure creation
   /*!
    * This is used to synchronize random alloy distributions between
    * atomistic and continuous representation
    */
-  static void register_callback(std::string& name,
-      boost::function<void(void)> callback);
+  static void register_callback(std::string &name,
+                                boost::function<void(void)> callback);
 
-
-  void interface_interactions(const Material* mat1, 
-                              const Material* mat2, 
-                              std::vector<std::string>& str,
-                              std::vector<double>& frac,
-                              const Atom& at1,
-                              const Atom& at2);
+  void interface_interactions(const Material *mat1,
+                              const Material *mat2,
+                              std::vector<std::string> &str,
+                              std::vector<double> &frac,
+                              const Atom &at1,
+                              const Atom &at2);
 
   //! extract alloy statistics
-  void extract_alloy_statistics(const ModelOptions& opt);
+  void extract_alloy_statistics(const ModelOptions &opt);
 
   //! plot alloy composition on a vtk file
-  void plot_alloy_composition(const ModelOptions& opt);
+  void plot_alloy_composition(const ModelOptions &opt);
 
   //! compute radial distribution
   void radial_distribution(std::string suffix = "");
 
-
-
 private:
-
   //! Constructor for AtomisticStructure class object
   /*!
    * A name to keep reference of structure must
@@ -212,60 +197,59 @@ private:
    */
   AtomisticStructure();
 
-  AtomisticStructure(const std::string& name);
-  
+  AtomisticStructure(const std::string &name);
+
   //! copy constructor
-  AtomisticStructure(const AtomisticStructure& other);
+  AtomisticStructure(const AtomisticStructure &other);
 
   //! Initialize a structure (to be read from input file)
-  void init(const std::string& name, const Device* const device,
-      const ModelOptions& options);
-  
+  void init(const std::string &name, const Device *const device,
+            const ModelOptions &options);
+
   //! Calculate the number of atoms excluding hydrogens, usefule for passivated structures
   void compute_N_without_H(void);
-  
-  //!Override lattice vectors from structure generation
-  void parse_lattice_vectors(void); 
-  
+
+  //! Override lattice vectors from structure generation
+  void parse_lattice_vectors(void);
+
   //! Initialize the structure using mesh infos
   void init_periodicity(void);
-  
+
   //! Initialize the structure using mesh infos
   void init_mesh_structure(void);
-  
-  //!Build mesh regions infos
+
+  //! Build mesh regions infos
   void parse_regions(void);
 
   //! Combine structures
-  void combine_structures(const std::string& name, const ModelOptions& options);
+  void combine_structures(const std::string &name, const ModelOptions &options);
 
   //! Remove close atoms
   void remove_bad_atoms(void);
 
-  //!Build element to atoms association map
+  //! Build element to atoms association map
   void build_elem_to_atoms(void);
 
   //! Print structure in internal tgn format (contains bondmap and element map)
-  void print_tgn(const std::string& path) const;
-
+  void print_tgn(const std::string &path) const;
 
   //! Associate at any alement atoms contained
-  std::map<const libMesh::Elem*, std::vector<unsigned int> > _elem_to_atoms;
+  std::map<const libMesh::Elem *, std::vector<unsigned int>> _elem_to_atoms;
 
-  //!Associate elements: any atom keep tracks of the elements he belongs to
+  //! Associate elements: any atom keep tracks of the elements he belongs to
   void associate_elements();
 
   //! Read structure from file
-  void read_structure(const std::string& path);
+  void read_structure(const std::string &path);
 
   //! Read tgn structure
-  void read_xyz(const std::string& path, const Tensor1& transl);
-  
+  void read_xyz(const std::string &path, const Tensor1 &transl);
+
   //! Read xyz structure
-  void read_gen(const std::string& path, const Tensor1& transl);
+  void read_gen(const std::string &path, const Tensor1 &transl);
 
   //! Read gen structure
-  void read_tgn(const std::string& path, const Tensor1& transl);
+  void read_tgn(const std::string &path, const Tensor1 &transl);
 
   //! set the labels (used e.g. when reading xyz)
   void set_labels(void);
@@ -280,7 +264,7 @@ private:
   double _scale;
 
   //! Set of mesh regions covered by atomistic structure (numbers: mesh regions)
-  std::set <ID> _IDset;
+  std::set<ID> _IDset;
 
   //! Tell if the object has been already initialized
   bool _is_initialized;
@@ -293,126 +277,100 @@ private:
   bool _random_alloy;
 
   //! Contains reference to device we're working with
-  const Device* _device;
+  const Device *_device;
 
-  //!Number of atoms excluding hydrogens
+  //! Number of atoms excluding hydrogens
   unsigned int _N_without_H;
 
   //! The map with callbacks
   static std::map<std::string,
-    std::list<boost::function<void(void)>>> _callback_functions;
-
+                  std::list<boost::function<void(void)>>>
+      _callback_functions;
 
   //! Manage structure printing
   void print_driver(void);
 
-  //! Set virtual atom types in structure as for VCA InGaAs (InGa), As 
+  //! Set virtual atom types in structure as for VCA InGaAs (InGa), As
   std::vector<std::string> _virtual_atom_types;
 
   std::map<std::string, unsigned int> _virtual_type_idx;
 
   // calculate radial distribution function for a given specie
-  void compute_g(const Specie&, double Rc, double dr, std::vector<std::map<Specie,unsigned int>>& g);
-
+  void compute_g(const Specie &, double Rc, double dr, std::vector<std::map<Specie, unsigned int>> &g);
 };
 
 //----------------------------------------------------
 // Inline member functions
 //----------------------------------------------------
 
-
-inline
-ModelOptions& AtomisticStructure::get_options(void)
+inline ModelOptions &AtomisticStructure::get_options(void)
 {
-    assert( !(_options.is_empty()) );
+  assert(!(_options.is_empty()));
 
-    return _options;
+  return _options;
 }
 
-
-inline
-const ModelOptions& AtomisticStructure::get_options(void) const
+inline const ModelOptions &AtomisticStructure::get_options(void) const
 {
-    return _options;
+  return _options;
 }
 
-inline
-bool AtomisticStructure::is_random_alloy(void)
+inline bool AtomisticStructure::is_random_alloy(void)
 {
   return _random_alloy;
 }
 
-
-inline
-void AtomisticStructure::set_options(const ModelOptions& options)
+inline void AtomisticStructure::set_options(const ModelOptions &options)
 {
   _options = options;
 }
 
-
-inline
-const std::string& AtomisticStructure::get_name(void) const
+inline const std::string &AtomisticStructure::get_name(void) const
 {
   return _name;
 }
 
-
-inline
-const double& AtomisticStructure::get_scale(void) const
+inline const double &AtomisticStructure::get_scale(void) const
 {
   return _scale;
 }
 
-
-
-
-
-
-inline
-const Device* AtomisticStructure::get_device(void) const
+inline const Device *AtomisticStructure::get_device(void) const
 {
 
-  assert ( (_device != NULL) );
+  assert((_device != NULL));
 
   return _device;
-
 }
 
-inline
-void AtomisticStructure::set_device(const Device* const device)
+inline void AtomisticStructure::set_device(const Device *const device)
 {
- _device = device;
+  _device = device;
 }
 
-
-inline
-const std::set<ID>&
+inline const std::set<ID> &
 AtomisticStructure::get_IDset(void) const
 {
   return _IDset;
 }
 
-
-inline
-const Specie&
+inline const Specie &
 AtomisticStructure::get_specie(unsigned int i) const
 {
   return _atoms[i].get_specie();
 }
 
-inline
-unsigned int
+inline unsigned int
 AtomisticStructure::get_N_without_H(void) const
 {
   return _N_without_H;
 }
 
-
-//inline 
-//const Material* 
-//AtomisticStructure::get_reference_material(void) const
+// inline
+// const Material*
+// AtomisticStructure::get_reference_material(void) const
 //{
-//  return _reference_material;
-//}
+//   return _reference_material;
+// }
 
 #endif // _ATOMISTICSTRUCTURE_H_
