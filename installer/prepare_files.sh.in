@@ -32,7 +32,7 @@ make_windows_package () {
   fi
   cp -r ${topdir}/Tutorials/[^.]* ${files}/examples
   # for now:
-  rm -rf ${topdir}/${ARCH}/modules/dd_generic
+  #rm -rf ${topdir}/${ARCH}/modules/dd_generic
   rm -rf ${topdir}/${ARCH}/modules/excitons
   rm -rf ${files}/examples/Modules
   #rm -rf ${files}/examples/Example_1[7-9]
