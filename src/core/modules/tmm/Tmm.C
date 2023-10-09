@@ -1488,27 +1488,79 @@ Tmm::do_solve(void)
 
                   }
 				  
-                //*****************************Assigning Output Power of two ends of the device ******************************
 
-                _Poynting_back [cnt] += abs(poynting[0]                ) * coefficient ;
-                _Poynting_front[cnt] +=  abs(poynting[n_real.size()-1] ) * coefficient ;
+                
 
                 //*************a loop to take integral of the absorption and Poynting vector over wavelengths, polarization and orientation******
 
                 for (double nm = 0; nm < poynting.size(); ++nm)
                 {
-				  _Internal_Poynting   [nm] += poynting[nm] * coefficient;
-                  _Energy_loss_internal[nm] += energy_loss[nm];
-                }		
+				           _Internal_Poynting   [nm] += poynting[nm] * coefficient;
+                   _Energy_loss_internal[nm] += energy_loss[nm];
+                }	
+
+                  //*****************a loop to calculate Power by taking integral over kr ******************************
+
+                complex<double> Ns ( n_real[dipole_loc] , n_imag[dipole_loc] );
+                complex<double> ki ((2*M_PI*n_real[dipole_loc])/lambda , (2*M_PI*n_imag[dipole_loc])/lambda);
+                complex<double> kzs;
+                vector<double> internal_power(n_real.size());
+                kzs  = ki * cmlx_sqrt(complex<double> (1.0 - (pow(kr,2)/pow(ki,2))));
+                double dkr = ks*_ratio[0]/_steps;
+                for (double nm = 0; nm < n_real.size(); ++nm)
+                {
+                  
+                  internal_power[nm] = real( (2*M_PI) * (poynting[nm]* coefficient) * kr * dkr / Ns / pow(kzs,2) );
+                  _Internal_Power[nm] += internal_power[nm];
+                }
+
+               //*****************************Assigning Output Power of two ends of the device ******************************
+         //_Poynting_back [cnt] +=  poynting[0] * coefficient;
+         //_Poynting_front[cnt] +=  poynting[n_real.size()] * coefficient;
+
+
+       // std::cout<<"///////////////////////////////////////////////////////////////////////"<<std::endl;
 				vector<double> Abs(n_real.size());
-				
-				double I0,Iend,Idip, extraction, absorb;
-				I0 = n_real[0] * pow(abs(E_int[0]), 2) ;
-				Iend = n_real[n_real.size()-1] * pow(abs(E_int[n_real.size()-1]), 2) ;
-				Idip = n_real[dipole_loc] * pow(abs(E_int[dipole_loc]), 2) ;
-				extraction = (I0 + Iend) / Idip / 2 ;
-				absorb = 1 - extraction;
-				// std::cout<<"extraction: "<<extraction<< " absorb : " << absorb<<std::endl;
+        double P0,Pend,Pdip, extraction, absorb;
+        P0 = abs(internal_power[0]);
+        Pend = abs(internal_power[n_real.size()]);
+
+        Pdip = abs(internal_power[dipole_loc]) + abs(internal_power[dipole_loc-2]);
+
+        if (Pdip != 0)
+        {
+          extraction = (P0+Pend) / Pdip;
+         _Poynting_back [cnt] +=  P0 / Pdip;
+         _Poynting_front[cnt] +=  Pend / Pdip;
+        }
+        else
+        {
+          extraction = 0;
+        }
+        absorb = 1 - extraction ;
+
+				//
+        //std::cout<<"kr is :"<<kr<<std::endl;
+				//double I0,Iend,Idip, extraction, absorb;
+				//I0 = n_real[0] * pow(abs(E_int[0]), 2) ;
+				//Iend = n_real[n_real.size()-1] * pow(abs(E_int[n_real.size()-1]), 2) ;
+        //std::cout<<"I0: "<<I0<< " Iend : " << Iend<<std::endl;
+//
+//				//Idip = n_real[dipole_loc] * pow(abs(E_int[dipole_loc]), 2) ;
+//
+//        //std::cout<<"Idip is : "<<Idip<<std::endl;
+//        //std::cout<<"Idip[-1] is : "<<n_real[dipole_loc-1] * pow(abs(E_int[dipole_loc-1]), 2)<<std::endl;
+//        //std::cout<<"Idip[+1] is : "<<n_real[dipole_loc+1] * pow(abs(E_int[dipole_loc+1]), 2)<<std::endl;
+//
+//				//extraction = (I0 + Iend) / Idip / 2 ;
+//				//absorb = 1 - extraction;
+				//std::cout<<"extraction: "<<extraction<< " absorb : " << absorb<<std::endl;
+
+
+        //if (absorb < -10 || kr == 0)
+        //  for (int nmj=0; nmj<n_real.size();nmj++)
+        //    std::cout<<nmj<<":   "<<n_real[nmj] * pow(abs(E_int[nmj]), 2)<<std::endl;
+
 				
 				// for (double nm = 0; nm < poynting.size()-1; ++nm)
 					// std::cout<<nm<<"  : "<< poynting[nm]<< "   &  "<< _Internal_Intensity[nm]<< std::endl;
@@ -1550,14 +1602,8 @@ Tmm::do_solve(void)
 			
                 
 
-                //*****************a loop to calculate Power by taking integral over kr ******************************
-                complex<double> Ns ( n_real[dipole_loc] , n_imag[dipole_loc] );
-                complex<double> ki ((2*M_PI*n_real[dipole_loc])/lambda , (2*M_PI*n_imag[dipole_loc])/lambda);
-                complex<double> kzs;
-                kzs  = ki * cmlx_sqrt(complex<double> (1.0 - (pow(kr,2)/pow(ki,2))));
-                double dkr = ks*_ratio[0]/_steps;
-                for (double nm = 0; nm < n_real.size(); ++nm)
-                  _Internal_Power[nm] += real( (2*M_PI) * (poynting[nm]* coefficient) * kr * dkr / Ns / pow(kzs,2) ) ;
+                
+
                 ++cnt;
                // std::cout<<n_real.size()<<std::endl;
 
@@ -1638,7 +1684,6 @@ Tmm::plot_globaldata(void)
     file.close();
 
   }
-
 
   if (_solutions.count(Generation_regions))
   if (!_Generation_regions.empty())
@@ -1811,7 +1856,7 @@ Tmm::plot_globaldata(void)
     file.close();
   }
 
-  if (_solutions.count(Polar))
+  //if (_solutions.count(Polar))
   if (!_Fraction_ratio.empty())
   {
     string polar_file(outdir + "/" + get_output_filename() + "_polar.dat");
