@@ -1,0 +1,143 @@
+# Tight binding parameters (c) Tan2016PRB
+scheme = 'tan'
+
+# material type : 'simple' / 'binary' / 'ternary' / 'quaternary'
+material type = 'binary'
+
+# lattice type : 'face centered cubic' / 'hexagonal'
+lattice type = 'face centered cubic'
+
+# lattice parameters ( in Angtroms )
+lattice parameters =   5.6532D0   5.6532D0   5.6532D0
+
+# 0 = no internal strain / 1 = maximal internal strain
+#internal strain parameter = 0.60D0
+internal strain parameter = 0.00D0
+
+
+# basis type : 'zinc-blende' / 'wurtzite'
+basis type = 'zinc-blende'
+
+number of ions = 2
+ions = 'Ga' 'As'
+
+Ga valence = 4 
+As valence = 4
+
+# spin orbit
+
+number of spin-orbit parameters per ion = 2 2
+
+Ga spin orbit
+'p'  0.024372329325D0
+'d'  0.000000000000D0
+
+As spin orbit
+'p'  0.129260966820D0
+'d'  0.000000000000D0
+
+# onsite ETB
+
+number of orbitals per ion = 4 4 
+	
+Ga onsite
+'s'    1.4880595906D0    1
+'p'    8.6528182658D0    3
+'s*'   12.7318779333D0   1
+'d'    13.5576147109D0   5
+
+As onsite
+'s'    -3.5205817484D0   1
+'p'     7.6037295002D0   3
+'s*'   12.5733198048D0   1
+'d'    13.1056287540D0   5
+
+Ga offset = -5.50208D0
+As offset = -5.50208D0
+
+
+# strain coefficient for the d orbitals
+Ga b_d parameter = 0.655D0
+As b_d parameter = 0.655D0
+
+# ETB couplings
+
+number of pairs = 1
+
+pair 1 = 'As' 'Ga' 21 1
+
+# V0, eta, P, S, Q
+As Ga coupling 1
+'sss'     -1.7842520268D0    1.5565716503D0     0.0000D0     0.0000D0     0.0000D0
+'sps'      2.7008066219D0    1.1126377886D0    -1.3555D0     1.4927D0     5.2229D0
+'ss*s'    -1.1588368639D0    0.9898577089D0     0.0000D0     0.0000D0     0.0000D0
+'sds'     -1.9422624594D0    1.0945865049D0     0.5127D0     1.8221D0    -1.5659D0
+'pss'      2.9935023998D0    1.1004164191D0    -2.2816D0     0.5577D0     6.1072D0
+'pps'      3.7312672710D0    0.9645981919D0    -0.4684D0     1.8866D0    -1.2315D0
+'ps*s'     2.1256288085D0    0.7835965920D0     0.0000D0     0.0000D0     0.0000D0
+'pds'     -0.6656760284D0    0.6976315625D0     0.0000D0     0.0000D0     0.0000D0
+'s*ss'    -1.8820675602D0    0.9515639909D0     0.0000D0     0.0000D0     0.0000D0
+'s*ps'     2.5673965277D0    0.8269077477D0     0.0000D0     0.0000D0     0.0000D0
+'s*s*s'   -4.3164014939D0    0.7447413195D0     0.0000D0     0.0000D0     0.0000D0
+'s*ds'    -0.3828639781D0    0.6838896571D0     0.0000D0     0.0000D0     0.0000D0
+'dss'     -2.1455733474D0    1.1300579674D0     0.5314D0     2.2435D0    -1.0584D0
+'dps'     -0.7416503879D0    0.6976763147D0     0.0000D0     0.0000D0     0.0000D0
+'ds*s'    -0.2812257387D0    0.6818290053D0     0.0000D0     0.0000D0     0.0000D0
+'dds'     -0.4906042206D0    0.6990114072D0     0.0000D0     0.7340D0     2.4369D0
+'ppp'     -1.2992822872D0    1.3845961802D0     1.0823D0    -4.2555D0    -1.1158D0
+'pdp'      2.0486635004D0    0.8941564865D0     0.0000D0     0.0000D0     0.0000D0
+'dpp'      2.2874731814D0    0.8730079588D0     0.0000D0     0.0000D0     0.0000D0
+'ddp'      1.4887909174D0    1.2959127105D0     0.0000D0     3.1996D0     7.0035D0
+'ddd'     -1.6106990937D0    1.4491850834D0     0.0000D0     3.6569D0    -0.7043D0
+
+As Ga pair reference distance 1 = 2.447951D0
+
+
+# onsite corrections: I, lambda_I
+onsite correction 1 = 'As' 'Ga' 8 1
+
+As Ga onsite correction 1
+'sca'     2.4389236686D0   1.4410134021D0
+'pca'     2.3491424583D0   1.2382921981D0
+'s*ca'    5.6115314577D0   0.9152658400D0
+'dca'     2.8751320020D0   1.2364769446D0
+'sac'     1.8771676747D0   1.5504455500D0
+'pac'     1.5866845279D0   1.6837509060D0
+'s*ac'    5.5735053314D0   1.0037423937D0
+'dac'     2.8658330570D0   1.0992980972D0
+
+
+# SO correction
+SO correction 1 = 'As' 'Ga' 4 1
+
+As Ga SO correction 1
+'pca'   0.009695827743750D0
+'dca'   0.0000D0
+'pac'   0.00533028847D0
+'dac'   0.0000D0
+
+
+# Offset correction: O, lambda_O, delta_d
+offset correction 1 = 'As' 'Ga' 1 1
+
+As Ga offset correction 1
+-1.6467251843D0   1.2697D0   -0.0098D0
+
+# intra-atomic couplings
+
+intra 1 = 'As' 'Ga' 14 1
+As Ga intra 1
+'spca'     1.2601D0
+'sdca'     0.0000D0
+'ppca'     0.0000D0
+'ps*ca'    0.0000D0
+'pdca'     3.4064D0
+'s*dca'    0.0000D0
+'ddca'     9.2562D0
+'spac'     1.2327D0
+'sdac'     0.0000D0
+'ppac'     0.0000D0
+'ps*ac'    0.0000D0
+'pdac'     3.5647D0
+'s*dac'    0.0000D0
+'ddac'     9.9997D0

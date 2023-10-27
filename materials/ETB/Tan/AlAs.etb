@@ -1,0 +1,145 @@
+# Tight binding parameters (c) Tan2016PRB
+scheme = 'tan'
+
+material type = 'binary'
+
+# lattice
+lattice type = 'face centered cubic'
+
+lattice parameters =   5.660D0   5.660D0   5.660D0
+
+#internal strain parameter = 1.00D0
+internal strain parameter = 0.60D0
+
+# basis
+basis type = 'zinc-blende'
+
+number of ions = 2
+ions = 'Al' 'As'
+
+Al valence = 4
+As valence = 4
+
+# states
+
+number of spin-orbit parameters per ion = 2 2
+
+Al spin orbit
+'p'  0.00157087079D0
+'d'  0.0000D0
+
+As spin orbit
+'p'  0.12926096682D0
+'d'  0.0000D0
+
+number of orbitals per ion = 4 4 
+	
+Al onsite
+'s'     2.5246267309D0   1
+'p'     8.8642413856D0   3
+'s*'   12.7009970929D0   1
+'d'    13.5409883108D0   5
+
+As onsite
+'s'    -3.5205817484D0   1
+'p'     7.6037295002D0   3
+'s*'   12.5733198048D0   1
+'d'    13.1056287540D0   5
+
+Al offset = -4.99431D0
+As offset = -4.99431D0
+
+
+# strain coefficient for the d orbitals
+Al b_d parameter = 0.536D0
+As b_d parameter = 0.536D0
+
+# TB couplings
+
+number of pairs = 1
+
+pair 1 = 'As' 'Al' 21 1
+
+As Al coupling 1
+'sss'     -1.8219D0    1.5402D0     0.0000D0     0.0000D0     0.0000D0
+'sps'      2.5919D0    1.0266D0    -0.9448D0     1.8554D0     4.6049D0
+'ss*s'    -1.2520D0    1.0682D0     0.0000D0     0.0000D0     0.0000D0
+'sds'     -2.1862D0    1.1880D0     1.0546D0     1.8819D0    -2.0707D0
+'pss'      3.1045D0    1.1291D0    -2.6736D0     0.4794D0     7.0724D0
+'pps'      3.7366D0    0.9481D0    -1.5842D0     2.8324D0    -2.6020D0
+'ps*s'     2.1783D0    0.9000D0     0.0000D0     0.0000D0     0.0000D0
+'pds'     -1.1628D0    0.7090D0     0.0000D0     0.0000D0     0.0000D0
+'s*ss'    -2.0242D0    0.9635D0     0.0000D0     0.0000D0     0.0000D0
+'s*ps'     2.6105D0    0.9233D0     0.0000D0     0.0000D0     0.0000D0
+'s*s*s'   -4.3097D0    0.7385D0     0.0000D0     0.0000D0     0.0000D0
+'s*ds'    -0.4197D0    0.6640D0     0.0000D0     0.0000D0     0.0000D0
+'dss'     -2.2634D0    0.9765D0     0.3458D0     2.3560D0    -0.8685D0
+'dps'     -0.6818D0    0.6716D0     0.0000D0     0.0000D0     0.0000D0
+'ds*s'    -0.3051D0    0.6901D0     0.0000D0     0.0000D0     0.0000D0
+'dds'     -0.7343D0    0.8016D0     0.0000D0     0.7210D0     2.4063D0
+'ppp'     -1.3318D0    1.4223D0     1.3440D0    -4.3925D0    -0.0880D0
+'pdp'      1.9673D0    0.8956D0     0.0000D0     0.0000D0     0.0000D0
+'dpp'      2.2795D0    0.9336D0     0.0000D0     0.0000D0     0.0000D0
+'ddp'      1.8295D0    1.2909D0     0.0000D0     4.2782D0     5.9092D0
+'ddd'     -1.6782D0    1.4205D0     0.0000D0     3.7232D0    -1.3089D0
+
+As Al pair reference distance 1 = 2.447951D0
+
+
+# dangling bonds saturation
+
+saturated bond length
+0.1D0
+
+onsite H energy
+-200.0D0
+
+
+# onsite corrections: I, lambda_I
+onsite correction 1 = 'As' 'Al' 8 1
+
+As Al onsite correction 1
+'sca'     3.3106D0   1.4021D0
+'pca'     2.7621D0   1.3069D0
+'s*ca'    5.8293D0   0.9414D0
+'dca'     3.0491D0   1.1437D0
+'sac'     2.2018D0   1.4805D0
+'pac'     1.8730D0   1.4592D0
+'s*ac'    5.7855D0   1.0470D0
+'dac'     3.0758D0   1.2393D0
+
+
+# SO correction
+SO correction 1 = 'As' 'Al' 4 1
+
+As Al SO correction 1
+'pca'   0.0000D0
+'dca'   0.0000D0
+'pac'   0.0017D0
+'dac'   0.0000D0
+
+
+# Offset correction: O, lambda_O, delta_d
+offset correction 1 = 'As' 'Al' 1 1
+
+As Al offset correction 1
+-1.9981D0   1.2167D0   0.0217D0
+
+# intra-atomic couplings
+
+intra 1 = 'As' 'Al' 14 1
+As Al intra 1
+'spca'     1.9559D0
+'sdca'     0.0000D0
+'ppca'     0.0000D0
+'ps*ca'    0.0000D0
+'pdca'     3.6671D0
+'s*dca'    0.0000D0
+'ddca'     6.9304D0
+'spac'     1.4219D0
+'sdac'     0.0000D0
+'ppac'     0.0000D0
+'ps*ac'    0.0000D0
+'pdac'     3.8677D0
+'s*dac'    0.0000D0
+'ddac'     9.0338D0

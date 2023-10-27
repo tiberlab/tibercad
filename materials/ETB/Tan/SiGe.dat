@@ -1,0 +1,143 @@
+# Tight binding parameters (c) Tan2016PRB
+scheme = 'tan'
+
+# material type : 'simple' / 'binary' / 'ternary' / 'quaternary'
+material type = 'binary'
+
+# lattice type : 'face centered cubic' / 'hexagonal'
+lattice type = 'face centered cubic'
+
+# lattice parameters ( in Angtroms ): choose averaged value of Si and Ge
+lattice parameters =   5.5440D0   5.5440D0   5.5440D0
+
+# 0 = no internal strain / 1 = maximal internal strain
+#internal strain parameter = 0.60D0
+internal strain parameter = 0.00D0
+
+
+# basis type : 'zinc-blende' / 'wurtzite'
+basis type = 'zinc-blende'
+
+number of ions = 2
+ions = 'Si' 'Ge'
+
+Si valence = 4
+Ge valence = 4
+
+# spin orbit
+
+number of spin-orbit parameters per ion = 2 2
+
+Si spin orbit
+'p'  0.02147D0
+'d'  0.00000D0
+
+Ge spin orbit
+'p'  0.12340D0
+'d'  0.00000D0
+
+# onsite ETB
+
+number of orbitals per ion = 4 4
+
+Si onsite
+'s'    1.17277601290D0    1
+'p'    10.1115116809D0    3
+'s*'   12.4094043708D0    1
+'d'    13.8987084174D0    5
+
+Ge onsite
+'s'    −0.1105D0    1
+'p'     9.8495D0    3
+'s*'   12.9983D0    1
+'d'    13.3211D0    5
+
+Si offset = 0.0D0
+Ge offset = 0.0D0
+
+
+# strain coefficient for the d orbitals
+Si b_d parameter = 0.443D0
+Ge b_d parameter = 0.243D0
+
+# ETB couplings
+
+number of pairs = 1
+
+pair 1 = 'Si' 'Ge' 21 1
+
+# V0, eta, P, S, Q
+Si Ge coupling 1
+'sss'     −1.7411D0    1.5187D0    0.0000D0     0.0000D0     0.0000D0
+'sps'      2.8553D0    1.1317D0   −1.5006D0     0.8200D0     6.2119D0
+'ss*s'    −1.5824D0    0.8371D0    0.0000D0     0.0000D0     0.0000D0
+'sds'     −2.2859D0    0.9601D0    0.8145D0     1.4848D0    −1.3773D0
+'pss'      2.8349D0    1.0444D0   −1.5006D0     0.8200D0     6.2119D0
+'pps'      3.6856D0    0.9412D0   −0.7794D0     1.4812D0    −2.2944D0
+'ps*s'     2.5087D0    0.7828D0    0.0000D0     0.0000D0     0.0000D0
+'pds'     −0.9837D0    0.7872D0    0.0000D0     0.0000D0     0.0000D0
+'s*ss'    −1.6734D0    1.1773D0    0.0000D0     0.0000D0     0.0000D0
+'s*ps'     2.0593D0    0.9643D0    0.0000D0     0.0000D0     0.0000D0
+'s*s*s'   −4.6183D0    0.5629D0    0.0000D0     0.0000D0     0.0000D0
+'s*ds'    −0.3354D0    0.7171D0    0.0000D0     0.0000D0     0.0000D0
+'dss'     −2.2045D0    1.2553D0    0.8145D0     1.4848D0    −1.3773D0
+'dps'     −1.0464D0    0.7486D0    0.0000D0     0.0000D0     0.0000D0
+'ds*s'    −0.2007D0    0.7795D0    0.0000D0     0.0000D0     0.0000D0
+'dds'     −0.3279D0    0.6172D0    0.0000D0     0.7508D0     2.0051D0
+'ppp'     −1.2686D0    1.2571D0    1.5188D0    −3.4877D0    −0.9155D0
+'pdp'      2.0199D0    0.8921D0    0.0000D0     0.0000D0     0.0000D0
+'dpp'      1.9985D0    0.8194D0    0.0000D0     0.0000D0     0.0000D0
+'ddp'      1.6931D0    1.4207D0    0.0000D0     3.8909D0     6.9180D0
+'ddd'     −1.6394D0    1.5080D0    0.0000D0     3.7768D0    −0.2475D0
+
+Si Ge pair reference distance 1 = 2.447951D0
+
+
+# onsite corrections: I, lambda_I
+onsite correction 1 = 'Si' 'Ge' 8 1
+
+Si Ge onsite correction 1
+'sca'     2.8305D0   1.4230D0
+'pca'     2.3208D0   1.5026D0
+'s*ca'    6.5890D0   0.9195D0
+'dca'     3.6100D0   1.2181D0
+'sac'     2.6494D0   1.4527D0
+'pac'     2.2079D0   1.5253D0
+'s*ac'    6.8296D0   0.6896D0
+'dac'     3.2390D0   1.0880D0
+
+
+# SO correction
+SO correction 1 = 'Si' 'Ge' 4 1
+
+Si Ge SO correction 1
+'pca'   0.0000D0
+'dca'   0.0000D0
+'pac'   0.0000D0
+'dac'   0.0000D0
+
+
+# Offset correction: O, lambda_O, delta_d
+offset correction 1 = 'Si' 'Ge' 1 1
+
+Si Ge offset correction 1
+−1.5267D0   1.4566D0   −0.0800D0
+
+# intra-atomic couplings
+
+intra 1 = 'Si' 'Ge' 14 1
+Si Ge intra 1
+'spca'     1.2030D0
+'sdca'     0.0000D0
+'ppca'     0.0000D0
+'ps*ca'    0.0000D0
+'pdca'     3.3930D0
+'s*dca'    0.0000D0
+'ddca'     9.8856D0
+'spac'     1.2030D0
+'sdac'     0.0000D0
+'ppac'     0.0000D0
+'ps*ac'    0.0000D0
+'pdac'     3.3930D0
+'s*dac'    0.0000D0
+'ddac'     9.8856D0

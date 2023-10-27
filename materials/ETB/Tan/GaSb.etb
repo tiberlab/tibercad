@@ -1,0 +1,142 @@
+# Tight binding parameters (c) Tan2016PRB
+scheme = 'tan'
+
+# material type : 'simple' / 'binary' / 'ternary' / 'quaternary'
+material type = 'binary'
+
+# lattice type : 'face centered cubic' / 'hexagonal'
+lattice type = 'face centered cubic'
+
+# lattice parameters ( in Angtroms )
+lattice parameters =   6.0959D0   6.0959D0   6.0959D0
+
+# 0 = no internal strain / 1 = maximal internal strain
+
+#internal strain parameter = 0.60D0
+internal strain parameter = 0.00D0
+
+
+# basis type : 'zinc-blende' / 'wurtzite'
+basis type = 'zinc-blende'
+
+number of ions = 2
+ions = 'Ga' 'Sb'
+
+Ga valence = 4
+Sb valence = 4
+
+# spin orbit
+number of spin-orbit parameters per ion = 2 2
+
+Ga spin orbit
+'p' 0.024372329325D0
+'d' 0.000000000000D0
+
+Sb spin orbit
+'p' 0.287119937635D0
+'d' 0.000000000000D0
+
+# bare onsite ETB
+number of orbitals per ion = 4 4
+
+Ga onsite
+'s'    1.4880595906D0    1
+'p'    8.6528182658D0    3
+'s*'   12.7318779333D0   1
+'d'    13.5576147109D0   5
+
+Sb onsite
+'s'    -2.3695080760D0   1
+'p'     6.8993676092D0   3
+'s*'   12.6420868695D0   1
+'d'    13.1316065371D0   5
+
+#Common offset
+Ga offset = -5.72484D0
+Sb offset = -5.72484D0
+
+# strain coefficient for the d orbitals
+Ga b_d parameter = 0.370D0
+Sb b_d parameter = 0.370D0
+
+# ETB couplings
+
+number of pairs = 1
+
+pair 1 = 'Sb' 'Ga' 21 1
+
+# V0, eta, P, S, Q
+Sb Ga coupling 1
+'sss'     -2.0232566906D0    1.5076409884D0    0.0000D0    0.0000D0    0.0000D0
+'sps'      3.0092058058D0    1.0806381720D0   -1.2324D0    1.1479D0    3.6729D0
+'ss*s'    -1.6281150993D0    0.9824749511D0    0.0000D0    0.0000D0    0.0000D0
+'sds'     -2.1686983563D0    0.9333388089D0    0.6116D0    1.8530D0   -2.0985D0
+'pss'      3.2439823000D0    1.0413577254D0   -2.6815D0    0.1379D0    6.9797D0
+'pps'      4.1685048365D0    1.0211598918D0   -0.9431D0    2.2525D0   -1.3465D0
+'ps*s'     2.4986269207D0    0.9136312461D0    0.0000D0    0.0000D0    0.0000D0
+'pds'     -0.3859844122D0    0.7726687977D0    0.0000D0    0.0000D0    0.0000D0
+'s*ss'    -1.7410906170D0    1.0117698449D0    0.0000D0    0.0000D0    0.0000D0
+'s*ps'     2.2691493190D0    0.8240034116D0    0.0000D0    0.0000D0    0.0000D0
+'s*s*s'   -4.2066612361D0    0.6439278073D0    0.0000D0    0.0000D0    0.0000D0
+'s*ds'    -0.3829360107D0    0.7762939139D0    0.0000D0    0.0000D0    0.0000D0
+'dss'     -2.2757821484D0    1.1453706659D0    0.4081D0    2.3834D0   -0.7086D0
+'dps'     -1.1356405899D0    0.5096291827D0    0.0000D0    0.0000D0    0.0000D0
+'ds*s'    -0.1848159517D0    0.6042566732D0    0.0000D0    0.0000D0    0.0000D0
+'dds'     -0.5153768510D0    0.6763097380D0    0.0000D0    0.1092D0    2.3476D0
+'ppp'     -1.5846806059D0    1.4392118499D0    0.4087D0   -3.4164D0   -0.6194D0
+'pdp'      2.1916981166D0    0.8046077794D0    0.0000D0    0.0000D0    0.0000D0
+'dpp'      2.3716148378D0    0.9348095770D0    0.0000D0    0.0000D0    0.0000D0
+'ddp'      1.6402781206D0    1.4977573914D0    0.0000D0    4.0625D0    5.9208D0
+'ddd'     -1.8241804317D0    1.4208344477D0    0.0000D0    2.6015D0   -1.1962D0
+
+Sb Ga pair reference distance 1 = 2.447951D0
+
+
+# onsite corrections: I, lambda_I
+onsite correction 1 = 'Sb' 'Ga' 8 1
+
+Sb Ga onsite correction 1
+'sca'     2.6906D0   1.5640D0
+'pca'     2.7446D0   1.5635D0
+'s*ca'    5.5030D0   1.0551D0
+'dca'     3.0666D0   1.4301D0
+'sac'     2.5078D0   1.6001D0
+'pac'     2.2820D0   1.6629D0
+'s*ac'    5.7372D0   0.8877D0
+'dac'     2.8997D0   1.3835D0
+
+
+# SO correction
+SO correction 1 = 'Sb' 'Ga' 4 1
+
+Sb Ga SO correction 1
+'pca'   0.0003D0
+'dca'   0.0000D0
+'pac'   0.0085D0
+'dac'   0.0000D0
+
+
+# Offset correction: O, lambda_O, delta_d
+offset correction 1 = 'Sb' 'Ga' 1 1
+
+Sb Ga offset correction 1
+-1.9763D0   1.2931D0   -0.0019D0
+
+# intra-atomic couplings
+
+intra 1 = 'Sb' 'Ga' 14 1
+Sb Ga intra 1
+'spca'     1.9561D0
+'sdca'     0.0000D0
+'ppca'     0.0000D0
+'ps*ca'    0.0000D0
+'pdca'     3.8564D0
+'s*dca'    0.0000D0
+'ddca'     6.9425D0
+'spac'     1.9606D0
+'sdac'     0.0000D0
+'ppac'     0.0000D0
+'ps*ac'    0.0000D0
+'pdac'     3.8573D0
+'s*dac'    0.0000D0
+'ddac'     6.7043D0

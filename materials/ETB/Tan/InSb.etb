@@ -1,0 +1,142 @@
+# Tight binding parameters (c) Tan2016PRB
+scheme = 'tan'
+
+# material type : 'simple' / 'binary' / 'ternary' / 'quaternary'
+material type = 'binary'
+
+# lattice type : 'face centered cubic' / 'hexagonal'
+lattice type = 'face centered cubic'
+
+# lattice parameters ( in Angtroms )
+lattice parameters =   6.4794D0   6.4794D0   6.4794D0
+
+# 0 = no internal strain / 1 = maximal internal strain
+
+#internal strain parameter = 0.60D0
+internal strain parameter = 0.17D0
+# follow Cousins1991
+
+# basis type : 'zinc-blende' / 'wurtzite'
+basis type = 'zinc-blende'
+
+number of ions = 2
+ions = 'In' 'Sb'
+
+In valence = 4
+Sb valence = 4
+
+# spin orbit
+number of spin-orbit parameters per ion = 2 2
+
+In spin orbit
+'p' 0.13006330281D0
+'d' 0.0000D0
+
+Sb spin orbit
+'p' 0.287119937635D0
+'d' 0.0000D0
+
+# bare onsite ETB
+number of orbitals per ion = 4 4
+	
+In onsite
+'s'     1.6787405569D0   1
+'p'     8.9987817826D0   3
+'s*'   12.7742036183D0   1
+'d'    13.5664716117D0   5
+
+Sb onsite
+'s'    -2.3695080760D0   1
+'p'     6.8993676092D0   3
+'s*'   12.6420868695D0   1
+'d'    13.1316065371D0   5
+
+In offset = -5.54573D0
+Sb offset = -5.54573D0
+
+
+# strain coefficient for the d orbitals
+In b_d parameter = 0.302D0
+Sb b_d parameter = 0.302D0
+
+# ETB couplings
+
+number of pairs = 1
+
+pair 1 = 'Sb' 'In' 21 1
+
+# V0, eta, P, S, Q
+Sb In coupling 1
+'sss'     -2.2797343396D0    1.5461189875D0     0.0000D0     0.0000D0     0.0000D0
+'sps'      3.0903445128D0    1.1634421589D0    -1.0398D0     1.9147D0     3.5491D0
+'ss*s'    -1.3963979167D0    0.9732777767D0     0.0000D0     0.0000D0     0.0000D0
+'sds'     -2.0149617987D0    0.9660221375D0     1.0719D0     0.7074D0    -1.4815D0
+'pss'      3.5395357418D0    1.0835204661D0    -1.8459D0    -0.1957D0     5.2978D0
+'pps'      4.2661324282D0    0.9518239563D0    -0.6557D0     2.7781D0    -1.8447D0
+'ps*s'     2.2701384331D0    0.9525547344D0     0.0000D0     0.0000D0     0.0000D0
+'pds'     -0.3351412825D0    0.7927466499D0     0.0000D0     0.0000D0     0.0000D0
+'s*ss'    -1.8748373774D0    0.9793582494D0     0.0000D0     0.0000D0     0.0000D0
+'s*ps'     2.3266510027D0    0.7068473343D0     0.0000D0     0.0000D0     0.0000D0
+'s*s*s'   -4.1696491080D0    0.6794183017D0     0.0000D0     0.0000D0     0.0000D0
+'s*ds'    -0.3658906202D0    0.7474756716D0     0.0000D0     0.0000D0     0.0000D0
+'dss'     -2.4392693130D0    0.9973571868D0     0.8668D0     2.0629D0    -1.1249D0
+'dps'     -0.9446410506D0    0.5439333886D0     0.0000D0     0.0000D0     0.0000D0
+'ds*s'    -0.1813765489D0    0.7439514373D0     0.0000D0     0.0000D0     0.0000D0
+'dds'     -0.6675519940D0    0.7115223664D0     0.0000D0     0.3453D0     2.2434D0
+'ppp'     -1.7708357427D0    1.4457833102D0     0.5719D0    -2.8257D0    -0.0713D0
+'pdp'      2.0716429942D0    0.8251623330D0     0.0000D0     0.0000D0     0.0000D0
+'dpp'      2.4045269256D0    0.8398856519D0     0.0000D0     0.0000D0     0.0000D0
+'ddp'      1.7524938577D0    1.3794576106D0     0.0000D0     3.3261D0     6.6177D0
+'ddd'     -2.0733846297D0    1.2748590233D0     0.0000D0     3.6276D0    -0.6252D0
+
+Sb In pair reference distance 1 = 2.447951D0
+
+
+# onsite corrections: I, lambda_I
+onsite correction 1 = 'Sb' 'In' 8 1
+
+Sb In onsite correction 1
+'sca'     4.1431747044D0   1.3823096576D0
+'pca'     3.7455136197D0   1.4495520326D0
+'s*ca'    6.1344500625D0   0.8716369193D0
+'dca'     4.0470130535D0   1.3863433055D0
+'sac'     3.3103828474D0   1.6355258926D0
+'pac'     3.1701578869D0   1.6167777486D0
+'s*ac'    6.2579290235D0   0.9284346645D0
+'dac'     3.8005253243D0   1.3715128004D0
+
+
+# SO correction
+SO correction 1 = 'Sb' 'In' 4 1
+
+Sb In SO correction 1
+'pca'   0.0017113592475D0
+'dca'   0.0000D0
+'pac'   0.00377789391625D0
+'dac'   0.0000D0
+
+
+# Offset correction: O, lambda_O, delta_d
+offset correction 1 = 'Sb' 'In' 1 1
+
+Sb In offset correction 1
+-2.9362796069D0   1.2860D0   0.0176D0
+
+# intra-atomic couplings
+
+intra 1 = 'Sb' 'In' 14 1
+Sb In intra 1
+'spca'     1.0291D0
+'sdca'     0.0000D0
+'ppca'     0.0000D0
+'ps*ca'    0.0000D0
+'pdca'     3.3380D0
+'s*dca'    0.0000D0
+'ddca'     8.7305D0
+'spac'     1.1456D0
+'sdac'     0.0000D0
+'ppac'     0.0000D0
+'ps*ac'    0.0000D0
+'pdac'     3.3593D0
+'s*dac'    0.0000D0
+'ddac'     8.6512D0
