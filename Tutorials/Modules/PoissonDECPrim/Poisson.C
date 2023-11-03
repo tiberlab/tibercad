@@ -95,6 +95,12 @@ Poisson::parse_options(void)
 
  myopts.integration_order = static_cast<libMeshEnums::Order>(intorder);
  
+ string dualconstr = "barycentric";
+ dualconstr = get_option("dual_construction", dualconstr);
+ if (dualconstr == "barycentric")
+   myopts.dual_constr = BARYCENTER;
+ else if (dualconstr == "voronoi")
+   myopts.dual_constr = VORONOI;
 }
 
 
@@ -321,7 +327,8 @@ Poisson::circumcenter(const libMesh::Elem* elem, int s)
 
     if (!elem->contains_point(x_i))
     {
-      x_i = elem->centroid();
+      cerr << "outside!\n"; 
+      //x_i = elem->centroid();
     }
     else
     {
@@ -364,247 +371,96 @@ Poisson::circumcenter(const libMesh::Elem* elem, int s)
 
 
 void
-Poisson::hodge_dp(const libMesh::Elem* elem,
-                  std::vector<libMesh::Point>& centers,
-                  std::vector<std::vector<double>>& hodge)
+Poisson::hodge_pd(const libMesh::Elem* elem,
+                  libMesh::Point& center,
+                  libMesh::DenseMatrix<double>& hodge,
+                  vector<pair<unsigned int, unsigned int>>& incidence,
+                  vector<double>& vol)
 {
   unsigned int dim = elem->dim();
-  unsigned int nn = elem->n_sides();
+  unsigned int ne = elem->n_edges();
+  unsigned int nn = elem->n_nodes();
 
-  centers.resize(nn + 1);
-  hodge.resize(nn, vector<double>(nn, 0.0));
+  hodge.resize(ne, ne);
+  incidence.resize(0);
+  incidence.reserve(ne);
 
-  // get the center of elem
-  //centers[0] = circumcenter(elem);
-  centers[0] = elem->centroid();
+  vol = vector<double>(nn, 0.0);
 
-  // get centers of neighbor elements or construct virtual point
+  // circumcenter and thus Voronoi-construction works only
+  // for triangles, otherwise we fall back to barycentric Hodge
+  if ((nn != 3) || (myopts.dual_constr == BARYCENTER))
+    center = elem->centroid();
+  else
+    center = circumcenter(elem);
+
+  vector<Point> prim(ne);
+
+  // get primal 1-chains
+  // Works ONLY for 1D and 2D
   for (unsigned int i = 0; i < nn; ++i)
   {
-    const Elem* neigh = elem->neighbor_ptr(i);
+    unsigned int j = (i + 1) % nn;
+    prim[i] = (elem->point(j) - elem->point(i));
 
-    if (neigh != nullptr)
-      //centers[i + 1] = circumcenter(neigh);
-      centers[i + 1] = neigh->centroid();
-    else
-    {
-      // we create it so the connection is orthogonal to the side
-      if (dim == 1)
-      {
-        double h = 0.5 * elem->volume();
-        if (i == 0) h = -h;
-        centers[i + 1] = centers[0] + h * Point(1, 0, 0);
-      }
-      else if (dim == 2)
-      {
-        auto side = elem->side_ptr(i);
-        Point x1(side->point(0));
-        Point x2(side->point(1));
+    incidence.push_back(make_pair(i, j));
 
-        Point d(x2 - x1);
-
-        Point n_ik(0);
-        n_ik(0) = d(1);
-        n_ik(1) = -d(0);
-        n_ik /= n_ik.norm();
-
-        Point y = x1 - centers[0];
-
-        //double det = (d(0) * n_ik(1) - d(1) * n_ik(0));
-        //double h_im = (d(0) * y(1) - d(1) * y(0)) / det;
-        double h_im = (y(0) * d(1) - y(1) * d(0)) / d.norm();
-
-        centers[i + 1] = centers[0] + 2 * h_im * n_ik;
-      }
-      else if (dim == 3)
-      {
-        // TODO
-      }
-    }
+    vol[0] = vol[1] = 0.5 * elem->volume();
   }
 
-  // construct primal and dual vectors, e and e*
-  // primal build a star e_i - e_0
-  vector<Point> prim(nn);
-  for (unsigned int i = 0; i < nn; ++i)
-    prim[i] = centers[i + 1] - centers[0];
-  
   if (dim == 1)
   {
     // in this case the Hodge is automatically diagonal
     // dual form has volume 1
-    hodge[0][0] = 1.0 / prim[0].norm();
-    hodge[1][1] = 1.0 / prim[1].norm();
+    hodge(0, 0) = 1.0 / prim[0].norm();
 
   }
   else if (dim == 2)
   {
-    vector<Point> dual(nn);
+    vector<Point> dual(ne);
     for (unsigned int i = 0; i < nn; ++i)
     {
-      auto side = elem->side_ptr(i);
-      Point x1(side->point(0));
-      Point x2(side->point(1));
+      unsigned int j = (i + 1) % nn;
+      Point x_m = 0.5 * (elem->point(j) + elem->point(i));
 
-      dual[i] = x2 - x1;
+      dual[i] = center - x_m;
     }
 
     auto cross2d = [] (Point& a, Point& b) { return (a(0)*b(1) - a(1)*b(0)); };
 
-    // case of triangle
-    if (nn = 3)
+    for (unsigned int i = 0; i < ne; ++i)
     {
-      for (unsigned int i = 0; i < 3; ++i)
+      double e_norm = prim[i].norm_sq();
+      double e_x_ed = cross2d(prim[i], dual[i]);
+      double e_dot_ed = prim[i] * dual[i];
+
+      // calculate the volume contribution associated to the node
+      unsigned int r = (i + 1) % nn;
+      vol[i] += 0.25 * e_x_ed;
+      vol[r] += 0.25 * e_x_ed;
+
+      hodge(i, i) = e_x_ed / e_norm;
+
+      // the following takes for side i the next two
+      // sides for expanding skew-transformed 1-chain:
+      // -J e_i = a_i^(i+1)*e_(i+1) + a_i^(i+2)*e_(i+2)
+      // It should work for all n-angles, unless two 
+      // subsequent sides are collinear
+      for (unsigned int j = 1; j < 3; ++j)
       {
-        double e_norm = prim[i].norm_sq();
-        double e_x_ed = cross2d(prim[i], dual[i]);
-        double e_dot_ed = prim[i] * dual[i];
+        unsigned int k = (i + j) % ne;
+        unsigned int l = (i + 3 - j) % ne;
 
-        hodge[i][i] = e_x_ed / e_norm;
+        double ei_dot_el = prim[i] * prim[l];
+        double ek_x_el = cross2d(prim[k], prim[l]);
 
-        for (unsigned int j = 1; j < 3; ++j)
-        {
-          unsigned int k = (i + j) % 3;
-          unsigned int l = (k + j) % 3;
-
-          double ei_dot_el = prim[i] * prim[l];
-          double ek_x_el = cross2d(prim[k], prim[l]);
-
-          hodge[i][k] = (e_dot_ed / e_norm) * (ei_dot_el / ek_x_el);
-        }
+        hodge(i, k) = (e_dot_ed / e_norm) * (ei_dot_el / ek_x_el);
       }
     }
   }
 }
 
-void
-Poisson::geometry_params(const libMesh::Elem* elem,
-                         unsigned int k,
-                         libMesh::Point& x_i,
-                         libMesh::Point& x_k,
-                         libMesh::Point& n_ik,
-                         libMesh::Point& x_m,
-                         double& h_im, double& h_mk,
-                         double& A_ik)
-{
 
-  unsigned int dim = elem->dim();
-  const Elem *neigh = elem->neighbor_ptr(k);
-
-  // for a quadrangle, recalculate x_i
-  // see note in circumcenter()
-  //if ((dim == 2) && (elem->n_nodes() == 4))
-  //{
-  //  x_i = circumcenter(elem, k);
-  //}
-
-  if (neigh != nullptr)
-  {
-  //  unsigned int n = 0;
-  //  for ( ; neigh->neighbor_ptr(n) != elem; ++n) {}
-  //
-  //  x_k = circumcenter(neigh, n);
-    x_k = neigh->centroid();
-  }
-
-  // 1D is simple 
-  if (dim == 1)
-  {
-    x_m = elem->point(k);
-    Point d(x_m);
-    d -= x_i;
-    h_im = d.norm();
-
-    n_ik = d / h_im;
-
-    if (neigh != nullptr)
-    {
-      Point d(x_k);
-      d -= x_m;
-      h_mk = d.norm();
-    }
-  }
-
-  if (dim == 2)
-  {
-    // we need the side
-    // NOTE: should be adapted for any orientation in 3D
-    auto side = elem->side_ptr(k);
-    Point x1(side->point(0));
-    Point x2(side->point(1));
-
-    x_m = 0.5*(x1 + x2);
-
-    A_ik = side->volume();
-
-    ///*
-    // get the projection of x_i onto side k
-    Point d(x2 - x1);
-
-    n_ik(0) = d(1);
-    n_ik(1) = -d(0);
-    n_ik /= n_ik.norm();
-
-    Point y = x1 - x_i;
-
-    double det = (d(0) * n_ik(1) - d(1) * n_ik(0));
-    h_im = (d(0) * y(1) - d(1) * y(0)) / det;
-    //*/
-
-    // the height over the relevant edge
-    //h_im = 2.0 / 3.0 * elem->volume() / A_ik;
-
-    if (neigh != nullptr)
-    {
-      y = x1 - x_k;
-
-      h_mk = -(d(0) * y(1) - d(1) * y(0)) / det;
-      //h_mk = 2.0 / 3.0 * neigh->volume() / A_ik;
-    }
-    
-
-  }
-
-  if (dim == 3)
-  {
-    // get the projection onto a side
-    // we need the side
-    auto side = elem->side_ptr(k);
-    Point x1(side->point(0));
-    Point x2(side->point(1));
-    Point x3(side->point(2));
-
-    // the outer normal
-    // NOTE: this assumes that the side elements
-    // are ordered specifically
-    n_ik = x2 - x1;
-    n_ik = n_ik.cross(x3 - x1);
-    n_ik /= n_ik.norm();
-
-    libMesh::Plane p(x1, x2, x3);
-    x_m = p.closest_point(x_i);
-
-    //Point c(x_m - elem->centroid());
-    //double s = n_ik * c;
-    //if (s <= 0)
-    //  cerr << "n is pointing inwards\n";
-
-    h_im = abs(n_ik * (x_m - x_i));
-
-    A_ik = side->volume();
-
-    if (neigh != nullptr)
-    {
-      Point pp = p.closest_point(x_k);
-
-      h_mk = abs(n_ik * (x_k - pp));
-    }
-  }
-
-  // = 0 is not admissible, as we will divide by h_im
-  if (abs(h_im) < 1e-9)
-    h_im = 1e-9;
-}
 
 void
 Poisson::assemble(void)
@@ -616,18 +472,21 @@ Poisson::assemble(void)
   
   get_scaling().set_length_scaling(get_mesh_units());
   double x0 = get_mesh_units(); 
-  double Lambda = Constants::e * 1e6 * x0*x0;
+  double Lambda = Constants::e * 1e6 * x0*x0 / Constants::e0;
   
   DofMap& dof_map =  system.get_dof_map();
 
   DenseMatrix<Number> Ke;
   DenseVector<Number> Fe;
+  
+  // The Hodge dual
+  DenseMatrix<Number> H;
 
 
   MeshBase::const_element_iterator       el     = this->active_local_elements_begin();
   const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
 
-  for ( ; el != end_el ; ++el)
+  for ( ; el != end_el; ++el)
   {
     const Elem* elem = *el;
 
@@ -635,195 +494,127 @@ Poisson::assemble(void)
     unsigned int n_neigh = elem->n_neighbors();
 
     // all DoF indices in the current block
+    // in this case DoFs on all nodes
     vector<unsigned int> dof_indices;
 
-    // only DoFs of the current element
-    vector<unsigned int> rows;
-
-    dof_map.dof_indices(elem, rows);
-    // NOTE: as we hardcoded 0th order monomials rows will
-    // always be of size 1
-    dof_indices.push_back(rows[0]);
-
-    for (unsigned int i = 0; i < n_neigh; ++i)
-    {
-      const Elem* neigh = elem->neighbor_ptr(i);
-
-      vector<unsigned int> tmpdofs;
-
-      if (neigh != nullptr)
-      {
-        dof_map.dof_indices(neigh, tmpdofs);
-        dof_indices.push_back(tmpdofs[0]);
-      }
-    }
+    dof_map.dof_indices(elem, dof_indices);
 
     const unsigned int n_dofs = dof_indices.size();
 
     // resize the element matrix/rhs (does also zero them out)
-    Ke.resize(1, n_dofs);
-    Fe.resize(1);
+    Ke.resize(n_dofs, n_dofs);
+    Fe.resize(n_dofs);
+
+    Point center;
+    //vector<Point> mid;
+    vector<double> vol;
+
+    // calculate parameters we need from this element
+    //geometry_params(elem, center, mid, vol);
+    
+    // the incidence contains the pairs of indices of nodes
+    // in the same order as the entries in H
+    vector<pair<unsigned int, unsigned int>> inc;
+    hodge_pd(elem, center, H, inc, vol);
+
+    //cerr << H << endl;
+    //for (unsigned int i = 0; i < vol.size(); ++i)
+    //  cerr << vol[i] / elem->volume() << " ";
+    //cerr << endl << endl;
 
     PoissonModel& mod = *get_bulk_model<PoissonModel>(elem);
 
     mod.set_element(elem);
-
-    // calculate parameters we need from this element
-    Point x_i(circumcenter(elem));
-    //Point x_i(elem->centroid());
-
-
-    double vol_i = elem->volume();
-
-    mod.set_point(x_i);
+    mod.set_point(center);
     mod.calculate();
 
     // permittivity
-    const RealTensor& eps_i = mod.get_permittivity()*Constants::e0;
+    const RealTensor &eps_i = mod.get_permittivity();
     // for now assume eps_k = e_i * I
     double e_i = eps_i.tr() / 3.0;
 
-    // polarization
-    const RealVectorValue& pol_i = mod.get_polarization();
+    for (unsigned int i = 0; i < elem->n_nodes(); ++i)
+    {
 
-    double rho =  mod.get_charge_density() * Lambda;
-    Fe(0) += rho * vol_i;
+
+      mod.set_point(elem->point(i));
+      mod.calculate();
+
+      // polarization
+      const RealVectorValue &pol_i = mod.get_polarization();
+
+      double rho = mod.get_charge_density() * Lambda;
+      Fe(i) += rho * vol[i];
+
+    }
 
     // loop over the neighbors
     // j is used as column index in the Ke matrix
     for (unsigned int k = 0, j = 0; k < n_neigh; ++k)
     {
-      const Elem* neigh = elem->neighbor_ptr(k);
 
       // interface model if present
-      PoissonBoundaryModel* mod_int =
-        get_interface_model<PoissonBoundaryModel>(elem, k);
+      PoissonBoundaryModel *mod_int =
+          get_interface_model<PoissonBoundaryModel>(elem, k);
 
-      // First set up some geometric quantities.
-      //
-      // We need the distance from the element interface
-      // (from both sides), and the area of the side,
-      // and the projection on the side.
-      // In the following m indicates the middle = interface
-      Point x_m;
-      Point x_k;
-      double h_im, h_mk = 0.0;
-      double A_ik = 1;
-
-      // the normal, pointing out of the current element (i)
-      Point n_ik;
-
-
-      if (neigh != nullptr)
-      {
-        // advance index counter
-        ++j;
-      }
-      else if (mod_int == nullptr)
-      {
-        // in this case there is nothing to be done
-        // (natural boundary conditions)
-        continue;
-      }
-
-      geometry_params(elem, k, x_i, x_k, n_ik, x_m,
-                      h_im, h_mk, A_ik);
-
-      vector<Point> pts;
-      vector<vector<double>> hdg;
-      hodge_dp(elem, pts, hdg);
-      cerr << "H = " << hdg[0][0] << "  " << hdg[0][1] << "  " << hdg[0][2] << "\n"
-           << "    " << hdg[1][0] << "  " << hdg[1][1] << "  " << hdg[1][2] << "\n"
-           << "    " << hdg[2][0] << "  " << hdg[2][1] << "  " << hdg[2][2] << "\n"
-           << "\n";
-
-
-      double a = 0.0, b = 0.0, c = 0.0;
       if (mod_int != nullptr)
       {
-        mod_int->calculate(elem, k, x_m);
+        auto side_elem = elem->side_ptr(k);
+        double side_vol = side_elem->volume();
+        Point side_ctr = side_elem->centroid();
+
+        mod_int->calculate(elem, k, side_ctr);
+
+        double a, b, c;
         mod_int->get_coefficients(a, b, c);
+
+        // we use a penalty approach here for its simplicity
+        if ((b < 1e-10) && (b >= 0))
+          b = 1e-10;
+        else if ((b > -1e-10) && (b <= 0))
+          b = -1e-10;
+
+        a /= b;
+        c /= b;
+
+        for (unsigned int i = 0; i < elem->n_nodes(); ++i)
+        {
+          if (elem->is_node_on_side(i, k))
+          {
+            Ke(i, i) += a * side_vol;
+            Fe(i) += c * side_vol;
+          }
+        }
       }
+    }
 
-      // phi_m is linear function in phi_i and phi_k:
-      // phi_m = ((1 - c_i) * phi_i + c_k * phi_k + f) * h_im
-      // NOTE: in case h_im = 0, h_im = 1e-9 is used, which
-      // results in a penalty approach for the boundary condition.
-      // Distinctiomn between c_i and c_k is only needed for
-      // boundary conditions.
-      double c_i = 1.0 / abs(h_im);
-      double c_k = 0;
-      double f_i = 0;
+    for (unsigned int i = 0; i < H.n(); ++i)
+    {
+      unsigned int ia = inc[i].first;
+      unsigned int ib = inc[i].second;
 
-
-      // interface charge, if present
-      double sigma_int = 0.0;
-
-
-      if ((b == 0.0) && (a != 0.0))
+      for (unsigned int j = 0; j < H.n(); ++j)
       {
-        // this is a Dirichlet BC
-        f_i = c / a / abs(h_im);
+        unsigned int ja = inc[j].first;
+        unsigned int jb = inc[j].second;
+
+        Ke(ia, ja) += e_i * H(i, j);
+        Ke(ib, ja) -= e_i * H(i, j);
+        Ke(ia, jb) -= e_i * H(i, j);
+        Ke(ib, jb) += e_i * H(i, j);
       }
-      else if (neigh != nullptr)
-      {
-
-        PoissonModel &mod = *get_bulk_model<PoissonModel>(neigh);
-
-        mod.set_element(neigh);
-
-        mod.set_point(x_k);
-        mod.calculate();
-
-        //Point d = x_k - x_i;
-        //double cosphi = d * n_ik / norm(d);
-
-        const RealTensor &eps_k = mod.get_permittivity() * Constants::e0;
-        // for now assume eps_k = e_k * I
-        double e_k = eps_k.tr() / 3.0;
-        const RealVectorValue &pol_k = mod.get_polarization();
-
-        // polarization induced interface charge density
-        double sigma_pol = (pol_k - pol_i) * n_ik;
-
-        // interface potential discontinuity (due to e.g. dipole)
-        // double delta_phi = 0.0;
-
-        double denom = h_mk * e_i + h_im * e_k;
-        //double denom = e_i * neigh->volume() + e_k * elem->volume();
-        //c_i = e_k * 3 * A_ik * cosphi / denom;
-        c_i = e_k / denom;
-        c_k = c_i;
-        f_i = /* -e_k / denom * delta_phi */
-            -h_mk / denom * (sigma_pol + sigma_int);
-            //  -3 * A_ik / denom * (sigma_pol + sigma_int);
-
-      }
-
-
-      // now we use:
-      // NOTE: the divison by h_im is included in the coefficients,
-      // this eliminates all potential undefined cases (0/0)
-      //
-      //   D_i = -e_i * (phi_m - phi_i) / h_im + P_i*n_ik - 0.5*sigma_int;
-      //
-      Ke(0, 0) += e_i * c_i * A_ik;
-
-      if (neigh != nullptr)
-        Ke(0, j) -= e_i * c_k * A_ik;
-
-      Fe(0) -= (pol_i * n_ik - 0.5 * sigma_int - e_i * f_i) * A_ik;
-
     }
 
     //dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
-    system.matrix->add_matrix(Ke, rows, dof_indices);
-    system.rhs->add_vector(Fe, rows);
+    system.matrix->add_matrix(Ke, dof_indices, dof_indices);
+    system.rhs->add_vector(Fe, dof_indices);
+
+    //cerr << Ke << "\n";
 
   }
   system.matrix->close();
-  system.matrix->print_matlab("K.m");
-  //system.rhs->close();
+  //system.matrix->print_matlab("K.m");
+  system.rhs->close();
   //system.rhs->print_matlab("F.m");
 
 }

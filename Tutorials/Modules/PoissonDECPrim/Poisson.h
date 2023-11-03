@@ -93,6 +93,15 @@ class TBDLLOCAL Poisson : public SimulationInterface
       ChargeDensity     /*!< the source (charge density) */
     };
 
+    /*!
+     * The type of dual construction
+     */
+    enum DualConstruction
+    {
+      BARYCENTER,    /*! < using the barycenter */
+      VORONOI        /*! < using the circumcenter (Voronoi construction) */
+    };
+
     //! The constructor
     /*!
      * Being private disables further inheritance.
@@ -130,7 +139,9 @@ class TBDLLOCAL Poisson : public SimulationInterface
     
       libMeshEnums::QuadratureType quadrature_type; 
 
-      libMeshEnums::Order integration_order;  
+      libMeshEnums::Order integration_order;
+
+      DualConstruction dual_constr;  
     };
 
     Options myopts;
@@ -151,47 +162,35 @@ class TBDLLOCAL Poisson : public SimulationInterface
 
     //! Calculate the Hodge star
     /*!
-     * Calculate the dual-primal Hodge star matrix for
-     * element \c elem. Here, dual-primal means that the
-     * control volume is the primal element, and the 
-     * 1-form \f$\omega\f$ is assumed along the connection between
-     * the duals of the primal elements, so that the dual 1-form
-     * \f$\star w\f$ is along the primal edges.
+     * Calculate the primal-dual Hodge star matrix for
+     * element \c elem. Here, primal-dual means that the
+     * primal 1-forms \f$\omega\f$ are assumed along the edges
+     * of the primal element, an the dual 1-form
+     * \f$\star w\f$ is along the connection between mid-points
+     * and the element center.
+     * 
+     * The implementation follows:
+     * arXiv:2006.16930v1, Rama Ayoub et al. "A new Hodge
+     * operator in Discrete Exterior Calculus. Application to
+     * fluid mechanics""
      * 
      * \param elem the element
-     * \param centers the centers of \c elem and its neighbors
+     * \param center the center of \c elem to be used
      * \param hodge the discrete hodge star matrix, ordered as
-     *              the neighbors
+     *              the edges
+     * \param incidence the node pairs for each edge
+     * \param vol the volumes associated to each primal node
+     * 
      */
-    void hodge_dp(const libMesh::Elem* elem,
-                  std::vector<libMesh::Point>& centers,
-                  std::vector<std::vector<double>>& hodge);
+    void hodge_pd(const libMesh::Elem* elem,
+                  libMesh::Point& center,
+                  libMesh::DenseMatrix<double>& hodge,
+                  std::vector<std::pair<unsigned int,
+                                        unsigned int>>& incidence,
+                  std::vector<double>& vol);
 
     
-    //! Get the geometric parameters for the coupling
-    /*!
-     * \param elem [in] the current element worked on
-     * \param k [in] the index of the side of interest
-     * \param x_i [in/out] the circumcenter of \c elem
-     * \param x_k [out] the circumcenter of the neighbor
-     * \param n_ik [out] the outpointing normal
-     * \param x_m [out] the projection of x_i on the side
-     * \param h_im [out] the distance \c x_i to \c x_m
-     * \param h_mk [out] the distance \c x_m to \c x_k
-     * \param A_ik [out] the volume of side \c k
-     * 
-     * NOTE: \c x_i can be changed in the method if \c elem
-     * is not a triangle. In that case, a suitable center will
-     * be calculated using three points including side \c k.
-     */
-    void geometry_params(const libMesh::Elem *elem,
-                         unsigned int k,
-                         libMesh::Point &x_i,
-                         libMesh::Point &x_k,
-                         libMesh::Point &n_ik,
-                         libMesh::Point &x_m,
-                         double &h_im, double &h_mk,
-                         double &A_ik);
+
 };
 
 
