@@ -481,6 +481,8 @@ Poisson::assemble(void)
   
   // The Hodge dual
   DenseMatrix<Number> H;
+  // The discrete exterior derivative D0
+  DenseMatrix<Number> D0;
 
 
   MeshBase::const_element_iterator       el     = this->active_local_elements_begin();
@@ -505,17 +507,16 @@ Poisson::assemble(void)
     Ke.resize(n_dofs, n_dofs);
     Fe.resize(n_dofs);
 
-    Point center;
-    //vector<Point> mid;
-    vector<double> vol;
+    D0.resize(n_dofs, n_dofs);
 
-    // calculate parameters we need from this element
-    //geometry_params(elem, center, mid, vol);
+    Point center;
+    vector<double> vol;
     
     // the incidence contains the pairs of indices of nodes
     // in the same order as the entries in H
     vector<pair<unsigned int, unsigned int>> inc;
     hodge_pd(elem, center, H, inc, vol);
+
 
     //cerr << H << endl;
     //for (unsigned int i = 0; i < vol.size(); ++i)
@@ -535,7 +536,9 @@ Poisson::assemble(void)
 
     for (unsigned int i = 0; i < elem->n_nodes(); ++i)
     {
-
+      unsigned int j = (i + 1) % elem->n_nodes();
+      D0(i, i) = -1;
+      D0(i, j) =  1;
 
       mod.set_point(elem->point(i));
       mod.calculate();
@@ -547,6 +550,9 @@ Poisson::assemble(void)
       Fe(i) += rho * vol[i];
 
     }
+
+    H.right_multiply(D0);
+    H *= -e_i;
 
     // loop over the neighbors
     // j is used as column index in the Ke matrix
@@ -588,20 +594,15 @@ Poisson::assemble(void)
       }
     }
 
-    for (unsigned int i = 0; i < H.n(); ++i)
+    for (int i = 0; i < H.n(); ++i)
     {
-      unsigned int ia = inc[i].first;
-      unsigned int ib = inc[i].second;
+      int ii = (i - 1) % (int) H.n();
+      if (ii < 0) ii += H.n();
 
       for (unsigned int j = 0; j < H.n(); ++j)
       {
-        unsigned int ja = inc[j].first;
-        unsigned int jb = inc[j].second;
-
-        Ke(ia, ja) += e_i * H(i, j);
-        Ke(ib, ja) -= e_i * H(i, j);
-        Ke(ia, jb) -= e_i * H(i, j);
-        Ke(ib, jb) += e_i * H(i, j);
+        Ke(i, j) += H( i, j);
+        Ke(i, j) -= H(ii, j);
       }
     }
 
@@ -609,7 +610,6 @@ Poisson::assemble(void)
     system.matrix->add_matrix(Ke, dof_indices, dof_indices);
     system.rhs->add_vector(Fe, dof_indices);
 
-    //cerr << Ke << "\n";
 
   }
   system.matrix->close();
