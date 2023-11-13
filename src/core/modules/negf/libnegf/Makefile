@@ -10,6 +10,8 @@ CMAKE = cmake
 
 CXXFLAGS = -fPIC -I . 
 
+CUDADIR = /usr/pack/cudatoolkit-11.4-ma/lib64/
+CUDALIBS = -L$(CUDADIR) -Wl,-rpath=$(CUDADIR) -lcudart -lcublas -lcusolver -lstdc++
 
 target := libnegf$(shared_libext)
 
@@ -21,22 +23,25 @@ libnegf$(shared_libext) :  .$(ARCH)/NegfWrapper$(obj-suffix) libnegf_$(ARCH).a
 		-Wl,--version-script,export.map \
 		-Wl,-Bsymbolic -Wl,-Bstatic \
 		-L. libnegf_$(ARCH).a $$dep \
-		-Wl,-Bdynamic
+		-Wl,-Bdynamic \
 
 .$(ARCH)/NegfWrapper$(obj-suffix) : libnegf_$(ARCH).a 
 
+
+#cp ../myCUDACompiler.cmake CMakeFiles/3.18.4/CMakeCUDACompiler.cmake;
 libnegf_$(ARCH).a: update
 	@echo "Compiling libNEGF ...";
 	mkdir -p build; cd build; \
-	$(CMAKE) -C ../config.cmake -S ../libnegf -B .; \
-	$(MAKE) ; cd .. ;
+	$(CMAKE) -C ../custom.cmake -S ../libnegf -B .; \
+	$(MAKE); cd .. ;
 	cp build/src/libnegf.a libnegf_$(ARCH).a	
 	cp build/src/api/libnegf.hpp . 
 	cp libnegf/src/api/fortran.h .
 	cp libnegf/src/api/lnParams.h .
 
 update: checkout
-	cd libnegf; git pull origin; cd ..;
+	cd libnegf; cd ..;
+#	cd libnegf; git pull origin; cd ..;
 
 checkout:
 	@echo "Checkout libNEGF..."
