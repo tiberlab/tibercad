@@ -40,15 +40,13 @@ libnegf_$(ARCH).a: update
 	cp libnegf/src/api/lnParams.h .
 
 update: checkout
-	cd libnegf; cd ..;
-#	cd libnegf; git pull origin; cd ..;
+	cd libnegf; git pull origin; cd ..;
 
 checkout:
 	@echo "Checkout libNEGF..."
 	@if [ ! -e libnegf ]; then \
-		git clone https://github.com/DanSoccodato/libnegf.git; \
+		git clone https://github.com/libnegf/libnegf.git; \
 		cd libnegf; \
-		git checkout quasiEq-density; \
 	fi
 
 clean:
