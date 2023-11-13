@@ -7,6 +7,7 @@
 #include <complex>
 #include <vector>
 
+#include <mpi.h>
 //-----------------------------------------------------------------------
 typedef std::complex<double> Complex; 
 
@@ -32,6 +33,9 @@ public:
 
   //!Initialize the Negf instance
   void init(void);
+
+  //Initialize MPI communicator
+  int set_mpi_comm(MPI_Comm comm);
 
   //! Destroy and reinitialize
   void force_reinit(void);

@@ -44,6 +44,14 @@ NegfWrapper::init(void)
   }
 }
 
+int NegfWrapper::set_mpi_comm(MPI_Comm comm)
+{
+    {
+      f77_negf_set_mpi_fcomm(_handler, MPI_Comm_c2f(comm));
+      return 0;
+    }
+}
+
 void
 NegfWrapper::force_reinit(void)
 {
@@ -174,7 +182,7 @@ NegfWrapper::quasi_equilibrium_density(std::vector<double>& density, std::string
    if (particle == "hl"){ p = -1;}
 
    f77_negf_density_quasi_equilibrium(_handler, size, density.data(), p, Ec.data(),
-       Ev.data(), muN.data(), muP.data());
+      Ev.data(), muN.data(), muP.data());
 }
 
 void
@@ -300,7 +308,6 @@ NegfWrapper::contact_blocks(int ncont, const std::vector<int>& surfstart,
     const std::vector<int>& plend)
 {
   std::vector<int> cblks(ncont);
-
   f77_negf_contact_blocks(_handler, ncont, surfstart.data(),
       surfend.data(), contend.data(), npl, plend.data(), cblks.data());
 
