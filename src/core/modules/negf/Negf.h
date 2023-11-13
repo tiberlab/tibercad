@@ -203,6 +203,15 @@ class TBDLLOCAL Negf : public SimulationInterface
     void transfer_density(const std::vector<double>& density,
         const std::string& particle);
 
+    void transfer_density_efa(const std::vector<double>& density,
+        const std::string& particle);
+
+    void transfer_density_etb(const std::vector<double>& density,
+        const std::string& particle);
+
+    double project_density(const Elem* elem, const Point& point, 
+        const std::vector<double>& atomic_charges, double cutoff);
+
     //! Print energy resolved data to file
     void print_energy_resolved(const std::string& file,
         const std::vector<double>& energy,

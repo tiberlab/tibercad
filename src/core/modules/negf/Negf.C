@@ -343,13 +343,18 @@ Negf::init_etb_hamil(void)
      last_cont.insert(std::pair<ID,unsigned int>(it->first,-1) );
    }
 
+   unsigned int nPL = get_solver_options().get_option("number_of_PL", 0);
+
+   _end_blocks.resize(0);
+   _end_blocks.resize(nPL, 0);
+
    _inv_perm.resize(N_atoms);
 
    // Count all atoms in device and contacts regions 
    // Set inv_perm in device region (order left unchanged)
    for (unsigned int i=0; i< N_atoms; i++)
    {
-       it = _quantum_contacts.find(atoms[i].get_region_ID());         
+       it = _quantum_contacts.find(atoms[i].get_region_ID());
        if (it == qc_end)
        {
           _inv_perm[i] = ++last_dev;
@@ -360,18 +365,18 @@ Negf::init_etb_hamil(void)
        } 
    } 
 
-   // Set inv_perm in contacts 
+   // Set inv_perm in contacts
    // contact with normal>0 is left unchanged the other is reversed
    unsigned int count1 = 0;
    unsigned int count2 = N_atoms;
    for (unsigned int i=0; i< N_atoms; i++)
    {
-       it = _quantum_contacts.find(atoms[i].get_region_ID());         
+       it = _quantum_contacts.find(atoms[i].get_region_ID());
        if (it != qc_end)
        {
           if (it->second->get_normal()(0) > 0) 
           {
-             _inv_perm[i]= last_dev+ (++count1); 
+             _inv_perm[i]= last_dev+ (++count1);
           }     
           else
           {
@@ -428,21 +433,40 @@ Negf::init_etb_hamil(void)
      }
    }
    
-   //std::cout<<"write: "<<std::endl;
    for (ID i=0; i<2; i++)
    {
       std::cout<<"Conts: "<<i+1<<"  "<<_qc_n_dofs[i]+1<<std::endl;
    }
 
-  std::cout<<"(negf) init k-integration"<<std::endl;
-  init_k_space_integration();
+   // Reorder the qc_n_dofs such that they are with increasing order
+   for (unsigned int i = 0; i <(_quantum_contacts.size()-1); i++)
+    if (_qc_n_dofs[i]>_qc_n_dofs[i+1])
+      std::swap(_qc_n_dofs[i],_qc_n_dofs[i+1]);
 
 
-  //std::cout<<"(negf) get eq sys for etb stuff"<<std::endl;
-  //ID id = create_equation_system("linear","");
-  //_sys = &get_equation_system<TiberLinearSystem>(id);
-  //std::cout<<"(negf) setting up etb stuff"<<std::endl;
-  //set_stuff_for_etb();
+   //Create the _end_blocks vector.
+   unsigned int n_orbitals = _ext_module->get_number_of_bands(); 
+
+   //_device_n_dofs is equal to N_atoms in the device
+   unsigned int size_of_PL = _device_n_dofs / nPL;
+
+   for (unsigned int i = 0; i <nPL; i++)
+    _end_blocks[i] = size_of_PL * n_orbitals;
+   
+
+   unsigned int remaining_atoms = _device_n_dofs - nPL * size_of_PL;
+   if (remaining_atoms != 0) _end_blocks[nPL-1] += remaining_atoms * n_orbitals;
+   
+   for (unsigned int i = 1; i < nPL; ++i)
+    _end_blocks[i] += _end_blocks[i-1];
+
+   // These two lines remove any duplicate (if they are for some reason created)
+   auto bl_it = std::unique(_end_blocks.begin(), _end_blocks.end());
+   _end_blocks.resize(distance(_end_blocks.begin(), bl_it));
+   
+   std::cout<<"(negf) init k-integration"<<std::endl;
+   init_k_space_integration();
+
 
 }
 
@@ -657,9 +681,11 @@ Negf::setup_hamil(void)
 
     Messages::info("Passing Hamiltonian ... ", 0);
 
-    //cout << "nrow= " << nrow << endl;
     if ( _hamil_type == "etb" )
+    {
       _ext_module->get_H_csr(A, JA, IA);
+    }
+
     else
       _ext_module->get_H_csr(A, JA, IA, _perm);
 
@@ -692,7 +718,7 @@ Negf::setup_hamil(void)
   else
   {
     _libnegf->set_S_id(nrow);
-  }
+  }  
 
   // we have to reinitialize some structures in libnegf
   if (get_option("print_matrices", false))
@@ -759,11 +785,13 @@ Negf::setup_negf(void)
 
   _libnegf->set_output_path(get_output_directory());
 
+  //Set MPI communicator
+  _libnegf->set_mpi_comm(this->get_solver_communicator().get());
   // initialize the contacts
   _libnegf->init_contacts(_quantum_contacts.size());
 
   // new way via memory
-  // first get the parameter strcture with defaults
+  // first get the parameter structure with defaults
   NegfWrapper::Parameters params;
   _libnegf->get_parameters(params);
 
@@ -986,21 +1014,20 @@ Negf::do_solve(void)
     if (get_options().has_submodel("k_integration_density"))
     {
       _which_integration = INTDENSITYEL;
-
       _k_int_density->solve();
-
+      
       transfer_density(_k_int_density->get_solution(), "el");
 
     }
     else
     {
       _k_vec.zero();
-      
+
       setup_hamil();
 
-      unsigned int n_vars = _sys_H->n_vars();
+      //unsigned int n_vars = _sys_H->n_vars();
+      unsigned int n_vars = _ext_module->get_number_of_bands();
       std::vector<double> density(_device_n_dofs * n_vars, 0.0); //device_n_dofs = n nodi del device
-
 
       if (get_option("quasi_equilibrium",false))
       {
@@ -1060,7 +1087,8 @@ Negf::do_solve(void)
       
       setup_hamil();
 
-      unsigned int n_vars = _sys_H->n_vars();
+      // unsigned int n_vars = _sys_H->n_vars();
+      unsigned int n_vars = _ext_module->get_number_of_bands();
       std::vector<double> density(_device_n_dofs * n_vars, 0.0);
 
       if (get_option("quasi_equilibrium",false))
@@ -1418,7 +1446,8 @@ Negf::calculate_for_k_point(const Point& k_point,
    setup_hamil();
 
    //In theory, size of "field" has to be consistent with _device_n_dofs, which is # of nodes
-   unsigned int n_vars = _sys_H->n_vars();
+  //  unsigned int n_vars = _sys_H->n_vars();
+  unsigned int n_vars = _ext_module->get_number_of_bands();
    field.resize(_device_n_dofs * n_vars);
 
    //unsigned int n_vars = _ext_module->get_H_dim();
@@ -1452,8 +1481,8 @@ Negf::calculate_for_k_point(const Point& k_point,
        }
        else
        {
-
          _libnegf->density(field, "el");
+
 
          error = 0.0;
 
@@ -1554,10 +1583,13 @@ Negf::calculate_for_k_point(const Point& k_point,
 
      // get_energies
      vector<double> erg;
+     Messages::info("DEBUG: before get_energies");
      _libnegf->get_energies(erg);
 
+     Messages::info("DEBUG: before get_ldos");
      vector<vector<double>> ldos;
      _libnegf->get_ldos(ldos);
+     Messages::info("DEBUG: after get_ldos");
 
      ostringstream os;
      os << "k=(" << k_point(0) << ","
@@ -1604,13 +1636,45 @@ Negf::print_energy_resolved(const string& file, const vector<double>& energy,
   }
 }
 
-
 void
 Negf::transfer_density(const std::vector<double>& density, const std::string& particle)
 {
+  if ( _hamil_type == "etb")  
+  {
+    std::cout << "DEBUG: printing density from NEGF" << std::endl;
+    std::ofstream myfile;
+    myfile.open("DEBUG/density_output_negf_etb.dat");
+    for (int i; i<density.size(); i++){
+      myfile << density[i] << std::endl;
+    }
+    myfile.close();
+    transfer_density_etb(density, particle);
+  }
+  else if ( _hamil_type == "efa")
+  {
+    std::cout << "DEBUG: printing density from NEGF (efa)" << std::endl;
+    std::ofstream myfile;
+    myfile.open("DEBUG/density_output_negf_efa.dat");
+    for (int i; i<density.size(); i++){
+      myfile << density[i] << std::endl;
+    }
+    myfile.close();
+    transfer_density_efa(density, particle);
+  }  
+  else 
+  {
+    Messages::error("undefined hamiltonian type "+_hamil_type);
+  }
+}
+
+
+void
+Negf::transfer_density_efa(const std::vector<double>& density, const std::string& particle)
+{
 
   // compute total number of n_vars n_dofs
-  unsigned int n_vars = _sys_H->n_vars();
+  // unsigned int n_vars = _sys_H->n_vars();
+  unsigned int n_vars = _ext_module->get_number_of_bands();
   unsigned int n_dofs = _qc_n_dofs[_quantum_contacts.size()-1];
 
   int particle_id;
@@ -1684,11 +1748,10 @@ Negf::transfer_density(const std::vector<double>& density, const std::string& pa
 
       for (unsigned int n = 0; n < elem->n_nodes(); n++)
       {
-
         //double dens = abs(density[_inv_perm[dof_indices[n]]]);
         double dens = density[_inv_perm[dof_indices[n]]];
+        // std::cout<<band*n_dofs+n<<" dens: "<<dens<<std::endl;
 
-        //std::cout<<band*n_dofs+n<<" dens: "<<dens<<std::endl;
 
         double val = equ * dens / connectivity[dof_indices_qdens[n]];
 
@@ -1697,8 +1760,78 @@ Negf::transfer_density(const std::vector<double>& density, const std::string& pa
 
       //for (unsigned int n = 0; n < elem->n_nodes(); n++)
       //std::cout<<connectivity[ dof_indices_qdens[n]]<<std::endl;
-
     }
+  }
+
+  qdens.close();
+}
+
+void
+Negf::transfer_density_etb(const std::vector<double>& density, const std::string& particle)
+{
+
+  // compute total number of n_vars n_dofs
+  unsigned int n_vars = _ext_module->get_number_of_bands();
+  // unsigned int n_dofs = _qc_n_dofs[_quantum_contacts.size()-1];
+  unsigned int N_atoms = _device_n_dofs;
+  NumericVector<Number>& qdens = *_qdens_sys->solution;
+  //qdens.zero();
+
+  int particle_id;
+
+  if (particle == "el") particle_id = _qdens_sys->variable_number("edens");
+  if (particle == "hl") particle_id = _qdens_sys->variable_number("hdens");
+
+
+  DofMap& dof_map_qdens = _qdens_sys->get_dof_map();
+  std::vector<unsigned int> dof_indices_qdens;
+
+  // Calculate atomic charge by summing the density from orbitals of the same atom
+  double charge;
+  std::vector<double> atomic_charges(N_atoms);
+  for (unsigned int i=0; i<N_atoms; i++)
+  {
+    charge = 0;
+    for (unsigned int k=0; k<n_vars; k++)
+      charge += density[i*n_vars + k];
+
+    atomic_charges[i] = charge;
+  }
+
+  std::ofstream myfile;
+  std::cout << "DEBUG: write atomic charges collapsed from negf" << std::endl;
+  myfile.open("DEBUG/atomic_charges_negf_etb.dat");
+  for (int i=0; i<N_atoms; i++){
+    myfile << atomic_charges[i] << std::endl;
+  }
+  myfile.close();
+
+  // the cutoff distance for near atoms in A
+  // double cutoff = _ext_module->get_solver_options().get_option("projection_length", 5.0);
+  double cutoff = 5.0;  // hard-coded for now, find out how to take the option from the etb module
+
+
+  MeshBase::const_element_iterator el = this->active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
+  
+  std::cout << "DEBUG: write project_density on file" << std::endl;
+  myfile.open("DEBUG/density_after_projection_etb.dat");
+
+  for ( ; el != end_el; ++el)
+  {
+    const Elem* elem = *el;
+    dof_map_qdens.dof_indices(elem, dof_indices_qdens, particle_id);
+
+    for (unsigned int n = 0; n < elem->n_nodes(); n++)
+    {
+      //if (qdens(dof_indices_e[n]) < 0)
+      {
+        auto density = project_density(elem, elem->point(n), atomic_charges, cutoff);
+        myfile << density << std::endl;
+        qdens.add(dof_indices_qdens[n], density);
+      }
+    }
+
   }
 
   qdens.close();
@@ -2765,3 +2898,101 @@ Negf::get_boundary(const QuantumContact* qc)
   return it->second;
 }
 
+
+double
+Negf::project_density(const Elem* elem, const Point& point, const std::vector<double>& atomic_charges, double cutoff)
+{
+  double density(0);
+
+  AtomisticStructure* as = _ext_module->get_atomistic_structure();
+
+  const double scale = _ext_module->get_atomistic_structure()->get_scale();
+  const double sigma = cutoff;
+  const double sigma2 = 2.0*sigma*sigma;
+
+  // the point in Angstrom
+  Point coord(point);
+  coord *= get_mesh_units() / 1e-10;
+
+  // normalization/scale factor
+  double normalization = 1.0;
+
+  unsigned int dim = get_mesh().mesh_dimension();
+
+
+  switch (dim)
+  {
+//      case 1:
+//        normalization = 1e8;
+//        break;
+
+//      case 2:
+//        normalization = 1e16 / (2.0 * M_PI * sigma);
+//        break;
+
+    default:
+    {
+      double tmp = 1 / (2.0 * M_PI * sigma * sigma);
+      normalization = 1e24 * sqrt(tmp * tmp * tmp);
+      break;
+    }
+  }
+  //normalization = 3.0 / (4 * M_PI * sigma * sigma * sigma) * 1e24;
+
+  // this approach does not need the elem_atoms map, but then it needs to be able
+  // to find atoms not only in spheres.
+  ///*
+  int index = as->find_nearest_atom(elem, point, 2 * cutoff / 10.0);
+  AtomisticBasis::neighbor_iterator it(
+       _ext_module->get_atomistic_structure()->neighbors_begin(index, cutoff));
+  const AtomisticBasis::neighbor_iterator end(
+       _ext_module->get_atomistic_structure()->neighbors_end(index, cutoff));
+
+  // the charge of the nearest atom
+  //densities.first += _el_atomic_charges[index] * normalization;
+  //densities.second += _hl_atomic_charges[index] * normalization;
+
+  for (; it != end; ++it)
+  {
+    const Atom* atom = *it;
+    unsigned int atom_id = it.atom_index();
+
+    //cerr << " " << atom_id << endl;
+    Point atom_pos(atom->get_position() + it.atom_translation());
+  //*/
+
+  /*
+  const std::vector<unsigned int>& atoms = get_elem_atoms(elem->id());
+  for (int i = 0; i < atoms.size(); ++i)
+  {
+    unsigned int atom_id = atoms[i];
+    const Atom* atom = &get_atomistic_structure()->get_structure_atom(atom_id);
+    Point atom_pos(atom->get_position());
+  */
+
+  Point delta_r = coord - atom_pos;
+
+  switch (dim)
+  {
+//        case 1:
+      // set dy = 0, the rest is the same as in 3D
+//          delta_r(1) = 0.0;
+
+//        case 2:
+      // set dz = 0, the rest is the same as in 3D
+//          delta_r(2) = 0.0;
+    default:
+    {
+      double factor = normalization * std::exp(-delta_r.norm_sq() / sigma2);
+      density += atomic_charges[atom_id] * factor;
+
+      break;
+    }
+  }
+    
+   //cerr << densities.first << endl;
+
+  }
+
+  return density;
+}
