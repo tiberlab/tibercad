@@ -396,11 +396,11 @@ Negf::init_etb_hamil(void)
    sortclass sortobj(atoms);
    std::sort(_perm.begin(),_perm.begin()+last_dev+1,sortobj);
 
-   for (unsigned int i=0; i< N_atoms; i++)
-   {
-      std::cout<<"atom "<<i<<" reg "<<atoms[i].get_region_ID()
-               <<" iperm "<<_inv_perm[i]<<" perm "<<_perm[i]<<std::endl;
-   }
+   //for (unsigned int i=0; i< N_atoms; i++)
+   //{
+   //   std::cout<<"atom "<<i<<" reg "<<atoms[i].get_region_ID()
+   //            <<" iperm "<<_inv_perm[i]<<" perm "<<_perm[i]<<std::endl;
+   //}
    
   
    // ------------------------------------------------------------------------
