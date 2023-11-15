@@ -396,11 +396,11 @@ Negf::init_etb_hamil(void)
    sortclass sortobj(atoms);
    std::sort(_perm.begin(),_perm.begin()+last_dev+1,sortobj);
 
-   //for (unsigned int i=0; i< N_atoms; i++)
-   //{
-   //   std::cout<<"atom "<<i<<" reg "<<atoms[i].get_region_ID()
-   //            <<" iperm "<<_inv_perm[i]<<" perm "<<_perm[i]<<std::endl;
-   //}
+   for (unsigned int i=0; i< N_atoms; i++)
+   {
+      std::cout<<"atom "<<i<<" reg "<<atoms[i].get_region_ID()
+               <<" iperm "<<_inv_perm[i]<<" perm "<<_perm[i]<<std::endl;
+   }
    
   
    // ------------------------------------------------------------------------
@@ -1641,7 +1641,7 @@ Negf::transfer_density(const std::vector<double>& density, const std::string& pa
 {
   if ( _hamil_type == "etb")  
   {
-    std::cout << "DEBUG: printing density from NEGF" << std::endl;
+    std::cout << "DEBUG: writing density from NEGF" << std::endl;
     std::ofstream myfile;
     myfile.open("DEBUG/density_output_negf_etb.dat");
     for (int i; i<density.size(); i++){
@@ -1652,7 +1652,7 @@ Negf::transfer_density(const std::vector<double>& density, const std::string& pa
   }
   else if ( _hamil_type == "efa")
   {
-    std::cout << "DEBUG: printing density from NEGF (efa)" << std::endl;
+    std::cout << "DEBUG: writing density from NEGF (efa)" << std::endl;
     std::ofstream myfile;
     myfile.open("DEBUG/density_output_negf_efa.dat");
     for (int i; i<density.size(); i++){
@@ -1798,6 +1798,22 @@ Negf::transfer_density_etb(const std::vector<double>& density, const std::string
     atomic_charges[i] = charge;
   }
 
+  // compute connectivity of each node
+  // we need the connectivity of the nodes to not double count
+  std::vector<int> connectivity(qdens.size(), 0);
+  {
+    MeshBase::const_element_iterator el = this->active_local_elements_begin();
+    const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
+    for ( ; el != end_el; ++el)
+    {
+      const Elem* elem = *el;
+      dof_map_qdens.dof_indices(elem, dof_indices_qdens, particle_id);
+
+      for (unsigned int n = 0; n < elem->n_nodes(); n++)
+        connectivity[dof_indices_qdens[n]]++;
+    }
+  }
+
   std::ofstream myfile;
   std::cout << "DEBUG: write atomic charges collapsed from negf" << std::endl;
   myfile.open("DEBUG/atomic_charges_negf_etb.dat");
@@ -1807,16 +1823,13 @@ Negf::transfer_density_etb(const std::vector<double>& density, const std::string
   myfile.close();
 
   // the cutoff distance for near atoms in A
-  // double cutoff = _ext_module->get_solver_options().get_option("projection_length", 5.0);
-  double cutoff = 5.0;  // hard-coded for now, find out how to take the option from the etb module
+  //double cutoff = _ext_module->get_option("projection_length", 5.0);
+  double cutoff = 3.5;  // hard-coded for now, find out how to take the option from the etb module
 
 
   MeshBase::const_element_iterator el = this->active_local_elements_begin();
   const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
   
-  std::cout << "DEBUG: write project_density on file" << std::endl;
-  myfile.open("DEBUG/density_after_projection_etb.dat");
-
   for ( ; el != end_el; ++el)
   {
     const Elem* elem = *el;
@@ -1827,7 +1840,7 @@ Negf::transfer_density_etb(const std::vector<double>& density, const std::string
       //if (qdens(dof_indices_e[n]) < 0)
       {
         auto density = project_density(elem, elem->point(n), atomic_charges, cutoff);
-        myfile << density << std::endl;
+        density = density / connectivity[dof_indices_qdens[n]];
         qdens.add(dof_indices_qdens[n], density);
       }
     }
@@ -2910,6 +2923,8 @@ Negf::project_density(const Elem* elem, const Point& point, const std::vector<do
   const double sigma = cutoff;
   const double sigma2 = 2.0*sigma*sigma;
 
+  int N_atoms = atomic_charges.size();
+
   // the point in Angstrom
   Point coord(point);
   coord *= get_mesh_units() / 1e-10;
@@ -2944,9 +2959,9 @@ Negf::project_density(const Elem* elem, const Point& point, const std::vector<do
   ///*
   int index = as->find_nearest_atom(elem, point, 2 * cutoff / 10.0);
   AtomisticBasis::neighbor_iterator it(
-       _ext_module->get_atomistic_structure()->neighbors_begin(index, cutoff));
+       as->neighbors_begin(index, cutoff));
   const AtomisticBasis::neighbor_iterator end(
-       _ext_module->get_atomistic_structure()->neighbors_end(index, cutoff));
+       as->neighbors_end(index, cutoff));
 
   // the charge of the nearest atom
   //densities.first += _el_atomic_charges[index] * normalization;
@@ -2955,7 +2970,10 @@ Negf::project_density(const Elem* elem, const Point& point, const std::vector<do
   for (; it != end; ++it)
   {
     const Atom* atom = *it;
-    unsigned int atom_id = it.atom_index();
+    unsigned int atom_id = _inv_perm[it.atom_index()];
+
+    // atom_id may belong to a contact, skip loop in this case
+    if (atom_id > N_atoms-1) continue;
 
     //cerr << " " << atom_id << endl;
     Point atom_pos(atom->get_position() + it.atom_translation());
