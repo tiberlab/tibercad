@@ -453,7 +453,6 @@ Negf::init_etb_hamil(void)
    for (unsigned int i = 0; i <nPL; i++)
     _end_blocks[i] = size_of_PL * n_orbitals;
    
-
    unsigned int remaining_atoms = _device_n_dofs - nPL * size_of_PL;
    if (remaining_atoms != 0) _end_blocks[nPL-1] += remaining_atoms * n_orbitals;
    
@@ -1211,8 +1210,11 @@ Negf::plot_LDOS(const std::vector<double>& energies,
   string mod(name_suffix);
   if (!mod.empty()) mod = "_" + mod;
 
+  // MATLAB plotting commented, replaced with python
   string file = get_output_directory() + "/" + get_output_filename_prefix()
-      + "_LDOS" + mod + TiberCad::get_filename_suffix() + ".m";
+      // + "_LDOS" + mod + TiberCad::get_filename_suffix() + ".m";
+      + "_LDOS" + mod + TiberCad::get_filename_suffix() + ".py";
+
   ofstream of(file);
 
   size_t esteps = energies.size();
@@ -1220,41 +1222,66 @@ Negf::plot_LDOS(const std::vector<double>& energies,
   unsigned int bands = _ext_module->get_number_of_bands();
   int npoints = _device_n_dofs * bands;
 
-  of << "energy = [";
-  for (auto&& erg : energies) of << erg << " ";
-  of << "];\n";
+  // of << "energy = [";
+  // for (auto&& erg : energies) of << erg << " ";
+  // of << "];\n";
+  of << "import matplotlib.pyplot as plt\nimport numpy as np\n\n";
+  of << "energy = np.array([";
+  for (auto&& erg : energies) of << erg << ", ";
+  of << "])\n";
 
-
-  DofMap& dof_map = _sys_H->get_dof_map();
-  std::vector<unsigned int> dof_indices;
-
-  //set<double> coordinates;
   vector<double> coordinates(_device_n_dofs);
 
   // TODO what to do if mesh is distributed?
-  MeshBase::const_element_iterator       nd     = this->active_local_elements_begin();
-  const MeshBase::const_element_iterator nd_end = this->active_local_elements_end();
-  for ( ; nd != nd_end; ++nd)
+  if (_hamil_type == "efa")
   {
-    const Elem* elem = *nd;
-    dof_map.dof_indices(elem, dof_indices, 0);
+    DofMap& dof_map = _sys_H->get_dof_map();
+    std::vector<unsigned int> dof_indices;
 
-    for (unsigned int n = 0; n < elem->n_nodes(); ++n)
+    MeshBase::const_element_iterator       nd     = this->active_local_elements_begin();
+    const MeshBase::const_element_iterator nd_end = this->active_local_elements_end();
+    for ( ; nd != nd_end; ++nd)
     {
-      unsigned int id = _inv_perm[dof_indices[n]];
-      coordinates[id / bands] = elem->point(n)(0);
+      const Elem* elem = *nd;
+      dof_map.dof_indices(elem, dof_indices, 0);
+
+      for (unsigned int n = 0; n < elem->n_nodes(); ++n)
+      {
+        unsigned int id = _inv_perm[dof_indices[n]];
+        coordinates[id / bands] = elem->point(n)(0);
+      }
+    }
+  }
+  // Cannot use _sys_H for ETB, define coordinates using atomistic structure
+  if (_hamil_type == "etb")
+  {
+    AtomisticStructure* as = _ext_module->get_atomistic_structure();
+    unsigned int N_atoms = _device_n_dofs;
+    std::vector<Atom>& atoms = as->get_structure_atoms();
+
+    for (int i=0; i<N_atoms; i++)
+    {
+      // x coord from Ansgtrom to mesh units
+      double equ = 1e-10 / get_mesh_units();
+      coordinates[i] = atoms[i].get_position(0) * equ;
     }
   }
 
+  //of << "x = [";
+  of << "x = np.array([";
 
-  of << "x = [";
   for (size_t i = 0; i < _device_n_dofs; ++i)
-    of << coordinates[i] << " ";
-  of << "];\n";
+    of << coordinates[i] << ", ";
+  of << "])\n";
+  //   of << coordinates[i] << " ";
+  // of << "];\n";
 
-  of << "LDOS = [";
+  //of << "LDOS = [";
+  of << "LDOS = np.array([\n";
+
   for (int i = 0; i < esteps; i++)
   {
+    of << "["; // <- only for python plotting
     for (int j = 0; j < npoints; j += bands)
     {
       double node_dos = 0.0;
@@ -1262,18 +1289,27 @@ Negf::plot_LDOS(const std::vector<double>& energies,
         node_dos += ldos[i][j + b];
       of << node_dos << " ";
     }
-    of << "\n";
+    // of << "\n";
+    of << "],\n";
+
   }
-  of << "];\n";
+  // of << "];\n";
+  of << "])\n";
+
 
   //of << "x=1:" << _device_n_dofs << ";\n";
   //of << "pcolor(x, energy, log(abs(LDOS))), shading flat\n";
-  of << "pcolor(x, energy, abs(LDOS)), shading flat\n";
-  of << "ylabel('Energy')\n";
-  of << "xlabel('x')\n";
+  
+  //of << "pcolor(x, energy, abs(LDOS)), shading flat\n";
+  //of << "ylabel('Energy')\n";
+  //of << "xlabel('x')\n";
+
+  of << "plt.contourf(x, energy, np.abs(LDOS), levels=10)\n";
+  of << "plt.xlabel('x')\n";
+  of << "plt.ylabel('Energy [eV]')\n";
+  of << "plt.colorbar()\n";
+  of << "plt.show()";
 }
-
-
 
 
 void
@@ -1583,13 +1619,10 @@ Negf::calculate_for_k_point(const Point& k_point,
 
      // get_energies
      vector<double> erg;
-     Messages::info("DEBUG: before get_energies");
      _libnegf->get_energies(erg);
 
-     Messages::info("DEBUG: before get_ldos");
      vector<vector<double>> ldos;
      _libnegf->get_ldos(ldos);
-     Messages::info("DEBUG: after get_ldos");
 
      ostringstream os;
      os << "k=(" << k_point(0) << ","
@@ -1641,24 +1674,10 @@ Negf::transfer_density(const std::vector<double>& density, const std::string& pa
 {
   if ( _hamil_type == "etb")  
   {
-    std::cout << "DEBUG: writing density from NEGF" << std::endl;
-    std::ofstream myfile;
-    myfile.open("DEBUG/density_output_negf_etb.dat");
-    for (int i; i<density.size(); i++){
-      myfile << density[i] << std::endl;
-    }
-    myfile.close();
     transfer_density_etb(density, particle);
   }
   else if ( _hamil_type == "efa")
   {
-    std::cout << "DEBUG: writing density from NEGF (efa)" << std::endl;
-    std::ofstream myfile;
-    myfile.open("DEBUG/density_output_negf_efa.dat");
-    for (int i; i<density.size(); i++){
-      myfile << density[i] << std::endl;
-    }
-    myfile.close();
     transfer_density_efa(density, particle);
   }  
   else 
@@ -1814,18 +1833,8 @@ Negf::transfer_density_etb(const std::vector<double>& density, const std::string
     }
   }
 
-  std::ofstream myfile;
-  std::cout << "DEBUG: write atomic charges collapsed from negf" << std::endl;
-  myfile.open("DEBUG/atomic_charges_negf_etb.dat");
-  for (int i=0; i<N_atoms; i++){
-    myfile << atomic_charges[i] << std::endl;
-  }
-  myfile.close();
-
   // the cutoff distance for near atoms in A
-  //double cutoff = _ext_module->get_option("projection_length", 5.0);
-  double cutoff = 3.5;  // hard-coded for now, find out how to take the option from the etb module
-
+  double cutoff = _ext_module->get_options().get_option("projection_length", 5.0);
 
   MeshBase::const_element_iterator el = this->active_local_elements_begin();
   const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
@@ -2952,20 +2961,12 @@ Negf::project_density(const Elem* elem, const Point& point, const std::vector<do
       break;
     }
   }
-  //normalization = 3.0 / (4 * M_PI * sigma * sigma * sigma) * 1e24;
 
-  // this approach does not need the elem_atoms map, but then it needs to be able
-  // to find atoms not only in spheres.
-  ///*
   int index = as->find_nearest_atom(elem, point, 2 * cutoff / 10.0);
   AtomisticBasis::neighbor_iterator it(
        as->neighbors_begin(index, cutoff));
   const AtomisticBasis::neighbor_iterator end(
        as->neighbors_end(index, cutoff));
-
-  // the charge of the nearest atom
-  //densities.first += _el_atomic_charges[index] * normalization;
-  //densities.second += _hl_atomic_charges[index] * normalization;
 
   for (; it != end; ++it)
   {
@@ -2977,28 +2978,11 @@ Negf::project_density(const Elem* elem, const Point& point, const std::vector<do
 
     //cerr << " " << atom_id << endl;
     Point atom_pos(atom->get_position() + it.atom_translation());
-  //*/
-
-  /*
-  const std::vector<unsigned int>& atoms = get_elem_atoms(elem->id());
-  for (int i = 0; i < atoms.size(); ++i)
-  {
-    unsigned int atom_id = atoms[i];
-    const Atom* atom = &get_atomistic_structure()->get_structure_atom(atom_id);
-    Point atom_pos(atom->get_position());
-  */
 
   Point delta_r = coord - atom_pos;
 
   switch (dim)
   {
-//        case 1:
-      // set dy = 0, the rest is the same as in 3D
-//          delta_r(1) = 0.0;
-
-//        case 2:
-      // set dz = 0, the rest is the same as in 3D
-//          delta_r(2) = 0.0;
     default:
     {
       double factor = normalization * std::exp(-delta_r.norm_sq() / sigma2);
@@ -3008,8 +2992,6 @@ Negf::project_density(const Elem* elem, const Point& point, const std::vector<do
     }
   }
     
-   //cerr << densities.first << endl;
-
   }
 
   return density;

@@ -57,8 +57,6 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     void reorder(void);
 
-    //void set_stuff_for_etb(void);
-
     //! call-back method that KspaceIntegration invokes
     void calculate_for_k_point(const Point& kpoint, DofField& spectrum, double& estimator);
 
