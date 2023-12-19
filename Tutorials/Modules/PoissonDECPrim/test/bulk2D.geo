@@ -1,7 +1,7 @@
 L = 2;
 H = 1;
-d = 0.02;
-dc = 0.002;
+d = 0.1;
+dc = 0.05;
 
 Point(1) = {0, 0, 0, d};
 Point(2) = {L, 0, 0, d};
@@ -21,5 +21,6 @@ Line Loop(1) = {1, 2, 3, 4, 5, 6};
 Plane Surface(1) = {1};
 
 Physical Surface("bulk") = {1};
-Physical Line("anode") = {5};
-Physical Line("cathode") = {1};
+//Physical Line("anode") = {5};
+Physical Line("anode") = {3,4};
+Physical Line("cathode") = {6,1};

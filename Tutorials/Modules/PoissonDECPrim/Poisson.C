@@ -18,6 +18,8 @@
 #include "libmesh/tensor_value.h"
 #include "libmesh/vector_value.h"
 #include "libmesh/plane.h"
+#include "libmesh/fe.h"
+#include "libmesh/fe_interface.h"
 
 // This is needed in order to create the shared module library
 #include "TiberModule.h"
@@ -26,6 +28,38 @@
 using namespace std;
 using namespace libMesh;
 
+namespace
+{
+  void whitney_interpolation(const Elem& elem,
+                             const Point& p,
+                             vector<double>& w0,
+                             vector<Point>& w1)
+  {
+    unsigned int nn = elem.n_nodes();
+
+    w0.resize(nn);
+    w1.resize(elem.n_edges());
+
+    unsigned int dim = 2;
+
+    unique_ptr<FEBase> fe = libMesh::FEBase::build(2, FEType(1, LAGRANGE));
+    const vector<vector<Real> >& phi = fe->get_phi();
+    const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+
+    vector<Point> pts(1, p);
+    fe->reinit(&elem, &pts);
+
+    for (unsigned int i = 0; i < nn; ++i)
+      w0[i] = phi[i][0];
+
+
+    for (unsigned int i = 0; i < nn; ++i)
+    {
+      unsigned int j = (i + 1) % nn;
+      w1[i] = w0[i] * dphi[j][0] - w0[j] * dphi[i][0];
+    }
+  }
+}
 
 
 
@@ -101,6 +135,17 @@ Poisson::parse_options(void)
    myopts.dual_constr = BARYCENTER;
  else if (dualconstr == "voronoi")
    myopts.dual_constr = VORONOI;
+else
+  throw InitFailedException("Unknwon dual construction: " + dualconstr);
+
+string hodgetype = "geometric";
+hodgetype = get_option("hodge_type", hodgetype);
+if (hodgetype == "geometric")
+  myopts.hodge_type = GEOMETRIC;
+else if (hodgetype == "Whitney")
+  myopts.hodge_type = WHITNEY;
+else
+  throw InitFailedException("Unknwon Hodge type: " + hodgetype);
 }
 
 
@@ -397,7 +442,7 @@ Poisson::hodge_pd(const libMesh::Elem* elem,
   vector<Point> prim(ne);
 
   // get primal 1-chains
-  // Works ONLY for 1D and 2D
+  // Works ONLY for 1D and 2D in this form
   for (unsigned int i = 0; i < nn; ++i)
   {
     unsigned int j = (i + 1) % nn;
@@ -417,44 +462,83 @@ Poisson::hodge_pd(const libMesh::Elem* elem,
   }
   else if (dim == 2)
   {
+
     vector<Point> dual(ne);
+    vector<Point> x_m(ne);
     for (unsigned int i = 0; i < nn; ++i)
     {
       unsigned int j = (i + 1) % nn;
-      Point x_m = 0.5 * (elem->point(j) + elem->point(i));
+      x_m[i] = 0.5 * (elem->point(j) + elem->point(i));
 
-      dual[i] = center - x_m;
+      dual[i] = center - x_m[i];
     }
 
     auto cross2d = [] (Point& a, Point& b) { return (a(0)*b(1) - a(1)*b(0)); };
 
-    for (unsigned int i = 0; i < ne; ++i)
+    if (myopts.hodge_type == WHITNEY)
     {
-      double e_norm = prim[i].norm_sq();
-      double e_x_ed = cross2d(prim[i], dual[i]);
-      double e_dot_ed = prim[i] * dual[i];
+      vector<double> w0;
+      vector<Point> w1;
 
-      // calculate the volume contribution associated to the node
-      unsigned int r = (i + 1) % nn;
-      vol[i] += 0.25 * e_x_ed;
-      vol[r] += 0.25 * e_x_ed;
+      Point p = libMesh::FEInterface::inverse_map(2, libMesh::FEType(), elem, center);
+      whitney_interpolation(*elem, p, w0, w1);
 
-      hodge(i, i) = e_x_ed / e_norm;
-
-      // the following takes for side i the next two
-      // sides for expanding skew-transformed 1-chain:
-      // -J e_i = a_i^(i+1)*e_(i+1) + a_i^(i+2)*e_(i+2)
-      // It should work for all n-angles, unless two 
-      // subsequent sides are collinear
-      for (unsigned int j = 1; j < 3; ++j)
+      for (unsigned int i = 0; i < nn; ++i)
       {
-        unsigned int k = (i + j) % ne;
-        unsigned int l = (i + 3 - j) % ne;
+        hodge(i, 0) += 0.5 * cross2d(w1[0], dual[i]);
+        hodge(i, 1) += 0.5 * cross2d(w1[1], dual[i]);
+        hodge(i, 2) += 0.5 * cross2d(w1[2], dual[i]);
 
-        double ei_dot_el = prim[i] * prim[l];
-        double ek_x_el = cross2d(prim[k], prim[l]);
+        double e_x_ed = cross2d(prim[i], dual[i]);
 
-        hodge(i, k) = (e_dot_ed / e_norm) * (ei_dot_el / ek_x_el);
+        // calculate the volume contribution associated to the node
+        unsigned int r = (i + 1) % nn;
+        vol[i] += 0.25 * e_x_ed;
+        vol[r] += 0.25 * e_x_ed;
+      }
+
+      for (unsigned int i = 0; i < nn; ++i)
+      {
+        p = libMesh::FEInterface::inverse_map(2, libMesh::FEType(), elem, x_m[i]);
+        whitney_interpolation(*elem, p, w0, w1);
+        
+        hodge(i, 0) += 0.5 * cross2d(w1[0], dual[i]);
+        hodge(i, 1) += 0.5 * cross2d(w1[1], dual[i]);
+        hodge(i, 2) += 0.5 * cross2d(w1[2], dual[i]);
+
+      }
+    }
+    else
+    {
+
+      for (unsigned int i = 0; i < ne; ++i)
+      {
+        double e_norm = prim[i].norm_sq();
+        double e_x_ed = cross2d(prim[i], dual[i]);
+        double e_dot_ed = prim[i] * dual[i];
+
+        // calculate the volume contribution associated to the node
+        unsigned int r = (i + 1) % nn;
+        vol[i] += 0.25 * e_x_ed;
+        vol[r] += 0.25 * e_x_ed;
+
+        hodge(i, i) = e_x_ed / e_norm;
+
+        // the following takes for side i the next two
+        // sides for expanding skew-transformed 1-chain:
+        // -J e_i = a_i^(i+1)*e_(i+1) + a_i^(i+2)*e_(i+2)
+        // It should work for all n-angles, unless two
+        // subsequent sides are collinear
+        for (unsigned int j = 1; j < 3; ++j)
+        {
+          unsigned int k = (i + j) % ne;
+          unsigned int l = (i + 3 - j) % ne;
+
+          double ei_dot_el = prim[i] * prim[l];
+          double ek_x_el = cross2d(prim[k], prim[l]);
+
+          hodge(i, k) = (e_dot_ed / e_norm) * (ei_dot_el / ek_x_el);
+        }
       }
     }
   }
@@ -518,10 +602,12 @@ Poisson::assemble(void)
     hodge_pd(elem, center, H, inc, vol);
 
 
+    //cerr << "H = \n";
     //cerr << H << endl;
     //for (unsigned int i = 0; i < vol.size(); ++i)
     //  cerr << vol[i] / elem->volume() << " ";
     //cerr << endl << endl;
+
 
     PoissonModel& mod = *get_bulk_model<PoissonModel>(elem);
 
@@ -552,6 +638,8 @@ Poisson::assemble(void)
     }
 
     H.right_multiply(D0);
+    //cerr << "H*D = \n";
+    //cerr << H << "\n";
     H *= -e_i;
 
     // loop over the neighbors

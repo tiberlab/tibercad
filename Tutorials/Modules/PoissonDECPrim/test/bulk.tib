@@ -1,4 +1,6 @@
 @define DIM 2D
+@define DUAL barycentric
+#@define DUAL voronoi
 
 # Description of  the  device physical regions
 Device
@@ -24,13 +26,16 @@ Module poisson
               
   plot = (Potential, ElField, Displacement)
 
+  dual_construction = DUAL
+  hodge_type = Whitney
+
 
   Physics
   {
   
     charge_density constant
     {
-      charge_density = 0e15
+      charge_density = 0e17
     }
 
   }
@@ -61,7 +66,7 @@ Simulation
   
   solve = poisson
   
-  resultpath = "output"DIM
+  resultpath = "output"DIM"_"DUAL
 }
 
 

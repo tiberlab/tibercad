@@ -102,6 +102,15 @@ class TBDLLOCAL Poisson : public SimulationInterface
       VORONOI        /*! < using the circumcenter (Voronoi construction) */
     };
 
+    /*!
+     * The type of discrete Hodge
+     */
+    enum HodgeType
+    {
+      WHITNEY,    /*! < using Whitney forms */
+      GEOMETRIC,  /*! < geometric construction */
+    };
+
     //! The constructor
     /*!
      * Being private disables further inheritance.
@@ -142,6 +151,8 @@ class TBDLLOCAL Poisson : public SimulationInterface
       libMeshEnums::Order integration_order;
 
       DualConstruction dual_constr;  
+
+      HodgeType hodge_type;
     };
 
     Options myopts;
