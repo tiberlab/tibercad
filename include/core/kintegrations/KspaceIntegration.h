@@ -58,15 +58,13 @@ class KspaceIntegration : public TiberModelObject
   static KspaceIntegration* create(T* hook,
       void (T::*callback)(const Point&, DofField&, double&),
       const ModelOptions& opts,
-      const libMesh::Parallel::Communicator& device_comm,
-      const libMesh::Parallel::Communicator& mesh_comm);
+      const libMesh::Parallel::Communicator& k_comm);
 
   template <class T>
   static KspaceIntegration* create(T* hook,
       void (T::*callback)(const Point&, const Point&, DofField&, double&),
       const ModelOptions& opts,
-      const libMesh::Parallel::Communicator& device_comm,
-      const libMesh::Parallel::Communicator& mesh_comm);
+      const libMesh::Parallel::Communicator& k_comm);
 
 
   virtual ~KspaceIntegration();
@@ -83,12 +81,17 @@ class KspaceIntegration : public TiberModelObject
 
   unsigned int get_k_space_dimension(void) const;
 
+  //!creates a parallel communicator by splitting the Device communicator (larger than mesh_comm)
+  //!all nodes with same id (color) of the mesh_communicator have to compute the same k-point
+  static void create_communicator(const libMesh::Parallel::Communicator& device_comm,
+                                  const libMesh::Parallel::Communicator& mesh_comm,
+                                  libMesh::Parallel::Communicator& communicator);
+
 
  protected:
 
   KspaceIntegration(const ModelOptions& options, 
-                    const libMesh::Parallel::Communicator& device_comm,
-                    const libMesh::Parallel::Communicator& mesh_comm);
+                    const libMesh::Parallel::Communicator& k_comm);
 
   virtual void do_init(void);
 
@@ -199,9 +202,7 @@ class KspaceIntegration : public TiberModelObject
   //!estimates error for mesh refinement KellyErrorEstimator is called
   void estimate_error_for_refinement(libMesh::ErrorVector& error);
 
-  const libMesh::Parallel::Communicator& device_comm;
-  const libMesh::Parallel::Communicator& mesh_comm;
-  libMesh::Parallel::Communicator kspace_comm;
+  const libMesh::Parallel::Communicator& kspace_comm;
 
 };
 
@@ -213,10 +214,9 @@ KspaceIntegration*
 KspaceIntegration::create(T* hook,
     void (T::*callback)(const Point&, DofField&, double&),
     const ModelOptions& opts,
-    const libMesh::Parallel::Communicator& device_comm,
-    const libMesh::Parallel::Communicator& mesh_comm)
+    const libMesh::Parallel::Communicator& k_comm)
 {
-  KspaceIntegrationTemplate<T>* templ = new KspaceIntegrationTemplate<T>(hook, opts, device_comm, mesh_comm);
+  KspaceIntegrationTemplate<T>* templ = new KspaceIntegrationTemplate<T>(hook, opts, k_comm);
   templ->_callback = callback;
   return templ;
 }
@@ -226,10 +226,9 @@ KspaceIntegration*
 KspaceIntegration::create(T* hook,
     void (T::*callback)(const Point&, const Point&, DofField&, double&),
     const ModelOptions& opts,
-    const libMesh::Parallel::Communicator& device_comm,
-    const libMesh::Parallel::Communicator& mesh_comm)
+    const libMesh::Parallel::Communicator& k_comm)
 {
-  KspaceIntegrationTemplate<T>* templ = new KspaceIntegrationTemplate<T>(hook, opts, device_comm, mesh_comm);
+  KspaceIntegrationTemplate<T>* templ = new KspaceIntegrationTemplate<T>(hook, opts, k_comm);
   templ->_callback2 = callback;
   return templ;
 }

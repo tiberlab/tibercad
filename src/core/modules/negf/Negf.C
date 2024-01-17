@@ -622,8 +622,7 @@ Negf::init_k_space_integration(void)
     init_k_space(kopts); 
 
     _k_int_density = KspaceIntegration::create(this, &Negf::calculate_for_k_point, kopts,
-                                               get_communicator(),
-                                               get_solver_communicator());
+                                               _k_comm);
 
     if (_k_int_density == NULL)
       throw InitFailedException("Could not create k-integration");
@@ -646,8 +645,7 @@ Negf::init_k_space_integration(void)
     init_k_space(kopts); 
     
     _k_int_current = KspaceIntegration::create(this, &Negf::calculate_for_k_point, kopts,
-                                               get_communicator(),
-                                               get_solver_communicator());
+                                               _k_comm);
 
     if (_k_int_current == NULL)
       throw InitFailedException("Could not create k-integration");
@@ -688,7 +686,7 @@ Negf::setup_hamil(void)
     else
       _ext_module->get_H_csr(A, JA, IA, _perm);
 
-    _libnegf->set_H_csr(nrow, A, JA, IA);
+    _libnegf->set_H_csr(nrow, A, JA, IA); //add iKS
 
     Messages::info("done.");
   }
@@ -784,8 +782,8 @@ Negf::setup_negf(void)
 
   _libnegf->set_output_path(get_output_directory());
 
-  //Set MPI communicator
-  _libnegf->set_mpi_comm(this->get_solver_communicator().get());
+  //Set MPI communicator - TO BE DELETED
+  // _libnegf->set_mpi_comm(this->get_solver_communicator().get());
   // initialize the contacts
   _libnegf->init_contacts(_quantum_contacts.size());
 
@@ -1261,7 +1259,7 @@ Negf::plot_LDOS(const std::vector<double>& energies,
 
     for (int i=0; i<N_atoms; i++)
     {
-      // x coord from Ansgtrom to mesh units
+      // x coord from Angstrom to mesh units
       double equ = 1e-10 / get_mesh_units();
       coordinates[i] = atoms[i].get_position(0) * equ;
     }
@@ -2996,3 +2994,27 @@ Negf::project_density(const Elem* elem, const Point& point, const std::vector<do
 
   return density;
 }
+
+
+// Overrides the method in SimulationInterface.C
+void
+Negf::setup_mpi_comm(void)
+{
+ 
+  // // Set this communicator as the device one, we don't need it to be different
+  this->set_solver_communicator(this->get_communicator());
+  
+  unsigned int nGroups = get_solver_options().get_option("parallel_groups", 1);
+
+  _libnegf->mpi_cart_init(this->get_communicator().get(), nGroups, _cart_comm.get(), _k_comm.get());
+  
+  // In dftb+, they reset the global communicator with the cartesian one
+  this->set_communicator(_cart_comm);
+
+  return;
+}
+// Commented code for creating a new option block
+// if(get_options().has_submodel("New block"))
+// ModelOptions::submodel_iterator it(get_options().submodels_begin("New block"));
+// const ModelOptions& opts = it->second;
+// opts.get_option("option_in_block",varaible);

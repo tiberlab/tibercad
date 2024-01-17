@@ -23,11 +23,9 @@
 using namespace std;
 
 KspaceIntegration::KspaceIntegration(const ModelOptions& options, 
-                                     const libMesh::Parallel::Communicator& d_comm,
-                                     const libMesh::Parallel::Communicator& m_comm)
+                                     const libMesh::Parallel::Communicator& k_comm)
  : TiberModelObject(options),
-   device_comm(d_comm),
-   mesh_comm(m_comm)
+   kspace_comm(k_comm)
 {
   _kspace = NULL;
 }
@@ -454,8 +452,8 @@ void KspaceIntegration::do_init(void)
 
   // Create a parallel communicator by splitting the Device communicator (larger than mesh_comm)
   // All nodes with same id (color) of the mesh_communicator have to compute the same k-point
-  unsigned int color = mesh_comm.rank();
-  device_comm.split(color, 0, kspace_comm);
+  // unsigned int color = mesh_comm.rank();
+  // device_comm.split(color, 0, kspace_comm);
 
   _kspace = new Kspace(kopts, kspace_comm);
 
@@ -528,6 +526,17 @@ double  KspaceIntegration::estimate_error(void)
   return(result);
 
 }
+
+void
+KspaceIntegration::create_communicator(const libMesh::Parallel::Communicator& device_comm,
+                                            const libMesh::Parallel::Communicator& mesh_comm,
+                                            libMesh::Parallel::Communicator& communicator)
+{
+  unsigned int color = mesh_comm.rank();
+  device_comm.split(color, 0, communicator);
+}
+
+
 //--------------------------------------------------------------------------------------//
 unsigned int KspaceIntegration::count_elements() const
 {

@@ -12,6 +12,9 @@
 #include "Boundary.h"
 #include "KspaceIntegration.h"
 
+#include "libmesh/mesh_base.h"
+#include "libmesh/parallel.h"
+
 #include <string>
 
 class NegfWrapper;
@@ -74,6 +77,10 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     //! Solve the MyPoisson equation
     virtual void do_solve(void);
+
+
+    //! Reimplement the MPI communicators setup
+    virtual void setup_mpi_comm(void);
 
 
     //! We need to create a physical model
@@ -293,6 +300,10 @@ class TBDLLOCAL Negf : public SimulationInterface
     EigenvalueProblem* _ext_module;
 
     AtomisticStructure* _atom_structure;
+
+    // The MPI cartesian communicators used in libNEGF
+    libMesh::Parallel::Communicator _cart_comm;
+    libMesh::Parallel::Communicator _k_comm;
 };
 
 

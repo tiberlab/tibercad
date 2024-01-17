@@ -295,11 +295,15 @@ void Optics::init_k_space_integration(void)
    m.info("Setting up k-space integration");
    m.indent();
 
+   libMesh::Parallel::Communicator kspace_comm;
+   KspaceIntegration::create_communicator(_initial_state_model->get_communicator(),
+                                          _initial_state_model->get_solver_communicator(),
+                                          kspace_comm);
+
    _k_integration = KspaceIntegration::create(this, 
                                               &Optics::calculate_for_k_point, 
                                               kopts, 
-                                              _initial_state_model->get_communicator(),
-                                              _initial_state_model->get_solver_communicator());
+                                              kspace_comm);
 
    if (_k_integration == NULL)
       throw InitFailedException("Could not create k-integration");

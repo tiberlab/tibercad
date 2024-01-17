@@ -46,8 +46,7 @@ class KspaceIntegrationTemplate : public KspaceIntegration
 
     KspaceIntegrationTemplate(T* hook, 
                               const ModelOptions& opts,
-                              const libMesh::Parallel::Communicator& device_comm,
-                              const libMesh::Parallel::Communicator& mesh_comm);
+                              const libMesh::Parallel::Communicator& k_comm);
 
     //! The object which knows how to calculate the density
     T* _hook;
@@ -64,9 +63,8 @@ template <class T>
 inline
 KspaceIntegrationTemplate<T>::KspaceIntegrationTemplate(T* hook, 
                               const ModelOptions& opt,
-                              const libMesh::Parallel::Communicator& device_comm,
-                              const libMesh::Parallel::Communicator& mesh_comm)
-  : KspaceIntegration(opt, device_comm, mesh_comm),
+                              const libMesh::Parallel::Communicator& k_comm)
+  : KspaceIntegration(opt, k_comm),
     _callback(0),
     _callback2(0)
 {
