@@ -24,10 +24,10 @@ using namespace std;
 
 KspaceIntegration::KspaceIntegration(const ModelOptions& options, 
                                      const libMesh::Parallel::Communicator& k_comm)
- : TiberModelObject(options),
-   kspace_comm(k_comm)
+ : TiberModelObject(options)
 {
   _kspace = NULL;
+  kspace_comm.duplicate(k_comm);
 }
 
 //-------------------------------------------------------//
