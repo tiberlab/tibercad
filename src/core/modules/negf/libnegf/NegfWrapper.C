@@ -52,14 +52,15 @@ int NegfWrapper::set_mpi_comm(MPI_Comm comm)
     }
 }
 
-int NegfWrapper :: mpi_cart_init(MPI_Comm inComm, int nGroups, MPI_Comm cartComm, MPI_Comm kComm)
-{   
-    MPI_Comm cartComm_converted = MPI_Comm_c2f(cartComm);
-    MPI_Comm kComm_converted = MPI_Comm_c2f(kComm);
+// WORK IN PROGRESS
+// int NegfWrapper :: mpi_cart_init(MPI_Comm inComm, int nGroups, MPI_Comm cartComm, MPI_Comm kComm)
+// {   
+//     MPI_Comm cartComm_converted = MPI_Comm_c2f(cartComm);
+//     MPI_Comm kComm_converted = MPI_Comm_c2f(kComm);
 
-    f77_negf_cartesian_init(_handler, MPI_Comm_c2f(inComm), nGroups, cartComm_converted, kComm_converted);
-    return 0;
-}
+//     f77_negf_cartesian_init(_handler, MPI_Comm_c2f(inComm), nGroups, cartComm_converted, kComm_converted);
+//     return 0;
+// }
 
 void
 NegfWrapper::force_reinit(void)

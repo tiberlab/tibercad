@@ -601,6 +601,12 @@ Negf::init_k_space_integration(void)
 
   k_dim = min(k_dim, 3u);
 
+  //TEMPORARY FIX (UNTIL API FOR CART_INIT HAS BEEN PUSHED TO REPO)
+  libMesh::Parallel::Communicator kspace_comm;
+  KspaceIntegration::create_communicator(this->get_communicator(),
+                                          this->get_solver_communicator(),
+                                          kspace_comm);
+
 
   if (get_options().has_submodel("k_integration_density"))
   {
@@ -621,8 +627,11 @@ Negf::init_k_space_integration(void)
 
     init_k_space(kopts); 
 
+    // TEMPORARY
+    // _k_int_density = KspaceIntegration::create(this, &Negf::calculate_for_k_point, kopts,
+    //                                            _k_comm);
     _k_int_density = KspaceIntegration::create(this, &Negf::calculate_for_k_point, kopts,
-                                               _k_comm);
+                                               kspace_comm);                                           
 
     if (_k_int_density == NULL)
       throw InitFailedException("Could not create k-integration");
@@ -644,8 +653,11 @@ Negf::init_k_space_integration(void)
 
     init_k_space(kopts); 
     
+    // TEMPORARY
+    // _k_int_current = KspaceIntegration::create(this, &Negf::calculate_for_k_point, kopts,
+    //                                            _k_comm);
     _k_int_current = KspaceIntegration::create(this, &Negf::calculate_for_k_point, kopts,
-                                               _k_comm);
+                                               kspace_comm);
 
     if (_k_int_current == NULL)
       throw InitFailedException("Could not create k-integration");
@@ -2997,22 +3009,24 @@ Negf::project_density(const Elem* elem, const Point& point, const std::vector<do
 
 
 // Overrides the method in SimulationInterface.C
-void
-Negf::setup_mpi_comm(void)
-{
+// WORK IN PROGRESS (INELASTIC API)
+// void
+// Negf::setup_mpi_comm(void)
+// {
  
-  // // Set this communicator as the device one, we don't need it to be different
-  this->set_solver_communicator(this->get_communicator());
+//   // // Set this communicator as the device one, we don't need it to be different
+//   this->set_solver_communicator(this->get_communicator());
   
-  unsigned int nGroups = get_solver_options().get_option("parallel_groups", 1);
+//   unsigned int nGroups = get_solver_options().get_option("parallel_groups", 1);
 
-  _libnegf->mpi_cart_init(this->get_communicator().get(), nGroups, _cart_comm.get(), _k_comm.get());
+//   _libnegf->mpi_cart_init(this->get_communicator().get(), nGroups, _cart_comm.get(), _k_comm.get());
   
-  // In dftb+, they reset the global communicator with the cartesian one
-  this->set_communicator(_cart_comm);
+//   // In dftb+, they reset the global communicator with the cartesian one
+//   this->set_communicator(_cart_comm);
 
-  return;
-}
+//   return;
+// }
+
 // Commented code for creating a new option block
 // if(get_options().has_submodel("New block"))
 // ModelOptions::submodel_iterator it(get_options().submodels_begin("New block"));

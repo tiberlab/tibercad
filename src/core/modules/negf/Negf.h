@@ -79,8 +79,8 @@ class TBDLLOCAL Negf : public SimulationInterface
     virtual void do_solve(void);
 
 
-    //! Reimplement the MPI communicators setup
-    virtual void setup_mpi_comm(void);
+    //! Reimplement the MPI communicators setup (TEMPORARILY COMMENTED UNTIL API IS FINISHED)
+    //virtual void setup_mpi_comm(void);
 
 
     //! We need to create a physical model

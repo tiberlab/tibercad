@@ -26,7 +26,8 @@ option(WITH_SOCKETS "Whether socket communication should allowed for" FALSE)
 option(WITH_DFTD3 "Whether the DFTD3 library should be included" FALSE)
 
 option(WITH_TRANSPORT "Whether transport via libNEGF should be enabled" TRUE)
-option(WITH_TRANSPORT_GPU "Whether libNEGF should enable GPU" TRUE)
+option(WITH_INELASTIC "Whether libNEGF should enable inelastic transport (requires MPI)." FALSE)
+option(WITH_TRANSPORT_GPU "Whether libNEGF should enable GPU" FALSE)
 
 if(NOT WITH_MPI)
   option(WITH_ARPACK "Whether the ARPACK library should be included" FALSE)
