@@ -8,11 +8,11 @@ target := modules
 #target := 
 
 modules: libnegf module.conf
-	@$(BUILDMODULE) module.conf
+	@$(BUILDMODULE) module.conf >> test/double_barrier/Make_log_3.out 2>&1
 
 .PHONY: libnegf clean
 libnegf:
-	-@$(MAKE) --no-print-directory -C libnegf $(MAKECMDGOALS)
+	-@$(MAKE) --no-print-directory -C libnegf $(MAKECMDGOALS) >> test/double_barrier/Make_log_2.out 2>&1
 	@mkdir -p $(topdir)/$(ARCH)/modules/negf
 	-@cp libnegf/libnegf.so $(topdir)/$(ARCH)/modules/negf
 

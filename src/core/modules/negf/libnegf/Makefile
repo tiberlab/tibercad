@@ -32,8 +32,8 @@ libnegf$(shared_libext) :  .$(ARCH)/NegfWrapper$(obj-suffix) libnegf_$(ARCH).a
 libnegf_$(ARCH).a: update
 	@echo "Compiling libNEGF ...";
 	mkdir -p build; cd build; \
-	$(CMAKE) -C ../custom.cmake -S ../libnegf -B .; \
-	$(MAKE); cd .. ;
+	$(CMAKE) -C ../custom.cmake -S ../libnegf -B . >> ../../test/double_barrier/cmake_log.out 2>&1; \
+	$(MAKE) >> ../../test/double_barrier/Make_log.out 2>&1; cd .. ;
 	cp build/src/libnegf.a libnegf_$(ARCH).a	
 	cp build/src/api/libnegf.hpp . 
 	cp libnegf/src/api/fortran.h .
