@@ -2,15 +2,17 @@
 #define _KSPACEINTEGRATION_H_
 
 
-#include "error_vector.h"
-#include "elem.h"
-#include "dof_object.h"
-
 #include "TiberModelObject.h"
 #include "Kspace.h"
 #include "TypeDefs.h"
 #include "libMeshDefs.h"
-#include "parallel.h"
+
+#include "libmesh/error_vector.h"
+#include "libmesh/elem.h"
+#include "libmesh/enum_order.h"
+#include "libmesh/enum_quadrature_type.h"
+#include "libmesh/dof_object.h"
+#include "libmesh/parallel.h"
 
 #include <stdio.h>
 #include <stdlib.h>

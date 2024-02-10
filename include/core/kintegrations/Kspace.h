@@ -1,17 +1,22 @@
 #ifndef _KSPACE_H_
 #define _KSPACE_H_
 
-#include "enum_order.h"
-#include "enum_quadrature_type.h"
-#include "libmesh.h"
-#include "mesh.h"
-#include "mesh_generation.h"
-#include <vector>
 #include "tensor.h"
-#include <node.h>
 #include "ModelOptions.h"
 #include "InitFailedException.h"
 #include "parallel.h"
+
+#include "libmesh/enum_order.h"
+#include "libmesh/vector_value.h"
+
+#include <vector>
+
+namespace libMesh
+{
+  class MeshBase;
+  class ReplicatedMesh;
+}
+
 
 class Kspace
 {
@@ -148,7 +153,7 @@ class Kspace
 
 
    //! Brilluoin zone
-   libMesh::Mesh* kmesh;
+   libMesh::ReplicatedMesh* kmesh;
 
    //! Dimension of the k_space
    unsigned int  k_space_dim;
@@ -213,15 +218,6 @@ inline bool Kspace::is_k_path(void) const
   return(k_path);
 }
 
-inline libMesh::MeshBase* Kspace::get_k_mesh()
-{
-  return(kmesh);
-}
-
-inline const libMesh::MeshBase* Kspace::get_k_mesh() const
-{
-  return(kmesh);
-}
 
 inline unsigned int Kspace::dimension(void) const
 {

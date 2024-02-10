@@ -42,17 +42,13 @@
 // LibMesh includes
 #include "libmesh/system.h"
 #include "libmesh/elem.h"
+#include "libmesh/mesh.h"
 #include "libmesh/fe_interface.h"
 #include "libmesh/periodic_boundary.h"
-//#include "libmesh/elem.h"
 
 #include <sstream>
 #include <algorithm>
 
-namespace libMesh
-{
-  class Elem;
-}
 
 
 using namespace std;

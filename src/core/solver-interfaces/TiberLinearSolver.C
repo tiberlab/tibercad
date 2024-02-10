@@ -104,6 +104,7 @@ TiberLinearSolver::solve(const libMesh::ShellMatrix<Number>&,
     const unsigned int)
 {
   Messages::error("Solving with shell matrix is not implemented");
+  return std::make_pair(0, 0.0);
 }
   
 
@@ -117,6 +118,7 @@ TiberLinearSolver::solve(const libMesh::ShellMatrix<Number>&,
     const unsigned int)
 {
   Messages::error("Solving with shell matrix is not implemented");
+  return std::make_pair(0, 0.0);
 }
 
 

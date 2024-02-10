@@ -10,6 +10,9 @@
 #include "DataOutput.h"
 #include "Constants.h"
 
+#include "libmesh/mesh.h"
+#include "libmesh/mesh_generation.h"
+
 using namespace std;
 using namespace Constants; 
 using namespace libMesh;

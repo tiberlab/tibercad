@@ -71,8 +71,9 @@ void OpticsTB::do_compute_matrix_elements( )
           unsigned int is = _initial_state_numbers[_initial_indices[i1]];
           unsigned int fs = _final_state_numbers[_final_indices[i2]];
 
-          _P_matrix[i][i1][i2] = _initial_state_model->
-	        calculate_matrix_element(_initial_state_particle, is,
+          _P_matrix[i][i1][i2] = 
+              _initial_state_model->calculate_matrix_element(
+                             _initial_state_particle, is,
 		                         _final_state_particle, fs);
 
           // convert matrix element from eV*Ang to atomic units

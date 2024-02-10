@@ -7,6 +7,7 @@
 #include "Utils.h"
 #include "SpaceTransformation.h"
 
+#include "libmesh/replicated_mesh.h"
 #include "libmesh/mesh_modification.h"
 #include "libmesh/mesh_refinement.h"
 #include "libmesh/gmsh_io.h"
@@ -45,12 +46,13 @@ Kspace::symmetry_names = {"Gamma", "linear", "quadratic", "rectangular",
 Kspace::Kspace(const ModelOptions& options, const libMesh::Parallel::Communicator& comm)
  : mod_opt(options),
    _mesh_order(libMesh::FIRST),
+   kmesh(nullptr),
    k_max(1, 1, 1),
    k_space_symmetry(GAMMA)
 {
-  kmesh = NULL;
 
-  kspace_comm.duplicate(comm);
+  // we create a serial communicator
+  comm.split(0,0,kspace_comm); 
 
   transform_matrix = Tensor2Gen(1);
 
@@ -77,7 +79,7 @@ Kspace::Kspace( const Kspace& kspace)
 {
    transform_matrix = 0;
    transform_matrix += kspace.transform_matrix;
-   kmesh = new libMesh::Mesh(*(kspace.kmesh));
+   kmesh = new libMesh::ReplicatedMesh(*(kspace.kmesh));
    kspace_comm.duplicate(kspace.kspace_comm);
 }
 
@@ -87,6 +89,21 @@ Kspace::~Kspace()
 {
   delete kmesh;
 }
+
+
+libMesh::MeshBase*
+Kspace::get_k_mesh()
+{
+  return(kmesh);
+}
+
+
+const libMesh::MeshBase*
+Kspace::get_k_mesh() const
+{
+  return(kmesh);
+}
+
 
 
 void
@@ -500,7 +517,7 @@ void Kspace::build_k_grid()
 {
 
   //build mesh
-  kmesh = new libMesh::Mesh(kspace_comm, k_space_dim);
+  kmesh = new libMesh::ReplicatedMesh(kspace_comm, k_space_dim);
 
   //bool full = mod_opt.get_option("full_zone", false);
 
@@ -728,7 +745,7 @@ void Kspace::build_k_grid()
       n = floor(log(num_nodes[0] - 1) / log(2));
     mr.uniformly_refine(n);
 
-    //kmesh->print_info();
+    kmesh->print_info();
   }
 
 }
@@ -1509,7 +1526,7 @@ Kspace::get_symmetry_point(const std::string& name) const
 //---------------------------------------------------------------------------------------------------------------//
 void Kspace::define_k_path(void)
 {
-  kmesh = new libMesh::Mesh(kspace_comm, k_space_dim);
+  kmesh = new libMesh::ReplicatedMesh(kspace_comm, k_space_dim);
 
 
   std::string kpath = mod_opt.get_option("k_path","");

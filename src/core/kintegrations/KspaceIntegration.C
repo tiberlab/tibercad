@@ -1,19 +1,17 @@
 
 // Basic include files needed for the mesh functionality.
-#include "fe.h"
-#include "fe_interface.h"
+#include "libmesh/mesh_base.h"
+#include "libmesh/fe.h"
+#include "libmesh/fe_interface.h"
 // Define generic quadrature rules.
-#include "quadrature.h"
-#include "quadrature_gauss.h"
-#include "quadrature_trap.h"
+#include "libmesh/quadrature.h"
+#include "libmesh/quadrature_gauss.h"
+#include "libmesh/quadrature_trap.h"
 
 // For mesh refinement
-#include "mesh_refinement.h"
-#include "kelly_error_estimator.h"
-// Define the Finite Element object.
+#include "libmesh/mesh_refinement.h"
+#include "libmesh/kelly_error_estimator.h"
 
-// Define useful datatypes for finite element
-// matrix and vector components.
 #include "KspaceIntegration.h"
 #include "VTKIO.h"
 

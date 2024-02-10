@@ -6,10 +6,14 @@
 #include "SimulationInterface.h"
 #include "KspaceIntegration.h"
 
-#include "sparse_matrix.h"
+#include "libmesh/sparse_matrix.h"
 #include <complex>
 #include <vector>
 
+namespace libMesh
+{
+  class UnstructuredMesh;
+}
 
 class Kspace;
 
