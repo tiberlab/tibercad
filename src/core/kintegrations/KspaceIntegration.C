@@ -22,9 +22,9 @@ using namespace std;
 
 KspaceIntegration::KspaceIntegration(const ModelOptions& options, 
                                      const libMesh::Parallel::Communicator& k_comm)
- : TiberModelObject(options)
+ : TiberModelObject(options),
+ _kspace(nullptr)
 {
-  _kspace = NULL;
   kspace_comm.duplicate(k_comm);
 }
 
@@ -266,6 +266,7 @@ void KspaceIntegration::calculate_convergent_density()
   int verbose = get_option("verbose",SimulationOptions::verbose());
 
   libMesh::MeshBase* kmesh = _kspace->get_k_mesh();
+  //kmesh->print_info();
 
   if (verbose>1)
  	 cout <<"(KIntegration) Calculate k-integral "<<endl;
@@ -532,6 +533,7 @@ KspaceIntegration::create_communicator(const libMesh::Parallel::Communicator& de
 {
   unsigned int color = mesh_comm.rank();
   device_comm.split(color, 0, communicator);
+  //communicator.duplicate(device_comm);
 }
 
 

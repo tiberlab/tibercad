@@ -52,7 +52,7 @@ Kspace::Kspace(const ModelOptions& options, const libMesh::Parallel::Communicato
 {
 
   // we create a serial communicator
-  comm.split(0,0,kspace_comm); 
+  comm.split(0, 0, kspace_comm); 
 
   transform_matrix = Tensor2Gen(1);
 
@@ -734,6 +734,10 @@ void Kspace::build_k_grid()
     }
 
     kmesh->prepare_for_use();
+    // this is done to prevent from distributing the
+    // mesh, as we want the k-mesh always serial on
+    // all processes.
+    kmesh->skip_partitioning(true);
 
     if (_mesh_order == libMesh::SECOND)
       kmesh->all_second_order();
@@ -745,7 +749,7 @@ void Kspace::build_k_grid()
       n = floor(log(num_nodes[0] - 1) / log(2));
     mr.uniformly_refine(n);
 
-    kmesh->print_info();
+    //kmesh->print_info();
   }
 
 }
