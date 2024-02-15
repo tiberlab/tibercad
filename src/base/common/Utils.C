@@ -609,10 +609,10 @@ Utils::extract_tensor(const std::string& input, libMesh::RealTensor& tensor)
         tensor(2,2) = row[1];
         break;
 
-      case 6: // symmetric tensor in xx yy zz xy yz xz ordering
-        tensor(0,1) = tensor(1,0) = row[3];
-        tensor(1,2) = tensor(2,1) = row[4];
-        tensor(0,2) = tensor(2,0) = row[5];
+      case 6: // symmetric tensor in xx yy zz yz xz xy ordering
+        tensor(1,2) = tensor(2,1) = row[3];
+        tensor(0,2) = tensor(2,0) = row[4];
+        tensor(0,1) = tensor(1,0) = row[5];
 
       case 3: // complete diagonal given
         tensor(0,0) = row[0];
