@@ -209,7 +209,6 @@ Sweep::parse_options(void)
       {
         continue;
       }
-      cerr << *it << " -> " << val << endl;
 
       for (unsigned int i = 0; i < _values.size(); ++i)
       {
