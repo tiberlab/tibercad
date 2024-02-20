@@ -219,11 +219,10 @@ Options and  parameters:
     a factor of 10 between successive values. 
 
  ``values`` :  double
-  instead of ``start``, ``stop`` and ``steps``, provide the sweep values explicitly
+  instead of ``start``, ``stop`` and ``steps``, provide the sweep values explicitly. This accepts also ranges in Matlab syntax, e.g. ``0:0.25:4``
 
- ``plot_data`` : string | boolean
-    set to true or ``each`` if you want to plot after each step the simulation results (default is false), or to ``last`` to write only
-    results of last step
+ ``plot_data`` : string
+    set to ``each`` if you want to plot after each step the simulation results (default is ``none``), or to ``last`` to write only results of last step. Alternatively, a vector of values can be given, indicating the specific values where to plot data. Values not present in ``values`` or the variable range will be ignored.
 
  ``file_mode`` : string
     controls the behaviour for writing the data file containing global data. Can be one of ``append``, ``overwrite`` (default) or ``no-overwrite``
@@ -258,7 +257,7 @@ Example::
    start = 0.0
    stop = 1.2
    steps = 12
-   plot_data = true
+   plot_data = (0, 0.3, 0.7, last)
   }
 
 In  this example, at  each  step of the  sweep the two simulations ``dd`` and  ``thermal`` are  performed, in  this  order, while  the  variable is ``Vbias`` and assumes values between 0 and 1.2.

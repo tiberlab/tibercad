@@ -6,12 +6,38 @@
 #include "Variable.h"
 #include "Messages.h"
 
+#include "boost/lexical_cast.hpp"
+
 #include <fstream>
+#include <algorithm>
 
 
 
 using namespace std;
 
+
+Sweep::Sweep(const ModelOptions& options)
+  : SimulationInterface(options),
+    _variable(""),
+    _ignore_failures(false)
+{
+  has_solution_vector(false);
+  is_task(true);
+}
+
+
+Sweep*
+Sweep::create(const ModelOptions& options)
+{
+  return new Sweep(options);
+}
+
+
+const std::vector<SimulationInterface*>&
+Sweep::get_simulations(void) const
+{
+  return _simulations;
+}
 
 
 Sweep::~Sweep(void)
@@ -46,28 +72,6 @@ Sweep::do_init(void)
 
 
   }
-
-  /*
-  2018-07-18 want to be able to not solve anything
-  // if user didn't provide a simulation name, we take the first available
-  if (num_of_sims == 0)
-  {
-    SimulationIterator it = simulations_begin();
-    if (it == simulations_end())
-      throw InitFailedException("Sweep: No simulation found.");
-
-    _simulations.resize(1);
-    _simulations[0] = *it;
-  }
-  */
-
-  //
-  // at this point we have for sure one simulation
-  //
-
-  // we set our environment to that of the first simulation
-  // 02-09-2010 Sweep should not have an environment
-  //set_environment(&_simulations[0]->get_environment());
 
 
   // Now we have to find the model to the variable
@@ -181,14 +185,38 @@ Sweep::parse_options(void)
 
 
   // whether to plot data or not
-  string plot_data = get_option("plot_data", "none");
-  if (plot_data == "last")
-    _plot_data = LAST;
-  else
+  _plot_data.resize(0);
+  _plot_data.resize(_values.size(), false);
+  vector<string> plot_data(1, "none");
+  get_option("plot_data", plot_data);
+
+  for (auto it = plot_data.begin(); it != plot_data.end(); ++it)
   {
-    if ((plot_data == "each") ||
-        get_option("plot_data", false))
-      _plot_data = EACH;
+    if (*it == "last")
+    {
+      _plot_data.back() = true;
+    }
+    else if ((*it == "each") || (*it == "true"))
+    {
+      fill(_plot_data.begin(), _plot_data.end(), true);
+    }
+    else
+    {
+      // check if specific values are given
+      double val;
+      try { val = boost::lexical_cast<double>(*it); }
+      catch(boost::bad_lexical_cast &)
+      {
+        continue;
+      }
+      cerr << *it << " -> " << val << endl;
+
+      for (unsigned int i = 0; i < _values.size(); ++i)
+      {
+        if (Utils::almost_equal::compare(val, _values[i]))
+          _plot_data[i] = true;
+      }
+    }
   }
 
 }
@@ -534,7 +562,8 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
     // filename suffix
     // we strip the leading '$' for the filename
     ostringstream suffix;
-    suffix << _variable.substr(1, string::npos) << "_" << _goal;
+    suffix << get_name() << "_" <<
+              _variable.substr(1, string::npos) << "_" << _goal;
     TiberCad::prepend_to_filename_suffix(suffix.str());
 
     bool failed = false;
@@ -551,8 +580,7 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
           _simulations[j]->solve();
 
         // plot results if required
-        if ((_plot_data == EACH) ||
-            ((_plot_data == LAST) && (i == (n - 1))))
+        if (_plot_data[i])
           _simulations[j]->plot();
 
         // update "something-vs.-sweepvariable" files
