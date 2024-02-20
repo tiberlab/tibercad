@@ -81,6 +81,8 @@ class KspaceIntegration : public TiberModelObject
 
   const Kspace* get_k_space(void) const;
 
+  Kspace* get_k_space(void);
+
   unsigned int get_k_space_dimension(void) const;
 
   //!creates a parallel communicator by splitting the Device communicator (larger than mesh_comm)
@@ -88,6 +90,22 @@ class KspaceIntegration : public TiberModelObject
   static void create_communicator(const libMesh::Parallel::Communicator& device_comm,
                                   const libMesh::Parallel::Communicator& mesh_comm,
                                   libMesh::Parallel::Communicator& communicator);
+
+  //!returns the k points and weights
+  std::map<libMesh::Point, double>
+  get_kpoints_and_weights(void);
+  
+  //!returns the kpoints and weights of the kspace as a shared global quantity among the processors.
+  std::map<DofField, double>
+  broadcast_kpoints(libMesh::Parallel::Communicator& comm, std::map<Point, double> k_points);
+
+  //!distributes the k-grid across the processors and for each process returns the local indices
+  std::vector<int>
+  distribute_kpoints(const libMesh::Parallel::Communicator& comm, std::map<DofField, double> k_points);
+
+  //! builds the map local k points - weights
+  std::map<DofField, double>
+  get_local_kpoints(std::map<DofField, double> global_kpoints, std::vector<int> local_k_indices);
 
 
  protected:
@@ -254,6 +272,13 @@ KspaceIntegration::solve(void)
 inline
 const Kspace*
 KspaceIntegration::get_k_space(void) const
+{
+  return(_kspace);
+}
+
+inline
+Kspace*
+KspaceIntegration::get_k_space(void)
 {
   return(_kspace);
 }

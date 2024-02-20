@@ -42,6 +42,153 @@ KspaceIntegration::get_k_space_dimension(void) const
 }
 
 
+map<Point, double>
+KspaceIntegration::get_kpoints_and_weights(void)
+{
+  map<Point, double> k_points;
+
+  const libMesh::MeshBase* kmesh =  _kspace->get_k_mesh();
+  unsigned int k_dim = kmesh->mesh_dimension();
+
+  real_space_density.clear();
+
+  double error_value;
+
+  //-----------------------------------------------------------
+
+  libMesh::UniquePtr<libMesh::FEBase> fe( libMesh::FEBase::build(k_dim, libMesh::FEType(fem_order) ));
+
+  libMesh::UniquePtr<libMesh::QBase> qrule(libMesh::QBase::build(quadrature_type, k_dim, integration_order));
+
+  fe->attach_quadrature_rule(qrule.get());
+
+  const std::vector<Real>& JxW = fe->get_JxW();
+
+  const std::vector<Point>& q_point = fe->get_xyz();
+
+
+  MeshBase::const_element_iterator it_k_space= kmesh->active_local_elements_begin();
+  const MeshBase::const_element_iterator it_k_end  = kmesh->active_local_elements_end();
+
+
+  double factor = opt.normalization_volume;
+  for (short i = 0; i < k_dim; i++)  factor /= (2.0 * M_PI);
+  factor *= _kspace->get_degeneracy_factor() * opt.degeneracy;
+
+
+
+  for ( ; it_k_space != it_k_end ; ++it_k_space) //loop over k space elements
+  {
+    const KElem* kelem = *it_k_space;
+    KMeshToIntegratedValue::iterator it_k_elem;
+
+    fe->reinit(kelem);
+
+    for (unsigned int qp=0; qp<q_point.size(); qp++)
+    {
+
+      double w = k_points[q_point[qp]];
+      k_points[q_point[qp]] = w + JxW[qp] * factor;
+    }
+  }
+
+  return k_points;
+}
+
+
+map<DofField, double>
+KspaceIntegration::broadcast_kpoints(libMesh::Parallel::Communicator& comm, map<Point, double> kpoints)
+{
+
+  // Broadcast the kpoints
+  // For some reason it does not compile when broadcasting the Point object. 
+  // For now we broadcast a map built with std::vectors
+  map<DofField, double> std_kpoint_map;
+
+  map<Point, double>::iterator kp_it(kpoints.begin());
+  const map<Point, double>::iterator kp_end(kpoints.end());
+  for (; kp_it != kp_end; kp_it++)
+  {
+    Point kp = kp_it->first;
+    double w = kp_it->second;
+
+    DofField std_kp(3);
+
+    std_kp[0] = kp(0);
+    std_kp[1] = kp(1);
+    std_kp[2] = kp(2);
+
+    std_kpoint_map[std_kp] = w;
+
+  }
+
+  comm.broadcast(std_kpoint_map);
+
+  return std_kpoint_map;
+}
+
+
+std::vector<int>
+KspaceIntegration::distribute_kpoints(const libMesh::Parallel::Communicator& comm, map<DofField, double> kpoints)
+{
+  int n_procs = comm.size();
+  int id = comm.rank();
+  
+  int n_global_kpoints = kpoints.size();
+
+  int n_local_kpoints = n_global_kpoints / n_procs;
+  
+  int res = n_global_kpoints - n_local_kpoints*n_procs;
+  if (res > 0) n_local_kpoints++;
+
+  std::ostringstream os;
+  os << "(KIntegration) Distribute " << n_global_kpoints 
+  << " k-points over " << n_procs << " processes.";
+  Messages::info(os.str());
+  
+  std::vector<int> local_indices(n_local_kpoints, -1);
+
+  int index = 0;
+  for (int iK=0; iK<n_global_kpoints; iK++)
+  {
+    if ((iK-id)%n_procs == 0)
+    {
+      local_indices[index] = iK;
+      index++;
+    }
+  }
+
+  // Remove any eventual leftover -1 (could happen if kpoints are not evenly distributed)
+  local_indices.erase(std::remove(local_indices.begin(), local_indices.end(), -1), local_indices.end());
+  
+  return local_indices;
+
+}
+
+
+map<DofField, double>
+KspaceIntegration::get_local_kpoints(map<DofField, double> global_kpoints, std::vector<int> local_k_indices)
+{
+  // Use local_k_indices to create local map of kpoints
+  map<DofField, double> local_kpoints;
+  int local_index = 0;
+  int global_index = 0;
+
+  map<DofField, double>::iterator kp_it(global_kpoints.begin());
+  const map<DofField, double>::iterator kp_end_global(global_kpoints.end());
+  for ( ; kp_it != kp_end_global; ++kp_it)
+  {
+    if (global_index == local_k_indices[local_index])
+    {
+      local_kpoints[kp_it->first] = kp_it->second;
+      local_index++;
+    }
+    global_index++;
+  }
+
+  return local_kpoints;
+}
+
 
 //-------------------------------------------------------//
 void KspaceIntegration::calculate_density()
@@ -197,16 +344,24 @@ void KspaceIntegration::calculate_density()
 
   if (this->quadrature_type == libMesh::QTRAP)
   {
+    
+    map<DofField, double> global_kpoints = broadcast_kpoints(kspace_comm, k_points);
+    std::vector<int> local_k_indices = distribute_kpoints(kspace_comm, global_kpoints);
+
+    map<DofField, double> local_kpoints = get_local_kpoints(global_kpoints, local_k_indices);
 
     real_space_density.resize(0);
 
-    map<Point, double>::iterator kp_it(k_points.begin());
-    const map<Point, double>::iterator kp_end(k_points.end());
+    map<DofField, double>::iterator kp_it = local_kpoints.begin();
+    const map<DofField, double>::iterator kp_end_local(local_kpoints.end());
 
-    for ( ; kp_it != kp_end; ++kp_it)
+    for ( ; kp_it != kp_end_local; ++kp_it)
     {
       double error_value;
-      const Point& kp = kp_it->first;
+      const DofField& std_kp = kp_it->first;
+
+      //Re-assign the std::vector point to the libMesh point
+      const Point kp(std_kp[0], std_kp[1], std_kp[2]);
 
       ostringstream os;
       os << "k = (" << kp(0) << ", " << kp(1) << ", " << kp(2) <<
