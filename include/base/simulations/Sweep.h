@@ -124,6 +124,8 @@ class TBDLLOCAL Sweep : public SimulationInterface
     //! When to write results to file
     std::vector<bool> _plot_data;
 
+    //! Whether to append sweep name to filename suffix
+    bool _append_sweep_name_to_datafile_name;
 
     //! The current filename suffix
     std::string _suffix;

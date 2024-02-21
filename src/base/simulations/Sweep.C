@@ -183,6 +183,9 @@ Sweep::parse_options(void)
     //throw InitFailedException(o.str());
   }
 
+  // if yes, append also sweep name to data file suffix
+  _append_sweep_name_to_datafile_name =
+    get_option("append_sweep_name_to_filename", false);
 
   // whether to plot data or not
   _plot_data.resize(0);
@@ -561,8 +564,11 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
     // filename suffix
     // we strip the leading '$' for the filename
     ostringstream suffix;
-    suffix << get_name() << "_" <<
-              _variable.substr(1, string::npos) << "_" << _goal;
+
+    if (_append_sweep_name_to_datafile_name)
+      suffix << get_name() << "_";
+
+    suffix << _variable.substr(1, string::npos) << "_" << _goal;
     TiberCad::prepend_to_filename_suffix(suffix.str());
 
     bool failed = false;
