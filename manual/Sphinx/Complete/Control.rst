@@ -224,7 +224,7 @@ Options and  parameters:
  ``plot_data`` : string
     set to ``each`` if you want to plot after each step the simulation results (default is ``none``), or to ``last`` to write only results of last step. Alternatively, a vector of values can be given, indicating the specific values where to plot data. Values not present in ``values`` or the variable range will be ignored.
 
- ``append_sweep_name_to_filename`` : boolean
+ ``add_sweep_name_to_file_suffix`` : boolean
     if set to ``true``, then the sweep name will be added to the suffix of data files. This is useful when different sweeps use the same variable and data should not be overwritten.
 
  ``file_mode`` : string

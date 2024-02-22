@@ -185,7 +185,7 @@ Sweep::parse_options(void)
 
   // if yes, append also sweep name to data file suffix
   _append_sweep_name_to_datafile_name =
-    get_option("append_sweep_name_to_filename", false);
+    get_option("add_sweep_name_to_file_suffix", false);
 
   // whether to plot data or not
   _plot_data.resize(0);
