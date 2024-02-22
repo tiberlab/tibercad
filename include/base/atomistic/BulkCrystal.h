@@ -14,16 +14,19 @@ class BulkCrystal: public AtomisticBasis
 
   void init(void);
 
-  //! Return the vector of Atoms defining the crystal basis
-  //! unrotated in xyz basis
+  /*! Return the vector of Atoms defining the crystal basis
+   * unrotated in xyz basis
+   */
   const std::vector<Atom>& get_basis(void);
 
-  //! Return the vector of Atoms defining the crystal basis
-  //! Already rotated in xyz basis
+  /*! Return the vector of Atoms defining the crystal basis
+   * Already rotated in xyz basis
+   */
   const std::vector<Atom>& get_rotated_basis(void);
 
-  //! Return the vector of Atoms defining the crystal basis
-  //! in primitive vectors units
+  /*! Return the vector of Atoms defining the crystal basis
+   *  in primitive vectors units
+   */
   const std::vector<Atom>& get_lattice_basis(void);
 
   //! Return string specifying lattice type (ex: 'fcc', 'hexagonal')
@@ -45,9 +48,10 @@ class BulkCrystal: public AtomisticBasis
     
   private:
 
-  //! Constructore accept a material and additional options
-  //! Option from material and additional optional are merged 
-  //! internally
+  /*! Constructor accepts a material and additional options
+   * Option from material and additional optional are merged 
+   * internally
+   */
   BulkCrystal(const Material* mat, const ModelOptions& options);
 
   //! Contains the options, as given when create is invoked
@@ -84,7 +88,6 @@ class BulkCrystal: public AtomisticBasis
   void build_rotation(void);
 
   //! Primitive vectors (lattice constant included). Columnwise
-  //! These are still not rotated
   Tensor2Gen _prim_vec;
 
   //! Rotated primitive vectors
