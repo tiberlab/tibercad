@@ -429,7 +429,7 @@ AtomisticGenerator::cut(const std::set<ID>& reg_ids, const std::string preserve)
     _belong_to_structure.clear();
     _belong_to_structure.reserve(2 * _super_basis.size());
 
-    for (unsigned int i=0; i<  _super_basis.size(); i++)
+    for (unsigned int i = 0; i < _super_basis.size(); i++)
     {
       Atom& atom = _super_basis[i];
 
@@ -450,6 +450,8 @@ AtomisticGenerator::cut(const std::set<ID>& reg_ids, const std::string preserve)
   {
     Messages::error("preserve conventional and primitive cell not implemented yet");
   }
+
+  _belong_to_structure.resize(_belong_to_structure.size());
 
 }
 
@@ -526,8 +528,11 @@ AtomisticGenerator::assign_species(void)
     if (_belong_to_structure[i])
     {    
       ID el_reg = atom.get_elem()->subdomain_id();
-      Specie tmp =  assign[el_reg][atom.get_label()];
-      atom.set_specie(tmp);
+      Specie tmp = assign[el_reg][atom.get_label()];
+      if (tmp != Specie::NONE)
+        atom.set_specie(tmp);
+      else
+        _belong_to_structure[i] = false;
     }
     else
     {

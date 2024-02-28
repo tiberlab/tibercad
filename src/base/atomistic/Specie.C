@@ -2,7 +2,7 @@
 
 Specie::Specie()
 {
-  _type = Specie::H;
+  _type = NONE;
 }
 
 Specie::~Specie(void)
