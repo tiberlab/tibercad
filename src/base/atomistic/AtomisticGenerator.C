@@ -293,7 +293,7 @@ AtomisticGenerator::do_init()
 
   // iterates on _super_basis and assign species
   assign_species();
-  print_basis(_super_basis, "superbasis.xyz");
+  //print_basis(_super_basis, "superbasis.xyz");
 
   //eventually enlarge along dummy supercell directions
   //(build bondmap if not present)
@@ -312,7 +312,7 @@ AtomisticGenerator::do_init()
   // remove unflagged atoms
   remove_atoms();
   //_bondmap->print();
-  print_basis(_structure_basis, "structurebasis.xyz");
+  //print_basis(_structure_basis, "structurebasis.xyz");
 
   // assign random-alloy species
   if (_as->is_random_alloy())
@@ -505,7 +505,6 @@ AtomisticGenerator::assign_species(void)
 
       for (unsigned int j = 1; j <= n; ++j)
       {
-        std::cerr << db_record << " -> " << Specie(db_record) << std::endl;
         assign[*reg][++label] = Specie(db_record);
       }
 
