@@ -22,6 +22,8 @@ delta = 0.16
 #
 [atomistic_structure]
 n_basis_specie=2
+n_1=1
+n_2=1
 
 specie_1=In
 specie_2=AsP

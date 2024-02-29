@@ -13,6 +13,8 @@ comp_B = Ge
 #
 [atomistic_structure]
 n_basis_specie=2
+n_1=1
+n_2=1
 
 specie_1=SiGe
 specie_2=SiGe

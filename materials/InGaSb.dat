@@ -46,6 +46,8 @@ bow_d = 0.0
 #
 [atomistic_structure]
 n_basis_specie=2
+n_1=1
+n_2=1
 
 specie_1=InGa
 specie_2=Sb

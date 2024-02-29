@@ -21,6 +21,8 @@ bow_Eg_X = 0.13
 #
 [atomistic_structure]
 n_basis_specie=2
+m_1=1
+n_2=1
 
 specie_1=AlGa
 specie_2=P

@@ -12,7 +12,10 @@ Specie::~Specie(void)
 
 Specie::Specie(const std::string& type)
 {
-  _type = string_to_specie[type];
+  if (string_to_specie.find(type) != string_to_specie.end())
+    _type = string_to_specie[type];
+  else
+    _type = VIRT;
 }
 
 Specie::Specie(const Specie::Type& type)
@@ -33,7 +36,7 @@ Specie::specie_to_string = boost::assign::map_list_of
        "Cu") (Re, "Re") (Rh, "Rh") (Rb, "Rb") (Ru, "Ru") (Rf, "Rf") (Sm, "Sm") (Sc, "Sc") (Sg, "Sg") (Se, "Se")
        (Si, "Si") (Na, "Na") (Sn, "Sn") (Sr, "Sr") (Ta, "Ta") (Tc, "Tc") (Te, "Te") (Tb, "Tb") (Tl, "Tl") (Th, "Th")
        (Tm, "Tm") (Ti, "Ti") (W, "W") (U, "U") (V, "V") (Xe, "Xe") (Yb, "Yb") (Y, "Y") (Zn, "Zn") (Zr, "Zr") (S,
-       "S") (NONE, "Virt");
+       "S") (VIRT, "Virt") (NONE, "none");
 
 std::map<std::string, Specie::Type> 
 Specie::string_to_specie = boost::assign::map_list_of
@@ -47,11 +50,16 @@ Specie::string_to_specie = boost::assign::map_list_of
        ("Pt", Pt) ("Pu", Pu) ("Po", Po) ("K", K) ("Pr", Pr) ("Pm", Pm) ("Pa", Pa) ("Ra", Ra) ("Rn", Rn) ("Cu", Cu)
        ("Re", Re) ("Rh", Rh) ("Rb", Rb) ("Ru", Ru) ("Rf", Rf) ("Sm", Sm) ("Sc", Sc) ("Sg", Sg) ("Se", Se) ("Si", Si)
        ("Na", Na) ("Sn", Sn) ("Sr", Sr) ("Ta", Ta) ("Tc", Tc) ("Te", Te) ("Tb", Tb) ("Tl", Tl) ("Th", Th) ("Tm", Tm)
-       ("Ti", Ti) ("W", W) ("U", U) ("V", V) ("Xe", Xe) ("Yb", Yb) ("Y", Y) ("Zn", Zn) ("Zr", Zr) ("S", S);
+       ("Ti", Ti) ("W", W) ("U", U) ("V", V) ("Xe", Xe) ("Yb", Yb) ("Y", Y) ("Zn", Zn) ("Zr", Zr) ("S", S)
+       ("Virt", VIRT)
+       ("none", NONE);
 
 std::map<Specie::Type, double>
 Specie::specie_to_mass = boost::assign::map_list_of
-       (Si,28.01) (Ge,72.61) (C,12.0107)(Ga,69.723)(As, 74.92160)(O,15.9994)(Ti, 47.867)(Sr,87.62)(Ca, 40.078)(Al, 26.981538)(N,14.00674)(H,1.00794)(Pb,121.760)(Cl, 35.4527)(Mn,54.938049)(In,114.818);
+       (Si,28.01) (Ge,72.61) (C,12.0107) (Ga,69.723) (As, 74.92160)
+       (O,15.9994)(Ti, 47.867)(Sr,87.62)(Ca, 40.078)(Al, 26.981538)
+       (N,14.00674)(H,1.00794)(Pb,121.760)(Cl, 35.4527)(Mn,54.938049)
+       (In,114.818);
 
 
 //!Override assignement operator (string input, allows:

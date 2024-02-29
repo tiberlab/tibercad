@@ -31,7 +31,8 @@ public:
                 Cs,Ba,La,Ce,Pr,Nd,Pm,Sm,Eu,Gd,Tb,Dy,Ho,Er,Tm,Yb,
                       Lu,Hf,Ta,W ,Re,Os,Ir,Pt,Au,Hg,Tl,Pb,Bi,Po,At,Rn,
                 Fr,Ra,Ac,Th,Pa,U ,Np,Pu,Am,Cm,Bk,Cf,Es,Fm,Md,No,
-                      Lr,Rf,Db,Sg,Bh,Hs,Mt,Ds};
+                      Lr,Rf,Db,Sg,Bh,Hs,Mt,Ds,
+                VIRT};
 
 
   static
@@ -105,11 +106,6 @@ private:
 };
 
 
-//inline
-//const Type& Specie::get_type(void) const
-//{
-// return _type;
-//}
 
 inline
 const std::string& Specie::get_string(void) const
@@ -174,47 +170,35 @@ bool operator== (const std::string& type_string, const Specie& specie)
 // explicit get_type() call
 inline
 bool operator== (const Specie& specie, const Specie::Type& type)
-    {
+{
   return ( specie._type == type);
-    }
+}
 
 //Override comparison, allow comparison between Specie and Type avoiding
 // explicit get_type() call
 inline
 bool operator== (const Specie::Type& type, const Specie& specie)
-    {
+{
   return ( specie._type == type);
-    }
+}
 
 //Override comparison, allow comparison between Specie and Type avoiding
 // explicit get_type() call
 inline
 bool operator!= (const Specie& specie, const Specie::Type& type)
-    {
+{
   return !(specie == type);
-    }
+}
 
 //Override comparison, allow comparison between Specie and Type avoiding
 // explicit get_type() call
 inline
 bool operator!= (const Specie::Type& type, const Specie& specie)
-    {
+{
   return !( type == specie);
-    }
+}
 
-////Override comparison operator, allows:
-//    // s.get_type() == 'H'
-//bool operator!= (Type& type, std::string& type_string)
-//{
-//  return !(type == string_to_specie[type_string]);
-//}
-//
-////Override comparison operator, allows:
-//    //! 'H' == s.get_type()
-//bool operator!= (std::string& type_string, Type& type)
-//{
-//  return !(type == type_string);
-//}
+
 
 //Override comparison operator, allows:
   // s == 'H'

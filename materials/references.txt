@@ -26,3 +26,5 @@ References for material parameters
 
 [9] Li et al., Appl. Phys. Lett. 83, 4963 (2003)
 
+[10] Yan et al., Phys. Rev. B 90, 125118 (2014)
+

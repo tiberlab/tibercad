@@ -19,6 +19,8 @@ bow_Eg_X = 0.24
 #
 [atomistic_structure]
 n_basis_specie=2
+n_1=1
+n_2=1
 
 specie_1=Ga
 specie_2=AsP

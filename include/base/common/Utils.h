@@ -85,7 +85,7 @@ class Utils
      *    different principal axis
      * \li \verbatim ( a b c ) \endverbatim  diagonal tensor
      * \li \verbatim ( a b c d e f ) \endverbatim symmetric tensor with ordering
-     *      \verbatim xx yy zz xy yz xz \endverbatim
+     *      \verbatim xx yy zz yz xz xy \endverbatim
      * \li \verbatim ( a b c; d e f; g h i ) \endverbatim complete tensor
      * The semicolon can be replaced by a newline.
      *

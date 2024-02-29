@@ -12,6 +12,8 @@ comp_B = GaAs
 #
 [atomistic_structure]
 n_basis_specie=2
+n_1=1
+n_2=1
 
 specie_1=AlGa
 specie_2=As
