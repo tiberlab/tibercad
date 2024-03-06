@@ -1,14 +1,9 @@
-
-# Description of  the  device physical regions
 Device
 {
   meshfile = barrier.msh  
   mesh_units = 1e-9
 
   material = GaAs
-  #x-growth-direction = (1, 1, 0)
-  #y-growth-direction = (1, -1, 0)
-  #z-growth-direction = (0, 0, 1)
 
    Region source_region
    {
@@ -22,21 +17,12 @@ Device
    {
      material = AlGaAs
      x = 0.3           
-   #  Doping {
-   #    type = donor
-   #    Nd = 2e18 
-   #  }
-    
    }
 
    Region barrier2
    {
     material = AlGaAs
     x = 0.3           
-   # Doping {
-   #    type = donor
-   #    Nd = 2e18 
-   #  }
    }
 
    Region drain_region
@@ -65,10 +51,6 @@ Device
 
    Region well
    {
-  #   Doping {
-  #   type = donor
-  #   Nd = 2e18 
-  #   }
    }
 
    Cluster double_barrier
@@ -165,12 +147,13 @@ Module negf
   verbosity = 10
 
   potential_simulation = driftdiffusion
-  Boundary int_source{}
   Boundary int_drain{}
+  Boundary int_source{}
 
  
   Solver
   {
+    number_of_PL = 90
     number_of_PL = 90
     #writeLDOS = 1
     Np_contour = (30, 100)
@@ -210,42 +193,7 @@ Module negf
 
 }
 
-#Module efaschroedinger
-#{
-#  name = quantum_el
 
-#  regions = double_barrier 
-  
-#  particle = el
-#  poisson_model_name = driftdiffusion
-
-#  plot = (EigenFunctions, EigenEnergy, EnergyLevels,ProbabilityDensity,QuantumDensity)
-
-#  Solver
-#  {
-#    number_of_eigenstates = 4 
-#  }	
-
-
-#  Physics
-#  {
-#    model = conduction_band
-
-    #model = kp   #  k.p  for  valence  band
-    #kp_model = 8x8
-#  }
-
-#}
-
-
-#Module selfconsistent
-#{
-# solve = (driftdiffusion,negf) 
-# max_iteration = 100
-# absolute_tollerance = 5e-4
-# relative_tollerance = 1e-9
-# monitor = true
-#} 
 
 # Definition of  model-independent parameters of the Simulation
 Simulation
@@ -255,8 +203,6 @@ Simulation
   #solve = (driftdiffusion, quantum_el) 
   #solve = (sweep_drain)
   resultpath = output
-  #scratchpath = /work/pecchia/GS
-  output_format = grace 
 }
 
 
