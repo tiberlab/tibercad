@@ -59,7 +59,7 @@ Specie::specie_to_mass = boost::assign::map_list_of
        (Si,28.01) (Ge,72.61) (C,12.0107) (Ga,69.723) (As, 74.92160)
        (O,15.9994)(Ti, 47.867)(Sr,87.62)(Ca, 40.078)(Al, 26.981538)
        (N,14.00674)(H,1.00794)(Pb,207.2)(Cl, 35.4527)(Mn,54.938049)
-       (In,114.818)(P,30.973761)(Sb,121,76);
+       (In,114.818)(P,30.973761)(Sb,121.76);
 
 
 //!Override assignement operator (string input, allows:
