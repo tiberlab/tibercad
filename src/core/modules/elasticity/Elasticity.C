@@ -281,7 +281,7 @@ Elasticity::accumulate_strain(void)
   vector<unsigned int> dof_indices;
 
   libMesh::FEType fe_type = dof_map.variable_type(uvar[0]);
-  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+  std::unique_ptr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
   libMesh::QGauss qrule(dim, CONSTANT);
   fe->attach_quadrature_rule(&qrule);
 
@@ -339,7 +339,7 @@ Elasticity::get_solution_secure(const Elem* elem,
      dof_map.dof_indices(elem, dof_indices[i],uvar[i]);
 
    libMesh::FEType fe_type = system->variable_type(uvar[0]);
-   libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+   std::unique_ptr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
    const std::vector<std::vector<Real> >& phi = fe->get_phi();
    const std::vector<std::vector<libMesh::RealGradient> >& dphi = fe->get_dphi();
    const std::vector<Point>& real_pts = fe->get_xyz();
@@ -580,7 +580,7 @@ Elasticity::compute_elastic_energy(void)
   const unsigned int dim = mesh.mesh_dimension();
   libMesh::DofMap& dof_map =  system.get_dof_map();
   libMesh::FEType fe_type = dof_map.variable_type(uvar[0]);
-  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+  std::unique_ptr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
   libMesh::QGauss qrule(dim, FIFTH);
   fe->attach_quadrature_rule(&qrule);
 
@@ -632,8 +632,8 @@ Elasticity::assemble(void)
   SimulationEnvironment& si = get_environment();
 
   // the volume finite element
-  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
-  //UniquePtr<QBase> qrule(QBase::build(QTRAP, dim, FIFTH));
+  std::unique_ptr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+  //std::unique_ptr<QBase> qrule(QBase::build(QTRAP, dim, FIFTH));
 
   libMesh::QGauss qrule(dim, FIFTH);
   //QTrap qrule(dim);
@@ -648,7 +648,7 @@ Elasticity::assemble(void)
 
 
   // the surface finite element
-  libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
+  std::unique_ptr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
   libMesh::QGauss qface(dim - 1, SIXTH);
   //QTrap qface(dim - 1);
   fe_face->attach_quadrature_rule(&qface);
@@ -718,7 +718,7 @@ Elasticity::assemble(void)
     ElasticityModel& mod = *get_bulk_model<ElasticityModel>(elem);    
   
 // commentato perche' centroide ha coordinate globali e produce errore
-//    const RealTensor& internal_stress = get_internal_stress(elem, elem->centroid());
+//    const RealTensor& internal_stress = get_internal_stress(elem, elem->vertex_average());
 
     // get the accumulated strain from shape deformation
     libMesh::RealTensor accum_strain;
@@ -873,7 +873,7 @@ Elasticity::apply_shape_deformation()
   std::vector<std::vector<unsigned int> > dof_indices(3);
   
   libMesh::FEType fe_type = system->variable_type(uvar[0]);
-  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+  std::unique_ptr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
   const std::vector<std::vector<Real> >& phi = fe->get_phi();
 
 
@@ -1196,7 +1196,7 @@ Elasticity::internal_strain_correction(AtomisticStructure* as)
 
       const Elem* elem = structure[i].get_elem();
       ElasticityModel& mod = *get_bulk_model<ElasticityModel>(elem);
-      mod.calculate(elem, elem->centroid());
+      mod.calculate(elem, elem->vertex_average());
 
       RealTensor total_strain;
       _accumulated_strain[elem].get_tensor(total_strain);

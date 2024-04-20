@@ -114,7 +114,7 @@ Thermal::compute_power_dissipated()
   
   ID  dim = get_mesh().mesh_dimension();
 
-  libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
+  std::unique_ptr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
   libMesh::QGauss qrule_face(dim-1,libMesh::FIFTH);
   fe_face->attach_quadrature_rule(&qrule_face);
   
@@ -183,7 +183,7 @@ Thermal::compute_power_emitted()
   libMesh::FEType fe_type = dof_map.variable_type(tvar);
 
   //------------BULK----------
-  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+  std::unique_ptr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
   libMesh::QGauss qrule(dim,libMesh::FIFTH);
   fe->attach_quadrature_rule(&qrule);
   const vector<vector<Real> >& phi = fe->get_phi();
@@ -192,7 +192,7 @@ Thermal::compute_power_emitted()
   //--------------------------
 
 
-  libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
+  std::unique_ptr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
   libMesh::QGauss qrule_face(dim-1,libMesh::CONSTANT);
   fe_face->attach_quadrature_rule(&qrule_face);
 
@@ -311,7 +311,7 @@ Thermal::get_solution_secure(const Elem* elem,
    const unsigned int u_var = system->variable_number("T");
 
    libMesh::FEType fe_type = system->variable_type(u_var);
-   libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
+   std::unique_ptr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
 
    vector<unsigned int> dof_indices;
 
@@ -399,7 +399,7 @@ Thermal::assemble(void)
    ID  dim = get_mesh().mesh_dimension();
    SimulationEnvironment& se = get_environment();
    // the volume finite element
-   libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+   std::unique_ptr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
    libMesh::QGauss qrule(dim, libMesh::FIFTH);
    fe->attach_quadrature_rule(&qrule);
 
@@ -410,7 +410,7 @@ Thermal::assemble(void)
 
 
    // the surface finite element
-   libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
+   std::unique_ptr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
    libMesh::QGauss qface(dim - 1, libMesh::SIXTH);
    fe_face->attach_quadrature_rule(&qface);
 

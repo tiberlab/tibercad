@@ -183,7 +183,7 @@ void OpticsKP::calculate_matrix_bulk(void)
 
   const Elem* mat_elem = initial_state_model->return_bulk_element();
 
-  Point qp = mat_elem->centroid();
+  Point qp = mat_elem->vertex_average();
 
 
   EFAbulkHamiltonian* element_hamiltonian;
@@ -287,7 +287,7 @@ void OpticsKP::do_assemble(const ModelOptions& opts)
 
   libMesh::FEType fe_type = dof_map.variable_type(psivar[0]);
 
-  libMesh::UniquePtr<libMesh::FEBase> fe (  build_finite_element(dim, fe_type, true)  );
+  std::unique_ptr<libMesh::FEBase> fe (  build_finite_element(dim, fe_type, true)  );
 
   // A 5th order Gauss quadrature rule for numerical integration.
   libMesh::QGauss qrule (dim, FIFTH);

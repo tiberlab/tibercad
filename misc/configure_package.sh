@@ -2,7 +2,7 @@
 
 export PETSCVERSION="3.17.4"
 export SLEPCVERSION="3.17.2"
-export LIBMESHVERSION="1.6.2"
+export LIBMESHVERSION="1.7.1"
 export GMSHVERSION="4.10.5"
 export BOOSTVERSION="1_77_0"
 
@@ -17,8 +17,8 @@ export MKLDIR=/usr/pack/intel_oneapi-2021-ma/mkl/latest
 export CUDADIR=/usr/pack/cudatoolkit-11.4-ma
 
 export MPI=y
-#export MPIDIR="$(dirname `pwd`)/SDK"
-export MPIDIR=/usr/pack/tibercad_dev-3.3-ma/SDK
+export MPIDIR="$(dirname `pwd`)/SDK"
+#export MPIDIR=/usr/pack/tibercad_dev-3.3-ma/SDK
 
 export FORTRANDIR=/usr/pack/intel_oneapi-2021-ma/compiler/latest/linux/compiler
 
@@ -57,7 +57,8 @@ if test "${MAKE_MPICH}x" != "x"
 then 
   echo "MPI not yet present, I will now compile MPICH"
   echo "Re-run configure_package.sh after this has finished"
-  ./build_mpich
+  #./build_mpich
+  ./build_mpi
 else
 #  ./build_petsc
 #  ./build_slepc

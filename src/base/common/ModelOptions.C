@@ -26,7 +26,7 @@ ModelOptions::ModelOptions(map<const string, string> options)
 
 ModelOptions::ModelOptions(const ModelOptions& other)
 {
-  operator+=(other);
+  operator=(other);
 
   _key = other._key;
   _name = other._name;
@@ -216,6 +216,20 @@ ModelOptions::add_submodel(const string& name,
 }
 
 
+ModelOptions&
+ModelOptions::operator=(const ModelOptions& rhs)
+{
+  _key = "";
+  _name = "";
+  _index = 0;
+  _options.clear();
+  _submodels.clear();
+  _used.clear();
+
+  *this += rhs;
+
+  return *this;
+}
 
 
 ModelOptions&

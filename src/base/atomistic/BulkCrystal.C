@@ -37,7 +37,7 @@ BulkCrystal::init(void)
    for (std::vector<Atom>::iterator it = _basis.begin(); 
      it != _basis.end(); ++it)
    {
-   it->set_position(_prim_vec * it->get_ttype_position());
+     it->set_position(_prim_vec * it->get_ttype_position());
    }
 
   //! Get rotation and apply to basis and primitive vectors
@@ -45,9 +45,26 @@ BulkCrystal::init(void)
   set_ttype_lattice_vectors(_rotated_prim_vec);
   _atoms = _rotated_basis;
 
+  Messages m;
+  m.indent();
+
+  // write some info on the atomic structure
+  std::ostringstream os;
+  os << "Basis atom | label\n";
+  os << "==================\n";
+
+  for (auto&& a : _basis)
+  {
+    os << std::left << std::setw(11) << a.get_specie() << "|"
+       << std::right << std::setw(6) << static_cast<unsigned int>(a.get_label())
+       << "\n";
+  }
+  m.info(os.str());
+  m.newline();
+   
+
   build_bond_map();
   refresh();
-   
   
 }
 

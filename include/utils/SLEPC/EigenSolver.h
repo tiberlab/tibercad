@@ -46,6 +46,8 @@ class EigenSolver
 
     std::string pc_type; //<! preconditioner name
 
+    std::string solver_package{"mumps"}; //<! solver package, e.g. mumps, petsc
+
     std::string spectral_trans;
 
     bool monitor;   //<! activates monitor if true

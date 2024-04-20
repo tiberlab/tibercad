@@ -163,7 +163,7 @@ DSSCGeneration::get_solution_secure(const Elem* elem,
   //const unsigned int g_var = system.variable_number("G");
 
   libMesh::FEType fe_type = system.variable_type(d_var);
-  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
+  std::unique_ptr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
 
   vector<unsigned int> dof_indices_d;
   //vector<unsigned int> dof_indices_g;
@@ -294,7 +294,7 @@ DSSCGeneration::_calculate_distances(void)
       }
       else if (dim == 2)
       {
-        libMesh::UniquePtr<libMesh::Elem> side_el(sideelem->build_side(s));
+        std::unique_ptr<libMesh::Elem> side_el(sideelem->build_side(s));
 
         /*
          * have to solve: p0 = node; p1, p2 nodes of side elem
@@ -326,7 +326,7 @@ DSSCGeneration::_calculate_distances(void)
       }
       else // dim = 3
       {
-        libMesh::UniquePtr<libMesh::Elem> side_el(sideelem->build_side(s));
+        std::unique_ptr<libMesh::Elem> side_el(sideelem->build_side(s));
 
         /*
          * have to solve: p0 = node; p1, p2, p3 nodes of side elem (TRI3)

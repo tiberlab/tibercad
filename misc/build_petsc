@@ -31,14 +31,23 @@ make_petsc()
   echo "Building with PETSC_ARCH=${PETSC_ARCH} ..."
 
   if [ ! -e  reconfigure-${PETSC_ARCH}.py ] && [ ! -e  conftest-${PETSC_ARCH} ]; then
-    #./config/configure.py ${CONFIGOPTS} --with-debugging=${debug} --with-scalar-type=${datatype} \
-    #  --CFLAGS="${CFLAGS}" --FFLAGS="-fno-range-check ${FFLAGS}" --CXXFLAGS="${{CXXFLAGS}" --LDFLAGS="${LDFLAGS}"
+
     ./configure \
     --CC="$CC" --CXX="$CXX" --FC="$FC" --F77="$F77" --CPP="$CPP" \
     --CXXFLAGS="$CXXFLAGS ${MKLINCLUDE}" --FCFLAGS="$FCFLAGS ${MKLINCLUDE}" --CFLAGS="$CFLAGS ${MKLINCLUDE}" \
-    --FFLAGS="$FFLAGS ${MKLINCLUDE}" --LDFLAGS="$LDFLAGS" --COPTFLAGS="-g -O3" --CXXOPTFLAGS="-g -O3" \
-    ${CONFIGOPTS} --with-debugging=${debug} --with-scalar-type=${datatype} --CUDAFLAGS="-ccbin=$CXX" \
-    --with-blas-lapack-lib="${LAPACK_LIBS}" 
+    --FFLAGS="$FFLAGS ${MKLINCLUDE}" --LDFLAGS="$LDFLAGS" \
+    --FOPTFLAGS="-g -O3" --COPTFLAGS="-g -O3" --CXXOPTFLAGS="-g -O3" --with-cxx-dialect=c++17 --with-cuda-dialect=c++17 \
+    --with-debugging=${debug} --with-scalar-type=${datatype} \
+    $SHARED  $MPIFLAGS $COMPILERS --with-x=0 ${petsc_host} --with-ssl=0 --known-64-bit-blas-indices=0  \
+    --CUDAFLAGS="-ccbin=$CXX --compiler-options=-fPIC" --with-cudac=${CUDADIR}/bin/nvcc --with-cuda-dir=${CUDADIR} \
+    --with-matlab=0 --download-mumps --download-metis \
+    --with-blas-lapack-lib="${LAPACK_LIBS}" \
+    --with-scalapack=1  --with-scalapack-include=${MKLDIR}/include \
+    --with-scalapack-lib="-L${MKLDIR}/lib/intel64 -Wl,-rpath,${MKLDIR}/lib/intel64 -lmkl_scalapack_lp64 -lmkl_blacs_openmpi_lp64" \
+    --with-mkl_pardiso=1 --with-mkl_pardiso-dir=${MKLDIR} \
+    --with-mkl_sparse-dir=${MKLDIR}
+
+
 
     #cp conftest conftest-${PETSC_ARCH}
 
@@ -201,13 +210,6 @@ if [ "${target_os}" = "win32" ]
 then
   petsc_host="--with-host-vendor=w64 --with-host-os=mingw32"
 fi
-
-
-CONFIGOPTS="--with-matlab=0 $SHARED  $MPIFLAGS $COMPILERS --with-batch=1 --with-x=0 ${petsc_host} \
-  --with-ssl=0 --known-64-bit-blas-indices=0 --with-cudac=${CUDADIR}/bin/nvcc --with-cuda-dir=${CUDADIR} \
-  --with-mkl_pardiso=1 --with-mkl_pardiso-dir=${MKLDIR} --download-scalapack --download-mumps --with-cxx-dialect=c++17 --with-cuda-dialect=c++17"
-#CONFIGOPTS="--with-matlab=0 $SHARED  $MPI $COMPILERS --with-clanguage=C++ ${LAPACKLIBS} --with-batch=1 --with-x=0 \
-#  ${petsc_host} --download-mumps=yes  --download-parmetis=1 --download-scalapack=1 --download-blacs=1"
 
 # only for gfortran
 #export FCFLAGS="-fno-range-check $FCFLAGS"

@@ -543,10 +543,6 @@ class PhysicalModel : public TiberModelObject
     //! The unique ID of this model type
     ID _id;
 
-    /*//! The unique ID of this model
-    ID _unique_id;
-
-
     //! The ID of the simulator this model is used for
     /*!
      * This ID is needed by the simulator to get the right models

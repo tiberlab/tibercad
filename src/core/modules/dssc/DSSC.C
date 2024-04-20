@@ -182,7 +182,7 @@ DSSC::compute_scaling(Scaling::ScalingType type)
           _device->get_material(elem->subdomain_id())->get_model(get_id()));
 
     sc->reinit(elem);
-    sc->set_coordinates(elem->centroid());
+    sc->set_coordinates(elem->vertex_average());
     sc->set_potentials(0.0);
     sc->set_electric_field(libMesh::RealGradient(0));
     sc->set_grad_fermi_n(libMesh::RealGradient(0));
@@ -337,7 +337,7 @@ DSSC::compute_scaling_only(Scaling::ScalingType type)
     const unsigned int dim = mesh.mesh_dimension();
 
     libMesh::FEType fe_type = system->variable_type(u_var);
-    libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
+    std::unique_ptr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
     libMesh::QGauss qrule(dim, libMeshEnums::CONSTANT);
     fe->attach_quadrature_rule(&qrule);
 
@@ -366,7 +366,7 @@ DSSC::compute_scaling_only(Scaling::ScalingType type)
 
       sc->reinit(elem);
       // prepare for calculating local properties
-      sc->set_coordinates(elem->centroid());
+      sc->set_coordinates(elem->vertex_average());
 
       unsigned int n_dofs = dof_indices_u.size();
       // get the solution values at the centroid
@@ -939,7 +939,7 @@ DSSC::rebuild_equation_system(void)
           {
             if (n_cat == NULL)
             {
-              libMesh::UniquePtr<libMesh::Elem> elside(elem->build_side(s));
+              std::unique_ptr<libMesh::Elem> elside(elem->build_side(s));
               n_cat = elside->get_node(0);
               break;
             }
@@ -1133,7 +1133,7 @@ DSSC::find_dirichlet_nodes(void)
 
         if (contact != NULL)
         {
-          libMesh::UniquePtr<libMesh::Elem> side_el(elem->build_side(s));
+          std::unique_ptr<libMesh::Elem> side_el(elem->build_side(s));
           for (unsigned int i = 0; i < side_el->n_nodes(); i++)
             _dirichlet_nodes[side_el->get_node(i)] = bd;
         }
@@ -1182,7 +1182,7 @@ DSSC::calculate_currents_rstf(void)
 
   libMesh::FEType fe_type = system->variable_type(u_var);
 
-  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
+  std::unique_ptr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
   libMesh::QGauss qrule(dim, libMeshEnums::FIFTH);
   fe->attach_quadrature_rule(&qrule);
 
@@ -1294,7 +1294,7 @@ DSSC::calculate_currents_rstf(void)
       }
 
       // prepare for calculating local properties
-      sc->set_coordinates(elem->centroid());
+      sc->set_coordinates(elem->vertex_average());
 
 
       sc->set_potentials(phi0 * u, phi0 * en, phi0 * eI, phi0 * eI3, phi0 * eC);
@@ -1382,7 +1382,7 @@ DSSC::build_local_scaling(void)
 
   FEType fe_type = system->variable_type(u_var);
 
-  UniquePtr<FEBase> fe(build_finite_element(dim, fe_type));
+  std::unique_ptr<FEBase> fe(build_finite_element(dim, fe_type));
   QGauss qrule(dim, libMeshEnums::FIFTH);
   fe->attach_quadrature_rule(&qrule);
 
@@ -1615,7 +1615,7 @@ DSSC::find_internal_boundary_nodes(void)
           // if neighbor is not dielectric we record it
           if (!scn->is_TiO2())
           {
-            libMesh::UniquePtr<libMesh::Elem> side(el->build_side(s));
+            std::unique_ptr<libMesh::Elem> side(el->build_side(s));
             for (unsigned int i = 0; i < side->n_nodes(); i++)
               _internal_boundary_nodes.insert(side->get_node(i));
           }
@@ -1734,13 +1734,13 @@ DSSC::do_assembly(const libMesh::NumericVector<Number>& x,
   //libMeshEnums::Order integration_order = libMeshEnums::FIRST;
 
   // the finite element
-  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+  std::unique_ptr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
   libMesh::QGauss qrule(dim, integration_order);
   //QTrap qrule(dim);
   fe->attach_quadrature_rule(&qrule);
 
   // the finite element for boundary integration
-  libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
+  std::unique_ptr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
   if (dim == 1)
     integration_order = libMeshEnums::CONSTANT;
 
@@ -2308,7 +2308,7 @@ DSSC::do_assembly(const libMesh::NumericVector<Number>& x,
           contact = dynamic_cast<DSSCContact*>(
               boundary->models_begin()->second);
 
-        libMesh::UniquePtr<libMesh::Elem> side(elem->build_side(s));
+        std::unique_ptr<libMesh::Elem> side(elem->build_side(s));
 
         fe_face->reinit(elem, s);
 
@@ -2622,7 +2622,7 @@ DSSC::do_assembly(const libMesh::NumericVector<Number>& x,
           double dsigma_C = phi0 / C0_C * sc->get_mobility_C() *
             sc->get_density_derivative_C();
 
-          double x_c = elem->centroid()(0);
+          double x_c = elem->vertex_average()(0);
           double x_s = elem->point(s)(0);
           double sign = (x_s > x_c) ? 1 : -1;
 
@@ -3130,7 +3130,7 @@ DSSC::get_solution_secure(const Elem* elem,
   unsigned int eC_var = system->variable_number("fermi_C");
 
   libMesh::FEType fe_type = system->variable_type(u_var);
-  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
+  std::unique_ptr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
 
   vector<unsigned int> dof_indices_u;
   vector<unsigned int> dof_indices_en;
@@ -3579,13 +3579,13 @@ DSSC::do_assembly_frequency(libMesh::EquationSystems& es, const std::string& sys
   //libMeshEnums::Order integration_order = libMeshEnums::FIRST;
 
   // the finite element
-  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+  std::unique_ptr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
   libMesh::QGauss qrule(dim, integration_order);
   //QTrap qrule(dim);
   fe->attach_quadrature_rule(&qrule);
 
   // the finite element for boundary integration
-  libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
+  std::unique_ptr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
   if (dim == 1)
     integration_order = libMeshEnums::CONSTANT;
 
@@ -3722,15 +3722,15 @@ DSSC::do_assembly_frequency(libMesh::EquationSystems& es, const std::string& sys
 
   const Node* n_cat = NULL;
   double tot_cat = 0;
-  libMesh::UniquePtr<libMesh::NumericVector<Number> > cons_cat_R = solution_frequency.clone();
+  std::unique_ptr<libMesh::NumericVector<Number> > cons_cat_R = solution_frequency.clone();
   cons_cat_R->zero();
-  libMesh::UniquePtr<libMesh::NumericVector<Number> > cons_cat_I = solution_frequency.clone();
+  std::unique_ptr<libMesh::NumericVector<Number> > cons_cat_I = solution_frequency.clone();
   cons_cat_I->zero();
 
   double tot_iodine = 0;
-  libMesh::UniquePtr<libMesh::NumericVector<Number> > cons_iodine_R = solution_frequency.clone();
+  std::unique_ptr<libMesh::NumericVector<Number> > cons_iodine_R = solution_frequency.clone();
   cons_iodine_R->zero();
-  libMesh::UniquePtr<libMesh::NumericVector<Number> > cons_iodine_I = solution_frequency.clone();
+  std::unique_ptr<libMesh::NumericVector<Number> > cons_iodine_I = solution_frequency.clone();
   cons_iodine_I->zero();
 
   set<unsigned int> inner_boundary_nodes;
@@ -4312,7 +4312,7 @@ DSSC::do_assembly_frequency(libMesh::EquationSystems& es, const std::string& sys
           contact = dynamic_cast<DSSCContact*>(
               boundary->models_begin()->second);
 
-        libMesh::UniquePtr<libMesh::Elem> side(elem->build_side(s));
+        std::unique_ptr<libMesh::Elem> side(elem->build_side(s));
 
         fe_face->reinit(elem, s);
 
@@ -4569,7 +4569,7 @@ DSSC::do_assembly_frequency(libMesh::EquationSystems& es, const std::string& sys
           double dsigma_C = phi0 / C0_C * sc->get_mobility_C() *
             sc->get_density_derivative_C();
 
-          double x_c = elem->centroid()(0);
+          double x_c = elem->vertex_average()(0);
           double x_s = elem->point(s)(0);
           double sign = (x_s > x_c) ? 1 : -1;
 
@@ -4887,7 +4887,7 @@ DSSC::calculate_currents_rstf_EIS(std::map<const Boundary*, double>& curr_R,
   
   libMesh::FEType fe_type = system_frequency->variable_type(u_var_R);
 
-  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
+  std::unique_ptr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
   libMesh::QGauss qrule(dim, libMeshEnums::FIFTH);
   fe->attach_quadrature_rule(&qrule);
 

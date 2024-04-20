@@ -1243,7 +1243,7 @@ void EigenvalueProblem::calculate_dos(void)
 
 
 
-  UniquePtr<FEBase> fe(FEBase::build(_kspace->dimension(),
+  std::unique_ptr<FEBase> fe(FEBase::build(_kspace->dimension(),
       FEType(SECOND, LAGRANGE)));
 
   QGauss qrule(_kspace->dimension(),
@@ -1659,6 +1659,8 @@ EigenvalueProblem::solve_eigenvalue_problem(unsigned int num_eigenvalues,
   const ModelOptions& sol_opt = get_solver_options();
 
   EigenSolver::SLEPCoptions slep_opt;
+
+  slep_opt.solver_package = sol_opt.get_option("solver_package","petsc");
 
   slep_opt.solver_type = sol_opt.get_option("solver","krylovshur");
 

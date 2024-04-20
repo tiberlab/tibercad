@@ -163,13 +163,11 @@ fi
 # BLAS/LAPACK
 if [ "$MKL" = y ]; then
   if [ $march = x86_64 ]; then
-#    LAPACKLIBS="--with-blas-lapack-lib=[-L${MKLDIR}/lib/em64t,-lmkl_intel_lp64,-lmkl_intel_thread,-lmkl_core,-liomp5,-lm,-lpthread]"
-#    LDFLAGS="${LDFLAGS} -L${MKLDIR}/lib/em64t -Wl,-rpath-link,${MKLDIR}/lib/em64t"
-#    LAPACK_LIBS="${LDFLAGS} -L${MKLDIR}/lib/em64t -Wl,-rpath,${MKLDIR}/lib/em64t"
-    #LAPACKLIBS="--with-blas-lapack-lib=[-Xlinker,--no-as-needed,-Xlinker,-rpath,-Xlinker,${MKLDIR}/lib/intel64,-L${MKLDIR}/lib/intel64,-lmkl_intel_lp64,-lmkl_intel_thread,-lmkl_core,-liomp5,-lm,-lpthread]"
-    LAPACKLIBS="--with-blas-lapack-lib=\"-Wl,--no-as-needed -Wl,-rpath,${MKLDIR}/lib/intel64 -L${MKLDIR}/lib/intel64 -lmkl_intel_lp64 -lmkl_gnu_thread -lmkl_core -lgomp -lm -lpthread\""
     LDFLAGS="${LDFLAGS} -L${MKLDIR}/lib/intel64 -Wl,-rpath,${MKLDIR}/lib/intel64"
-    LAPACK_LIBS="${LDFLAGS} -L${MKLDIR}/lib/intel64 -Wl,-rpath,${MKLDIR}/lib/intel64 -Wl,--no-as-needed -lmkl_intel_lp64 -lmkl_gnu_thread -lmkl_core -lgomp -lm -lpthread"
+    LAPACKLIBS="--with-blas-lapack-lib=\"-Wl,--no-as-needed -Wl,-rpath,${MKLDIR}/lib/intel64 -L${MKLDIR}/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread\""
+    LAPACK_LIBS="${LDFLAGS} -L${MKLDIR}/lib/intel64 -Wl,-rpath,${MKLDIR}/lib/intel64 -Wl,--no-as-needed -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread"
+    #LAPACKLIBS="--with-blas-lapack-lib=\"-Wl,--no-as-needed -Wl,-rpath,${MKLDIR}/lib/intel64 -L${MKLDIR}/lib/intel64 -lmkl_intel_lp64 -lmkl_gnu_thread -lmkl_core -lgomp -lm -lpthread\""
+    #LAPACK_LIBS="${LDFLAGS} -L${MKLDIR}/lib/intel64 -Wl,-rpath,${MKLDIR}/lib/intel64 -Wl,--no-as-needed -lmkl_intel_lp64 -lmkl_gnu_thread -lmkl_core -lgomp -lm -lpthread"
  
   else
     LAPACKLIBS="--with-blas-lapack-lib=[-L${MKLDIR}/lib/32,-lmkl_intel,-lmkl_intel_thread,-lmkl_core,-liomp5,-lm,-lpthread]"

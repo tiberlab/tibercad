@@ -81,7 +81,7 @@ inline double EnvelopFunctionApprox::get_band_edge(const Elem* elem, const std::
   //      p[i] = elem->point(i);
   
   vector<double> values(1);
-  vector<Point> p(1, elem->centroid());
+  vector<Point> p(1, elem->vertex_average());
 
   bool electron = (particle == "el") || (particle == "Ec");
 
@@ -121,7 +121,7 @@ inline double EnvelopFunctionApprox::get_electric_potential(const Elem* elem, co
 inline double EnvelopFunctionApprox::get_el_electro_chem_potential(const Elem* elem) const
 {
   vector<double> values;
-  vector<Point> qp(1, elem->centroid());
+  vector<Point> qp(1, elem->vertex_average());
 
   _el_elchem.first->get_solution(elem, _el_elchem.second, values, qp);
 
@@ -132,7 +132,7 @@ inline double EnvelopFunctionApprox::get_el_electro_chem_potential(const Elem* e
 inline double EnvelopFunctionApprox::get_hl_electro_chem_potential(const Elem* elem) const
 {
   vector<double> values;
-  vector<Point> qp(1, elem->centroid());
+  vector<Point> qp(1, elem->vertex_average());
 
   _hl_elchem.first->get_solution(elem, _hl_elchem.second, values, qp);
 
@@ -300,7 +300,7 @@ EnvelopFunctionApprox::get_solution_secure(const Elem* elem,
       scale *= Constants::bohr_radius * 1e2;
 
     FEType fe_type = system->variable_type(0);
-    UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
+    std::unique_ptr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
     const vector<vector<Real> >& phi = fe->get_phi();
 
     fe->reinit(elem, &points);
@@ -353,7 +353,7 @@ EnvelopFunctionApprox::get_solution_secure(const Elem* elem,
       scale *= Constants::bohr_radius * 1e2;
 
     FEType fe_type = system->variable_type(0);
-    UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
+    std::unique_ptr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
     const vector<vector<Real> >& phi = fe->get_phi();
 
     fe->reinit(elem, &points);
@@ -417,7 +417,7 @@ EnvelopFunctionApprox::get_solution_secure(const Elem* elem,
     libMesh::NumericVector<Number>& qdens = *qdens_sys.current_local_solution;
 
     FEType fe_type = qdens_sys.variable_type(0);
-    UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
+    std::unique_ptr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
     const vector<vector<Real> >& phi = fe->get_phi();
 
     fe->reinit(elem, &points);
@@ -1376,11 +1376,11 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
 
 
- UniquePtr<libMesh::FEBase> fe (  build_finite_element(dim, fe_type, true)  );
+ std::unique_ptr<libMesh::FEBase> fe (  build_finite_element(dim, fe_type, true)  );
 
   // A 5th order Gauss quadrature rule for numerical integration.
   //QGauss qrule (dim, FIFTH);
- UniquePtr<libMesh::QBase> qrule (libMesh::QBase::build(_quadrature_type, dim, SECOND));
+ std::unique_ptr<libMesh::QBase> qrule (libMesh::QBase::build(_quadrature_type, dim, SECOND));
 
   // Tell the finite element object to use our quadrature rule.
 
@@ -1484,7 +1484,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
       element_hamiltonian = get_bulk_model<EFAbulkModel>(elem)->get_Hamiltonian_model();
 
-      element_hamiltonian->set_temperature(_temp_interface.get_temperature( elem, elem->centroid()));
+      element_hamiltonian->set_temperature(_temp_interface.get_temperature( elem, elem->vertex_average()));
 
       element_hamiltonian->set_k_vector(k_vector);
 
@@ -1976,19 +1976,15 @@ pair<unsigned int, double> EnvelopFunctionApprox::read_slepc_solution(void)
     }
     // TODO this test seems not to work for very dense states
     check_linear_dependency = false;
-    //check_orthogonality = true;
 
     // we found a (potentially) valid slot and fill it
     _solution[index].eigen_energy = ev[i].energy;
     _solution[index].particle = ev[i].particle;
     _solution[index].statistics = "Fermi";
-    //_solution[index].eigen_vector.resize(number_of_all_dofs, Complex(0.0, 0.0));
     
-    //vector<Complex> temp;
     
     unsigned int solution_number = ev[i].index;
 
-    //EigenSolver::get_eigen_vector(solution_number, temp);
     EigenSolver::get_eigen_vector(solution_number, _solution[index].eigen_vector);
 
     this->get_solver_communicator().allgather(_solution[index].eigen_vector);
@@ -2214,7 +2210,7 @@ EnvelopFunctionApprox::check_confinement(const vector<Complex>& state)
 
   FEType fe_type = dof_map.variable_type(0); //all the variable have the same FE representation
 
-  UniquePtr<FEBase> fe (  build_finite_element(dim, fe_type, true)  );
+  std::unique_ptr<FEBase> fe (  build_finite_element(dim, fe_type, true)  );
 
   QGauss qrule (dim, SECOND);
 
@@ -2352,9 +2348,9 @@ double  EnvelopFunctionApprox::eigenstate_norm(unsigned int state_number, vector
 
   FEType fe_type = dof_map.variable_type(0); //all the variable have the same FE representation
 
-  // UniquePtr<FEBase> fe (FEBase::build(dim, fe_type));
-  //UniquePtr<FEBase> fe (  build_finite_element(dim, fe_type)  );
-  UniquePtr<libMesh::FEBase> fe (  build_finite_element(dim, fe_type, true)  );
+  // std::unique_ptr<FEBase> fe (FEBase::build(dim, fe_type));
+  //std::unique_ptr<FEBase> fe (  build_finite_element(dim, fe_type)  );
+  std::unique_ptr<libMesh::FEBase> fe (  build_finite_element(dim, fe_type, true)  );
 
   QGauss qrule(dim, SECOND);
 
@@ -2447,8 +2443,8 @@ double EnvelopFunctionApprox::calculate_fermi_averaged(unsigned int i, const str
 
   FEType fe_type = dof_map.variable_type(0); //all the variable have the same FE representation
 
-   //  UniquePtr<FEBase> fe (FEBase::build(dim, fe_type));
-   UniquePtr<libMesh::FEBase> fe (build_finite_element(dim, fe_type, true));
+   //  std::unique_ptr<FEBase> fe (FEBase::build(dim, fe_type));
+   std::unique_ptr<libMesh::FEBase> fe (build_finite_element(dim, fe_type, true));
 
    // A 5th order Gauss quadrature rule for numerical integration.
    QGauss qrule (dim, SECOND);
@@ -2489,7 +2485,7 @@ double EnvelopFunctionApprox::calculate_fermi_averaged(unsigned int i, const str
       fe->reinit (elem);
 
 
-      Point center = elem->centroid();
+      Point center = elem->vertex_average();
 
       if (particle == "el")
         chem_pot_value_eV = get_el_electro_chem_potential(elem);
@@ -2559,8 +2555,8 @@ double EnvelopFunctionApprox::calculate_temperature_averaged(unsigned int i)
 
     FEType fe_type = dof_map.variable_type(0); //all the variable have the same FE representation
 
-    //  UniquePtr<FEBase> fe (FEBase::build(dim, fe_type));
-    UniquePtr<FEBase> fe (  build_finite_element(dim, fe_type, true)  );
+    //  std::unique_ptr<FEBase> fe (FEBase::build(dim, fe_type));
+    std::unique_ptr<FEBase> fe (  build_finite_element(dim, fe_type, true)  );
 
     // A 5th order Gauss quadrature rule for numerical integration.
     QGauss qrule (dim, libMesh::SECOND);
@@ -2602,7 +2598,7 @@ double EnvelopFunctionApprox::calculate_temperature_averaged(unsigned int i)
       fe->reinit (elem);
 
 
-      Point center = elem->centroid();
+      Point center = elem->vertex_average();
       double Temperature = _temp_interface.get_temperature(elem, center);
 
 
@@ -2810,7 +2806,7 @@ void EnvelopFunctionApprox::calculate_density_analytic(void)
 
 
   FEType fe_type = system->variable_type(0);
-  UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
+  std::unique_ptr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
 
   DofMap& dof_map = system->get_dof_map();
   std::vector<unsigned int> dof_indices;
@@ -2928,7 +2924,7 @@ void
 EnvelopFunctionApprox::do_calculate_density_at_k(DofField& density)
 {
   FEType fe_type = system->variable_type(0);
-  UniquePtr<FEBase> fe(build_finite_element(dim, fe_type));
+  std::unique_ptr<FEBase> fe(build_finite_element(dim, fe_type));
 
   DofMap& dof_map = system->get_dof_map();
   std::vector<unsigned int> dof_indices;
@@ -3123,7 +3119,7 @@ short EnvelopFunctionApprox::calculate_number_of_bands(void) const
 void EnvelopFunctionApprox::solve_bulk(void)
 {
 
-  Point qp = _bulk_mat_element->centroid();
+  Point qp = _bulk_mat_element->vertex_average();
 
   EFAbulkHamiltonian* element_hamiltonian;
 
@@ -3214,7 +3210,7 @@ void EnvelopFunctionApprox::solve_bulk(void)
 
   double el_chem = 0;
   double hl_chem = 0;
-  double temp = _temp_interface.get_temperature(_bulk_mat_element, _bulk_mat_element->centroid());
+  double temp = _temp_interface.get_temperature(_bulk_mat_element, _bulk_mat_element->vertex_average());
 
   if (_el_elchem.second != INVALID_ID)
     el_chem = get_el_electro_chem_potential(_bulk_mat_element);

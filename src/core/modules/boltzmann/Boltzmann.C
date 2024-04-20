@@ -192,7 +192,7 @@ Boltzmann::do_partition(void)
 
      //Get temperature from the first Fourier temperature
      std::vector<Point>  p(1);
-     p[0] = elem->centroid();
+     p[0] = elem->vertex_average();
      vector<Point> points(1);
      libMesh::FEInterface::inverse_map(dim, fe_type, elem, p, points);
      std::map<ID, std::vector<double> > values;
@@ -534,7 +534,7 @@ Boltzmann::solve_fourier(void)
 
   const unsigned int var = system_fourier.variable_number("T");
   libMesh::FEType fe_type = dof_map_fourier.variable_type(var);
-  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+  std::unique_ptr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
   const vector<vector<libMesh::RealGradient> >& dphi = fe->get_dphi();
 
   //--------------------------------------------
@@ -556,13 +556,13 @@ Boltzmann::solve_fourier(void)
     dof_map_fourier.dof_indices (elem, dof_indices_fourier);
     
     std::vector<Point> p(1);
-    p[0]=elem->centroid();
+    p[0]=elem->vertex_average();
     vector<Point> points(1);
     libMesh::FEInterface::inverse_map(dim, fe_type, elem, p, points);
     fe->reinit(elem, &points);
     
     BoltzmannModel& mod = *get_bulk_model<BoltzmannModel>(elem);
-    mod.calculate(elem,elem->centroid());
+    mod.calculate(elem,elem->vertex_average());
     const libMesh::RealTensor& kappa = mod.get_total_thermal_conductivity();
     
     libMesh::RealGradient heat_flux(0);
@@ -596,7 +596,7 @@ Boltzmann::from_nodal_to_cell()
 
   const unsigned int var = system_fourier.variable_number("T");
   libMesh::FEType fe_type = dof_map_fourier.variable_type(var);
-  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+  std::unique_ptr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
   const vector<vector<Real> >& phi = fe->get_phi();
   const vector<vector<libMesh::RealGradient> >& dphi = fe->get_dphi();
 
@@ -616,12 +616,12 @@ Boltzmann::from_nodal_to_cell()
     dof_map_gray.dof_indices (elem, dof_indices_gray);
 
     BoltzmannModel& mod = *get_bulk_model<BoltzmannModel>(elem);
-    mod.calculate(elem,elem->centroid());
+    mod.calculate(elem,elem->vertex_average());
     const libMesh::RealTensor& kappa = mod.get_total_thermal_conductivity();
 
     //Compute temperature at the centroid. Maybe here we can compute value at the centroid by using the JXW.
     std::vector<Point> p(1);
-    p[0]=elem->centroid();
+    p[0]=elem->vertex_average();
     vector<Point> points(1);
     libMesh::FEInterface::inverse_map(dim, fe_type, elem, p, points);
     //---------------------------------------------------------
@@ -1002,7 +1002,7 @@ Boltzmann::solve_gray(void)
 //        const Elem* elem = *el;
 //        ID dof = elem->dof_number(gray_sys_number,0,0);
 //        BoltzmannModel& mod = *get_bulk_model<BoltzmannModel>(elem);
-//        mod.calculate(elem,elem->centroid());
+//        mod.calculate(elem,elem->vertex_average());
 //        double vg = mod.get_sound_velocity();
 //        double cg = mod.get_heat_capacity();
 //
@@ -1079,7 +1079,7 @@ Boltzmann::energy_conservation_check()
   //-----------------------------------------------
 
   libMesh::FEType fe_type(libMesh::FIRST,libMesh::LAGRANGE);
-  libMesh::UniquePtr<libMesh::FEBase>  fe(build_finite_element(dim,fe_type,true));
+  std::unique_ptr<libMesh::FEBase>  fe(build_finite_element(dim,fe_type,true));
 
   libMesh::QGauss qrule(dim, libMesh::CONSTANT);
   fe->attach_quadrature_rule(&qrule);
@@ -1145,7 +1145,7 @@ Boltzmann::energy_conservation_check_traditional()
   libMesh::FEType fe_type = dof_map.variable_type(tvar);
 
   //------------BULK----------
-  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+  std::unique_ptr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
   libMesh::QGauss qrule(dim,libMesh::FIFTH);
   fe->attach_quadrature_rule(&qrule);
   const std::vector<Real>& JxW = fe->get_JxW();
@@ -1153,7 +1153,7 @@ Boltzmann::energy_conservation_check_traditional()
   //--------------------------
 
 
-  libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
+  std::unique_ptr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
   libMesh::QGauss qrule_face(dim-1,libMesh::CONSTANT);
   fe_face->attach_quadrature_rule(&qrule_face);
 
@@ -1241,7 +1241,7 @@ Boltzmann::compute_power_dissipated()
   const unsigned int tvar = system.variable_number("T");
   libMesh::FEType fe_type = dof_map.variable_type(tvar);
 
-  libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
+  std::unique_ptr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
   libMesh::QGauss qrule_face(dim-1,libMesh::FIFTH);
   fe_face->attach_quadrature_rule(&qrule_face);
   
@@ -1310,7 +1310,7 @@ Boltzmann::compute_porosity()
   libMesh::FEType fe_type = dof_map.variable_type(tvar);
   
   //------------BULK----------
-  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+  std::unique_ptr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
   libMesh::QGauss qrule(dim,libMesh::FIFTH);
   fe->attach_quadrature_rule(&qrule);
   const std::vector<Real>& JxW = fe->get_JxW();
@@ -1378,7 +1378,7 @@ Boltzmann::compute_effective_thermal_conductivity()
     // FEType fe_type_gray = dof_map_gray.variable_type(tvar);
 
    //--------------surface-----------------
-//   UniquePtr<FEBase> fe_face_gray(build_finite_element(dim, fe_type_gray, true));
+//   std::unique_ptr<FEBase> fe_face_gray(build_finite_element(dim, fe_type_gray, true));
  //  QGauss qrule_face_gray(dim-1,libMesh::CONSTANT);
  //  fe_face_gray->attach_quadrature_rule(&qrule_face_gray);
  //  const std::vector<Real>& JxW_face_gray = fe_face_gray->get_JxW();
@@ -1396,14 +1396,14 @@ Boltzmann::compute_effective_thermal_conductivity()
   libMesh::FEType fe_type = dof_map.variable_type(tvar);
 
    //------------BULK----------
-  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+  std::unique_ptr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
   libMesh::QGauss qrule(dim,libMesh::FIFTH);
   fe->attach_quadrature_rule(&qrule);
   const std::vector<Real>& JxW = fe->get_JxW();
   const std::vector<Point>& q_point = fe->get_xyz();
 
   //--------------SURFACE-----------------
-  libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
+  std::unique_ptr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
   libMesh::QGauss qrule_face(dim-1,libMesh::FIFTH);
   fe_face->attach_quadrature_rule(&qrule_face);
 
@@ -1585,14 +1585,14 @@ Boltzmann::compute_effective_thermal_conductivity_elemental()
    libMesh::FEType fe_type = dof_map.variable_type(tvar);
 
    //--------------surface-----------------
-   libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
+   std::unique_ptr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
    libMesh::QGauss qrule_face(dim-1,libMesh::CONSTANT);
    fe_face->attach_quadrature_rule(&qrule_face);
    const std::vector<Real>& JxW_face = fe_face->get_JxW();
    const std::vector<Point>& normal = fe_face->get_normals();
    //---------------------------------------------------------------------------
    //------------BULK----------
-   libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+   std::unique_ptr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
   libMesh::QGauss qrule(dim,libMesh::FIFTH);
   fe->attach_quadrature_rule(&qrule);
   const std::vector<Real>& JxW = fe->get_JxW();
@@ -1733,7 +1733,7 @@ Boltzmann::compute_power_emitted()
   libMesh::FEType fe_type = dof_map.variable_type(tvar);
 
   //------------BULK----------
-  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+  std::unique_ptr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
   libMesh::QGauss qrule(dim,libMesh::FIFTH);
   fe->attach_quadrature_rule(&qrule);
   const std::vector<Real>& JxW = fe->get_JxW();
@@ -1741,7 +1741,7 @@ Boltzmann::compute_power_emitted()
   //--------------------------
 
 
-  libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
+  std::unique_ptr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
   libMesh::QGauss qrule_face(dim-1,libMesh::CONSTANT);
   fe_face->attach_quadrature_rule(&qrule_face);
 
@@ -1825,7 +1825,7 @@ Boltzmann::compute_power_emitted()
 //   FEType fe_type = dof_map.variable_type(tvar);
 
 //   //------------BULK----------
-//   UniquePtr<FEBase> fe(build_finite_element(dim, fe_type, true));
+//   std::unique_ptr<FEBase> fe(build_finite_element(dim, fe_type, true));
 //   QGauss qrule(dim,libMesh::FIFTH);
 //   fe->attach_quadrature_rule(&qrule);
 //   const std::vector<Real>& JxW = fe->get_JxW();
@@ -1833,7 +1833,7 @@ Boltzmann::compute_power_emitted()
 //   //--------------------------
 
 
-//   UniquePtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
+//   std::unique_ptr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
 //   QGauss qrule_face(dim-1,libMesh::CONSTANT);
 //   fe_face->attach_quadrature_rule(&qrule_face);
 
@@ -1917,7 +1917,7 @@ Boltzmann::compute_view_factor(std::string S1, std::string S2)
     libMesh::FEType fe_type = dof_map.variable_type(tvar);
 
     // the surface finite element
-    libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
+    std::unique_ptr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
     libMesh::QGauss qface(dim - 1, libMesh::CONSTANT);
     fe_face->attach_quadrature_rule(&qface);
 
@@ -2184,7 +2184,7 @@ Boltzmann::get_solution_secure(const Elem* elem,
    const unsigned int u_var = system->variable_number("T");
 
    libMesh::FEType fe_type = system->variable_type(u_var);
-   libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
+   std::unique_ptr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
 
    vector<unsigned int> dof_indices;
 
@@ -2349,7 +2349,7 @@ Boltzmann::do_assemble_boltzmann(libMesh::EquationSystems& es, const std::string
      libMesh::FEType fe_type = dof_map.variable_type(t_var[0]);
 
      // VOLUME
-     libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+     std::unique_ptr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
      libMesh::QGauss qrule(dim, libMesh::CONSTANT);
      fe->attach_quadrature_rule(&qrule);
 
@@ -2359,7 +2359,7 @@ Boltzmann::do_assemble_boltzmann(libMesh::EquationSystems& es, const std::string
      const vector<vector<libMesh::RealGradient> >& dphi = fe->get_dphi();
 
      // SURFACE
-     libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
+     std::unique_ptr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
      libMesh::QGauss qface(dim - 1, libMesh::CONSTANT);
      fe_face->attach_quadrature_rule(&qface);
 
@@ -2464,7 +2464,7 @@ Boltzmann::do_assemble_boltzmann(libMesh::EquationSystems& es, const std::string
       //Get the model parameters
       const unsigned int num_sides = elem->n_sides();
       BoltzmannModel& mod = *get_bulk_model<BoltzmannModel>(elem);
-      mod.calculate(elem,elem->centroid());
+      mod.calculate(elem,elem->vertex_average());
       Real tg = mod.get_relaxation_time();
       Real vg = mod.get_sound_velocity();
       Real cg = mod.get_heat_capacity();
@@ -2551,7 +2551,7 @@ Boltzmann::do_assemble_gray(libMesh::EquationSystems& es, const std::string& sys
 
 
    // the volume finite element
-   libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+   std::unique_ptr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
    //QGauss qrule(dim, libMesh::FIFTH);
    libMesh::QGauss qrule(dim, libMesh::CONSTANT);
    fe->attach_quadrature_rule(&qrule);
@@ -2563,7 +2563,7 @@ Boltzmann::do_assemble_gray(libMesh::EquationSystems& es, const std::string& sys
 
 
    // the surface finite element
-   libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
+   std::unique_ptr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
    //QGauss qface(dim - 1, libMesh::SIXTH);
    libMesh::QGauss qface(dim - 1, libMesh::CONSTANT);
    fe_face->attach_quadrature_rule(&qface);
@@ -2629,7 +2629,7 @@ Boltzmann::do_assemble_gray(libMesh::EquationSystems& es, const std::string& sys
      const unsigned int num_sides = elem->n_sides();
 
      BoltzmannModel& mod = *get_bulk_model<BoltzmannModel>(elem);
-     mod.calculate(elem,elem->centroid());
+     mod.calculate(elem,elem->vertex_average());
 
      double tg = mod.get_relaxation_time();
      double vg = mod.get_sound_velocity();
@@ -2766,7 +2766,7 @@ Boltzmann::get_boundary_value(ElementSide elside, Point normal)
   double diff_part = 0.0;
   if (mod != NULL)
   {
-    mod->calculate(elside.elem(), elside.side(), elside.elem()->centroid());
+    mod->calculate(elside.elem(), elside.side(), elside.elem()->vertex_average());
 
     if (mod->get_type() == "boltzmann_bnd_heat_reservoir")
     {
@@ -2783,7 +2783,7 @@ Boltzmann::get_boundary_value(ElementSide elside, Point normal)
          double DeltaT = mod->get_deltaT();
          double value_eq = 0.0;
          //Get the point to search for
-         libMesh::UniquePtr< Elem > elem_face =  elside.elem()->build_side(elside.side());
+         std::unique_ptr< Elem > elem_face =  elside.elem()->build_side(elside.side());
          Point point_side = elem_face->point(0);
 
          //The 1 - delta term has been included in order to be sure that the point is in the element
@@ -2998,7 +2998,7 @@ Boltzmann::do_assemble_fourier(libMesh::EquationSystems& es, const std::string& 
 
    SimulationEnvironment& se = get_environment();
    // the volume finite element
-   libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+   std::unique_ptr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
    libMesh::QGauss qrule(dim, libMesh::FIFTH);
    fe->attach_quadrature_rule(&qrule);
 
@@ -3009,7 +3009,7 @@ Boltzmann::do_assemble_fourier(libMesh::EquationSystems& es, const std::string& 
 
 
    // the surface finite element
-   libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
+   std::unique_ptr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
    libMesh::QGauss qface(dim - 1, libMesh::SIXTH);
    fe_face->attach_quadrature_rule(&qface);
 
@@ -3081,7 +3081,7 @@ Boltzmann::do_assemble_fourier(libMesh::EquationSystems& es, const std::string& 
 	 double a, b, c;
 	 if (mod != NULL &&  mod->get_type() != "boltzmann_bnd_diffusive" )
 	 {
-	   mod->calculate(elem,s,elem->centroid() );
+	   mod->calculate(elem,s,elem->vertex_average() );
 	   mod->get_coefficients(a, b, c);
 	   do_boundary = true;  
 	 }
@@ -3162,7 +3162,7 @@ Boltzmann::get_fourier_boundary(ElementSide elside,double a, double b, double c)
 
   if (mod != NULL)
   {
-    mod->calculate(elside.elem(), elside.side(),elside.elem()->centroid() );
+    mod->calculate(elside.elem(), elside.side(),elside.elem()->vertex_average() );
     mod->get_coefficients(a, b, c);
     boundary = true;
   }

@@ -92,7 +92,7 @@ void MacrostrainModel::get_converse_piezo_stress(Tensor2Sym& sigma, const Elem* 
   if (poisson != NULL)
   {
 
-    Point q_point = element->centroid();
+    Point q_point = element->vertex_average();
     std::vector<Point> q_point_vec(1, q_point);
 
     std::map<ID, std::vector<double> > field_components;

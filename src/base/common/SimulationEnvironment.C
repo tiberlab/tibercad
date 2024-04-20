@@ -14,7 +14,7 @@
 
 using namespace std;
 
-//USELIBMESHTYPE(UniquePtr);
+//);
 
 
 SimulationEnvironment::EnvironmentSet
@@ -343,7 +343,7 @@ SimulationEnvironment::get_boundary(const string& name) const
     if ((*it)->get_name() == name)
       bd = *it;
 
-    return bd;
+  return bd;
 }
 
 

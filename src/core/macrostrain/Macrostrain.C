@@ -82,7 +82,7 @@ Macrostrain::get_solution_secure(const Elem* elem,
 
     libMesh::DofMap& dof_map = system.get_dof_map();
     libMesh::FEType fe_type = dof_map.variable_type(uvar[0]);
-    libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
+    std::unique_ptr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
     const vector<vector<double> >& phi = fe->get_phi();
 
     vector<unsigned int> dof_indices_x;
@@ -686,7 +686,7 @@ void Macrostrain::do_assemble(libMesh::EquationSystems& es,
 
   libMesh::FEType fe_type = dof_map.variable_type(uvar[0]);
 
-  libMesh::UniquePtr<libMesh::FEBase> fe (build_finite_element(dim, fe_type, true)); //I need scaling here
+  std::unique_ptr<libMesh::FEBase> fe (build_finite_element(dim, fe_type, true)); //I need scaling here
 
 
 
@@ -700,7 +700,7 @@ void Macrostrain::do_assemble(libMesh::EquationSystems& es,
 
   // Declare a special finite element object for
   // boundary integration.
-  libMesh::UniquePtr<libMesh::FEBase>  fe_face(build_finite_element(dim, fe_type, true)); //I need scaling here
+  std::unique_ptr<libMesh::FEBase>  fe_face(build_finite_element(dim, fe_type, true)); //I need scaling here
 
 
   // Boundary integration requires one quadraure rule,
@@ -991,7 +991,7 @@ void Macrostrain::do_assemble(libMesh::EquationSystems& es,
 		{
 		  double normal;
 		  Point p = elem->point(side);
-		  Point pc = elem->centroid();
+		  Point pc = elem->vertex_average();
 		  if (p(0) > pc(0))
 		    normal = 1.0;
 		  else
@@ -1800,7 +1800,7 @@ void Macrostrain::do_solve()
     libMesh::FEType fe_type = dof_map.variable_type(0);
 
 
-    libMesh::UniquePtr<libMesh::FEBase> fe (build_finite_element(dim, fe_type, true));
+    std::unique_ptr<libMesh::FEBase> fe (build_finite_element(dim, fe_type, true));
 
     _atom_relative_points.resize(as->get_structure_atoms().size());
     for (unsigned int i = 0; i < as->get_structure_atoms().size(); i++)
@@ -1971,7 +1971,7 @@ void Macrostrain::update_eps0_list()
 
   libMesh::LinearImplicitSystem& system = *my_system;
 
-  libMesh::UniquePtr<libMesh::NumericVector<libMesh::Number> >& solution = system.solution;
+  std::unique_ptr<libMesh::NumericVector<libMesh::Number> >& solution = system.solution;
 
   libMesh::DofMap& dof_map = system.get_dof_map();
 
@@ -1987,7 +1987,7 @@ void Macrostrain::update_eps0_list()
 
 
   libMesh::FEType fe_type = dof_map.variable_type(0);
-  libMesh::UniquePtr<libMesh::FEBase> fe (build_finite_element(dim, fe_type, true));//no scaling here!
+  std::unique_ptr<libMesh::FEBase> fe (build_finite_element(dim, fe_type, true));//no scaling here!
   const std::vector<std::vector<libMesh::RealGradient> >& dphi = fe->get_dphi();
 
   std::vector<Point> point_vec(1);
@@ -2005,7 +2005,7 @@ void Macrostrain::update_eps0_list()
 
       const Elem* elem = *el;
 
-      point_vec[0]  = libMesh::FEInterface::inverse_map(dim, fe_type, elem, elem->centroid());
+      point_vec[0]  = libMesh::FEInterface::inverse_map(dim, fe_type, elem, elem->vertex_average());
       fe->reinit (elem, &point_vec);
 
 
@@ -2173,7 +2173,7 @@ void  Macrostrain::apply_periodic_bc()
   libMesh::FEType fe_type = dof_map.variable_type(uvar[0]);
 
 
-  libMesh::UniquePtr<libMesh::FEBase> fe (build_finite_element(dim, fe_type, true));  //no scaling here
+  std::unique_ptr<libMesh::FEBase> fe (build_finite_element(dim, fe_type, true));  //no scaling here
 
 
 
@@ -2368,7 +2368,7 @@ The constrants are the following:
  libMesh::FEType fe_type = dof_map.variable_type(uvar[0]);
 
 
- //UniquePtr<FEBase> fe (build_finite_element(dim, fe_type, true));
+ //std::unique_ptr<FEBase> fe (build_finite_element(dim, fe_type, true));
 
  libMesh::DofConstraintRow constraint;
 
@@ -2598,7 +2598,7 @@ void Macrostrain::prepare_strain_data_for_output( std::vector<std::string>& eps_
 
   libMesh::LinearImplicitSystem& system = *my_system  ;
 
-  libMesh::UniquePtr<libMesh::NumericVector<libMesh::Number> >& solution = system.solution;
+  std::unique_ptr<libMesh::NumericVector<libMesh::Number> >& solution = system.solution;
 
   libMesh::DofMap& dof_map = system.get_dof_map();
 
@@ -2610,7 +2610,7 @@ void Macrostrain::prepare_strain_data_for_output( std::vector<std::string>& eps_
 
   libMesh::FEType fe_type = dof_map.variable_type(0);
 
-  libMesh::UniquePtr<libMesh::FEBase> fe (build_finite_element(dim, fe_type, true)); //no scaling here
+  std::unique_ptr<libMesh::FEBase> fe (build_finite_element(dim, fe_type, true)); //no scaling here
 
   const std::vector<std::vector<libMesh::RealGradient> >& dphi = fe->get_dphi();
   const std::vector<std::vector<Real> >& phi = fe->get_phi();
@@ -2661,7 +2661,7 @@ void Macrostrain::prepare_strain_data_for_output( std::vector<std::string>& eps_
 	  {
 	    const Elem* elem = *el;
 
-	    Point center=elem->centroid();
+	    Point center=elem->vertex_average();
 
 
 
@@ -2885,7 +2885,7 @@ void Macrostrain::move_nodes()
 
   libMesh::LinearImplicitSystem& system = *my_system;
 
-  libMesh::UniquePtr<libMesh::NumericVector<libMesh::Number> >& solution = system.solution;
+  std::unique_ptr<libMesh::NumericVector<libMesh::Number> >& solution = system.solution;
 
   // DofMap& dof_map = system.get_dof_map();
 
@@ -3116,7 +3116,7 @@ Tensor2Sym Macrostrain::get_strain(const Elem* elem, bool crystal_system )
 
   libMesh::LinearImplicitSystem& system = *my_system;
 
-  libMesh::UniquePtr<libMesh::NumericVector<libMesh::Number> >& solution = system.solution;
+  std::unique_ptr<libMesh::NumericVector<libMesh::Number> >& solution = system.solution;
 
   libMesh::DofMap& dof_map = system.get_dof_map();
 
@@ -3130,7 +3130,7 @@ Tensor2Sym Macrostrain::get_strain(const Elem* elem, bool crystal_system )
 
 
   libMesh::FEType fe_type = dof_map.variable_type(0);
-  libMesh::UniquePtr<libMesh::FEBase> fe (build_finite_element(dim, fe_type, true)); //no scaling here
+  std::unique_ptr<libMesh::FEBase> fe (build_finite_element(dim, fe_type, true)); //no scaling here
   const std::vector<std::vector<libMesh::RealGradient> >& dphi = fe->get_dphi();
 
   std::vector<Point> point_vec(1);
@@ -3155,7 +3155,7 @@ Tensor2Sym Macrostrain::get_strain(const Elem* elem, bool crystal_system )
 
 
 
-  point_vec[0]  = libMesh::FEInterface::inverse_map(dim, fe_type, elem, elem->centroid());
+  point_vec[0]  = libMesh::FEInterface::inverse_map(dim, fe_type, elem, elem->vertex_average());
 
 
 
@@ -3554,7 +3554,7 @@ void Macrostrain::update_substrate()
 
   libMesh::LinearImplicitSystem& system = *my_system;
 
-  libMesh::UniquePtr<libMesh::NumericVector<libMesh::Number> >& solution = system.solution;
+  std::unique_ptr<libMesh::NumericVector<libMesh::Number> >& solution = system.solution;
 
 
   for (unsigned int i = 0; i <  number_of_add_var; i++)
@@ -3618,7 +3618,7 @@ void Macrostrain::update_u_node()
 
   libMesh::LinearImplicitSystem& system = *my_system;
 
-  libMesh::UniquePtr<libMesh::NumericVector<libMesh::Number> >& solution = system.solution;
+  std::unique_ptr<libMesh::NumericVector<libMesh::Number> >& solution = system.solution;
 
   const unsigned int system_number = system.number();
 
@@ -3691,7 +3691,7 @@ void Macrostrain::output_add_strain_variables(string filename)
     {
       libMesh::LinearImplicitSystem& system = *my_system;
 
-      libMesh::UniquePtr<libMesh::NumericVector<libMesh::Number> >& solution = system.solution;
+      std::unique_ptr<libMesh::NumericVector<libMesh::Number> >& solution = system.solution;
 
 
       std::ofstream out (filename.c_str());
@@ -3808,7 +3808,7 @@ Macrostrain::apply_atom_displacements(const std::string structure_name)
 
   libMesh::LinearImplicitSystem& system = *my_system;
 
-  libMesh::UniquePtr<libMesh::NumericVector<libMesh::Number> >& solution = system.solution;
+  std::unique_ptr<libMesh::NumericVector<libMesh::Number> >& solution = system.solution;
 
   libMesh::DofMap& dof_map = system.get_dof_map();
 
@@ -3823,7 +3823,7 @@ Macrostrain::apply_atom_displacements(const std::string structure_name)
 
   libMesh::FEType fe_type = dof_map.variable_type(0);
 
-  libMesh::UniquePtr<libMesh::FEBase> fe (build_finite_element(dim, fe_type, true)); //no scaling here
+  std::unique_ptr<libMesh::FEBase> fe (build_finite_element(dim, fe_type, true)); //no scaling here
 
   const std::vector<std::vector<Real> >& phi = fe->get_phi();
 
@@ -4255,7 +4255,7 @@ Macrostrain::Macrostrain(const ModelOptions& options)
 
 //    Tensor4DSym C_calc =  C_tensor_el->C_calc;
 
-//    Tensor2Sym strain =  get_strain_crystal(el, el->centroid());
+//    Tensor2Sym strain =  get_strain_crystal(el, el->vertex_average());
 
 //   Tensor2Sym stress = strain * C_calc;
 
@@ -4311,7 +4311,7 @@ Macrostrain::Macrostrain(const ModelOptions& options)
 
 //   LinearImplicitSystem& system = *my_system;
 
-//   UniquePtr<NumericVector<Number> >& solution = system.solution;
+//   std::unique_ptr<NumericVector<Number> >& solution = system.solution;
 
 //   DofMap& dof_map = system.get_dof_map();
 
@@ -4328,7 +4328,7 @@ Macrostrain::Macrostrain(const ModelOptions& options)
 //   FEType fe_type = dof_map.variable_type(0);
 
 
-//   UniquePtr<FEBase> fe (build_finite_element(dim, fe_type, true)); //no scaling here
+//   std::unique_ptr<FEBase> fe (build_finite_element(dim, fe_type, true)); //no scaling here
 
 
 //   const std::vector<std::vector<Real> >& phi = fe->get_phi();

@@ -25,6 +25,7 @@
 #include <vector>
 #include <set>
 #include <map>
+#include <stack>
 
 
 // forward declarations

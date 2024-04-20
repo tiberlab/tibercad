@@ -38,7 +38,9 @@ ifneq ($(target_os),darwin)
 		-L$(SLEPC_LIB_DIR) -lslepc \
 		$(SLEPC_EXTERNAL_LIB) \
 		-L$(PETSC_LIB_DIR) $(PETSC_KSP_LIB_BASIC) \
-		-Wl,-Bdynamic -Wl,--as-needed $(LDFLAGS)
+		-Wl,-Bdynamic -Wl,--as-needed @LDFLAGS@ \
+		$(BLASLAPACK_LDFLAGS) $(FORTRAN_LDFLAGS) $(CUDA_LDFLAGS)
+       
 	
 #$(PETSC_EXTERNAL_LIB_BASIC)
 else

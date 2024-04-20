@@ -48,7 +48,7 @@ void
 TiberLinearSystem::user_initialization(void)
 {
   TiberLinearSolver* lin_solver = TiberLinearSolver::create(this->comm(), get_options());
-  linear_solver = libMesh::UniquePtr<libMesh::LinearSolver<Real> >(lin_solver);
+  linear_solver = std::unique_ptr<libMesh::LinearSolver<Real> >(lin_solver);
 }
 
 

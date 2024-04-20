@@ -1892,7 +1892,7 @@ AtomisticStructure::create_conformal_grid(libMesh::UnstructuredMesh& mesh,
     }
     else
     {
-      Point centroid(el->centroid());
+      Point centroid(el->vertex_average());
       const Elem* dev_el = MeshUtils::search_element(
           &(get_device()->get_mesh()), centroid);
       ID id = INVALID_ID;
@@ -1923,9 +1923,8 @@ AtomisticStructure::extract_statistics(map<Specie, vector<unsigned int>>& stats,
     const set<ID>& regions, double cutoff, double y, double z, const ModelOptions& opt) const
 {
 
-  //cutoff = _options.get_option("control_volume_radius", cutoff);
-
-  int ref_atom = _options.get_option("reference_atom", -1);
+  std::vector<int> ref_atom;
+  opt.get_option("reference_atom", ref_atom);
 
   int bin_size = opt.get_option("bin_size", 0);
   set<unsigned int> binning_atom;
@@ -1946,10 +1945,12 @@ AtomisticStructure::extract_statistics(map<Specie, vector<unsigned int>>& stats,
 
   m.info(os.str());
 
-  if (ref_atom >= 0)
+  if (!ref_atom.empty())
   {
     os.str("");
-    os << "control volumes centered at atoms with label (= reference atom): " << ref_atom;
+    os << "control volumes centered at atoms with label (= reference atom):";
+    for (auto &&r : ref_atom)
+      os << " " << r;
     m.info(os.str());
   }
 
@@ -2065,7 +2066,7 @@ AtomisticStructure::extract_statistics(map<Specie, vector<unsigned int>>& stats,
         stats[atm.get_specie()][0] += 1;
       }
 
-      if ((ref_atom < 0) || (atm.get_label() == ref_atom))
+      if ((ref_atom.empty()) || std::count(ref_atom.begin(), ref_atom.end(), atm.get_label()))
       {
 
         map<Specie, vector<unsigned int>>::iterator mit(stats.begin());
@@ -2213,7 +2214,7 @@ AtomisticStructure::find_nearest_atom(const Elem* elem, const Point& point, doub
         if ((neigh != NULL) && //!processed_elems.count(neigh))
             !processed_elems.count(neigh) &&
             !to_process.count(neigh) &&
-            (Point(point - neigh->centroid()).norm() <
+            (Point(point - neigh->vertex_average()).norm() <
                 min_dist / _scale))
         {
           next_to_process.insert(neigh);
@@ -2491,7 +2492,7 @@ AtomisticStructure::extract_alloy_statistics(const ModelOptions& opt)
         x = opt.get_option("side_length", cutoff);
         y = z = x;
       }
-      else if (shape == "column")
+      else if (shape == "column") // we should never get here??
       {
         libMesh::RealVectorValue a, b, c;
         get_lattice_vectors(a, b, c);
@@ -2572,15 +2573,16 @@ AtomisticStructure::plot_alloy_composition(const ModelOptions& opt)
   // CREATE A VTK FILE PROJECTING LOCAL ALLOY COMPOSITION 
   double cutoff = opt.get_option("control_volume_radius", 0.5);
   string cutoff_str = opt.get_option("control_volume_radius", "0.5");
-  libMesh::UniquePtr<libMesh::UnstructuredMesh> mesh(new libMesh::Mesh(TiberCad::get_mpi_comm(), 3));
+  std::unique_ptr<libMesh::UnstructuredMesh> mesh(new libMesh::Mesh(TiberCad::get_mpi_comm(), 3));
 
-  int ref_atom = _options.get_option("reference_atom", -1);
+  std::vector<int> ref_atom;
+  _options.get_option("reference_atom", ref_atom);
   IDSet refatoms;
-  if (ref_atom >= 0)
-    refatoms.insert(ref_atom);
+  if (ref_atom.size() >= 0)
+    refatoms.insert(ref_atom.begin(), ref_atom.end());
   create_conformal_grid(*mesh, refatoms, true);
 
-  libMesh::UniquePtr<DataOutput> writer(DataOutput::create(
+  std::unique_ptr<DataOutput> writer(DataOutput::create(
       _options.get_option("meshdata_format", "vtk")));
 
   writer->set_mesh(*mesh);

@@ -56,13 +56,12 @@ TC_MPIEXEC
 #AC_PROG_LIBTOOL
 
 # check for libreadline
-# we cannot use it directly, it is GPL! We are not, sigh..
-# VL_LIB_READLINE
-[LIBREADLINE]=""
-#if test "$vl_cv_lib_readline" != "no"
-#then
-#  [LIBREADLINE]="$vl_cv_lib_readline"
-#fi
+VL_LIB_READLINE
+#[LIBREADLINE]=""
+if test "$ax_cv_lib_readline" != "no"
+then
+  [LIBREADLINE]="$ax_cv_lib_readline"
+fi
 AC_SUBST([LIBREADLINE])
 
 # check for perl

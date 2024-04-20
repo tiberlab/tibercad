@@ -59,7 +59,7 @@ class MeshUtils
     static libMesh::Point get_outer_normal(const libMesh::Elem* elem, int side);
 
     //! Create the boundary mesh for a given volume mesh
-    static libMesh::UniquePtr<libMesh::MeshBase> create_boundary_mesh(const libMesh::MeshBase& mesh);
+    static std::unique_ptr<libMesh::MeshBase> create_boundary_mesh(const libMesh::MeshBase& mesh);
 
 
     //! Triangulate a given point set

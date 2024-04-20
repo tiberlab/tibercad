@@ -27,7 +27,6 @@
 using namespace std;
 using namespace libMesh;
 
-USELIBMESHTYPE(UniquePtr);
 USELIBMESHTYPE(DofObject);
 
 
@@ -186,7 +185,7 @@ MeshUtils::get_outer_normal(const libMesh::Elem* elem, int side)
 
   unique_ptr<const libMesh::Elem> side_el(elem->side_ptr(side));
   //const libMesh::Elem* side_el = dynamic_cast<libMesh::Elem*>(sobj.get());
-  const libMesh::Point& centroid = elem->centroid();
+  const libMesh::Point& centroid = elem->vertex_average();
 
   switch (elem->dim())
   {
@@ -245,7 +244,7 @@ MeshUtils::create_boundary_mesh(const libMesh::MeshBase& mesh)
     const libMesh::Elem* elem = *it;
     ID subdomain = elem->subdomain_id();
 
-    for (int i = 0; i < elem->n_sides(); ++i)
+    for (unsigned int i = 0; i < elem->n_sides(); ++i)
     {
       const libMesh::Elem* nb = elem->neighbor_ptr(i);
       pair<const libMesh::Elem*, const libMesh::Elem*> el_pair(elem, nb);
@@ -615,9 +614,9 @@ MeshUtils::GridMapper::setup(void)
     // all tensor grid elements in the cube [tg0, tg1] may be touched
     // by elem
 
-    for (unsigned int k = tg0[0]; k <= tg1[0]; ++k)
-      for (unsigned int l = tg0[1]; l <= tg1[1]; ++l)
-        for (unsigned int m = tg0[2]; m <= tg1[2]; ++m)
+    for (int k = tg0[0]; k <= tg1[0]; ++k)
+      for (int l = tg0[1]; l <= tg1[1]; ++l)
+        for (int m = tg0[2]; m <= tg1[2]; ++m)
         {
           int tgrid_el = _tensor_grid.index_to_element(k, l, m);
 

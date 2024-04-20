@@ -493,16 +493,16 @@ DriftDiffusionProperties::reinit(const libMesh::Elem* elem)
   if (_elem != elem)
   {
     _elem = elem;
-    _coord = elem->centroid();
+    _coord = elem->vertex_average();
 
     // get the nodal temperatures
     _lattice_temp.get_temperature(elem, _nodal_lattice_vt);
 
     // get the mean temperature on the element
     _lattice_vt = Constants::k_B *
-      _lattice_temp.get_temperature(elem, elem->centroid());
+      _lattice_temp.get_temperature(elem, elem->vertex_average());
 
-     _strain_if.get_crystal_strain(elem, elem->centroid(), _strain);
+     _strain_if.get_crystal_strain(elem, elem->vertex_average(), _strain);
 
       _polarization = 0;
       for (size_t n = 0; n < _pm.size(); n++)

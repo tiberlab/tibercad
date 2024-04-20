@@ -297,6 +297,7 @@ TiberPetscNonlinearSolver::TiberPetscNonlinearSolver(sys_type& s)
     _divergence_tol(2.0),
     _ksp_type(KSPBCGSL),
     _pc_type(PCILU),
+    _solver_package("petsc"),
     _linear_rtol(1e-6),
     _linear_atol(1e-50),
     _linear_max_it(500)
@@ -322,6 +323,8 @@ TiberPetscNonlinearSolver::parse_options(const ModelOptions& options)
 
     _ksp_type = TiberPetscUtils::extract_KSPType(linoptions);
     _pc_type = TiberPetscUtils::extract_PCType(linoptions);
+
+    _solver_package = linoptions.get_option("solver_package", _solver_package);
   }
 }
 
@@ -490,6 +493,10 @@ TiberPetscNonlinearSolver::solve(SparseMatrix<double>&  jacobian,
   // get the type of preconditioner
   PCType pc_type = 0;
   PCGetType(pc, &pc_type);
+
+  if (_solver_package != "") {
+    PCFactorSetMatSolverType(pc, _solver_package.c_str());
+  }
 
   // - the very first time, there's no preconditioner yet
   // - if we changed the preconditioner, then we create it from scratch

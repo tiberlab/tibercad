@@ -317,18 +317,6 @@ Control::setup_globals(const ModelOptions& opts)
           << TiberCad::arch_string() << ")";
     Messages::info(os.str());
 
-    if (TiberCad::get_mpi_comm().size() > 1)
-    {
-      char buffer[MPI_MAX_PROCESSOR_NAME];
-      int buflen;
-      MPI_Get_processor_name(buffer, &buflen);
-      os.str("");
-      os << "MPI: rank " << TiberCad::get_mpi_comm().rank()
-            << " out of " << TiberCad::get_mpi_comm().size()
-            << ", running on host " << buffer;
-      Messages::newline();
-      Messages::info(os.str());
-    }
   }
   Messages::newline();
   Messages::info("Input file: " + _inputfile);
@@ -350,20 +338,63 @@ Control::setup_globals(const ModelOptions& opts)
     // initialize global simulation options
     SimulationOptions::initialize(opts);
 
+    std::string modellibpath;
+    DLLoader::get_library_path(modellibpath);
+
     ostringstream os;
     os << "Simulation temperature: "
       << SimulationOptions::temperature << " K" << endl
       << "Database search path  : "
       << Database::get_search_path() << endl
-      //<< "Output directory      : "
-      //<< _outputdir << endl
+      << "Module library path   : "
+      << modellibpath << endl
       << "Log file              : "
-      << logfile << endl
-      //<< "Output file format    : "
-      //<< _output_format << endl
-      << endl;
+      << logfile << endl;
     m.info(os.str());
     m.newline();
+  }
+
+  {
+    int omp_procs = omp_get_max_threads();
+    int mpi_comm = TiberCad::get_mpi_comm().size();
+
+    if ((omp_procs > 1) || (mpi_comm) > 1)
+    {
+      Messages m;
+      m.info("Parallelization");
+      m.indent();
+
+      ostringstream os;
+      os << "MPI communicator size : "
+         << mpi_comm << endl
+         << "OMP threads           : "
+         << omp_procs << endl;
+      m.info(os.str());
+      m.newline();
+
+      if ((omp_procs > 1) && (mpi_comm) > 1)
+      {
+        Messages::info("This is a hybrid MPI+openMP run. "
+            "Assure that OMP_NUM_THREADS is set correctly.");
+        m.newline();
+      }
+
+
+      if (mpi_comm > 1)
+      {
+        char buffer[MPI_MAX_PROCESSOR_NAME];
+        int buflen;
+        MPI_Get_processor_name(buffer, &buflen);
+        os.str("");
+        os << "This is MPI rank " << TiberCad::get_mpi_comm().rank()
+          << " out of " << mpi_comm
+          << ", running on host " << buffer;
+        Messages::info(os.str());
+        Messages::newline();
+      }
+
+      m.newline();
+    }
   }
 
 

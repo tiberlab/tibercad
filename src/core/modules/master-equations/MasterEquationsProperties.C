@@ -72,7 +72,7 @@ MasterEquationsProperties::reinit(const Elem* elem)
   {
     this->_elem = elem;
 
-    lattice_vt = Constants::k_B * _lattice_temp.get_temperature(elem, elem->centroid());
+    lattice_vt = Constants::k_B * _lattice_temp.get_temperature(elem, elem->vertex_average());
 
     conduction_edge = _conduction_band_edge->get_band_edge();
 

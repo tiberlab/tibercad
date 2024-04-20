@@ -9,7 +9,7 @@ ifeq ($(have_cuda),yes)
 endif
 
 ifeq ($(have_mkl),yes)
-  MKLCONF=--with-mkl=@MKL_DIR@
+  MKLCONF=--with-mkl=@MKL_DIR@ --with-thread-library=@THREAD_LIBRARY@
 endif
 
 ARCH = $(shell uname -m)

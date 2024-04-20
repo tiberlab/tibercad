@@ -18,8 +18,7 @@
 //! Contains Atom definition
 /*!
  * Atom is defined mainly by atomic specie and
- * spatial vector giving the position (from library
- * tensor.h)
+ * spatial vector giving the position.
  */
 class Atom
 {

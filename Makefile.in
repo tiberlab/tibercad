@@ -176,7 +176,7 @@ config.status: configure VERSION
 
 
 aclocal.m4: acinclude.m4
-	aclocal -I /usr/share/doc/autoconf-archive/m4source
+	aclocal -I /usr/share/aclocal
     
 .PHONY: echo_cuda
 

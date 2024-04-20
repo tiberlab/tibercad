@@ -20,9 +20,9 @@
  */
 class Specie
 {
-public:
+  public:
 
-  enum Type {NONE=0, 
+    enum Type {NONE=0, 
                 H ,                                                He,
                 Li,Be,                              B ,C ,N ,O ,F ,Ne,
                 Na,Mg,                              Al,Si,P ,S ,Cl,Ar,
@@ -35,16 +35,16 @@ public:
                 VIRT};
 
 
-  static
-  std::map<Type, std::string> specie_to_string;
+    static
+      std::map<Type, std::string> specie_to_string;
 
 
-   static
-   std::map<Type, double> specie_to_mass;
+    static
+      std::map<Type, double> specie_to_mass;
 
 
-   static
-   std::map<std::string, Type> string_to_specie;
+    static
+      std::map<std::string, Type> string_to_specie;
 
     //! Default constructor
     Specie(void);
@@ -59,7 +59,7 @@ public:
     Specie(const Type& type);
 
     //!Get mass
-    const double get_mass(void) const;
+    double get_mass(void) const;
 
     //!Get specie string
     const std::string& get_string(void) const;
@@ -92,14 +92,14 @@ public:
     friend bool operator> (const Specie& specie1, const Specie& specie2);
     friend bool operator< (const Specie& specie1, const Specie& specie2);
 
-friend std::ostream& operator<< (std::ostream& stream, Type& type);
-friend std::istream& operator>> (std::istream& stream, Type& type);
-friend std::ostream& operator<< (std::ostream& stream, const Specie& specie);
-friend std::istream& operator>> (std::istream& stream, Specie& specie);
-//friend std::ofstream& operator<< (std::ofstream& stream, const Specie& specie);
-//friend std::ifstream& operator>> (std::ifstream& stream, Specie& specie);
+    friend std::ostream& operator<< (std::ostream& stream, Type& type);
+    friend std::istream& operator>> (std::istream& stream, Type& type);
+    friend std::ostream& operator<< (std::ostream& stream, const Specie& specie);
+    friend std::istream& operator>> (std::istream& stream, Specie& specie);
+    //friend std::ofstream& operator<< (std::ofstream& stream, const Specie& specie);
+    //friend std::ifstream& operator>> (std::ifstream& stream, Specie& specie);
 
-private:
+  private:
 
     Type _type;
 
@@ -110,26 +110,26 @@ private:
 inline
 const std::string& Specie::get_string(void) const
 {
- return Specie::specie_to_string[_type];
+  return Specie::specie_to_string[_type];
 }
 
 
 inline
-const double Specie::get_mass(void) const
+double Specie::get_mass(void) const
 {
- return Specie::specie_to_mass[_type];
+  return Specie::specie_to_mass[_type];
 }
 
 inline
 void Specie::set_type(const Type& type)
 {
- _type = type;
+  _type = type;
 }
 
 inline
 void Specie::set_type(const std::string& type)
 {
- _type = Specie::string_to_specie[type];
+  _type = Specie::string_to_specie[type];
 }
 
 
@@ -154,16 +154,16 @@ inline
 bool operator== (const Specie& specie, const std::string& type_string)
 {
   if (Specie::string_to_specie[type_string] == specie._type) return true;
-    else return false;
+  else return false;
 }
 
 //Override comparison operator, allows:
-  // 'H' == s
+// 'H' == s
 inline
 bool operator== (const std::string& type_string, const Specie& specie)
 {
   if (Specie::string_to_specie[type_string] == specie._type) return true;
-    else return false;
+  else return false;
 }
 
 //Override comparison, allow comparison between Specie and Type avoiding
@@ -201,7 +201,7 @@ bool operator!= (const Specie::Type& type, const Specie& specie)
 
 
 //Override comparison operator, allows:
-  // s == 'H'
+// s == 'H'
 inline
 bool operator!= (const Specie& specie, const std::string& type_string)
 {
@@ -209,7 +209,7 @@ bool operator!= (const Specie& specie, const std::string& type_string)
 }
 
 //Override comparison operator, allows:
-  // 'H' == s
+// 'H' == s
 inline
 bool operator!= (const std::string& type_string, const Specie& specie)
 {
@@ -217,7 +217,7 @@ bool operator!= (const std::string& type_string, const Specie& specie)
 }
 
 //Override greater operator, allows:
-  // 's1 > s2
+// 's1 > s2
 inline
 bool operator> (const Specie& specie1, const Specie& specie2)
 {
@@ -225,7 +225,7 @@ bool operator> (const Specie& specie1, const Specie& specie2)
 }
 
 //Override greater operator, allows:
-  // 's1 < s2
+// 's1 < s2
 inline
 bool operator< (const Specie& specie1, const Specie& specie2)
 {

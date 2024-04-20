@@ -420,16 +420,16 @@ DDBulkModel::do_reinit(const Elem* elem)
   if ((get_element() != elem) ||
       _nodal_lattice_vt.empty())
   {
-    set_coordinates(elem, elem->centroid());
+    set_coordinates(elem, elem->vertex_average());
 
     // get the nodal temperatures
     get_temperature_interface().get_temperature(elem, _nodal_lattice_vt);
 
     // get the mean temperature on the element
     set_lattice_temperature(
-        get_temperature_interface().get_temperature(elem, elem->centroid()));
+        get_temperature_interface().get_temperature(elem, elem->vertex_average()));
 
-     _strain_if.get_crystal_strain(elem, elem->centroid(), get_strain());
+     _strain_if.get_crystal_strain(elem, elem->vertex_average(), get_strain());
 
 
       RealVectorValue polarization(0);

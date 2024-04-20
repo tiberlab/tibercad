@@ -56,9 +56,9 @@ KspaceIntegration::get_kpoints_and_weights(void)
 
   //-----------------------------------------------------------
 
-  libMesh::UniquePtr<libMesh::FEBase> fe( libMesh::FEBase::build(k_dim, libMesh::FEType(fem_order) ));
+  std::unique_ptr<libMesh::FEBase> fe( libMesh::FEBase::build(k_dim, libMesh::FEType(fem_order) ));
 
-  libMesh::UniquePtr<libMesh::QBase> qrule(libMesh::QBase::build(quadrature_type, k_dim, integration_order));
+  std::unique_ptr<libMesh::QBase> qrule(libMesh::QBase::build(quadrature_type, k_dim, integration_order));
 
   fe->attach_quadrature_rule(qrule.get());
 
@@ -227,9 +227,9 @@ void KspaceIntegration::calculate_density()
 
   //-----------------------------------------------------------
 
-  libMesh::UniquePtr<libMesh::FEBase> fe( libMesh::FEBase::build(k_dim, libMesh::FEType(fem_order) ));
+  std::unique_ptr<libMesh::FEBase> fe( libMesh::FEBase::build(k_dim, libMesh::FEType(fem_order) ));
 
-  libMesh::UniquePtr<libMesh::QBase> qrule(libMesh::QBase::build(quadrature_type, k_dim, integration_order));
+  std::unique_ptr<libMesh::QBase> qrule(libMesh::QBase::build(quadrature_type, k_dim, integration_order));
 
   fe->attach_quadrature_rule(qrule.get());
 

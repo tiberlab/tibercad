@@ -708,7 +708,7 @@ class SimulationInterface : public TiberModelObject
      * \param type the type of finite element
      * \param scale include length scaling if true
      */
-    libMesh::UniquePtr<libMesh::FEBase> build_finite_element(unsigned int dim, libMesh::FEType type,
+    std::unique_ptr<libMesh::FEBase> build_finite_element(unsigned int dim, libMesh::FEType type,
         bool scale = false) const;
 
 

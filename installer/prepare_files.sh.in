@@ -213,7 +213,7 @@ prepare_linux_package () {
   cp /usr/pack/tibercad_dev-3.3-ma/SDK/${ARCH}/bin/hydra_pmi_proxy ${files}/${ARCH}/bin
 
   #
-  # adjust rpath
+  # adjust rpath and strip
   #
   for l in $(ls ${files}/${ARCH}/lib)
   do

@@ -204,7 +204,7 @@ DSSCModel::reinit(const Elem* elem)
   if (_elem != elem)
   {
     _elem = elem;
-    _pd.coordinates = elem->centroid();
+    _pd.coordinates = elem->vertex_average();
     _pd.kT = Constants::k_B * _lattice_temp.get_temperature(elem, _pd.coordinates);
 
     prepare_element_data();

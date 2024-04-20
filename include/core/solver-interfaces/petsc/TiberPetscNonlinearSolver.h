@@ -88,6 +88,9 @@ class TiberPetscNonlinearSolver : public TiberNonlinearSolver
     //! The PC type
     std::string _pc_type;
 
+    //! The solver package to be used
+    std::string _solver_package;
+
     //! The linear relative tolerance
     double _linear_rtol;
 

@@ -125,7 +125,7 @@ Embracing::generate_embracing_region(void)
           if ((find_elem(neighbour) == list_end) &&
               (in.contains_element(neighbour)))
           {
-            double w = (neighbour->centroid() - elem->centroid()).norm();
+            double w = (neighbour->vertex_average() - elem->vertex_average()).norm();
             if (w < _lambda)
             {
               _elem_list[neighbour] = w;
@@ -157,7 +157,7 @@ Embracing::generate_embracing_region(void)
             (find_elem(neighbour) == list_end) &&
             (in.contains_element(neighbour)))
         {
-          double w = (neighbour->centroid() - elem->centroid()).norm();
+          double w = (neighbour->vertex_average() - elem->vertex_average()).norm();
           w += _elem_list[elem];
           if (w < _lambda)
           {
@@ -367,7 +367,7 @@ Embracing::assembly(LaplaceEq& system)
   const MeshBase& mesh = system.get_mesh();
   unsigned int dim = mesh.mesh_dimension();
 
-  libMesh::UniquePtr<libMesh::FEBase> fe(libMesh::FEBase::build(dim, fe_type));
+  std::unique_ptr<libMesh::FEBase> fe(libMesh::FEBase::build(dim, fe_type));
   libMesh::QGauss qrule(dim, libMesh::SECOND);
   fe->attach_quadrature_rule(&qrule);
 
@@ -537,7 +537,7 @@ Embracing::get_mixing_coefficient(const Elem* elem, const Point& p)
         vector<unsigned int> dof_indices;
         dof_map.dof_indices(elem, dof_indices);
 
-        libMesh::UniquePtr<libMesh::FEBase> fe(libMesh::FEBase::build(dim, fe_type));
+        std::unique_ptr<libMesh::FEBase> fe(libMesh::FEBase::build(dim, fe_type));
         const vector<vector<double> >& phi = fe->get_phi();
 
         vector<Point> points(1, p);

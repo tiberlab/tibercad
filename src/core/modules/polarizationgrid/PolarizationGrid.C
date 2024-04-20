@@ -759,7 +759,7 @@ PolarizationGrid::get_solution_secure(const Elem* elem,
 
    if (values.count(Polarization))
    {  
-     int i = grid.find_element(elem->centroid());
+     int i = grid.find_element(elem->vertex_average());
      double vol = grid.grid_step(0)*grid.grid_step(1)*grid.grid_step(2);
      
      for (int k=0; k<p.size(); k=k+3)

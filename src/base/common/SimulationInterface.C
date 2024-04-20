@@ -1535,8 +1535,6 @@ SimulationInterface::solve_equilibrium(void)
   if (!_equilibrium_is_solved)
   {
 
-    START_LOG(get_name() + ": solve_equilibrium", "");
-
     assert(is_initialized());
 
     if (_environment != nullptr)
@@ -1550,7 +1548,6 @@ SimulationInterface::solve_equilibrium(void)
 
     _equilibrium_is_solved = true;
 
-    STOP_LOG(get_name() + ": solve_equilibrium", "");
   }
 }
 
@@ -2619,7 +2616,7 @@ SimulationInterface::do_add_scaled_remembered_solution(ID id, double factor)
       break; \
   }
 
-libMesh::UniquePtr<libMesh::FEBase>
+std::unique_ptr<libMesh::FEBase>
 SimulationInterface::build_finite_element(unsigned int dim, libMesh::FEType type,
                                           bool scale) const
 {
@@ -2649,7 +2646,7 @@ SimulationInterface::build_finite_element(unsigned int dim, libMesh::FEType type
   }
   assert(fe != nullptr);
 
-  return libMesh::UniquePtr<libMesh::FEBase>(fe);
+  return std::unique_ptr<libMesh::FEBase>(fe);
 }
 
 
@@ -2964,7 +2961,7 @@ SimulationInterface::get_solution(const libMesh::Elem* elem,
               pid.push_back(node);
             }
             else
-              my_p.push_back(el->centroid());
+              my_p.push_back(el->vertex_average());
           }
 
           get_solution_secure(el, valcopy, my_p);
@@ -3434,7 +3431,7 @@ SimulationInterface::build_map_elem_atoms(double sigma, double cutoff)
   { 
     const Elem* elem = *elit;
  
-    Point pc = elem->centroid() * scale;
+    Point pc = elem->vertex_average() * scale;
     //double x=pc(0), y=pc(1), z=pc(2);
 
     std::vector<unsigned int> temp;

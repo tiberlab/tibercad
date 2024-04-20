@@ -200,21 +200,13 @@ TiberCad::init(const std::string& inputfile)
   __empty_argv[0] = __executable;
   __empty_argv[1] = __option;
 
-#ifdef _WIN32
-  // a trick to get libgomp in
-  int omp_procs = omp_get_num_procs();
-#endif
+  // Note: it is the responsability of the user to define OMP_NUM_THREADS correctly
+  // in case of MPI parallel runs
+  int omp_procs = omp_get_max_threads();
 
   // prepare libMesh
-  _libmeshinit = new libMesh::LibMeshInit(__empty_argc, __empty_argv, _mpi_comm.get());
+  _libmeshinit = new libMesh::LibMeshInit(__empty_argc, __empty_argv, _mpi_comm.get(), omp_procs);
 
-  //MPI_Comm local_comm;
-  //int proc_id;
-
-  //MPI_Comm_rank(_mpi_comm.get(), &proc_id);
-  //MPI_Comm_split(_mpi_comm.get(), proc_id, 0, &local_comm);
-  // prepare EigenSolver
-  //EigenSolver::slepc_init(__empty_argc, __empty_argv, local_comm);
   EigenSolver::slepc_init(__empty_argc, __empty_argv, _mpi_comm.get());
 
   PetscPopSignalHandler();
@@ -261,6 +253,8 @@ TiberCad::cleanup(void)
 
   // close libMesh and return
   delete _libmeshinit;
+
+  _mpi_comm.clear();
 
   delete [] __empty_argv;
 

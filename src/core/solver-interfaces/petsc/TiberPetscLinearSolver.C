@@ -15,19 +15,10 @@
 
 
 
-TiberPetscLinearSolver::TiberPetscLinearSolver(const libMesh::Parallel::Communicator &comm_in, const ModelOptions& options)
-  : TiberLinearSolver(comm_in, options),
-    _ksp(NULL),
-    _ksp_type(KSPBCGS),
-    _pc_type(PCILU),
-    _monitor(false),
-    _xmonitor(true),
-    _xmonitor_open(false)
+TiberPetscLinearSolver::TiberPetscLinearSolver(const libMesh::Parallel::Communicator &comm_in,
+    const ModelOptions& options)
+  : TiberLinearSolver(comm_in, options)
 {
-//  if (libMesh::n_processors() == 1)
-//    this->_preconditioner_type = ILU_PRECOND;
-//  else
-//    this->_preconditioner_type = BLOCK_JACOBI_PRECOND;
 }
 
 
@@ -93,7 +84,7 @@ void TiberPetscLinearSolver::init(const char*)
     // behavior is for PETSc to allocate (internally) an array
     // of size 1000 to hold the residual norm history.
     ierr = KSPSetResidualHistory(_ksp,
-        PETSC_NULL,   // pointer to the array which holds the history
+        PETSC_NULLPTR,   // pointer to the array which holds the history
         PETSC_DECIDE, // size of the array holding the history
         PETSC_TRUE);  // Whether or not to reset the history for each solve. 
     TiberPetscUtils::checkerr(ierr);
@@ -106,6 +97,15 @@ void TiberPetscLinearSolver::init(const char*)
 libMesh::LinearConvergenceReason
 TiberPetscLinearSolver::get_converged_reason() const
 {
+  libMesh::LinearConvergenceReason conv_reason;
+
+  if (_ksp != nullptr)
+  {
+    KSPConvergedReason reason;
+    KSPGetConvergedReason(_ksp, &reason);
+  }
+
+  return(conv_reason);
 }
 
 
@@ -127,11 +127,11 @@ TiberPetscLinearSolver::do_solve(SparseMatrix<Number>&  matrix_in,
   libMesh::PetscVector<Number>* rhs      = dynamic_cast<libMesh::PetscVector<Number>*>(&rhs_in);
 
   // We cast to pointers so we can be sure that they succeeded
-  // by comparing the result against NULL.
-  assert(matrix   != NULL);
-  assert(precond  != NULL);
-  assert(solution != NULL);
-  assert(rhs      != NULL);
+  // by comparing the result against nullptr.
+  assert(matrix   != nullptr);
+  assert(precond  != nullptr);
+  assert(solution != nullptr);
+  assert(rhs      != nullptr);
 
   
   int ierr = 0;
@@ -147,6 +147,14 @@ TiberPetscLinearSolver::do_solve(SparseMatrix<Number>&  matrix_in,
   if (this->comm().size() == 1)
     if ((_pc_type == PCLU) && (matrix == precond))
       ksp_type = KSPPREONLY;
+
+  // when using mumps or pardiso, we also use LU or Cholesky
+  if ((_solver_package == "mumps") || (_solver_package == "mkl_pardiso"))
+  {
+    ksp_type = KSPPREONLY;
+    if (_pc_type != PCCHOLESKY)
+      _pc_type = PCLU;
+  }
 
   // Set user-specified solver and preconditioner types
   ierr = KSPSetType(_ksp, ksp_type.c_str());
@@ -167,7 +175,8 @@ TiberPetscLinearSolver::do_solve(SparseMatrix<Number>&  matrix_in,
   if (matrix != precond)
     _pc_type = PCMAT;
 
-  if (this->comm().size() > 1)
+  if ((this->comm().size() > 1) && (_solver_package != "mumps")
+                                && (_solver_package != "mkl_pardiso"))
   {
     if ((_pc_type == PCLU) || (_pc_type == PCILU))
     {
@@ -267,7 +276,7 @@ void TiberPetscLinearSolver::_set_sub_pc(PC pc, const std::string& pc_type)
   PetscInt n_local;
 
   // Fill array of local KSP contexts
-  ierr = PCBJacobiGetSubKSP(pc, &n_local, PETSC_NULL, &subksps);
+  ierr = PCBJacobiGetSubKSP(pc, &n_local, PETSC_NULLPTR, &subksps);
 
   // Loop over sub-ksp objects, set ILU preconditioner
   for (PetscInt i = 0; i < n_local; ++i)
@@ -377,15 +386,19 @@ TiberPetscLinearSolver::check_convergence(void)
 void
 TiberPetscLinearSolver::setup_monitors(void)
 {
-  if (_ksp != NULL)
+  if (_ksp != nullptr)
   {
     int ierr = 0;
     if (_monitor)
     {
+      // first cancel all monitors
+      ierr = KSPMonitorCancel(_ksp);
+
 #if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3) \
     && (PETSC_VERSION_SUBMINOR > 2)) || (PETSC_VERSION_MAJOR >= 3)
       PetscViewerAndFormat *vf;
-      ierr = PetscViewerAndFormatCreate(PETSC_VIEWER_STDOUT_WORLD,PETSC_VIEWER_DEFAULT, &vf); TiberPetscUtils::checkerr(ierr);
+      ierr = PetscViewerAndFormatCreate(PETSC_VIEWER_STDOUT_WORLD,PETSC_VIEWER_DEFAULT, &vf);
+      TiberPetscUtils::checkerr(ierr);
       ierr = KSPMonitorSet(_ksp, (PetscErrorCode (*)(KSP, PetscInt, PetscReal, void*))KSPMonitorResidual, vf, 0);
 #else
       ierr = KSPSetMonitor(_ksp, KSPDefaultMonitor, PetscViewerAndFormatDestroy, 0);
@@ -394,7 +407,7 @@ TiberPetscLinearSolver::setup_monitors(void)
     else
       ierr = KSPMonitorCancel(_ksp);
       // does not work:
-      //ierr = KSPMonitorSet(_ksp, PETSC_NULL, PETSC_NULL, 0);
+      //ierr = KSPMonitorSet(_ksp, PETSC_NULLPTR, PETSC_NULLPTR, 0);
 
     TiberPetscUtils::checkerr(ierr);
 
@@ -408,12 +421,12 @@ TiberPetscLinearSolver::setup_monitors(void)
         std::string sim_name(get_simulation_name());
         sim_name += ": Linear solver convergence monitor";
 #if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 4))
-        ierr = KSPMonitorLGResidualNormCreate(NULL, sim_name.c_str(),0,0,400,400, &_LG_monitor);
+        ierr = KSPMonitorLGResidualNormCreate(nullptr, sim_name.c_str(),0,0,400,400, &_LG_monitor);
 #elif ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3)	\
     && (PETSC_VERSION_SUBMINOR > 2)) || (PETSC_VERSION_MAJOR >= 3)
-        ierr = KSPMonitorLGCreate(NULL, sim_name.c_str(),0,0,400,400, &_LG_monitor);
+        ierr = KSPMonitorLGCreate(nullptr, sim_name.c_str(),0,0,400,400, &_LG_monitor);
 #else
-        ierr = KSPLGMonitorCreate(NULL, sim_name.c_str(),0,0,400,400, &_LG_monitor);
+        ierr = KSPLGMonitorCreate(nullptr, sim_name.c_str(),0,0,400,400, &_LG_monitor);
 #endif
         TiberPetscUtils::checkerr(ierr);
     
@@ -447,7 +460,7 @@ TiberPetscLinearSolver::do_parse_options(void)
 
   _pc_type = TiberPetscUtils::extract_PCType(get_options());
 
-  _solver_package = get_option("solver_package", "");
+  _solver_package = get_option("solver_package", _solver_package);
   // dummy read
   get_option("use_initial_guess", false);
 

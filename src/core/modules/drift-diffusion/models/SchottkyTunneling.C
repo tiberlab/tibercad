@@ -69,7 +69,7 @@ SchottkyTunneling::do_init(void)
 
   unsigned int dim = sim->get_mesh().mesh_dimension();
 
-  libMesh::UniquePtr<libMesh::FEBase> fe(libMesh::FEBase::build(dim, libMesh::FEType(libMesh::CONSTANT, libMesh::MONOMIAL)));
+  std::unique_ptr<libMesh::FEBase> fe(libMesh::FEBase::build(dim, libMesh::FEType(libMesh::CONSTANT, libMesh::MONOMIAL)));
   libMesh::QGauss qrule(dim - 1, libMesh::CONSTANT);
   fe->attach_quadrature_rule(&qrule);
   const std::vector<Point>& normal = fe->get_normals();
@@ -148,7 +148,7 @@ SchottkyTunneling::do_init(void)
   for ( ; it != end; ++it)
   {
     const Elem* elem = *it;
-    const Point& centr = elem->centroid();
+    const Point& centr = elem->vertex_average();
 
     // check if it is inside the tunneling bounding box
     if ((centr(0) < pmin(0)) || (centr(1) < pmin(1)) || (centr(2) < pmin(2)) ||
@@ -409,8 +409,8 @@ SchottkyTunneling::do_reinit(void)
         data[hdens_id];
 
         unsigned int dim = sim->get_mesh().mesh_dimension();
-        UniquePtr<FEBase> fe(sim->build_finite_element(dim, FEType()));
-        UniquePtr<QBase> qrule(QBase::build(libMeshEnums::QGAUSS, dim, libMeshEnums::FIFTH));
+        std::unique_ptr<FEBase> fe(sim->build_finite_element(dim, FEType()));
+        std::unique_ptr<QBase> qrule(QBase::build(libMeshEnums::QGAUSS, dim, libMeshEnums::FIFTH));
         fe->attach_quadrature_rule(qrule.get());
 
         const vector<Real>& JxW = fe->get_JxW();

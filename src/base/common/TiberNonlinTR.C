@@ -55,10 +55,10 @@ TiberNonlinTR::do_solve(void)
   if (!u.closed()) u.close();
 
   // the linear system solution
-  libMesh::UniquePtr<NumericVector<Number> > du_ptr = solution->clone();
+  std::unique_ptr<NumericVector<Number> > du_ptr = solution->clone();
   NumericVector<Number>& du = *du_ptr;
 
-  libMesh::UniquePtr<NumericVector<Number> > u_old_ptr = solution->clone();
+  std::unique_ptr<NumericVector<Number> > u_old_ptr = solution->clone();
   NumericVector<Number>& u_old = *u_old_ptr;
 
   NumericVector<Number>& u_tmp = *solution;
@@ -84,9 +84,9 @@ TiberNonlinTR::do_solve(void)
   double tol_orig = tol;
 
   // for testing
-  //UniquePtr<SparseMatrix<Number> > transpose;
-  libMesh::UniquePtr<NumericVector<double> > gradf = rhs->clone();
-  libMesh::UniquePtr<NumericVector<double> > tmpvec = solution->clone();
+  //std::unique_ptr<SparseMatrix<Number> > transpose;
+  std::unique_ptr<NumericVector<double> > gradf = rhs->clone();
+  std::unique_ptr<NumericVector<double> > tmpvec = solution->clone();
 
   // this is only when l2 norm is used
   //double sqrtn = std::sqrt(du.size());

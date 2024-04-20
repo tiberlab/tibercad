@@ -599,7 +599,7 @@ MasterEquation::do_assembly(const libMesh::NumericVector<Number>& x, libMesh::Nu
   libMesh::FEType fe_type = system.variable_type(Ef_e_var); //
 
   // the volume finite element
-  libMesh::UniquePtr<libMesh::FEBase> fe(libMesh::FEBase::build(dim, fe_type));
+  std::unique_ptr<libMesh::FEBase> fe(libMesh::FEBase::build(dim, fe_type));
 
 
   std::cout<<"sigma: "<<sigma<<endl;
@@ -619,7 +619,7 @@ MasterEquation::do_assembly(const libMesh::NumericVector<Number>& x, libMesh::Nu
   //cerr<<"do_assembly get centroids"<<endl;
 
   // physical coordinates of the quadrature points
-  //const vector<Point>& center = fe->centroid();
+  //const vector<Point>& center = fe->vertex_average();
   const vector<Point>& center = fe->get_xyz();
 
 
@@ -990,7 +990,7 @@ MasterEquation::do_assembly(const libMesh::NumericVector<Number>& x, libMesh::Nu
 
             ind += 1;
 
-            Point d = elem->centroid() - elem_neig->centroid();
+            Point d = elem->vertex_average() - elem_neig->vertex_average();
             double dist = d.size();
             double abs_dist = abs(dist);
             double exp_d = exp(-2 * alpha * abs_dist);
@@ -1163,7 +1163,7 @@ MasterEquation::do_assembly(const libMesh::NumericVector<Number>& x, libMesh::Nu
           {
             ind += 1;
 
-            Point d = elem->centroid() - elem_neig->centroid();
+            Point d = elem->vertex_average() - elem_neig->vertex_average();
             double dist = d.size();
             double abs_dist = abs(dist);
             double exp_d = exp(-2 * alpha * abs_dist);
@@ -1486,7 +1486,7 @@ MasterEquation::do_transformation(libMesh::NumericVector<Number>& u,
   libMesh::FEType fe_type = system.variable_type(Ef_e_var); //
 
   // the volume finite element
-  libMesh::UniquePtr<libMesh::FEBase> fe(libMesh::FEBase::build(dim, fe_type));
+  std::unique_ptr<libMesh::FEBase> fe(libMesh::FEBase::build(dim, fe_type));
 
   //AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
 
@@ -1638,7 +1638,7 @@ MasterEquation::get_solution_secure(const Elem* elem, std::map<ID,
   const unsigned int HOMO_var = _sys_EcEv->variable_number("HOMO");
 
   libMesh::FEType fe_type = system->variable_type(Ef_e_var);
-  libMesh::UniquePtr<libMesh::FEBase> fe(libMesh::FEBase::build(dim, fe_type));
+  std::unique_ptr<libMesh::FEBase> fe(libMesh::FEBase::build(dim, fe_type));
 
   vector<unsigned int> dof_indices_n;
   vector<unsigned int> dof_indices_p;

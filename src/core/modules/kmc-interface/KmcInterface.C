@@ -53,11 +53,11 @@ KmcInterface::get_boundary_potentials(Boundary* bd,
 
      if (side.elem()->contains_point(pt) || neigh->contains_point(pt))
      {
-        pot_sim->get_solution(neigh, _pot_sol.second, val, neigh->centroid());
+        pot_sim->get_solution(neigh, _pot_sol.second, val, neigh->vertex_average());
         phi = val;
-        mue_sim->get_solution(neigh, _mue_sol.second, val, neigh->centroid());
+        mue_sim->get_solution(neigh, _mue_sol.second, val, neigh->vertex_average());
         efermi = val;
-        muh_sim->get_solution(neigh, _muh_sol.second, val, neigh->centroid());
+        muh_sim->get_solution(neigh, _muh_sol.second, val, neigh->vertex_average());
         hfermi = val;
      } 
  

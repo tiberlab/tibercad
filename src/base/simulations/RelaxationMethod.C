@@ -30,7 +30,7 @@ RelaxationMethod::do_solve(void)
 
   open_xmonitor();
 
-  libMesh::UniquePtr<libMesh::NumericVector<double> > x_old =
+  std::unique_ptr<libMesh::NumericVector<double> > x_old =
       get_solution_vector().clone();
   //    libMesh::NumericVector<double>::build();
   get_solution_vector().close();

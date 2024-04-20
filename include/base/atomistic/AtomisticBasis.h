@@ -100,16 +100,10 @@ class AtomisticBasis
   BondMap* build_bond_map(bool periodicity[3]) const;
 
   //! get the number of atoms in the structure
-  int get_N_atoms() const {return _atoms.size();}
-
-  //! set number of atoms
-  //void set_N_atoms(long N) {N_atoms=N;}
+  unsigned int get_N_atoms() const {return _atoms.size();}
 
   //! get the number of types in the structure
   int get_N_types() const {return _atom_types.size();}
-
-  //! set number of atoms
-  //void set_N_types(int N) {N_types=N;}
 
   //! Print structure in xyz format
   void print_xyz(const std::string& path) const;

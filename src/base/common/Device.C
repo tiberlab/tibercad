@@ -205,7 +205,7 @@ Device::prepare(void)
   if (_options.get_option("write_boundary_mesh", false) &&
       (get_mesh().mesh_dimension() > 1))
   {
-    libMesh::UniquePtr<DataOutput> writer(DataOutput::create("vtk"));
+    std::unique_ptr<DataOutput> writer(DataOutput::create("vtk"));
     if (writer.get() != NULL)
     {
       writer->set_output_directory(_options.get_option("output_path", "./"));
@@ -1372,7 +1372,7 @@ Device::reassign_alloy_regions(const string& source,
       {
         double x;
         provider.first->get_solution(
-            elem, provider.second, x, elem->centroid());
+            elem, provider.second, x, elem->vertex_average());
 
         int i = 0;
         while ((i < (composition.size() - 1)) &&
@@ -1460,7 +1460,7 @@ Device::reassign_alloy_regions(const string& source,
             {
               // ok, there is at least one atom inside
               // atomic coordinates are in Angstrom
-              Point center = 10 * elem->centroid();
+              Point center = 10 * elem->vertex_average();
               double min_dist = Point(center -
                   str->get_structure_atom(atoms[0]).get_position()).norm();
               unsigned int nearest = 0;
@@ -1498,7 +1498,7 @@ Device::reassign_alloy_regions(const string& source,
                 {
                   // ok, there is at least one atom inside
                   // atomic coordinates are in Angstrom
-                  Point center = 10 * elem->centroid();
+                  Point center = 10 * elem->vertex_average();
                   double min_dist = Point(center -
                       str->get_structure_atom(atoms[0]).get_position()).norm();
                   unsigned int nearest = 0;
@@ -1525,7 +1525,7 @@ Device::reassign_alloy_regions(const string& source,
                   if ((neigh != NULL) &&
                       reg_ids.count(neigh->subdomain_id()) &&
                       !processed_elems.count(neigh) &&
-                      (Point(elem->centroid() - neigh->centroid()).norm() <
+                      (Point(elem->vertex_average() - neigh->vertex_average()).norm() <
                           scale * 3 * cutoff))
                   {
                     to_process.insert(neigh);

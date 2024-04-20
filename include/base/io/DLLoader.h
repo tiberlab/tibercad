@@ -58,6 +58,9 @@ class TBDLLOCAL DLLoader
     //! Append to library search path
     static void append_to_library_path(const std::string& path);
 
+    //! Get the library search paths, colon separated
+    static void get_library_path(std::string& path);
+
 
   private:
 

@@ -208,7 +208,7 @@ void GraceIO::write_elemental_data(const std::string& fname,
       values.push_back(soln[global_id + c] );
     }
 
-    node_map[elem->centroid()(0)] = values;
+    node_map[elem->vertex_average()(0)] = values;
 
     elem_number++;
   }

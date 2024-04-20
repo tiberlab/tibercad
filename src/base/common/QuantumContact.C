@@ -97,7 +97,7 @@ QuantumContact::get_normal(double& area)
 {
   unsigned int dim = _mesh->mesh_dimension();
 
-  libMesh::UniquePtr<libMesh::FEBase> fe(libMesh::FEBase::build(dim, libMesh::FEType()));
+  std::unique_ptr<libMesh::FEBase> fe(libMesh::FEBase::build(dim, libMesh::FEType()));
 
   libMesh::QGauss qrule(dim-1, libMesh::CONSTANT); // Order 0 rule because in this way we take centroid's normal
 
@@ -460,7 +460,7 @@ QuantumContact::extend_mesh(void)
       ID side = elemside.side();
 
       const Elem* elem = elemside.elem();
-      const Point centr = elem->centroid();
+      const Point centr = elem->vertex_average();
 
 
       if (!_rg_ids.count(elem->subdomain_id())) continue;

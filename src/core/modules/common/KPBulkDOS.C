@@ -117,7 +117,7 @@ KPBulkDOS::do_reinit(const Elem* elem)
     Tensor2Sym strain(0);
 
     vector<Point> p(1);
-    p[0] = elem->centroid();
+    p[0] = elem->vertex_average();
     vector<double> values(6);
 
     if (_strain_if.simulation()->get_solution(elem,

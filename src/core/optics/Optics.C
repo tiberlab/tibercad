@@ -843,7 +843,7 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
       for (unsigned int el = 0; el < n_energy; el++)
       {
 
-        double En =  Energy.point(el)(0); //elem->centroid()(0);
+        double En =  Energy.point(el)(0); //elem->vertex_average()(0);
 
         double Lorenzian = 0;
         if (get_option("line_shape", "lorentzian") == "gaussian")

@@ -61,23 +61,24 @@ namespace
   bool stop_on_warning = false;
 
   // TODO doe sthis work in windows?
-  //UniquePtr<ofstream> nullstream(NULL);
+  //std::unique_ptr<ofstream> nullstream(NULL);
 
   void usage(void)
   {
 #if defined(_WIN32)
     cout << endl << "Usage:" << endl
-      << "  from command line: tibercad [options] inputfile" << endl
+      << "  from command line: tibercad [options] [inputfile]" << endl
       << "  or double click on inputfile" << endl << endl;
 # else
-    cout << endl << "Usage: tibercad [options] inputfile" << endl << endl;
+    cout << endl << "Usage: tibercad [options] [inputfile]" << endl << endl;
 # endif
 
     cout << "Options:" << endl
          << "  -b      batch mode" << endl
          << "  -i      interactive mode" << endl
          << "  -s      stop at warnings (disabled in batch mode)" << endl
-         << "  -v      version info" << endl;
+         << "  -v      version info" << endl
+         << "  -h      show this help" << endl;
 
 #if defined(_WIN32)
     cout << "press Enter ...";
@@ -115,7 +116,7 @@ int main (int argc, char** argv)
 
   opterr = 0;
   int c;
-  while ((c = getopt(argc, argv, "bivs")) != -1)
+  while ((c = getopt(argc, argv, "bivsh")) != -1)
     switch (c)
     {
       case 'v':
@@ -140,11 +141,13 @@ int main (int argc, char** argv)
 
       case '?':
         cout << "Unknown option: -" << (char) optopt << endl;
+      case 'h':
       default:
         usage();
         return 1;
     }
 
+/*
 #ifdef _WIN32
   if (!interactive)
 #endif
@@ -153,31 +156,32 @@ int main (int argc, char** argv)
       usage();
       return 1;
     }
-
+*/
 
 
   // take input file from command line or ask for it
   string inputfile;
   if (optind < argc)
     inputfile = string(argv[optind]);
-
-//#ifdef HAVE_LIBREADLINE
-//    char *line = readline ("Enter input file: ");
-//    inputfile = string(line);
-//    free(line);
-//    boost::algorithm::trim(inputfile);
-//    cout << endl;
-//#else
-//#endif
+#ifdef HAVE_LIBREADLINE
+  else
+  {
+    char *line = readline ("Enter input file: ");
+    inputfile = string(line);
+    free(line);
+    boost::algorithm::trim(inputfile);
+    cout << endl;
+  }
+#endif
 
 
   // do some preparation
   {
 #if defined(_WIN32)
-#if defined(__CYGWIN__)
+ #if defined(__CYGWIN__)
     // we first convert the filename to something more UNIX like
     Utils::convert_win32_path_to_posix(inputfile);
-#endif
+ #endif
 
     if (inputfile.empty())
       inputfile = open_file();
@@ -191,20 +195,20 @@ int main (int argc, char** argv)
       if (!GetModuleFileName(NULL, buffer, bufsize))
         cerr << "Problems detecting installation path." << endl;
       string program(buffer);
-#if defined(__CYGWIN__)
+ #if defined(__CYGWIN__)
       Utils::convert_win32_path_to_posix(program);
-#endif
+ #endif
       string exepath(Utils::dirname(program));
-# ifdef HAVE_SETENV
+ # ifdef HAVE_SETENV
       setenv("TIBERCADROOT", exepath.c_str(), 1);
-# else
-#  ifdef HAVE_PUTENV
+ # else
+ #  ifdef HAVE_PUTENV
       string tc_root("TIBERCADROOT=" + exepath);
       putenv(tc_root.c_str());
-#  else
-#   error "Neither setenv nor putenv available"
-#  endif
-# endif
+ #  else
+ #   error "Neither setenv nor putenv available"
+ #  endif
+ # endif
     }
 #endif
 
@@ -320,11 +324,11 @@ int main (int argc, char** argv)
   }
 
 
-
   /*
    * As last thing, finalize MPI
    */
-  //  MPI_Finalize();
+  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Finalize();
 
   return(error);
 }

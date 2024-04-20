@@ -62,17 +62,17 @@ TiberNonlinLS::do_solve(void)
   if (!u.closed()) u.close();
 
   // the linear system solution
-  libMesh::UniquePtr<NumericVector<Number> > du_ptr = solution->clone();
+  std::unique_ptr<NumericVector<Number> > du_ptr = solution->clone();
   NumericVector<Number>& du = *du_ptr;
-  //libMesh::UniquePtr<NumericVector<Number> > du_ptr_t = solution->clone();
+  //std::unique_ptr<NumericVector<Number> > du_ptr_t = solution->clone();
   //NumericVector<Number>& du_t = *du_ptr_t;
 
   // the old local solution values
-  libMesh::UniquePtr<NumericVector<Number> > u_old_ptr = solution->clone();
+  std::unique_ptr<NumericVector<Number> > u_old_ptr = solution->clone();
   NumericVector<Number>& u_old = *u_old_ptr;
 
 
-  //libMesh::UniquePtr<NumericVector<Number> > u_tmp_ptr = u_old.clone();
+  //std::unique_ptr<NumericVector<Number> > u_tmp_ptr = u_old.clone();
   NumericVector<Number>& u_tmp = *solution;
 
   // the l_infty tolerance for the step size
@@ -95,7 +95,7 @@ TiberNonlinLS::do_solve(void)
   double tol = get_linear_solver()->get_linear_rtol();
   double tol_orig = tol;
 
-  //UniquePtr<SparseMatrix<double> > transpose = SparseMatrix<double>::build();
+  //std::unique_ptr<SparseMatrix<double> > transpose = SparseMatrix<double>::build();
 
   unsigned int i = 1;
   for ( ; i <= get_nonlinear_max_it(); i++)

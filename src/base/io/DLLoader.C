@@ -55,6 +55,23 @@ DLLoader::append_to_library_path(const std::string& path)
 }
 
 
+void
+DLLoader::get_library_path(std::string& path)
+{
+  path = "";
+  bool first = true;
+  for (auto &&p : _libpath)
+  {
+    if (!first)
+      path += ":";
+
+    path += p;
+
+    first = false;
+  }
+}
+
+
 
 
 void

@@ -536,16 +536,6 @@ void FEMEigenvalueProblem::apply_bc()
 void FEMEigenvalueProblem::apply_periodic_bc()
 {
 
-  
-
-  // Declare a performance log.  Give it a descriptive
-  // string to identify what part of the code we are
-  // logging, since there may be many PerfLogs in an
-  // application.
-
-
-  PerfLog perf_log ("Periodic bc. Assembly",false);
-
   DofMap& dof_map = system->get_dof_map();
   //dof_map.create_dof_constraints(get_mesh());
 
@@ -573,7 +563,7 @@ void FEMEigenvalueProblem::apply_periodic_bc()
   FEType fe_type = dof_map.variable_type(uvar[0]);
   
  
-  UniquePtr<FEBase> fe (FEBase::build(dim, fe_type));
+  std::unique_ptr<FEBase> fe (FEBase::build(dim, fe_type));
    
 
   
@@ -917,12 +907,12 @@ FEMEigenvalueProblem::get_csr(std::vector<libMesh::Complex>& A,
     int n_cols_imag = 0;
     
     ierr = MatGetRow(Mr->mat(), row, &n_cols_real, &petsc_cols, &petsc_row_vals_real);
-    CHKERRABORT(MPI::COMM_WORLD,ierr);
+    CHKERRABORT(libMesh::GLOBAL_COMM_WORLD,ierr);
 
     if (Mi != nullptr)
     {
       ierr = MatGetRow(Mi->mat(), row, &n_cols_imag, &petsc_cols, &petsc_row_vals_imag);
-      CHKERRABORT(MPI::COMM_WORLD,ierr);
+      CHKERRABORT(libMesh::GLOBAL_COMM_WORLD,ierr);
 
       if (n_cols_real != n_cols_imag)
         Messages::error("n_cols_real != n_cols_imag");
@@ -968,12 +958,12 @@ FEMEigenvalueProblem::get_csr(std::vector<libMesh::Complex>& A,
     IA[i + 1]= ind;
 
     ierr = MatRestoreRow(Mr->mat(), row ,&n_cols_real, &petsc_cols, &petsc_row_vals_real);
-    CHKERRABORT(MPI::COMM_WORLD,ierr);
+    CHKERRABORT(libMesh::GLOBAL_COMM_WORLD,ierr);
       
     if (Mi != nullptr)
     {
       ierr = MatRestoreRow(Mi->mat(), row ,&n_cols_imag, &petsc_cols, &petsc_row_vals_imag);
-      CHKERRABORT(MPI::COMM_WORLD,ierr);
+      CHKERRABORT(libMesh::GLOBAL_COMM_WORLD,ierr);
     }
  
 

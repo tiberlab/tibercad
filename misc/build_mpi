@@ -7,7 +7,7 @@ fi
 
 . common.sh
 
-VERSION=1.6.3
+VERSION=4.1.4
 ARCHIVE=openmpi-${VERSION}.tar.bz2
 
 echo "Compiling openmpi libraries"
@@ -23,13 +23,12 @@ fi
 
 cd $BUILDDIR
 if [ ! -e ${ARCHIVE} ]; then
-  wget --no-check-certificate  http://www.open-mpi.org/software/ompi/v1.6/downloads/${ARCHIVE}
+  wget --no-check-certificate  https://download.open-mpi.org/release/open-mpi/v4.1/${ARCHIVE}
 fi
-
 
 if [ ! -e ${ARCHIVE} ]; then
   echo "Could not download ${ARCHIVE}."
-  exit 1
+  exit  
 fi
 
 if [ ! -d openmpi-${VERSION} ]; then
@@ -42,8 +41,9 @@ fi
 cd openmpi-${VERSION}
 
 ./configure --prefix=${SDKDIR} --exec-prefix=${SDKDIR}/${TCHOST} --enable-shared=yes \
-            --enable-static=no --host=$HOST --build=$BUILD
+            --enable-static=no --host=$HOST --build=$BUILD \
+            --with-pmix
 
 make
-#make install
+make install
 

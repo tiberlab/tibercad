@@ -32,9 +32,6 @@ class ModelOptions
     //! typedef for convenience
     typedef std::map<const std::string, std::string> OptionsMap;
 
-    //! typedef for options iterator
-    //typedef OptionsMap::const_iterator const_option_iterator;
-
     //! typedef for the map of submodels
     typedef std::multimap<const std::string, ModelOptions> SubmodelMap;
 
@@ -195,6 +192,10 @@ class ModelOptions
     void clear(void);
 
 
+    //! Assignment operator
+    ModelOptions& operator=(const ModelOptions& rhs);
+
+
     //! operator to add options
     ModelOptions& operator+=(const ModelOptions& rhs);
 
@@ -291,14 +292,6 @@ class ModelOptions
 
     //! Get the past-the-end iterator for the submodels
     const_submodel_iterator submodels_end(void) const;
-
-
-    //! Get the const iterator to the first option
-    //const_option_iterator options_begin(void) const;
-
-
-    //! Get the past-the-end iterator for the options
-    //const_option_iterator options_end(void) const;
 
 
     //! Check if there are unused options

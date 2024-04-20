@@ -29,7 +29,8 @@ make_slepc()
 
   if [ "x$LINKONLY" == "x" ]
   then
-    ./config/configure.py $CONFIGOPTS
+    #./config/configure.py
+    ./configure --with-feast=1
     make
   fi
 

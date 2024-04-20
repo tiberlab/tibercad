@@ -16,7 +16,6 @@
 
 #include <cassert>
 
-USELIBMESHTYPE(UniquePtr);
 
 namespace
 {
@@ -851,7 +850,7 @@ void ReadISEGrid::scan_grid_file(std::istream& ISE_INPUT)
 
       for (unsigned int s = 0; s < elem->n_edges(); s++)
       {
-        UniquePtr<const libMesh::Elem> edge (elem->build_edge_ptr(s));
+        std::unique_ptr<const libMesh::Elem> edge (elem->build_edge_ptr(s));
         std::set<unsigned int> edge_nodes;
         std::set<unsigned int>::iterator iter = edge_nodes.begin();
 

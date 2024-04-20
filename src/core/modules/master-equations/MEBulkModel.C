@@ -118,14 +118,14 @@ MEBulkModel::do_reinit(const Elem* elem)
   if (get_element() != elem)
   {
     set_element(elem);
-    set_coordinates(elem->centroid());
+    set_coordinates(elem->vertex_average());
 
     // get the nodal temperatures
     get_temperature_interface().get_temperature(elem, _nodal_lattice_vt);
 
     // get the mean temperature on the element
     set_lattice_temperature(
-        get_temperature_interface().get_temperature(elem, elem->centroid()));
+        get_temperature_interface().get_temperature(elem, elem->vertex_average()));
 
   }
 

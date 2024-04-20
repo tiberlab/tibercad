@@ -5,6 +5,7 @@
 #include <string>
 
 #include "EigenSolver.h"
+#include "Messages.h"
 #include "RuntimeException.h"
 #include "TiberPetscUtils.h"
 #include "slepceps.h"
@@ -85,18 +86,6 @@ void EigenSolver::slepc_init(int argc1, char** argv1, MPI_Comm comm)
 
   slepc_comm = comm;
 
-  //Seems to work ^^
-  //  TODO Looks poor, but in current version of petsc there is no methods for it. (In later releases there is ...)
-  // It fix problem when during factorization MUMPS does not have have enouph memory.
-/*
-  int __empty_argc = 3;
-  char** __empty_argv = new char*[3];
-  __empty_argv[0] = "tibercad";
-  __empty_argv[1] = "-mat_mumps_icntl_14";
-  __empty_argv[2] = "100";
-
-  SlepcInitialize(&__empty_argc,&__empty_argv,NULL,NULL);
-*/
   SlepcInitialize(&argc1,&argv1,NULL,NULL);
   PetscPopSignalHandler();
 
@@ -368,6 +357,10 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt,
         TiberPetscUtils::checkerr(ierr);
       }*/
     }
+    else
+    {
+      ierr = STSetType(st, STSINVERT); TiberPetscUtils::checkerr(ierr);
+    }
   }
   else if (opt.solver_type == "gd")
   {
@@ -470,15 +463,18 @@ void EigenSolver::print_options(const EigenSolver::SLEPCoptions& opt)
 
 
 
-int set_ksp_and_pc(ST st, const EigenSolver::SLEPCoptions& opt)
+int set_ksp_and_pc(ST st, const EigenSolver::SLEPCoptions& opts)
 {
+
+  EigenSolver::SLEPCoptions opt(opts);
+
   int ierr;
 
   KSP ksp;
   ierr = STGetKSP(st, &ksp);
 
   PC pc;
-  ierr = KSPGetPC(ksp,&pc);
+  ierr = KSPGetPC(ksp, &pc);
 
 #if ((SLEPC_VERSION_MAJOR < 3) || \
     ((SLEPC_VERSION_MAJOR == 3) && (SLEPC_VERSION_MINOR < 5)))
@@ -486,6 +482,17 @@ int set_ksp_and_pc(ST st, const EigenSolver::SLEPCoptions& opt)
 #else
   PCSetOperators(pc, A, A);
 #endif
+
+  // if MUMPS or PARDISO is used as solver package, then we
+  // want to use LU or Cholesky decomposition
+  if ((opt.solver_package == "mumps") ||
+      (opt.solver_package == "mkl_pardiso"))
+  {
+    if (opt.pc_type != "cholesky")
+      opt.pc_type = "lu";
+
+    opt.st_ksp_type = "preonly";
+  }
 
   if (opt.st_ksp_type == "bcgsl")
     ierr = KSPSetType( ksp, KSPBCGSL);
@@ -502,7 +509,6 @@ int set_ksp_and_pc(ST st, const EigenSolver::SLEPCoptions& opt)
   else
     throw RuntimeException("KSP type \'" + opt.st_ksp_type +
         "\' not supported in EigenSolver.");
-
 
   PetscMPIInt comm_size;
   MPI_Comm_size(slepc_comm, &comm_size);
@@ -531,7 +537,7 @@ int set_ksp_and_pc(ST st, const EigenSolver::SLEPCoptions& opt)
   {
     // in principle, this should have worked with this if, but for some reason even
     // when running with a single process it complains about mpiaij matrix type
-    if (comm_size > 1)
+    if ((comm_size > 1) && (opt.solver_package != "mumps"))
     {
       ierr = PCSetType(pc, PCBJACOBI);
       ierr = PCSetUp(pc);
@@ -547,6 +553,9 @@ int set_ksp_and_pc(ST st, const EigenSolver::SLEPCoptions& opt)
   else
     throw RuntimeException("Preconditioner \'" + opt.pc_type +
         "\' not supported in EigenSolver.");
+
+  PCFactorSetMatSolverType(pc, opt.solver_package.c_str());
+
 
   ierr = KSPSetTolerances(ksp,opt.spectrum_inversion_tolerance, PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT);
 
@@ -571,6 +580,8 @@ int EigenSolver::number_of_converged_eigenvalues()
 
   return(nconv);
 }
+
+
 //--------------------------------------------------------------//
 double EigenSolver::get_eigenvalue(int i)
 {
@@ -605,7 +616,7 @@ double EigenSolver::get_eigenvalue(int i)
 //----------------------------------------------------------------//
 
 
-void EigenSolver::get_eigen_vector( int i, std::vector<Complex>& eigen_vector_out)
+void EigenSolver::get_eigen_vector(int i, std::vector<Complex>& eigen_vector_out)
 {
   int ierr, vec_size;
   PetscScalar kr, ki;
@@ -616,9 +627,6 @@ void EigenSolver::get_eigen_vector( int i, std::vector<Complex>& eigen_vector_ou
   MatCreateVecs(A,PETSC_NULL,&eigen_vector);
 
   EPSGetEigenpair(eps,i,&kr,&ki,eigen_vector,PETSC_NULL);
-
-  //VecGetSize(eigen_vector, &vec_size);
-  
 
   PetscScalar *loc_part;
   VecGetArray(eigen_vector, &loc_part);
@@ -633,31 +641,13 @@ void EigenSolver::get_eigen_vector( int i, std::vector<Complex>& eigen_vector_ou
 
   VecRestoreArray(eigen_vector, &loc_part);
 
-  //PetscMPIInt rank;
-  //MPI_Comm_rank(slepc_comm,&rank);
-/*
-  {
-
-    PetscInt ix[vec_size];
-
-    for (int j= 0; j < vec_size; j++) ix[j] = j;
-
-    PetscScalar y[vec_size];
-
-    VecGetValues(eigen_vector,vec_size,ix,y);
-
-    for (int j= 0; j < vec_size; j++)
-    {
-      eigen_vector_out[j] = Complex(  PetscRealPart(y[j]), PetscImaginaryPart(y[j]) );
-      //if (rank == 0) cerr << eigen_vector_out[j] << endl;
-    }
-
-  }
-*/
 
   ierr = VecDestroy(&eigen_vector);
 
 }
+
+
+
 //-----------------------------------------------------------------------------//
 void EigenSolver::set_initial_vector( const std::vector<Complex>& in_vector)
 {
@@ -706,7 +696,6 @@ int EigenSolver::prepare_slepc(MPI_Comm comm)
 //  if (eps == NULL)
   {
     ierr = EPSCreate(slepc_comm,&eps);TiberPetscUtils::checkerr(ierr);
-//    ierr = EPSCreate(comm ,&eps);TiberPetscUtils::checkerr(ierr);
   }
 
 
@@ -832,6 +821,18 @@ int EigenSolver::do_solve(const SLEPCoptions& opt)
   ierr = EPSSetDimensions(eps,opt.ev_number, ncv); TiberPetscUtils::checkerr(ierr);
 #endif
 
+  ST st;
+  EPSGetST(eps, &st);
+  KSP ksp;
+  STGetKSP(st, &ksp);
+  PC pc;
+  KSPGetPC(ksp, &pc);
+  MatSolverType ms_type;
+  PCFactorGetMatSolverType(pc, &ms_type);
+  ostringstream os;
+  os << "Solver package used in Eigensolver: " << ms_type << endl;
+  Messages::info(os.str());
+
 
   ierr = EPSSolve(eps);
 
@@ -867,7 +868,7 @@ int EigenSolver::init_H_matrix(unsigned int n)
 
   int ierr;
 
-  ierr = MatCreate(slepc_comm,&A);
+  ierr = MatCreate(slepc_comm, &A);
   TiberPetscUtils::checkerr(ierr);
   //ierr = MatSetType(A, MATAIJ);
   //TiberPetscUtils::checkerr(ierr);

@@ -572,7 +572,7 @@ MasterEquations::do_assembly(const NumericVector<Number>& x, NumericVector<Numbe
   //cerr<<"do_assembly get centroids"<<endl;
 
   // physical coordinates of the quadrature points
-  //const vector<Point>& center = fe->centroid();
+  //const vector<Point>& center = fe->vertex_average();
   const vector<Point>& center = fe->get_xyz();
 
 
@@ -913,7 +913,7 @@ MasterEquations::do_assembly(const NumericVector<Number>& x, NumericVector<Numbe
 
             ind += 1;
 
-            Point d = elem->centroid() - elem_neig->centroid();
+            Point d = elem->vertex_average() - elem_neig->vertex_average();
             double dist = d.size();
             double abs_dist = abs(dist);
             double exp_d = exp(-2 * alpha * abs_dist);
@@ -1017,7 +1017,7 @@ MasterEquations::do_assembly(const NumericVector<Number>& x, NumericVector<Numbe
           {
             ind += 1;
 
-            Point d = elem->centroid() - elem_neig->centroid();
+            Point d = elem->vertex_average() - elem_neig->vertex_average();
             double dist = d.size();
             double abs_dist = abs(dist);
             double exp_d = exp(-2 * alpha * abs_dist);

@@ -146,7 +146,7 @@ ifeq ($(METHOD),dbg)
 endif
 
 
-CXXFLAGS += -DLIBMESH_REQUIRE_SEPARATE_NAMESPACE -std=gnu++11 -fopenmp
+CXXFLAGS += -DLIBMESH_REQUIRE_SEPARATE_NAMESPACE -std=gnu++17 -fopenmp
 CFLAGS += -fopenmp
 FCFLAGS += -fopenmp
-LDFLAGS += -fopenmp
+#LDFLAGS += -fopenmp

@@ -276,11 +276,6 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   short calculate_number_of_bands(void) const;
 
 
-  //! Get strain in crystal coordinates
-  void get_crystal_strain(const libMesh::Elem* elem,
-      const libMesh::Point& point, Tensor2Sym& strain);
-
-
 
   //!calculated density
   std::map<const Elem*, double> _density;
@@ -315,7 +310,7 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   //! bulk eigenstates
   void solve_bulk(void);
 
-  virtual double get_H_units(void) const;
+  virtual double get_H_units(void) const final;
 
   //! Redeclare the solutions, if number of states changed
   void redeclare_solutions(void);
@@ -371,6 +366,10 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
  private:
 
   bool check_confinement(const std::vector<libMesh::Complex>& state);
+
+  //! Get strain in crystal coordinates
+  void get_crystal_strain(const libMesh::Elem* elem,
+      const libMesh::Point& point, Tensor2Sym& strain);
 
 };
 

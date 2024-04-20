@@ -815,7 +815,7 @@ Vff::get_solution_secure(const libMesh::Elem* elem,
     */
   }
  
-  Point phys_p = elem->centroid();
+  Point phys_p = elem->vertex_average();
   unsigned int np = p.size();
   double scale = get_atomistic_structure()->get_scale();
   unsigned int dim = get_mesh().mesh_dimension();

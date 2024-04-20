@@ -157,8 +157,6 @@ ETB::UptSolverOptions::~UptSolverOptions(void)
 void
 ETB::do_init(void){
 
-  std::cerr << "("+get_name()+") Empirical TB Initialisation..." << std::endl;
-
   inst = UptWrapper::create();
 
   inst->set_mpi_comm(this->get_solver_communicator().get());
@@ -170,15 +168,15 @@ ETB::do_init(void){
   inst -> complex_test(re,im,zz);
   if (zz != Complex(re,im))
   {
-    cerr<< zz <<  re << ", " << im << endl;
+    //cerr<< zz <<  re << ", " << im << endl;
     throw InitFailedException("ETB: complex-passing test failed");
   }
 
 
   TightBinding::do_init(); 
 
-  if(get_atomistic_structure()==NULL)
-    throw InitFailedException("ETB: atomistic structure not created");
+  if(get_atomistic_structure() == nullptr)
+    throw InitFailedException("ETB: an atomistic structure is needed");
 
   get_bulk_edges();  //reads band edges from database
 
@@ -230,7 +228,6 @@ ETB::do_init(void){
 
     build_map_elem_atoms(_upt_options.projection_length);
 
-    cerr << "done\n";
 
     Messages::info("(" + get_name() + ") database path: " + database_path);
     Messages::info("(" + get_name() + ") work path: " + work_path);
@@ -256,18 +253,18 @@ void ETB::do_reinit(void)
 
   if (!includes_regions(get_atomistic_structure()->get_IDset()))
   {
-     std::cerr << "("+get_name()+") restrict on active regions" << std::endl;
+     //std::cerr << "("+get_name()+") restrict on active regions" << std::endl;
 
      std::set<ID> reg_ids;
      get_region_ids(reg_ids);
 
      get_atomistic_structure()->dorestrict(reg_ids);
     
-     std::cerr<< "("+get_name()+") Build Map Elem->Atom "<<std::endl;
+     //std::cerr<< "("+get_name()+") Build Map Elem->Atom "<<std::endl;
 
      double Rmax = build_map_elem_atoms(_upt_options.projection_length);
      
-     std::cerr<< "("+get_name()+") Rmax= "<<Rmax<<std::endl;
+     //std::cerr<< "("+get_name()+") Rmax= "<<Rmax<<std::endl;
   }
 
   _vb_shift = 0.0;
@@ -531,7 +528,7 @@ void ETB::do_solve(void) {
     NumericVector<Number>& qdens = *qdens_sys.solution;
 
     FEType fe_type = qdens_sys.variable_type(0);
-    UniquePtr<FEBase> fe(build_finite_element(_dim, fe_type));
+    std::unique_ptr<FEBase> fe(build_finite_element(_dim, fe_type));
 
     DofMap& dof_map = qdens_sys.get_dof_map();
     vector<unsigned int> dof_indices_e;
@@ -1616,7 +1613,7 @@ ETB::project_atom_strain(void)
       const Elem* el = structure[i].get_elem();
 
       // 6/5/2016 I believe one should take strain in crystal coordinates, here
-      _strain_int.get_crystal_strain(el, el->centroid(), epsilon);
+      _strain_int.get_crystal_strain(el, el->vertex_average(), epsilon);
 
       exx[i] = epsilon(1,1);
       eyy[i] = epsilon(2,2);
@@ -2184,7 +2181,7 @@ ETB::get_solution_secure(const Elem* elem,
     unsigned int dim = get_mesh().mesh_dimension();
 
     FEType fe_type = qdens_sys.variable_type(0);
-    UniquePtr<FEBase> fe(build_finite_element(dim, fe_type));
+    std::unique_ptr<FEBase> fe(build_finite_element(dim, fe_type));
     const vector<vector<Real> >& phi = fe->get_phi();
 
     fe->reinit(elem, &p);
@@ -2224,9 +2221,9 @@ ETB::get_solution_secure(const Elem* elem,
   if (values.count(ElQuantumDensity))
     {
     if (_dim == 3)
-      values[ElQuantumDensity][0] = build_rho3d(_el_atomic_charges, elem, elem->centroid());
+      values[ElQuantumDensity][0] = build_rho3d(_el_atomic_charges, elem, elem->vertex_average());
     else if (_dim == 2)
-      values[ElQuantumDensity][0] = build_rho2d(_el_atomic_charges, elem, elem->centroid());
+      values[ElQuantumDensity][0] = build_rho2d(_el_atomic_charges, elem, elem->vertex_average());
     else if (_dim == 1)
       values[ElQuantumDensity][0] = build_average_rho1d(_el_atomic_charges, elem);
     }
@@ -2234,9 +2231,9 @@ ETB::get_solution_secure(const Elem* elem,
   if (values.count(HlQuantumDensity))
     {
     if (_dim == 3)
-      values[HlQuantumDensity][0] = build_rho3d(_hl_atomic_charges, elem, elem->centroid());
+      values[HlQuantumDensity][0] = build_rho3d(_hl_atomic_charges, elem, elem->vertex_average());
     else if (_dim == 2)
-      values[HlQuantumDensity][0] = build_rho2d(_hl_atomic_charges, elem, elem->centroid());
+      values[HlQuantumDensity][0] = build_rho2d(_hl_atomic_charges, elem, elem->vertex_average());
     else if (_dim == 1)
       values[HlQuantumDensity][0] = build_average_rho1d(_hl_atomic_charges, elem);
     }
@@ -2247,9 +2244,9 @@ ETB::get_solution_secure(const Elem* elem,
     for (unsigned int i = 0; i < _solution_size; i++)
       {
       if (_dim == 3)
-        values[MeshStates][i] = build_rho3d(_eigenvector_mag[i], elem, elem->centroid());
+        values[MeshStates][i] = build_rho3d(_eigenvector_mag[i], elem, elem->vertex_average());
       else if (_dim == 2)
-        values[MeshStates][i] = build_rho2d(_eigenvector_mag[i], elem, elem->centroid());
+        values[MeshStates][i] = build_rho2d(_eigenvector_mag[i], elem, elem->vertex_average());
       else if (_dim == 1)
         values[MeshStates][i] = build_average_rho1d(_eigenvector_mag[i], elem);
       }
@@ -2419,9 +2416,8 @@ ETB::build_rho2d(const std::vector<double>& tb_density, const Elem* elem, const 
 
   if (tb_density.size() != _N_without_H)
   {
-    std::cerr << "ERROR IN ETB: trying to mesh density "
-      "but tb_density has wrong size" << std::endl;
-    exit(1);
+    throw RuntimeException("ERROR IN ETB: trying to mesh density "
+      "but tb_density has wrong size");
   }
 
   const std::vector<Atom>& structure = get_atomistic_structure()->get_structure_atoms();
@@ -2478,9 +2474,8 @@ ETB::build_average_rho1d(const std::vector<double>& tb_density, const Elem* elem
 
   if (tb_density.size() != _N_without_H)
     {
-      std::cerr << "ERROR IN ETB: trying to build mesh density "
-      "but tb_density has wrong size" << std::endl;
-      exit(1);
+      throw RuntimeException("ERROR IN ETB: trying to build mesh density "
+      "but tb_density has wrong size");
     }
 
   const std::vector<Atom>& structure = get_atomistic_structure()->get_structure_atoms();

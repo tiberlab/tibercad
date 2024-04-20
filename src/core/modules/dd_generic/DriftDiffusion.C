@@ -269,7 +269,7 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
     assert(_device->get_material(elem->subdomain_id()) != NULL);
     DDBulkModel* sc = get_bulk_model<DDBulkModel>(elem);
 
-    sc->set_coordinates(elem->centroid());
+    sc->set_coordinates(elem->vertex_average());
     sc->set_potentials(sc->get_equilibrium_fermi_level());
     sc->set_electric_field(libMesh::RealGradient(0));
     for (auto&& cp : sc->get_carrier_properties())
@@ -3216,7 +3216,7 @@ DriftDiffusion::calculate_currents_rstf_compact(void)
       }
 
       // prepare for calculating local properties
-      //sc->set_coordinates(elem->centroid());  ????? 2012-08-31
+      //sc->set_coordinates(elem->vertex_average());  ????? 2012-08-31
       sc->set_coordinates(q_point[qp]);
 
       sc->set_el_potential(phi0 * u);
@@ -3670,7 +3670,7 @@ DriftDiffusion::calculate_currents_surfint(void)
           // what is the outer normal in this point??
           // Idea: if x(s) > x(centroid), normal is +1
           //       else it is -1
-          double x_c = elem->centroid()(0);
+          double x_c = elem->vertex_average()(0);
           double x_s = elem->point(s)(0);
           if (x_s < x_c)
           {

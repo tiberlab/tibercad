@@ -162,10 +162,16 @@ Device
     supercell_size_z = 20 # size in Angstrom
     supercell_size_y = 20  
 
+    radial_distribution { }
 
     # write out statistics of alloy
-    alloy_statistics = true
-    alloy_statistics {}
+    alloy_statistics
+    {
+      # to plot the local composition:
+      plot_alloy_composition = true
+      control_volume = sphere
+      control_volume_radius = 0.75
+    }
 
   }
 

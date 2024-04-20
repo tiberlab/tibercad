@@ -116,7 +116,7 @@ DataImporter::get_solution_secure(const Elem* elem,
 
   // This section maps 3d equidistant data to the fem grid
   FEType fe_type = system->variable_type(varids[0]);
-  UniquePtr<FEBase> fe(build_finite_element(dim, fe_type));
+  std::unique_ptr<FEBase> fe(build_finite_element(dim, fe_type));
   vector<vector<unsigned int>> dof_indices(varids.size());
 
   //element shape functions
@@ -522,7 +522,7 @@ DataImporter::_create_mesh_from_points(const vector<double>* x,
     }
     else
     {
-      Point centroid(el->centroid());
+      Point centroid(el->vertex_average());
       const Elem* dev_el = MeshUtils::search_element(
           &(get_environment().get_device().get_mesh()), centroid);
 

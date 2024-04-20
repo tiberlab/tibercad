@@ -28,6 +28,8 @@ do
       : $(OMP_NUM_THREADS:-1);
       export OMP_NUM_THREADS ;;
 
+    n) n_mpi_procs=${OPTARG} ;;
+
     *) OPTIND=$(( $OPTIND - 1 )); break ;;
   esac
 done
@@ -45,6 +47,8 @@ then
   mpi_opts=(--hostfile ${MPI_HOSTFILE})
 fi
 
+: ${OMP_NUM_THREADS:=1}
+export OMP_NUM_THREADS
 
 ARCH=`${TIBERCADROOT}/share/arch.sh`
 SDKDIR=${TIBERCADROOT}/SDK
@@ -65,6 +69,7 @@ ulimit -c 0
 if [ $usegdb -eq 1 ]
 then
   gdb -nx -ex run --args ${executable} $@
+  #@MPIEXEC@ -n ${n_mpi_procs} ${mpi_opts[*]} -xterm -e gdb -nx -ex run --args ${executable} $@
 else
   #${SDKDIR}/${ARCH}/bin/mpiexec -n ${n_mpi_procs} ${executable} $@
   @MPIEXEC@ -n ${n_mpi_procs} ${mpi_opts[*]}  ${executable} $@

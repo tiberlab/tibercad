@@ -118,28 +118,28 @@ class TiberPetscLinearSolver :  public TiberLinearSolver
 
 
     //! Krylov subspace context
-    KSP _ksp;
+    KSP _ksp{nullptr};
 
     //! The KSP type
-    std::string _ksp_type;
+    std::string _ksp_type{KSPBCGS};
 
     //! The PC type
-    std::string _pc_type;
+    std::string _pc_type{PCILU};
 
     //! The graphical monitor
-    PetscDrawLG _LG_monitor;
+    PetscDrawLG _LG_monitor{nullptr};
 
     //! Do we want monitor?
-    bool _monitor;
+    bool _monitor{false};
 
     //! Do we want X monitor?
-    bool _xmonitor;
+    bool _xmonitor{false};
 
     //! Tells if xmonitor is already opened
-    bool _xmonitor_open;
+    bool _xmonitor_open{false};
 
     //! The solver package
-    std::string _solver_package;
+    std::string _solver_package{"petsc"};
 
     //! Check convergence
     std::pair<unsigned int, double> check_convergence(void);

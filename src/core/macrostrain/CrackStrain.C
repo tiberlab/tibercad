@@ -60,7 +60,7 @@ void CrackStrain::do_solve()
   for ( ; el != end_el ; ++el) 
   {
     const Elem* elem = *el;
-    const Point p = elem->centroid();
+    const Point p = elem->vertex_average();
 
     calculate_stress(stress, p(0), p(1)); 
 

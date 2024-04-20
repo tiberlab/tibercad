@@ -1431,8 +1431,8 @@ Negf::occupy_LDOS(const std::vector<double>& ldos)
     // get the Fermi levels on the centroid
     double e_qfermi = 0;
     double h_qfermi = 0;
-    potmodel->get_solution(elem, efermi_id, e_qfermi, elem->centroid());
-    potmodel->get_solution(elem, hfermi_id, h_qfermi, elem->centroid());
+    potmodel->get_solution(elem, efermi_id, e_qfermi, elem->vertex_average());
+    potmodel->get_solution(elem, hfermi_id, h_qfermi, elem->vertex_average());
 
     for (int band = 0; band < n_vars; band++)
     {
@@ -2146,7 +2146,7 @@ Negf::get_solution_secure(const Elem *elem, std::map<ID, std::vector<double>> &v
     const libMesh::DofMap& dof_map = _sys->get_dof_map();
     ID u_var = _sys->variable_number("u0");
     FEType fe_type = _sys->variable_type(u_var);
-    UniquePtr<FEBase> fe(build_finite_element(dim, fe_type));
+    std::unique_ptr<FEBase> fe(build_finite_element(dim, fe_type));
     const std::vector<std::vector<Real> >& phi = fe->get_phi();
 
     fe->reinit(elem, &p);
@@ -2182,7 +2182,7 @@ Negf::get_solution_secure(const Elem *elem, std::map<ID, std::vector<double>> &v
     libMesh::NumericVector<Number>& qdens = *_qdens_sys->solution;
 
     FEType fe_type = _qdens_sys->variable_type(el_id);
-    UniquePtr<FEBase> fe(build_finite_element(dim, fe_type));
+    std::unique_ptr<FEBase> fe(build_finite_element(dim, fe_type));
     const std::vector<std::vector<Real> >& phi = fe->get_phi();
 
     fe->reinit(elem, &p);
@@ -2551,7 +2551,7 @@ Negf::reorder_assemble(void)
 
   libMesh::FEType fe_type = dof_map.variable_type(0);
 
-  UniquePtr<FEBase> fe(FEBase::build(dim, fe_type));
+  std::unique_ptr<FEBase> fe(FEBase::build(dim, fe_type));
 
   libMesh::QGauss qrule(dim, THIRD);
 
@@ -2721,7 +2721,7 @@ Negf::get_boundary_potentials(QuantumContact* qc, double& av_V, double& av_mu_n,
 
   unsigned int dim = mesh.mesh_dimension();
 
-  UniquePtr<FEBase> fe( FEBase::build(dim, FEType() ));
+  std::unique_ptr<FEBase> fe( FEBase::build(dim, FEType() ));
 
   libMesh::QGauss qrule(dim, FIRST); // Why order 1 ?
 

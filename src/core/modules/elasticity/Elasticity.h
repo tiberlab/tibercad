@@ -198,7 +198,7 @@ class TBDLLOCAL Elasticity : public SimulationInterface
 
 
   //! The total displacement
-    libMesh::UniquePtr<libMesh::NumericVector<Number> > sol;
+  std::unique_ptr<libMesh::NumericVector<Number> > sol;
 
   force_vector internal_force;
 

@@ -58,7 +58,7 @@ cd libmesh-${LIBMESHVERSION}-${TCHOST}
 #cp ${TOPDIR}/misc/configure.libmesh configure
 
 
-#export SLEPC_DIR=${BUILDDIR}/slepc-${PETSCVERSION}${SLEPCPATCHLEVEL}
+export SLEPC_DIR=${BUILDDIR}/slepc-${SLEPCVERSION}${SLEPCPATCHLEVEL}
 export PETSC_DIR=${BUILDDIR}/petsc-${PETSCVERSION}${PETSCPATCHLEVEL}
 export PETSC_ARCH=${TCHOST}
 
@@ -100,7 +100,7 @@ export LDFLAGS
 METHOD=devel
 
 
-./configure --enable-petsc --disable-slepc --disable-complex \
+./configure --enable-petsc-required --enable-slepc --disable-complex \
     --enable-periodic ${SHARED} --disable-pfem --enable-static \
     --disable-strict-lgpl \
     --enable-second --enable-exceptions --disable-laspack --disable-sfc \
@@ -110,9 +110,12 @@ METHOD=devel
     --disable-reference-counting --disable-legacy-using-namespace --enable-unique-ptr \
     --disable-deprecated \
     --disable-metaphysicl \
+    --disable-openmp \
+    --with-thread-model=none \
     --disable-hdf5 \
     --with-subdomain-id-bytes=2 \
     --disable-fparser \
+    --with-boost=${SDKDIR} \
     --with-methods="$METHOD" \
     --host=$HOST --build=$BUILD \
     --prefix=${SDKDIR} --exec-prefix=${SDKDIR}/${TCHOST}

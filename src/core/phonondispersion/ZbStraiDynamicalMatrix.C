@@ -93,7 +93,7 @@ void  ZbStrainDynamicalMatrix::re_init(void)
   const Elem* elem = _phonon_model->get_element(); 
 
   std::vector<Point> h_point(1);
-  h_point[0] = elem->centroid();
+  h_point[0] = elem->vertex_average();
 
   std::vector< std::map< ID, double > > solution;
 

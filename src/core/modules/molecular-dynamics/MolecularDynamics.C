@@ -341,7 +341,7 @@ MolecularDynamics::do_solve(void)
     const unsigned int t_var = system.variable_number("T");
 
     FEType fe_type = system.variable_type(t_var);
-    UniquePtr<FEBase> fe(build_finite_element(dim, fe_type));
+    std::unique_ptr<FEBase> fe(build_finite_element(dim, fe_type));
 
     vector<unsigned int> dof_indices;
 
@@ -466,7 +466,7 @@ MolecularDynamics::get_solution_secure(const Elem* elem,
     const unsigned int t_var = system.variable_number("T");
 
     FEType fe_type = system.variable_type(t_var);
-    UniquePtr<FEBase> fe(build_finite_element(dim, fe_type));
+    std::unique_ptr<FEBase> fe(build_finite_element(dim, fe_type));
 
     vector<unsigned int> dof_indices;
 

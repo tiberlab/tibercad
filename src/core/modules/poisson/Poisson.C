@@ -171,7 +171,7 @@ Poisson::get_solution_secure(const Elem* elem,
   const unsigned int u_var = system.variable_number("u");
 
   FEType fe_type = system.variable_type(u_var);
-  UniquePtr<FEBase> fe(build_finite_element(dim, fe_type));
+  std::unique_ptr<FEBase> fe(build_finite_element(dim, fe_type));
 
   vector<unsigned int> dof_indices;
 
@@ -299,8 +299,8 @@ Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
   FEType fe_type = dof_map.variable_type(uvar);
 
   // the finite element
-  UniquePtr<FEBase> fe(build_finite_element(dim, fe_type, true));
-  UniquePtr<QBase> qrule(QBase::build(myopts.quadrature_type, dim, myopts.integration_order));
+  std::unique_ptr<FEBase> fe(build_finite_element(dim, fe_type, true));
+  std::unique_ptr<QBase> qrule(QBase::build(myopts.quadrature_type, dim, myopts.integration_order));
   fe->attach_quadrature_rule(qrule.get());
 
   const vector<Real>& JxW = fe->get_JxW();
@@ -309,8 +309,8 @@ Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
   const vector<vector<RealGradient> >& dphi = fe->get_dphi();
 
   // the surface finite element
-  UniquePtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
-  UniquePtr<QBase> qface(QBase::build(myopts.quadrature_type, dim-1, myopts.integration_order));
+  std::unique_ptr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
+  std::unique_ptr<QBase> qface(QBase::build(myopts.quadrature_type, dim-1, myopts.integration_order));
   fe_face->attach_quadrature_rule(qface.get());
 
   const vector<Real>& JxW_face = fe_face->get_JxW();
