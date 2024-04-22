@@ -904,10 +904,10 @@ Tmm::do_solve(void)
       l_length.push_back(dof_indices[0]);
       
 	  
-	  libMesh::Point pp =elem->centroid();
-	  mod.calculate(elem,pp(0),lambda);
-	  // std::cout<<mod.get_emission_power()<<std::endl;
-	  dipole_power.push_back(mod.get_emission_power());
+      libMesh::Point pp =elem->vertex_average();
+      mod.calculate(elem,pp(0),lambda);
+      // std::cout<<mod.get_emission_power()<<std::endl;
+      dipole_power.push_back(mod.get_emission_power());
       elem_coordinate.push_back(pp(0));
 
       if ( i == 0)
