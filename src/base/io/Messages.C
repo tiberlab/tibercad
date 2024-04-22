@@ -11,6 +11,8 @@
 #include "Utils.h"
 #include "tiber_config.h"
 
+#include "libmesh/parallel.h"
+
 #include <vector>
 
 #ifdef _WIN32

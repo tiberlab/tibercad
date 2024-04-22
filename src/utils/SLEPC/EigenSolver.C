@@ -9,13 +9,10 @@
 #include "RuntimeException.h"
 #include "TiberPetscUtils.h"
 #include "slepceps.h"
-//#include "petscsys.h"
 
-//#include <eigen_solver.h>
 
 #include "petsc/private/matimpl.h"
 
-//#include "libmesh/petsc_vector.h"
 
 using namespace std;
 

@@ -7,7 +7,7 @@
 #include <fstream>
 
 template<typename Elem, typename Traits = std::char_traits<Elem> >
-struct TBDLLOCAL basic_TeeStream : std::basic_ostream<Elem,Traits>
+struct basic_TeeStream : std::basic_ostream<Elem,Traits>
 {
    typedef std::basic_ostream<Elem,Traits> SuperType;
 

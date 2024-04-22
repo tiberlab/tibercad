@@ -3,11 +3,6 @@
 #ifndef _MESSAGES_H_
 #define _MESSAGES_H_
 
-#include "TiberCad.h"
-//#include "tiber_dll.h"
-
-//#include "libmesh/parallel.h"
-
 #include <string>
 #include <iostream>
 #include <sstream>
@@ -16,6 +11,13 @@
 #ifdef error
 # undef error
 #endif
+
+namespace libMesh {
+  namespace Parallel {
+    class Communicator;
+  }
+}
+
 
 //! Print messages to standard out or standard error
 /*!
