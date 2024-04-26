@@ -1,0 +1,172 @@
+# Ga2O3
+
+structure = monoclinic
+
+[lattice]  # [11]
+a = 1.2214
+b = 0.3037
+c = 0.5798
+beta = 103.83
+
+
+
+[valenceband]
+#E_v = -2.64
+# from Nextnano
+E_v = 0
+
+m_dos = 1.6
+
+
+[conductionband]
+m_G = 0.1
+
+m_dos = 0.1
+
+
+
+[bandgap]
+# T = 0
+Eg_G = 4.6
+
+
+[permittivity]
+# static dielectric constant
+permittivity = 10
+
+#optical_data = optics/GaN.nk
+
+
+# stiffness data
+[elasticity]
+C11 = 367.0
+C12 = 135.0
+C13 = 103.0
+C33 = 405.0
+C44 = 95.0
+
+
+[stiffness]
+C11 = 367.0
+C12 = 135.0
+C13 = 103.0
+C33 = 405.0
+C44 = 95.0
+
+#
+# mobility
+#
+
+# constant
+[mobility/constant]
+mu_max = (1500, 200.0)
+exponent = (1.0, 2.1)
+
+
+# doping dependent
+[mobility/doping_dependent]
+mobility_formula = 1
+mumin1 = (85, 		33)
+mumin2 = (75, 		0)
+mu1    = (50, 		20)
+Pc     = (6.5e15, 	5e15)
+Cr     = (9.5e16, 	8e16)
+Cs     = (7.2e19, 	8e20)
+alpha  = (0.55, 	0.55)
+beta   = (0.75, 	0.7)
+
+# for formula 2
+mumin  = (80,	33)
+am     = (-0.2,	-0.2)
+mud    = (1325, 170)
+ad     = (-3,   -3)
+N0     = (0.778e17, 1e17)
+aN     = (1.3,  1.3)
+A      = (0.71, 0.7)
+aA     = (0.31, 0.31) 
+
+
+# high field dependency
+[mobility/field_dependent]
+Vsat_Formula = 2
+beta0    = (1.7, 	1.7)
+A_vsat   = (1.5e+07, 	1.5000e+07)
+B_vsat   = (0,		0)
+vsat_min = (1.000e+07, 	1.000e+07)
+betaexp  = (0,		0)
+
+
+#
+# recombination
+#
+
+# SRH recombination
+[recombination/SRH]
+Etrap  = 0.0
+taumin = (0.0,		0.0)
+taumax = (1.0e-9,	1.0e-9)
+Nref   = (1.0e+16,	1.0e+16)
+gamma  = (1,		1)
+Talpha = (-1.5,		-1.5)
+Tcoeff = (2.55,		2.55)
+
+
+# direct
+[recombination/direct]
+C = 2e-10
+
+
+[recombination/auger]
+# R_Auger = ( C_n n + C_p p ) ( n p - ni_eff^2)
+# with C_n,p = (A + B (T/T0) + C (T/T0)^2) (1 + H exp(-{n,p}/N0))
+# The values below should be checked
+A  = (1.0000e-34 ,	1.0000e-34)	# [cm^6/s]
+B  = (0.0000e+00 ,	0.0000e+00)	# [cm^6/s]
+C  = (0.0000e+00 ,	0.0000e+00)	# [cm^6/s]
+H  = (0.0000e+00 ,	0.0000e+00)	# [1]
+N0 = (1.0000e+18 ,	1.0000e+18)	# [cm^(-3)]
+
+
+
+#Lattice thermal conductivity 
+[thermal_conductivity/constant]
+ThermCond = (130, 130)
+
+[sound_velocity/constant]
+vg = 7.914e3 #m/s
+
+[heat_capacity/constant]
+C = 1.00e6 # j/m3K 
+
+#Atomistic structure informations
+#
+[atomistic_structure]
+lattice_type = C2/m
+
+#Basis 
+
+#Number of basis specie
+n_basis_specie = 2
+#Number of basis atoms for any specie
+n_1 = 4
+n_2 = 6
+#Basis vectors T_"specie"_"#of atom"_"direction"
+T_1_1 = (0.09, 0.09, 0.795)
+T_1_2 = (-0.09, 0.91, 0.205)
+T_1_3 = (-0.341, 0.659, 0.314)
+T_1_4 = (0.341, 0.341, 0.686)
+T_2_1 = (0.165, 0.165, 0.109)
+T_2_2 = (-0.165, 0.835, 0.891)
+T_2_3 = (0.173, 0.173, 0.563)
+T_2_4 = (-0.173, 0.827, 0.437)
+T_2_5 = (0.496, 0.496, 0.256)
+T_2_6 = (-0.496, 0.504, 0.743)
+
+#Name of species
+specie_1 = Ga
+specie_2 = O
+
+[densityfunctional_tb]
+
+dataset = nitrides
+

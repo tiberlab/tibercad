@@ -109,7 +109,7 @@ BulkCrystal::read_database(void)
 
   if ( !(_mat->is_alloy()) )
   {
-    //lattice constant are expressed in Amstrong
+    //lattice constant are expressed in Angstrom
 
     Database db = _mat->get_database();
     db.set_section("lattice");
@@ -352,7 +352,8 @@ BulkCrystal::set_prim_vec(void)
 
   else if (_lattice_type.compare("cubic") == 0) {
 
-    assert((_lattice_constant[0] == _lattice_constant[1]) && (_lattice_constant[1] == _lattice_constant[2]));
+    assert((_lattice_constant[0] == _lattice_constant[1]) &&
+           (_lattice_constant[1] == _lattice_constant[2]));
 
     prim_vec_dir(1,1) = 1.0 ; prim_vec_dir(2,1) = 0; prim_vec_dir(3,1) = 0;
     prim_vec_dir(1,2) = 0; prim_vec_dir(2,2) = 1.0; prim_vec_dir(3,2) = 0;
@@ -422,12 +423,29 @@ BulkCrystal::set_prim_vec(void)
     _prim_vec(3,3) = prim_vec_dir(3,3) * _lattice_constant[2];
 
   }
+
+  else if ((_lattice_type.compare("monoclinic") == 0) ||
+           (_lattice_type.compare("C2/m") == 0))
+  {
+    // following the definitions in Ponce et al. Phys. Rev. Research 2, 033102 (2020)
+    _prim_vec(1,1) = 0.5 * _lattice_constant[0];
+    _prim_vec(2,1) = -0.5 * _lattice_constant[1];
+    _prim_vec(3,1) = 0.0;
+
+    _prim_vec(1,2) = 0.5 * _lattice_constant[0];
+    _prim_vec(2,2) = 0.5 * _lattice_constant[1];
+    _prim_vec(3,2) = 0.0;
+
+    double beta = M_PI * _angles[1] / 180;
+    _prim_vec(1,3) = _lattice_constant[2] * cos(beta);
+    _prim_vec(2,3) = 0.0;
+    _prim_vec(3,3) = _lattice_constant[2] * sin(beta);
+  }
+
   else
   {
     Messages::error("Lattice type "+ _lattice_type + " doesn't exist in material "+_mat->get_name());
   }
 
-  //Messages::info( "Bulk Material "+ _mat->get_name()+
-  //                               " is created with primitive vectors ");
 }
 

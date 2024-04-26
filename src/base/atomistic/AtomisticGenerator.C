@@ -818,15 +818,17 @@ void AtomisticGenerator::make_conv_cell()
   
 
   //Check orthogonality of the final conventional vectors
+  /*
   assert(((vec_x * vec_y) < 1e-10) && 
       ((vec_x * vec_z) < 1e-10) && 
       ((vec_y * vec_z) < 1e-10) &&
     (norm(vec_x) > 1e-10) &&
     (norm(vec_y) > 1e-10) &&
-    (norm(vec_z) > 1e-10)); 
+    (norm(vec_z) > 1e-10));
+  */ 
 
   // make a right-hended basis (for later use in fold to cell) 
-  if (det(_conv_vect)<0)
+  if (det(_conv_vect) < 0)
   {
      //swap vec_y <-> vec_z
      _conv_vect(1,2) = vec_z(1); _conv_vect(2,2) = vec_z(2); _conv_vect(3,2) = vec_z(3); 
