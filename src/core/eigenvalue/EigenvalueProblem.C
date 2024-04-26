@@ -556,6 +556,9 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
 
               bool equal = p.absolute_fuzzy_equals(p2, 1e-3);
 
+              // check parity symmetric point
+              equal = p.absolute_fuzzy_equals(-p2, 1e-3);
+
               for (unsigned int s = 0; (s < star.size()) && !equal; ++s)
                 equal |= p.absolute_fuzzy_equals(p2 + star[s], 1e-3);
 
