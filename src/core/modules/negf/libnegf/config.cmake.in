@@ -38,7 +38,7 @@ endif()
 	  set(CMAKE_Fortran_COMPILER "@FC@"
        CACHE STRING "Fortran compiler")
   
- set(CMAKE_Fortran_FLAGS "-fmax-errors=5 -fallow-argument-mismatch -I@abs_top_builddir@/SDK/include" 
+ set(CMAKE_Fortran_FLAGS "-fmax-errors=5 -fallow-argument-mismatch -fPIC -I@abs_top_builddir@/SDK/include" 
        CACHE STRING "General Fortran flags")
 
     #set(CMAKE_C_COMPILER "mpicc" CACHE STRING "C compiler")
