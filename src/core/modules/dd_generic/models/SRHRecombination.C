@@ -292,6 +292,8 @@ SRHRecombination::calculate_rate_and_derivatives(std::vector<double>& R, std::ve
   double Et = get_trap_level();
 
   double dens = _density;
+  if (_profile != nullptr)
+    dens *= _profile->get_data(dd.get_element(), dd.get_coordinates());
 
   //double E01 = dd.get_carrier_properties(id1)->get_band_edge();
   //double E02 = dd.get_carrier_properties(id2)->get_band_edge();
