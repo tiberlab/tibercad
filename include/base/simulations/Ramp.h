@@ -34,6 +34,8 @@ class TBDLLOCAL Ramp
     //! Ramp to a given goal
     void ramp(double goal);
 
+    //! Get the current value
+
 
 
   private:
@@ -42,36 +44,40 @@ class TBDLLOCAL Ramp
     std::vector<SimulationInterface*> _simulations;
 
     //! A pointer to the variable
-    std::string _variable;
+    /*!
+     * We use a vector of string so that we can sweep
+     * multiple variables together, if needed.
+     */
+    std::vector<std::string> _variable {""};
 
     //! The simulation goal
-    double _goal;
+    double _goal {0.0};
 
     //! The last simulation value
-    double _last;
+    double _last {0.0};
 
     //! The initial relative step size 0 < _initial_step < 1
-    double _initial_step;
+    double _initial_step {1};
 
     //! The minimum relative step size 0 < _min_step < 1
-    double _min_step;
+    double _min_step {0.01};
 
     //! The maximum relative step size 0 < _max_step < 1
-    double _max_step;
+    double _max_step {1};
 
 
     //! The initial absolute step size 0 < _initial_step < 1
-    double _initial_abs_step;
+    double _initial_abs_step {std::numeric_limits<double>::max()};
 
     //! The minimum absolute step size 0 < _min_step < 1
-    double _min_abs_step;
+    double _min_abs_step {std::numeric_limits<double>::min()};
 
     //! The maximum absolute step size 0 < _max_step < 1
-    double _max_abs_step;
+    double _max_abs_step {std::numeric_limits<double>::max()};
 
 
     //! Whether to plot results or not
-    bool _plot_data;
+    bool _plot_data {false};
 
 
     //! The ids of the remembered solutions
@@ -79,18 +85,6 @@ class TBDLLOCAL Ramp
 
 };
 
-
-//
-// inline methods
-//
-
-inline
-void
-Ramp::ramp(double goal)
-{
-  _goal = goal;
-  ramp();
-}
 
 
 

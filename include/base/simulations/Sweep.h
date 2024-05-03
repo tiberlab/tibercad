@@ -109,37 +109,41 @@ class TBDLLOCAL Sweep : public SimulationInterface
     std::vector<SimulationInterface*> _simulations;
 
     //! A pointer to the sweepable variable
-    std::string _variable;
+    /*!
+     * We use a vector of string so that we can sweep
+     * multiple variables together, if needed.
+     */
+    std::vector<std::string> _variable;
 
     //! The type of the sweep
-    Type _type;
+    Type _type {LINEAR};
 
     //! A vector containing all the simulation values
     std::vector<double> _values;
 
     //! The current simulation goal
-    double _goal;
+    double _goal {0.0};
 
 
     //! When to write results to file
     std::vector<bool> _plot_data;
 
     //! Whether to append sweep name to filename suffix
-    bool _append_sweep_name_to_datafile_name;
+    bool _append_sweep_name_to_datafile_name {false};
 
     //! The current filename suffix
-    std::string _suffix;
+    std::string _suffix {""};
 
 
     //! The ids of the remembered solutions
     std::map<ID, std::vector<ID> > _remembered_sol_ids;
 
     //! The remembered sweep value
-    double _remembered_sweep_value;
+    double _remembered_sweep_value {0.0};
 
 
     //! Ignore solver failures
-    bool _ignore_failures;
+    bool _ignore_failures {false};
 
 
     //! Remember the current solution

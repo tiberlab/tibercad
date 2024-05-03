@@ -13,17 +13,7 @@ using namespace std;
 
 Ramp::Ramp(const ModelOptions& options,
     const vector<SimulationInterface*>& simulations)
-  : _simulations(simulations),
-    _variable(""),
-    _goal(0.0),
-    _last(0.0),
-    _initial_step(1.0),
-    _min_step(1e-3),
-    _max_step(1.0),
-    _initial_abs_step(numeric_limits<double>::max()),
-    _min_abs_step(numeric_limits<double>::min()),
-    _max_abs_step(numeric_limits<double>::max()),
-    _plot_data(false)
+  : _simulations(simulations)
 {
 
   if (simulations.size() == 0)
@@ -64,13 +54,15 @@ Ramp::Ramp(const ModelOptions& options,
 
 
   // Now we have to find the model to the variable
-  _variable = options.get_option("variable", "");
-  if (_variable == "")
+  string variable = options.get_option("variable", "");
+  if (variable == "")
   {
     string msg("Sweep: You have to provide the name of ");
     msg += "the sweep variable.";
     throw InitFailedException(msg);
   }
+
+  Utils::extract_vector(variable, _variable);
 
 
   _goal = options.get_option("goal", _goal);
@@ -90,6 +82,16 @@ Ramp::Ramp(const ModelOptions& options,
   //_plot_data = options.get_option("plot_data", _plot_data);
 
 }
+
+
+
+void
+Ramp::ramp(double goal)
+{
+  _goal = goal;
+  ramp();
+}
+
 
 
 void
@@ -123,7 +125,7 @@ Ramp::ramp(void)
       _simulations[i]->remember_current_solution(_old_sol_ids[i]);
 
 
-  _last = VariableValue::get_variable_value<double>(_variable);
+  _last = VariableValue::get_variable_value<double>(_variable[0]);
 
   // NOTE: we will treat the absolute value of the steps and their
   // sign independently
@@ -150,14 +152,18 @@ Ramp::ramp(void)
     if ((currstep < min_step) && (step > 0))
     {
       ostringstream os;
-      os << "Ramp of " << _variable << " failed: step size too small.";
+      os << "Ramp of " << _variable[0];
+      if (_variable.size() > 1)
+        os << "...";
+      os << " failed: step size too small.";
       throw SolveFailedException(os.str());
     }
 
     // update the value
     value = sign * min(sign * _goal, sign * value + currstep);
 
-    VariableValue::set_variable_value(_variable, value);
+    for (auto&& var : _variable)
+      VariableValue::set_variable_value(var, value);
 
     // we define the simulation index here so we can know in the
     // catch clause which simulation failed.
@@ -165,7 +171,10 @@ Ramp::ramp(void)
     try
     {
       ostringstream os;
-      os << "Trying " << _variable << " = " << value;
+      os << "Trying " << _variable[0];
+      for (unsigned int i = 1; i < _variable.size(); ++i)
+        os << "," << _variable[i];
+      os << " = " << value;
       Messages::info(os.str());
 
       for (j = 0; j < num_sim; j++)
@@ -194,8 +203,11 @@ Ramp::ramp(void)
       currstep /= 2.0;
 
       ostringstream os;
-      os << "Ramping to " << _variable << " = " << value
-        << " failed while solving \'" << _simulations[j]->get_name() << "\'.";
+      os << "Ramping to " << _variable[0];
+      if (_variable.size() > 1)
+        os << "...";
+      os << " = " << value
+         << " failed while solving \'" << _simulations[j]->get_name() << "\'.";
 
       if (_simulations[j]->verbose() > 1)
         os << "\n" << e.what();
@@ -206,7 +218,8 @@ Ramp::ramp(void)
       if (step == 0) throw SolveFailedException("Cannot decrease step size, is already 0");
 
       value = oldvalue;
-      VariableValue::set_variable_value(_variable, value);
+      for (auto&& var : _variable)
+        VariableValue::set_variable_value(var, value);
       //for (int i = 0; i < num_sim; i++)
       //  _simulations[i]->solve();
     }

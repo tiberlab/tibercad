@@ -17,9 +17,7 @@ using namespace std;
 
 
 Sweep::Sweep(const ModelOptions& options)
-  : SimulationInterface(options),
-    _variable(""),
-    _ignore_failures(false)
+  : SimulationInterface(options)
 {
   has_solution_vector(false);
   is_task(true);
@@ -75,8 +73,8 @@ Sweep::do_init(void)
 
 
   // Now we have to find the model to the variable
-  _variable = opts.get_option("variable", "");
-  if (_variable == "")
+  opts.get_option("variable", _variable);
+  if (_variable.empty())
   {
     string msg("Sweep: You have to provide the name of ");
     msg += "the sweep variable.";
@@ -175,12 +173,15 @@ Sweep::parse_options(void)
 
 
   // check if our variable exists
-  if (!VariableValue::is_variable(_variable))
+  for (auto&& var : _variable)
   {
-    ostringstream o;
-    o << "Sweep: The variable " << _variable << " is not defined.";
-    Messages::warning(o.str());
-    //throw InitFailedException(o.str());
+    if (!VariableValue::is_variable(var))
+    {
+      ostringstream o;
+      o << "Sweep: The variable " << var << " is not defined.";
+      Messages::warning(o.str());
+      // throw InitFailedException(o.str());
+  }
   }
 
   // if yes, append also sweep name to data file suffix
@@ -259,8 +260,6 @@ Sweep::do_plot(void)
 void
 Sweep::do_solve(void)
 {
-  assert(_variable != "");
-
   parse_options();
 
   int num_sim = _simulations.size();
@@ -357,7 +356,10 @@ Sweep::write_global_data(SimulationInterface& simulation, ofstream*& plotfile)
       ostringstream s;
       s << "# Parameter sweep " << "(" << get_name() << ")" << endl;
       s << "# Simulation    : " << simulation.get_name() << endl;
-      s << "# Sweep variable: " << _variable << endl;
+      s << "# Sweep variable: " << _variable[0];
+      for (unsigned int i = 1; i < _variable.size(); ++i)
+        s << ", " << _variable[i];
+      s << endl;
       s << "# Data ordering : " << "column" << endl;
       s << "# Data:" << endl;
       file << s.str();
@@ -386,7 +388,7 @@ Sweep::write_global_data(SimulationInterface& simulation, ofstream*& plotfile)
       }
 
       ostringstream l;
-      l << "#" << endl << "# " << _variable << " ";
+      l << "#" << endl << "# " << _variable[0] << " ";
       map<ID, vector<double> >::iterator it = data.begin();
       const map<ID, vector<double> >::iterator end = data.end();
       for ( ; it != end; ++it)
@@ -545,7 +547,10 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
 
     {
       ostringstream os;
-      os << "Ramping to sweep value " << _variable << " = " << _goal;
+      os << "Ramping to sweep value " << _variable[0];
+      for (unsigned int i = 1; i < _variable.size(); ++i)
+        os << "," << _variable[i];
+      os << " = " << _goal;
       Messages::info(os.str());
     }
 
@@ -568,7 +573,7 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
     if (_append_sweep_name_to_datafile_name)
       suffix << get_name() << "_";
 
-    suffix << _variable.substr(1, string::npos) << "_" << _goal;
+    suffix << _variable[0].substr(1, string::npos) << "_" << _goal;
     TiberCad::prepend_to_filename_suffix(suffix.str());
 
     bool failed = false;
@@ -612,7 +617,7 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
     if (failed)
     {
       ostringstream os;
-      os << "Sweep failed at " << _variable << " = " << _goal;
+      os << "Sweep failed at " << _variable[0] << " = " << _goal;
       if (get_option("ignore_failure", false))
       {
         // in this case, exit the sweep
@@ -671,7 +676,7 @@ Sweep::remember_solution(void)
 
   // the current variable value
   _remembered_sweep_value =
-    VariableValue::get_variable_value<double>(_variable);
+    VariableValue::get_variable_value<double>(_variable[0]);
 
   return id;
 }
@@ -690,7 +695,8 @@ Sweep::do_set_to_remembered_solution(ID id)
     for (int i = 0; i < num_sim; i++)
       _simulations[i]->set_to_remembered_solution((it->second)[i]);
 
-  VariableValue::set_variable_value(_variable, _remembered_sweep_value);
+  for (auto&& var : _variable)
+    VariableValue::set_variable_value(var, _remembered_sweep_value);
 }
 
 
