@@ -171,7 +171,7 @@ Poisson::get_solution_secure(const Elem* elem,
   const unsigned int u_var = system.variable_number("u");
 
   FEType fe_type = system.variable_type(u_var);
-  UniquePtr<FEBase> fe(build_finite_element(dim, fe_type));
+  unique_ptr<FEBase> fe(build_finite_element(dim, fe_type));
 
   vector<unsigned int> dof_indices;
 
@@ -289,8 +289,10 @@ Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
   // This is not that clever! Since Displacement and Polarization are already in C/m^2
   // it is easier to work with the derivatives in 1/m and rho/eps0 in V/m^2 
   // The factor 1e6 is for cm^3 -> m^3 in rho 
-  get_scaling().set_length_scaling(1.0);
-  double Lambda = Constants::e * 1e6;
+  get_scaling().set_length_scaling(get_mesh_units());
+  get_scaling().set_calc_mesh_units(get_mesh_units());
+  double x0 = get_scaling().get_length_scaling();
+  double Lambda = Constants::e * 1e6 * (x0 * x0) / Constants::e0;
   
   DofMap& dof_map =  system.get_dof_map();
 
@@ -299,8 +301,8 @@ Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
   FEType fe_type = dof_map.variable_type(uvar);
 
   // the finite element
-  UniquePtr<FEBase> fe(build_finite_element(dim, fe_type, true));
-  UniquePtr<QBase> qrule(QBase::build(myopts.quadrature_type, dim, myopts.integration_order));
+  unique_ptr<FEBase> fe(build_finite_element(dim, fe_type, true));
+  unique_ptr<QBase> qrule(QBase::build(myopts.quadrature_type, dim, myopts.integration_order));
   fe->attach_quadrature_rule(qrule.get());
 
   const vector<Real>& JxW = fe->get_JxW();
@@ -309,8 +311,8 @@ Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
   const vector<vector<RealGradient> >& dphi = fe->get_dphi();
 
   // the surface finite element
-  UniquePtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
-  UniquePtr<QBase> qface(QBase::build(myopts.quadrature_type, dim-1, myopts.integration_order));
+  unique_ptr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
+  unique_ptr<QBase> qface(QBase::build(myopts.quadrature_type, dim-1, myopts.integration_order));
   fe_face->attach_quadrature_rule(qface.get());
 
   const vector<Real>& JxW_face = fe_face->get_JxW();
@@ -353,7 +355,7 @@ Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
 
       mod.calculate();
 
-      const RealTensor& eps = mod.get_permittivity()*Constants::e0;
+      const RealTensor& eps = mod.get_permittivity();
       // units of polarization ??????
       const RealVectorValue& pol = mod.get_polarization();
       double rho =  mod.get_charge_density() * Lambda;
@@ -408,9 +410,11 @@ Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
     system.matrix->add_matrix(Ke, dof_indices);
     system.rhs->add_vector(Fe, dof_indices);
 
+    cerr << Ke << "\n";
+
   }
-  //system.matrix->close();
-  //system.matrix->print_matlab("K.m");
+  system.matrix->close();
+  system.matrix->print_matlab("K.m");
   //system.rhs->close();
   //system.rhs->print_matlab("F.m");
 

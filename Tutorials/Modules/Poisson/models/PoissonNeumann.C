@@ -54,7 +54,7 @@ PoissonNeumann::calculate(const Elem* elem, unsigned int side,
      SimulationInterface* si = _sim[0].first;
      si->get_solution(elem, id, displ, point);
      //construct normal component
-     UniquePtr<FEBase> fe(FEBase::build(dim, FEType()));
+     unique_ptr<FEBase> fe(FEBase::build(dim, FEType()));
      QGauss qrule(dim-1, CONSTANT); // Order 0 rule because in this way we take centroid's normal
      fe->attach_quadrature_rule(&qrule);
      const std::vector<Point>& normal = fe->get_normals();
