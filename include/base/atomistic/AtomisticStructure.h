@@ -70,7 +70,7 @@ public:
                              bool keep_node_order = false) const;
 
   //! Get scale factor (from mesh_units to amstrong mesh_units/1e-10)
-  const double &get_scale(void) const;
+  double get_scale(void) const;
 
   //! Print structure to file (format depends on extension used)
   void print_structure(const std::string &path);
@@ -136,9 +136,6 @@ public:
 
   //! Tells if random alloy approximation is used
   bool is_random_alloy(void);
-
-  // ! Get the reference material
-  // const Material* get_reference_material(void) const;
 
   //! Apply reordering to atoms
   void reorder(const std::vector<unsigned int> &P);
@@ -330,7 +327,7 @@ inline const std::string &AtomisticStructure::get_name(void) const
   return _name;
 }
 
-inline const double &AtomisticStructure::get_scale(void) const
+inline double AtomisticStructure::get_scale(void) const
 {
   return _scale;
 }
@@ -366,11 +363,6 @@ AtomisticStructure::get_N_without_H(void) const
   return _N_without_H;
 }
 
-// inline
-// const Material*
-// AtomisticStructure::get_reference_material(void) const
-//{
-//   return _reference_material;
-// }
+
 
 #endif // _ATOMISTICSTRUCTURE_H_
