@@ -3,11 +3,11 @@
 topdir=`pwd`
 #builddir=/usr/pack/tibercad_dev-2.5-ma/build
 builddir=${topdir}/extern
-libmesh=libmesh-1.0.0-x86_64-linux
+libmesh=libmesh-1.7.1-x86_64-linux
 
 ARCH=`${topdir}/share/arch.sh`
-PETSC=petsc-3.6.2
-SLEPC=slepc-3.6.2
+PETSC=petsc-3.17.4
+SLEPC=slepc-3.17.2
 
 mkdir -p SDK/include
 cd SDK/include

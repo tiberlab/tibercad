@@ -1,5 +1,5 @@
 2021-09-28 Auf der Maur
-	( ) get rid of all the bad static pointers to 'this' in modules
+	(DONE) get rid of all the bad static pointers to 'this' in modules
 
 2011-04-19 Auf der Maur
 	(DONE) control/change get_solution() for CELL data (return data on each point)

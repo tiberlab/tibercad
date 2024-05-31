@@ -49,6 +49,8 @@ $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext): src
 
 ifeq ($(build_modules),yes)
 modules: $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext)
+	@mkdir -p SDK/etc
+	@cp share/modules.conf SDK/etc
 	@$(MAKE) --no-print-directory -C src/SDK
 	@$(MAKE) --no-print-directory -C src/core/modules
 
@@ -124,7 +126,7 @@ wininstaller linuxinstaller deb tgz tbz: completemanual SHAREDLIBS
 
 sdk:
 	@mkdir -p SDK/etc
-	@cp share/modules.conf SDK/etc
+	@cp share/modules.conf.sdk SDK/etc/modules.conf
 	@./collect_headers
 	@if test -e $(doxygen); then $(doxygen) share/Doxyfile_SDK; fi
 	@tar jcf SDK.tbz SDK

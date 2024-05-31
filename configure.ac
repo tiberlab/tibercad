@@ -286,7 +286,7 @@ AC_CONFIG_FILES([Make.common
 		 installer/windows/tibercad.bim
                  installer/linux/deb/control
                  installer/linux/tar/install
-                 share/coremodules.conf
+                 share/modules.conf
                  share/Doxyfile_SDK])
 AC_CONFIG_FILES([installer/prepare_files.sh], [chmod +x installer/prepare_files.sh])
 AC_CONFIG_FILES([bin/tibercad], [chmod +x bin/tibercad])
