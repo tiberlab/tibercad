@@ -53,7 +53,7 @@ namespace
   };
 }
 
-Device::Device(const ModelOptions& options)
+Device::Device(const ModelOptions& options, const libMesh::Parallel::Communicator& comm)
   : _mesh(NULL),
     _mesh_units(1e-6),
     _eq_system(NULL),
@@ -61,11 +61,12 @@ Device::Device(const ModelOptions& options)
     _mesh_region_info(NULL),
     _bd_regions(NULL),
     _options(options),
-    _symmetry(TiberCad::NONE)
+    _symmetry(TiberCad::NONE),
+    _mpi_comm(comm.get())
 {
   _material_map.clear();
 
-  libMesh::Parallel::Communicator& comm = TiberCad::get_mpi_comm();
+
   unsigned int nodes_per_device = comm.size();
   unsigned int nodes_per_mesh = comm.size();
 
@@ -83,38 +84,12 @@ Device::Device(const ModelOptions& options)
     // nodes_per_mesh is the number of processes used to calculate FEM based models. It
     // must be between 1 and nodes_per_device. 1 means that FEM calculation is done in
     // serial.
-    nodes_per_device = mpi_opts.get_option("mpi_processes_per_device", nodes_per_device);
     nodes_per_mesh = mpi_opts.get_option("mpi_processes_per_mesh", nodes_per_device);
 
     if (nodes_per_mesh > nodes_per_device)
       throw InitFailedException("Cannot distribute mesh on more nodes than "
           "requested for device.");
   }
-
-  if (nodes_per_device < comm.size())
-  {
-    int proc_id = comm.rank();
-    color = proc_id / nodes_per_device;
-
-    //MPI_Comm local_comm;
-    //MPI_Comm_split(comm.get(), color, 0, &local_comm);
-    //_mpi_comm = local_comm;
-
-    // this did not work before 1.0.0, because there was a bug in libmesh
-    // parallel_implementation.h, line 470, missing this->assign(comm)
-    comm.split(color, 0, _mpi_comm);
-
-  }
-  else
-  {
-    // TODO not sure if we should duplicate here?
-    //_mpi_comm = TiberCad::get_mpi_comm();
-    _mpi_comm.duplicate(TiberCad::get_mpi_comm());
-
-    if (nodes_per_device > comm.size())
-      throw InitFailedException("Too many MPI nodes requested for device");
-  }
-
 
   if (nodes_per_mesh < nodes_per_device)
   {
@@ -127,10 +102,6 @@ Device::Device(const ModelOptions& options)
   {
     _mesh_comm.duplicate(_mpi_comm);
   }
-
-  ostringstream os;
-  os << color;
-  InputParser::add_defined("MPI_DEV_KEY", os.str(), false);
 }
 
 
@@ -181,10 +152,10 @@ Device::~Device(void)
 
 
 Device*
-Device::create(const ModelOptions& options)
+Device::create(const ModelOptions& options, const libMesh::Parallel::Communicator& comm)
 {
 
-  Device* device = new Device(options);
+  Device* device = new Device(options, comm);
 
   return device;
 }
@@ -340,7 +311,7 @@ void
 Device::setup_regions(void)
 {
 
-  Messages::debug("Control::create_materials() begin");
+  Messages::debug("Device::create_materials() begin");
 
   Messages m;
   m.info("Create materials ...");
@@ -477,7 +448,7 @@ Device::setup_regions(void)
   m.unindent();
   m.info("Creation of materials done.");
 
-  Messages::debug("Control::create_materials() end");
+  Messages::debug("Device::create_materials() end");
 }
 
 
@@ -543,7 +514,7 @@ void
 Device::setup_atomistic_structures(void)
 {
 
-  Messages::debug("Control::create_atomistic_structures() begin");
+  Messages::debug("Device::create_atomistic_structures() begin");
 
   ModelOptions::const_submodel_iterator it(_options.submodels_begin("Atomistic"));
   const ModelOptions::const_submodel_iterator end(_options.submodels_end("Atomistic"));
@@ -593,14 +564,14 @@ Device::setup_atomistic_structures(void)
 
   }
 
-  Messages::debug("Control::create_atomistic_structures() end");
+  Messages::debug("Device::create_atomistic_structures() end");
 }
 
 void
 Device::setup_quantum_contacts(void)
 {
 
-  Messages::debug("Control::create_quantum_contacts() begin");
+  Messages::debug("Device::create_quantum_contacts() begin");
 
   ModelOptions::const_submodel_iterator it(_options.submodels_begin("Quantum_contact"));
   const ModelOptions::const_submodel_iterator end(_options.submodels_end("Quantum_contact"));
@@ -679,7 +650,7 @@ Device::setup_quantum_contacts(void)
 
    }
 
-  Messages::debug("Control::create_quantum_contacts() end");
+  Messages::debug("Device::create_quantum_contacts() end");
 }
 
 

@@ -57,8 +57,11 @@ void
 InputParser::add_defined(const string& name, const string& value,
     bool warn_on_redefine)
 {
-  if (warn_on_redefine && (_defined.find(name) != _defined.end()))
-    Messages::warning("Redefining input file macro '" + name + "'");
+  // 2024-06-04 M. Auf der Maur: I think, this check does not make too
+  // much sense, as long as we read the input two times anyway
+  // Also, why are defines static??
+  //if (warn_on_redefine && (_defined.find(name) != _defined.end()))
+  //  Messages::warning("Redefining input file macro '" + name + "'");
   _defined[name] = value;
 }
 
@@ -431,19 +434,19 @@ string InputParser::get_until_closing_brace(istream& in_stream)
   {
     temp = in_stream.get();
     if (temp == EOF)
-      return(str);
+      return (str);
     else if (temp == '#')
     {
       // comment => skip until end of line
 
-      while ((temp != '\n') && (temp != '\r') )
+      while ((temp != '\n') && (temp != '\r'))
       {
-	if (!in_stream)
-	{
-	  in_stream.unget();
-	  return(str);
-	}
-	temp = in_stream.get();
+        if (!in_stream)
+        {
+          in_stream.unget();
+          return (str);
+        }
+        temp = in_stream.get();
       }
 
       continue;
@@ -457,10 +460,8 @@ string InputParser::get_until_closing_brace(istream& in_stream)
       line_counter++;
   }
 
-  return(str);
+  return (str);
 }
-
-
 
 string InputParser::get_until_closing_quotes(istream& in_stream)
 {
@@ -473,18 +474,19 @@ string InputParser::get_until_closing_quotes(istream& in_stream)
   {
     last = temp;
     temp = in_stream.get();
-    if (temp == EOF) return str;
+    if (temp == EOF)
+      break;
     else if ((temp == '"') && (last != '\\'))
-      return str ;
+      break;
     else if (temp == '\n')
       line_counter++;
     else if ((temp == '\\') && (last != '\\'))
       continue;
     else
       str += temp;
-
   }
 
+  return str;
 }
 
 

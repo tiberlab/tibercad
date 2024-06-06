@@ -75,7 +75,8 @@ class Device
      * \li "meshfile" -> filename
      * \li "mesh_units" -> the units of the mesh (cf. get_mesh_units())
      */
-    static Device* create(const ModelOptions& options) TBDLLOCAL;
+    static Device* create(const ModelOptions& options,
+                          const libMesh::Parallel::Communicator& comm) TBDLLOCAL;
 
 
     //! Destroy a Device object
@@ -353,7 +354,8 @@ class Device
      * The \c boundary_nodes map has to contain all nodes for each boundary
      * for which a boundary condition is implied.
      */
-    Device(const ModelOptions& options) TBDLLOCAL;
+    Device(const ModelOptions& options,
+           const libMesh::Parallel::Communicator& comm) TBDLLOCAL;
 
 
     //! Set a material for a physical region

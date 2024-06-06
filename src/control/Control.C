@@ -184,8 +184,53 @@ Control::init(void)
   if (it == input.submodels_end("Device"))
     throw InitFailedException("\'Device\' block missing in input file.");
 
-  _device = Device::create(it->second);
-  delete _device;
+  //_device = Device::create(it->second);
+  //delete _device;
+
+  // this will be the communicator passed to Device constructor
+  libMesh::Parallel::Communicator dev_comm;
+
+  // here we set up the communicator for the device
+  {
+    ModelOptions& dev_opts = it->second;
+    libMesh::Parallel::Communicator &comm = TiberCad::get_mpi_comm();
+    unsigned int nodes_per_device = comm.size();
+
+    int color = 0;
+
+    if (dev_opts.has_submodel("Parallel"))
+    {
+      const ModelOptions &mpi_opts = dev_opts.submodels_begin("Parallel")->second;
+
+      // nodes_per_device is the number of processes to be used for calculation of a device.
+      // If e.g. comm.size() = 4 and nodes_per_device = 2, then simulation on two independent
+      // devices is performed, each parallelized on two processes
+      nodes_per_device = mpi_opts.get_option("mpi_processes_per_device", nodes_per_device);
+    }
+
+    if (nodes_per_device < comm.size())
+    {
+      int proc_id = comm.rank();
+      color = proc_id / nodes_per_device;
+
+      comm.split(color, 0, dev_comm);
+    }
+    else
+    {
+      // TODO not sure if we should duplicate here?
+      //_mpi_comm = TiberCad::get_mpi_comm();
+      dev_comm.duplicate(TiberCad::get_mpi_comm());
+
+      if (nodes_per_device > comm.size())
+        throw InitFailedException("Too many MPI nodes requested for device");
+    }
+
+    // set a special variable to get fine control from input file
+    // e.g. one might use MPI_DEV_KEY to change output directories per device
+    ostringstream os;
+    os << color;
+    InputParser::add_defined("MPI_DEV_KEY", os.str(), false);
+  }
 
   // second parsing, now with all defines
   input.clear();
@@ -203,7 +248,7 @@ Control::init(void)
   device_opts += it->second;
 
   // create the device
-  _device = Device::create(device_opts);
+  _device = Device::create(device_opts, dev_comm);
 
   // setup global options
   setup_globals(global_opts);
