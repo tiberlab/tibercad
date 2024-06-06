@@ -184,8 +184,6 @@ Control::init(void)
   if (it == input.submodels_end("Device"))
     throw InitFailedException("\'Device\' block missing in input file.");
 
-  //_device = Device::create(it->second);
-  //delete _device;
 
   // this will be the communicator passed to Device constructor
   libMesh::Parallel::Communicator dev_comm;
