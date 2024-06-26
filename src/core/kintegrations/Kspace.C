@@ -777,15 +777,22 @@ void  Kspace::define_k_space(Tensor1 k_vector)
 
     for (short i = 1; i < 4; i++)
     {
-      transform_matrix(i,1) = basis2(i);
-      transform_matrix(i,2) = basis3(i);
-      transform_matrix(i,3) = basis1(i);
+      // transform_matrix(i,1) = basis2(i);
+      // transform_matrix(i,2) = basis3(i);
+      // transform_matrix(i,3) = basis1(i);
 
-      k_basis_vector1(i-1) = basis2(i);
-      k_basis_vector2(i-1) = basis3(i);
-      k_basis_vector3(i-1) = basis1(i);
+      // k_basis_vector1(i-1) = basis2(i);
+      // k_basis_vector2(i-1) = basis3(i);
+      // k_basis_vector3(i-1) = basis1(i);
+
+      transform_matrix(i,1) = basis1(i);
+      transform_matrix(i,2) = basis2(i);
+      transform_matrix(i,3) = basis3(i);
+
+      k_basis_vector1(i-1) = basis1(i);
+      k_basis_vector2(i-1) = basis2(i);
+      k_basis_vector3(i-1) = basis3(i);
     }
-
   }
 
 }
@@ -793,26 +800,33 @@ void  Kspace::define_k_space(Tensor1 k_vector)
 //-----------------------------------------------------------------------------//
 void Kspace::define_k_space(Tensor1 k_vector1, Tensor1 k_vector2)
 {
-  // 1 -> y, 2 -> z
 
-  Tensor1 basis1 = k_vector1;  // y
-  Tensor1 basis2 = k_vector2;  // z
-  Tensor1 basis3 = vectorProduct(basis1, basis2);  // x
+  Tensor1 basis1 = k_vector1;
+  Tensor1 basis2 = k_vector2;
+  Tensor1 basis3 = vectorProduct(basis1, basis2);
 
 
 
   for (short i = 1; i < 4; i++)
   {
 
-    transform_matrix(i,1) = basis3(i);
-    transform_matrix(i,2) = basis1(i);
-    transform_matrix(i,3) = basis2(i);
+    // transform_matrix(i,1) = basis3(i);
+    // transform_matrix(i,2) = basis1(i);
+    // transform_matrix(i,3) = basis2(i);
 
 
-    k_basis_vector1(i-1) = basis3(i);
-    k_basis_vector2(i-1) = basis1(i);
-    k_basis_vector3(i-1) = basis2(i);
+    // k_basis_vector1(i-1) = basis3(i);
+    // k_basis_vector2(i-1) = basis1(i);
+    // k_basis_vector3(i-1) = basis2(i);
 
+    transform_matrix(i,1) = basis1(i);
+    transform_matrix(i,2) = basis2(i);
+    transform_matrix(i,3) = basis3(i);
+
+
+    k_basis_vector1(i-1) = basis1(i);
+    k_basis_vector2(i-1) = basis2(i);
+    k_basis_vector3(i-1) = basis3(i);
   }
 
   // cerr << setw(12) << transform_matrix << endl;
@@ -1143,9 +1157,13 @@ void Kspace::find_k_space_symmetry()
   else if (k_space_dim == 1)
   {
     k_space_symmetry = LINEAR;
-    b1 = 2;
-    b2 = 0;
-    b3 = 1;
+    // b1 = 2;
+    // b2 = 0;
+    // b3 = 1;
+
+    b1 = 0;
+    b2 = 1;
+    b3 = 2;
   }
   else if (k_space_dim > 1)
   {
@@ -1181,19 +1199,28 @@ void Kspace::find_k_space_symmetry()
         if (k_space_dim == 2)
         {
           // NOTE this is not generic, assumes 2D k space on yz plane
-          if (Utils::almost_equal::compare(norm2, norm3, 1e-6))
+          // if (Utils::almost_equal::compare(norm2, norm3, 1e-6))
+          if (Utils::almost_equal::compare(norm1, norm2, 1e-6))
           {
             k_space_symmetry = QUADRATIC;
-            b1 = 1;
-            b2 = 2;
-            b3 = 0;
+            // b1 = 1;
+            // b2 = 2;
+            // b3 = 0;
+
+            b1 = 0;
+            b2 = 1;
+            b3 = 2;
           }
           else
           {
             k_space_symmetry = RECTANGULAR;
-            b1 = 1;
-            b2 = 2;
-            b3 = 0;
+            // b1 = 1;
+            // b2 = 2;
+            // b3 = 0;
+
+              b1 = 0;
+              b2 = 1;
+              b3 = 2;
           }
         }
         else

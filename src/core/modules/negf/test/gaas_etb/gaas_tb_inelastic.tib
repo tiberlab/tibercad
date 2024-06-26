@@ -7,6 +7,11 @@ Device
 
   material = GaAs 
 
+  Parallel
+  {  
+   mpi_processes_per_mesh = 1
+  }
+
    Doping { Nd = 1e15  type = donor  } 
 
    Region dd_source_region
@@ -77,7 +82,7 @@ Module driftdiffusion
 
   Contact drain
   {
-    voltage = $Vd[0.00]
+    voltage = $Vd[0.1]
   }
 
   Contact source
@@ -97,6 +102,8 @@ Module empirical_tb
 
   plot = (tbstates)
 
+  parallel_as_mesh = true
+
   Solver
   {
     num_valence_eigenvalues = 2   
@@ -111,7 +118,7 @@ Module empirical_tb
 
 Module negf
 {
-  plot = (elDensity)
+  plot = (Current)
   # plot = (LDOS)
   regions = bulk
 
@@ -121,9 +128,10 @@ Module negf
 
   Solver
   {
-    verbosity = 10
-    number_of_PL = 20
-    #size_of_PL = 8 #24 
+    parallel_k_groups = 1
+
+    verbosity = 51
+    number_of_PL = 5
 
     #Np_contour = (30,100)
     Np_real = 40
@@ -131,34 +139,50 @@ Module negf
     #deltaEc = 0.25
 
     #delta = 1e-3
-    #Emin = 0.30
-    #Emax = 0.70
+    Emin = 0.30
+    Emax = 0.70
     #Estep = 0.05
     #writeLDOS = 1
   }
 
   Physics
   {
-     hamiltonian etb {simulation = tb}
+    hamiltonian etb {simulation = tb}
+
+    Scattering
+    {
+      Inelastic
+      {
+        model = polar_optical_phonon
+        coupling = 1.0
+        max_scba_iterations = 6000
+        scba_tolerance = 1e-7
+        phonon_frequency = 0.05
+        eps_infinity = 1.0
+        eps_0 = 3.0
+        screening_length = 10
+        tridiagonal = true 
+      }
+    }
   }
   
-  #k_integration_current
+  k_integration_current
+  {
+    verbose = 3
+    #gamma_point_calculation = true
+    quadrature_rule = trapezoidal
+    #k_max = 0.50
+    number_of_elements = (1,1)
+  }
+
+  #k_integration_density
   #{
-  #  verbose = 3
+  #  verbose = 1 
   #  #gamma_point_calculation = true
   #  quadrature_rule = trapezoidal
   #  k_max = 0.50
   #  number_of_elements = (2,2)
   #}
-
-  k_integration_density
-  {
-    verbose = 1 
-    #gamma_point_calculation = true
-    quadrature_rule = trapezoidal
-    k_max = 0.50
-    number_of_elements = (2,2)
-  }
 
 
 }

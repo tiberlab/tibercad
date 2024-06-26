@@ -11,6 +11,7 @@
 #include "TiberLinearSystem.h"
 #include "Boundary.h"
 #include "KspaceIntegration.h"
+#include "Kspace.h"
 
 #include "libmesh/mesh_base.h"
 #include "libmesh/parallel.h"
@@ -80,7 +81,7 @@ class TBDLLOCAL Negf : public SimulationInterface
 
 
     //! Reimplement the MPI communicators setup (TEMPORARILY COMMENTED UNTIL API IS FINISHED)
-    //virtual void setup_mpi_comm(void);
+    virtual void setup_mpi_comm(void);
 
 
     //! We need to create a physical model
@@ -109,6 +110,8 @@ class TBDLLOCAL Negf : public SimulationInterface
     void finalize(void);
 
     void compute_current(void);
+    
+    std::vector<double> compute_layer_currents(void);
 
     void reorder_assemble(void);
 
@@ -148,10 +151,11 @@ class TBDLLOCAL Negf : public SimulationInterface
 
         double delta;
 
-	double deltaE;
+	      double deltaE;
 
         bool writeLDOS;
     };
+
 
 
 
@@ -175,6 +179,61 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     MyAssembly _reorder_assembly;
 
+    enum InteractionModels
+    {
+      DUMMY,
+      DEPHDIAGONAL,
+      DEPHATOMBLOCK,
+      DEPHOVERLAP,
+      POLAROPTICAL,
+      NONPOLAROPTICAL,
+      ACOUSTICINEL,
+    };
+
+    //! The structure containing elastic and inelastic scattering parameters. 
+    //! TODO: Some of these fields could be unnecessary
+    struct Interaction
+    {
+      // Specify which model in input
+      int model = DUMMY;
+
+      // Coupling strength
+      double coupling = 0.0;
+
+      // Iterations for self-consistent Born approximation
+      int scba_niter = 0;
+
+      // Tolerance for self-consistent Born approximation
+      double scba_tol = 0.0;
+
+      // List of orbitals per atom
+      std::vector<int> orbsperatm = std::vector<int>(1, 0);
+
+      // phonon frequency
+      double wq = 0.0;
+
+      // dielectric constant in the high freq limit
+      double eps_inf = 1.0;
+
+      // dielectric constant in the low freq
+      double eps_r = 1.0;
+
+      // screening paramter
+      double q0 = 0.0;
+
+      // deformation potential
+      double D0 = 0.0;
+
+      // whether Umklapp have to be added up
+      bool tUmklapp = false;
+
+      // whether k -> -k symmetry
+      bool tKSymmetry = true;
+
+      // whether tri-diagonal blocks are computed
+      bool tTridiagonal = true;
+    };
+
     double get_band_edge(const std::string& band) const;
     double get_band_edge(SimulationInterface* model, const std::string& band, const Elem* elem) const;
 
@@ -190,6 +249,8 @@ class TBDLLOCAL Negf : public SimulationInterface
     void init_efa_hamil(void);
 
     void init_etb_hamil(void);
+
+    void reinit_etb_module(void);
 
     //void setup_sb_hamil(void); 
    
@@ -222,6 +283,42 @@ class TBDLLOCAL Negf : public SimulationInterface
         const std::vector<double>& energy,
         const std::vector<std::vector<double>>& data,
         const std::string& header = "") const;
+
+    void get_equivalent_points(Kspace* kspace, const std::vector<DofField> kpoints, 
+         std::vector<DofField>& equiv_points, std::vector<int>& n_equiv);
+
+    //! Pass kpoints to NEGF, after calculating global and local indices, and the symmetrically equivalent points
+    //! of the irreducible wedge
+    void set_kpoints_reduced_BZ(KspaceIntegration* k_int);
+
+    //! Pass kpoints to NEGF, after calculating global and local indices, of the full BZ
+    void set_kpoints_full_BZ(KspaceIntegration* k_int);
+
+    //! Wrapper for the two set_kpoints methods
+    void set_kpoints(std::string solution);
+    
+    //! Passes the Hamiltonians to libNegf for each kpoint
+    void set_hamiltonians(void);
+
+    //! Pass information about atomistic structure such as: lattice vectors, coordinates of atoms, matrix_indices.
+    void init_basis(void);
+
+    std::vector<DofField> transform_to_fractional_coordinates(Kspace* kspace, const std::vector<DofField>& kpoints);
+
+    void get_coordinates(std::vector<DofField>& coordinates);
+
+    std::vector<DofField> get_lattice_vectors(std::vector<double>& r1, std::vector<double>& r2);
+    
+    std::vector<DofField> get_lattice_vectors(std::vector<double>& r1);
+
+    //! Parse the options for interactions from the input file.
+    void parse_scattering_options(void);
+
+    int get_scattering_model(std::string model);
+
+    void setup_interactions(void);
+
+    void print_interactions(void);
 
     Device* _device;
 
@@ -280,6 +377,31 @@ class TBDLLOCAL Negf : public SimulationInterface
     KspaceIntegration* _k_int_density;
 
     KspaceIntegration* _k_int_current;
+
+    bool _scattering;
+
+    std::vector<Interaction> _interactions;
+
+    //! area of the cell for computing inelastic coupling
+    double _cell_area;
+
+    //! discretization along the transport direction needed for computation of the elph coupling
+    double _deltaz;
+
+    //!k-dependent index for setting the Hamiltonian in the HS container
+    int _iK;
+
+    //! local number of Hamiltonians to be passed to libNEGF
+    int _n_Hk;
+
+    //! kpoints broadcasted to all processes, in absolute units (inverse length)
+    std::vector<DofField> _global_abs_kpoints;
+    
+    //! local indices that map the local kpoints to the global ones 
+    std::vector<int> _local_k_indices;
+
+    //! the lattice vectors to be passed to init_basis
+    std::vector<DofField> _lattice_vectors;
 
     // internal status for k_space_integration
     int _which_integration;

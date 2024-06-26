@@ -142,6 +142,9 @@ class AtomisticBasis
    */
   bool is_periodic(unsigned int direction) const;
 
+  // ! Returns the vector of periodicity along all axes
+  std::vector<bool> get_periodicity_vector(void) const; 
+
   //! Tells if the structure is periodic in any direction
   bool is_periodic(void) const;
 
@@ -334,6 +337,13 @@ AtomisticBasis::is_periodic(unsigned int direction) const
   return(_periodicity[direction]);
 }
 
+
+inline
+std::vector<bool>
+AtomisticBasis::get_periodicity_vector(void) const
+{
+  return(_periodicity);
+}
 
 
 

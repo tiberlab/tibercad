@@ -11,6 +11,9 @@
 #include "InitFailedException.h"
 #include "PotentialInterface.h"
 #include "KspaceIntegration.h"
+#include "Kspace.h"
+#include <mpi.h>
+
 
 #include "libnegf/NegfWrapper.h"
 
@@ -212,7 +215,7 @@ Negf::do_init(void)
   _qc_n_dofs.resize(_quantum_contacts.size(), 0);
   
   init_hamil();
-  
+
 }
 
 void
@@ -239,6 +242,17 @@ Negf::init_hamil(void)
   std::cout<<"(negf) sim: "<< sim <<std::endl;
 
   _ext_module = dynamic_cast<EigenvalueProblem*>(find_simulation(sim));
+
+  if (_ext_module == nullptr)
+  {
+    throw InitFailedException("NEGF module needs an external"
+        " provider of the Hamiltonian.");
+  }
+  else
+  {
+    if (!_ext_module->is_initialized())
+      _ext_module->init();
+  }
 
   if ( _hamil_type == "etb")  
   {
@@ -278,17 +292,7 @@ Negf::init_efa_hamil(void)
 
   unsigned int n_bands;
 
-  if (_ext_module == NULL)
-  {
-    throw InitFailedException("NEGF module needs an external"
-        " provider of the Hamiltonian.");
-  }
-  else
-  {
-    if (!_ext_module->is_initialized())
-      _ext_module->init();
-    n_bands = _ext_module->get_number_of_bands();
-  }
+  n_bands = _ext_module->get_number_of_bands();
 
   // Setup a simple effective mass Hamiltonian
   std::cout<<"(negf) create eq_sys with "<<n_bands<<" bands"<<std::endl;
@@ -343,7 +347,7 @@ Negf::init_etb_hamil(void)
      last_cont.insert(std::pair<ID,unsigned int>(it->first,-1) );
    }
 
-   unsigned int nPL = get_solver_options().get_option("number_of_PL", 0);
+   unsigned int nPL = get_solver_options().get_option("number_of_PL", 1);
 
    _end_blocks.resize(0);
    _end_blocks.resize(nPL, 0);
@@ -499,17 +503,21 @@ Negf::init_k_space(ModelOptions& kopts)
            std::cout<<"(Negf) lattice vec:"<<r1[0]<<" "<<r1[1]<<" "<<r1[2]<<std::endl;
            std::cout<<"(Negf) lattice vec:"<<r2[0]<<" "<<r2[1]<<" "<<r2[2]<<std::endl;
            kopts.set_option("r1",r1);  
-           kopts.set_option("r2",r2);  
+           kopts.set_option("r2",r2);
+           // Get lattice vectors for _init_basis routine
+           if (_scattering) _lattice_vectors = get_lattice_vectors(r1, r2);
            break;
 
          case 1:
-           r1[0] = cf*vectors[2](0); r2[1] = cf*vectors[2](1); r2[2] = cf*vectors[2](2);
-           kopts.set_option("r1",r1);  
+           r1[0] = cf*vectors[2](0); r1[1] = cf*vectors[2](1); r1[2] = cf*vectors[2](2);
+           kopts.set_option("r1",r1);
+           if (_scattering) _lattice_vectors = get_lattice_vectors(r1);
            break;
 
          default:
            break;
       }
+      
     }
     else
     {
@@ -548,6 +556,12 @@ Negf::init_k_space(ModelOptions& kopts)
               c = b;
           }
           kopts.set_option("r1", c);
+          if (_scattering) 
+          {
+            std::vector<double> r1(3);
+            for (int i=0; i<3; i++) r1[i] = c(i);
+            _lattice_vectors = get_lattice_vectors(r1);
+          }
           break;
 
         case 2:
@@ -570,6 +584,17 @@ Negf::init_k_space(ModelOptions& kopts)
           }
           kopts.set_option("r1", b);
           kopts.set_option("r2", c);
+          if (_scattering) 
+          {
+            std::vector<double> r1(3);
+            std::vector<double> r2(3);
+            for (int i=0; i<3; i++)
+            {
+              r1[i] = b(i);
+              r2[i] = c(i);
+            } 
+            _lattice_vectors = get_lattice_vectors(r1, r2);
+          }
           break;
 
         case 3:
@@ -592,21 +617,29 @@ Negf::init_k_space_integration(void)
   int dim = get_mesh().mesh_dimension();
 
   unsigned int k_dim = 3 - dim;
-  if (get_option("x-periodicity", false))
-    k_dim++;
-  if (get_option("y-periodicity", false))
-    k_dim++;
-  if (get_option("z-periodicity", false))
-    k_dim++;
 
-  k_dim = min(k_dim, 3u);
+  // Override the k_dim derived from mesh dimension, if it was specified in input
+  if (get_option("x-periodicity", false) || get_option("y-periodicity", false) || get_option("z-periodicity", false))
+  {
+    std::vector<bool> input_periodicity(3, false);
+    input_periodicity[0] = get_option("x-periodicity", false);
+    input_periodicity[1] = get_option("y-periodicity", false);
+    input_periodicity[2] = get_option("z-periodicity", false);
 
-  //TEMPORARY FIX (UNTIL API FOR CART_INIT HAS BEEN PUSHED TO REPO)
-  libMesh::Parallel::Communicator kspace_comm;
-  KspaceIntegration::create_communicator(this->get_communicator(),
-                                          this->get_solver_communicator(),
-                                          kspace_comm);
+    k_dim = std::accumulate(input_periodicity.begin(), input_periodicity.end(), 0);
+  }
 
+  // For ETB we can get the k-dimension directly from the atomistic structure (periodicity information)
+  if ( _hamil_type == "etb" ) 
+  {
+    unsigned int k_dim_etb;
+    std::vector<bool> periodicity = _ext_module->get_atomistic_structure()->get_periodicity_vector();
+    k_dim_etb = std::accumulate(periodicity.begin(), periodicity.end(), 0);
+    // Check if it was defined in the input file
+    if (k_dim_etb != 0) k_dim = k_dim_etb;
+  }
+
+  k_dim = min(k_dim, 2u); // It cannot really be more than 2 with NEGF
 
   if (get_options().has_submodel("k_integration_density"))
   {
@@ -627,11 +660,8 @@ Negf::init_k_space_integration(void)
 
     init_k_space(kopts); 
 
-    // TEMPORARY
-    // _k_int_density = KspaceIntegration::create(this, &Negf::calculate_for_k_point, kopts,
-    //                                            _k_comm);
     _k_int_density = KspaceIntegration::create(this, &Negf::calculate_for_k_point, kopts,
-                                               kspace_comm);                                           
+                                              _k_comm);
 
     if (_k_int_density == NULL)
       throw InitFailedException("Could not create k-integration");
@@ -645,6 +675,7 @@ Negf::init_k_space_integration(void)
     ModelOptions& kopts = it->second;
 
     //kopts.set_option("mesh_units", get_mesh_units());
+
     kopts.set_option("k_space_dimension", k_dim);
     if (! kopts.find_option("verbose"))
     {
@@ -653,11 +684,8 @@ Negf::init_k_space_integration(void)
 
     init_k_space(kopts); 
     
-    // TEMPORARY
-    // _k_int_current = KspaceIntegration::create(this, &Negf::calculate_for_k_point, kopts,
-    //                                            _k_comm);
     _k_int_current = KspaceIntegration::create(this, &Negf::calculate_for_k_point, kopts,
-                                               kspace_comm);
+                                               _k_comm);
 
     if (_k_int_current == NULL)
       throw InitFailedException("Could not create k-integration");
@@ -698,7 +726,17 @@ Negf::setup_hamil(void)
     else
       _ext_module->get_H_csr(A, JA, IA, _perm);
 
-    _libnegf->set_H_csr(nrow, A, JA, IA); //add iKS
+    if (_scattering)
+    {
+      _libnegf->create_HS_container(_n_Hk);
+      _libnegf->set_H_csr(nrow, A, JA, IA, _iK+1); // +1 because Fortran is 1-indexed
+    }
+    else
+    {
+      _libnegf->create_HS_container(1);
+      _libnegf->set_H_csr(nrow, A, JA, IA, 1);
+    }
+    
 
     Messages::info("done.");
   }
@@ -720,14 +758,28 @@ Negf::setup_hamil(void)
       _ext_module->get_S_csr(S, JS, IS, _perm);
 
 
-    _libnegf->set_S_csr(nrow, S, JS, IS);
+    if (_scattering)
+    {
+      _libnegf->set_S_csr(nrow, S, JS, IS, _iK+1);
+    }
+    else
+    {
+      _libnegf->set_S_csr(nrow, S, JS, IS, 1);
+    }
 
     Messages::info("done.");
   }
   else
   {
-    _libnegf->set_S_id(nrow);
-  }  
+    if (_scattering)
+    {
+      _libnegf->set_S_id(nrow, _iK+1);
+    }
+    else
+    {
+      _libnegf->set_S_id(nrow, 1);
+    }
+  }
 
   // we have to reinitialize some structures in libnegf
   if (get_option("print_matrices", false))
@@ -794,8 +846,6 @@ Negf::setup_negf(void)
 
   _libnegf->set_output_path(get_output_directory());
 
-  //Set MPI communicator - TO BE DELETED
-  // _libnegf->set_mpi_comm(this->get_solver_communicator().get());
   // initialize the contacts
   _libnegf->init_contacts(_quantum_contacts.size());
 
@@ -972,6 +1022,30 @@ Negf::setup_negf(void)
     _libnegf->set_ldos_indices(0, vector<int>(1, -1));
   }
 
+  if (_scattering)
+  {
+    // This works only after init_k_space_integration()
+    init_basis();
+
+    //Set orbsperatom in elastic scattering, only if some interactions were defined
+    if (_interactions.size() > 0 && _interactions[0].model != DUMMY)
+    {
+      std::vector<int> orbitals_per_atom(_device_n_dofs, n_vars);
+
+      for (int i = 0; i < _interactions.size(); i++)
+      {
+        Interaction* inter = &_interactions[i];
+        if (inter->model == DEPHATOMBLOCK || inter->model == DEPHOVERLAP)
+        {
+          inter->orbsperatm.resize(_device_n_dofs, n_vars);
+          inter->orbsperatm = orbitals_per_atom;
+        }
+      }
+    }
+
+    setup_interactions();
+  }
+
   //if (opt.verbosity > 60) _libnegf->partition_info();
 
 }
@@ -1002,6 +1076,23 @@ Negf::compute_current(void)
   cout << "curr from negf : " << current[0] << endl;
 }
 
+std::vector<double>
+Negf::compute_layer_currents(void)
+{
+  _libnegf->set_verbose(opt.verbosity);
+
+  int nPL = _end_blocks.size();
+  std::vector<double> layer_current(nPL-1);
+
+  _libnegf->layer_current(layer_current, "eV", "A");
+  std::cout << "Layer currents from negf :" << std::endl;
+  for (int i=0; i<layer_current.size(); i++)
+  {
+    std::cout << layer_current[i] << std::endl;
+  }
+  return layer_current;
+}
+
 void
 Negf::do_solve(void)
 {
@@ -1022,19 +1113,35 @@ Negf::do_solve(void)
 
     if (get_options().has_submodel("k_integration_density"))
     {
-      _which_integration = INTDENSITYEL;
-      _k_int_density->solve();
-      
-      transfer_density(_k_int_density->get_solution(), "el");
+      if (_scattering)
+      {
+        unsigned int n_vars = _ext_module->get_number_of_bands();
+        std::vector<double> density(_device_n_dofs * n_vars, 0.0);
+
+        set_kpoints("elDensity");
+        set_hamiltonians();
+        // _libnegf->compute_density_inelastic(density, "el");
+        // transfer_density();
+      }
+      else
+      {
+        _which_integration = INTDENSITYEL;
+        _k_int_density->solve();
+        transfer_density(_k_int_density->get_solution(), "el");
+      }
 
     }
     else
     {
+      if (_scattering)
+      {
+        Messages::warning("Scattering block was added without density k-integration.");
+      }
+      
       _k_vec.zero();
 
       setup_hamil();
 
-      //unsigned int n_vars = _sys_H->n_vars();
       unsigned int n_vars = _ext_module->get_number_of_bands();
       std::vector<double> density(_device_n_dofs * n_vars, 0.0); //device_n_dofs = n nodi del device
 
@@ -1083,15 +1190,29 @@ Negf::do_solve(void)
 
     if (get_options().has_submodel("k_integration_density"))
     {
-      _which_integration = INTDENSITYHL;
+      if (_scattering)
+      {
+        unsigned int n_vars = _ext_module->get_number_of_bands();
+        std::vector<double> density(_device_n_dofs * n_vars, 0.0);
 
-      _k_int_density->solve();
-
-      transfer_density(_k_int_density->get_solution(), "hl");
-
+        set_kpoints("hlDensity");
+        set_hamiltonians();
+        // _libnegf->compute_density_inelastic(density, "hl");
+      }
+      else
+      {
+        _which_integration = INTDENSITYHL;
+        _k_int_density->solve();
+        transfer_density(_k_int_density->get_solution(), "hl");
+      }
     }
     else
     {
+      if (_scattering)
+      {
+        Messages::warning("Scattering block was added without density k-integration.");
+      }
+
       _k_vec.zero();
       
       setup_hamil();
@@ -1140,26 +1261,55 @@ Negf::do_solve(void)
 
   if ( plot_solution("Current") )
   {
-    Messages::info("Computing Current");
-
-    if (get_options().has_submodel("k_integration_current"))
+    if(_scattering)
     {
-      _which_integration = INTCURRENT;
+      Messages::info("Computing Layer Current");
+      set_kpoints("Current");
+      set_hamiltonians();
 
-      _k_int_current->solve();
+      std::vector<double> layer_curr = compute_layer_currents();
 
-      current = _k_int_current->get_solution();
+      if (plot_solution("LDOS"))
+      {
+        Messages::info("Plot LDOS");
 
+        // get_energies
+        vector<double> erg;
+        _libnegf->get_energies(erg);
+
+        vector<vector<double>> ldos;
+        _libnegf->get_ldos(ldos);
+
+        plot_LDOS(erg, ldos, "");
+      }
+      
+      current.clear();
+      current.resize(2,0.0);
+      current[0] = layer_curr[0];
+      current[1] = layer_curr[layer_curr.size()-1];
     }
     else
     {
-       _k_vec.zero();
+      Messages::info("Computing Current");
+      if (get_options().has_submodel("k_integration_current"))
+      {
+        _which_integration = INTCURRENT;
 
-       setup_hamil();
+        _k_int_current->solve();
 
-       compute_current();
+        current = _k_int_current->get_solution();
 
-       finalize();
+      }
+      else
+      {
+        _k_vec.zero();
+
+        setup_hamil();
+
+        compute_current();
+
+        finalize();
+      }
     }
 
     double area_factor = 1.0;
@@ -1297,7 +1447,7 @@ Negf::plot_LDOS(const std::vector<double>& energies,
       double node_dos = 0.0;
       for (int b = 0; b < bands; ++b)
         node_dos += ldos[i][j + b];
-      of << node_dos << " ";
+      of << node_dos << ", ";
     }
     // of << "\n";
     of << "],\n";
@@ -1584,45 +1734,45 @@ Negf::calculate_for_k_point(const Point& k_point,
 
      case INTCURRENT:
      {
-       field.clear();
-       compute_current();
+      field.clear();
+      compute_current();
 
-       // get_energies
-       vector<double> erg;
-       _libnegf->get_energies(erg);
+      // get_energies
+      vector<double> erg;
+      _libnegf->get_energies(erg);
 
-       vector<vector<double>> transmission;
-       // get transmission
-       _libnegf->get_transmission(transmission);
+      vector<vector<double>> transmission;
+      // get transmission
+      _libnegf->get_transmission(transmission);
 
-       ostringstream os;
-       os << "transmission";
-       //if (k_point.norm() > 1e-6)
-       os << "_k=(" << k_point(0) << ","
-           << k_point(1) << "," << k_point(2) << ")";
-       os << ".dat";
+      ostringstream os;
+      os << "transmission";
+      //if (k_point.norm() > 1e-6)
+      os << "_k=(" << k_point(0) << ","
+          << k_point(1) << "," << k_point(2) << ")";
+      os << ".dat";
 
-       ostringstream header;
-       header << "# Transmission at k = "
+      ostringstream header;
+      header << "# Transmission at k = "
               << "(" << k_point(0) << "," << k_point(1) << ","
               << k_point(2) << ")\n"
               << "#\n"
               << "# energy T\n";
 
-       print_energy_resolved(os.str(), erg, transmission, header.str());
+      print_energy_resolved(os.str(), erg, transmission, header.str());
 
-       //double curr = _libnegf->current();
-       //_contact_potential[]
-       //field.push_back(curr);
-       //field.push_back(-curr);
-       field = current;
+      //double curr = _libnegf->current();
+      //_contact_potential[]
+      //field.push_back(curr);
+      //field.push_back(-curr);
+      field = current;
 
-       error = current[0];
-       break;
+      error = current[0];
+      break;
      }
    }
 
-
+   // WARNING: for now it works only when calling Currents
    if (plot_solution("LDOS"))
    {
      Messages::info("Plot LDOS");
@@ -1843,7 +1993,7 @@ Negf::transfer_density_etb(const std::vector<double>& density, const std::string
     }
   }
 
-  // the cutoff distance for near atoms in A
+  // the cutoff distance for neighbouring atoms in A
   double cutoff = _ext_module->get_options().get_option("projection_length", 5.0);
 
   MeshBase::const_element_iterator el = this->active_local_elements_begin();
@@ -2040,6 +2190,7 @@ Negf::parse_options(void)
   opt.writeLDOS = sol_opt.get_option("writeLDOS", opt.writeLDOS);
 
 }
+
 
 void
 Negf::do_setup_solution_variables(void)
@@ -2861,7 +3012,7 @@ double Negf::get_band_edge(const std::string& band) const
   }
   else
   {
-    model = NULL;
+    model = nullptr;
   }
 
   MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
@@ -2919,8 +3070,6 @@ inline double Negf::get_band_edge(SimulationInterface* model, const std::string&
 
   return bedge;
 }
-
-
 
 
 const Boundary*
@@ -3008,27 +3157,579 @@ Negf::project_density(const Elem* elem, const Point& point, const std::vector<do
 }
 
 
+void
+Negf::set_kpoints(std::string solution)
+{
+  if (solution == "Current")
+  {
+    ModelOptions::submodel_iterator it(get_options().submodels_begin("k_integration_current"));
+    ModelOptions kopts;
+    kopts = it->second;
+    if (kopts.get_option("reduced_BZ", true))
+    {
+      set_kpoints_reduced_BZ(_k_int_current);
+    }
+    else
+    {
+      set_kpoints_full_BZ(_k_int_current);
+    }
+  }                                                       
+  if (solution == "elDensity" || solution == "hlDensity")
+  {
+    ModelOptions::submodel_iterator it(get_options().submodels_begin("k_integration_density"));
+    ModelOptions kopts;
+    kopts = it->second;
+    if (kopts.get_option("reduced_BZ", true))
+    {
+      set_kpoints_reduced_BZ(_k_int_density);
+    }
+    else
+    {
+      set_kpoints_full_BZ(_k_int_density);
+    }
+  }
+}
+
+
+void
+Negf::set_kpoints_full_BZ(KspaceIntegration* k_int)
+{
+  bool uneven_distributed;
+  Kspace* negf_kspace = k_int->get_k_space();
+
+  //Get kpoints and weights and distribute them
+  map<Point, double> kpoints = k_int->get_kpoints_and_weights();
+  map<Point, double> extended_kpoints;
+
+  map<Point, double>::iterator kb(kpoints.begin());
+  const map<Point, double>::iterator kend(kpoints.end());
+
+  double degeneracy_fact = negf_kspace->get_degeneracy_factor();
+  
+  for (; kb != kend; kb++)
+  {
+    Point kpt = kb->first;
+    double w = kb->second;
+
+    std::vector<Point> eq_points;
+    negf_kspace->equivalent_points(kpt, eq_points, true);
+
+    for (auto&& eq_pt : eq_points)  extended_kpoints[eq_pt] = w / degeneracy_fact;
+  }
+
+  map<DofField, double> global_kpoints_map = k_int->broadcast_kpoints(_k_comm, extended_kpoints);
+  _local_k_indices = k_int->distribute_kpoints(_k_comm, global_kpoints_map, uneven_distributed);
+
+  if (uneven_distributed)
+  {
+    std::ostringstream os;
+    os << "The k-points are unevenly distributed along processes. Please change the number of processes,";
+    os << " the number of k-points, or the `parallel_k_groups` option to distribute them equally.";
+    throw RuntimeException(os.str());
+  }
+
+  //Extract kpoints and weights separately from the map
+  std::vector<double> kweights(global_kpoints_map.size());
+  _global_abs_kpoints.resize(global_kpoints_map.size());
+
+  map<DofField, double>::iterator kp_it(global_kpoints_map.begin());
+  const map<DofField, double>::iterator kp_end(global_kpoints_map.end());
+  int i=0;
+  for (; kp_it != kp_end; kp_it++)
+  {
+    DofField kp = kp_it->first;
+    double w = kp_it->second;
+    kweights[i] = w;
+    _global_abs_kpoints[i] = kp;
+    i++;
+  }
+    
+  // libNEGF wants kpoints in fractional coordinates
+  std::vector<DofField> global_frac_kpoints = transform_to_fractional_coordinates(negf_kspace, _global_abs_kpoints);
+
+  std::vector<DofField>  equivalent_points(1, std::vector<double>(3, 0.0));
+  std::vector<int> n_equivalent(1, 1);
+
+  _libnegf->set_kpoints(global_frac_kpoints, kweights, _local_k_indices, equivalent_points, n_equivalent, 0);
+}
+
+
+void
+Negf::set_kpoints_reduced_BZ(KspaceIntegration* k_int)
+{
+  bool uneven_distributed;
+  Kspace* negf_kspace = k_int->get_k_space();
+
+  //Get kpoints and weights and distribute them
+  map<Point, double> kpoints = k_int->get_kpoints_and_weights();
+  map<DofField, double> global_kpoints_map = k_int->broadcast_kpoints(_k_comm, kpoints);
+  _local_k_indices = k_int->distribute_kpoints(_k_comm, global_kpoints_map, uneven_distributed);
+
+  if (uneven_distributed)
+  {
+    std::ostringstream os;
+    os << "The k-points are unevenly distributed along processes. Please change the number of processes,";
+    os << " the number of k-points, or the `parallel_k_groups` option to distribute them equally.";
+    throw RuntimeException(os.str());
+  }
+
+  //Extract kpoints and weights separately from the map
+  std::vector<double> kweights(global_kpoints_map.size());
+  _global_abs_kpoints.resize(global_kpoints_map.size());
+
+  double degeneracy_fact = negf_kspace->get_degeneracy_factor();
+
+  map<DofField, double>::iterator kp_it(global_kpoints_map.begin());
+  const map<DofField, double>::iterator kp_end(global_kpoints_map.end());
+  int i=0;
+  for (; kp_it != kp_end; kp_it++)
+  {
+    DofField kp = kp_it->first;
+    double w = kp_it->second;
+    kweights[i] = w / degeneracy_fact;
+    _global_abs_kpoints[i] = kp;
+    i++;
+  }
+  
+  //Find equivalent points
+  std::vector<DofField> equivalent_points;
+  std::vector<int> n_equivalent;
+  get_equivalent_points(negf_kspace, _global_abs_kpoints, equivalent_points, n_equivalent);
+  
+  // libNEGF wants kpoints in fractional coordinates
+  std::vector<DofField> global_frac_kpoints = transform_to_fractional_coordinates(negf_kspace, _global_abs_kpoints);
+  std::vector<DofField> frac_eqv_points = transform_to_fractional_coordinates(negf_kspace, equivalent_points);
+
+  _libnegf->set_kpoints(global_frac_kpoints, kweights, _local_k_indices, frac_eqv_points, n_equivalent, 1);
+}
+
+
+std::vector<DofField> 
+Negf::transform_to_fractional_coordinates(Kspace* kspace, const std::vector<DofField>& abs_kpoints)
+{
+  std::vector<DofField> frac_kpoints(abs_kpoints.size(), DofField(3, 0.0));
+  int k = 0;
+
+  for (auto&& kp_std : abs_kpoints)
+  {
+    Point kp;
+    for (int i=0; i<3; i++) kp(i) = kp_std[i];
+    kspace->inverse_transform(kp);
+    for (int i=0; i<3; i++) frac_kpoints[k][i] = kp(i);
+    k++;
+  }
+  return frac_kpoints;
+}
+
+
+void
+Negf::get_equivalent_points(Kspace* kspace, const vector<DofField> kpoints, 
+      vector<DofField>& equiv_points, vector<int>& n_equiv)
+{
+
+  n_equiv.resize(kpoints.size());
+  
+  for(int i=0; i<kpoints.size(); i++)
+  { 
+    
+    DofField kp_std = kpoints[i];
+    const Point kp(kp_std[0], kp_std[1], kp_std[2]);
+
+    // Get the equivalent points for a given kpoint
+    vector<Point> points;
+    kspace->equivalent_points(kp, points, true);
+
+    //Remove the last equivalent point, which coincides with the original kpoint
+    points.pop_back();
+
+    //If there are equiv. points fill the std::vector
+    if (points.size() != 0)
+    {
+      for (auto&& p : points)
+      {
+        DofField std_p(3);
+        for (int j=0; j<3; j++) std_p[j] = p(j);
+        equiv_points.push_back(std_p);
+      }
+    }
+
+    n_equiv[i] = points.size();
+  }
+  return;
+}
+
+
+std::vector<DofField>
+Negf::get_lattice_vectors(std::vector<double>& r1, std::vector<double>& r2)
+{
+  Tensor1 vec1_real;
+  Tensor1 vec2_real;
+
+  for (short i = 0; i < 3; i++)
+    vec1_real(i + 1) = r1[i]; // /(Constants::bohr_radius / mesh_units);
+
+  for (short i = 0; i < 3; i++)
+    vec2_real(i + 1) = r2[i]; // /(Constants::bohr_radius / mesh_units);
+
+  Tensor1 vec3_real = vectorProduct(vec1_real, vec2_real);
+  vec3_real = vec3_real/norm(vec3_real);
+
+  std::vector<DofField> lattice_vectors(3);
+  // libNEGF wants them in column order
+  for (int j = 0; j < 3; j++)
+  {
+    lattice_vectors[j].resize(3);
+    lattice_vectors[j][0] = vec1_real(j+1);
+    lattice_vectors[j][1] = vec2_real(j+1);
+    lattice_vectors[j][2] = vec3_real(j+1);
+  }
+
+  return lattice_vectors;
+}
+
+
+std::vector<DofField>
+Negf::get_lattice_vectors(std::vector<double>& r1)
+{
+  Tensor1 vec1_real;
+
+  for (short i = 0; i < 3; i++)
+    vec1_real(i + 1) = r1[i];
+
+  Tensor1 vec2_real;
+  vec2_real(1) = 0;
+  vec2_real(2) = -vec1_real(3);
+  vec2_real(3) =  vec1_real(2);
+  
+  Tensor1 vec3_real = vectorProduct(vec1_real, vec2_real);
+  vec3_real = vec3_real/norm(vec3_real);
+
+  std::vector<DofField> lattice_vectors(3);
+  // libNEGF wants them in column order
+  for (int j = 0; j < 3; j++)
+  {
+    lattice_vectors[j].resize(3);
+    lattice_vectors[j][0] = vec1_real(j+1);
+    lattice_vectors[j][1] = vec2_real(j+1);
+    lattice_vectors[j][2] = vec3_real(j+1);
+  }
+
+  return lattice_vectors;
+}
+
+
+void
+Negf::init_basis(void)
+{
+  std::vector<DofField> coordinates(3);
+  for (int i = 0; i < 3; i++) coordinates[i].resize(_device_n_dofs);
+  get_coordinates(coordinates);
+
+  // Transport direction for TC is x but default in NEGF is z, so we pass it as an integer.
+  // Remember: Fortran is 1-indexed
+  int transport_direction = 1;
+  
+  // Create map from atoms (or dofs) to hamiltonian matrix
+  std::vector<int> matrix_indices(_device_n_dofs);
+  matrix_indices[0] = 1;
+  int n_bands = _ext_module->get_number_of_bands(); // In case of ETB, this is number of orbitals
+  for (int i = 1; i < _device_n_dofs; i++)
+  {
+    matrix_indices[i] = matrix_indices[i-1] + n_bands;
+  }
+  _libnegf->init_basis(coordinates, matrix_indices, _lattice_vectors, transport_direction);
+
+  return;
+}
+
+
+void
+Negf::get_coordinates(vector<DofField>& coordinates)
+{
+  if (_hamil_type == "efa")
+  {
+    unsigned int bands = _ext_module->get_number_of_bands();
+    DofMap& dof_map = _sys_H->get_dof_map();
+    std::vector<unsigned int> dof_indices;    
+
+    MeshBase::const_element_iterator       nd     = this->active_local_elements_begin();
+    const MeshBase::const_element_iterator nd_end = this->active_local_elements_end();
+    for ( ; nd != nd_end; ++nd)
+    {
+      const Elem* elem = *nd;
+      dof_map.dof_indices(elem, dof_indices, 0);
+
+      for (unsigned int n = 0; n < elem->n_nodes(); ++n)
+      {
+        // coords in nanometer (consistent with lattice vectors)
+        double equ =  get_mesh_units() * 1e9;
+        unsigned int id = _inv_perm[dof_indices[n]];
+        // coordinates[id / bands].resize(3);
+        //libnegf                    tiberCAD
+        coordinates[0][id / bands] = elem->point(n)(0) * equ;
+        coordinates[1][id / bands] = elem->point(n)(1) * equ;
+        coordinates[2][id / bands] = elem->point(n)(2) * equ;
+      }
+    }
+  }
+
+  if (_hamil_type == "etb")
+  {
+    AtomisticStructure* as = _ext_module->get_atomistic_structure();
+    unsigned int N_atoms = _device_n_dofs;
+    std::vector<Atom>& atoms = as->get_structure_atoms();
+
+    for (int i=0; i<N_atoms; i++)
+    {
+      // coords from Angstrom to nanometer (consistent with lattice vectors)
+      double equ = 0.1;
+      //libnegf                    tiberCAD
+      coordinates[0][i] = atoms[i].get_position(0) * equ;
+      coordinates[1][i] = atoms[i].get_position(1) * equ;
+      coordinates[2][i] = atoms[i].get_position(2) * equ;
+
+    }
+  }
+  return;
+}
+
+
 // Overrides the method in SimulationInterface.C
-// WORK IN PROGRESS (INELASTIC API)
-// void
-// Negf::setup_mpi_comm(void)
-// {
- 
-//   // // Set this communicator as the device one, we don't need it to be different
-//   this->set_solver_communicator(this->get_communicator());
+void
+Negf::setup_mpi_comm(void)
+{
+
+  // They need to be parsed here because we need the _scattering flag already at this point
+  parse_scattering_options();
+
+  if (_scattering)
+  {
+    // ModelOptions& device_opts = _device->get_options();
+    // if (device_opts.has_submodel("Parallel"))
+    // {
+    //   ModelOptions& mpi_opts = device_opts.submodels_begin("Parallel")->second;
+    //   unsigned int nGroups = mpi_opts.get_option("negf_k_groups", 1);
+    // }
+    // else
+    // {
+    //   Messages::error("(negf) The inelastic NEGF code needs MPI to run. "
+    //   "Please include the `Parallel` block in the `Device section`");
+    // }
+    unsigned int nGroups = get_solver_options().get_option("parallel_k_groups", 1);
+    MPI_Comm bare_kcomm;
+    MPI_Comm bare_cartcomm;
+
+    // Initialize cartesian grid. Return cart- and k- communicators
+    _libnegf->mpi_cart_init(this->get_communicator().get(), nGroups, bare_cartcomm, bare_kcomm);
+
+    // // Initialiaze libMesh Communicators
+    _k_comm.duplicate(bare_kcomm);
+    _cart_comm.duplicate(bare_cartcomm);
+
+    this->set_communicator(_cart_comm);
+   
+  }
+  else
+  {
+    this->set_solver_communicator(this->get_mesh().comm());
+    KspaceIntegration::create_communicator(this->get_communicator(),
+                                          this->get_solver_communicator(),
+                                          _k_comm);
+  }
+  return;
+}
+
+
+void
+Negf::parse_scattering_options(void)
+{
+  ModelOptions::submodel_iterator phys_opts(get_options().submodels_begin("Physics"));
+  ModelOptions& phys_block = phys_opts->second;
+
+  _deltaz = phys_block.get_option("delta_z", 0.01);
+  _cell_area = phys_block.get_option("cell_area", 1.0);
+
+  if(phys_block.has_submodel("Scattering"))
+  {
+    ModelOptions::submodel_iterator scatt_it(phys_block.submodels_begin("Scattering"));
+    ModelOptions& scattering_block = scatt_it->second;
+
+    if (scattering_block.has_submodel("Elastic"))
+    {
+      ModelOptions::submodel_iterator el_it(scattering_block.submodels_begin("Elastic"));
+      const ModelOptions::submodel_iterator el_it_end(scattering_block.submodels_end("Elastic"));
+      
+      for (; el_it != el_it_end; el_it++)
+      {
+        Interaction inter;
+        const ModelOptions& el_options = el_it->second;
+
+        std::string input_model = el_options.get_option("model", "DUMMY");
+        inter.model = get_scattering_model(input_model);
+        if (inter.model == DUMMY) throw InitFailedException("Elastic scattering block was added without a valid model.");
+
+        inter.coupling = el_options.get_option("coupling", inter.coupling);
+        inter.scba_niter = el_options.get_option("max_scba_iterations", inter.scba_niter);
+        inter.scba_tol = el_options.get_option("scba_tolerance", inter.scba_tol);
+        //orbsperatom to be filled after hamiltonian has been set up
+
+        _interactions.push_back(inter);
+      }
+    }
+
+    if (scattering_block.has_submodel("Inelastic"))
+    {
+      ModelOptions::submodel_iterator inel_it(scattering_block.submodels_begin("Inelastic"));
+      const ModelOptions::submodel_iterator inel_it_end(scattering_block.submodels_end("Inelastic"));
+      for (; inel_it != inel_it_end; inel_it++)
+      {
+        Interaction inter;
+        const ModelOptions& inel_options = inel_it->second;
+
+        std::string input_model = inel_options.get_option("model", "DUMMY");
+        inter.model = get_scattering_model(input_model);
+        if (inter.model == DUMMY) throw InitFailedException("Inelastic scattering block was added without a valid model.");
+
+        inter.coupling = inel_options.get_option("coupling", inter.coupling);
+        inter.scba_niter = inel_options.get_option("max_scba_iterations", inter.scba_niter);
+        inter.scba_tol = inel_options.get_option("scba_tolerance", inter.scba_tol);
+
+        inter.wq = inel_options.get_option("phonon_frequency", inter.wq);
+        inter.eps_inf = inel_options.get_option("eps_infinity", inter.eps_inf);
+        inter.eps_r = inel_options.get_option("eps_0", inter.eps_r);
+        inter.D0 = inel_options.get_option("deformation_potential", inter.D0);
+        inter.q0 = inel_options.get_option("screening_length", inter.q0);
+        inter.tTridiagonal = inel_options.get_option("tridiagonal", inter.tTridiagonal);
+
+        _interactions.push_back(inter);
+      }
+    }
+    _scattering = true;
+  }
+  else
+  {
+    _scattering = false;
+  }
+
+  return;
+}
+
+
+void
+Negf::print_interactions(void)
+{
+  for (int i = 0; i < _interactions.size(); i++)
+  {
+    Interaction inter = _interactions[i];
+    std::cout << "Interaction " << i << ":"<< std::endl;
+    std::cout << "Model: " << inter.model << std::endl;
+    std::cout << "Coupling: " << inter.coupling << std::endl;
+    std::cout << "max_scba_iterations: " << inter.scba_niter <<std::endl;
+    std::cout << "scba_tolerance: " << inter.scba_tol <<std::endl;
+    std::cout << "orbitals per atom: "; for (auto&& v: inter.orbsperatm) std::cout << v << " "; std::cout << std::endl;
+    std::cout << "frequency: " << inter.wq <<std::endl;
+    std::cout << "eps_r: " << inter.eps_r <<std::endl;
+    std::cout << "eps_inf: " << inter.eps_inf <<std::endl;
+    std::cout << "q0: " << inter.q0 <<std::endl;
+    std::cout << "D0: " << inter.D0 <<std::endl;
+    std::cout << "tridiagonal: " << inter.tTridiagonal <<std::endl;
+    std::cout << std::endl;
+  }
+  return;
+}
+
+
+int
+Negf::get_scattering_model(std::string input_model)
+{
+  int model;
+
+  if (input_model == "dephasing_diagonal") model = DEPHDIAGONAL;
+  else if (input_model == "dephasing_block") model = DEPHATOMBLOCK;
+  else if (input_model == "dephasing_overlap") model = DEPHOVERLAP;
+  else if (input_model == "polar_optical_phonon") model = POLAROPTICAL;
+  else if (input_model == "non_polar_optical_phonon") model = NONPOLAROPTICAL;
+  else if (input_model == "acoustic_phonon") model = ACOUSTICINEL;
+  else model = DUMMY;
   
-//   unsigned int nGroups = get_solver_options().get_option("parallel_groups", 1);
+  return model;
+}
 
-//   _libnegf->mpi_cart_init(this->get_communicator().get(), nGroups, _cart_comm.get(), _k_comm.get());
-  
-//   // In dftb+, they reset the global communicator with the cartesian one
-//   this->set_communicator(_cart_comm);
 
-//   return;
-// }
+void
+Negf::setup_interactions(void)
+{
+  double kbT = SimulationOptions::temperature * Constants::kb;
+  double cell_area = _cell_area;
+  double deltaz = _deltaz;
+  double elastic_tol = 10.0;
+  double inelastic_tol = 10.0;
 
-// Commented code for creating a new option block
-// if(get_options().has_submodel("New block"))
-// ModelOptions::submodel_iterator it(get_options().submodels_begin("New block"));
-// const ModelOptions& opts = it->second;
-// opts.get_option("option_in_block",varaible);
+  ostringstream os;
+
+  for (int i = 0; i < _interactions.size(); i++)
+  {
+    Interaction inter = _interactions[i];
+
+    int Natoms = _device_n_dofs;
+    int Norbs = _ext_module->get_number_of_bands();
+    std::vector<double> coup(Natoms*Norbs, inter.coupling);
+
+    switch (inter.model)
+    {
+      case DEPHDIAGONAL:
+        os << "Setting local fully diagonal elastic dephasing model" << std::endl;
+        Messages::info(os.str()); os.str("");
+        _libnegf->set_elph_dephasing(coup, inter.scba_niter);
+        if ( inter.scba_tol < elastic_tol ) elastic_tol = inter.scba_tol;
+        break;
+      case DEPHATOMBLOCK:
+        os << "Setting local block diagonal (BD) elastic dephasing model" << std::endl;
+        Messages::info(os.str()); os.str("");
+        _libnegf->set_elph_block_dephasing(coup, inter.orbsperatm, inter.scba_niter);
+        if ( inter.scba_tol < elastic_tol ) elastic_tol = inter.scba_tol;
+        break;
+      case DEPHOVERLAP:
+        os << "Setting overlap mask (OM) block diagonal elastic dephasing model" << std::endl;
+        Messages::info(os.str()); os.str("");
+        _libnegf->set_elph_s_dephasing(coup, inter.orbsperatm, inter.scba_niter);
+        if ( inter.scba_tol < elastic_tol ) elastic_tol = inter.scba_tol;
+        break;
+      case POLAROPTICAL:
+        os << "Setting polar-optical inelastic scattering model" << std::endl;
+        Messages::info(os.str()); os.str("");
+        _libnegf->set_elph_polaroptical(coup, inter.wq, kbT, deltaz, inter.eps_r, 
+                  inter.eps_inf, inter.q0, cell_area, inter.scba_niter, inter.tTridiagonal);
+        if ( inter.scba_tol < inelastic_tol ) inelastic_tol = inter.scba_tol;
+        break;
+      case NONPOLAROPTICAL:
+        os << "Setting non polar-optical inelastic scattering model" << std::endl;
+        Messages::info(os.str()); os.str("");
+        _libnegf->set_elph_nonpolaroptical(coup, inter.wq, kbT, deltaz, inter.D0, 
+                  cell_area, inter.scba_niter, inter.tTridiagonal);
+        if ( inter.scba_tol < inelastic_tol ) inelastic_tol = inter.scba_tol;
+        break;
+      
+      default:
+        os << "Electron-phonon model in Scattering block " << i << " is not yet supported" << std::endl;
+        throw std::runtime_error(os.str());
+        break;
+    }
+
+  }
+  _libnegf->set_scba_tolerances(elastic_tol, inelastic_tol);
+}
+
+void
+Negf::set_hamiltonians(void)
+{
+  _n_Hk = _local_k_indices.size();
+  for (_iK=0; _iK < _n_Hk; _iK++)
+  {
+    int k_index = _local_k_indices[_iK];
+    DofField kpoint = _global_abs_kpoints[k_index];
+    for(short i=0;i<3;i++) _k_vec(i) = kpoint[i];
+    setup_hamil();
+    finalize();
+  }
+}

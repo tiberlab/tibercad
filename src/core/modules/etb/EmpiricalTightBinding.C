@@ -149,8 +149,37 @@ ETB::UptSolverOptions::~UptSolverOptions(void)
 }
 
 
+// Overrides the method in SimulationInterface.C
+void
+ETB::setup_mpi_comm(void)
+{
+  // This first part is just the same as the method of the parent class
+  std::string name(get_options().get_option("atomistic_structure", ""));
+  AtomisticStructure* str;
+  if (!name.empty())
+    str = get_environment().get_device().get_atomistic_structure(name);
+  else
+    str = nullptr;
+  
+  if (this->has_environment())
+  {
+    if (str != nullptr)
+      this->set_solver_communicator(this->get_communicator());
+    else
+      throw InitFailedException("ETB: an atomistic structure is needed.");
+  }
+  else
+    this->set_communicator(TiberCad::get_mpi_comm());
 
-
+  // If given the option, just assign the same number of processes as the mesh.
+  // Necessary to use in combination with new Negf module
+  if (get_options().get_option("parallel_as_mesh", false))
+  {
+    Messages::info("(" + get_name() + ") Setting MPI mesh communicator as the solver communicator");
+    this->set_solver_communicator(this->get_mesh().comm());    
+  }
+  return;
+}
 
 
 //-------------------------------------------------------------------------
@@ -243,6 +272,41 @@ ETB::do_init(void){
     linsys.add_variable("hdens", libMeshEnums::FIRST, &(this->get_region_ids()));
     linsys.init();
 
+    do_reinit();
+}
+
+void ETB::set_band_extrema(void)
+{
+  ModelOptions& solopts = get_solver_options();
+
+  // Get the minimum CB and maximum VB edges
+  if (!solopts.find_option("guess_conduction") ||
+      !solopts.find_option("guess_valence"))
+  {
+    double cb_min, vb_max;
+    get_band_extrema(cb_min, vb_max);
+    ostringstream os;
+    os << "      CB min = " << cb_min << "  VB max = " << vb_max << endl;
+    Messages::info(os.str());
+
+    double gap = cb_min - vb_max;
+    if (gap <= 0.0)
+    {
+      Messages::warning("Your system apparently does not have a global gap: "
+          "cannot find reasonable guess.");
+      Messages::warning("Will use mean value of band edges");
+      cb_min = (cb_min + vb_max) / 2.0;
+      vb_max = cb_min;
+    }
+    else
+    {
+      cb_min -= gap / 4.0;
+      vb_max += gap / 4.0;
+    }
+
+    _upt_solver_options.guess_cb = cb_min;
+    _upt_solver_options.guess_vb = vb_max;
+  }
 }
 
 //-------------------------------------------------------------------------
@@ -268,22 +332,6 @@ void ETB::do_reinit(void)
   }
 
   _vb_shift = 0.0;
-
-  // checks that the strain simulation, if specified has been done
-  if(_upt_options.strain_sim != "no_sim")
-  {
-    SimulationInterface* strsim = _strain_int.get_simulation();
-
-    if( ! strsim->is_solved() ) 
-      throw InitFailedException("Strain model has not been solved");
-  }
-
-  // checks that the potential simulation, if specified has been done
-  if(_upt_options.potential_sim != "no_sim")
-  {
-    if( ! _dd_int->is_solved() )
-      throw InitFailedException(_upt_options.potential_sim+" model has not been solved");
-  }
 
   Point kp(get_k_point(true));
 
@@ -319,36 +367,6 @@ void ETB::do_reinit(void)
     memset(_upt_options.load_path, UPT_PADCHAR, UPT_LC);
     load_file.copy(_upt_options.load_path, load_file.size());
   }
-
-  // Get the minimum CB and maximum VB edges
-  if (!solopts.find_option("guess_conduction") ||
-      !solopts.find_option("guess_valence"))
-  {
-    double cb_min, vb_max;
-    get_band_extrema(cb_min, vb_max);
-    ostringstream os;
-    os << "      CB min = " << cb_min << "  VB max = " << vb_max << endl;
-    Messages::info(os.str());
-
-    double gap = cb_min - vb_max;
-    if (gap <= 0.0)
-    {
-      Messages::warning("Your system apparently does not have a global gap: "
-          "cannot find reasonable guess.");
-      Messages::warning("Will use mean value of band edges");
-      cb_min = (cb_min + vb_max) / 2.0;
-      vb_max = cb_min;
-    }
-    else
-    {
-      cb_min -= gap / 4.0;
-      vb_max += gap / 4.0;
-    }
-
-    _upt_solver_options.guess_cb = cb_min;
-    _upt_solver_options.guess_vb = vb_max;
-  }
-
 
   std::string upt_filename;
   // Getting reference to atomistic structure for calculation
@@ -500,6 +518,15 @@ void ETB::do_calculate_density_at_k(DofField& density)
 
 void ETB::do_solve_for_kpoint(const Point& k_point)
 {
+  if (_strain_int.has_simulation() && !_strain_int.get_simulation()->is_solved() )
+      throw InitFailedException("Strain model has not been solved");
+
+  // checks that the potential simulation, if specified has been done
+  if( (_dd_int != nullptr) && (! _dd_int->is_solved()) )
+    throw InitFailedException(_upt_options.potential_sim+" model has not been solved");
+
+  set_band_extrema();
+
   reinit();
   call_uptight();
 }
@@ -507,6 +534,15 @@ void ETB::do_solve_for_kpoint(const Point& k_point)
 
 //-------------------------------------------------------------------------
 void ETB::do_solve(void) {
+
+  if ( _strain_int.has_simulation() && !_strain_int.get_simulation()->is_solved() )
+      throw InitFailedException("Strain model has not been solved");
+
+  // checks that the potential simulation, if specified has been done
+  if( (_dd_int != nullptr) && (! _dd_int->is_solved()) )
+    throw InitFailedException(_upt_options.potential_sim+" model has not been solved");
+
+  set_band_extrema();
 
   if (_upt_options.compute_densities)
   {
@@ -1302,7 +1338,7 @@ void ETB::parse_options(void)
     if (_dd_int == NULL)
       throw InitFailedException("potential simulation not found");
     _upt_options.potential_flag = true;
-  } 
+  }
 
   _upt_options.el_chem_pot = get_option("el_qfermi_level", 0.0);
   _upt_options.hl_chem_pot = get_option("hl_qfermi_level", 0.0);
@@ -2616,8 +2652,13 @@ ETB::get_H_csr(std::vector<Complex>& A,
 unsigned int
 ETB::get_number_of_bands(void) const
 {
-   unsigned int num = _upt_options.relat_flag ? 20 : 10;
-   return num;
+  std::vector<int> num_orbitals;
+  num_orbitals.resize(get_atomistic_structure()->get_N_atoms(), 0);
+  inst->get_ion_numorbitals(num_orbitals);
+
+  // This assumes that all atoms have the same number of orbitals. Must modify to generalize.
+  unsigned int num = num_orbitals[0];
+  return num;
 }
 
 void

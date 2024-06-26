@@ -6,6 +6,7 @@
 
 #include <complex>
 #include <vector>
+#include <map>
 
 #include <mpi.h>
 //-----------------------------------------------------------------------
@@ -38,13 +39,13 @@ public:
   int set_mpi_comm(MPI_Comm comm);
 
   //Initialize MPI k-E cartesian communicators
-  //int mpi_cart_init(MPI_Comm inComm, int nGroups, MPI_Comm cartComm, MPI_Comm kComm);
+  void mpi_cart_init(MPI_Comm inComm, int nGroups, MPI_Comm& cartComm, MPI_Comm& kComm);
 
   //! Destroy and reinitialize
   void force_reinit(void);
 
   //!read H and S hamiltonians 
-  int read_HS(void);
+  int read_HS(std::string real_path, std::string imag_path, std::string H_or_S);
 
   //!read 'negf.in'
   int read_input(void);
@@ -59,6 +60,11 @@ public:
   //! unitsOfH is a string like "H", "eV", "cm^-1"
   //! unitsOfJ is a string like "A"
   double current(std::string unitsOfH, std::string unitsOfJ);
+
+  //! Compute the currents flowing through each layer
+  //! unitsOfH is a string like "H", "eV", "cm^-1"
+  //! unitsOfJ is a string like "A"
+  void layer_current(std::vector<double>& layer_current, std::string unitsOfH, std::string unitsOfJ);
 
   //! Get the energy points
   /*!
@@ -96,7 +102,7 @@ public:
   //!Clean the Negf instance variable space
   void clean_libnegf(void);
 
-  //!Get UPTIGHT instance handler
+  //!Get libNEGF instance handler
   inline const int* get_handler(void){ return _handler; };
 
   //! Set verbosity level for the library screen output
@@ -104,6 +110,15 @@ public:
 
   //! used to set an integer value to label tunneling files
   void set_kpoint(int kpoint);
+
+  //! Set global and local kpoints, along with equivalent kpoints for extending the irreducible wedge
+  void set_kpoints(std::vector<std::vector<double>> kpoints, std::vector<double> kweights,  
+       std::vector<int> local_k_indices, std::vector<std::vector<double>> equivalent_points, 
+       std::vector<int> n_equivalent, int set_eq_pts);
+
+  //! Pass atom coordinates and map from atom indices to matrix indices, as well as lattice vectors
+  void init_basis(std::vector<std::vector<double>> coordinates, std::vector<int> matrix_indices, 
+       std::vector<std::vector<double>> lattice_vectors, int transport_direction);
 
   //! used to set the reference contact 0= min mu; 1= max mu
   void set_reference(int minmax);
@@ -155,18 +170,35 @@ public:
   
   //! set H via memcopy to libnegf container
   void set_H_csr(int nrow, std::vector<Complex >& A, std::vector<int>& JA,
-                                                     std::vector<int>& IA );
+                           std::vector<int>& IA, int iK);
+
+  void create_HS_container(int n_Hk);
+
   //! set S via memcopy to libnegf container
   void set_S_csr(int nrow, std::vector<Complex >& A, std::vector<int>& JA,
-                                                     std::vector<int>& IA );
+                           std::vector<int>& IA, int iK);
   //! Set S as and Identity matrix
-  void set_S_id(int nrow);
+  void set_S_id(int nrow, int iK);
 
   //! Print matrix
   void print_mat(void);
 
   //! Print memory statistics
   void print_memory_statistics(void);
+
+  void set_elph_dephasing(std::vector<double> coupling, int scba_niter);
+
+  void set_elph_block_dephasing(std::vector<double> coupling, std::vector<int> orbsperatm, int scba_niter);
+
+  void set_elph_s_dephasing(std::vector<double> coupling, std::vector<int>orbsperatm, int scba_niter);
+
+  void set_elph_polaroptical(std::vector<double> coupling,  double wq, double kbT, double deltaz, double eps_r,  double eps_inf, 
+                             double q0, double cell_area, int scba_niter,  bool tTridiagonal);
+
+  void set_elph_nonpolaroptical(std::vector<double> coupling, double wq, double kbT, double deltaz, double D0, double cell_area, 
+                                int scba_niter, bool tTridiagonal);
+
+  void set_scba_tolerances(double elastic_tol, double inelastic_tol);
 
 private:
   int _handler[NEGF_HSIZE];

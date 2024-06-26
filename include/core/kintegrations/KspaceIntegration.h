@@ -97,15 +97,15 @@ class KspaceIntegration : public TiberModelObject
   
   //!returns the kpoints and weights of the kspace as a shared global quantity among the processors.
   std::map<DofField, double>
-  broadcast_kpoints(libMesh::Parallel::Communicator& comm, std::map<Point, double> k_points);
+  broadcast_kpoints(libMesh::Parallel::Communicator& comm, std::map<Point, double>& k_points);
 
   //!distributes the k-grid across the processors and for each process returns the local indices
   std::vector<int>
-  distribute_kpoints(const libMesh::Parallel::Communicator& comm, std::map<DofField, double> k_points);
+  distribute_kpoints(const libMesh::Parallel::Communicator& comm, const std::map<DofField, double>& k_points, bool& uneven_distributed);
 
   //! builds the map local k points - weights
   std::map<DofField, double>
-  get_local_kpoints(std::map<DofField, double> global_kpoints, std::vector<int> local_k_indices);
+  get_local_kpoints(std::map<DofField, double>& global_kpoints, const std::vector<int>& local_k_indices);
 
 
  protected:

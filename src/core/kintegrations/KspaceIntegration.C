@@ -50,32 +50,27 @@ KspaceIntegration::get_kpoints_and_weights(void)
   const libMesh::MeshBase* kmesh =  _kspace->get_k_mesh();
   unsigned int k_dim = kmesh->mesh_dimension();
 
-  real_space_density.clear();
-
-  double error_value;
-
-  //-----------------------------------------------------------
-
-  std::unique_ptr<libMesh::FEBase> fe( libMesh::FEBase::build(k_dim, libMesh::FEType(fem_order) ));
-
-  std::unique_ptr<libMesh::QBase> qrule(libMesh::QBase::build(quadrature_type, k_dim, integration_order));
-
-  fe->attach_quadrature_rule(qrule.get());
-
-  const std::vector<Real>& JxW = fe->get_JxW();
-
-  const std::vector<Point>& q_point = fe->get_xyz();
-
-
-  MeshBase::const_element_iterator it_k_space= kmesh->active_local_elements_begin();
-  const MeshBase::const_element_iterator it_k_end  = kmesh->active_local_elements_end();
-
-
   double factor = opt.normalization_volume;
   for (short i = 0; i < k_dim; i++)  factor /= (2.0 * M_PI);
   factor *= _kspace->get_degeneracy_factor() * opt.degeneracy;
 
+  // For Gamma point calculations return just the Gamma point
+  if (k_dim == 0)
+  {
+    Point kp;
+    for (int i = 0; i<3; i++) kp(i) = 0.0;
+    k_points[kp] = 1.0 * factor;
+    return k_points;
+  }
 
+  std::unique_ptr<libMesh::FEBase> fe( libMesh::FEBase::build(k_dim, libMesh::FEType(fem_order) ));
+  std::unique_ptr<libMesh::QBase> qrule(libMesh::QBase::build(quadrature_type, k_dim, integration_order));
+  fe->attach_quadrature_rule(qrule.get());
+  const std::vector<Real>& JxW = fe->get_JxW();
+  const std::vector<Point>& q_point = fe->get_xyz();
+
+  MeshBase::const_element_iterator it_k_space= kmesh->active_local_elements_begin();
+  const MeshBase::const_element_iterator it_k_end  = kmesh->active_local_elements_end();
 
   for ( ; it_k_space != it_k_end ; ++it_k_space) //loop over k space elements
   {
@@ -97,7 +92,7 @@ KspaceIntegration::get_kpoints_and_weights(void)
 
 
 map<DofField, double>
-KspaceIntegration::broadcast_kpoints(libMesh::Parallel::Communicator& comm, map<Point, double> kpoints)
+KspaceIntegration::broadcast_kpoints(libMesh::Parallel::Communicator& comm, map<Point, double>& kpoints)
 {
 
   // Broadcast the kpoints
@@ -129,7 +124,8 @@ KspaceIntegration::broadcast_kpoints(libMesh::Parallel::Communicator& comm, map<
 
 
 std::vector<int>
-KspaceIntegration::distribute_kpoints(const libMesh::Parallel::Communicator& comm, map<DofField, double> kpoints)
+KspaceIntegration::distribute_kpoints(const libMesh::Parallel::Communicator& comm, const map<DofField, double>& kpoints, 
+                                      bool& uneven_distributed)
 {
   int n_procs = comm.size();
   int id = comm.rank();
@@ -158,7 +154,11 @@ KspaceIntegration::distribute_kpoints(const libMesh::Parallel::Communicator& com
     }
   }
 
-  // Remove any eventual leftover -1 (could happen if kpoints are not evenly distributed)
+  // Look for any eventual leftover -1 (could happen if kpoints are not evenly distributed)
+  // For NEGF this is cause of error, return a flag to deal with it
+  uneven_distributed = std::any_of(local_indices.begin(), local_indices.end(), [](int i) {return i == -1;});
+
+  // Remove any eventual leftover -1 (for some modules this is ok)
   local_indices.erase(std::remove(local_indices.begin(), local_indices.end(), -1), local_indices.end());
   
   return local_indices;
@@ -167,7 +167,7 @@ KspaceIntegration::distribute_kpoints(const libMesh::Parallel::Communicator& com
 
 
 map<DofField, double>
-KspaceIntegration::get_local_kpoints(map<DofField, double> global_kpoints, std::vector<int> local_k_indices)
+KspaceIntegration::get_local_kpoints(map<DofField, double>& global_kpoints, const std::vector<int>& local_k_indices)
 {
   // Use local_k_indices to create local map of kpoints
   map<DofField, double> local_kpoints;
@@ -346,7 +346,8 @@ void KspaceIntegration::calculate_density()
   {
     
     map<DofField, double> global_kpoints = broadcast_kpoints(kspace_comm, k_points);
-    std::vector<int> local_k_indices = distribute_kpoints(kspace_comm, global_kpoints);
+    bool uneven_distributed; //This flag is necessary for NEGF
+    std::vector<int> local_k_indices = distribute_kpoints(kspace_comm, global_kpoints, uneven_distributed);
 
     map<DofField, double> local_kpoints = get_local_kpoints(global_kpoints, local_k_indices);
 

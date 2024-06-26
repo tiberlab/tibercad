@@ -210,6 +210,9 @@ class ETB : public TightBinding
 
  private:
 
+  //! Overrides the method in SimulationInterface.C
+  void setup_mpi_comm(void);
+
   //! Get options suited for DFTB+ tight binding builder and solver
   void get_upt_options(void);
 
@@ -250,6 +253,9 @@ class ETB : public TightBinding
 
   //! get the band extrema
   void get_band_extrema(double& cb_min, double& vb_max);
+
+  //! set the band extrema to member values (introduced after refactoring in do_reinit())
+  void set_band_extrema(void);
 
   //! get c-axis orientation
   void get_c_axis(void);

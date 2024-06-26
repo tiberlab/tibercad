@@ -1,7 +1,7 @@
 // Gmsh project created on Thu Apr 21 2022
 lc1 = 0.565;
-l = 5*lc1;
-cs = 20*lc1;
+l = 2*lc1;
+cs = 5*lc1;
 
 
 Point(1) = {0, 0, 0, lc1};
