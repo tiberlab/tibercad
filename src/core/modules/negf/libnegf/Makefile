@@ -40,12 +40,12 @@ libnegf_$(ARCH).a: update
 	cp libnegf/src/api/lnParams.h .
 
 update: checkout
-	cd libnegf; git pull origin; cd ..;
+	cd libnegf; git pull origin; git checkout master_gitlab; cd ..;
 
 checkout:
 	@echo "Checkout libNEGF..."
 	@if [ ! -e libnegf ]; then \
-		git clone https://github.com/libnegf/libnegf.git; \
+		git clone https://github.com/DanSoccodato/libnegf.git; \
 		cd libnegf; \
 	fi
 
