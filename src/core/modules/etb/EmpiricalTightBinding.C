@@ -518,12 +518,18 @@ void ETB::do_calculate_density_at_k(DofField& density)
 
 void ETB::do_solve_for_kpoint(const Point& k_point)
 {
-  if (_strain_int.has_simulation() && !_strain_int.get_simulation()->is_solved() )
-      throw InitFailedException("Strain model has not been solved");
-
+  if(_upt_options.strain_sim != "no_sim")
+  {
+    SimulationInterface* strsim = _strain_int.get_simulation();
+    if( ! strsim->is_solved() ) 
+      throw InitFailedException("Strain model has not been solved");    
+  }
   // checks that the potential simulation, if specified has been done
-  if( (_dd_int != nullptr) && (! _dd_int->is_solved()) )
-    throw InitFailedException(_upt_options.potential_sim+" model has not been solved");
+  if(_upt_options.potential_sim != "no_sim")
+  {
+    if( ! _dd_int->is_solved() )
+      throw InitFailedException(_upt_options.potential_sim+" model has not been solved");
+  }
 
   set_band_extrema();
 
@@ -535,12 +541,18 @@ void ETB::do_solve_for_kpoint(const Point& k_point)
 //-------------------------------------------------------------------------
 void ETB::do_solve(void) {
 
-  if ( _strain_int.has_simulation() && !_strain_int.get_simulation()->is_solved() )
-      throw InitFailedException("Strain model has not been solved");
-
+  if(_upt_options.strain_sim != "no_sim")
+  {
+    SimulationInterface* strsim = _strain_int.get_simulation();
+    if( ! strsim->is_solved() ) 
+      throw InitFailedException("Strain model has not been solved");    
+  }
   // checks that the potential simulation, if specified has been done
-  if( (_dd_int != nullptr) && (! _dd_int->is_solved()) )
-    throw InitFailedException(_upt_options.potential_sim+" model has not been solved");
+  if(_upt_options.potential_sim != "no_sim")
+  {
+    if( ! _dd_int->is_solved() )
+      throw InitFailedException(_upt_options.potential_sim+" model has not been solved");
+  }
 
   set_band_extrema();
 
