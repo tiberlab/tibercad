@@ -4,6 +4,8 @@
 #define _POISSON_H_
 
 #include "SimulationInterface.h"
+#include "TiberLinearSystem.h"
+
 #include "enum_order.h"
 #include "enum_quadrature_type.h"
 
@@ -98,38 +100,43 @@ class TBDLLOCAL Poisson : public SimulationInterface
     Poisson(const ModelOptions& options);
 
     //! The assembly function
-    static void assemble(libMesh::EquationSystems& es, const std::string& system_name);
+    void assemble(void);
 
-    //! The real assembly function
-    void do_assemble(libMesh::EquationSystems& es, const std::string& system_name);
+    // A local helper class to be used to access assembly routine
+    class MyAssembly : public TiberLinearSystem::Assembly
+    {
+      public:
+        MyAssembly(Poisson* obj) : _obj(obj) {};
 
-    //! A static pointer to this
-    static Poisson* _this;
+        void assemble() override
+        {
+          _obj->assemble();
+        }
 
+      private:
+        Poisson *_obj;
+    };
 
-  struct Options
-  {
-    
-    /**
-     * Set the default boundary conditions
-     */
-    std::string default_boundary_conditions;
-  
-    libMeshEnums::QuadratureType quadrature_type; 
+    MyAssembly _my_assembly;
 
-    libMeshEnums::Order integration_order;  
-  };
+    struct Options
+    {
 
-  Options myopts;
+      /**
+       * Set the default boundary conditions
+       */
+      std::string default_boundary_conditions;
 
+      libMeshEnums::QuadratureType quadrature_type;
+
+      libMeshEnums::Order integration_order;
+    };
+
+    Options myopts;
 };
 
 
-void
-Poisson::assemble(libMesh::EquationSystems& es, const std::string& system_name)
-{
-  _this->do_assemble(es, system_name);
-}
+
 
 
 #endif // _POISSON_H_

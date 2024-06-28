@@ -26,12 +26,10 @@ using namespace std;
 using namespace libMesh;
 
 
-Poisson*
-Poisson::_this = NULL;
-
 
 Poisson::Poisson(const ModelOptions& options) :
-  SimulationInterface(options)
+  SimulationInterface(options),
+  _my_assembly(this)
 {
   // there's nothing to be done
 }
@@ -66,7 +64,7 @@ Poisson::do_init(void)
 
   // add variables and attach the assemble function
   system.add_variable("u", FIRST);
-  system.attach_assemble_function(assemble);
+  system.attach_assemble_object(_my_assembly);
   system.init();
 }
 
@@ -116,9 +114,6 @@ Poisson::do_setup_solution_variables(void)
 void
 Poisson::do_solve(void)
 {
-  // this is dirty, but at the moment we have to provide a static method
-  // for assembly. Thsi should change in future
-  _this = this;
 
   TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
 
@@ -265,7 +260,7 @@ Poisson::get_solution_secure(const Elem* elem,
 
 
 void
-Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
+Poisson::assemble(void)
 {
   TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
 
@@ -410,12 +405,10 @@ Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
     system.matrix->add_matrix(Ke, dof_indices);
     system.rhs->add_vector(Fe, dof_indices);
 
-    cerr << Ke << "\n";
-
   }
   system.matrix->close();
-  system.matrix->print_matlab("K.m");
-  //system.rhs->close();
+  //system.matrix->print_matlab("K.m");
+  system.rhs->close();
   //system.rhs->print_matlab("F.m");
 
 }
