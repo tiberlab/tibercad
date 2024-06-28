@@ -1,0 +1,44 @@
+
+# Description of  the  device physical regions
+Device
+{
+   meshfile = module.msh
+
+   Region active 
+   {
+   }
+
+}
+
+Module pvmodule
+{
+
+}
+
+Simulation
+{
+  verbose = 2
+
+  # look here first for modules
+  modellibpath = ../..
+
+  temperature = 300
+  
+  solve = pvmodule
+  
+  resultpath = output
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
