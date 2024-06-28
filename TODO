@@ -1,3 +1,10 @@
+2024-06-26 Auf der Maur
+	( ) change input parser so that it reads first into a string (with
+		all includes) and then parses
+	( ) change get_solution to have source argument, to allow different
+		meshes
+	( ) eliminiate RotatedCrystal (transfer to BulkCrystal)
+
 2021-09-28 Auf der Maur
 	(DONE) get rid of all the bad static pointers to 'this' in modules
 
