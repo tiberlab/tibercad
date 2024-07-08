@@ -3376,12 +3376,13 @@ Negf::get_lattice_vectors(std::vector<double>& r1, std::vector<double>& r2)
 
   std::vector<DofField> lattice_vectors(3);
   // libNEGF wants them in column order
+  // 1 -> y, 2 -> z
   for (int j = 0; j < 3; j++)
   {
     lattice_vectors[j].resize(3);
-    lattice_vectors[j][0] = vec1_real(j+1);
-    lattice_vectors[j][1] = vec2_real(j+1);
-    lattice_vectors[j][2] = vec3_real(j+1);
+    lattice_vectors[j][0] = vec3_real(j+1);
+    lattice_vectors[j][1] = vec1_real(j+1);
+    lattice_vectors[j][2] = vec2_real(j+1);
   }
 
   return lattice_vectors;
@@ -3406,12 +3407,13 @@ Negf::get_lattice_vectors(std::vector<double>& r1)
 
   std::vector<DofField> lattice_vectors(3);
   // libNEGF wants them in column order
+  // 1 -> z
   for (int j = 0; j < 3; j++)
   {
     lattice_vectors[j].resize(3);
-    lattice_vectors[j][0] = vec1_real(j+1);
-    lattice_vectors[j][1] = vec2_real(j+1);
-    lattice_vectors[j][2] = vec3_real(j+1);
+    lattice_vectors[j][0] = vec2_real(j+1);
+    lattice_vectors[j][1] = vec3_real(j+1);
+    lattice_vectors[j][2] = vec1_real(j+1);
   }
 
   return lattice_vectors;
