@@ -396,28 +396,35 @@ Negf::init_etb_hamil(void)
      _perm[_inv_perm[i]]=i;
    }
 
-   //Order the atoms
+   //Order the atoms according to x-coordinate
    sortclass sortobj(atoms);
    std::sort(_perm.begin(),_perm.begin()+last_dev+1,sortobj);
 
+   // Redefine _inv_perm since _perm changed according to x-coordinate
+   _inv_perm.clear();
+   _inv_perm.resize(N_atoms);
+   for (unsigned int i=0; i<N_atoms; i++)
+   {
+    _inv_perm[_perm[i]] = i;
+   }
    //for (unsigned int i=0; i< N_atoms; i++)
    //{
    //   std::cout<<"atom "<<i<<" reg "<<atoms[i].get_region_ID()
    //            <<" iperm "<<_inv_perm[i]<<" perm "<<_perm[i]<<std::endl;
    //}
-   
-  
+
    // ------------------------------------------------------------------------
    // count assign dofs in all regions
    _device_n_dofs = last_dev+1;
 
-   std::cout<<"Number of atoms: "<<N_atoms<<std::endl;
-   std::cout<<"Device: "<<_device_n_dofs<<std::endl;
+   ostringstream os;
+   os << "Number of atoms: " << N_atoms << std::endl;
+   os << "Device: " << _device_n_dofs << std::endl;
    
    it = _quantum_contacts.begin();
    for (it; it!=qc_end; it++)
    {  
-     std::cout<<"Contact: "<<it->first<<"  "<<last_cont[it->first]+1<<std::endl;
+     os <<"Contact: "<<it->first<<"  "<<last_cont[it->first]+1<<std::endl;
    }
   
    _qc_n_dofs[0] =  _device_n_dofs;
@@ -439,7 +446,7 @@ Negf::init_etb_hamil(void)
    
    for (ID i=0; i<2; i++)
    {
-      std::cout<<"Conts: "<<i+1<<"  "<<_qc_n_dofs[i]+1<<std::endl;
+      os << "Conts: "<< i+1 <<"  " << _qc_n_dofs[i]+1 << std::endl;
    }
 
    // Reorder the qc_n_dofs such that they are with increasing order
@@ -457,11 +464,26 @@ Negf::init_etb_hamil(void)
    for (unsigned int i = 0; i <nPL; i++)
     _end_blocks[i] = size_of_PL * n_orbitals;
    
-   unsigned int remaining_atoms = _device_n_dofs - nPL * size_of_PL;
-   if (remaining_atoms != 0) _end_blocks[nPL-1] += remaining_atoms * n_orbitals;
-   
    for (unsigned int i = 1; i < nPL; ++i)
     _end_blocks[i] += _end_blocks[i-1];
+
+   unsigned int remaining_atoms = _device_n_dofs - nPL * size_of_PL;
+   if (remaining_atoms != 0) {
+    Messages::warning("(init etb hamil) Number of atoms in each PL not equal: adding one more PL for remaining atoms.");
+    _end_blocks.resize(nPL+1);
+    nPL = _end_blocks.size();
+    _end_blocks[nPL-1] = _end_blocks[nPL-2] + remaining_atoms * n_orbitals;
+   }
+
+   os << "Size of PLs: " << std::endl;
+   os << _end_blocks[0] << ", ";
+   for (int i=1; i<nPL; i++)
+   {
+      os << _end_blocks[i]-_end_blocks[i-1] << ", ";
+   }
+   os << std::endl;
+   os << "Total number of PLs: " << _end_blocks.size() << std::endl;
+   Messages::info(os.str());
 
    // These two lines remove any duplicate (if they are for some reason created)
    auto bl_it = std::unique(_end_blocks.begin(), _end_blocks.end());
@@ -819,6 +841,8 @@ Negf::setup_etb_hamil(void)
    
   //apply permutation to atomistic structure
    _ext_module->get_atomistic_structure()->reorder(_perm);
+   if get_options().get_option("print_reordered_structure", false)
+      _ext_module->get_atomistic_structure()->print_structure("reordered_str.xyz");
   
   Point k_point; 
   for(short i=0;i<3;i++) k_point(i) = _k_vec(i);
@@ -1217,7 +1241,6 @@ Negf::do_solve(void)
       
       setup_hamil();
 
-      // unsigned int n_vars = _sys_H->n_vars();
       unsigned int n_vars = _ext_module->get_number_of_bands();
       std::vector<double> density(_device_n_dofs * n_vars, 0.0);
 
@@ -1641,13 +1664,8 @@ Negf::calculate_for_k_point(const Point& k_point,
 
    setup_hamil();
 
-   //In theory, size of "field" has to be consistent with _device_n_dofs, which is # of nodes
-  //  unsigned int n_vars = _sys_H->n_vars();
-  unsigned int n_vars = _ext_module->get_number_of_bands();
+   unsigned int n_vars = _ext_module->get_number_of_bands();
    field.resize(_device_n_dofs * n_vars);
-
-   //unsigned int n_vars = _ext_module->get_H_dim();
-   //field.resize(n_vars); //FOR NOW THIS IS BEST SOLUTION
 
    switch (_which_integration)
    {
@@ -1951,8 +1969,7 @@ Negf::transfer_density_etb(const std::vector<double>& density, const std::string
 
   // compute total number of n_vars n_dofs
   unsigned int n_vars = _ext_module->get_number_of_bands();
-  // unsigned int n_dofs = _qc_n_dofs[_quantum_contacts.size()-1];
-  unsigned int N_atoms = _device_n_dofs;
+  unsigned int N_atoms = density.size() / n_vars;
   NumericVector<Number>& qdens = *_qdens_sys->solution;
   //qdens.zero();
 
@@ -2006,12 +2023,9 @@ Negf::transfer_density_etb(const std::vector<double>& density, const std::string
 
     for (unsigned int n = 0; n < elem->n_nodes(); n++)
     {
-      //if (qdens(dof_indices_e[n]) < 0)
-      {
-        auto density = project_density(elem, elem->point(n), atomic_charges, cutoff);
-        density = density / connectivity[dof_indices_qdens[n]];
-        qdens.add(dof_indices_qdens[n], density);
-      }
+      auto density = project_density(elem, elem->point(n), atomic_charges, cutoff);
+      density = density / connectivity[dof_indices_qdens[n]];
+      qdens.add(dof_indices_qdens[n], density);
     }
 
   }
@@ -3087,7 +3101,6 @@ Negf::project_density(const Elem* elem, const Point& point, const std::vector<do
 
   AtomisticStructure* as = _ext_module->get_atomistic_structure();
 
-  const double scale = _ext_module->get_atomistic_structure()->get_scale();
   const double sigma = cutoff;
   const double sigma2 = 2.0*sigma*sigma;
 
@@ -3130,27 +3143,24 @@ Negf::project_density(const Elem* elem, const Point& point, const std::vector<do
   for (; it != end; ++it)
   {
     const Atom* atom = *it;
-    unsigned int atom_id = _inv_perm[it.atom_index()];
+    unsigned int atom_id = it.atom_index();
 
     // atom_id may belong to a contact, skip loop in this case
-    if (atom_id > N_atoms-1) continue;
+    // if (atom_id > N_atoms-1) continue;
 
-    //cerr << " " << atom_id << endl;
     Point atom_pos(atom->get_position() + it.atom_translation());
+    Point delta_r = coord - atom_pos;
 
-  Point delta_r = coord - atom_pos;
-
-  switch (dim)
-  {
-    default:
+    switch (dim)
     {
-      double factor = normalization * std::exp(-delta_r.norm_sq() / sigma2);
-      density += atomic_charges[atom_id] * factor;
+      default:
+      {
+        double factor = normalization * std::exp(-delta_r.norm_sq() / sigma2);
+        density += atomic_charges[atom_id] * factor;
 
-      break;
+        break;
+      }
     }
-  }
-    
   }
 
   return density;
@@ -3504,20 +3514,10 @@ Negf::setup_mpi_comm(void)
   // They need to be parsed here because we need the _scattering flag already at this point
   parse_scattering_options();
 
+  unsigned int nGroups = get_solver_options().get_option("parallel_k_groups", 1);
   if (_scattering)
   {
-    // ModelOptions& device_opts = _device->get_options();
-    // if (device_opts.has_submodel("Parallel"))
-    // {
-    //   ModelOptions& mpi_opts = device_opts.submodels_begin("Parallel")->second;
-    //   unsigned int nGroups = mpi_opts.get_option("negf_k_groups", 1);
-    // }
-    // else
-    // {
-    //   Messages::error("(negf) The inelastic NEGF code needs MPI to run. "
-    //   "Please include the `Parallel` block in the `Device section`");
-    // }
-    unsigned int nGroups = get_solver_options().get_option("parallel_k_groups", 1);
+    
     MPI_Comm bare_kcomm;
     MPI_Comm bare_cartcomm;
 
