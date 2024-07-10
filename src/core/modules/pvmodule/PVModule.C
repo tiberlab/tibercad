@@ -104,6 +104,10 @@ PVModule::do_solve(void)
   // write Spice netlist
   string netlist = get_output_directory() + "/" + get_name() + "_spice.net";
   ofstream of(netlist);
+
+  // idea: loop through matrix, and take coupling elements as resistors
+  // DOF indices can be used as node numbers
+
   of.close();
 
   // call ngspice
