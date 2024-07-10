@@ -19,6 +19,7 @@
 // forward declarations
 class Dopant;
 class RotatedCrystal;
+class BulkCrystal;
 
 
 //! Contains all needed data for a material
@@ -72,6 +73,10 @@ class Material : public PhysicalObject
 
     //! Get the crystal structure
     const std::string& get_structure(void) const;
+
+
+    //! Get the bulk crystal
+    const BulkCrystal* get_bulk_crystal(void) const;
 
 
     //! Get a reference to the RotatedCrystal
@@ -202,7 +207,7 @@ class Material : public PhysicalObject
     /*!
      * The crystal structure as wz, zb etc
      */
-    std::string _structure;
+    std::string _structure {""};
 
 
     //! True if this is an alloy
@@ -210,7 +215,11 @@ class Material : public PhysicalObject
 
 
     //! The RotatedCrystal object
-    RotatedCrystal* _rotated_crystal;
+    RotatedCrystal* _rotated_crystal {nullptr};
+
+
+    //! The bulk crystal object
+    BulkCrystal* _bulk_crystal {nullptr};
 
 
     //! The list of donors
@@ -245,6 +254,14 @@ const std::string&
 Material::get_structure(void) const
 {
   return  _structure;
+}
+
+
+inline
+const BulkCrystal*
+Material::get_bulk_crystal(void) const
+{
+  return _bulk_crystal;
 }
 
 

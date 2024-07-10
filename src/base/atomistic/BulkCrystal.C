@@ -49,6 +49,7 @@ BulkCrystal::init(void)
   m.indent();
 
   // write some info on the atomic structure
+  /*
   std::ostringstream os;
   os << "Basis atom | label\n";
   os << "==================\n";
@@ -61,6 +62,7 @@ BulkCrystal::init(void)
   }
   m.info(os.str());
   m.newline();
+  */
    
 
   build_bond_map();

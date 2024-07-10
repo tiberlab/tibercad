@@ -5,6 +5,7 @@
 #include "Alloy.h"
 #include "Database.h"
 #include "RotatedCrystal.h"
+#include "BulkCrystal.h"
 #include "Dopant.h"
 #include "Messages.h"
 #include "CrystalDefs.h"
@@ -15,8 +16,7 @@ Material::Material(const std::string& name,
     const ModelOptions& options, bool alloy)
   : PhysicalObject(BULK, options),
     _structure("zb"),
-    _is_alloy(alloy),
-    _rotated_crystal(NULL)
+    _is_alloy(alloy)
 {
   set_name(name);
 }
@@ -82,14 +82,20 @@ Material::do_preinit(void)
   if (get_options().find_option("gamma"))
     opts["gamma"] = get_options()["gamma"];
 
-  opts["x-growth-direction"] = get_options()["x-growth-direction"];
-  opts["y-growth-direction"] = get_options()["y-growth-direction"];
-  opts["z-growth-direction"] = get_options()["z-growth-direction"];
+  if (get_options().find_option("x-growth-direction"))
+    opts["x-growth-direction"] = get_options()["x-growth-direction"];
+  if (get_options().find_option("y-growth-direction"))
+    opts["y-growth-direction"] = get_options()["y-growth-direction"];
+  if (get_options().find_option("z-growth-direction"))
+    opts["z-growth-direction"] = get_options()["z-growth-direction"];
 
   // first we set up RotatedCrystal because it will be
   // needed by others
   _rotated_crystal = RotatedCrystal::create(this, opts);
   _rotated_crystal->init();
+
+  _bulk_crystal = BulkCrystal::create(this, opts);
+  _bulk_crystal->init();
 }
 
 
