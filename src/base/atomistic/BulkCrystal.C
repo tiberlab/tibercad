@@ -8,7 +8,11 @@
 BulkCrystal*
 BulkCrystal::create(const Material* mat, const ModelOptions& options)
 {
-  return new BulkCrystal(mat, options);
+  BulkCrystal* bc = nullptr;
+  if ((mat != nullptr) && (mat->get_structure() != "none"))
+    bc = new BulkCrystal(mat, options);
+
+  return bc;
 }
 
 BulkCrystal::BulkCrystal(const Material* mat, const ModelOptions& options)
@@ -103,10 +107,6 @@ BulkCrystal::build_rotation(void)
 void
 BulkCrystal::read_database(void)
 {
-  Atom tmp;
-  Tensor1 T;
-  unsigned int j, n;
-  std::string specie;
 
   if ( !(_mat->is_alloy()) )
   {
@@ -127,6 +127,7 @@ BulkCrystal::read_database(void)
 
     db.set_section("atomistic_structure");
 
+    // NOTE: would like to change to top level "structure", as this duplicates that one
     _lattice_type = db.get("lattice_type", "none");
 
     unsigned int n_basis_specie = db.get("n_basis_specie", 0);
@@ -143,11 +144,11 @@ BulkCrystal::read_database(void)
       s = out.str();
 
       record = "n_" + s;
-      n = db.get(record.c_str(), 0);
+      unsigned int n = db.get(record.c_str(), 0);
       record = "specie_" + s;
-      specie = db.get(record.c_str(), "H");
+      std::string specie = db.get(record.c_str(), "H");
 
-      for (j = 1; j <= n; j++)
+      for (unsigned int j = 1; j <= n; j++)
       {
         record.clear(); n_s.clear();
         record = "T_" + s + "_";
@@ -160,27 +161,26 @@ BulkCrystal::read_database(void)
         //Putting specie label (defined by an integer) in label data
         //It's used in cut_and_change_specie() and build_random_alloy()
         label++;
+        Atom tmp;
         tmp.set_label(label);
         tmp.set_specie(specie);
 
-        std::vector<double> v(3,0.0);
+        libMesh::RealVectorValue v(0.0);
      
         // offers two alternative ways of setting vectors
         // either with component _a _b _c or as vectors 
         if (db.has_variable(n_s+"_a"))
         {
-          v[0] = db.get(n_s+"_a", 0.0);
-          v[1] = db.get(n_s+"_b", 0.0);
-          v[2] = db.get(n_s+"_c", 0.0);
+          v(0) = db.get(n_s+"_a", 0.0);
+          v(1) = db.get(n_s+"_b", 0.0);
+          v(2) = db.get(n_s+"_c", 0.0);
         }
         else
         {
           db.get(n_s, v);
         } 
-        T(1) = v[0]; 
-        T(2) = v[1];
-        T(3) = v[2];  
-        tmp.set_position(T);
+
+        tmp.set_position(v);
         _lattice_basis.push_back(tmp);
       }
     }
@@ -212,7 +212,7 @@ BulkCrystal::read_database(void)
       db = &(mat_alloy->get_component_A()->get_database());
       db->set_section("lattice");
 
-      //We express lattice constant in Amstrong
+      //We express lattice constant in Angstrom
       ax_1 = db->get("a", 0.0) * 10.0;
       if (ax_1 == 0.0) std::cerr << "At least lattice constant a must be defined !!!!" << std::endl;
 
@@ -241,7 +241,7 @@ BulkCrystal::read_database(void)
 
     }
     else
-      throw RuntimeException("Could not initialize bulk for non-binar alloy");
+      throw RuntimeException("Could not initialize bulk for non-binary alloy");
       
 
     tmp_db = mat_alloy->get_database();
@@ -258,7 +258,7 @@ BulkCrystal::read_database(void)
     unsigned int n_basis_specie = db->get("n_basis_specie", 0);
 
     // Read in basis vectors
-    Tensor1 Tb, Ta;
+    //Tensor1 Tb, Ta;
     Database* dbB = &(mat_alloy->get_component_B()->get_database());
     Database* dbA = &(mat_alloy->get_component_A()->get_database());
     dbB->set_section("atomistic_structure");
@@ -280,9 +280,9 @@ BulkCrystal::read_database(void)
         Messages::error("Alloy bulks do not correspond");
 
       record = "specie_" + s;
-      specie = dbA->get(record.c_str(), "H");
+      std::string specie = dbA->get(record.c_str(), "H");
       
-      for (j = 1; j <= n_x; j++)
+      for (unsigned int j = 1; j <= n_x; j++)
       {
         std::string s2;
         record = "T_" + s + "_";
@@ -295,21 +295,26 @@ BulkCrystal::read_database(void)
         //Putting specie label (defined by an integer) in label data
         //It's used in cut_and_change_specie() and build_random_alloy()
         label++;
+        Atom tmp;
         tmp.set_label(label);
         tmp.set_specie(specie);
 
+        libMesh::RealVectorValue Ta(0.0);
+        libMesh::RealVectorValue Tb(0.0);
         record = s2 + "_a";
+        Tb(0) = dbB->get(record, 0.0);
+        Ta(0) = dbA->get(record, 0.0);
+        record = s2 + "_b";
         Tb(1) = dbB->get(record, 0.0);
         Ta(1) = dbA->get(record, 0.0);
-        record = s2 + "_b";
+        record = s2 + "_c";
         Tb(2) = dbB->get(record, 0.0);
         Ta(2) = dbA->get(record, 0.0);
-        record = s2 + "_c";
-        Tb(3) = dbB->get(record, 0.0);
-        Ta(3) = dbA->get(record, 0.0);
 
-        T = Ta * (molar_fraction) + Tb * (1.0 - molar_fraction);
-        tmp.set_position(T);
+        Ta *= molar_fraction;
+        Ta += Tb * (1.0 - molar_fraction);
+        //libMesh::RealVectorValue T = Ta * (molar_fraction) + Tb * (1.0 - molar_fraction);
+        tmp.set_position(Ta);
         _lattice_basis.push_back(tmp);
 
       }
