@@ -1372,7 +1372,7 @@ void  AtomisticGenerator::bond_map_gen(const std::vector<Atom>& basis){
   //os.str(std::string());
   //---------------------------------------------------------------------------
 
-  _bondmap->do_solve(basis, _period, _as->get_origin());
+  _bondmap->solve(basis, _period, _as->get_origin());
 
 }
 

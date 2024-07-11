@@ -34,11 +34,10 @@ BulkCrystal::init(void)
   set_prim_vec();
 
   _basis = _lattice_basis;
-   for (std::vector<Atom>::iterator it = _basis.begin(); 
-     it != _basis.end(); ++it)
-   {
-     it->set_position(_prim_vec * it->get_ttype_position());
-   }
+  for (auto it = _basis.begin(); it != _basis.end(); ++it)
+  {
+    it->set_position(_prim_vec * it->get_ttype_position());
+  }
 
   //! Get rotation and apply to basis and primitive vectors
   build_rotation();
@@ -116,8 +115,8 @@ BulkCrystal::read_database(void)
     Database db = _mat->get_database();
     db.set_section("lattice");
     _lattice_constant[0] = db.get("a", 0.0) * 10.0;
-    if (_lattice_constant[0] == 0.0) Messages::error("At least "
-        "lattice constant a must be defined !!!!");
+    //if (_lattice_constant[0] == 0.0) Messages::error("At least "
+    //    "lattice constant a must be defined !!!!");
     _lattice_constant[1] = db.get("b", 0.0) * 10.0;
     if (_lattice_constant[1] == 0.0) _lattice_constant[1] = _lattice_constant[0];
     _lattice_constant[2] = db.get("c", 0.0) * 10.0;
@@ -249,6 +248,7 @@ BulkCrystal::read_database(void)
     db = &tmp_db;
     db->set_section("");
     db->set_section("atomistic_structure");
+    // NOTE: would like to change to top level "structure", as this duplicates that one
     _lattice_type = db->get("lattice_type", "none");
 
     tmp_db = mat_alloy->get_database();
@@ -326,7 +326,8 @@ BulkCrystal::set_prim_vec(void)
 
   Tensor2Gen prim_vec_dir(0);
 
-  if (_lattice_type.compare("orthorhombic") == 0) {
+  if (_lattice_type.compare("orthorhombic") == 0)
+  {
 
     prim_vec_dir(1,1) = 1.0; prim_vec_dir(2,1) = 0; prim_vec_dir(3,1) = 0;
     prim_vec_dir(1,2) = 0; prim_vec_dir(2,2) = 1.0; prim_vec_dir(3,2) = 0;
@@ -338,7 +339,8 @@ BulkCrystal::set_prim_vec(void)
 
   }
 
-  else if (_lattice_type.compare("tetragonal") == 0) {
+  else if (_lattice_type.compare("tetragonal") == 0)
+  {
  
     assert((_lattice_constant[0] == _lattice_constant[1]));
 
@@ -352,7 +354,8 @@ BulkCrystal::set_prim_vec(void)
 
   }
 
-  else if (_lattice_type.compare("cubic") == 0) {
+  else if (_lattice_type.compare("cubic") == 0)
+  {
 
     assert((_lattice_constant[0] == _lattice_constant[1]) &&
            (_lattice_constant[1] == _lattice_constant[2]));
@@ -365,7 +368,8 @@ BulkCrystal::set_prim_vec(void)
 
   }
 
-  else if (_lattice_type.compare("bcc") == 0) {
+  else if (_lattice_type.compare("bcc") == 0)
+  {
 
     assert((_lattice_constant[0] == _lattice_constant[1]) && (_lattice_constant[1] == _lattice_constant[2]));
 
@@ -377,7 +381,9 @@ BulkCrystal::set_prim_vec(void)
 
   }
 
-  else if (_lattice_type.compare("fcc") == 0) {
+  else if ((_lattice_type.compare("fcc") == 0) ||
+           (_lattice_type.compare("zb") == 0))
+  {
 
     assert((_lattice_constant[0] == _lattice_constant[1]) && (_lattice_constant[1] == _lattice_constant[2]));
 
@@ -390,7 +396,9 @@ BulkCrystal::set_prim_vec(void)
   }
 
   else if ((_lattice_type.compare("hexagonal") == 0) ||
-           (_lattice_type.compare("TMD") == 0)) {
+           (_lattice_type.compare("TMD") == 0) ||
+           (_lattice_type.compare("wz") == 0))
+  {
 
     assert(_lattice_constant[0] == _lattice_constant[1]);
 
@@ -410,7 +418,8 @@ BulkCrystal::set_prim_vec(void)
 
   }
   
-  else if (_lattice_type.compare("anatase") == 0) {
+  else if (_lattice_type.compare("anatase") == 0)
+  {
 
     assert(_lattice_constant[0] == _lattice_constant[1]);
 
@@ -444,10 +453,10 @@ BulkCrystal::set_prim_vec(void)
     _prim_vec(3,3) = _lattice_constant[2] * sin(beta);
   }
 
-  else
-  {
-    Messages::error("Lattice type "+ _lattice_type + " doesn't exist in material "+_mat->get_name());
-  }
+  //else
+  //{
+  //  Messages::error("Lattice type "+ _lattice_type + " doesn't exist in material "+_mat->get_name());
+  //}
 
 }
 

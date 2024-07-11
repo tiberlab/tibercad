@@ -1,6 +1,6 @@
 dielectric = true
 
-structure = am
+structure = none
 
 #Lattice thermal conductivity [W/(cm*K)]
 [thermal_conductivity/constant]

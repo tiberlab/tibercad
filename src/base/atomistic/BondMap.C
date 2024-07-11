@@ -138,11 +138,15 @@ BondMap::get_translation(unsigned int atom, unsigned int neighbor) const
 
 
 void
-BondMap::do_solve(const std::vector<Atom>& basis,
+BondMap::solve(const std::vector<Atom>& basis,
     const Tensor2Gen& period, const libMesh::Point& origin)
 {
 
-  Messages::debug("BondMap::do_solve");
+  Messages::debug("BondMap::solve");
+
+  // nothing to be done if there are no atoms
+  if (basis.empty())
+    return;
 
   Tensor1 edge_min, edge_max;
 

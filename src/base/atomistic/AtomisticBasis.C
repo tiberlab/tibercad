@@ -137,7 +137,7 @@ AtomisticBasis::build_bond_map(bool periodicity[3]) const
       period(j + 1, i + 1) = scale * _lattice_vectors[i](j);
     }
   }
-  bm->do_solve(_atoms, period, _origin);
+  bm->solve(_atoms, period, _origin);
 
   return bm;
 }
@@ -160,7 +160,7 @@ AtomisticBasis::build_bond_map(void)
           period(j + 1, i + 1) = _lattice_vectors[i](j);
         }
     }
-  _bondmap->do_solve(_atoms, period, _origin);
+  _bondmap->solve(_atoms, period, _origin);
 
 }
 

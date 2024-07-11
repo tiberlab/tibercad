@@ -94,8 +94,12 @@ Material::do_preinit(void)
   _rotated_crystal = RotatedCrystal::create(this, opts);
   _rotated_crystal->init();
 
+  // the bulk crystal
+  // if there is no structure assigned (e.g. air, vacuum,
+  // effective media, etc), a nullptr will be returned
   _bulk_crystal = BulkCrystal::create(this, opts);
-  _bulk_crystal->init();
+  if (_bulk_crystal != nullptr)
+    _bulk_crystal->init();
 }
 
 
@@ -204,7 +208,7 @@ Material::preinit(void)
   set_database(db);
 
   // set the crystal structure at this point
-  _structure = get_database().get("structure", "zb");
+  _structure = get_database().get("structure", "none");
 
   bool hasx = get_options().find_option("x-growth-direction");
   bool hasy = get_options().find_option("y-growth-direction");
