@@ -154,6 +154,16 @@ class TBDLLOCAL Negf : public SimulationInterface
 	      double deltaE;
 
         bool writeLDOS;
+
+        bool contact_calculation;
+
+        bool scattering;
+        
+        //! discretization along the transport direction needed for computation of the elph coupling
+        double deltaz;
+        
+        //! area of the cell for computing inelastic coupling
+        double cell_area;
     };
 
 
@@ -378,15 +388,8 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     KspaceIntegration* _k_int_current;
 
-    bool _scattering;
-
     std::vector<Interaction> _interactions;
 
-    //! area of the cell for computing inelastic coupling
-    double _cell_area;
-
-    //! discretization along the transport direction needed for computation of the elph coupling
-    double _deltaz;
 
     //!k-dependent index for setting the Hamiltonian in the HS container
     int _iK;

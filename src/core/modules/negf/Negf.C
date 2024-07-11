@@ -527,13 +527,13 @@ Negf::init_k_space(ModelOptions& kopts)
            kopts.set_option("r1",r1);  
            kopts.set_option("r2",r2);
            // Get lattice vectors for _init_basis routine
-           if (_scattering) _lattice_vectors = get_lattice_vectors(r1, r2);
+           if (opt.scattering) _lattice_vectors = get_lattice_vectors(r1, r2);
            break;
 
          case 1:
            r1[0] = cf*vectors[2](0); r1[1] = cf*vectors[2](1); r1[2] = cf*vectors[2](2);
            kopts.set_option("r1",r1);
-           if (_scattering) _lattice_vectors = get_lattice_vectors(r1);
+           if (opt.scattering) _lattice_vectors = get_lattice_vectors(r1);
            break;
 
          default:
@@ -578,7 +578,7 @@ Negf::init_k_space(ModelOptions& kopts)
               c = b;
           }
           kopts.set_option("r1", c);
-          if (_scattering) 
+          if (opt.scattering) 
           {
             std::vector<double> r1(3);
             for (int i=0; i<3; i++) r1[i] = c(i);
@@ -606,7 +606,7 @@ Negf::init_k_space(ModelOptions& kopts)
           }
           kopts.set_option("r1", b);
           kopts.set_option("r2", c);
-          if (_scattering) 
+          if (opt.scattering) 
           {
             std::vector<double> r1(3);
             std::vector<double> r2(3);
@@ -748,7 +748,7 @@ Negf::setup_hamil(void)
     else
       _ext_module->get_H_csr(A, JA, IA, _perm);
 
-    if (_scattering)
+    if (opt.scattering)
     {
       _libnegf->create_HS_container(_n_Hk);
       _libnegf->set_H_csr(nrow, A, JA, IA, _iK+1); // +1 because Fortran is 1-indexed
@@ -780,7 +780,7 @@ Negf::setup_hamil(void)
       _ext_module->get_S_csr(S, JS, IS, _perm);
 
 
-    if (_scattering)
+    if (opt.scattering)
     {
       _libnegf->set_S_csr(nrow, S, JS, IS, _iK+1);
     }
@@ -793,7 +793,7 @@ Negf::setup_hamil(void)
   }
   else
   {
-    if (_scattering)
+    if (opt.scattering)
     {
       _libnegf->set_S_id(nrow, _iK+1);
     }
@@ -841,7 +841,7 @@ Negf::setup_etb_hamil(void)
    
   //apply permutation to atomistic structure
    _ext_module->get_atomistic_structure()->reorder(_perm);
-   if get_options().get_option("print_reordered_structure", false)
+   if (get_options().get_option("print_reordered_structure", false))
       _ext_module->get_atomistic_structure()->print_structure("reordered_str.xyz");
   
   Point k_point; 
@@ -1046,7 +1046,7 @@ Negf::setup_negf(void)
     _libnegf->set_ldos_indices(0, vector<int>(1, -1));
   }
 
-  if (_scattering)
+  if (opt.scattering)
   {
     // This works only after init_k_space_integration()
     init_basis();
@@ -1137,7 +1137,7 @@ Negf::do_solve(void)
 
     if (get_options().has_submodel("k_integration_density"))
     {
-      if (_scattering)
+      if (opt.scattering)
       {
         unsigned int n_vars = _ext_module->get_number_of_bands();
         std::vector<double> density(_device_n_dofs * n_vars, 0.0);
@@ -1157,7 +1157,7 @@ Negf::do_solve(void)
     }
     else
     {
-      if (_scattering)
+      if (opt.scattering)
       {
         Messages::warning("Scattering block was added without density k-integration.");
       }
@@ -1214,7 +1214,7 @@ Negf::do_solve(void)
 
     if (get_options().has_submodel("k_integration_density"))
     {
-      if (_scattering)
+      if (opt.scattering)
       {
         unsigned int n_vars = _ext_module->get_number_of_bands();
         std::vector<double> density(_device_n_dofs * n_vars, 0.0);
@@ -1232,7 +1232,7 @@ Negf::do_solve(void)
     }
     else
     {
-      if (_scattering)
+      if (opt.scattering)
       {
         Messages::warning("Scattering block was added without density k-integration.");
       }
@@ -1284,7 +1284,7 @@ Negf::do_solve(void)
 
   if ( plot_solution("Current") )
   {
-    if(_scattering)
+    if(opt.scattering)
     {
       Messages::info("Computing Layer Current");
       set_kpoints("Current");
@@ -2202,6 +2202,8 @@ Negf::parse_options(void)
   //sol_opt.check_unused();
   opt.writeLDOS = plot_solution("LDOS");
   opt.writeLDOS = sol_opt.get_option("writeLDOS", opt.writeLDOS);
+  
+  parse_scattering_options();
 
 }
 
@@ -3146,7 +3148,7 @@ Negf::project_density(const Elem* elem, const Point& point, const std::vector<do
     unsigned int atom_id = it.atom_index();
 
     // atom_id may belong to a contact, skip loop in this case
-    // if (atom_id > N_atoms-1) continue;
+    if (atom_id > N_atoms-1) continue;
 
     Point atom_pos(atom->get_position() + it.atom_translation());
     Point delta_r = coord - atom_pos;
@@ -3510,34 +3512,19 @@ Negf::get_coordinates(vector<DofField>& coordinates)
 void
 Negf::setup_mpi_comm(void)
 {
-
-  // They need to be parsed here because we need the _scattering flag already at this point
-  parse_scattering_options();
-
   unsigned int nGroups = get_solver_options().get_option("parallel_k_groups", 1);
-  if (_scattering)
-  {
     
-    MPI_Comm bare_kcomm;
-    MPI_Comm bare_cartcomm;
+  MPI_Comm bare_kcomm;
+  MPI_Comm bare_cartcomm;
 
-    // Initialize cartesian grid. Return cart- and k- communicators
-    _libnegf->mpi_cart_init(this->get_communicator().get(), nGroups, bare_cartcomm, bare_kcomm);
+  // Initialize cartesian grid. Return cart- and k- communicators
+  _libnegf->mpi_cart_init(this->get_communicator().get(), nGroups, bare_cartcomm, bare_kcomm);
 
-    // // Initialiaze libMesh Communicators
-    _k_comm.duplicate(bare_kcomm);
-    _cart_comm.duplicate(bare_cartcomm);
+  // Initialiaze libMesh Communicators
+  _k_comm.duplicate(bare_kcomm);
+  _cart_comm.duplicate(bare_cartcomm);
 
-    this->set_communicator(_cart_comm);
-   
-  }
-  else
-  {
-    this->set_solver_communicator(this->get_mesh().comm());
-    KspaceIntegration::create_communicator(this->get_communicator(),
-                                          this->get_solver_communicator(),
-                                          _k_comm);
-  }
+  this->set_communicator(_cart_comm);
   return;
 }
 
@@ -3548,8 +3535,8 @@ Negf::parse_scattering_options(void)
   ModelOptions::submodel_iterator phys_opts(get_options().submodels_begin("Physics"));
   ModelOptions& phys_block = phys_opts->second;
 
-  _deltaz = phys_block.get_option("delta_z", 0.01);
-  _cell_area = phys_block.get_option("cell_area", 1.0);
+  opt.deltaz = phys_block.get_option("delta_z", 0.01);
+  opt.cell_area = phys_block.get_option("cell_area", 1.0);
 
   if(phys_block.has_submodel("Scattering"))
   {
@@ -3606,11 +3593,11 @@ Negf::parse_scattering_options(void)
         _interactions.push_back(inter);
       }
     }
-    _scattering = true;
+    opt.scattering = true;
   }
   else
   {
-    _scattering = false;
+    opt.scattering = false;
   }
 
   return;
@@ -3662,8 +3649,8 @@ void
 Negf::setup_interactions(void)
 {
   double kbT = SimulationOptions::temperature * Constants::kb;
-  double cell_area = _cell_area;
-  double deltaz = _deltaz;
+  double cell_area = opt.cell_area;
+  double deltaz = opt.deltaz;
   double elastic_tol = 10.0;
   double inelastic_tol = 10.0;
 
