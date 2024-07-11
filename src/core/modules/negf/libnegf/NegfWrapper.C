@@ -261,7 +261,8 @@ NegfWrapper::get_energy_current(std::vector<std::vector<double>>& current)
 }
 
 void
-NegfWrapper::density(std::vector<double>& density, std::string particle)
+NegfWrapper::density(std::vector<double>& density, std::string particle)  // Temporary definition
+// NegfWrapper::density(std::vector<double>& density, std::string particle, bool contact_calc)
 {
    int size = density.size();
    int p = 0;
@@ -269,7 +270,10 @@ NegfWrapper::density(std::vector<double>& density, std::string particle)
    if (particle == "el"){ p = +1;}
    if (particle == "hl"){ p = -1;}
    
-   negf_density_efa(_handler, size, density.data(), p);
+  //  Temporarily hardcoded to false.
+   bool contact_calc = false;
+
+   negf_density_efa(_handler, size, density.data(), p, contact_calc);
 }
 
 void
