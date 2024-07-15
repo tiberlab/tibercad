@@ -215,6 +215,12 @@ Negf::do_init(void)
   _qc_n_dofs.resize(_quantum_contacts.size(), 0);
   
   init_hamil();
+  opt.contact_calculation = false;
+  if (_hamil_type=="etb" && !get_option("disable_contact_calculation", false))
+  {
+    opt.contact_calculation = true;
+    Messages::info("Calculation of density in the contacts activated");
+  }
 
 }
 
@@ -1135,13 +1141,20 @@ Negf::do_solve(void)
     if (get_option("quasi_equilibrium",false))
       Messages::info("Quasi-equilibrium approximation");
 
+    unsigned int n_vars = _ext_module->get_number_of_bands();
+    std::vector<double> density(_device_n_dofs * n_vars, 0.0);
+    // Include density of the contacts in case of ETB
+    if (opt.contact_calculation)
+    {
+      int cont1_ndofs = _qc_n_dofs[0] - _device_n_dofs;
+      int cont2_ndofs = _qc_n_dofs[1] - cont1_ndofs - _device_n_dofs;
+      density.resize(_device_n_dofs*n_vars + cont1_ndofs*n_vars + cont2_ndofs*n_vars);
+    }
+
     if (get_options().has_submodel("k_integration_density"))
     {
       if (opt.scattering)
       {
-        unsigned int n_vars = _ext_module->get_number_of_bands();
-        std::vector<double> density(_device_n_dofs * n_vars, 0.0);
-
         set_kpoints("elDensity");
         set_hamiltonians();
         // _libnegf->compute_density_inelastic(density, "el");
@@ -1166,9 +1179,6 @@ Negf::do_solve(void)
 
       setup_hamil();
 
-      unsigned int n_vars = _ext_module->get_number_of_bands();
-      std::vector<double> density(_device_n_dofs * n_vars, 0.0); //device_n_dofs = n nodi del device
-
       if (get_option("quasi_equilibrium",false))
       {
         std::vector<double> Ec(_device_n_dofs*n_vars);
@@ -1183,25 +1193,12 @@ Negf::do_solve(void)
       }
       else
       {
-        _libnegf->density(density, "el");
+        _libnegf->density(density, "el", opt.contact_calculation);
       }
       transfer_density(density, "el");
-
-      // write qdens on eldensity
-      //NumericVector<Number>& qdens = *_qdens_sys->solution;
-      //unsigned int p_id = _qdens_sys->variable_number("edens");
-      //unsigned int p_dofs = _qc_n_dofs[_quantum_contacts.size()-1];
-      //unsigned int start = p_id * p_dofs;
-      //_eldensity.reserve(_device_n_dofs);
-      //for (unsigned int i=0; i < _device_n_dofs; i++)
-      //  _eldensity.push_back( qdens(start+i) );
-
       finalize();
     }
       
-    //for (unsigned int i=0; i < _device_n_dofs; i++)
-    //  std::cout<<_eldensity[i]<<std::endl;
-
     Messages::info("Density done");
 
   }
@@ -1212,13 +1209,20 @@ Negf::do_solve(void)
     if (get_option("quasi_equilibrium",false))
           Messages::info("Quasi-equilibrium approximation");
 
+    unsigned int n_vars = _ext_module->get_number_of_bands();
+    std::vector<double> density(_device_n_dofs * n_vars, 0.0);
+    // Include density of the contacts in case of ETB
+    if (opt.contact_calculation)
+    {
+      int cont1_ndofs = _qc_n_dofs[0] - _device_n_dofs;
+      int cont2_ndofs = _qc_n_dofs[1] - cont1_ndofs - _device_n_dofs;
+      density.resize(_device_n_dofs*n_vars + cont1_ndofs*n_vars + cont2_ndofs*n_vars);
+    }
+
     if (get_options().has_submodel("k_integration_density"))
     {
       if (opt.scattering)
       {
-        unsigned int n_vars = _ext_module->get_number_of_bands();
-        std::vector<double> density(_device_n_dofs * n_vars, 0.0);
-
         set_kpoints("hlDensity");
         set_hamiltonians();
         // _libnegf->compute_density_inelastic(density, "hl");
@@ -1241,9 +1245,6 @@ Negf::do_solve(void)
       
       setup_hamil();
 
-      unsigned int n_vars = _ext_module->get_number_of_bands();
-      std::vector<double> density(_device_n_dofs * n_vars, 0.0);
-
       if (get_option("quasi_equilibrium",false))
       {
         std::vector<double> Ec(_device_n_dofs*n_vars);
@@ -1258,25 +1259,12 @@ Negf::do_solve(void)
       }
       else
       {
-        _libnegf->density(density, "hl");
+        _libnegf->density(density, "hl", opt.contact_calculation);
       }
       transfer_density(density, "hl");
-
-      // write qdens on hldensity
-      //NumericVector<Number>& qdens = *_qdens_sys->solution;
-      //unsigned int p_id = _qdens_sys->variable_number("hdens");
-      //unsigned int p_dofs = _qc_n_dofs[_quantum_contacts.size()-1];
-      //unsigned int start = p_id * p_dofs;
-      //_hldensity.reserve(_device_n_dofs);
-      //for (unsigned int i=0; i < _device_n_dofs; i++)
-      //  _hldensity.push_back( qdens(start+i) );
-
       finalize();
     }
       
-    //for (unsigned int i=0; i < _device_n_dofs; i++)
-    //  std::cout<<_hldensity[i]<<std::endl;
-
     Messages::info("Density done");
 
   }
@@ -1291,20 +1279,6 @@ Negf::do_solve(void)
       set_hamiltonians();
 
       std::vector<double> layer_curr = compute_layer_currents();
-
-      if (plot_solution("LDOS"))
-      {
-        Messages::info("Plot LDOS");
-
-        // get_energies
-        vector<double> erg;
-        _libnegf->get_energies(erg);
-
-        vector<vector<double>> ldos;
-        _libnegf->get_ldos(ldos);
-
-        plot_LDOS(erg, ldos, "");
-      }
       
       current.clear();
       current.resize(2,0.0);
@@ -1667,6 +1641,14 @@ Negf::calculate_for_k_point(const Point& k_point,
    unsigned int n_vars = _ext_module->get_number_of_bands();
    field.resize(_device_n_dofs * n_vars);
 
+   // Include density of the contacts in case of ETB
+   if (opt.contact_calculation)
+   {
+    int cont1_ndofs = _qc_n_dofs[0] - _device_n_dofs;
+    int cont2_ndofs = _qc_n_dofs[1] - cont1_ndofs - _device_n_dofs;
+    field.resize(_device_n_dofs*n_vars + cont1_ndofs*n_vars + cont2_ndofs*n_vars);
+   }
+
    switch (_which_integration)
    {
      case INTDENSITYEL:
@@ -1695,7 +1677,7 @@ Negf::calculate_for_k_point(const Point& k_point,
        }
        else
        {
-         _libnegf->density(field, "el");
+         _libnegf->density(field, "el", opt.contact_calculation);         
 
 
          error = 0.0;
@@ -1704,8 +1686,15 @@ Negf::calculate_for_k_point(const Point& k_point,
          {
            error += field[i];
          }
-
-         error /= _device_n_dofs;
+         
+        if (opt.contact_calculation)
+        {
+          int cont1_ndofs = _qc_n_dofs[0] - _device_n_dofs;
+          int cont2_ndofs = _qc_n_dofs[1] - cont1_ndofs - _device_n_dofs;
+          error /= (_device_n_dofs + cont1_ndofs + cont2_ndofs);
+        }
+        else
+          error /= _device_n_dofs;
        }
        break;
      }
@@ -1735,7 +1724,7 @@ Negf::calculate_for_k_point(const Point& k_point,
        else
        {
 
-         _libnegf->density(field, "hl");
+         _libnegf->density(field, "hl", opt.contact_calculation);
 
          error = 0.0;
 
@@ -1744,8 +1733,17 @@ Negf::calculate_for_k_point(const Point& k_point,
            error += field[i];
          }
 
-         error /= _device_n_dofs;
-         }
+                 
+        if (opt.contact_calculation)
+        {
+          int cont1_ndofs = _qc_n_dofs[0] - _device_n_dofs;
+          int cont2_ndofs = _qc_n_dofs[1] - cont1_ndofs - _device_n_dofs;
+          error /= (_device_n_dofs + cont1_ndofs + cont2_ndofs);
+        }
+        else
+          error /= _device_n_dofs;
+      }
+
        break;
      }
 
@@ -1793,6 +1791,8 @@ Negf::calculate_for_k_point(const Point& k_point,
    // WARNING: for now it works only when calling Currents
    if (plot_solution("LDOS"))
    {
+     if (!plot_solution("Current")) 
+        throw std::runtime_error("LDOS cannot be computed without Current calculation");
      Messages::info("Plot LDOS");
 
      // get_energies
@@ -1969,9 +1969,9 @@ Negf::transfer_density_etb(const std::vector<double>& density, const std::string
 
   // compute total number of n_vars n_dofs
   unsigned int n_vars = _ext_module->get_number_of_bands();
+  // It is important to infer N_atoms from the size of density: it tells us if the contact were computed
   unsigned int N_atoms = density.size() / n_vars;
   NumericVector<Number>& qdens = *_qdens_sys->solution;
-  //qdens.zero();
 
   int particle_id;
 
@@ -3148,7 +3148,8 @@ Negf::project_density(const Elem* elem, const Point& point, const std::vector<do
     unsigned int atom_id = it.atom_index();
 
     // atom_id may belong to a contact, skip loop in this case
-    if (atom_id > N_atoms-1) continue;
+    // (when contact calculation is disabled)
+    if (atom_id > N_atoms-1 && !opt.contact_calculation) continue;
 
     Point atom_pos(atom->get_position() + it.atom_translation());
     Point delta_r = coord - atom_pos;

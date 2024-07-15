@@ -80,8 +80,7 @@ public:
   void get_energy_current(std::vector<std::vector<double>>& current);
 
   //!Compute charge density
-  // void density(std::vector<double>& density, std::string particle, bool contact_calc);
-  void density(std::vector<double>& density, std::string particle);
+  void density(std::vector<double>& density, std::string particle, bool contact_calc);
 
   //!Compute charge density, using quasi-equilibrium approximation
   void quasi_equilibrium_density(std::vector<double>& density, std::string particle,
