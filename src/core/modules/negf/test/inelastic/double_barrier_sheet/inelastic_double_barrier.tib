@@ -1,0 +1,227 @@
+
+# Description of  the  device physical regions
+Device
+{
+  
+  Parallel
+  {
+   # let's do FEM calculations in serial
+   # this will do FEM calculations in serial, but when started
+   # with more than 1 MPI process will calculate k-points for
+   # spectrum in parallel
+   mpi_processes_per_mesh = 1
+  }
+
+  meshfile = barrier.msh  
+  mesh_units = 1e-9
+
+  material = GaAs
+  Doping 
+  {
+    type = donor
+  }
+
+   Region source_region
+   {
+     Doping 
+     {
+       type = donor
+       Nd = 2e18 
+     }
+   }
+
+   Region barrier1
+   {
+     material = AlGaAs
+     x = 0.3           
+   }
+
+   Region barrier2
+   {
+    material = AlGaAs
+    x = 0.3           
+   }
+
+   Region drain_region
+   {
+     Doping 
+     {
+       type = donor
+       Nd = 2e18 
+     }
+   }
+
+   Region dd_drain_region
+   {
+     Doping 
+     {
+       type = donor
+       Nd = 2e18 
+     }
+   }
+   
+   Region dd_source_region
+   {
+     Doping {
+       type = donor
+       Nd = 2e18 
+     }
+   }
+
+   Region well
+   {
+   }
+
+   Cluster double_barrier
+   {
+    regions=(source_region,barrier1, well, barrier2,drain_region)
+   }
+
+   Quantum_contact int_drain
+   {
+    regions = drain_region
+   }
+
+   Quantum_contact int_source
+   {
+    regions = source_region  
+   }
+
+}
+
+
+# Definition of  Simulation Models  and associated Boundary Conditions 
+Module driftdiffusion
+{
+  regions=(dd_source_region, source_region,barrier1, well, barrier2,drain_region, dd_drain_region)
+
+  coupling = electrons
+
+  plot = (Ec, Ev, eQFermi, hQFermi, eDensity, hDensity,
+          eCurrentDensity, hCurrentDensity, NetRecombination,
+          ElField, ElPotential, ContactCurrent)
+
+  Physics
+  {
+
+  }
+
+  Contact source
+  {
+    voltage = 0.0
+  }
+ 
+  Contact drain
+  {
+    voltage = $Vd[0.1]
+  }
+}
+
+Module efaschroedinger
+{
+  name = quantum_el
+  regions =(int_source, double_barrier, int_drain)
+
+  
+  poisson_model_name = driftdiffusion
+  Dirichlet_bc_everywhere = false
+  
+  plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)
+
+  Solver
+  {
+    number_of_eigenstates = 6
+    Dirichlet_bc_everywhere = false
+  }
+
+  Physics
+  {
+    particle = el
+    model = single_band
+  }
+}
+
+
+Module negf
+{
+  #plot = (elDensity)
+  plot = (Current)
+  regions = double_barrier
+  verbosity = 51
+
+  potential_simulation = driftdiffusion
+  Boundary int_source{}
+  Boundary int_drain{}
+
+  y-periodicity = true # Define a sheet
+ 
+  Solver
+  {
+    parallel_k_groups = 2
+
+    number_of_PL = 15
+    #writeLDOS = 1
+    Np_contour = (30, 100)
+    Npoles = 1 
+    delta = 1e-4
+    deltaEc = 0.1
+    Emin = -0.2
+    #Emax = 0.74
+    Emax = 0.40
+    Estep = 0.02
+    n_kT = 15
+  }
+
+  Physics
+  {
+    hamiltonian efa {simulation = quantum_el}
+
+    Scattering
+    {
+      Inelastic
+      {
+        model = polar_optical_phonon
+        coupling = 1.0
+        max_scba_iterations = 6000
+        scba_tolerance = 1e-7
+        phonon_frequency = 0.05
+        eps_infinity = 1.0
+        eps_0 = 3.0
+        screening_length = 10
+        tridiagonal = true 
+      }
+    }
+  }
+  
+  #k_integration_density
+  #{
+  #  verbose = 4 
+  #  #gamma_point_calculation = true
+  #  quadrature_rule = trapezoidal 
+  #  k_max = 0.50
+  #  number_of_elements = (8,8)
+  #}
+
+ k_integration_current
+ {
+   verbose = 4
+   #gamma_point_calculation = true
+   #k_max = 0.5
+   quadrature_rule = trapezoidal
+   number_of_elements = (1)
+   #reduced_BZ = false
+ }
+
+}
+
+
+# Definition of  model-independent parameters of the Simulation
+Simulation
+{
+  temperature = 300
+  solve = (driftdiffusion,negf) 
+  resultpath = output 
+  output_format = grace 
+}
+
+

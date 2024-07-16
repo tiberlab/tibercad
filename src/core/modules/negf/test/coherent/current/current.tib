@@ -1,0 +1,161 @@
+
+# Description of  the  device physical regions
+Device
+{
+  meshfile = bulk.msh  
+  mesh_units = 1e-9
+
+  material = GaAs
+
+   Doping { Nd = 1e15  type = donor  level = 0.025 } 
+
+   Region bulk 
+   {
+   }
+
+   Quantum_contact anode
+   {
+    regions = bulk
+   }
+
+   Quantum_contact cathode
+   {
+    regions = bulk
+   }
+
+}
+
+
+# Definition of  Simulation Models  and associated Boundary Conditions 
+Module driftdiffusion
+{
+  regions = (all)
+  plot = (Ec, Ev, eQFermi, eQFermi, eDensity, hDensity,
+          eCurrentDensity, hCurrentDensity, NetRecombination,
+          ElField, ElPotential, ContactCurrent)
+
+  Contact cathode
+  {
+    voltage = 0.0
+  }
+ 
+  Contact anode
+  {
+    voltage = $Vd[0.001]
+  }
+
+  Physics
+  {
+    band_properties bulk_kp
+    {
+    }
+  }
+}
+
+Module efaschroedinger
+{
+  name = quantum_el
+  regions = (anode, cathode, bulk)
+  poisson_model_name = driftdiffusion
+  Dirichlet_bc_everywhere = false
+
+  degeneracy = 2
+
+  plot = (ProbabilityDensity, EigenEnergy, QuantumDensity,k_dispersion)
+
+  Solver
+  {
+    number_of_eigenstates = 6
+  }
+
+  Physics
+  {
+    model = conduction_band 
+    spurious = none 
+  }
+
+}
+
+
+Module sweep
+{
+  name = sweep_drain 
+  solve = (driftdiffusion,negf)
+  variable = $Vd
+  start = 0.0
+  stop = 1.0
+  steps = 50 
+  plot_data = true
+}
+
+Module negf
+{
+  verbosity = 10
+
+  plot = (Current)
+  regions = (bulk)
+
+  potential_simulation = driftdiffusion
+  Boundary anode{}
+  Boundary cathode{}
+ 
+  Solver
+  {
+    number_of_PL = 10 
+    #Np_contour = (30,100)
+    #Np_real = 200
+    #Npoles = 1 
+    delta = 1e-9
+    n_kT = 30
+    deltaEc = 0.1
+    deltaEv = 0.1
+    Emin = -0.1
+    Emax = 1.0
+    Estep = 0.001
+  }
+
+  Physics
+  {
+    hamiltonian efa {simulation = quantum_el}
+  }
+  
+  k_integration_density
+  {
+    k_max = 1.00
+    quadrature_rule = trapezoidal
+    number_of_elements = (8,8)
+  }
+
+ k_integration_current
+ {
+   verbose = 4
+   quadrature_rule = trapezoidal
+   k_max = 0.68
+   number_of_elements = (8,8)   #must be a power of 2
+ }
+
+
+}
+
+
+# Definition of  model-independent parameters of the Simulation
+Simulation
+{
+  temperature = 300 
+  solve = (driftdiffusion, negf) 
+  resultpath = output
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

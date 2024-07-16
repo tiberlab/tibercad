@@ -1,0 +1,193 @@
+# Description of  the  device physical regions
+Device
+{
+  meshfile = bulk.msh  
+  mesh_units = 1e-9
+
+  material = GaAs 
+
+   Doping { Nd = 1e15  type = donor  } 
+
+   Region dd_source_region
+   {
+   }
+
+
+   Region bulk
+   {
+   }
+
+   Region dd_drain_region
+   {
+   }
+   
+
+   Quantum_contact c_source
+   {
+    regions = bulk  
+   }
+   
+   Quantum_contact c_drain
+   {
+    regions = bulk 
+   }
+
+   Atomistic str 
+   {
+      reference_region = bulk 
+      regions = (c_source, bulk, c_drain)
+      passivation = no 
+ 
+      #z_length = 6 
+      #y_length = 6
+      
+      print = (xyz, tgn)
+  }
+
+}
+
+# Definition of  Simulation Models  and associated Boundary Conditions 
+Module driftdiffusion
+{
+  regions=(dd_source_region, bulk, dd_drain_region)
+  # is default
+  # statistics = fermidirac
+
+  plot = (Ec, Ev, eQFermi, eQFermi, eDensity, hDensity,
+          eCurrentDensity, hCurrentDensity, NetRecombination,
+          ElField, ElPotential, ContactCurrent)
+
+  Physics
+  {
+   particle_density
+   { 
+      statistics =  fermidirac
+   }
+  }
+
+  Contact drain
+  {
+    voltage = $Vd[0.00]
+  }
+
+  Contact source
+  {
+    voltage = 0.0
+  }
+ 
+}
+
+Module empirical_tb
+{
+  regions = (c_source, bulk, c_drain)
+  name = tb
+  atomistic_structure = str 
+  Harrison_scaling = false 
+  potential_simulation = driftdiffusion
+
+  plot = (tbstates)
+
+  Solver
+  {
+    num_valence_eigenvalues = 2   
+    num_conduction_eigenvalues = 2   
+    #guess_valence = -3.0
+    #guess_conduction = -0.2
+    #long_tolerance = 1e-4
+  }
+
+}
+
+Module efaschroedinger
+{
+  name = quantum_el
+  regions =(c_source, bulk, c_drain)
+
+  
+  poisson_model_name = driftdiffusion
+  Dirichlet_bc_everywhere = false
+  
+  #degeneracy = 1
+
+  #quadrature_rule = trapez
+  plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)
+
+  Solver
+  {
+    number_of_eigenstates = 6
+    Dirichlet_bc_everywhere = false
+  }
+
+  Physics
+  {
+    model = conduction_band
+  }
+}
+
+
+Module negf
+{
+  plot = (elDensity)
+  regions = bulk
+
+  potential_simulation = driftdiffusion
+  Boundary c_source{}
+  Boundary c_drain{}
+
+  Solver
+  {
+    verbosity = 10
+    number_of_PL = 20
+    #size_of_PL = 8 #24 
+
+    #Np_contour = (30,100)
+    Np_real = 130
+    #Npoles = 1 
+    #deltaEc = 0.25
+
+    #delta = 1e-3
+    #Emin = 0.30
+    #Emax = 0.70
+    #Estep = 0.05
+    writeLDOS = 1
+  }
+
+  Physics
+  {
+     hamiltonian efa {simulation = quantum_el}
+  }
+  
+  k_integration_density
+  {
+    verbose = 1 
+    #gamma_point_calculation = true
+    quadrature_rule = trapezoidal
+    k_max = 0.50
+    number_of_elements = (2,2)
+  }
+
+
+}
+
+# Definition of  model-independent parameters of the Simulation
+Simulation
+{
+  temperature = 300
+  solve = (driftdiffusion,negf) 
+  resultpath = ref_efa_output
+  output_format = grace 
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

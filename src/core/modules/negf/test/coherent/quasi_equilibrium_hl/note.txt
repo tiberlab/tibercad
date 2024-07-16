@@ -1,0 +1,2 @@
+You can compare the result of the quasieq integration with the output of holes_barrier.tib. This tib file computes the density without 
+the quasi_equilibrium approximation, so that we are sure the quasieq routine works as intended.

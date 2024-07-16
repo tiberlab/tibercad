@@ -235,7 +235,7 @@ Module negf
    #k_max = 0.5
    quadrature_rule = trapezoidal
    number_of_elements = (1,1)
-   reduced_BZ = true
+   #reduced_BZ = false
  }
 
 }

@@ -1,0 +1,193 @@
+Device
+{
+  meshfile = barrier.msh  
+  mesh_units = 1e-9
+
+  material = GaAs
+
+  Parallel
+  {
+    mpi_processes_per_mesh = 1
+  }
+
+   Region source_region
+   {
+     Doping 
+     {
+       type = donor
+       Nd = 2e18 
+     }
+   }
+
+   Region barrier1
+   {
+     material = AlGaAs
+     x = 0.3           
+   }
+
+   Region barrier2
+   {
+    material = AlGaAs
+    x = 0.3           
+   }
+
+   Region drain_region
+   {
+     Doping 
+     {
+       type = donor
+       Nd = 2e18 
+     }
+   }
+
+   Region dd_drain_region
+   {
+     Doping 
+     {
+       type = donor
+       Nd = 2e18 
+     }
+   }
+   
+   Region dd_source_region
+   {
+     Doping {
+       type = donor
+       Nd = 2e18 
+     }
+   }
+
+   Region well
+   {
+   }
+
+   Cluster double_barrier
+   {
+    regions=(source_region,barrier1, well, barrier2,drain_region)
+   }
+
+   Quantum_contact int_drain
+   {
+    regions = drain_region
+   }
+
+   Quantum_contact int_source
+   {
+    regions = source_region  
+   }
+
+}
+
+
+# Definition of  Simulation Models  and associated Boundary Conditions 
+Module driftdiffusion
+{
+  regions=(dd_source_region, source_region,barrier1, well, barrier2,drain_region, dd_drain_region)
+
+  coupling = electrons
+
+  plot = (Ec, Ev, eQFermi, hQFermi, eDensity, hDensity,
+          eCurrentDensity, hCurrentDensity, NetRecombination,
+          ElField, ElPotential, ContactCurrent)
+
+  Physics
+  {
+
+  }
+
+  Contact source
+  {
+    voltage = 0.0
+  }
+ 
+  Contact drain
+  {
+    voltage = $Vd[0.0]
+  }
+}
+
+Module efaschroedinger
+{
+  name = quantum_el
+  regions =(int_source, double_barrier, int_drain)
+
+  
+  poisson_model_name = driftdiffusion
+  Dirichlet_bc_everywhere = false
+
+  #quadrature_rule = trapez
+  plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)
+
+  Solver
+  {
+    number_of_eigenstates = 6
+    Dirichlet_bc_everywhere = false
+  }
+
+  Physics
+  {
+    model = conduction_band
+  }
+}
+
+
+Module sweep
+{
+  name = sweep_drain 
+  solve = (driftdiffusion,negf)
+  variable = $Vd
+  start = 0.0
+  stop = 1.0
+  steps = 50 
+  plot_data = true
+}
+
+Module negf
+{
+  plot = (elDensity)
+  regions = double_barrier
+  verbosity = 10
+
+  potential_simulation = driftdiffusion
+  Boundary int_drain{}
+  Boundary int_source{}
+
+ 
+  Solver
+  {
+    number_of_PL = 90
+    Np_contour = (30, 100)
+    #Npoles = 0 
+    #Np_real = 1000
+    delta = 1e-6
+    deltaEc = 0.1
+  }
+
+  Physics
+  {
+    # hamiltonian single_band { } 
+    # hamiltonian single_band {valley = G}
+    hamiltonian efa {simulation = quantum_el}
+  }
+  
+  k_integration_density
+  {
+    verbose = 4 
+    #gamma_point_calculation = true
+    quadrature_rule = trapezoidal
+    k_max = 0.50
+    number_of_elements = (8,8)
+  }
+
+}
+
+
+# Definition of  model-independent parameters of the Simulation
+Simulation
+{
+  temperature = 300
+  solve = (driftdiffusion,negf) 
+  resultpath = output
+}
+
+

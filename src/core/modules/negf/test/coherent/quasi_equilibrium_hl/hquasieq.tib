@@ -1,0 +1,220 @@
+
+# Description of  the  device physical regions
+Device
+{
+
+  Parallel
+  {  
+   mpi_processes_per_mesh = 1
+  }
+
+  meshfile = barrier.msh  
+  mesh_units = 1e-9
+
+  material = GaAs
+  Doping 
+  {
+    type = acceptor
+    level = 0.025
+  }
+
+   Region source_region
+   {
+     Doping 
+     {
+       type = acceptor
+       Nd = 2e18 
+     }
+   }
+
+   Region barrier1
+   {
+     material = AlGaAs
+     x = 0.3           
+   }
+
+   Region barrier2
+   {
+    material = AlGaAs
+    x = 0.3           
+   }
+
+   Region drain_region
+   {
+     Doping 
+     {
+       type = acceptor
+       Nd = 2e18 
+     }
+   }
+
+   Region dd_drain_region
+   {
+     Doping 
+     {
+       type = acceptor
+       Nd = 2e18 
+     }
+   }
+   
+   Region dd_source_region
+   {
+     Doping {
+       type = acceptor
+       Nd = 2e18 
+     }
+   }
+
+   Region well
+   {
+   }
+
+   Cluster double_barrier
+   {
+    regions=(source_region,barrier1, well, barrier2,drain_region)
+   }
+
+   Quantum_contact int_drain
+   {
+    regions = drain_region
+   }
+
+   Quantum_contact int_source
+   {
+    regions = source_region  
+   }
+
+}
+
+
+# Definition of  Simulation Models  and associated Boundary Conditions 
+Module driftdiffusion
+{
+  regions=(dd_source_region, source_region,barrier1, well, barrier2,drain_region, dd_drain_region)
+
+  coupling = holes
+
+  plot = (Ec, Ev, eQFermi, hQFermi, eDensity, hDensity,
+          eCurrentDensity, hCurrentDensity, NetRecombination,
+          ElField, ElPotential, ContactCurrent)
+
+  #valence_band
+  #{
+  #  regions = (dd_source_region, source_region,barrier1, well, barrier2,drain_region, dd_drain_region)
+  #  density_of_states bulk
+  #  {
+  #    dos_mass = 0.09
+  #    m_dos = 0.09
+  #  }
+  #}
+
+  Physics
+  {
+
+  }
+
+  Contact source
+  {
+    voltage = 0.0
+  }
+ 
+  Contact drain
+  {
+    voltage = $Vd[0.0]
+  }
+}
+
+Module efaschroedinger
+{
+  name = quantum_hl
+  regions =(int_source, double_barrier, int_drain)
+
+  
+  poisson_model_name = driftdiffusion
+  Dirichlet_bc_everywhere = false
+  
+  #degeneracy = 1
+
+  #quadrature_rule = trapez
+  plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)
+
+  Solver
+  {
+    number_of_eigenstates = 6
+    Dirichlet_bc_everywhere = false
+  }
+
+  Physics
+  {
+    particle = hl
+    model = single_band
+  }
+}
+
+Module negf
+{
+  plot = (hlDensity)
+  regions = double_barrier
+  verbosity = 49
+
+  potential_simulation = driftdiffusion
+  Boundary int_source{}
+  Boundary int_drain{}
+
+  quasi_equilibrium = true
+
+  Solver
+  {
+    number_of_PL = 90
+    delta = 1e-6
+    deltaEv = 0.1
+    #n_kT = 15
+
+    Np_contour = (30, 100)
+    Npoles = 0 
+
+    #for debug
+    #deltaEv = 0.7
+
+    #Estep = 0.001
+    #Estep_coarse = 0.01
+  }
+
+  Physics
+  {
+    # hamiltonian single_band { } 
+    # hamiltonian single_band {valley = G}
+    hamiltonian efa {simulation = quantum_hl}
+  }
+  
+  k_integration_density
+  {
+    verbose = 4 
+    #gamma_point_calculation = true
+    quadrature_rule = trapezoidal
+    k_max = 0.50
+    number_of_elements = (4,4)
+  }
+
+ k_integration_current
+ {
+   verbose = 4
+   gamma_point_calculation = true
+  #k_max = 0.5
+  #number_of_elements = (5,5)
+ }
+
+
+}
+
+
+# Definition of  model-independent parameters of the Simulation
+Simulation
+{
+  temperature = 300
+  solve = (driftdiffusion,negf) 
+  resultpath = output
+  output_format = grace 
+}
+
+

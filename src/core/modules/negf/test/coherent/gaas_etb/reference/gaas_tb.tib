@@ -2,6 +2,12 @@
 # Description of  the  device physical regions
 Device
 {
+
+  Parallel
+  {  
+   mpi_processes_per_mesh = 1
+  }
+
   meshfile = bulk.msh  
   mesh_units = 1e-9
 
@@ -21,7 +27,7 @@ Device
    Region dd_drain_region
    {
    }
-   
+
 
    Quantum_contact c_source
    {
@@ -94,6 +100,10 @@ Module empirical_tb
   atomistic_structure = str 
   Harrison_scaling = false 
   potential_simulation = driftdiffusion
+  relativistic = false
+
+  parallel_as_mesh = true
+
 
   plot = (tbstates)
 
@@ -112,53 +122,57 @@ Module empirical_tb
 Module negf
 {
   plot = (elDensity)
-  # plot = (LDOS)
+  # plot = (Current, LDOS)
   regions = bulk
 
   potential_simulation = driftdiffusion
   Boundary c_source{}
   Boundary c_drain{}
 
+  disable_contact_calculation = false
+  parallel_k_groups = 1
+
   Solver
   {
-    verbosity = 10
+    # General settings
+    delta = 1e-7  # Important for converging on real axis (needs to be small enough)
+    verbosity = 70
     number_of_PL = 5
 
+    # For density
     #Np_contour = (30,100)
-    Np_real = 40
-    #Npoles = 1 
-    #deltaEc = 0.25
+    #Npoles = 0
+    Np_real = 300
+    deltaEc = 0.14
+    n_kT = 15
 
-    #delta = 1e-3
-    #Emin = 0.30
-    #Emax = 0.70
-    #Estep = 0.05
-    #writeLDOS = 1
+    # For current
+    Emin = 0.14
+    Emax = 0.45
+    Estep = 0.05
   }
 
   Physics
   {
      hamiltonian etb {simulation = tb}
   }
-  
-  #k_integration_current
-  #{
-  #  verbose = 3
-  #  #gamma_point_calculation = true
-  #  quadrature_rule = trapezoidal
-  #  k_max = 0.50
-  #  number_of_elements = (2,2)
-  #}
+
+  k_integration_current
+  {
+    verbose = 3
+    #gamma_point_calculation = true
+    quadrature_rule = trapezoidal
+    #k_max = 0.50
+    number_of_elements = (2,2)
+  }
 
   k_integration_density
   {
     verbose = 1 
     #gamma_point_calculation = true
     quadrature_rule = trapezoidal
-    k_max = 0.50
     number_of_elements = (2,2)
   }
-
 
 }
 
@@ -170,17 +184,4 @@ Simulation
   resultpath = output
   output_format = grace 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 

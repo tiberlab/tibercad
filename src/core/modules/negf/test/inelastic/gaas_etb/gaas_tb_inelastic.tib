@@ -1,0 +1,212 @@
+# Description of  the  device physical regions
+Device
+{
+  meshfile = bulk.msh  
+  mesh_units = 1e-9
+
+  material = GaAs 
+
+  Parallel
+  {  
+   mpi_processes_per_mesh = 1
+  }
+
+   Doping { Nd = 1e15  type = donor  } 
+
+   Region dd_source_region
+   {
+   }
+
+
+   Region bulk
+   {
+   }
+
+   Region dd_drain_region
+   {
+   }
+   
+
+   Quantum_contact c_source
+   {
+    regions = bulk  
+    length = 0.565 
+   }
+   
+   Quantum_contact c_drain
+   {
+    regions = bulk 
+    length = 0.565
+   }
+
+   Atomistic str 
+   {
+      reference_region = bulk 
+      regions = (c_source, bulk, c_drain)
+      passivation = no 
+      # fold_into_box = true
+
+ 
+      #z_length = 6 
+      #y_length = 6
+      
+      print = (xyz, tgn)
+  }
+
+}
+
+# Definition of  Simulation Models  and associated Boundary Conditions 
+Module driftdiffusion
+{
+  regions=(dd_source_region, bulk, dd_drain_region)
+  # is default
+  # statistics = fermidirac
+
+  # we solve only for electrons
+  #coupling = electrons
+
+  #save_state = true
+  
+  plot = (Ec, Ev, eQFermi, eQFermi, eDensity, hDensity,
+          eCurrentDensity, hCurrentDensity, NetRecombination,
+          ElField, ElPotential, ContactCurrent)
+
+  Physics
+  {
+   particle_density
+   { 
+      statistics =  fermidirac
+   }
+  }
+
+  Contact drain
+  {
+    voltage = $Vd[0.1]
+  }
+
+  Contact source
+  {
+    voltage = 0.0
+  }
+ 
+}
+
+Module empirical_tb
+{
+  regions = (c_source, bulk, c_drain)
+  name = tb
+  atomistic_structure = str 
+  Harrison_scaling = false 
+  potential_simulation = driftdiffusion
+
+  plot = (tbstates)
+
+  parallel_as_mesh = true
+
+  Solver
+  {
+    num_valence_eigenvalues = 2   
+    num_conduction_eigenvalues = 2   
+    #guess_valence = -3.0
+    #guess_conduction = -0.2
+    #long_tolerance = 1e-4
+  }
+
+}
+
+
+Module negf
+{
+  plot = (Current)
+  # plot = (LDOS)
+  regions = bulk
+
+  potential_simulation = driftdiffusion
+  Boundary c_source{}
+  Boundary c_drain{}
+
+  Solver
+  {
+    parallel_k_groups = 1
+
+    verbosity = 51
+    number_of_PL = 5
+
+    #Np_contour = (30,100)
+    Np_real = 40
+    #Npoles = 1 
+    #deltaEc = 0.25
+
+    #delta = 1e-3
+    Emin = 0.30
+    Emax = 0.70
+    #Estep = 0.05
+    #writeLDOS = 1
+  }
+
+  Physics
+  {
+    hamiltonian etb {simulation = tb}
+
+    Scattering
+    {
+      delta_z = 0.01
+      cell_area = 1.0
+
+      Inelastic
+      {
+        model = polar_optical_phonon
+        coupling = 1.0
+        max_scba_iterations = 6000
+        scba_tolerance = 1e-7
+        phonon_frequency = 0.05
+        eps_infinity = 1.0
+        eps_0 = 3.0
+        screening_length = 10
+        tridiagonal = true 
+      }
+    }
+  }
+  
+  k_integration_current
+  {
+    verbose = 3
+    #gamma_point_calculation = true
+    quadrature_rule = trapezoidal
+    #k_max = 0.50
+    number_of_elements = (1,1)
+  }
+
+  #k_integration_density
+  #{
+  #  verbose = 1 
+  #  #gamma_point_calculation = true
+  #  quadrature_rule = trapezoidal
+  #  k_max = 0.50
+  #  number_of_elements = (2,2)
+  #}
+
+}
+
+# Definition of  model-independent parameters of the Simulation
+Simulation
+{
+  temperature = 300
+  solve = (driftdiffusion,negf) 
+  resultpath = output
+  output_format = grace 
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

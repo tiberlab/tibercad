@@ -646,17 +646,6 @@ Negf::init_k_space_integration(void)
 
   unsigned int k_dim = 3 - dim;
 
-  // Override the k_dim derived from mesh dimension, if it was specified in input
-  if (get_option("x-periodicity", false) || get_option("y-periodicity", false) || get_option("z-periodicity", false))
-  {
-    std::vector<bool> input_periodicity(3, false);
-    input_periodicity[0] = get_option("x-periodicity", false);
-    input_periodicity[1] = get_option("y-periodicity", false);
-    input_periodicity[2] = get_option("z-periodicity", false);
-
-    k_dim = std::accumulate(input_periodicity.begin(), input_periodicity.end(), 0);
-  }
-
   // For ETB we can get the k-dimension directly from the atomistic structure (periodicity information)
   if ( _hamil_type == "etb" ) 
   {
@@ -665,6 +654,17 @@ Negf::init_k_space_integration(void)
     k_dim_etb = std::accumulate(periodicity.begin(), periodicity.end(), 0);
     // Check if it was defined in the input file
     if (k_dim_etb != 0) k_dim = k_dim_etb;
+  }
+
+  // Override the k_dim derived from mesh dimension or etb module, if it was specified in input
+  if (get_option("x-periodicity", false) || get_option("y-periodicity", false) || get_option("z-periodicity", false))
+  {
+    std::vector<bool> input_periodicity(3, false);
+    input_periodicity[0] = get_option("x-periodicity", false);
+    input_periodicity[1] = get_option("y-periodicity", false);
+    input_periodicity[2] = get_option("z-periodicity", false);
+
+    k_dim = std::accumulate(input_periodicity.begin(), input_periodicity.end(), 0);
   }
 
   k_dim = min(k_dim, 2u); // It cannot really be more than 2 with NEGF
