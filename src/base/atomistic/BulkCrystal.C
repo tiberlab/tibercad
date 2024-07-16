@@ -84,6 +84,13 @@ BulkCrystal::build_rotation(void)
   //Retrieve rotation (now from material, in future this will 
   //be calculated directly here
   _rotation = _mat->get_rotated_crystal().RotMatrix; 
+
+  // TODO: when porting from RotatedCrystal do the following:
+  //       read miller indices, and check for parentheses
+  //       ( ) -> trat as plane
+  //       [ ] -> treat as direction
+  //       in first case, us a* = bxc/V, b* = cxa/V, c* = axb/V, V=a.(bxc)
+  //       also, construct third direction from two given ones
   
   //os << "Bulk Material " << _mat->get_name() << 
   //  " is created with a rotation " << std::endl<< _rotation << std::endl;
@@ -258,7 +265,6 @@ BulkCrystal::read_database(void)
     unsigned int n_basis_specie = db->get("n_basis_specie", 0);
 
     // Read in basis vectors
-    //Tensor1 Tb, Ta;
     Database* dbB = &(mat_alloy->get_component_B()->get_database());
     Database* dbA = &(mat_alloy->get_component_A()->get_database());
     dbB->set_section("atomistic_structure");

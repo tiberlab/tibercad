@@ -183,10 +183,10 @@ class Kspace
     */
    unsigned int b1;
 
-   //! Identify k basis vector b1
+   //! Identify k basis vector b2
    unsigned int b2;
 
-   //! Identify k basis vector b1
+   //! Identify k basis vector b3
    unsigned int b3;
 
    //! The maximum k to use (relative to k space basis)
