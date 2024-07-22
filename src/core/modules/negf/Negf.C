@@ -47,6 +47,7 @@
 
 
 // C++ includes
+#include <filesystem>
 #include <fstream>
 #include <sstream>
 #include <set>
@@ -1103,6 +1104,8 @@ Negf::compute_current(void)
   //TODO: elCurrent. hlCurrent
   current[0] = _libnegf->current("eV","A");
   current[1] = current[0];
+  // Perform energy communicator reduce (maybe it should be done in libnegf)
+  _en_comm.sum(current);
   cout << "curr from negf : " << current[0] << endl;
 }
 
@@ -1355,117 +1358,121 @@ Negf::do_solve(void)
 }
 
 
-
 void
 Negf::plot_LDOS(const std::vector<double>& energies,
     const std::vector<std::vector<double>>& ldos,
     const string& name_suffix)
 {
+  namespace fs = std::filesystem;
+
   if (ldos.empty())
     return;
 
   string mod(name_suffix);
   if (!mod.empty()) mod = "_" + mod;
 
-  // MATLAB plotting commented, replaced with python
-  string file = get_output_directory() + "/" + get_output_filename_prefix()
-      // + "_LDOS" + mod + TiberCad::get_filename_suffix() + ".m";
-      + "_LDOS" + mod + TiberCad::get_filename_suffix() + ".py";
-
-  ofstream of(file);
-
-  size_t esteps = energies.size();
-
+  if (!fs::exists( get_output_directory() + "/LDOS/")) fs::create_directory( get_output_directory() + "/LDOS/");
+  
   unsigned int bands = _ext_module->get_number_of_bands();
-  int npoints = _device_n_dofs * bands;
+  SimulationInterface* model = SimulationInterface::find_simulation(opt.pot_module);
+  ofstream of;
 
-  // of << "energy = [";
-  // for (auto&& erg : energies) of << erg << " ";
-  // of << "];\n";
-  of << "import matplotlib.pyplot as plt\nimport numpy as np\n\n";
-  of << "energy = np.array([";
-  for (auto&& erg : energies) of << erg << ", ";
-  of << "])\n";
+  string enfile = get_output_directory() + "/LDOS/" + get_output_filename_prefix()
+      + "_energies.dat";
+  of.open(enfile);
+  
+  for (auto&& erg : energies) 
+    of << erg << ", ";
+  of.close();
 
-  vector<double> coordinates(_device_n_dofs);
-
-  // TODO what to do if mesh is distributed?
+  std::vector<DofField> coordinates(3, DofField(_device_n_dofs));
+  get_coordinates(coordinates);
+  std::vector<double> x = coordinates[0];
+  
+  string ldosfile = get_output_directory() + "/LDOS/" + get_output_filename_prefix()
+      + "_ldos" + mod + TiberCad::get_filename_suffix() + ".dat";
+  of.open(ldosfile);
+  
   if (_hamil_type == "efa")
   {
-    DofMap& dof_map = _sys_H->get_dof_map();
-    std::vector<unsigned int> dof_indices;
-
-    MeshBase::const_element_iterator       nd     = this->active_local_elements_begin();
-    const MeshBase::const_element_iterator nd_end = this->active_local_elements_end();
-    for ( ; nd != nd_end; ++nd)
+    size_t esteps = energies.size();
+    int npoints = _device_n_dofs * bands;
+    for (int i = 0; i < esteps; i++)
     {
-      const Elem* elem = *nd;
-      dof_map.dof_indices(elem, dof_indices, 0);
-
-      for (unsigned int n = 0; n < elem->n_nodes(); ++n)
+      for (int j = 0; j < npoints; j += bands)
       {
-        unsigned int id = _inv_perm[dof_indices[n]];
-        coordinates[id / bands] = elem->point(n)(0);
+        double node_dos = 0.0;
+        for (int b = 0; b < bands; ++b)
+          node_dos += ldos[i][j + b];
+        of << node_dos << ", ";
       }
+      of << "\n";
     }
   }
-  // Cannot use _sys_H for ETB, define coordinates using atomistic structure
+
+  int n_planes;
+  // This array will be re-sized after n_planes is computed
+  std::vector<double> plane_coordinates(_device_n_dofs, 0.0);
   if (_hamil_type == "etb")
   {
-    AtomisticStructure* as = _ext_module->get_atomistic_structure();
-    unsigned int N_atoms = _device_n_dofs;
-    std::vector<Atom>& atoms = as->get_structure_atoms();
-
-    for (int i=0; i<N_atoms; i++)
+    double eps = 1e-5;  // Arbitrary criterium for belonging to the same atomic plane
+    size_t esteps = energies.size();
+    int npoints = _device_n_dofs * bands;
+    for (int i = 0; i < esteps; i++)
     {
-      // x coord from Angstrom to mesh units
-      double equ = 1e-10 / get_mesh_units();
-      coordinates[i] = atoms[i].get_position(0) * equ;
+      n_planes = 0;
+      double plane_dos = 0.0;
+      double atom_dist = 0.0;
+      
+      for (int j = 0; j < npoints; j += bands)
+      {
+      
+        double node_dos = 0.0;
+        for (int b = 0; b < bands; ++b)
+          node_dos += ldos[i][j + b];
+
+        // This approach works only if atoms were previously reordered according to x-coorrdinate
+        atom_dist = std::abs(x[j / bands] - x[(j+bands)/bands]);
+
+        if (atom_dist > eps)
+        {
+          plane_coordinates[n_planes] = x[j / bands];
+          n_planes++;
+          of << plane_dos << ", ";
+          plane_dos = 0.0;
+        }
+        else
+        {
+          plane_dos += node_dos;
+        }
+      }
+      
+      of << "\n";
     }
   }
+  of.close();
 
-  //of << "x = [";
-  of << "x = np.array([";
-
-  for (size_t i = 0; i < _device_n_dofs; ++i)
-    of << coordinates[i] << ", ";
-  of << "])\n";
-  //   of << coordinates[i] << " ";
-  // of << "];\n";
-
-  //of << "LDOS = [";
-  of << "LDOS = np.array([\n";
-
-  for (int i = 0; i < esteps; i++)
-  {
-    of << "["; // <- only for python plotting
-    for (int j = 0; j < npoints; j += bands)
-    {
-      double node_dos = 0.0;
-      for (int b = 0; b < bands; ++b)
-        node_dos += ldos[i][j + b];
-      of << node_dos << ", ";
-    }
-    // of << "\n";
-    of << "],\n";
-
-  }
-  // of << "];\n";
-  of << "])\n";
-
-
-  //of << "x=1:" << _device_n_dofs << ";\n";
-  //of << "pcolor(x, energy, log(abs(LDOS))), shading flat\n";
+  string coordfile = get_output_directory() + "/LDOS/" + get_output_filename_prefix()
+      + "_coordinates.dat";
+  of.open(coordfile);
   
-  //of << "pcolor(x, energy, abs(LDOS)), shading flat\n";
-  //of << "ylabel('Energy')\n";
-  //of << "xlabel('x')\n";
+  if (_hamil_type == "efa")
+  {
+    for (size_t i = 0; i < _device_n_dofs; ++i)
+      // Convert from nanometer to mesh units
+      of << x[i] * 1e-9 / get_mesh_units() << ", ";
+  }
+  if (_hamil_type == "etb")
+  {
+    plane_coordinates.resize(n_planes);
+    for (size_t i = 0; i < n_planes; ++i)
+      // Convert from nanometer to mesh units
+      of << plane_coordinates[i] * 1e-9 / get_mesh_units() << ", ";
+  }
+  of.close();
 
-  of << "plt.contourf(x, energy, np.abs(LDOS), levels=10)\n";
-  of << "plt.xlabel('x')\n";
-  of << "plt.ylabel('Energy [eV]')\n";
-  of << "plt.colorbar()\n";
-  of << "plt.show()";
+  create_python_script();
+
 }
 
 
@@ -1629,6 +1636,72 @@ Negf::occupy_LDOS(const std::vector<double>& ldos)
 
 
 void
+Negf::create_python_script(void)
+{
+  if (get_communicator().rank() != 0) return;
+
+  string pyfile = get_output_directory() + "/LDOS/" + get_output_filename_prefix()
+      + "_plot_LDOS" + TiberCad::get_filename_suffix() + ".py";
+
+  ofstream of(pyfile);
+
+  of << "###\n### This script was automatically generated by TiberCAD - negf module\n###\n\n";
+  of << "import matplotlib.pyplot as plt\nimport numpy as np\nimport pandas as pd\nimport sys\n\n";
+  of << "args = sys.argv[1:]\n";
+  of << "try:\n    ldos_name = args[0]\nexcept:\n    raise ValueError('Please give a valid LDOS filename as an argument, "<<
+  "and a drift diffusion filename (for plotting the bands, optional)')\n\n";
+
+  // read TIBERCADROOT from environment
+  char* root = getenv("TIBERCADROOT");
+
+  of << "if len(args) > 1:\n";
+  of << "    dd_file = args[1]\n";
+  of << "    try:\n";
+  of << "        module_path = '"<< std::string(root) << "/src/core/modules/negf/'\n";
+  of << "        if module_path not in sys.path:\n";
+  of << "            sys.path.append(module_path)\n";
+  of << "        from utilities import read_tibercad_file_as_df\n\n";
+
+  of << "        df = read_tibercad_file_as_df(dd_file)\n";
+  of << "        Ec = df['Ec'].values\n";
+  of << "        Ev = df['Ev'].values\n";
+  of << "        x_msh = df['x'].values\n";
+  of << "        dd_plot = True\n";
+  of << "    except:\n";
+  of << "        raise ValueError('Please give the following arguments: 1) a valid LDOS filename, "<<
+                                  "2) a valid drift diffusion file (for plotting the bands, optional).')\n";
+  of << "else:\n";
+  of << "    dd_plot = False\n";
+  
+  of << "energy = pd.read_csv(f'" << get_output_filename_prefix() + "_energies.dat" << "', header=None, delimiter=',').values[0]\n";
+  of << "if type(energy[-1]) != float:\n";
+  of << "    energy = energy[:-1].astype(float)\n\n";
+
+  of << "x = pd.read_csv(f'" << get_output_filename_prefix() + "_coordinates.dat" << "', header=None, delimiter=',').values[0]\n";
+  of << "if type(x[-1]) != float:\n";
+  of << "    x = x[:-1].astype(float)\n\n";
+
+  of << "ldos =  pd.read_csv(ldos_name, header=None, delimiter=',').values\n";
+  of << "if type(ldos[-1,-1]) != float:\n";
+  of << "    ldos = ldos[:,:-1].astype(float)\n\n";
+  
+  of << "# plt.contourf(x, energy, np.abs(ldos), levels=10, cmap='Greys') # Decomment this line for abs value plotting\n";
+  of << "plt.contourf(x, energy, np.log(ldos), levels=10, cmap = 'Greys')\n\n";
+  of << "if dd_plot:\n";
+  of << "    plt.plot(x_msh, Ec, 'r-')\n";
+  of << "    plt.plot(x_msh, Ev, 'r-')\n\n";
+  of << "plt.xlabel('x [mesh units]')\n";
+  of << "plt.ylabel('Energy [eV]')\n";
+  of << "plt.ylim(min(energy), max(energy))\n";
+  of << "plt.xlim(min(x), max(x))\n";
+  of << "plt.colorbar()\n";
+  of << "plt.show()";
+  
+  of.close();
+}
+
+
+void
 Negf::calculate_for_k_point(const Point& k_point,
                                   DofField& field,
                                   double& error)
@@ -1761,6 +1834,9 @@ Negf::calculate_for_k_point(const Point& k_point,
       // get transmission
       _libnegf->get_transmission(transmission);
 
+      // Perform energy communicator reduce
+     for (auto& t : transmission) _en_comm.sum(t);
+
       ostringstream os;
       os << "transmission";
       //if (k_point.norm() > 1e-6)
@@ -1805,6 +1881,9 @@ Negf::calculate_for_k_point(const Point& k_point,
      ostringstream os;
      os << "k=(" << k_point(0) << ","
         << k_point(1) << "," << k_point(2) << ")";
+
+    // Perform energy communicator reduce
+     for (auto& l : ldos) _en_comm.sum(l);
 
      plot_LDOS(erg, ldos, os.str());
    }
@@ -2968,22 +3047,26 @@ std::vector<double>
 Negf::get_ordered_solution(SimulationInterface* model, const std::string& var)
 {
   ID ID = model->get_solution_id(var);
-  unsigned int n_vars = _sys_H->n_vars();
+  unsigned int n_vars = _ext_module->get_number_of_bands();
 
   std::vector<double> solution;
   solution.reserve(_device_n_dofs*n_vars);
 
   std::vector<double> tot_vals;
+  // For ETB: how to get the real ndof of the mesh, and not the number of atoms?
+  //         Also: Find a way to project the values coming from DD to the atomic positions
   tot_vals.resize(_device_n_dofs, 0.0);
 
-  libMesh::DofMap& dof_map = _sys->get_dof_map();
+  TiberEqSystem& tiber_sys = get_equation_system<TiberEqSystem>();
+  libMesh::System* system = tiber_sys.get_libmesh_system();
+  const libMesh::DofMap& dof_map = system->get_dof_map();
+
   std::vector<unsigned int> dof_indices;
 
   MeshBase::const_element_iterator       el     = this->active_local_elements_begin();
   const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
 
   assert(el != end_el);
-
 
   for (; el != end_el ; ++el )
   {
@@ -3001,7 +3084,6 @@ Negf::get_ordered_solution(SimulationInterface* model, const std::string& var)
       tot_vals[dof_indices[i]] = values[i];
   }
 
-
   for (size_t i = 0; i < _device_n_dofs; ++i)
   {
     size_t index = _perm[i];
@@ -3009,7 +3091,6 @@ Negf::get_ordered_solution(SimulationInterface* model, const std::string& var)
     for (size_t j = 0; j < n_vars; ++j)
       solution.push_back(tot_vals[index]);
   }
-
 
   return solution;
 }
@@ -3516,13 +3597,15 @@ Negf::setup_mpi_comm(void)
   unsigned int nGroups = get_solver_options().get_option("parallel_k_groups", 1);
     
   MPI_Comm bare_kcomm;
+  MPI_Comm bare_encomm;
   MPI_Comm bare_cartcomm;
 
-  // Initialize cartesian grid. Return cart- and k- communicators
-  _libnegf->mpi_cart_init(this->get_communicator().get(), nGroups, bare_cartcomm, bare_kcomm);
+  // Initialize cartesian grid. Return cart-, k- and en- communicators
+  _libnegf->mpi_cart_init(this->get_communicator().get(), nGroups, bare_cartcomm, bare_kcomm, bare_encomm);
 
   // Initialiaze libMesh Communicators
   _k_comm.duplicate(bare_kcomm);
+  _en_comm.duplicate(bare_encomm);
   _cart_comm.duplicate(bare_cartcomm);
 
   this->set_communicator(_cart_comm);

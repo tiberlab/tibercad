@@ -39,7 +39,7 @@ public:
   int set_mpi_comm(MPI_Comm comm);
 
   //Initialize MPI k-E cartesian communicators
-  void mpi_cart_init(MPI_Comm inComm, int nGroups, MPI_Comm& cartComm, MPI_Comm& kComm);
+  void mpi_cart_init(MPI_Comm inComm, int nGroups, MPI_Comm& cartComm, MPI_Comm& kComm, MPI_Comm& enComm);
 
   //! Destroy and reinitialize
   void force_reinit(void);

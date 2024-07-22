@@ -276,6 +276,8 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     void occupy_LDOS(const std::vector<double>& ldos);
 
+    void create_python_script(void);
+
     void transfer_density(const std::vector<double>& density,
         const std::string& particle);
 
@@ -429,6 +431,7 @@ class TBDLLOCAL Negf : public SimulationInterface
     // The MPI cartesian communicators used in libNEGF
     libMesh::Parallel::Communicator _cart_comm;
     libMesh::Parallel::Communicator _k_comm;
+    libMesh::Parallel::Communicator _en_comm;
 };
 
 

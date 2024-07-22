@@ -123,16 +123,18 @@ int NegfWrapper::set_mpi_comm(MPI_Comm comm)
     }
 }
 
-void NegfWrapper :: mpi_cart_init(MPI_Comm inComm, int nGroups, MPI_Comm& cartComm, MPI_Comm& kComm)
+void NegfWrapper :: mpi_cart_init(MPI_Comm inComm, int nGroups, MPI_Comm& cartComm, MPI_Comm& kComm, MPI_Comm& enComm)
 {   
     MPI_Fint cartComm_F;
     MPI_Fint kComm_F;
+    MPI_Fint enComm_F;
     MPI_Fint global_comm_f = MPI_Comm_c2f(inComm);
 
-    negf_cartesian_init(_handler, global_comm_f, nGroups, cartComm_F, kComm_F);
+    negf_cartesian_init(_handler, global_comm_f, nGroups, cartComm_F, kComm_F, enComm_F);
 
     cartComm = MPI_Comm_f2c(cartComm_F);
     kComm = MPI_Comm_f2c(kComm_F);
+    enComm = MPI_Comm_f2c(enComm_F);
 
 }
 
