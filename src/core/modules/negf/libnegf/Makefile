@@ -32,20 +32,20 @@ libnegf$(shared_libext) :  .$(ARCH)/NegfWrapper$(obj-suffix) libnegf_$(ARCH).a
 libnegf_$(ARCH).a: update
 	@echo "Compiling libNEGF ...";
 	mkdir -p build; cd build; \
-	$(CMAKE) -C ../config.cmake -S ../libnegf -B .; \
-	$(MAKE) ; cd .. ;
+	$(CMAKE) -C ../config.cmake -S ../libnegf -B . > cmake_compile.log 2>&1; \
+	$(MAKE) > make_compile.log 2>&1 ; cd .. ;
 	cp build/src/libnegf.a libnegf_$(ARCH).a	
 	cp build/src/api/libnegf.hpp . 
 	cp libnegf/src/api/fortran.h .
 	cp libnegf/src/api/lnParams.h .
 
 update: checkout
-	cd libnegf; git pull origin; git checkout master_gitlab; cd ..;
+	cd libnegf; git pull origin >> ../git_comms.log 2>&1; git checkout master_gitlab >> ../git_comms.log 2>&1; cd ..;
 
 checkout:
 	@echo "Checkout libNEGF..."
 	@if [ ! -e libnegf ]; then \
-		git clone https://github.com/DanSoccodato/libnegf.git; \
+		git clone https://github.com/DanSoccodato/libnegf.git >> git_comms.log 2>&1; \
 		cd libnegf; \
 	fi
 
