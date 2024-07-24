@@ -3057,10 +3057,7 @@ Negf::get_ordered_solution(SimulationInterface* model, const std::string& var)
   //         Also: Find a way to project the values coming from DD to the atomic positions
   tot_vals.resize(_device_n_dofs, 0.0);
 
-  TiberEqSystem& tiber_sys = get_equation_system<TiberEqSystem>();
-  libMesh::System* system = tiber_sys.get_libmesh_system();
-  const libMesh::DofMap& dof_map = system->get_dof_map();
-
+  libMesh::DofMap& dof_map = _sys->get_dof_map();
   std::vector<unsigned int> dof_indices;
 
   MeshBase::const_element_iterator       el     = this->active_local_elements_begin();
