@@ -2,7 +2,7 @@ dielectric = true
 
 structure = none
 
-#Lattice thermal conductivity [W/(cm*K)]
+#Lattice thermal conductivity [W/(m*K)]
 [thermal_conductivity/constant]
 ThermCond = 0.026
 
