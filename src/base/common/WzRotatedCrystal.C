@@ -106,9 +106,9 @@ void WzRotatedCrystal::calculate_rot_matrix_miller(std::vector<int> vec_x_mil, s
 
   //assign proncipal directions
       
-  mil1=Tensor1(0); mil1(1) = a_lat; mil1(2) = (-1.0/std::sqrt(3.0)) * a_lat;
-  mil2=Tensor1(0); mil2(1) = a_lat; mil2(2) = (1.0/std::sqrt(3.0)) * a_lat;
-  mil3=Tensor1(0); mil3(3) = c_lat;
+  mil1=Tensor1(0); mil1(1) = 1.0 / a_lat; mil1(2) = (-1.0/std::sqrt(3.0)) / a_lat;
+  mil2=Tensor1(0); mil2(1) = 1.0 / a_lat; mil2(2) = (1.0/std::sqrt(3.0)) / a_lat;
+  mil3=Tensor1(0); mil3(3) = 1.0 / c_lat;
   
 
   //convert from miller indexes to vectors 
@@ -119,8 +119,7 @@ void WzRotatedCrystal::calculate_rot_matrix_miller(std::vector<int> vec_x_mil, s
 
   // make sanity check on right-handedness
   vec_z = z_miller[0] * mil1 + z_miller[1] * mil2 + z_miller[3]*mil3;
-  vec_z = vectorProduct(vec_y, vec_z);
-  double v = vec_x * vec_z;
+  double v = vec_x * vectorProduct(vec_y, vec_z);
   if (v < 1e-12)
   {
     Messages m;
