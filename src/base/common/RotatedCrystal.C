@@ -179,11 +179,45 @@ void RotatedCrystal::calculate_euler_angles(void)
 {
   // calculate Euler angles
 
-  // Note: they are calculated from the transpose of RotMatrix
-  _beta = acos(RotMatrix(3,3));
+  // formulas taken from en.wikipedia.org/wiki/Euler_angles
+  // and https://eecs.qmul.ac.uk/~gslabaugh/publications/euler.pdf
 
-  _gamma = atan2(RotMatrix(2,3), -RotMatrix(1,3));
-  _alpha = atan2(-RotMatrix(3,2), RotMatrix(3,1));
+  // Note: they are calculated from the transpose of RotMatrix
+  _beta = acos(RotMatrix(3, 3));
+
+  if (abs(RotMatrix(3,3)) < (1.0 - 1e-6))
+  {
+
+    double sb1 = sin(_beta);
+    _alpha = atan2(-RotMatrix(2,3)/sb1, RotMatrix(1,3)/sb1);
+
+
+    if (abs(_alpha) > M_PI_2)
+    {
+      double sb2 = -sb1;
+      _alpha = atan2(-RotMatrix(2,3)/sb2, RotMatrix(1,3)/sb2);
+      _gamma = atan2(RotMatrix(3,2)/sb2, RotMatrix(3,1)/sb2);
+      _beta = -_beta;
+    }
+    else
+      _gamma = atan2(RotMatrix(3,2)/sb1, RotMatrix(3,1)/sb1);
+  }
+  else // R33 = +/-1
+  {
+    // set gamma = 0 arbitrarily
+    _gamma = 0;
+
+    if (RotMatrix(3,3) < 0) // R33 = -1
+    {
+      _alpha = atan2(RotMatrix(2,1), RotMatrix(2,2));
+    }
+    else
+    {
+      _alpha = atan2(RotMatrix(1,2), RotMatrix(1,1));
+    }
+
+
+  }
 }
 
 

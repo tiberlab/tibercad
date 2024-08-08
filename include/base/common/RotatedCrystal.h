@@ -92,7 +92,8 @@ class RotatedCrystal : public PhysicalModel
   /*!
    * The Euler angles here are the ones that rotate the crystal from
    * standard orientation to its real orientation (obtained thus from the
-   * transpose of the rotation matrix)
+   * transpose of the rotation matrix).
+   * We use the convention \f$ Z_\alpha Y_\beta Z_\gamma \f$.
    */
   void get_euler_angles(double& alpha, double& beta, double& gamma) const;
  
