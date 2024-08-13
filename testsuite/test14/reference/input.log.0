@@ -1,21 +1,23 @@
 
-Log start: Wed Feb  5 08:33:21 2020
+Log start: Tue Aug 13 07:54:50 2024
 
 
-tiberCAD release 3.1.0 (rev. 4940, x86_64-linux)
+Writing log to output/input.log.0
+tiberCAD release 3.4.0 (rev. 5555, x86_64-linux)
 
 Input file: input.tib
 
 Initialize global simulation options
   Simulation temperature: 300 K
   Database search path  : /scratch/maufder/TiberCAD_testsuite/trunk/materials
+  Module library path   : .:/scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules
   Log file              : output/input.log.0
 
 Setup mesh
   Reading mesh file 'mesh.msh ...
-    mesh reading time: 0h 0m 0.079s
-    mesh preparation time: 0h 0m 0.0077s
-    bd_regions preparation time: 0h 0m 0.00012s
+    mesh reading time: 0h 0m 0.024s
+    mesh preparation time: 0h 0m 0.0049s
+    bd_regions preparation time: 0h 0m 0.00019s
 
     mesh units          : 1e-09 m
     mesh dimension      :       3
@@ -25,6 +27,7 @@ Setup mesh
     number of boundaries:       4
 
 Create materials ...
+    BondMap progress  done.
   Added material GaN for region 'Column' (mesh regions 4)
     (using datafile /scratch/maufder/TiberCAD_testsuite/trunk/materials/GaN.dat)
     x growth direction : (-1,2,-1,0)
@@ -34,43 +37,38 @@ Creation of materials done.
 
 Building Atomistic Structure tb1
   Create reference lattice: GaN
-  BondMap progress  done.
+    BondMap progress  done.
   Build a first oversized structure
   Make conventional cell
   Relative origin of atomic structure: 1.11022e-16 1.84117 1e-06
   Conventional cells along x, y, z: 1 1 9
 
-  Setup of grid mapper: 0h 0m 0.023s, memory usage: 1 MB 1921512
+  Setup of grid mapper: 0h 0m 0.016s, memory usage: 1 MB 
   Assign elements progress  done.
   Assign Species progress  done.
   Check periodicity ... 
     BondMap progress  done.
-    Adding needed atoms for correct passivation
   done
-  Rebuild bondmap
-  BondMap progress  done.
-  Build final Bond Map...
-  BondMap progress  done.
-  Atomistic structure build time: 0h 0m 0.79s
+  Atomistic structure build time: 0h 0m 0.13s
 
-  Atomistic Structure containing 137 atoms has been built. 
-  Size not counting passivation hydrogens: 137
+  Atomistic Structure containing 156 atoms has been built. 
+  Size not counting passivation hydrogens: 156
   Supercell structure
   Lattice vectors (A):
-    a1 = (6.37800 4.44089e-16 0.00000 )
-    a2 = (8.88178e-16 11.0470 0.00000 )
-    a3 = (0.00000 0.00000 93.3300 )
+    a1 = (15.9450 1.11022e-15 0.00000 )
+    a2 = (0.00000 27.6176 0.00000 )
+    a3 = (0.00000 0.00000 67.4050 )
     Output structure(s)
 
 Setting up simulation of type 'elasticity' ...
   (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/elasticity/elasticity.so)
-  Adding boundary 'Lower'
-  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/elasticity/ebnd_clamp.so)
-  Adding boundary 'Upper'
-  Adding boundary 'Force'
-  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/elasticity/ebnd_surface_force.so)
-Creating bulk models... 
-  Region: Column
+    Adding boundary 'Lower'
+    (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/elasticity/ebnd_clamp.so)
+    Adding boundary 'Upper'
+    Adding boundary 'Force'
+    (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/elasticity/ebnd_surface_force.so)
+  Creating bulk models... 
+    Region: Column
 
 Setting up bulk models ...
   (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/elasticity/stiffness_anisotropic.so)
@@ -91,7 +89,7 @@ StrainCell                              tensor    cell        n
 StrainCrystal                           tensor    nodal       n
 Stress                   GPa            tensor    nodal       y
 RelativeStrain                          tensor    nodal       n
-StressCrystal                           tensor    nodal       n
+StressCrystal            GPa            tensor    nodal       n
 Displacement             m              vector    nodal       y
 ForceSource              N/m3           tensor    nodal       n
 StrainSource                            tensor    nodal       n
@@ -118,18 +116,16 @@ We solve: elasticity
 
   | Iteration | Elastic energy [J] | ||u|| [m.u.] | dE [%] | du [m.u.] |
   -------------------------------------------------------------------------------------
-    BondMap progress  done.
     New periodicity (ratios : 1 1 1)
-    (x,y,z)=(   6.378, 4.44089e-16,        0)
-    (x,y,z)=(8.88178e-16,   11.047,        0)
-    (x,y,z)=(       0,        0,    93.33)
+    (x,y,z)=(  15.945, 1.11022e-15,        0)
+    (x,y,z)=(       0,  27.6176,        0)
+    (x,y,z)=(       0,        0,   67.405)
   |         1 |        3.24549e+06 |    0.0471495 |    inf | 0.0471495 |
-    BondMap progress  done.
     New periodicity (ratios : 1.00158 1.10187 1.00014)
-    (x,y,z)=( 6.38809, 4.44792e-16,        0)
-    (x,y,z)=(9.78653e-16,  12.1723,        0)
-    (x,y,z)=(       0,        0,  93.3428)
-  |         2 |        3.44203e+06 |    0.0503443 |6.05571 |0.00319539 |
+    (x,y,z)=( 15.9702, 1.22332e-15,        0)
+    (x,y,z)=(       0,  30.4308,        0)
+    (x,y,z)=(       0,        0,  67.4142)
+  |         2 |        3.44202e+06 |    0.0503443 |6.05549 |0.00319533 |
 
 Solve time: 0h 0m 12s
 <<<<----------------------------------------------------------------------------
@@ -141,6 +137,6 @@ Simulation finished.
 0 errors detected
 
 
-Log end: Wed Feb  5 08:33:34 2020
+Log end: Tue Aug 13 07:55:03 2024
 
 

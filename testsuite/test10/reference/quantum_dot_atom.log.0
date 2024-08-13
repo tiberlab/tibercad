@@ -1,21 +1,23 @@
 
-Log start: Wed Feb  5 07:18:37 2020
+Log start: Tue Aug 13 07:45:41 2024
 
 
-tiberCAD release 3.1.0 (rev. 4940, x86_64-linux)
+Writing log to output/quantum_dot_atom.log.0
+tiberCAD release 3.4.0 (rev. 5555, x86_64-linux)
 
 Input file: quantum_dot_atom.tib
 
 Initialize global simulation options
   Simulation temperature: 300 K
   Database search path  : /scratch/maufder/TiberCAD_testsuite/trunk/materials
+  Module library path   : .:/scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules
   Log file              : output/quantum_dot_atom.log.0
 
 Setup mesh
   Reading mesh file 'box_in_cube.msh ...
-    mesh reading time: 0h 0m 0.1s
-    mesh preparation time: 0h 0m 0.019s
-    bd_regions preparation time: 0h 0m 2.5e-05s
+    mesh reading time: 0h 0m 0.022s
+    mesh preparation time: 0h 0m 0.01s
+    bd_regions preparation time: 0h 0m 3e-05s
 
     mesh units          : 1e-09 m
     mesh dimension      :       3
@@ -25,26 +27,31 @@ Setup mesh
     number of boundaries:       2
 
 Create materials ...
+    BondMap progress  done.
   Added material GaN for region 'ball' (mesh regions 1)
     (using datafile /scratch/maufder/TiberCAD_testsuite/trunk/materials/GaN.dat)
     x growth direction : (-1,2,-1,0)
     y growth direction : (1,0,-1,0)
     z growth direction : (0,0,0,-1)
+    BondMap progress  done.
   Added material AlN for region 'qbox' (mesh regions 2)
     (using datafile /scratch/maufder/TiberCAD_testsuite/trunk/materials/AlN.dat)
     x growth direction : (-1,2,-1,0)
     y growth direction : (1,0,-1,0)
     z growth direction : (0,0,0,-1)
+    BondMap progress  done.
   Added material AlN for region 'intrinsic' (mesh regions 5)
     (using datafile /scratch/maufder/TiberCAD_testsuite/trunk/materials/AlN.dat)
     x growth direction : (-1,2,-1,0)
     y growth direction : (1,0,-1,0)
     z growth direction : (0,0,0,-1)
+    BondMap progress  done.
   Added material AlN for region 'nside' (mesh regions 3)
     (using datafile /scratch/maufder/TiberCAD_testsuite/trunk/materials/AlN.dat)
     x growth direction : (-1,2,-1,0)
     y growth direction : (1,0,-1,0)
     z growth direction : (0,0,0,-1)
+    BondMap progress  done.
   Added material AlN for region 'pside' (mesh regions 4)
     (using datafile /scratch/maufder/TiberCAD_testsuite/trunk/materials/AlN.dat)
     x growth direction : (-1,2,-1,0)
@@ -56,81 +63,80 @@ Setting up Cluster 'atomistic' containing regions 1, 2
 
 Building Atomistic Structure tb1
   Create reference lattice: AlN
-  BondMap progress  done.
+    BondMap progress  done.
   Build a first oversized structure
   Make conventional cell
   Relative origin of atomic structure: 1.11022e-16 1e-06 4.39363
   Conventional cells along x, y, z: 12 7 8
 
-  Setup of grid mapper: 0h 0m 0.011s, memory usage: 0 MB 730336
+  Setup of grid mapper: 0h 0m 0.0073s, memory usage: 0 MB 
   Assign elements progress  done.
   Assign Species progress  done.
   Check periodicity ... 
     BondMap progress  done.
-    Adding needed atoms for correct passivation
   done
-  Rebuild bondmap
-  BondMap progress  done.
   Starting passivation...
   Cut & Passivation done
-  Build final Bond Map...
-  BondMap progress  done.
-  Atomistic structure build time: 0h 0m 1.6s
+  Atomistic structure build time: 0h 0m 1.1s
 
   Atomistic Structure containing 8111 atoms has been built. 
   Size not counting passivation hydrogens: 6435
   Supercell structure
   Lattice vectors (A):
-    a1 = (74.6880 0.00000 0.00000 )
-    a2 = (0.00000 75.4620 0.00000 )
-    a3 = (0.00000 0.00000 79.7120 )
+    a1 = (49.7920 0.00000 0.00000 )
+    a2 = (-4.88498e-15 59.2916 0.00000 )
+    a3 = (0.00000 0.00000 59.7840 )
     Output structure(s)
+    print structure file tb1.gen
+    print structure file tb1.xyz
+    print structure file tb1.tgn
 
 Setting up simulation of type 'empirical_tb' ...
   (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/empirical_tb/empirical_tb.so)
-Creating bulk models... 
-  Region: ball
-  Region: qbox
+  Creating bulk models... 
+    Region: ball
+    Region: qbox
 
 Setting up simulation of type 'empirical_tb' ...
-Creating bulk models... 
-  Region: ball
-  Region: qbox
+  Creating bulk models... 
+    Region: ball
+    Region: qbox
 
 Setting up simulation of type 'elasticity' ...
   (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/elasticity/elasticity.so)
-  Adding boundary 'cathode'
-  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/elasticity/ebnd_clamp.so)
-Creating bulk models... 
-  Region: ball
-  Region: qbox
-  Region: nside
-  Region: pside
-  Region: intrinsic
+    Adding boundary 'cathode'
+    (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/elasticity/ebnd_clamp.so)
+  Creating bulk models... 
+    Region: ball
+    Region: qbox
+    Region: nside
+    Region: pside
+    Region: intrinsic
 
 Setting up simulation of type 'driftdiffusion' ...
   (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/driftdiffusion/driftdiffusion.so)
-  Adding boundary 'anode'
-  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/driftdiffusion/ddbnd_ohmic.so)
-  Adding boundary 'cathode'
-Creating bulk models... 
-  Region: ball
-  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/driftdiffusion/ddbulk_default.so)
-  Region: qbox
-  Region: nside
-  Region: pside
-  Region: intrinsic
-(using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/driftdiffusion/recombination_srh.so)
-(using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/driftdiffusion/recombination_direct.so)
+    Adding boundary 'anode'
+    (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/driftdiffusion/ddbnd_ohmic.so)
+    Adding boundary 'cathode'
+  Creating bulk models... 
+    Region: ball
+    (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/driftdiffusion/ddbulk_default.so)
+    Region: qbox
+    Region: nside
+    Region: pside
+    Region: intrinsic
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/driftdiffusion/recombination_srh.so)
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/driftdiffusion/recombination_direct.so)
 
 Setting up simulation of type 'opticstb' ...
-Creating bulk models... 
-  Region: ball
-  Region: qbox
+  Creating bulk models... 
+    Region: ball
+    Region: qbox
 
 Setting up bulk models ...
   (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/elasticity/stiffness_anisotropic.so)
   (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/elasticity/body_force_lattice_mismatch.so)
+      BondMap progress  done.
   (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/driftdiffusion/band_properties.so)
   (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/permittivity_constant.so)
   (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/polarization_pyro.so)
@@ -138,6 +144,10 @@ Setting up bulk models ...
   (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/driftdiffusion/mobility_doping_dependent.so)
     (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/density_of_states_bulk_kp.so)
     (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/modules/driftdiffusion/mobility_constant.so)
+      BondMap progress  done.
+      BondMap progress  done.
+      BondMap progress  done.
+      BondMap progress  done.
 
 Setting up lower dimensional (boundary) models ...
 
@@ -150,12 +160,13 @@ k-space initialized
 
 *** Warning: Empirical tight binding calculations are preformed at T=0
 (tb) creating map elem->atoms
-(tb) database path: /scratch/maufder/TiberCAD_testsuite/trunk/materials
-(tb) default  path: /scratch/maufder/TiberCAD_testsuite/trunk/materials
+(tb) database path: /scratch/maufder/TiberCAD_testsuite/trunk/materials/ETB/Jancu
 (tb) work path: output
 (tb) output path: output
 
 *** Warning: found unused options in block Solver: long_tolerance, num_conduction_eigenvalues, num_valence_eigenvalues
+Assign Virtual Species
+Printing upg file
 
 Available solution variables:
 ------------------------------------------------------------------
@@ -185,12 +196,13 @@ k-space initialized
 
 *** Warning: Empirical tight binding calculations are preformed at T=0
 (tb2) creating map elem->atoms
-(tb2) database path: /scratch/maufder/TiberCAD_testsuite/trunk/materials
-(tb2) default  path: /scratch/maufder/TiberCAD_testsuite/trunk/materials
+(tb2) database path: /scratch/maufder/TiberCAD_testsuite/trunk/materials/ETB/Jancu
 (tb2) work path: output
 (tb2) output path: output
 
 *** Warning: found unused options in block Solver: load_path, load_states, long_tolerance, num_conduction_eigenvalues, num_valence_eigenvalues
+Assign Virtual Species
+Printing upg file
 
 Available solution variables:
 ------------------------------------------------------------------
@@ -225,7 +237,7 @@ StrainCell                              tensor    cell        n
 StrainCrystal                           tensor    nodal       n
 Stress                   GPa            tensor    nodal       n
 RelativeStrain                          tensor    nodal       n
-StressCrystal                           tensor    nodal       n
+StressCrystal            GPa            tensor    nodal       n
 Displacement             m              vector    nodal       n
 ForceSource              N/m3           tensor    nodal       n
 StrainSource                            tensor    nodal       n
@@ -421,6 +433,9 @@ using local scaling
 Simulation options for opt (opticstb)
 MPI: rank 0 of communicator with size 1
 MPI: solver parallelized on 1 processes
+
+Calculating transitions between tb2, el -> tb2, hl
+
 Setting up k-space integration
   Doing Gamma point calculation
   Symmetry of k space: Gamma
@@ -446,23 +461,16 @@ Output file basename  : opt
 We solve: str dd tb tb2 opt 
 
 >>>>---------------------------------- (str) -----------------------------------
-
-  | Iteration | Elastic energy [J] | ||u|| [m.u.] | dE [%] | du [m.u.] |
-  -------------------------------------------------------------------------------------
-    BondMap progress  done.
     New periodicity (ratios : 1 1 1)
-    (x,y,z)=(  74.688,        0,        0)
-    (x,y,z)=(       0,   75.462,        0)
-    (x,y,z)=(       0,        0,   79.712)
-  |         1 |        1.64736e+09 |    0.0208306 |    inf | 0.0208306 |
-    BondMap progress  done.
+    (x,y,z)=(  49.792,        0,        0)
+    (x,y,z)=(-4.88498e-15,  59.2916,        0)
+    (x,y,z)=(       0,        0,   59.784)
     New periodicity (ratios : 1.00145 1.00146 1.00298)
-    (x,y,z)=( 74.7965,        0,        0)
-    (x,y,z)=(       0,  75.5721,        0)
-    (x,y,z)=(       0,        0,  79.9494)
-  |         2 |        1.68433e+09 |      0.02102 |2.24397 |0.00019816 |
+    (x,y,z)=( 49.8644,        0,        0)
+    (x,y,z)=(-4.89208e-15,  59.3781,        0)
+    (x,y,z)=(       0,        0,  59.9621)
 
-Solve time: 0h 0m 5.1s
+Solve time: 0h 0m 5s
 <<<<----------------------------------------------------------------------------
 
 >>>>----------------------------------- (dd) -----------------------------------
@@ -474,39 +482,37 @@ Solve time: 0h 0m 5.1s
   it 4, |du| = 0.101637, |r| = 0.000229314  alpha = 1
   it 5, |du| = 0.000423872, |r| = 5.699e-09  alpha = 1
 
-  iterations: 6, |du| = 8.85783e-09, |r| = 3.51554e-13
+  iterations: 6, |du| = 8.85789e-09, |r| = 3.40804e-13
   Equilibrium done
 
-Solve time: 0h 0m 9.6s
+Solve time: 0h 0m 9.9s
 <<<<----------------------------------------------------------------------------
 
 >>>>----------------------------------- (tb) -----------------------------------
-  (tb) get band edges from model: dd
-        CB min = -1.45769  VB max = -4.70022
   Assign Virtual Species
   Printing upg file
+  (tb) get band edges from model: dd
+        CB min = -1.45769  VB max = -4.70022
   (tb) solving using lanczos
    
   (tb) copy states from uptight
 
   #  type   level    stat.     pot.       pop.
-  0 hl -5.05023 Fermi          0          0
-  1 el -0.620721 Fermi          0          1
+  0 hl -5.07129 Fermi          0 6.39868e-86
+  1 el -0.633774 Fermi          0          1
 
 
-Solve time: 0h 4m 56s
+Solve time: 0h 2m 44s
 <<<<----------------------------------------------------------------------------
 (tb) compute atom-projected charges
 (tb) print atom-projected charges on files
 (tb) write wave functions on files
 
 >>>>---------------------------------- (tb2) -----------------------------------
-  (tb2) get band edges from model: dd
-        CB min = -1.45769  VB max = -4.70022
   Assign Virtual Species
   Printing upg file
-
-*** Warning: found unused options in block Solver: load_states
+  (tb2) get band edges from model: dd
+        CB min = -1.45769  VB max = -4.70022
   (tb2) reading old states
   ...done
   (tb2) consistency check:
@@ -515,13 +521,13 @@ Solve time: 0h 4m 56s
   (tb2) copy states from uptight
 
   #  type   level    stat.     pot.       pop.
-  0 hl -5.05023 Fermi          0          0
-  1 hl -5.05023 Fermi          0          0
-  2 el -0.620721 Fermi          0          1
-  3 el -0.620721 Fermi          0          1
+  0 hl -5.07129 Fermi          0 6.39868e-86
+  1 hl -5.07131 Fermi          0 6.39466e-86
+  2 el -0.633774 Fermi          0          1
+  3 el -0.633792 Fermi          0          1
 
 
-Solve time: 0h 6m 9s
+Solve time: 0h 4m 21s
 <<<<----------------------------------------------------------------------------
 (tb2) compute atom-projected charges
 (tb2) print atom-projected charges on files
@@ -532,8 +538,6 @@ Solve time: 0h 6m 9s
         CB min = -1.45769  VB max = -4.70022
   Assign Virtual Species
   Printing upg file
-
-*** Warning: found unused options in block Solver: load_states
   (tb2) reading old states
   ...done
   (tb2) consistency check:
@@ -542,27 +546,27 @@ Solve time: 0h 6m 9s
   (tb2) copy states from uptight
 
   #  type   level    stat.     pot.       pop.
-  0 hl -5.05023 Fermi          0          0
-  1 hl -5.05023 Fermi          0          0
-  2 el -0.620721 Fermi          0          1
-  3 el -0.620721 Fermi          0          1
+  0 hl -5.07129 Fermi          0 6.39868e-86
+  1 hl -5.07131 Fermi          0 6.39466e-86
+  2 el -0.633774 Fermi          0          1
+  3 el -0.633792 Fermi          0          1
 
   calculation of matrix elements for dipole optical transition...
   (OPT) write matrix elements in output/opt.dat
-  Total emitted power     : 2.95708e-09 W
-  Total recombination rate: 4.16625e+09 1/s
-  Peak emission energy    : 4.43 eV
+  Total emitted power     : 2.9611e-09 W
+  Total recombination rate: 4.16446e+09 1/s
+  Peak emission energy    : 4.438 eV
 
-Solve time: 0h 0m 4.3s
+Solve time: 0h 0m 4.1s
 <<<<----------------------------------------------------------------------------
 
-Total solve time: 0h 11m 51s
+Total solve time: 0h 7m 41s
 Simulation finished.
 
-6 warnings during run
+4 warnings during run
 0 errors detected
 
 
-Log end: Wed Feb  5 07:30:31 2020
+Log end: Tue Aug 13 07:53:25 2024
 
 
