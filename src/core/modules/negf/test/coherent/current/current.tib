@@ -2,6 +2,12 @@
 # Description of  the  device physical regions
 Device
 {
+
+  Parallel
+  {
+    mpi_processes_per_mesh = 1
+  }
+
   meshfile = bulk.msh  
   mesh_units = 1e-9
 
@@ -90,9 +96,9 @@ Module sweep
 
 Module negf
 {
-  verbosity = 10
+  verbosity = 70
 
-  plot = (Current)
+  plot = (Current, LDOS)
   regions = (bulk)
 
   potential_simulation = driftdiffusion
@@ -101,6 +107,8 @@ Module negf
  
   Solver
   {
+    parallel_k_groups = 1
+
     number_of_PL = 10 
     #Np_contour = (30,100)
     #Np_real = 200
@@ -130,8 +138,9 @@ Module negf
  {
    verbose = 4
    quadrature_rule = trapezoidal
-   k_max = 0.68
-   number_of_elements = (8,8)   #must be a power of 2
+   #gamma_point_calculation = true
+   #k_max = 0.68
+   number_of_elements = (2,2)   #must be a power of 2
  }
 
 

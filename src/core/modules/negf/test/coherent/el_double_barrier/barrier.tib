@@ -154,7 +154,6 @@ Module negf
   Solver
   {
     number_of_PL = 90
-    number_of_PL = 90
     #writeLDOS = 1
     Np_contour = (30, 100)
     Npoles = 1 

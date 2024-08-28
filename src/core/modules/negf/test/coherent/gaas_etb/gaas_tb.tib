@@ -130,10 +130,11 @@ Module negf
   Boundary c_drain{}
 
   disable_contact_calculation = false
-  parallel_k_groups = 1
 
   Solver
   {
+    parallel_k_groups = 1
+
     # General settings
     delta = 1e-7  # Important for converging on real axis (needs to be small enough)
     verbosity = 70
