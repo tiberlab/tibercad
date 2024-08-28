@@ -3256,144 +3256,147 @@ Negf::set_kpoints(std::string solution)
     ModelOptions::submodel_iterator it(get_options().submodels_begin("k_integration_current"));
     ModelOptions kopts;
     kopts = it->second;
-    if (kopts.get_option("reduced_BZ", true))
-    {
-      set_kpoints_reduced_BZ(_k_int_current);
-    }
-    else
-    {
-      set_kpoints_full_BZ(_k_int_current);
-    }
+    bool reduced_BZ = kopts.get_option("reduced_BZ", true);
+    set_kpoints(_k_int_current, reduced_BZ);
   }                                                       
   if (solution == "elDensity" || solution == "hlDensity")
   {
     ModelOptions::submodel_iterator it(get_options().submodels_begin("k_integration_density"));
     ModelOptions kopts;
     kopts = it->second;
-    if (kopts.get_option("reduced_BZ", true))
-    {
-      set_kpoints_reduced_BZ(_k_int_density);
-    }
-    else
-    {
-      set_kpoints_full_BZ(_k_int_density);
-    }
+    bool reduced_BZ = kopts.get_option("reduced_BZ", true);
+    set_kpoints(_k_int_density, reduced_BZ);
   }
 }
 
 
 void
-Negf::set_kpoints_full_BZ(KspaceIntegration* k_int)
+Negf::set_kpoints(KspaceIntegration* k_int, bool reduced_BZ)
 {
-  bool uneven_distributed;
   Kspace* negf_kspace = k_int->get_k_space();
-
-  //Get kpoints and weights and distribute them
-  map<Point, double> kpoints = k_int->get_kpoints_and_weights();
-  map<Point, double> extended_kpoints;
-
-  map<Point, double>::iterator kb(kpoints.begin());
-  const map<Point, double>::iterator kend(kpoints.end());
-
-  double degeneracy_fact = negf_kspace->get_degeneracy_factor();
+  std::vector<double> kweights;
+  get_distributed_kpoints(k_int, kweights, _local_k_indices, _global_abs_kpoints, reduced_BZ);
   
-  for (; kb != kend; kb++)
-  {
-    Point kpt = kb->first;
-    double w = kb->second;
-
-    std::vector<Point> eq_points;
-    negf_kspace->equivalent_points(kpt, eq_points, true);
-
-    for (auto&& eq_pt : eq_points)  extended_kpoints[eq_pt] = w / degeneracy_fact;
-  }
-
-  map<DofField, double> global_kpoints_map = k_int->broadcast_kpoints(_k_comm, extended_kpoints);
-  _local_k_indices = k_int->distribute_kpoints(_k_comm, global_kpoints_map, uneven_distributed);
-
-  if (uneven_distributed)
-  {
-    std::ostringstream os;
-    os << "The k-points are unevenly distributed along processes. Please change the number of processes,";
-    os << " the number of k-points, or the `parallel_k_groups` option to distribute them equally.";
-    throw RuntimeException(os.str());
-  }
-
-  //Extract kpoints and weights separately from the map
-  std::vector<double> kweights(global_kpoints_map.size());
-  _global_abs_kpoints.resize(global_kpoints_map.size());
-
-  map<DofField, double>::iterator kp_it(global_kpoints_map.begin());
-  const map<DofField, double>::iterator kp_end(global_kpoints_map.end());
-  int i=0;
-  for (; kp_it != kp_end; kp_it++)
-  {
-    DofField kp = kp_it->first;
-    double w = kp_it->second;
-    kweights[i] = w;
-    _global_abs_kpoints[i] = kp;
-    i++;
-  }
-    
-  // libNEGF wants kpoints in fractional coordinates
-  std::vector<DofField> global_frac_kpoints = transform_to_fractional_coordinates(negf_kspace, _global_abs_kpoints);
-
-  std::vector<DofField>  equivalent_points(1, std::vector<double>(3, 0.0));
-  std::vector<int> n_equivalent(1, 1);
-
-  _libnegf->set_kpoints(global_frac_kpoints, kweights, _local_k_indices, equivalent_points, n_equivalent, 0);
-}
-
-
-void
-Negf::set_kpoints_reduced_BZ(KspaceIntegration* k_int)
-{
-  bool uneven_distributed;
-  Kspace* negf_kspace = k_int->get_k_space();
-
-  //Get kpoints and weights and distribute them
-  map<Point, double> kpoints = k_int->get_kpoints_and_weights();
-  map<DofField, double> global_kpoints_map = k_int->broadcast_kpoints(_k_comm, kpoints);
-  _local_k_indices = k_int->distribute_kpoints(_k_comm, global_kpoints_map, uneven_distributed);
-
-  if (uneven_distributed)
-  {
-    std::ostringstream os;
-    os << "The k-points are unevenly distributed along processes. Please change the number of processes,";
-    os << " the number of k-points, or the `parallel_k_groups` option to distribute them equally.";
-    throw RuntimeException(os.str());
-  }
-
-  //Extract kpoints and weights separately from the map
-  std::vector<double> kweights(global_kpoints_map.size());
-  _global_abs_kpoints.resize(global_kpoints_map.size());
-
-  double degeneracy_fact = negf_kspace->get_degeneracy_factor();
-
-  map<DofField, double>::iterator kp_it(global_kpoints_map.begin());
-  const map<DofField, double>::iterator kp_end(global_kpoints_map.end());
-  int i=0;
-  for (; kp_it != kp_end; kp_it++)
-  {
-    DofField kp = kp_it->first;
-    double w = kp_it->second;
-    kweights[i] = w / degeneracy_fact;
-    _global_abs_kpoints[i] = kp;
-    i++;
-  }
-  
-  //Find equivalent points
-  std::vector<DofField> equivalent_points;
   std::vector<int> n_equivalent;
-  get_equivalent_points(negf_kspace, _global_abs_kpoints, equivalent_points, n_equivalent);
-  
-  // libNEGF wants kpoints in fractional coordinates
-  std::vector<DofField> global_frac_kpoints = transform_to_fractional_coordinates(negf_kspace, _global_abs_kpoints);
-  std::vector<DofField> frac_eqv_points = transform_to_fractional_coordinates(negf_kspace, equivalent_points);
+  std::vector<DofField> global_frac_kpoints;
+  std::vector<DofField> frac_eqv_points;
+  if (reduced_BZ)
+  {
+    //Find equivalent points
+    std::vector<DofField> equivalent_points;
+    get_equivalent_points(negf_kspace, _global_abs_kpoints, equivalent_points, n_equivalent);
 
-  _libnegf->set_kpoints(global_frac_kpoints, kweights, _local_k_indices, frac_eqv_points, n_equivalent, 1);
+    // libNEGF wants kpoints in fractional coordinates
+    global_frac_kpoints = transform_to_fractional_coordinates(negf_kspace, _global_abs_kpoints);
+    frac_eqv_points = transform_to_fractional_coordinates(negf_kspace, equivalent_points);
+  }
+  else
+  {
+    // libNEGF wants kpoints in fractional coordinates
+    global_frac_kpoints = transform_to_fractional_coordinates(negf_kspace, _global_abs_kpoints);
+
+    // Dummy eq points
+    frac_eqv_points.resize(1, std::vector<double>(3));
+    n_equivalent.resize(1);
+  }
+
+  _libnegf->set_kpoints(global_frac_kpoints, kweights, _local_k_indices, frac_eqv_points, n_equivalent, reduced_BZ);
 }
 
+
+void
+Negf::get_distributed_kpoints(KspaceIntegration* k_int, std::vector<double>& kweights, std::vector<int>& local_k_indices, 
+                              std::vector<std::vector<double>>& global_abs_kpoints, bool reduced_BZ)
+{
+  bool uneven_distributed;
+  Kspace* negf_kspace = k_int->get_k_space();
+
+  if (reduced_BZ)
+  {
+    //Get kpoints and weights and distribute them
+    map<Point, double> kpoints = k_int->get_kpoints_and_weights();
+    map<DofField, double> global_kpoints_map = k_int->broadcast_kpoints(_k_comm, kpoints);
+    local_k_indices = k_int->distribute_kpoints(_k_comm, global_kpoints_map, uneven_distributed);
+
+    if (uneven_distributed)
+    {
+      std::ostringstream os;
+      os << "The k-points are unevenly distributed along processes. Please change the number of processes,";
+      os << " the number of k-points, or the `parallel_k_groups` option to distribute them equally.";
+      throw RuntimeException(os.str());
+    }
+
+    //Extract kpoints and weights separately from the map
+    kweights.resize(global_kpoints_map.size());
+    global_abs_kpoints.resize(global_kpoints_map.size());
+
+    double degeneracy_fact = negf_kspace->get_degeneracy_factor();
+
+    map<DofField, double>::iterator kp_it(global_kpoints_map.begin());
+    const map<DofField, double>::iterator kp_end(global_kpoints_map.end());
+    int i=0;
+    for (; kp_it != kp_end; kp_it++)
+    {
+      DofField kp = kp_it->first;
+      double w = kp_it->second;
+      kweights[i] = w / degeneracy_fact;
+      global_abs_kpoints[i] = kp;
+      i++;
+    }
+  }
+  else
+  {
+    bool uneven_distributed;
+    Kspace* negf_kspace = k_int->get_k_space();
+
+    //Get kpoints and weights and distribute them
+    map<Point, double> kpoints = k_int->get_kpoints_and_weights();
+    map<Point, double> extended_kpoints;
+
+    map<Point, double>::iterator kb(kpoints.begin());
+    const map<Point, double>::iterator kend(kpoints.end());
+
+    double degeneracy_fact = negf_kspace->get_degeneracy_factor();
+    
+    for (; kb != kend; kb++)
+    {
+      Point kpt = kb->first;
+      double w = kb->second;
+
+      std::vector<Point> eq_points;
+      negf_kspace->equivalent_points(kpt, eq_points, true);
+
+      for (auto&& eq_pt : eq_points)  extended_kpoints[eq_pt] = w / degeneracy_fact;
+    }
+
+    map<DofField, double> global_kpoints_map = k_int->broadcast_kpoints(_k_comm, extended_kpoints);
+    local_k_indices = k_int->distribute_kpoints(_k_comm, global_kpoints_map, uneven_distributed);
+
+    if (uneven_distributed)
+    {
+      std::ostringstream os;
+      os << "The k-points are unevenly distributed along processes. Please change the number of processes,";
+      os << " the number of k-points, or the `parallel_k_groups` option to distribute them equally.";
+      throw RuntimeException(os.str());
+    }
+
+    //Extract kpoints and weights separately from the map
+    kweights.resize(global_kpoints_map.size());
+    global_abs_kpoints.resize(global_kpoints_map.size());
+
+    map<DofField, double>::iterator kp_it(global_kpoints_map.begin());
+    const map<DofField, double>::iterator kp_end(global_kpoints_map.end());
+    int i=0;
+    for (; kp_it != kp_end; kp_it++)
+    {
+      DofField kp = kp_it->first;
+      double w = kp_it->second;
+      kweights[i] = w;
+      global_abs_kpoints[i] = kp;
+      i++;
+    }
+  }
+}
 
 std::vector<DofField> 
 Negf::transform_to_fractional_coordinates(Kspace* kspace, const std::vector<DofField>& abs_kpoints)

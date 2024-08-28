@@ -114,7 +114,7 @@ public:
   //! Set global and local kpoints, along with equivalent kpoints for extending the irreducible wedge
   void set_kpoints(std::vector<std::vector<double>> kpoints, std::vector<double> kweights,  
        std::vector<int> local_k_indices, std::vector<std::vector<double>> equivalent_points, 
-       std::vector<int> n_equivalent, int set_eq_pts);
+       std::vector<int> n_equivalent, bool reduced_BZ);
 
   //! Pass atom coordinates and map from atom indices to matrix indices, as well as lattice vectors
   void init_basis(std::vector<std::vector<double>> coordinates, std::vector<int> matrix_indices, 

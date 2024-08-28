@@ -299,17 +299,18 @@ class TBDLLOCAL Negf : public SimulationInterface
     void get_equivalent_points(Kspace* kspace, const std::vector<DofField> kpoints, 
          std::vector<DofField>& equiv_points, std::vector<int>& n_equiv);
 
-    //! Pass kpoints to NEGF, after calculating global and local indices, and the symmetrically equivalent points
-    //! of the irreducible wedge
-    void set_kpoints_reduced_BZ(KspaceIntegration* k_int);
-
-    //! Pass kpoints to NEGF, after calculating global and local indices, of the full BZ
-    void set_kpoints_full_BZ(KspaceIntegration* k_int);
-
-    //! Wrapper for the two set_kpoints methods
+    //! Wrapper for setting the kpoints that depends on the integrated quantity
     void set_kpoints(std::string solution);
+
+    //! Passes kpoints to libNEGF, after calculating global and local indices, either of the full BZ 
+    //! or the reduced one (with equivalent kpoints)
+    void set_kpoints(KspaceIntegration* k_int, bool reduced_BZ);
+
+    //! Used within set_kpoints and get_polarization_matrix 
+    void get_distributed_kpoints(KspaceIntegration* k_int, std::vector<double>& kweights, std::vector<int>& local_k_indices, 
+                                            std::vector<std::vector<double>>& global_abs_kpoints, bool reduced_BZ);
     
-    //! Passes the Hamiltonians to libNegf for each kpoint
+    //! Passes the Hamiltonians to libNEGF for each kpoint
     void set_hamiltonians(void);
 
     //! Pass information about atomistic structure such as: lattice vectors, coordinates of atoms, matrix_indices.

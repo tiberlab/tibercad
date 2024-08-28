@@ -363,8 +363,10 @@ NegfWrapper::set_kpoint(int kpoint)
 void
 NegfWrapper::set_kpoints(std::vector<std::vector<double>> kpoints, std::vector<double> kweights,  
              std::vector<int> local_k_indices, std::vector<std::vector<double>> equivalent_points, 
-             std::vector<int> n_equivalent, int set_eq_pts)
+             std::vector<int> n_equivalent, bool reduced_BZ)
 {
+  int set_eq_pts = (reduced_BZ) ? 1 : 0;
+
   std::vector<double> kpoints_f;
   int rows = kpoints.size(); 
   int columns = kpoints[0].size();
