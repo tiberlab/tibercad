@@ -4,7 +4,6 @@
 #include "PhysicalModel.h"
 #include "Alloy.h"
 #include "Database.h"
-#include "RotatedCrystal.h"
 #include "BulkCrystal.h"
 #include "Dopant.h"
 #include "Messages.h"
@@ -27,7 +26,7 @@ Material::~Material(void)
 {
   clear_doping();
 
-  destroy(_rotated_crystal);
+  delete _bulk_crystal;
 
   Messages::debug("Destroyed Material " + get_name());
 }
@@ -63,52 +62,14 @@ Material::do_init(void)
 
 
 
-void
-Material::do_preinit(void)
-{
-  ModelOptions opts;
-
-  if (get_options().find_option("a"))
-    opts["a"] = get_options()["a"];
-  if (get_options().find_option("b"))
-    opts["b"] = get_options()["b"];
-  if (get_options().find_option("c"))
-    opts["c"] = get_options()["c"];
-
-  if (get_options().find_option("alpha"))
-    opts["alpha"] = get_options()["alpha"];
-  if (get_options().find_option("beta"))
-    opts["beta"] = get_options()["beta"];
-  if (get_options().find_option("gamma"))
-    opts["gamma"] = get_options()["gamma"];
-
-  if (get_options().find_option("x-growth-direction"))
-    opts["x-growth-direction"] = get_options()["x-growth-direction"];
-  if (get_options().find_option("y-growth-direction"))
-    opts["y-growth-direction"] = get_options()["y-growth-direction"];
-  if (get_options().find_option("z-growth-direction"))
-    opts["z-growth-direction"] = get_options()["z-growth-direction"];
-
-  // first we set up RotatedCrystal because it will be
-  // needed by others
-  _rotated_crystal = RotatedCrystal::create(this, opts);
-  _rotated_crystal->init();
-
-  // the bulk crystal
-  // if there is no structure assigned (e.g. air, vacuum,
-  // effective media, etc), a nullptr will be returned
-  _bulk_crystal = BulkCrystal::create(this, opts);
-  if (_bulk_crystal != nullptr)
-    _bulk_crystal->init();
-}
 
 
 
 void
-Material::set_crystal(RotatedCrystal* crystal)
+Material::set_crystal(BulkCrystal* crystal)
 {
-  destroy(_rotated_crystal);
-  _rotated_crystal = crystal;
+  delete _bulk_crystal;
+  _bulk_crystal = crystal;
 }
 
 
@@ -214,13 +175,7 @@ Material::preinit(void)
   bool hasy = get_options().find_option("y-growth-direction");
   bool hasz = get_options().find_option("z-growth-direction");
 
-  // if one is given, all three should be provided
-  if (((hasx || hasy) && !(hasx && hasy)) ||
-      ((hasy || hasz) && !(hasy && hasz)))
-    throw InitFailedException("You have to provide all growth directions "
-        "in material " + get_name());
-
-  bool use_defaults = !hasx;
+  bool use_defaults = !(hasx || hasy || hasz);
 
   unsigned int dim = get_option("dimension", 4);
   
@@ -232,7 +187,6 @@ Material::preinit(void)
   {
     get_options()["x-growth-direction"] = "(1,0,0)";
     get_options()["y-growth-direction"] = "(0,1,0)";
-    get_options()["z-growth-direction"] = "(0,0,1)";
   }
 
   // read or set default growth directions for wurtzite
@@ -243,21 +197,18 @@ Material::preinit(void)
       switch (dim)
       {
         case 3:
-          get_options()["x-growth-direction"] = "( 1,0,-1,0)";
           get_options()["y-growth-direction"] = "(-1,2,-1,0)";
           get_options()["z-growth-direction"] = "( 0,0, 0,1)";
           break;
 
         case 2:
-          get_options()["z-growth-direction"] = "( 1,0,-1,0)";
           get_options()["x-growth-direction"] = "(-1,2,-1,0)";
           get_options()["y-growth-direction"] = "( 0,0, 0,1)";
           break;
 
         case 1:
         default:
-          get_options()["y-growth-direction"] = "( 1,0,-1,0)";
-          get_options()["z-growth-direction"] = "(-1,2,-1,0)";
+          get_options()["y-growth-direction"] = "(-1,2,-1,0)";
           get_options()["x-growth-direction"] = "( 0,0, 0,1)";
           break;
       }
@@ -273,21 +224,18 @@ Material::preinit(void)
       switch (dim)
       {
         case 3:
-          get_options()["x-growth-direction"] = "( 1,0,-1,0)";
           get_options()["y-growth-direction"] = "(-1,2,-1,0)";
           get_options()["z-growth-direction"] = "( 0,0, 0,1)";
           break;
 
         case 2:
-          get_options()["z-growth-direction"] = "( 1,0,-1,0)";
           get_options()["x-growth-direction"] = "(-1,2,-1,0)";
           get_options()["y-growth-direction"] = "( 0,0, 0,1)";
           break;
 
         case 1:
         default:
-          get_options()["y-growth-direction"] = "( 1,0,-1,0)";
-          get_options()["z-growth-direction"] = "(-1,2,-1,0)";
+          get_options()["y-growth-direction"] = "(-1,2,-1,0)";
           get_options()["x-growth-direction"] = "( 0,0, 0,1)";
           break;
       }
@@ -297,6 +245,20 @@ Material::preinit(void)
 
 
   do_preinit();
+
+  // the bulk crystal
+  // if there is no structure assigned (e.g. air, vacuum,
+  // effective media, etc), a nullptr will be returned
+  _bulk_crystal = BulkCrystal::create(this, opts);
+  if (_bulk_crystal != nullptr)
+  {
+    _bulk_crystal->init();
+    const Tensor2Gen& rot = _bulk_crystal->get_rotation();
+
+    for (unsigned int i = 0; i < 3; ++i)
+      for (unsigned int j = 0; j < 3; ++j)
+        _rotation_matrix(i, j) = rot(i+1, j+1);
+  }
 
   fill_species();
 
@@ -315,9 +277,10 @@ Material::info(void) const
 
   do_info();
 
-  os << "x growth direction : " << get_option("x-growth-direction", "") << std::endl;
-  os << "y growth direction : " << get_option("y-growth-direction", "") << std::endl;
-  os << "z growth direction : " << get_option("z-growth-direction", "") << std::endl;
+  if (_bulk_crystal != nullptr)
+  {
+    _bulk_crystal->print_info();
+  }
 
   m.info(os.str());
 }

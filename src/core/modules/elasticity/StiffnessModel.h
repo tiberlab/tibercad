@@ -5,20 +5,16 @@
 
 #include "PhysicalModel.h"
 
-#include "tensor_value.h"
+#include "libmesh/tensor_value.h"
 #include "tensor.h"
-#include "elem.h"
-#include "RotatedCrystal.h"
+#include "libmesh/elem.h"
 #include "Material.h"
 #include "TensorOperators.h"
 
 
-//class Elem;
-//class Point;
 
 using namespace std;
 
-//! The base class for Poisson boundary conditions
 class StiffnessModel : public PhysicalModel
 {
 
@@ -39,8 +35,6 @@ class StiffnessModel : public PhysicalModel
     //! Constructor
   StiffnessModel(const ModelOptions& options);
 
-//! Calculate for a point on the given side
-  //void calculate(const Elem* elem, const Point& point);
 
   void set_stiffness_constant(const Tensor4DSym& C);
 
@@ -84,9 +78,13 @@ StiffnessModel::rotate()
 {
 
   const Material* mat = get_material();
-  const RotatedCrystal&   cr = mat->get_rotated_crystal ();
+  const libMesh::RealTensor& rot = mat->get_rotation_matrix();
+  Tensor2Gen rotm;
+  for (unsigned int i = 0; i < 3; ++i)
+    for (unsigned int j = 0; j < 3; ++j)
+      rotm(i+1, j+1) = rot(i, j);
 
-  _stiffness = push_forward(_stiffness, cr.RotMatrix);
+  _stiffness = push_forward(_stiffness, rotm);
 }
 
 #endif // _THERMALCONDUCTIVITYMODEL_H_

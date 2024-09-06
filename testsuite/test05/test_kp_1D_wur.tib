@@ -4,9 +4,8 @@ Device
   mesh_units = 1e-9
   dimension = 1
 
-#  y-growth-direction = (1,0,-1,0)
-#  z-growth-direction = (-1,2,-1,0)
-#  x-growth-direction = (0,0,0,1)
+  # this should be the default
+  # x-growth-direction = (0,0,0,1)
 
   Region well
   {
@@ -75,9 +74,7 @@ Module elasticity
    {
     reference_material = AlGaN
     x = 0.3
-    y-growth-direction = (1,0,-1,0)
-    z-growth-direction = (-1,2,-1,0)
-    x-growth-direction = (0,0,0,1)
+    #x-growth-direction = (0,0,0,1)
    }
 
  }

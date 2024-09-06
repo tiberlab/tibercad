@@ -2,11 +2,11 @@
 
 #include "DDsemiconductor.h"
 #include "EFAbulkHamiltonian.h"
-#include "RotatedCrystal.h"
 #include "Material.h"
 #include "Constants.h"
 #include "Database.h"
 #include "Messages.h"
+#include "BulkCrystal.h"
 #include "SolverException.h"
 #include "RuntimeException.h"
 
@@ -24,12 +24,12 @@ namespace {
 
 
 
-  void rotate(libMesh::DenseVector<Complex>& vec, const RotatedCrystal& cr)
+  void rotate(libMesh::DenseVector<Complex>& vec, const BulkCrystal& cr)
   {
     // NOTE This is not tested well
     libMesh::DenseVector<Complex> tmp(vec);
 
-    const Tensor2Gen& mat = cr.RotMatrix;
+    const Tensor2Gen& mat = cr.get_rotation();
 
     double a, b, c; // euler angles
     cr.get_euler_angles(a, b, c);
@@ -519,7 +519,7 @@ void DDsemiconductor::calculate_inverse_mass(
       // rotate according to calculation system
       // rotate according to direction of k
       rotate(eigv[n], static_cast<KDirection>(k));
-      //rotate(eigv[n], get_material()->get_rotated_crystal());
+      //rotate(eigv[n], get_material()->get_bulk_crystal());
 
       libMesh::DenseVector<Complex> vec(6);
       for (int i = 0; i < 6; i++)
@@ -649,7 +649,7 @@ void DDsemiconductor::do_calculate_valence_band_extremum(void)
 
   //-----------------------------------------------
 
-  const Tensor2Gen& rotm = get_material()->get_rotated_crystal().RotMatrix;
+  const Tensor2Gen& rotm = get_material()->get_bulk_crystal()->get_rotation();
 
   // [100]
   k(1) = k_max ; k(2) = 0; k(3) = 0;

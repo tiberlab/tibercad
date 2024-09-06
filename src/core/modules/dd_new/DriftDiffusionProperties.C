@@ -10,7 +10,6 @@
 #include "Particle.h"
 #include "Constants.h"
 #include "InitFailedException.h"
-#include "RotatedCrystal.h"
 #include "Embracing.h"
 #include "Messages.h"
 #include "TypeDefs.h"

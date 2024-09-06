@@ -12,8 +12,6 @@
 #include "ParticleDensity.h"
 #include "PolarizationModel.h"
 
-#include "ZbRotatedCrystal.h"
-#include "WzRotatedCrystal.h"
 #include "ZbSemiconductor.h"
 #include "WzSemiconductor.h"
 #include "ZbDDsemiconductor.h"
@@ -76,13 +74,7 @@ PhysicalModel::_create(const string& name,
 
   PhysicalModel* mod = nullptr;
 
-  if (name == "cryst_gen")
-    mod = RotatedCrystal::create(options);
-  else if (name == "cryst_zb")
-    mod = ZbRotatedCrystal::create(options);
-  else if (name == "cryst_wz")
-    mod = WzRotatedCrystal::create(options);
-  else if (name == "semicond_zb")
+  if (name == "semicond_zb")
     mod = ZbSemiconductor::create(options);
   else if (name == "semicond_wz")
     mod = WzSemiconductor::create(options);

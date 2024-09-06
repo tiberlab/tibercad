@@ -171,7 +171,9 @@ Solution/Plot variables
 -----------------------
 
 The solution variables available for plotting and for interaction with other modules are
-given in :ref:`Plotting variables<el_solutions>`.
+given in :ref:`Plotting variables<el_solutions>`. Note that all quantities represented by
+symmetric tensors are provided as six-vectors ordered as in Voigt notation, i.e. ordered as
+xx, yy, zz, yz, xz, xy.
 
 
 

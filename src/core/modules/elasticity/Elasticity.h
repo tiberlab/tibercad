@@ -100,8 +100,6 @@ class TBDLLOCAL Elasticity : public SimulationInterface
     {
       public:
       SymTensor(void)
-//       : _val({0, 0, 0, 0, 0, 0})
-//      { }
       {
         _val[0] = _val[1] = _val[2] = _val[3] = _val[4] = _val[5] = 0.0;
       }
@@ -141,23 +139,35 @@ class TBDLLOCAL Elasticity : public SimulationInterface
       double _val[6];
     };
 
+    //! The accumulated elemental strain, used for shape deformation
+    HashMap<const Elem *, SymTensor>::Type _accumulated_strain;
 
-  //! The accumulated elemental strain, used for shape deformation
-  HashMap<const Elem*, SymTensor>::Type _accumulated_strain;
+    //! A pointer to device
+    Device *_device;
 
-  //! A pointer to device
-  Device* _device;
+    //! Compute the elastic energy
+    Real compute_elastic_energy(void);
 
-  //! Compute the elastic energy
-  Real compute_elastic_energy(void);
+    typedef std::map<const Elem *, libMesh::RealGradient> force_vector;
 
-  typedef std::map<const Elem*, libMesh::RealGradient> force_vector;
+   
+    struct options
+    {
+      ID magnification; //!< Magnification
+      ID edge;
+      bool non_linear_strain;
+      bool deformation;
+      double shape_error;                   //!< Max tollerance for shape deformation
+      unsigned int shape_iterations;        //! Max number of shape itarations
+      std::string structure_to_be_strained; //! Atomistic strucure to be strained
+    };
 
+    options myopt;
 
     //! These are the known solution variables
     /*!
-     * This is an enum, but we use the string representation of 
-     * the enum values to refer to solutions for plotting or 
+     * This is an enum, but we use the string representation of
+     * the enum values to refer to solutions for plotting or
      * for data exchange with other modules.
      *
      * \note Do \em not use (\c INVALID_ID - 1) or the strings \c RegionIDs
@@ -165,56 +175,40 @@ class TBDLLOCAL Elasticity : public SimulationInterface
      *
      * \note The name "all" is used to plot all solutions
      */
-  struct options
-  {
-    ID magnification;   //!< Magnification  
-    ID edge;
-    bool non_linear_strain;
-    bool deformation;
-    double shape_error; //!< Max tollerance for shape deformation
-    unsigned int shape_iterations; //! Max number of shape itarations
-    std::string structure_to_be_strained; //!Atomistic strucure to be strained
-   };
-
-  options myopt;
-
-
     enum Solutions
     {
-      Strain,        /*!< the strain */ 
+      Strain,            /*!< the strain */
       StrainCell,        /*!< the strain */
-      StrainCrystal,  /*!< the strain in the crystal system*/
+      StrainCrystal,     /*!< the strain in the crystal system*/
       Stress,            /*!< the total stress */
-      RelativeStrain,   /*!< the strain relative to the structure (= reference material) */
-      StressCrystal,  /*!< the stress in the crystal system*/
-      Displacement,     /*!< the displacement */
-      ForceSource,      /*!< force source */
-      StrainSource,     /*!< strain source */
-      StressSource,     /*!< stress source */
+      RelativeStrain,    /*!< the strain relative to the structure (= reference material) */
+      StressCrystal,     /*!< the stress in the crystal system*/
+      Displacement,      /*!< the displacement */
+      ForceSource,       /*!< force source */
+      StrainSource,      /*!< strain source */
+      StressSource,      /*!< stress source */
       HydrostaticStrain, /*!< the hydrostatic strain */
-      EnergyDensity,    /*!< elastic energy density */
+      EnergyDensity,     /*!< elastic energy density */
       Energy             /*!< Force */
     };
 
+    //! The total displacement
+    std::unique_ptr<libMesh::NumericVector<Number>> sol;
 
-  //! The total displacement
-  std::unique_ptr<libMesh::NumericVector<Number> > sol;
-
-  force_vector internal_force;
+    force_vector internal_force;
 
     std::vector<unsigned int> uvar;
     //! The constructor
     /*!
      * Being private disables further inheritance.
      */
-    Elasticity(const ModelOptions& options);
-
+    Elasticity(const ModelOptions &options);
 
     //! Apply the deformation
     void apply_shape_deformation();
 
     //! Apply correction for internal strain to atoms
-    void internal_strain_correction(AtomisticStructure* as);
+    void internal_strain_correction(AtomisticStructure *as);
 
     //! Update the aqccumulated strain
     void accumulate_strain(void);
@@ -222,8 +216,7 @@ class TBDLLOCAL Elasticity : public SimulationInterface
     //! Restore the shape
     void restore_shape();
 
-
-  libMesh::RealTensor get_subtensor(const Tensor4DSym& C_calc,unsigned int i,unsigned  int k);
+    libMesh::RealTensor get_subtensor(const Tensor4DSym &C_calc, unsigned int i, unsigned int k);
 };
 
 

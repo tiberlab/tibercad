@@ -78,6 +78,66 @@ namespace {
                          0, 0, -1)},
   };
 
+  // the International Symbols of crystal classes
+  // ID = 0 is reserved, if no symmetry is given. It map to C1 
+  vector<string> is_to_id = {
+    "",
+    "1", "-1",
+    "2", "m", "2/m",
+    "222", "mm2", "mmm", "4", "-4", "4/m", "422", "4mm", "-42m", "4/mmm",
+    "3", "-3", "32", "3m", "-3m",
+    "6", "-6", "6/m", "622", "6mm", "-6m2", "6/mmm",
+    "23", "m3", "432", "-43m", "m3m"
+  }; 
+
+  // a map from Schoenflies to internal indices
+  map<string, unsigned int> schoenflies_to_id = {
+    {"C1", 1},
+    {"Ci", 2},
+    {"S2", 2},
+
+    {"C2", 3},
+    {"Cs", 4},
+    {"C1h", 4},
+    {"C2h", 5},
+
+    {"D2", 6},
+    {"V", 6},
+    {"C2v", 7},
+    {"D2h", 8},
+    {"Vh", 8},
+
+    {"C4", 9},
+    {"S4", 10},
+    {"C4h", 11},
+    {"D4", 12},
+    {"C4v", 13},
+    {"D2d", 14},
+    {"Vd", 14},
+    {"D4h", 15},
+
+    {"C3", 16},
+    {"C6i", 17},
+    {"S6", 17},
+    {"D3", 18},
+    {"C3v", 19},
+    {"D3d", 20},
+
+    {"C6", 21},
+    {"S3", 22},
+    {"C3h", 22},
+    {"C6h", 23},
+    {"D6", 24},
+    {"C6v", 25},
+    {"D3h", 26},
+    {"D6h", 27},
+
+    {"T", 28},
+    {"Th", 29},
+    {"O", 30},
+    {"Td", 31},
+    {"Oh", 32}
+  }; 
 
   // list of generators for known symmetries
   map<string, vector<string>> symmetries = {

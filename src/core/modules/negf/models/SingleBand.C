@@ -3,7 +3,6 @@
 #include "SingleBand.h"
 #include "Database.h"
 #include "Material.h"
-#include "RotatedCrystal.h"
 
 #include "TiberModule.h"
 
@@ -173,16 +172,8 @@ void SingleBand::set_invmass_tensor(void)
   R(0,0) = R(0,0) + 1; R(1,1) = R(1,1) + 1; R(2,2) = R(2,2) + 1;
 
   // Set rotation from Crystal to Device
+  const RealTensor& Rot = get_material()->get_rotation_matrix();
 
-  const RotatedCrystal& cr = get_material()->get_rotated_crystal();
-
-  Tensor2Gen RotMatrix = cr.RotMatrix;
-
-  TensorValue<double> Rot;
-
-  for(unsigned int i=0; i<3; i++)
-    for(unsigned int j=0; j<3; j++)
-       Rot(i,j)=RotMatrix(i+1,j+1);
 
   //std::cerr<<"Rot"<<std::endl<<Rot<<std::endl;
   _inv_mass = Rot * R * _inv_mass_crys * R.transpose() * Rot.transpose();

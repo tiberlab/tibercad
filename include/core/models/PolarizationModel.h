@@ -5,14 +5,13 @@
 
 #include "PhysicalModel.h"
 #include "SolutionProvider.h"
-#include "RotatedCrystal.h"
 #include "Material.h"
 #include "tensor.h"
 #include "TensorOperators.h"
 #include "libMeshDefs.h"
 
-#include "vector_value.h"
-#include "tensor_value.h"
+#include "libmesh/vector_value.h"
+#include "libmesh/tensor_value.h"
 
 USELIBMESHTYPE(RealVectorValue);
 
@@ -80,6 +79,12 @@ class PolarizationModel : public PhysicalModel
 
    Tensor2Sym& get_strain(void);
 
+   //! Get strain tensor
+   void get_strain(libMesh::RealTensor& strain) const;
+
+   //! Get strain as vector, in Voigt order
+   void get_strain(std::vector<double>& strain) const;
+
 
   private:
 
@@ -115,6 +120,31 @@ PolarizationModel::get_strain(void)
 }
 
 
+inline
+void
+PolarizationModel::get_strain(libMesh::RealTensor& strain) const
+{
+  strain(0,0) = _strain(1,1);
+  strain(1,1) = _strain(2,2);
+  strain(2,2) = _strain(3,3);
+  strain(1,2) = strain(2,1) = _strain(3,2);
+  strain(0,2) = strain(2,0) = _strain(3,1);
+  strain(0,1) = strain(1,0) = _strain(2,1);
+}
+
+inline
+void
+PolarizationModel::get_strain(std::vector<double>& strain) const
+{
+  strain.resize(6, 0.0);
+  strain[0] =_strain(1,1); 
+  strain[1] =_strain(2,2); 
+  strain[2] =_strain(3,3); 
+  strain[3] =_strain(3,2); 
+  strain[4] =_strain(3,1); 
+  strain[5] =_strain(2,1); 
+}
+
 
 inline
 const RealVectorValue&
@@ -132,29 +162,9 @@ PolarizationModel::set_polarization(const libMesh::RealVectorValue& polarization
    _polarization = polarization;
 }
 
-/*
-inline
-RealVectorValue&
-PolarizationModel::polarization(void)
-{
-  return _polarization;
-}
-*/
 
-inline
-void 
-PolarizationModel::rotate(void)
-{
 
-  if (!_fixed_or_external)
-  {
-    const Material* mat = get_material();
-    const RotatedCrystal& cr = mat->get_rotated_crystal();
 
-    _polarization = cr.RotMatrix * _polarization;
-  }
-
-}
 
 
 #endif // _POLARIZATIONMODEL_H_

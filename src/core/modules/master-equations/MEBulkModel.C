@@ -1,22 +1,14 @@
 
 #include "MEBulkModel.h"
 #include "ParticleDensity.h"
-//#include "RecombinationModelInterface.h"
-//#include "MobilityModelInterface.h"
-//#include "ThermoelectricPower.h"
 #include "SimulationInterface.h"
 #include "Material.h"
 #include "Database.h"
-//#include "Dopant.h"
-//#include "Trap.h"
 #include "Constants.h"
 #include "InitFailedException.h"
-//#include "RotatedCrystal.h"
 #include "Embracing.h"
 #include "Messages.h"
 #include "TypeDefs.h"
-//#include "PolarizationModel.h"
-//#include "PermittivityModel.h"
 
 #include "elem.h"
 

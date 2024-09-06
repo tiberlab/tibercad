@@ -9,7 +9,6 @@
 #include "tensor_value.h"
 
 #include "vector_value.h"
-#include "RotatedCrystal.h"
 
 #include "libMeshDefs.h"
 
@@ -85,12 +84,8 @@ void
 ThermalConductivityModel::rotate(void)
 {
 
-  if (get_material()->get_structure() == "wz")
-  {
-    const RotatedCrystal&   cr = get_material()->get_rotated_crystal();
-    Tensor2Gen RotMatrix = cr.RotMatrix; 
-    _kappa = RotMatrix * ( _kappa * (RotMatrix.transpose()));
-  }
+  const libMesh::RealTensor& RotMatrix = get_material()->get_rotation_matrix();;
+  _kappa = RotMatrix * (_kappa * (RotMatrix.transpose()));
 
 }
 

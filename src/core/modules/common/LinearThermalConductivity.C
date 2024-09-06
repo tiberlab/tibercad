@@ -3,7 +3,6 @@
 
 #include "Material.h"
 #include "LinearThermalConductivity.h"
-#include "RotatedCrystal.h"
 #include "libMeshDefs.h"
 #include "PhysicalModel.h"
 #include "ModelOptions.h"

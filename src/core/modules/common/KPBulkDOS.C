@@ -3,18 +3,19 @@
 #include "KPBulkDOS.h"
 #include "Constants.h"
 #include "Material.h"
-#include "RotatedCrystal.h"
 #include "TiberMath.h"
 #include "Database.h"
 #include "InitFailedException.h"
 #include "DDsemiconductor.h"
 #include "SimulationOptions.h"
 #include "SimulationInterface.h"
+#include "TensorOperators.h"
 #include "Messages.h"
 
-#include "TiberModule.h"
+#include "libmesh/elem.h"
+#include "libmesh/tensor_value.h"
 
-#include "elem.h"
+#include "TiberModule.h"
 
 
 using namespace std;
@@ -132,8 +133,9 @@ KPBulkDOS::do_reinit(const Elem* elem)
     }
 
     const Material* mat = get_material();
-    const RotatedCrystal& cr = mat->get_rotated_crystal();
-    const Tensor2Gen& rotate = cr.RotMatrix;
+    const libMesh::RealTensor& rotm = mat->get_rotation_matrix();
+    Tensor2Gen rotate;
+    transform_tensor_format(rotm, rotate);
     strain = multAtSA(rotate, strain);
 
     _bulk_model->set_strain(strain);

@@ -2,7 +2,6 @@
 
 #include "ConversePiezo.h"
 #include "Material.h"
-#include "RotatedCrystal.h"
 #include "Database.h"
 #include "TensorOperators.h"
 
@@ -34,8 +33,8 @@ ConversePiezo::calculate(const libMesh::Elem* elem, const libMesh::Point& point)
   ElField *= -100.0 * 1e-9;
   //Rotate to crystal system
   const Material* mat = get_material();
-  const RotatedCrystal&   cr = mat->get_rotated_crystal ();
-  ElField = cr.RotMatrix.transpose() * ElField;
+  const libMesh::RealTensor& rotm = mat->get_rotation_matrix();
+  ElField = rotm.transpose() * ElField;
 
 
   //Compute the converse piezo stress
@@ -49,7 +48,7 @@ ConversePiezo::calculate(const libMesh::Elem* elem, const libMesh::Point& point)
   stress(2,2) = ElField(2) * _e33;
 
   //Rotate the converse piezo stress
-  stress =  cr.RotMatrix * (stress * cr.RotMatrix.transpose());
+  stress =  rotm * (stress * rotm.transpose());
 
   //From Pa tp GPa
   //stress *= 1e-9;

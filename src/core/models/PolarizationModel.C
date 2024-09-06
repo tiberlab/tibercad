@@ -1,6 +1,8 @@
 // $Id$
 
 #include "PolarizationModel.h"
+#include "BulkCrystal.h"
+#include "SimulationInterface.h"
 #include "InitFailedException.h"
 #include "Messages.h"
 
@@ -33,6 +35,18 @@ PolarizationModel::calculate(const libMesh::Elem* elem, const libMesh::Point& po
     PolarizationModel::do_calculate(elem, point);
 }
 
+
+void 
+PolarizationModel::rotate(void)
+{
+
+  if (!_fixed_or_external)
+  {
+    const Material* mat = get_material();
+    _polarization = mat->get_rotation_matrix() * _polarization;
+  }
+
+}
 
 
 void

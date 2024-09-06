@@ -4,14 +4,11 @@
 #define _PERMITTIVITYMODEL_H_
 
 #include "PhysicalModel.h"
-#include "RotatedCrystal.h"
 #include "Material.h"
-#include "tensor.h"
-#include "TensorOperators.h"
 #include "libMeshDefs.h"
 
-#include "tensor_value.h"
-#include "vector_value.h"
+#include "libmesh/tensor_value.h"
+#include "libmesh/vector_value.h"
 
 USELIBMESHTYPE(RealTensor);
 
@@ -92,12 +89,9 @@ PermittivityModel::rotate(void)
 {
 
   const Material* mat = get_material();
-  const RotatedCrystal&   cr = mat->get_rotated_crystal ();
+  const libMesh::RealTensor& rotm = mat->get_rotation_matrix();
 
- Tensor2Gen rotate = cr.RotMatrix;
-
- _permittivity = rotate * (_permittivity * rotate.transpose());
-
+  _permittivity = rotm * (_permittivity * rotm.transpose());
 
 }
 

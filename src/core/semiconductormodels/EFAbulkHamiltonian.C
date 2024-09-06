@@ -1,8 +1,8 @@
 // $Id$
 
 #include "EFAbulkHamiltonian.h"
-#include "RotatedCrystal.h"
 #include "Material.h" 
+
 using namespace std; 
 
 //------------------------------------------------------------//
@@ -103,14 +103,11 @@ void EFAbulkHamiltonian::set_rotation_matrix()
 {
 
   const Material* mat =	get_material();
+  const libMesh::RealTensor& rotmatrix = mat->get_rotation_matrix();
   
-  const RotatedCrystal& cr = mat->get_rotated_crystal ();
-
-  Tensor2Gen rotmatrix = cr.RotMatrix;
-
   for (short i = 0; i < 3; i++)
      for (short j = 0; j < 3; j++)
-       rot_matrix[i][j] = rotmatrix(i+1,j+1);
+       rot_matrix[i][j] = rotmatrix(i,j);
 
 }
 

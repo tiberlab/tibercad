@@ -7,7 +7,6 @@
 #include "MeshUtils.h"
 #include "Specie.h"
 #include "Utils.h"
-#include "RotatedCrystal.h"
 #include "Atom.h"
 #include "BulkCrystal.h"
 
@@ -38,8 +37,7 @@ _local_origin(0),
 _translation(0),
 _cell_translation(0),
 _period(0),
-_as(as),
-_bulk(NULL)
+_as(as)
 {
 
 }
@@ -63,11 +61,12 @@ AtomisticGenerator::create(AtomisticStructure* const as, unsigned int dimension)
 }
 
 
-void AtomisticGenerator::print_basis(std::vector<Atom> &basis, const std::string filename){
+void AtomisticGenerator::print_basis(const std::vector<Atom> &basis, const std::string filename) const
+{
 
   std::ofstream output_file;
 
-  std::vector<Atom>::iterator basis_iterator = basis.begin();
+  std::vector<Atom>::const_iterator basis_iterator = basis.begin();
 
   output_file.open(filename.c_str());
   output_file << basis.size() << std::endl << std::endl;
@@ -92,13 +91,6 @@ void
 AtomisticGenerator::build(void)
 {
 
-  // make the conventional cell, which has orthogonal lattice vectors
-  make_conv_cell();
-
-  if (_as->get_options().get_option("minimal_cell", false))
-  {
-    minimal_conv_cell();
-  }
 
   // Alternatively, we can use directly the primitive cell to fill up the structure,
   // allowing for non-orthogonal supercell basis.
@@ -109,9 +101,21 @@ AtomisticGenerator::build(void)
     _conv_prim = 0;
     _conv_prim(1,1) = _conv_prim(2,2) = _conv_prim(3,3) = 1;
   }
+  else
+  {
+    // make the conventional cell, which has orthogonal lattice vectors
+    make_conv_cell();
 
+    if (_as->get_options().get_option("minimal_cell", false))
+    {
+      minimal_conv_cell();
+    }
+  }
+
+  // fill the cell with lattice points
   make_conv_lattice();
   move_origin();
+  // put the atoms in to the periodic cell
   make_conv_basis();
 
   // Get bounding box for building structure
@@ -209,10 +213,9 @@ AtomisticGenerator::init_commons()
   //Additional options respect to the region should be specified here
   Messages::info("Create reference lattice: "+_reference_material->get_name());
 
-  _bulk = BulkCrystal::create(_reference_material); 
+  // TODO maybe it would be better to make a copy
+  _bulk = _reference_material->get_bulk_crystal(); 
   
-  _bulk->init();
-
   //_bulk->print_xyb("Ref.xyb");
   //-----------------------------------------------------------------------
   
@@ -637,7 +640,6 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3)
   //Build a supercell, defined by the lenght of conventional growth cell vectors
   int i,j,l;
   int start_i = 0, start_j = 0, start_l = 0;
-  double conv_l1, conv_l2, conv_l3;
   Atom basis_atom;
   Tensor1 lattice_point;
   Tensor2Gen supercell_vect,inv_supercell_vect;
@@ -645,33 +647,59 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3)
   std::ostringstream os;
 
   std::vector<Atom> basis = _bulk->get_rotated_basis();
-  std::vector<Atom>::const_iterator basis_iterator;
   std::vector<Tensor1>::iterator conv_iterator;
   
   Messages::debug("Running make_supercell...");
-  //print_basis(_conv_basis, "conv_basis.xyz");
+
+  os << "Making supercell with extensions " << fixed << setprecision(2)
+     << l1 << "x" << l2 << "x" << l3 << " = " 
+     << l1*l2*l3/1000 << " nm^3\n";
+  Messages::info(os.str());
 
   //Check values. l1,l2,l3 cannot be unwisely large (no more than (1um)^3)
-  assert((l1*l2*l3) < 1e+12);
+  if ((l1*l2*l3) > 1e+12)
+  {
+    os.str("");
+    os << "Supercell extension seems extensively large!";
+    Messages::warning(os.str());
+  }
+  os.str("");
 
+  /*
   //Find lenght of conventional cell sides
-  conv_l1 = sqrt(_conv_vect(1,1) * _conv_vect(1,1) + _conv_vect(2,1) * _conv_vect(2,1) 
+  double conv_l1 = sqrt(_conv_vect(1,1) * _conv_vect(1,1) + _conv_vect(2,1) * _conv_vect(2,1) 
                                                    + _conv_vect(3,1) * _conv_vect(3,1));
-  conv_l2 = sqrt(_conv_vect(1,2) * _conv_vect(1,2) + _conv_vect(2,2) * _conv_vect(2,2) 
+  double conv_l2 = sqrt(_conv_vect(1,2) * _conv_vect(1,2) + _conv_vect(2,2) * _conv_vect(2,2) 
                                                    + _conv_vect(3,2) * _conv_vect(3,2));
-  conv_l3 = sqrt(_conv_vect(1,3) * _conv_vect(1,3) + _conv_vect(2,3) * _conv_vect(2,3) 
+  double conv_l3 = sqrt(_conv_vect(1,3) * _conv_vect(1,3) + _conv_vect(2,3) * _conv_vect(2,3) 
                                                    + _conv_vect(3,3) * _conv_vect(3,3));
 
   int n1 = std::max(1, static_cast<int>(floor(l1 / conv_l1)));
   int n2 = std::max(1, static_cast<int>(floor(l2 / conv_l2)));
   int n3 = std::max(1, static_cast<int>(floor(l3 / conv_l3)));
+  */
+
+  Tensor1 diagonal;
+  diagonal(1) = l1;
+  diagonal(2) = l2;
+  diagonal(3) = l3;
+  // we add fraction of periodic cell, to use afterwards floor()
+  diagonal += 1e-6 * (_conv_vect(1) + _conv_vect(2) + _conv_vect(3));
+  Tensor1 mult = inv(_conv_vect) * Tensor1(diagonal);
+  int n1 = max(1.0, floor(mult(1)));
+  int n2 = max(1.0, floor(mult(2)));
+  int n3 = max(1.0, floor(mult(3)));
 
   // override with integer factors from input file
   n1 = _as->get_options().get_option("cells_along_x", n1);
+  n1 = _as->get_options().get_option("cells_along_a1", n1);
   n2 = _as->get_options().get_option("cells_along_y", n2);
+  n2 = _as->get_options().get_option("cells_along_a2", n2);
   n3 = _as->get_options().get_option("cells_along_z", n3);
+  n3 = _as->get_options().get_option("cells_along_a3", n3);
 
-  os << "Conventional cells along x, y, z: " << n1 << " " << n2  << " " << n3;
+  os << "Conventional cells along periodic directions: "
+     << n1 << " " << n2  << " " << n3;
   Messages::info(os.str());
 
   //Set supercell periodical vectors
@@ -745,19 +773,17 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3)
         tmp_conv(1) = (i * _conv_vect(1,1)) + (j * _conv_vect(1,2)) + (l * _conv_vect(1,3));
         tmp_conv(2) = (i * _conv_vect(2,1)) + (j * _conv_vect(2,2)) + (l * _conv_vect(2,3));
         tmp_conv(3) = (i * _conv_vect(3,1)) + (j * _conv_vect(3,2)) + (l * _conv_vect(3,3));
+
+        // as last step, we fold into the bounding box
         
-        basis_iterator = _conv_basis.begin();
-
-        do
+        // note: we do not use a reference, so we can change basis_atom in the loop
+        // without modifing _conv_basis
+        for (auto basis_atom : _conv_basis)
         {
-           basis_atom = (*basis_iterator);
            basis_atom.set_position( origin + tmp_conv + 
-                (*basis_iterator).get_ttype_position() );
+                basis_atom.get_ttype_position() );
             _super_basis.push_back(basis_atom);
-
-          ++basis_iterator;
         }
-        while(basis_iterator != _conv_basis.end());
        
       }
     }
@@ -770,7 +796,7 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3)
 
 void AtomisticGenerator::make_conv_cell()
 {
-  Messages::info("Make conventional cell");
+  Messages::info("Make conventional cell aligned with cartesian axes");
 
   //Calculate conventional cell vectors in the directions given by cut planes (conventional growth cell)
   Tensor1 vec_x(0),vec_y(0),vec_z(0);
@@ -789,12 +815,26 @@ void AtomisticGenerator::make_conv_cell()
   //
   _conv_prim = inv(rotated_prim_vec);
   scale_to_int(_conv_prim);
-  //cerr << " conv prim = " << _conv_prim << endl;
-  //cerr << " rot  prim = " << rotated_prim_vec << endl;
  
   // now the matrix nij = _conv_prim
   // so the orthogonal cell vectors are 
   _conv_vect = rotated_prim_vec * _conv_prim;
+
+  // make some sanity check
+  bool check = sqrt(_conv_vect(2,1)*_conv_vect(2,1) +
+                    _conv_vect(3,1)*_conv_vect(3,1)) > 1; 
+  check |= sqrt(_conv_vect(1,2)*_conv_vect(1,2) +
+                _conv_vect(3,2)*_conv_vect(3,2)) > 1; 
+  check |= sqrt(_conv_vect(1,3)*_conv_vect(1,3) +
+                _conv_vect(2,3)*_conv_vect(2,3)) > 1; 
+  if (check)
+    Messages::warning("The conventional cell vectors are not "
+           " sufficiently near to orthogonal. This might "
+           " be a problem.");
+
+  _conv_vect(3,1) = _conv_vect(2,1) = 0.0;
+  _conv_vect(3,2) = _conv_vect(1,2) = 0.0;
+  _conv_vect(2,3) = _conv_vect(1,3) = 0.0;
 
   //Note: we don't know if the vectors conv_vect are positively or
   //negatively oriented along the standard basis x,y,z.
@@ -804,12 +844,15 @@ void AtomisticGenerator::make_conv_cell()
   //absolute value of the component of conv_vect
   for (int i = 1; i <=3; i++)
   {
-     if (_conv_vect(i,i)<0)
-     { 
-       _conv_vect(i,i) = -_conv_vect(i,i);
-       for (int j = 1; j <=3; j++)
-          _conv_prim(j,i) = -_conv_prim(j,i);
-     }
+    for (int j = 1; j <= 3; j++)
+      if (abs(_conv_vect(i,j)) < 1e-6) _conv_vect(i,j) = 0.0; 
+
+    if (_conv_vect(i, i) < 0)
+    {
+      _conv_vect(i, i) = -_conv_vect(i, i);
+      for (int j = 1; j <= 3; j++)
+        _conv_prim(j, i) = -_conv_prim(j, i);
+    }
   }
 
   vec_x(1) = _conv_vect(1,1); vec_x(2) = _conv_vect(2,1); vec_x(3) = _conv_vect(3,1);
@@ -866,25 +909,25 @@ void AtomisticGenerator::minimal_conv_cell()
   int i,j, k,l, ilow,jlow,klow,llow, lower_2, lower_3, upper_2, upper_3;
   Tensor2Gen rotated_prim_vec = _bulk->get_rotated_prim_vec();
 
+
+
+
   // the following calculations assume a certain ordering of the vectors
-  // with rotated_prim_vec(1,1) != 0, therefore we reorder according to this
+  // with rotated_prim_vec(1,1) != 0, therefore we reorder according to this,
+  // choosing the vector with largest component along x
   // we do not reorder back afterwards the results, only _conv_vect will be needed
   unsigned int id1 = 1;
   unsigned int id2 = 2;
   unsigned int id3 = 3;
 
-  double proj = 0;
+  double maxval = 1e-6;
   for (i = 1; i <= 3; ++i)
   {
-    // this version lead to c[1] = 0, e.g. for zincblende
-    //if ((fabs(rotated_prim_vec(2, i)) < 1e-12) &&
-    //    (fabs(rotated_prim_vec(3, i)) < 1e-12))
-    if (fabs(rotated_prim_vec(1, i)) > 1e-6)
+    if (fabs(rotated_prim_vec(1, i)) > maxval)
     {
       id1 = i;
       id2 = (i % 3) + 1;
       id3 = ((i + 1) % 3) + 1;
-      break;
     }
   }
   //cerr << id1 << " " << id2 << " " << id3 << endl;
@@ -897,7 +940,58 @@ void AtomisticGenerator::minimal_conv_cell()
     rotated_prim_vec(i, 2) = tmp(i, id2);
     rotated_prim_vec(i, 3) = tmp(i, id3);
   }
+/* 
+  maxval = 1e-6;
+  for (i = 2; i <= 3; ++i)
+  {
+    if (fabs(rotated_prim_vec(3, i)) > maxval)
+    {
+      id1 = i;
+    }
+  }
 
+  if (id1 == 3)
+  {
+    tmp = rotated_prim_vec;
+    for (i = 1; i <= 3; ++i)
+    {
+      rotated_prim_vec(i, 2) = tmp(i, 3);
+      rotated_prim_vec(i, 3) = tmp(i, 2);
+    }
+  }
+  cerr << rotated_prim_vec << "\n";
+
+  Tensor2Gen inv_prim = inv(rotated_prim_vec);
+
+  // get indices for basis vector along y
+  Tensor1 n2 = inv_prim * Tensor1(Point(0, 1.0, 0));
+  scale_to_int(n2);
+  Tensor1 a2 = rotated_prim_vec * n2;
+  std::cerr << n2 << "\n";
+  std::cerr << a2 << "\n";
+
+  Tensor1 p1 = rotated_prim_vec(1);
+  Tensor1 p2 = rotated_prim_vec(2);
+  Tensor1 p3 = rotated_prim_vec(3);
+  double det = p1(1)*p2(3) - p1(3)*p2(1);
+  double n31_1 = -p2(1)/det;
+  double n32_1 = p1(1)/det;
+  double n31_2 = -(p2(3)*p3(1) - p2(1)*p3(3))/det;
+  double n32_2 = -(p1(1)*p3(3) - p1(3)*p3(1))/det;
+  for (int n33 = 0; n33 < 5; ++n33)
+  {
+    double n31 = n31_1 + n31_2*n33;
+    double n32 = n32_1 + n32_2*n33;
+    double a23 = n31*p1(2) + n32*p2(2) + n33*p3(2);
+    Tensor1 t(Point(0, a23, 1.0));
+    scale_to_int(t);
+    std::cerr << t << "\n";
+    Tensor1 a3 = rotated_prim_vec * t;
+    std::cerr << a3 << "\n";
+  }
+  cerr << n31_1 << " " << n31_2 << "\n"
+       << n32_1 << " " << n32_2 << "\n";
+*/
   for (i = 1; i<=3; i++)
     c[i] = rotated_prim_vec(1,i);
 
@@ -991,17 +1085,15 @@ void AtomisticGenerator::minimal_conv_cell()
   _conv_vect(1,2) = v1(1); _conv_vect(2,2) = v1(2); _conv_vect(3,2) = v1(3); 
   _conv_vect(1,3) = v2(1); _conv_vect(2,3) = v2(2); _conv_vect(3,3) = v2(3); 
 
-  //cerr << "conv_vect at end:\n";
-  //cerr << _conv_vect << endl;
+  cerr << "conv_vect at end:\n";
+  cerr << _conv_vect << endl;
 }
 
 void AtomisticGenerator::make_conv_lattice()
 {
   //Fill the conventional growth cell with atomic basis
   
-  Tensor1 prim_position, tmp_position;
   Tensor2Gen rotated_prim_vec = _bulk->get_rotated_prim_vec();
-  //cerr << "rotated prim vec : " << rotated_prim_vec << endl;
 
   /* IMPORTANT NOTE:
    * The lattice points covering the conventional cells are obtained by looking at the indeces
@@ -1034,9 +1126,22 @@ void AtomisticGenerator::make_conv_lattice()
   a2(0) = _conv_vect(1,2); a2(1) = _conv_vect(2,2); a2(2) = _conv_vect(3,2);
   a3(0) = _conv_vect(1,3); a3(1) = _conv_vect(2,3); a3(2) = _conv_vect(3,3);
 
-  //cout<<a1<<endl;
-  //cout<<a2<<endl;
-  //cout<<a3<<endl;
+  double volume = a3 * (a1.cross(a2));
+  double volume_prim = rotated_prim_vec(3) * (rotated_prim_vec(1) ^ rotated_prim_vec(2));
+
+  ostringstream os;
+  os << "Periodic (conventional) cell:\n" << fixed << setprecision(5)
+     << "  a1 = (" << a1(0) << ", " << a1(1) << ", " << a1(2) << ")\n" 
+     << "  a2 = (" << a2(0) << ", " << a2(1) << ", " << a2(2) << ")\n" 
+     << "  a3 = (" << a3(0) << ", " << a3(1) << ", " << a3(2) << ")\n"; 
+  os << "Volume of periodic  cell : " << volume << "\n";
+  os << "Volume of primitive cell : " << volume_prim << "\n";
+  os.unsetf(ios::fixed);
+  os << "  => periodic cell contains " << volume / volume_prim
+     << " primitive lattice cells";
+  Messages m;
+  m.info(os.str());
+
   //Define a box including conventional cell
  
   // will use indices 1-3, instead of 0-2
@@ -1044,32 +1149,63 @@ void AtomisticGenerator::make_conv_lattice()
 
   for (int i = 1; i <= 3; i++)
   {
-    double vals[] = {0.0, indxs(i), _conv_prim(i,1), _conv_prim(i,2), _conv_prim(i,3)};
-    lower[i] = int( *min_element(vals, vals+5) );
-    upper[i] = int( *max_element(vals, vals+5) );
+    vector<double> vals = {0.0, indxs(i), _conv_prim(i,1), _conv_prim(i,2), _conv_prim(i,3)};
+    lower[i] = std::round(*min_element(vals.begin(), vals.end()));
+    upper[i] = std::round(*max_element(vals.begin(), vals.end()));
+    --lower[i];
+    ++upper[i];
   }
+  // TODO: the above might be little robust. I had to add the +/-1 to make it work
+  // for (1nm) directions in zincblende.
+  // Maybe one should calculate the min/max indices by bounding the targeted
+  // periodic cell by a multiple of the used primitive or conventional cell
   
   double tol = 0.0;
   Point orig(-tol,-tol,-tol);
+
+  Tensor2Gen inv_conv_vec(inv(_conv_vect));
+
+  int counter = 0;
 
   for (int i = lower[1]; i <= upper[1]; i++){
     for (int j = lower[2]; j <= upper[2]; j++){
       for (int l = lower[3]; l <= upper[3]; l++){
 
-        prim_position(1) = double(i); 
-        prim_position(2) = double(j); 
-        prim_position(3) = double(l);
-        tmp_position = rotated_prim_vec * prim_position;
-        Point p(tmp_position(1), tmp_position(2), tmp_position(3));
+        Tensor1 prim_position = rotated_prim_vec * Tensor1(Point(i, j, l));
+        Tensor1 pos = inv_conv_vec * prim_position;
+        // in principle, 0 <= pos(i) < 1 to be inside the conventional cell
+        // the - 1e-6 is to prevent periodic lattice sites to be used due to
+        // numerical roundoff errors
+        // similarly, we allow values > -1e-6, i.e. below zero as starting
+        // points, to not loos lattice points to rounding errors
+        constexpr double tol = 1e-6;
+        constexpr double maxval = 1 - tol;
+        if ((pos(1) < maxval) && (pos(2) < maxval) && (pos(3) < maxval) &&
+            (pos(1) >= -tol)  && (pos(2) >= -tol)  && (pos(3) >= -tol))
+        {
+          _conv_lattice.push_back(prim_position);
+          counter++;
+        }
+        /*
+        // old code, but is less optimal
+        Point p(prim_position(1), prim_position(2), prim_position(3));
 
         if (fold_in_cell(p, orig, a1, a2, a3, false))
         {
-          _conv_lattice.push_back(tmp_position);
-          //cerr << p << endl;
+          _conv_lattice.push_back(prim_position);
+          counter++;
         }
-
+        */
       }
     }
+  }
+
+  if (round(volume / volume_prim) != counter)
+  {
+    os.str("");
+    os << "Periodic cell has been filled with "
+       << counter << " != " << volume / volume_prim << " primitive cells!";
+    m.warning(os.str());
   }
 
 }
@@ -1078,7 +1214,7 @@ void AtomisticGenerator::move_origin()
 {
   // Now we place the basis and translate the origin of the conv_cell in order to have all atoms
   // with positive coordinates. This is done to prevent loosing folded copies in periodic structures
-  std::vector<Atom> basis = _bulk->get_rotated_basis();
+  const std::vector<Atom>& basis = _bulk->get_rotated_basis();
   std::vector<Atom>::const_iterator basis_iterator;
   std::vector<Tensor1>::iterator conv_iterator = _conv_lattice.begin();      
   Tensor1 min_pos(1.0e10);
@@ -1118,7 +1254,7 @@ void AtomisticGenerator::move_origin()
 void AtomisticGenerator::make_conv_basis()
 {
   Tensor1 atm_coords;
-  std::vector<Atom> basis = _bulk->get_rotated_basis();
+  const std::vector<Atom>& basis = _bulk->get_rotated_basis();
   _conv_basis.reserve(_conv_lattice.size() * basis.size());
 
   Point a1, a2, a3;
@@ -1152,6 +1288,7 @@ void AtomisticGenerator::make_conv_basis()
   }
   while(conv_iterator != _conv_lattice.end());
 
+  //print_basis(_conv_basis, "conv_basis.xyz");
 }
 
 
@@ -1162,7 +1299,7 @@ bool AtomisticGenerator::fold_in_cell(Point& position,
   bool pfold;
   // The planes vectors are oriented to point outside the cell
   // NOTE: below_surface() includes on the surface
-  Point origin(orig - 1e-2*Point(1, 1, 1));
+  Point origin(orig - 1e-6*Point(1, 1, 1));
   //Point origin(orig);
 
   libMesh::Plane p(origin, origin + a2, origin + a1);
@@ -1180,7 +1317,7 @@ bool AtomisticGenerator::fold_in_cell(Point& position,
   if (!pfold && fold) position += a2;
   is_inside &= pfold;
 
-  Point corner(orig + a1 + a2 + a3 - 1e-2*Point(1, 1, 1));
+  Point corner(orig + a1 + a2 + a3 - 1e-6*Point(1, 1, 1));
   //Point corner(orig + a1 + a2 + a3);
 
   p.create_from_three_points(corner, corner + a1, corner + a2);
@@ -1498,8 +1635,7 @@ AtomisticGenerator::compare_tol(double a, double b)
   //Comparison routine with a tolerance defined as internal constant.
   //If absolute value of difference between a and b is minor than tolerance,
   //a and b are considered equal
-  if (std::fabs(a-b) < tol) return 1;
-  else return 0;
+  return(std::fabs(a-b) < tol);
 }
 
 
@@ -1510,7 +1646,7 @@ AtomisticGenerator::double_to_int_cast_checked(double a)
   int n;
   if (std::abs(std::floor(a)-a) < std::abs(std::ceil(a) - a)) n = int(std::floor(a));
   else n = int(std::ceil(a));
-  assert (std::abs(double(n) - a) < tol);
+  //assert (std::abs(double(n) - a) < tol);
   return n;
 }
 
@@ -1584,19 +1720,37 @@ void AtomisticGenerator::scale_to_int(Tensor1& a)
   //If vector is not in a reduced form (having integer values with gcd > 1) it's reduced
   //If input is a zero vector, a zero vector is returned
 
-  double tol = 1e-3;
+  double tol = 0.001;
 
-  //Check if a is already integer
-  if ( (fabs(a(1) - round(a(1))) < tol) && (fabs(a(2) - round(a(2))) < tol) && (fabs(a(3) - round(a(3))) < tol) )
+  //Check if a is already almost integer
+  if ((fabs(a(1) - round(a(1))) < tol) &&
+      (fabs(a(2) - round(a(2))) < tol) &&
+      (fabs(a(3) - round(a(3))) < tol))
   {
     a(1) = double_to_int_value_checked(a(1));
     a(2) = double_to_int_value_checked(a(2));
     a(3) = double_to_int_value_checked(a(3));
   }
-
   else
-
   {
+    // this tolerance allows for 0.2 error on scaled vector
+    // NOTE: tol has been increased in order to allow for "strange" growth directions,
+    // where strict periodicity would be obtained only for very large supercell sizes.
+    // This gives problems in structure generation. So I prefer to allow a more "fuzzy"
+    // periodicity, also because usually the structure would be passivated, or maybe
+    // relaxation solves the issue related to non-ideal periodicity.
+
+    // first scale smallest element to 1
+    double v1 = abs(a(1));
+    if (v1 < 1e-6) v1 = 1.0;
+    double v2 = abs(a(2));
+    if (v2 < 1e-6) v2 = 1.0;
+    double v3 = abs(a(3));
+    if (v3 < 1e-6) v3 = 1.0;
+    double minval = min(v1, min(v2, v3));
+    a /= minval;
+
+    tol = 0.2;
 
     int i = 0;
     Tensor1 a_tmp;
@@ -1604,7 +1758,9 @@ void AtomisticGenerator::scale_to_int(Tensor1& a)
     do{
       i = i + 1;
       a_tmp = a * i;
-    }while (  ( fabs (a_tmp(1) - round(a_tmp(1))) >= tol)  ||  (fabs(a_tmp(2) - round(a_tmp(2))) >= tol)  || (fabs(a_tmp(3) - round(a_tmp(3))) >= tol) );
+    } while ((fabs(a_tmp(1) - round(a_tmp(1))) >= tol) ||
+             (fabs(a_tmp(2) - round(a_tmp(2))) >= tol) ||
+             (fabs(a_tmp(3) - round(a_tmp(3))) >= tol));
 
     a(1) = a_tmp(1); a(2) = a_tmp(2); a(3) = a_tmp(3);
 

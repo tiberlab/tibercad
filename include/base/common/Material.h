@@ -8,7 +8,8 @@
 #include "Specie.h"
 
 // LibMesh includes
-#include "point.h"
+#include "libmesh/point.h"
+#include "libmesh/tensor_value.h"
 
 // C++ includes
 #include <string>
@@ -18,7 +19,6 @@
 
 // forward declarations
 class Dopant;
-class RotatedCrystal;
 class BulkCrystal;
 
 
@@ -79,8 +79,12 @@ class Material : public PhysicalObject
     const BulkCrystal* get_bulk_crystal(void) const;
 
 
-    //! Get a reference to the RotatedCrystal
-    const RotatedCrystal& get_rotated_crystal(void) const;
+    //! Get the rotation matrix
+    /*!
+     * For a crystal, this is the rotation from standard crystal
+     * coordinates into the calculation system.
+     */
+    const libMesh::RealTensor& get_rotation_matrix(void) const;
 
 
     //! Get the total n-doping
@@ -162,10 +166,7 @@ class Material : public PhysicalObject
 
 
     //! The real preinit function
-    /*!
-     * Prepares the rotated crystal object
-     */
-    virtual void do_preinit(void);
+    virtual void do_preinit(void) {};
 
 
     //! The real init function
@@ -180,12 +181,20 @@ class Material : public PhysicalObject
     virtual void do_info(void) const {};
 
 
-    //! Get a writable pointer to the RotatedCrystal
-    RotatedCrystal* get_crystal(void);
-
+    //! The rotation matrix
+    /*!
+     * The rotation matrix is taken from BulkCrystal,
+     * whenever it can be defined, otherwise it will be
+     * the unity matrix.
+     * In future, we might add an additional rotation due
+     * to macroscopic deformation.
+     */
+    libMesh::RealTensor _rotation_matrix {1.0, 0.0, 0.0,
+                                          0.0, 1.0, 0.0,
+                                          0.0, 0.0, 1.0};
 
     //! Set the RotatedCrystal
-    void set_crystal(RotatedCrystal* crystal);
+    void set_crystal(BulkCrystal* crystal);
 
     //! Fill list of species, to be used during initialization
     virtual void fill_species(void);
@@ -212,10 +221,6 @@ class Material : public PhysicalObject
 
     //! True if this is an alloy
     bool _is_alloy;
-
-
-    //! The RotatedCrystal object
-    RotatedCrystal* _rotated_crystal {nullptr};
 
 
     //! The bulk crystal object
@@ -266,19 +271,12 @@ Material::get_bulk_crystal(void) const
 
 
 inline
-const RotatedCrystal&
-Material::get_rotated_crystal(void) const
+const libMesh::RealTensor&
+Material::get_rotation_matrix(void) const
 {
-  return *_rotated_crystal;
+  return _rotation_matrix;
 }
 
-
-inline
-RotatedCrystal*
-Material::get_crystal(void)
-{
-  return _rotated_crystal;
-}
 
 
 inline

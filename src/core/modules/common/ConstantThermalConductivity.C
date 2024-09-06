@@ -4,7 +4,6 @@
 #include "Material.h"
 #include "Database.h"
 #include "ConstantThermalConductivity.h"
-#include "RotatedCrystal.h"
 
 #include "TiberModule.h"
 

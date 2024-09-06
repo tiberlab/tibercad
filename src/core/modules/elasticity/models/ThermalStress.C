@@ -2,7 +2,6 @@
 
 #include "ThermalStress.h"
 #include "Material.h"
-#include "RotatedCrystal.h"
 #include "Database.h"
 #include "SimulationOptions.h"
 #include "TensorOperators.h"
@@ -81,7 +80,7 @@ ThermalStress::calculate(const libMesh::Elem* elem, const libMesh::Point& point)
   // get temperature
   double deltaT = _temp.get_temperature(elem, point, true) - _ref_temp;
 
-  const RotatedCrystal& cr = get_material()->get_rotated_crystal();
+  const libMesh::RealTensor& rotm = get_material()->get_rotation_matrix();
 
 
   // compute thermally induced strain
@@ -91,7 +90,7 @@ ThermalStress::calculate(const libMesh::Elem* elem, const libMesh::Point& point)
   strain(2,2) = -_alpha(2) * deltaT;
 
   // rotate
-  strain = cr.RotMatrix * (strain * cr.RotMatrix.transpose());
+  strain = rotm * (strain * rotm.transpose());
 
   set_strain_source(strain);
 }

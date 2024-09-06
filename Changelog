@@ -4,6 +4,10 @@ Version 3.4.0
 New features:
 	- upgraded to libmesh 1.7.1, PETSc/SLEPc 3.17, cuda 11.5
 	- several fixes
+	- can now provide crystal directions as planes (hkl) or directions
+	  [utw], both Miller or Miller-Bravais. Also, only one or two
+	  directions need to be given
+	- changed output of symmetric tensors to reflect ordering in Voigt notation.
 
 
 Version 3.3.0

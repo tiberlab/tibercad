@@ -5,11 +5,11 @@
 #include "ModelOptions.h"
 #include "EFAbulkModel.h"
 #include "Material.h"
-#include "RotatedCrystal.h"
 #include "Boundary.h"
 #include "TiberMath.h"
 #include "TiberLinearSystem.h"
 #include "SimulationOptions.h"
+#include "TensorOperators.h"
 #include "tensor.h"
 
 #include "EigenSolver.h"
@@ -1340,8 +1340,8 @@ EnvelopFunctionApprox::get_crystal_strain(
     }
 
     const Material* mat = get_material(elem);
-    const RotatedCrystal& cr = mat->get_rotated_crystal();
-    const Tensor2Gen& rotate = cr.RotMatrix;
+    Tensor2Gen rotate;
+    transform_tensor_format(mat->get_rotation_matrix(), rotate);
     strain = multAtSA(rotate, strain);
   }
 }

@@ -38,7 +38,7 @@ libMesh::RealVectorValue operator*(const Tensor2Gen& A, const libMesh::RealVecto
 }
 
 
-//! Multiplication of Tenor types
+//! Multiplication of Tensor types
 inline
 libMesh::RealTensor operator*(const libMesh::RealTensor& A, const Tensor2Gen& B)
 {
@@ -58,7 +58,7 @@ libMesh::RealTensor operator*(const libMesh::RealTensor& A, const Tensor2Gen& B)
 }
 
 
-//! Multiplication of Tenor types
+//! Multiplication of Tensor types
 inline
 libMesh::RealTensor operator*(const Tensor2Gen& A, const libMesh::RealTensor& B)
 {
@@ -75,6 +75,16 @@ libMesh::RealTensor operator*(const Tensor2Gen& A, const libMesh::RealTensor& B)
   }
 
   return R;
+}
+
+
+//! Transform RealTensor into Tensor2Gen
+inline
+void transform_tensor_format(const libMesh::RealTensor& in, Tensor2Gen& out)
+{
+  for (unsigned int i = 0; i < 3; ++i)
+    for (unsigned int j = 0; j < 3; ++j)
+      out(i+1, j+1) = in(i, j);
 }
 
 

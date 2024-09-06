@@ -35,7 +35,7 @@ class TBDLLOCAL AtomisticGenerator
 
 public:
 
-  virtual  ~AtomisticGenerator(void);
+  ~AtomisticGenerator(void);
 
   //! Initialize structure informations
   void do_init();
@@ -43,14 +43,8 @@ public:
   //! Create an object of AtomisticGenerator for the right dimensionality
   static AtomisticGenerator* create(AtomisticStructure* const as, unsigned int dimension);
 
-  //! Tolerance defined internally for casting and comparison
-  static const double tol;
-
-  //! Scaling value respect to TiberCAD units (usually Amstrong instead of micron)
-  double scale;
-
   //! Print atom_basis in xyz file (for debugging)
-  void print_basis(std::vector<Atom> &basis, const std::string filename);
+  void print_basis(const std::vector<Atom> &basis, const std::string filename) const;
 
   //! Copy back information to AtomisticStructure
   void finalize(void);
@@ -64,6 +58,7 @@ public:
   //! cut the structure (only flags atoms)
   void cut(const std::set<ID>& reg_ids, const std::string preserve = "none");
 
+  //! Reduce structure to subset of regions
   void dorestrict(bool passivation = true);
   
   //! assign the correct specie to each atom
@@ -161,10 +156,14 @@ protected:
   void make_conv_basis();
 
   //! A function to build supercells (basis+lattice filling space)
+  /*!
+   * The input parameters define a cartesian bounding box, based on 
+   * the mesh extensions. 
+   */
   void make_supercell(double l1, double l2, double l3);
 
   //! Function for building up the structure.
-  virtual void build(void);
+  void build(void);
 
   //! Find the origin of the conventional cell such that all atoms have positive coordinates
   void move_origin(void);
@@ -202,6 +201,7 @@ protected:
 
   //! fold atoms into conventional cell
   static bool fold_in_cell(Atom& atom, const Point& orig, const Point& a1, const Point& a2, const Point& a3, bool fold=true);
+
   //! fold point into conventional cell
   static bool fold_in_cell(Point& p, const Point& orig, const Point& a1, const Point& a2, const Point& a3, bool fold=true);
 
@@ -219,13 +219,19 @@ private:
   double substitution_probability(size_t id, const Specie& sp);
 
   //! BulkCrystal of the reference material
-  BulkCrystal* _bulk;
+  const BulkCrystal* _bulk {nullptr};
 
   //! tells for every atom if it belongs to the structure
   /*!
    * Used for internal purpose
    */
   std::vector<bool> _belong_to_structure;
+
+  //! Tolerance defined internally for casting and comparison
+  static const double tol;
+
+  //! Scaling value respect to TiberCAD units (usually Angstrom instead of micron)
+  double scale;
 
 };
 

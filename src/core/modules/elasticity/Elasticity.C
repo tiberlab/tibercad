@@ -7,8 +7,6 @@
 #include "Messages.h"
 #include "SimulationOptions.h"
 #include "SimulationEnvironment.h"
-#include "TensorOperators.h"
-#include "RotatedCrystal.h"
 #include "AtomisticStructure.h"
 #include "QuantumContact.h"
 #include "DataOutput.h"
@@ -452,8 +450,7 @@ Elasticity::get_solution_secure(const Elem* elem,
      {
        
        const Material* mat = mod.get_material();
-       const RotatedCrystal&   cr = mat->get_rotated_crystal ();
-       const Tensor2Gen& rotate = cr.RotMatrix;
+       const libMesh::RealTensor& rotate = mat->get_rotation_matrix();
        libMesh::RealTensor crystal_strain = rotate.transpose() * (total_strain * rotate);
 
        values[StrainCrystal][6*n] =   crystal_strain(0,0);
@@ -495,8 +492,7 @@ Elasticity::get_solution_secure(const Elem* elem,
      {
        
        const Material* mat = mod.get_material();
-       const RotatedCrystal&   cr = mat->get_rotated_crystal ();
-       const Tensor2Gen& rotate = cr.RotMatrix;
+       const libMesh::RealTensor& rotate = mat->get_rotation_matrix();
        libMesh::RealTensor crystal_stress = rotate.transpose() * (total_stress * rotate);
        
        values[StressCrystal][6*n] =   crystal_stress(0,0);
@@ -1151,7 +1147,7 @@ Elasticity::internal_strain_correction(AtomisticStructure* as)
   // create a map between region IDs and lattice constants (for later fast access)
   // (a0 and c0 are the relaxed lattice constants of each material or alloy)
   map<ID,double> a, c;
-  map<ID,const Tensor2Gen*> RotM;
+  map<ID,const libMesh::RealTensor*> RotM;
 
   for(set<ID>::iterator reg = IDs.begin(); reg != IDs.end(); reg++)
   {
@@ -1164,8 +1160,7 @@ Elasticity::internal_strain_correction(AtomisticStructure* as)
       a[*reg] = db.get("a",0.0);
       c[*reg] = db.get("c",0.0);
 
-      const RotatedCrystal& cry =  mat->get_rotated_crystal();
-      RotM[*reg] = &cry.RotMatrix;
+      RotM[*reg] = &mat->get_rotation_matrix();
 
       //std::cout << "RotM: "<< cry.RotMatrix(1,3) << " " << cry.RotMatrix(2,3)  << " " << cry.RotMatrix(3,3)  <<std::endl;
     }
@@ -1214,13 +1209,13 @@ Elasticity::internal_strain_correction(AtomisticStructure* as)
       // compute internal displacement:
       // du = a0^2/(3*c0^2) * (exx+eyy-2ezz) * c0
 
-      Tensor1 du_cry(0), du(0), ro(0), r(0);
+      RealVectorValue du_cry(0), du(0), ro(0), r(0);
 
       du_cry(3) = a0*a0/(3*c0) * (exx+eyy-2*ezz) * 10.0; //1 nm -> 10.0 Angstroms
 
       du = *(RotM[id]) * du_cry;
 
-      ro = structure[i].get_ttype_position();
+      ro = structure[i].get_position();
 
       r = ro + du;
 

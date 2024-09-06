@@ -2,7 +2,6 @@
 
 #include "Alloy.h"
 #include "Database.h"
-#include "RotatedCrystal.h"
 #include "PhysicalModel.h"
 #include "Messages.h"
 #include "CrystalDefs.h"
@@ -116,15 +115,6 @@ Alloy::do_preinit(void)
        << " and its components are inconsistent.";
     throw InitFailedException(os.str());
   }
-
-  RotatedCrystal* crystal = static_cast<RotatedCrystal*>(
-      _mat_A->get_rotated_crystal().copy());
-  crystal->set_owner(this);
-  crystal->init_alloy(&_mat_A->get_rotated_crystal(),
-      &_mat_B->get_rotated_crystal(), _molar_fraction);
-  set_crystal(crystal);
-
-
 
 }
 

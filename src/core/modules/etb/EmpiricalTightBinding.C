@@ -15,7 +15,6 @@
 #include "Alloy.h"
 #include "Messages.h"
 #include "EigenSolver.h"
-#include "RotatedCrystal.h"
 #include "Utils.h"
 
 #include "libmesh/mesh.h"
@@ -460,15 +459,15 @@ void ETB::get_c_axis(void)
 {
 
   std::set<ID> IDs = get_atomistic_structure()->get_IDset();
-  std::map<ID,Tensor1> cc;
+  std::map<ID,Point> cc;
   std::set<ID>::iterator reg = IDs.begin();
 
   for(; reg != IDs.end(); reg++)
   {
     const Material* mat = get_environment().get_device().get_material( (*reg) );
-    Tensor2Gen RotM = (mat->get_rotated_crystal()).RotMatrix;
+    const libMesh::RealTensor& RotM = mat->get_rotation_matrix();
     // NOTE: the z axis is assumed to be the reference axis as used in uptight
-    Tensor1 zz(0); zz(3) = 1.0;
+    Point zz {0.0, 0.0, 1.0};
     cc[*reg] = RotM * zz; 
   }
   
@@ -481,9 +480,9 @@ void ETB::get_c_axis(void)
   //  throw InitFailedException("c-axis have different orientations in atomistic structure");
   //}  
 
-  _upt_options.c_axis[0]= cc[*IDs.begin()](1);
-  _upt_options.c_axis[1]= cc[*IDs.begin()](2);
-  _upt_options.c_axis[2]= cc[*IDs.begin()](3);
+  _upt_options.c_axis[0]= cc[*IDs.begin()](0);
+  _upt_options.c_axis[1]= cc[*IDs.begin()](1);
+  _upt_options.c_axis[2]= cc[*IDs.begin()](2);
 
 
 }

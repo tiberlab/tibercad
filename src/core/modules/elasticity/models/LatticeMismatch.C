@@ -1,10 +1,12 @@
 // $Id$
 
 #include "LatticeMismatch.h"
+#include "BulkCrystal.h"
 #include "Material.h"
-#include "RotatedCrystal.h"
-#include "tensor_value.h"
 #include "TiberModule.h"
+#include "Messages.h"
+
+#include "libmesh/tensor_value.h"
 
 
 using namespace std;
@@ -30,6 +32,10 @@ LatticeMismatch::do_init(void)
   
  //Get reference lattice
   const std::string name = get_option("reference_material", "");
+
+  // TODO: we should be able to take a material from a region, too,
+  //       and to use the crystal directions from the region.
+  //       Also, we need to implement reading a subblock, here.
  
   // maybe the reference material should be defined in a subblock
   // but this should be done after a change in the core
@@ -51,39 +57,16 @@ LatticeMismatch::do_init(void)
 
   Material* ref_mat = Material::create(name, matopts);
   ref_mat->init();
-
+  const BulkCrystal* ref_bulk = ref_mat->get_bulk_crystal();
 
   const Material* mat = get_material();
-  const RotatedCrystal* ref_crystal =  &(ref_mat->get_rotated_crystal());
-  
-  double ref_lat_const[3];
-   
-  ref_crystal->get_lat_const(ref_lat_const);
- 
-  //Get local lattice
-
-  
-  const RotatedCrystal* crystal_el = &(mat->get_rotated_crystal());
-       
-  Tensor2Sym _eps0 = crystal_el->get_eps0(ref_lat_const);
-
-  //double loc_lat_const[3];
-  //crystal_el->get_lat_const(loc_lat_const);
-
-  //Rotation NO: eps0 is already in calculation system
-  //Tensor2Gen RotMatrix = crystal_el->RotMatrix;
-  //_eps0 = sym(RotMatrix * ( _eps0 * (RotMatrix.transpose())));
-
+  const BulkCrystal* mat_bulk = mat->get_bulk_crystal();
 
   libMesh::RealTensor eps0(0);
-  for (ID i = 0; i<3; i ++)
-    for (ID j = i; j<=i; j ++)
-    {
-      eps0(i,j) = _eps0(i+1,j+1);
-      eps0(j,i) =  eps0(i,j);
-    }
 
-
+  if ((mat_bulk != nullptr) && (ref_bulk != nullptr))
+    mat_bulk->get_lattice_matching_strain(*ref_bulk, eps0);
+  
   double relax = get_option("relaxation_factor", 1.0);
 
   eps0 *= relax;

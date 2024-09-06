@@ -1,9 +1,12 @@
 #include "BulkCrystal.h"
 #include "Database.h"
 #include "Alloy.h"
-#include "RotatedCrystal.h"
 #include "RuntimeException.h"
+
+#include <boost/algorithm/string/replace.hpp>
+
 #include <fstream>
+#include <numeric>
 
 BulkCrystal*
 BulkCrystal::create(const Material* mat, const ModelOptions& options)
@@ -16,11 +19,6 @@ BulkCrystal::create(const Material* mat, const ModelOptions& options)
 }
 
 BulkCrystal::BulkCrystal(const Material* mat, const ModelOptions& options)
-:_lattice_constant(3, 0.0),
-_angles(3, 90.0),  
-_rotation(1),
-_prim_vec(0),
-_rotated_prim_vec(0)
 {
   _options = ModelOptions(mat->get_options()); 
   _options += options;
@@ -31,11 +29,14 @@ void
 BulkCrystal::init(void)
 {
  
-  Atom tmp_atom;
-
   //Careful with the order of the calls, it's important
   read_database();
-  set_prim_vec();
+
+  // TODO: standardize crystal names, using Standard Symbols
+  // defined in SpaceTransformation class
+  //if (_lattice_type.compare("orthorhombic") == 0)
+
+  set_cell_vectors();
 
   _basis = _lattice_basis;
   for (auto it = _basis.begin(); it != _basis.end(); ++it)
@@ -47,6 +48,9 @@ BulkCrystal::init(void)
   build_rotation();
   set_ttype_lattice_vectors(_rotated_prim_vec);
   _atoms = _rotated_basis;
+  
+  // calculate the Euler angles for the rotation matrix
+  calculate_euler_angles();
 
   Messages m;
   m.indent();
@@ -74,44 +78,485 @@ BulkCrystal::init(void)
 }
 
 
+bool
+BulkCrystal::extract_crystal_direction(const std::string& dir, Tensor1& vec) const
+{
+  bool valid = false;
+
+  vec = 0;
+
+  std::string opt_name = dir + "-growth-direction";
+
+  std::string miller_str = _options.get_option(opt_name, "");
+
+  if (!miller_str.empty())
+  {
+    // the Miller (or Miller-Bravais) indices, can be for directions or planes,
+    // depending on type of parentheses
+    std::vector<int> miller;
+    Utils::extract_vector(miller_str, miller);
+
+    if ((miller.size() > 2) && (miller.size() < 5))
+    {
+      Tensor1 mv;
+      mv(1) = miller[0];
+      mv(2) = miller[1];
+      mv(3) = miller.back();
+
+      if (miller_str.front() == '[')
+      {
+        // identify Miller ind. as crystal directions
+
+        if (miller.size() == 4)
+        {
+          mv(1) = (2 * miller[0] + miller[1]);
+          mv(2) = (2 * miller[1] + miller[0]);
+        }
+
+        vec = _conv_vec * mv;
+      }
+      else
+      {
+        // identify Miller ind. as crystal planes
+        vec = _reciprocal_lattice[0] * mv(1) +
+              _reciprocal_lattice[1] * mv(2) +
+              _reciprocal_lattice[2] * mv(3);
+      }
+
+      valid = true;
+    }
+    else
+    {
+      std::ostringstream os;
+      os << "Wrong Miller indices: " << miller_str;
+      throw InitFailedException(os.str()); 
+    }
+  }
+
+  return(valid);
+}
+
+  
+void
+BulkCrystal::get_orthogonal_vector(const Tensor1& dir, Tensor1& ortho) const
+{
+  ortho = Tensor1(1.0);
+
+  if (abs(dir(1)) > 1e-3)
+  {
+    ortho(1) = -(dir(2) + dir(3)) / dir(1);
+    return;
+  }
+
+  if (abs(dir(2)) > 1e-3)
+  {
+    ortho(2) = -(dir(1) + dir(3)) / dir(2);
+    return;
+  }
+
+  if (abs(dir(3)) > 1e-3)
+  {
+    ortho(3) = -(dir(1) + dir(2)) / dir(3);
+    return;
+  }
+  
+}
+
 void
 BulkCrystal::build_rotation(void)
 {
   std::ostringstream os;
 
-  Atom tmp_atom;
+  // reset to unit element
+  _rotation = Tensor2Gen(1);
 
-  //Retrieve rotation (now from material, in future this will 
-  //be calculated directly here
-  _rotation = _mat->get_rotated_crystal().RotMatrix; 
+  // the crystal directions along x, y, z
+  Tensor1 vec_x;
+  Tensor1 vec_y;
+  Tensor1 vec_z;
 
-  // TODO: when porting from RotatedCrystal do the following:
-  //       read miller indices, and check for parentheses
-  //       ( ) -> trat as plane
-  //       [ ] -> treat as direction
-  //       in first case, us a* = bxc/V, b* = cxa/V, c* = axb/V, V=a.(bxc)
-  //       also, construct third direction from two given ones
-  
-  //os << "Bulk Material " << _mat->get_name() << 
-  //  " is created with a rotation " << std::endl<< _rotation << std::endl;
-  //Messages::info(os.str());
-  
+  bool has_x = extract_crystal_direction("x", vec_x);
+  bool has_y = extract_crystal_direction("y", vec_y);
+  bool has_z = extract_crystal_direction("z", vec_z);
+
+  // if all are given, make some sanity checks
+  if (has_x && has_y && has_z)
+  {
+    double v = vec_x * vectorProduct(vec_y, vec_z);
+    if (v < 1e-12)
+    {
+      throw InitFailedException("The given crystal directions are inconsistent "
+              "(they do not build right-handed system)");
+    }
+  }
+
+  if (has_x)
+  {
+    if (has_y && !has_z)
+      vec_z = vectorProduct(vec_x, vec_y);
+
+    if (!has_y && has_z)
+      vec_y = vectorProduct(vec_z, vec_x);
+
+    if (!has_y && !has_z)
+    {
+      get_orthogonal_vector(vec_x, vec_y);
+      vec_z = vectorProduct(vec_x, vec_y);
+    }
+  }
+  else if (has_y)
+  {
+    if (has_z)
+    {
+      vec_x = vectorProduct(vec_y, vec_z);
+    }
+    else
+    {
+      get_orthogonal_vector(vec_y, vec_x);
+      vec_z = vectorProduct(vec_x, vec_y);
+    }
+  }
+  else if (has_z)
+  {
+    get_orthogonal_vector(vec_z, vec_y);
+    vec_x = vectorProduct(vec_y, vec_z);
+  }
+
+  {
+    double a = vec_x * vec_y;
+    double b = vec_x * vec_z;
+    double c = vec_y * vec_z;
+    if (((a * a) + (b * b) + (c * c)) > 1e-9)
+    {
+      throw InitFailedException("The given crystal directions are inconsistent "
+                                "(vectors are non-orthogonal)");
+    }
+  }
+
+  for (int i = 1; i <= 3; i++)
+  {
+    _rotation(1, i) = vec_x(i) / norm(vec_x);
+    _rotation(2, i) = vec_y(i) / norm(vec_y);
+    _rotation(3, i) = vec_z(i) / norm(vec_z);
+  }
 
 
   _rotated_prim_vec = _rotation * _prim_vec;
+  _rotated_conv_vec = _rotation * _conv_vec;
 
   //! Keep a copy of rotated crystal basis
-   _rotated_basis = _basis;
-   for (std::vector<Atom>::iterator it = _rotated_basis.begin(); 
-     it != _rotated_basis.end(); ++it)
-   {
-   it->set_position(_rotation * it->get_ttype_position());
-   }
+  _rotated_basis = _basis;
+  for (std::vector<Atom>::iterator it = _rotated_basis.begin();
+       it != _rotated_basis.end(); ++it)
+  {
+    it->set_position(_rotation * it->get_ttype_position());
+  }
 
+  // recalculate Miller indices and make sanity check
+  // we also set the options to the calculated values
+  std::vector<int> mil_x;
+  get_miller_indices(vec_x, mil_x);
+  std::vector<int> mil_y;
+  get_miller_indices(vec_y, mil_y);
+  std::vector<int> mil_z;
+  get_miller_indices(vec_z, mil_z);
+
+  bool miller_bravais = false;
+  if (has_x)
+  {
+    std::string miller_str = _options.get_option("x-growth-direction", "");
+    std::vector<int> miller;
+    Utils::extract_vector(miller_str, miller);
+
+    miller_bravais |= (miller.size() == 4);
+
+    if (miller_str.front() == '(')
+    {
+
+      if ((miller[0] != mil_x[0]) ||
+          (miller[1] != mil_x[1]) ||
+          (miller.back() != mil_x[2]))
+      {
+        std::ostringstream os;
+        os << "Calculated Miller indices are not the same as the ones provided: "
+           << miller_str << " != " << "(" << mil_x[0] << mil_x[1];
+        (miller.size() == 4) ? os << -(mil_x[0] + mil_x[1]) : os << "";
+        os << mil_x.back() << ")";
+
+        throw InitFailedException(os.str());
+      }
+    }
+  }
+  if (has_y)
+  {
+    std::string miller_str = _options.get_option("y-growth-direction", "");
+    std::vector<int> miller;
+    Utils::extract_vector(miller_str, miller);
+
+    miller_bravais |= (miller.size() == 4);
+
+    if (miller_str.front() == '(')
+    {
+
+      if ((miller[0] != mil_y[0]) ||
+          (miller[1] != mil_y[1]) ||
+          (miller.back() != mil_y[2]))
+      {
+        std::ostringstream os;
+        os << "Calculated Miller indices are not the same as the ones provided: "
+           << miller_str << " != " << "(" << mil_y[0] << mil_y[1];
+        (miller.size() == 4) ? os << -(mil_y[0] + mil_y[1]) : os << "";
+        os << mil_y.back() << ")";
+
+        throw InitFailedException(os.str());
+      }
+    }
+  }
+  if (has_z)
+  {
+    std::string miller_str = _options.get_option("z-growth-direction", "");
+    std::vector<int> miller;
+    Utils::extract_vector(miller_str, miller);
+
+    miller_bravais |= (miller.size() == 4);
+
+    if (miller_str.front() == '(')
+    {
+
+      if ((miller[0] != mil_z[0]) ||
+          (miller[1] != mil_z[1]) ||
+          (miller.back() != mil_z[2]))
+      {
+        std::ostringstream os;
+        os << "Calculated Miller indices are not the same as the ones provided: "
+           << miller_str << " != " << "(" << mil_z[0] << mil_z[1];
+        (miller.size() == 4) ? os << -(mil_z[0] + mil_z[1]) : os << "";
+        os << mil_z.back() << ")";
+
+        throw InitFailedException(os.str());
+      }
+    }
+  }
+
+  // now we reconstruct the vectors
+  vec_x = mil_x[0] * _reciprocal_lattice[0] + 
+          mil_x[1] * _reciprocal_lattice[1] +
+          mil_x[2] * _reciprocal_lattice[2];
+  
+  vec_y = mil_y[0] * _reciprocal_lattice[0] + 
+          mil_y[1] * _reciprocal_lattice[1] +
+          mil_y[2] * _reciprocal_lattice[2];
+
+  vec_z = mil_z[0] * _reciprocal_lattice[0] + 
+          mil_z[1] * _reciprocal_lattice[1] +
+          mil_z[2] * _reciprocal_lattice[2];
+
+
+  // calculate the lattice constants along calculation system axes
+  // However, I'm not sure they really serve something
+  _ortho_lattice_constants[0] = 1.0 / norm(vec_x);
+  _ortho_lattice_constants[1] = 1.0 / norm(vec_y);
+  _ortho_lattice_constants[2] = 1.0 / norm(vec_z);
+
+
+  // set the module options to the calculated directions
+  if (miller_bravais)
+  {
+    mil_x.insert(mil_x.end()-1, -(mil_x[0] + mil_x[1]));
+    mil_y.insert(mil_y.end()-1, -(mil_y[0] + mil_y[1]));
+    mil_z.insert(mil_z.end()-1, -(mil_z[0] + mil_z[1]));
+  }
+  _options.set_option("x-growth-direction", mil_x);
+  _options.set_option("y-growth-direction", mil_y);
+  _options.set_option("z-growth-direction", mil_z);
+}
+
+
+
+
+bool
+BulkCrystal::get_lattice_matching_strain(const BulkCrystal& substrate,
+                                  libMesh::RealTensor& strain) const
+{
+  bool compatible = (get_lattice_type() == substrate.get_lattice_type());
+
+  // TODO check also zb (111) on wz (0001) ore vice versa
+
+  if (compatible)
+  {
+    // this one is strained to bulk crystal, and strain tensor rotated
+    // to calculation system.
+
+    // cartesian basis vectors in terms of conventional cell are
+    // (x y z) = inv(_conv_vec)*_conv_vec
+    // so we calculate strained (x' y' z') by using
+    // A = inv(_conv_vec) of the strained layer and
+    // for _conv_vec the one of the substrate, i.e. we strain the 
+    // conventinal vectors and calculate the according strain in 
+    // cartesian coordinates:
+    // (x', y', z')' = (1 + eps)*(x, y, z)'
+    // => eps = (x', y', z') - 1, because (x, y, z) = 1
+
+    Tensor2Gen A(inv(_conv_vec));
+
+    Tensor2Gen eps = A * substrate.get_conv_vec() - Tensor2Gen(1.0);
+
+    // symmetrize to eliminate possible rotations
+    eps *= 0.5;
+    eps += eps.transpose();
+
+    // rotate to calculation system
+    eps = _rotation * eps * _rotation.transpose();
+
+    strain(0,0) = eps(1,1);
+    strain(1,1) = eps(2,2);
+    strain(2,2) = eps(3,3);
+    strain(1,2) = strain(2,1) = eps(3,2);
+    strain(0,2) = strain(2,0) = eps(3,1);
+    strain(0,1) = strain(1,0) = eps(2,1);
+    
+  }
+
+  return compatible;
+}
+
+
+
+
+void
+BulkCrystal::print_info(void) const
+{
+  std::ostringstream os;
+  os << "Lattice type : " << get_lattice_type() << std::endl;
+  os << "a = " << _lattice_constant[0];
+  if (_lattice_constant[1] != _lattice_constant[0])
+    os << ", b = " << _lattice_constant[1];
+  if (_lattice_constant[2] != _lattice_constant[1])
+    os << ", c = " << _lattice_constant[2];
+  os << std::endl;
+
+  if ((_angles[0] != 90.0) || (_angles[1] != 90.0) || (_angles[2] != 90.0))
+  {
+    os << "alpha = " << _angles[0] << ", ";
+    os << "beta = " << _angles[1] << ", ";
+    os << "gamma = " << _angles[2] << "\n";
+  }
+
+  std::string mil = _options.get_option("x-growth-direction", " ");
+  boost::replace_all(mil, ",", " ");
+  os << "x growth direction : " << mil << std::endl;
+  mil = _options.get_option("y-growth-direction", " ");
+  boost::replace_all(mil, ",", " ");
+  os << "y growth direction : " << mil << std::endl;
+  mil = _options.get_option("z-growth-direction", " ");
+  boost::replace_all(mil, ",", " ");
+  os << "z growth direction : " << mil << std::endl;
+  os << "Euler angles :" << " alpha = " << _euler_angles[0] / M_PI * 180 << ","
+                         << " beta = " << _euler_angles[1] / M_PI * 180 << ","
+                         << " gamma = " << _euler_angles[2] / M_PI * 180;
+  Messages::info(os.str());
+}
+
+void
+BulkCrystal::get_miller_indices(const Tensor1& vec, std::vector<int>& miller) const
+{
+  miller = std::vector<int>(3, 0);
+
+  double h = vec * _conv_vec(1);
+  double k = vec * _conv_vec(2);
+  double l = vec * _conv_vec(3);
+
+  double hh = abs(h);
+  hh = (hh < 1e-3) ? 1.0 : hh;
+  double kk = abs(k);
+  kk = (kk < 1e-3) ? 1.0 : kk;
+  double ll = abs(l);
+  ll = (ll < 1e-3) ? 1.0 : ll;
+  double minval = std::min(hh, std::min(kk, ll)); 
+
+  h /= minval;
+  k /= minval;
+  l /= minval;
+
+  double mul = 1000;
+  
+  double m0 = std::round(h * mul) / 10.0;
+  double m1 = std::round(k * mul) / 10.0;
+  double m2 = std::round(l * mul) / 10.0;
+
+  miller[0] = std::trunc(m0);
+  miller[1] = std::trunc(m1);
+  miller[2] = std::trunc(m2);
+
+  int div = std::gcd(miller[0], std::gcd(miller[1], miller[2]));
+  miller[0] /= div;
+  miller[1] /= div;
+  miller[2] /= div;
+  
 }
 
 
 void
+BulkCrystal::calculate_euler_angles(void)
+{
+  // calculate Euler angles
+
+  // formulas taken from en.wikipedia.org/wiki/Euler_angles
+  // and https://eecs.qmul.ac.uk/~gslabaugh/publications/euler.pdf
+
+  // Note: they are calculated from the transpose of _rotation
+  double alpha = 0;
+  double beta = acos(_rotation(3, 3));
+  double gamma = 0;
+
+  if (abs(_rotation(3,3)) < (1.0 - 1e-6))
+  {
+
+    double sb1 = sin(beta);
+    alpha = atan2(-_rotation(2,3)/sb1, _rotation(1,3)/sb1);
+
+
+    if (abs(alpha) > M_PI_2)
+    {
+      double sb2 = -sb1;
+      alpha = atan2(-_rotation(2,3)/sb2, _rotation(1,3)/sb2);
+      gamma = atan2(_rotation(3,2)/sb2, _rotation(3,1)/sb2);
+      beta = -beta;
+    }
+    else
+      gamma = atan2(_rotation(3,2)/sb1, _rotation(3,1)/sb1);
+  }
+  else // R33 = +/-1
+  {
+    // set gamma = 0 arbitrarily
+
+    if (_rotation(3,3) < 0) // R33 = -1
+    {
+      alpha = atan2(_rotation(2,1), _rotation(2,2));
+    }
+    else
+    {
+      alpha = atan2(_rotation(1,2), _rotation(1,1));
+    }
+  }
+
+  _euler_angles[0] = alpha;
+  _euler_angles[1] = beta;
+  _euler_angles[2] = gamma;
+}
+
+
+void
+BulkCrystal::get_euler_angles(double& alpha, double& beta, double& gamma) const
+{
+  alpha = _euler_angles[0];
+  beta = _euler_angles[1];
+  gamma = _euler_angles[2];
+}
+void
+
+
+
 BulkCrystal::read_database(void)
 {
 
@@ -251,17 +696,10 @@ BulkCrystal::read_database(void)
       throw RuntimeException("Could not initialize bulk for non-binary alloy");
       
 
-    tmp_db = mat_alloy->get_database();
     db = &tmp_db;
     db->set_section("");
     db->set_section("atomistic_structure");
-    // NOTE: would like to change to top level "structure", as this duplicates that one
-    _lattice_type = db->get("lattice_type", "none");
 
-    tmp_db = mat_alloy->get_database();
-    db = &tmp_db;
-
-    db->set_section("atomistic_structure");
     unsigned int n_basis_specie = db->get("n_basis_specie", 0);
 
     // Read in basis vectors
@@ -269,6 +707,8 @@ BulkCrystal::read_database(void)
     Database* dbA = &(mat_alloy->get_component_A()->get_database());
     dbB->set_section("atomistic_structure");
     dbA->set_section("atomistic_structure");
+    // NOTE: would like to change to top level "structure", as this duplicates that one
+    _lattice_type = dbA->get("lattice_type", "none");
 
     // the unique label for atoms in the primitive cell
     Atom::label_t label = 0;
@@ -332,10 +772,12 @@ BulkCrystal::read_database(void)
 
 
 void
-BulkCrystal::set_prim_vec(void)
+BulkCrystal::set_cell_vectors(void)
 {
 
   Tensor2Gen prim_vec_dir(0);
+  _prim_vec = 0.0;
+  _conv_vec = 0.0;
 
   if (_lattice_type.compare("orthorhombic") == 0)
   {
@@ -347,6 +789,8 @@ BulkCrystal::set_prim_vec(void)
     _prim_vec(1,1) = prim_vec_dir(1,1) * _lattice_constant[0];
     _prim_vec(2,2) = prim_vec_dir(2,2) * _lattice_constant[1];
     _prim_vec(3,3) = prim_vec_dir(3,3) * _lattice_constant[2];
+
+    _conv_vec = _prim_vec;
 
   }
 
@@ -363,6 +807,8 @@ BulkCrystal::set_prim_vec(void)
     _prim_vec(2,2) = prim_vec_dir(2,2) * _lattice_constant[1];
     _prim_vec(3,3) = prim_vec_dir(3,3) * _lattice_constant[2];
 
+    _conv_vec = _prim_vec;
+
   }
 
   else if (_lattice_type.compare("cubic") == 0)
@@ -377,6 +823,8 @@ BulkCrystal::set_prim_vec(void)
 
     _prim_vec = prim_vec_dir * _lattice_constant[0];
 
+    _conv_vec = _prim_vec;
+
   }
 
   else if (_lattice_type.compare("bcc") == 0)
@@ -390,6 +838,7 @@ BulkCrystal::set_prim_vec(void)
 
     _prim_vec = prim_vec_dir * _lattice_constant[0];
 
+    _conv_vec = _lattice_constant[0] * Tensor2Gen(1.0);
   }
 
   else if ((_lattice_type.compare("fcc") == 0) ||
@@ -403,6 +852,8 @@ BulkCrystal::set_prim_vec(void)
     prim_vec_dir(1,3) = 0.5; prim_vec_dir(2,3) = 0.5; prim_vec_dir(3,3) = 0.0;
 
     _prim_vec = prim_vec_dir * _lattice_constant[0];
+
+    _conv_vec = _lattice_constant[0] * Tensor2Gen(1.0);
 
   }
 
@@ -427,6 +878,8 @@ BulkCrystal::set_prim_vec(void)
     _prim_vec(2,3) = prim_vec_dir(2,3) * _lattice_constant[2];
     _prim_vec(3,3) = prim_vec_dir(3,3) * _lattice_constant[2];
 
+    _conv_vec = _prim_vec;
+
   }
   
   else if (_lattice_type.compare("anatase") == 0)
@@ -443,6 +896,8 @@ BulkCrystal::set_prim_vec(void)
     _prim_vec(1,3) = prim_vec_dir(1,3) * _lattice_constant[0]; 
     _prim_vec(2,3) = prim_vec_dir(2,3) * _lattice_constant[0]; 
     _prim_vec(3,3) = prim_vec_dir(3,3) * _lattice_constant[2];
+
+    _conv_vec = _prim_vec;
 
   }
 
@@ -462,12 +917,22 @@ BulkCrystal::set_prim_vec(void)
     _prim_vec(1,3) = _lattice_constant[2] * cos(beta);
     _prim_vec(2,3) = 0.0;
     _prim_vec(3,3) = _lattice_constant[2] * sin(beta);
+
+    _conv_vec = _prim_vec;
+
   }
 
-  //else
-  //{
-  //  Messages::error("Lattice type "+ _lattice_type + " doesn't exist in material "+_mat->get_name());
-  //}
+
+  // create reciprocal lattice vectors
+  Tensor1 a = _conv_vec(1);
+  Tensor1 b = _conv_vec(2);
+  Tensor1 c = _conv_vec(3);
+
+  double vol = a * (b ^ c);
+
+  _reciprocal_lattice[0] = (b ^ c)  / vol;
+  _reciprocal_lattice[1] = (c ^ a)  / vol;
+  _reciprocal_lattice[2] = (a ^ b)  / vol;
 
 }
 
