@@ -21,24 +21,29 @@ void
 ElectricalContact::do_init(void)
 {
   DDInterfaceModel::do_init();
-  _vrec.resize(n_known_carriers(), 0);
+  _vrec.resize(n_known_carriers(), -1.0);
   _fixed_vrec.resize(n_known_carriers(), 0);
 
   if (get_option("zero_field", false))
     set_type(n_known_carriers(), NEUMANN);
 
-  double vrec = -1.0;
-  get_parameter("rec_velocity", vrec);
-  get_parameter("recombination_velocity", vrec);
+  get_parameter("rec_velocity", _vrec);
+  get_parameter("recombination_velocity", _vrec);
+  if (_vrec.size() == 1)
+    _vrec.resize(n_known_carriers(), _vrec[0]);
+  if (_vrec.size() < n_known_carriers())
+    throw InitFailedException("Need to provide contact recombination "
+        "velocity for all carriers");
 
-  for (unsigned int i=0; i < n_known_carriers(); i++)
+  for (unsigned int i = 0; i < n_known_carriers(); i++)
   {
-    _vrec[i] = vrec;
 
     if (get_option("zero_grad_fermi", false) || (_vrec[i] >= 0))
     {
       set_type(i, NEUMANN);
       _fixed_vrec[i] = true;
+      if (get_option("zero_grad_fermi", false))
+        _vrec[i] = 0.0;
     }
     else
       _vrec[i] = 0.0;
