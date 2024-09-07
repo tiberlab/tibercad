@@ -179,8 +179,17 @@ The available keywords inside a ``Region`` block are the following:
           a list of region names as specified in the meshing program.
 
   ``[x,y,z]-growth-direction``  : 3-/4-tuple
-          Bravais vectors with Miller indices for wurtzite (4-tuple) or zincblende (3-tuple) crystal
-          along the x, y and z directions.
+          Bravais vectors with Miller or Miller-Bravais indices indicating the crystal directions
+          along the x, y and z axes. One may specify only two or even a single direction, as the
+          others will be computed internally. Based on the type of braces, crystal directions or
+          lattice planes will be used, based on standard notation using ``[]`` for directions and
+          ``()`` for planes.
+
+  ``euler_angles`` : 3-vector
+          As an alternative to Miller indices, the crystal orientation can be specified via Euler
+          angles describing the rotation from the standard crystal orientation to the one in the
+          calculation coordinate frame. We use the convention :math:`Z_\gamma Y_\beta Z_\alpha`,
+          and thhe order of the input arguments is :math:`(\alpha, \beta, \gamma)`.
 
 .. ``structure`` : string
 ..          crystal structure (wz = wurtzite, zb = zincblend)
@@ -943,7 +952,6 @@ Here is an example of the input file template::
      material = GaN
      y-growth-direction = (0,0,0,1)
      z-growth-direction = (1,0,-1,0)
-     x-growth-direction = (-1,2,-1,0)
 
      Region barrier
      { 
@@ -1105,7 +1113,6 @@ Here is an example of the input file template::
          structure = wz
          y-growth-direction = (0,0,0,1)
          z-growth-direction = (1,0,-1,0)
-         x-growth-direction = (-1,2,-1,0)
           
        }
        

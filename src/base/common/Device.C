@@ -397,6 +397,12 @@ Device::setup_regions(void)
     if (!zdir.empty())
       data["z-growth-direction"] = zdir;
 
+    vector<double> euler_angles;
+    _options.get_option("euler_angles", euler_angles);
+    data.get_option("euler_angles", euler_angles);
+    if (!euler_angles.empty())
+      data.set_option("euler_angles", euler_angles);
+
     data.set_option("dimension", get_mesh().mesh_dimension());
 
     if (!data.has_submodel("Doping"))

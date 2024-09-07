@@ -175,9 +175,60 @@ BulkCrystal::build_rotation(void)
   Tensor1 vec_y;
   Tensor1 vec_z;
 
-  bool has_x = extract_crystal_direction("x", vec_x);
-  bool has_y = extract_crystal_direction("y", vec_y);
-  bool has_z = extract_crystal_direction("z", vec_z);
+  bool has_x;
+  bool has_y;
+  bool has_z = false;
+
+  bool has_euler = false;
+
+  std::vector<double> euler_angles;
+  _options.get_option("euler_angles", euler_angles);
+  if (euler_angles.size() == 3)
+  {
+    has_euler = true;
+
+    double a = M_PI * euler_angles[0] / 180.0;
+    double b = M_PI * euler_angles[1] / 180.0;
+    double c = M_PI * euler_angles[2] / 180.0;
+
+    // calculate rotation matrix
+    double ca = cos(a);
+    double cb = cos(b);
+    double cc = cos(c);
+    double sa = sin(a);
+    double sb = sin(b);
+    double sc = sin(c);
+
+    _rotation(1,1) = ca*cb*cc - sa*sc;
+    _rotation(1,2) = sa*cb*cc + ca*sc;
+    _rotation(1,3) = sb*cc;
+    _rotation(2,1) = -ca*cb*sc - sa*cc;
+    _rotation(2,2) = ca*cc - sa*cb*sc;
+    _rotation(2,3) = -sb*sc;
+    _rotation(3,1) = -ca*sb;
+    _rotation(3,2) = -sa*sb;
+    _rotation(3,3) = cb;
+
+    // get rotated x and y
+    has_y = has_x = true;
+    vec_x(1) = _rotation(1,1);
+    vec_x(2) = _rotation(1,2);
+    vec_x(3) = _rotation(1,3);
+    vec_y(1) = _rotation(2,1);
+    vec_y(2) = _rotation(2,2);
+    vec_y(3) = _rotation(2,3);
+  }
+  else
+  {
+    if (euler_angles.size() > 0)
+      throw InitFailedException("All 3 Euler angles have to be specified.");
+
+    has_x = extract_crystal_direction("x", vec_x);
+    has_y = extract_crystal_direction("y", vec_y);
+    has_z = extract_crystal_direction("z", vec_z);
+  }
+  
+
 
   // if all are given, make some sanity checks
   if (has_x && has_y && has_z)
@@ -233,11 +284,14 @@ BulkCrystal::build_rotation(void)
     }
   }
 
-  for (int i = 1; i <= 3; i++)
+  if (!has_euler)
   {
-    _rotation(1, i) = vec_x(i) / norm(vec_x);
-    _rotation(2, i) = vec_y(i) / norm(vec_y);
-    _rotation(3, i) = vec_z(i) / norm(vec_z);
+    for (int i = 1; i <= 3; i++)
+    {
+      _rotation(1, i) = vec_x(i) / norm(vec_x);
+      _rotation(2, i) = vec_y(i) / norm(vec_y);
+      _rotation(3, i) = vec_z(i) / norm(vec_z);
+    }
   }
 
 
@@ -262,7 +316,7 @@ BulkCrystal::build_rotation(void)
   get_miller_indices(vec_z, mil_z);
 
   bool miller_bravais = false;
-  if (has_x)
+  if (has_x && !has_euler)
   {
     std::string miller_str = _options.get_option("x-growth-direction", "");
     std::vector<int> miller;
@@ -287,7 +341,7 @@ BulkCrystal::build_rotation(void)
       }
     }
   }
-  if (has_y)
+  if (has_y && !has_euler)
   {
     std::string miller_str = _options.get_option("y-growth-direction", "");
     std::vector<int> miller;
@@ -312,7 +366,7 @@ BulkCrystal::build_rotation(void)
       }
     }
   }
-  if (has_z)
+  if (has_z && !has_euler)
   {
     std::string miller_str = _options.get_option("z-growth-direction", "");
     std::vector<int> miller;
@@ -360,6 +414,7 @@ BulkCrystal::build_rotation(void)
 
 
   // set the module options to the calculated directions
+  // this is mainly for printing info afterwards
   if (miller_bravais)
   {
     mil_x.insert(mil_x.end()-1, -(mil_x[0] + mil_x[1]));
@@ -513,18 +568,18 @@ BulkCrystal::calculate_euler_angles(void)
   {
 
     double sb1 = sin(beta);
-    alpha = atan2(-_rotation(2,3)/sb1, _rotation(1,3)/sb1);
+    alpha = atan2(-_rotation(3,2)/sb1, -_rotation(3,1)/sb1);
 
 
     if (abs(alpha) > M_PI_2)
     {
       double sb2 = -sb1;
-      alpha = atan2(-_rotation(2,3)/sb2, _rotation(1,3)/sb2);
-      gamma = atan2(_rotation(3,2)/sb2, _rotation(3,1)/sb2);
+      alpha = atan2(-_rotation(3,2)/sb2, -_rotation(3,1)/sb2);
+      gamma = atan2(-_rotation(2,3)/sb2, _rotation(1,3)/sb2);
       beta = -beta;
     }
     else
-      gamma = atan2(_rotation(3,2)/sb1, _rotation(3,1)/sb1);
+      gamma = atan2(-_rotation(2,3)/sb1, _rotation(1,3)/sb1);
   }
   else // R33 = +/-1
   {
@@ -532,7 +587,7 @@ BulkCrystal::calculate_euler_angles(void)
 
     if (_rotation(3,3) < 0) // R33 = -1
     {
-      alpha = atan2(_rotation(2,1), _rotation(2,2));
+      alpha = atan2(-_rotation(2,1), _rotation(2,2));
     }
     else
     {

@@ -43,6 +43,7 @@ LatticeMismatch::do_init(void)
   get_option("x-growth-direction", "");
   get_option("y-growth-direction", "");
   get_option("z-growth-direction", "");
+  get_option("euler_angles", "");
   get_option("x", "");
 
   //  get_options().print_all();

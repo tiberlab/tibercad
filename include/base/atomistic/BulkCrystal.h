@@ -65,9 +65,9 @@ public:
   //! Get the Euler angles
   /*!
    * The Euler angles here are the ones that rotate the crystal from
-   * standard orientation to its real orientation (obtained thus from the
-   * transpose of the rotation matrix).
-   * We use the convention \f$ Z_\alpha Y_\beta Z_\gamma \f$.
+   * standard orientation to its real orientation in the calculation 
+   * coordinate system.
+   * We use the convention \f$ Z_\gamma Y_\beta Z_\alpha \f$.
    */
   void get_euler_angles(double& alpha, double& beta, double& gamma) const;
 
@@ -184,9 +184,9 @@ private:
   //! The Euler angles \f$\alpha$\f, \f$\beta$\f and \f$\gamma$\f
   /*!
    * The Euler angles here are the ones that rotate the crystal from
-   * standard orientation to its real orientation (obtained thus from the
-   * transpose of the rotation matrix), given in radians.
-   * We use the convention \f$ Z_\alpha Y_\beta Z_\gamma \f$.
+   * standard orientation to its real orientation in the calculation
+   * coordinate system, given in radians.
+   * We use the convention \f$ Z_\gamma Y_\beta Z_\alpha \f$.
    */
   std::vector<double> _euler_angles {0, 0, 0};
 
