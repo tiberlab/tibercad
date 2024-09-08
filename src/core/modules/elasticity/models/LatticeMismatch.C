@@ -3,8 +3,11 @@
 #include "LatticeMismatch.h"
 #include "BulkCrystal.h"
 #include "Material.h"
-#include "TiberModule.h"
+#include "SimulationInterface.h"
+#include "SimulationEnvironment.h"
 #include "Messages.h"
+
+#include "TiberModule.h"
 
 #include "libmesh/tensor_value.h"
 
@@ -30,27 +33,50 @@ LatticeMismatch::do_init(void)
 
   libMesh::RealGradient body_force(0);
   
- //Get reference lattice
-  const std::string name = get_option("reference_material", "");
+  //Get reference lattice
+  std::string name;
+  ModelOptions matopts;
+
+  if (get_options().has_submodel("reference_material"))
+  {
+    auto ref = get_options().submodels_begin("reference_material");
+    name = ref->first;
+    matopts = ref->second;
+  }
+  else
+  {
+    name = get_option("reference_material", "");
+
+    SimulationInterface *sim = SimulationInterface::get_simulation(get_simulator_id());
+    const Device& dev = sim->get_environment().get_device();
+    const Material* mat = dev.get_material(name);
+
+    if (mat != nullptr)
+    {
+      matopts = mat->get_options();
+      name = mat->get_name();
+    }
+    else if (!name.empty())
+    {
+      matopts = get_options();
+
+      get_option("x-growth-direction", "");
+      get_option("y-growth-direction", "");
+      get_option("z-growth-direction", "");
+      get_option("euler_angles", "");
+      get_option("x", "");
+    }
+  }
 
   // TODO: we should be able to take a material from a region, too,
   //       and to use the crystal directions from the region.
   //       Also, we need to implement reading a subblock, here.
  
-  // maybe the reference material should be defined in a subblock
-  // but this should be done after a change in the core
-  // dummy reads
-  get_option("x-growth-direction", "");
-  get_option("y-growth-direction", "");
-  get_option("z-growth-direction", "");
-  get_option("euler_angles", "");
-  get_option("x", "");
 
   //  get_options().print_all();
   if (name.empty())
     throw InitFailedException("Lattice mismatch: reference material is not defined");
 
-  ModelOptions matopts(get_options());
 
   // for "official" materials (created from Device) this is always present
   unsigned int dim = get_material()->get_options().get_option("dimension", 3);
