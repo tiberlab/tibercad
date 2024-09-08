@@ -383,6 +383,9 @@ sub run_test($) {
   # read the configuration
   read_checks_from_config(\%checks, \%opts) && return 0;
 
+  my $command = "";
+  (defined $opts{"commandline"}) && ($command = $opts{"commandline"});
+
   my $infile = "";
   (defined $opts{"inputfile"}) && ($infile = $opts{"inputfile"});
 
@@ -394,7 +397,12 @@ sub run_test($) {
  
   my $failure = 0;
   if (not $options{'testonly'}) {
-    $failure = run_executable($infile);
+    if ($command ne "") {
+      $failure = system("$command");
+    }
+    else {
+      $failure = run_executable($infile);
+    }
   }
   $failure = compare_results_with_reference(\%checks, $out, $ref) unless $failure;
 
@@ -563,13 +571,14 @@ sub extract_data_from_characteristic($$) {
     $oldpos = $pos;
     $pos = tell;
     my $line = <SF>;
+    trim($line);
     ($line !~ /#.*/) && last;
   }
   $pos = $oldpos;
 
   seek SF, $pos, 0;
 
-  my @vars = (split(/\s+/, <SF>));
+  my @vars = (split(/\s+/, trim(<SF>)));
   if ($#vars < 0) { die "Data file has no data??" };
 
   my $index = 0;
@@ -846,6 +855,9 @@ sub read_checks_from_config($$) {
      }
      elsif (/\s*referencedir\s*=([^=]+)/) {
        $opts->{"referencedir"} = trim($1);
+     }
+     elsif (/\s*commandline\s*=([^=]+)/) {
+       $opts->{"commandline"} = trim($1);
      }
   }
   close CF;
