@@ -248,18 +248,21 @@ This contribution can be mapped in the body force
 and  can  be included with the keyword ``lattice_mismatch`` .
 
 The strain source can be computed only once the reference lattice is identified. 
-The reference material and its growth axis must be included following the same syntax of the device section (see :ref:`InputFileGetting`).
+The reference material and its growth axis must be included following the same syntax of the device section (see :ref:`InputFileGetting`). The reference material can also be defined by specifying an existing device region as
+``reference_material = <regionname>``
 
 Example::
 
    body_force lattice_mismatch
     {
-     reference_material = AlGaN
-     structure = wz
-     x = 0.2
-     x-growth-direction = (1,0,0,0)
-     y-growth-direction = (0,1,-1,0)
-     z-growth-direction = (0,0,0,1)
+     reference_material AlGaN
+     {
+       structure = wz
+       x = 0.2
+       x-growth-direction = (1,0,0,0)
+       y-growth-direction = (0,1,-1,0)
+       z-growth-direction = (0,0,0,1)
+     }
     }
 
 
