@@ -1,0 +1,138 @@
+Device
+{
+  meshfile = quantum_well.msh
+  mesh_units = 1e-9
+
+  #x-growth-direction = (-1, 1, 0, 1)
+  #y-growth-direction = (-1, -1, 2, 0)
+  euler_angles = (0, @BETA@, 0)
+
+  Region  nGaN
+  {
+    material = GaN
+
+    Doping
+    {
+      density =  8e18
+      type = donor
+      level = 0.004
+    }
+  }
+
+  Region well
+  {
+    material = InGaN
+    x=0.2
+  }
+
+  Region  barrier
+  {
+    material = GaN
+  }
+  
+  Region  pGaN
+  {
+    material = GaN
+
+    Doping
+    {
+      density =  3e19
+      type = acceptor
+      level = 0.170     #p-doped Mg : Ea=170 meV   
+      g = 4 
+    }
+  }
+
+}
+
+
+Module elasticity 
+{
+
+  name = strain
+  regions = all
+
+  plot = (Strain)
+
+
+  Physics 
+  {
+    body_force lattice_mismatch 
+    {
+      reference_material = nGaN
+    }
+       
+  }
+
+  Contact substrate  
+  {type = clamp}
+
+}
+
+
+
+
+Module  driftdiffusion
+{ 
+        
+  name = dd
+    Contact substrate{ voltage = -0V }
+    Contact top{ voltage = 0V }
+    Solver
+    {
+    solver = linesearch
+    }
+  # we solve only Poisson equation
+  coupling = poisson
+ # default_boundary_condition=zero_displacement
+ # enforce_local_charge_neutrality=true
+  
+  plot = (Ec, Ev,ElPotential,ElField,Polarization)
+
+  Physics
+  {
+
+    band_properties {
+      density_of_states bulk_kp {
+        strain_simulation = strain 
+      }
+    }
+
+    #polarization nonlinear { strain_simulation = strain }
+
+    polarization piezo { strain_simulation = strain }
+    polarization pyro {  }
+  }
+}
+
+
+
+
+Module  efaschroedinger
+{
+  name = quantum
+  regions = (well, barrier)
+
+  plot = (ProbabilityDensity, EigenEnergy, EnergyLevels)#, EnvelopeFunctions)
+
+  num_conduction_eigenvalues = 5 #150
+  num_valence_eigenvalues = 5 #500
+  poisson_simulation  = dd
+  strain_simulation = strain 
+
+  Physics
+  { 
+    model = 8x8
+  }
+}
+  
+
+
+Simulation
+{
+  temperature = 300
+#  solve = (strain, dd, quantum)   
+  solve = (strain, dd)   
+  resultpath = @OUT@
+  searchpath = .
+}

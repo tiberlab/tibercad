@@ -1,0 +1,38 @@
+# InGaN
+
+alloy = 2
+structure = wz
+
+comp_A = InN
+comp_B = GaN
+
+
+[bandgap]
+bow_Eg_G = 1.4  # newer sources suggest 1.7
+bow_Eg_X = 0.69
+bow_Eg_L = 1.84
+
+
+[polarization/PRB88]
+# Note: PRB88 defines the bowing with different sign
+bow_Pz = -0.037
+bow_e33 = 0.55
+bow_e31 = -0.222
+bow_e15 = 0.275
+
+[pyroelectricity]
+#bow_Pz = -0.037
+bow_Pz = 0.0
+
+
+#Atomistic structure informations
+#
+[atomistic_structure]
+n_basis_specie=2
+
+specie_1=InGa
+specie_2=N
+
+[densityfunctional_tb]
+
+
