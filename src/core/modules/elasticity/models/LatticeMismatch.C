@@ -40,8 +40,14 @@ LatticeMismatch::do_init(void)
   if (get_options().has_submodel("reference_material"))
   {
     auto ref = get_options().submodels_begin("reference_material");
-    name = ref->first;
     matopts = ref->second;
+
+    if (!matopts.find_option("material"))
+    {
+      matopts["material"] = matopts.get_name();
+    }
+    
+    name = matopts["material"];
   }
   else
   {
