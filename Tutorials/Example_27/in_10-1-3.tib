@@ -1,0 +1,138 @@
+Device
+{
+  meshfile = quantum_well.msh
+  mesh_units = 1e-9
+
+  x-growth-direction = (1,0,-1,-3)
+  y-growth-direction = (-1,2,-1,0)
+
+
+  Region  nGaN
+  {
+    material = GaN
+
+    Doping
+    {
+      density =  1e19
+      type = donor
+      level = 0.004
+    }
+  }
+
+  Region well
+  {
+    material = InGaN
+    x=0.2
+  }
+
+  Region  barrier
+  {
+    material = GaN
+  }
+  
+  Region  pGaN
+  {
+    material = GaN
+
+    Doping
+    {
+      density =  3e19
+      type = acceptor
+      level = 0.170 
+      g = 4 
+    }
+  }
+
+}
+
+
+Module elasticity 
+{
+
+  name = strain
+  regions = all
+
+  plot = (Strain)
+
+
+  Physics 
+  {
+    body_force lattice_mismatch 
+    {
+      reference_material = nGaN
+    }
+       
+  }
+
+  Contact substrate  
+  {type = clamp}
+
+}
+
+
+
+
+Module  driftdiffusion
+{ 
+        
+  name = dd
+
+  Solver
+  {
+    solver = linesearch
+  }
+
+  # we solve only Poisson equation
+  coupling = poisson
+  
+  plot = (Ec, Ev,ElPotential,ElField,Polarization)
+
+  Physics
+  {
+
+    band_properties {
+      density_of_states bulk_kp {
+        strain_simulation = strain 
+      }
+    }
+    polarization piezo {
+       strain_simulation = strain
+    }
+    polarization pyro {  }
+  }
+
+
+  Contact substrate{ voltage = 0V }
+  Contact top{ voltage = 0V }
+}
+
+
+
+
+Module  efaschroedinger
+{
+  name = quantum
+  regions = (well, barrier)
+
+  plot = (ProbabilityDensity, EigenEnergy, EnergyLevels)
+
+  num_conduction_eigenvalues = 6
+  num_valence_eigenvalues = 12
+  poisson_simulation  = dd
+  strain_simulation = strain 
+
+  Physics
+  { 
+    model = 8x8
+  }
+}
+  
+
+
+Simulation
+{
+  temperature = 300
+  solve = (strain, dd, quantum)   
+  resultpath = output_10-1-3
+  searchpath = .
+}
