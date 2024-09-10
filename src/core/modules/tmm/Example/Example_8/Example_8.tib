@@ -15,7 +15,7 @@ Module tmm
 { 
   
   name = tmm_study 
-  plot = (Internal_Source_ElectricField,Internal_Poynting,Internal_Power,Internal_Absorption)
+  plot = (Internal_Source_ElectricField,Internal_Poynting,Internal_Power,Internal_Absorption,Generation_regions)
   wavelengths = 300
   wave_number_steps = 200
   wave_number_ratio = 1

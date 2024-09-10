@@ -249,6 +249,7 @@ void Tmm::reset_global_variables()
     _Electric_Field_External.clear();
     _Electric_Field_Internal.clear();
     _Generation_regions.clear();
+    _Generation_regions_internal.clear();
     _regions_name.clear();
 
     _Intensity.clear();
@@ -264,7 +265,7 @@ void Tmm::reset_global_variables()
     _Internal_Poynting.clear();
     _Internal_Power.clear();
     _Internal_Absorption.clear();
-	_Abs.clear();
+	  _Abs.clear();
     _Internal_Intensity.clear();
 
     _angle.clear();
@@ -272,6 +273,8 @@ void Tmm::reset_global_variables()
     _Poynting_back.clear();
     _Fraction_ratio.clear();
     _kr.clear();
+
+    _solutions.clear();
 }
 
 void Tmm::dipole_source(double & A_P, double & A_N, double Mode, double Oraintation, double lambda, double cos_phi_inter)
@@ -433,32 +436,14 @@ void Tmm::solving_internal_source(vector<complex<double>> & E_int_f, vector<comp
     E_int_f[nm] = E_int_f_l[nm+1];
     E_int_b[nm] = E_int_b_l[nm+1];
   }
-  // for (double nm =0 ; nm<n_real.size();nm++)
-	  // std::cout<< nm <<"  " << real(E_int_f[nm]) <<","<< real(E_int_b[nm])  <<std::endl;
-  
+
   for (double nm = E_int_f_r.size()-1; nm>dipole_loc-1;nm--)
   {
     E_int_f[nm] = E_int_f_r[nm-1];
     E_int_b[nm] = E_int_b_r[nm-1];
   }
-
-      // for (double nm =0 ; nm<n_real.size();nm++)
-	  // std::cout<< nm <<"  " << real(E_int_f[nm]) <<","<< real(E_int_b[nm]) << real(E_int_f[nm]) +  real(E_int_b[nm]) <<std::endl;
   E_int_f[dipole_loc-1] = (E_int_f_l[dipole_loc-1] + E_int_f_r[dipole_loc-1]) /2;
   E_int_b[dipole_loc-1] = (E_int_b_l[dipole_loc-1] + E_int_b_r[dipole_loc-1]) /2;
-      // for (double nm =0 ; nm<n_real.size();nm++)
-	  // std::cout<< nm <<"  " << real(E_int_f[nm]) <<","<< real(E_int_b[nm])<< real(E_int_f[nm]) +  real(E_int_b[nm])  <<std::endl;
-  // E_int_f[dipole_loc-1] = E_int_f_l[dipole_loc];
-  // E_int_b[dipole_loc-1] = E_int_b_l[dipole_loc];
-  // E_int_f[dipole_loc+1] = E_int_f_r[dipole_loc];
-  // E_int_b[dipole_loc+1] = E_int_b_r[dipole_loc];
-  
-    // for (double nm =0 ; nm<n_real.size();nm++)
-	// {
-	  
-       // std::cout<< nm <<"  " << real(E_int_f_l[nm]) <<","<< real(E_int_b_l[nm]) <<","<< real(E_int_f_r[nm]) <<","<< real(E_int_b_r[nm]) <<std::endl;
-	   // std::cout<< nm <<"  " << real(E_int_f[nm]) <<","<< real(E_int_b[nm])  <<std::endl;
-	// }
 }
 
 
@@ -676,7 +661,7 @@ Tmm::parse_options(void)
         }
       }
     }
-    is.close();  
+    is.close(); 
 
   Database datab;
   ifstream ifs;
@@ -734,13 +719,13 @@ Tmm::do_setup_solution_variables(void)
   declare_solution(Energy_Loss, REAL, CELL, "W/m^3");
  
 
-  declare_solution(Transmission, REAL, GLOBAL, "1");
-  declare_solution(Reflection, REAL, GLOBAL, "1");
-  declare_solution(Absorption, REAL, GLOBAL, "1");
+  declare_solution(Transmission, REAL, CELL, "1");
+  declare_solution(Reflection, REAL, CELL, "1");
+  declare_solution(Absorption, REAL, CELL, "1");
 
-  declare_solution(AVT, REAL, GLOBAL, "%");
-  declare_solution(Generation_regions, REAL, GLOBAL, "%");
-  declare_solution(Polar, REAL, GLOBAL, "a.u");
+  declare_solution(AVT, REAL, CELL, "%");
+  declare_solution(Generation_regions, REAL, CELL, "%");
+  declare_solution(Polar, REAL, CELL, "a.u");
   
 
 }
@@ -797,19 +782,24 @@ Tmm::do_solve(void)
   vector<double> eye_dum;
   vector<double> eye_interp;
 
+  vector<std::string> Names;
+
   double external_source_simulation=0;
   double internal_source_simulation=0;
   vector<complex<double>> Ki;
-
   if (_wavelength_vector.empty())
     for (double i = _down_lambda; i<= _up_lambda; i += _wavelength_steps)
       lambda_interp.push_back(i);
   else
     for (double i = 0; i< _wavelength_vector.size(); ++i)
       lambda_interp.push_back(_wavelength_vector[i]);
-
+  
+  //std::cout<<"starting running the tmm do_solve function -> "<< _spectrum.size()<<std::endl;
+  //for (int i =0 ; i<_spectrum.size();i++)
+	//  std::cout<<i<<" is " << _spectrum[i] <<std::endl;
   sun_interp = Tmm::linear_interpolation1(_lambda,_spectrum,lambda_interp);
   eye_interp = Tmm::linear_interpolation1(_eye_wl,_eye_value,lambda_interp);
+
 
   Utils::Progress progress("Sweeping wavelength: ", lambda_interp.size());
 
@@ -862,9 +852,6 @@ Tmm::do_solve(void)
     vector<double> eps_real;
     vector<double> eps_imag;
 
-
-
-
     vector<double> n_real_init;
     vector<double> n_imag_init;
     vector<double> l_length_init;
@@ -874,9 +861,8 @@ Tmm::do_solve(void)
     vector<double> eps_imag_init;
 	
 	
-	vector<double> dipole_power;
-
-    vector<std::string> Names;
+  	vector<double> dipole_power;
+    
     
 
 
@@ -1156,18 +1142,18 @@ Tmm::do_solve(void)
         //***********************************************************************
         //**********reflection and transmission calculation**********************
 
-        complex<double> Reflection,Transmission;
-        Reflection = pow(abs(T.get(2)/T.get(0)),2);
-        avg_reflection = avg_reflection + real(Reflection) / rnd;
+        complex<double> Refl,Trans;
+        Refl = pow(abs(T.get(2)/T.get(0)),2);
+        avg_reflection = avg_reflection + real(Refl) / rnd;
 
         complex<double> nc_first (n_real[0],n_imag[0]);
         complex<double> nc_last (n_real[n_real.size()-1],n_imag[n_imag.size()-1]);
         complex<double> ratio_complex;
         ratio_complex = ((nc_last)*cos(theta[theta.size()-1]*M_PI/180))/(nc_first*cos(theta[0]*M_PI/180));
-        Transmission = ratio_complex*pow(abs(1.0/T.get(0)),2);
+        Trans = ratio_complex*pow(abs(1.0/T.get(0)),2);
         // std::cout<<"T is : "<<Transmission<<std::endl;
-        avg_transmission = avg_transmission + real(Transmission) / rnd;
-        avg_Absorption = avg_Absorption + (1-real(Reflection)-real(Transmission)) / rnd;
+        avg_transmission = avg_transmission + real(Trans) / rnd;
+        avg_Absorption = avg_Absorption + (1-real(Refl)-real(Trans)) / rnd;
 
         //****************************************************************************
         //***************Calculating average values over random phases****************
@@ -1599,6 +1585,8 @@ Tmm::do_solve(void)
 					sum += _Internal_Absorption [nm];
 				}
 				// std::cout<<"sum is " << sum <<std::endl;
+
+
 			
                 
 
@@ -1616,11 +1604,34 @@ Tmm::do_solve(void)
 
      }// end of number of modes loop
 	 
+       vector<double> sumation;
+        for(double re =1; re < Regions.size(); re++)
+        {
+          double load=0;
+          for (double el=Regions[re-1]; el < Regions[re]; el++)
+          {
+            load += _Internal_Absorption[el];
+          }
+          sumation.push_back(load);
+        }
+        double load=0;
+        for (double re = 0; re<sumation.size();re++)
+          load += sumation[re];
 
-	 
+        for (double re = 0; re<sumation.size();re++)
+          if (load != 0)
+            sumation[re] = (sumation[re]/load);
+          else
+            sumation[re] = 0;
+        _Generation_regions_internal.push_back(sumation);
 
 
     }// end of dipole simulation
+
+
+
+
+
 
   }// end of loop of wavelength
     for (double nm = 0; nm < _Generation_rate.size() ; ++nm)  // suming generation rate for internal adn external sources
@@ -1663,6 +1674,7 @@ Tmm::plot_globaldata(void)
 {
   
   string outdir = get_output_directory();
+  //std::cout<<"AVT IS "<<_solutions.count(AVT)<<std::endl;
   if (_solutions.count(AVT))
   if (_AVT != 0)
   {
@@ -1716,6 +1728,46 @@ Tmm::plot_globaldata(void)
           file << _Wavelength[i]   << " " ;
           for (unsigned int j =0; j < _regions_name.size() ; j++)
             file << _Generation_regions[i][j]   << " " ;
+          file << "\n";
+      }
+    }
+
+      
+    file.close();
+  }
+
+  if (_solutions.count(Generation_regions))
+
+  if (!_Generation_regions_internal.empty())
+  {
+
+
+    string filename(outdir + "/" + get_output_filename() + "_Absorption_Regions_Internal.dat");
+
+    ofstream file;
+    file.open(filename.c_str());
+
+    if (file.good())
+    {
+      file << "# " << get_type() << " Absorption_Regions_Internal (" << get_name() << ")\n";
+      file << "# " << 0 << " Region_ID" << "\n";
+      for (double i = 0; i < _regions_name.size(); ++i)
+      {
+          file <<"# " << i+1 << " Region => "<< _regions_name[i] << "\n"; 
+      }
+
+      file << "# " << "Region_ID ";
+      for (double i = 0; i < _regions_name.size(); ++i)
+      {
+          file << _regions_name[i] << " "; 
+      }
+      file << "\n";
+
+      for (unsigned int i = 0; i < _Generation_regions_internal.size(); i++) //internal emission Wavelength
+      {
+          file << 1000 + i   << " " ;
+          for (unsigned int j =0; j < _regions_name.size() ; j++)
+            file << _Generation_regions_internal[i][j]   << " " ;
           file << "\n";
       }
     }
@@ -1827,9 +1879,19 @@ Tmm::plot_globaldata(void)
     }
     file.close();
   }
-
-  //if (_solutions.count(Transmission) || _solutions.count(Reflection) || _solutions.count(Absorption))
-  if (!_Electric_Field_External.empty())
+  
+  //std::cout<<"we are here "<<std::endl;
+  //std::cout<<"we are here "<<_solutions.count(Transmission)<<std::endl;
+  //std::cout<<"we are here "<<_solutions.count(Reflection)<<std::endl;
+  //std::cout<<"we are here "<<_solutions.count(Absorption)<<std::endl;
+  //std::cout<<"we are here "<<_solutions.count(Internal_Source_ElectricField)<<std::endl;
+  //std::cout<<"we are here "<<_solutions.count(External_Source_ElectricField)<<std::endl;
+  //std::cout<<"we are here "<<_solutions.count(Generation_regions)<<std::endl;
+  
+  
+  
+  if (_solutions.count(Transmission) || _solutions.count(Reflection) || _solutions.count(Absorption))
+  //if (!_Electric_Field_External.empty())
   {
     string filename(outdir + "/" + get_output_filename() + ".dat");
 
@@ -1838,6 +1900,7 @@ Tmm::plot_globaldata(void)
 
     if (file.good())
     {
+		std::cout<<"start printing "<<std::endl;
       // header
       file << "# " << get_type() << " TMM (" << get_name() << ")\n";
 
@@ -1857,30 +1920,30 @@ Tmm::plot_globaldata(void)
   }
 
   //if (_solutions.count(Polar))
-  if (!_Fraction_ratio.empty())
-  {
-    string polar_file(outdir + "/" + get_output_filename() + "_polar.dat");
-    ofstream polar;
-    polar.open(polar_file.c_str());
-    if (polar.good())
-      polar << '#' << get_type() << " Radiation results with respect to radial wave number (" << get_name() << ")\n"
-            << "# 0 ratio[1] "             << "\n"
-            << "# 1 kr value[1]"           << "\n"
-            << "# 2 Emission angle [deg]"  << "\n"
-            << "# 3 Power flow back"       << "\n"
-            << "#  Powerflow front"        << "\n"
-            << "# ratio  kr  Emission_angle  Power_back  Power_front"<< "\n";
-
-
-    for (double i = 0; i < _Poynting_back.size(); ++i)
-      polar << _Fraction_ratio[i] << "  "
-            << _kr[i]             << "  "
-            << _angle[i]          << "  "
-            << _Poynting_back[i]  << "  "
-            << _Poynting_front[i] << "\n";
-
-    polar.close();
-  }
+  //if (!_Fraction_ratio.empty())
+  //{
+  //  string polar_file(outdir + "/" + get_output_filename() + "_polar.dat");
+  //  ofstream polar;
+  //  polar.open(polar_file.c_str());
+  //  if (polar.good())
+  //    polar << '#' << get_type() << " Radiation results with respect to radial wave number (" << get_name() << ")\n"
+  //          << "# 0 ratio[1] "             << "\n"
+  //          << "# 1 kr value[1]"           << "\n"
+  //          << "# 2 Emission angle [deg]"  << "\n"
+  //          << "# 3 Power flow back"       << "\n"
+  //          << "#  Powerflow front"        << "\n"
+  //          << "# ratio  kr  Emission_angle  Power_back  Power_front"<< "\n";
+  //
+  //
+  //  for (double i = 0; i < _Poynting_back.size(); ++i)
+  //    polar << _Fraction_ratio[i] << "  "
+  //          << _kr[i]             << "  "
+  //          << _angle[i]          << "  "
+  //          << _Poynting_back[i]  << "  "
+  //          << _Poynting_front[i] << "\n";
+  //
+  //  polar.close();
+  //}
 
 }
 

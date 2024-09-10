@@ -225,6 +225,7 @@ class TBDLLOCAL Tmm : public SimulationInterface
     std::vector<vector<double>> _Electric_Field_External;
     std::vector<vector<double>> _Electric_Field_Internal;
     std::vector<vector<double>> _Generation_regions;
+    std::vector<vector<double>> _Generation_regions_internal;
     std::vector<std::string> _regions_name;
 
     std::vector<double> _Intensity;
@@ -240,14 +241,12 @@ class TBDLLOCAL Tmm : public SimulationInterface
     std::vector<double> _Internal_Poynting;
     std::vector<double> _Internal_Power;
     std::vector<double> _Internal_Absorption;
-	std::vector<double> _Abs;
+	  std::vector<double> _Abs;
     std::vector<double> _Internal_Intensity;
 
     std::vector<double> _angle;
     std::vector<double> _Poynting_front;
     std::vector<double> _Poynting_back;
-    // std::vector<double> _Fraction_front;
-    // std::vector<double> _Fraction_back;
     std::vector<double> _Fraction_ratio;
     std::vector<double> _kr;
     //std::vector<double> _Output_back_angle;

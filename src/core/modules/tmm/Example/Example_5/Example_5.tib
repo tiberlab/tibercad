@@ -279,7 +279,7 @@ Module sweep
   start = 0.0
   stop = 1.8 # 2.0
   steps = 18 #20
-  plot_data = true
+  plot_data = false
 }
 
 Module sweep 
@@ -299,7 +299,7 @@ Module sweep
   solve = ( driftdiffusion)
   variable = $x
   values = (1e-12 1e-9 1e-6, 1e-4, 1e-2, 1e-1, 0.2, 0.5, 0.75, 1.1)
-  plot_data = true
+  plot_data = false
  }
 
 
