@@ -3,8 +3,6 @@ Device
   meshfile = quantum_well.msh
   mesh_units = 1e-9
 
-  #x-growth-direction = (-1, 1, 0, 1)
-  #y-growth-direction = (-1, -1, 2, 0)
   euler_angles = (0, @BETA@, 0)
 
   Region  nGaN
@@ -13,7 +11,7 @@ Device
 
     Doping
     {
-      density =  8e18
+      density =  1e19
       type = donor
       level = 0.004
     }
@@ -30,6 +28,18 @@ Device
     material = GaN
   }
   
+  Region well_q
+  {
+    material = InGaN
+    x=0.2
+  }
+
+  Region  barrier_q
+  {
+    material = GaN
+  }
+  
+
   Region  pGaN
   {
     material = GaN
@@ -38,7 +48,7 @@ Device
     {
       density =  3e19
       type = acceptor
-      level = 0.170     #p-doped Mg : Ea=170 meV   
+      level = 0.170  
       g = 4 
     }
   }
@@ -76,16 +86,13 @@ Module  driftdiffusion
 { 
         
   name = dd
-    Contact substrate{ voltage = -0V }
-    Contact top{ voltage = 0V }
-    Solver
-    {
+
+  Solver
+  {
     solver = linesearch
-    }
+  }
   # we solve only Poisson equation
   coupling = poisson
- # default_boundary_condition=zero_displacement
- # enforce_local_charge_neutrality=true
   
   plot = (Ec, Ev,ElPotential,ElField,Polarization)
 
@@ -103,35 +110,18 @@ Module  driftdiffusion
     polarization piezo { strain_simulation = strain }
     polarization pyro {  }
   }
+
+  Contact substrate{ voltage = 0 }
+  Contact top{ voltage = 0 }
 }
 
 
 
-
-Module  efaschroedinger
-{
-  name = quantum
-  regions = (well, barrier)
-
-  plot = (ProbabilityDensity, EigenEnergy, EnergyLevels)#, EnvelopeFunctions)
-
-  num_conduction_eigenvalues = 5 #150
-  num_valence_eigenvalues = 5 #500
-  poisson_simulation  = dd
-  strain_simulation = strain 
-
-  Physics
-  { 
-    model = 8x8
-  }
-}
-  
 
 
 Simulation
 {
   temperature = 300
-#  solve = (strain, dd, quantum)   
   solve = (strain, dd)   
   resultpath = @OUT@
   searchpath = .

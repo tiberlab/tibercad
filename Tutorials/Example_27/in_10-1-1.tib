@@ -30,6 +30,18 @@ Device
     material = GaN
   }
   
+  Region well_q
+  {
+    material = InGaN
+    x=0.2
+  }
+
+  Region  barrier_q
+  {
+    material = GaN
+  }
+  
+
   Region  pGaN
   {
     material = GaN
@@ -43,6 +55,19 @@ Device
     }
   }
 
+  Atomistic tb
+  {
+    reference_region = barrier_q
+    regions = (well_q, barrier_q)
+    passivation = no
+    periodicity = true
+
+    random_alloy = true
+    random_generator_seed = 1
+
+    print = xyz
+  }
+
 }
 
 
@@ -53,7 +78,8 @@ Module elasticity
   regions = all
 
   plot = (Strain)
-
+ 
+  mesh_deformation = true
 
   Physics 
   {
@@ -70,6 +96,26 @@ Module elasticity
 }
 
 
+Module vff
+{
+
+ regions = (well_q, barrier_q) 
+ atomistic_structure = tb
+
+ plot = (Strain, StrainCells)
+
+ Physics
+ {
+
+   keating automatic
+   {
+     use_four_wz_parameters = true
+   }
+ }
+}
+
+
+
 
 
 Module  driftdiffusion
@@ -84,6 +130,7 @@ Module  driftdiffusion
 
   # we solve only Poisson equation
   coupling = poisson
+  guess_hl_qfermi = 3.0
   
   plot = (Ec, Ev,ElPotential,ElField,Polarization)
 
@@ -103,7 +150,7 @@ Module  driftdiffusion
 
 
   Contact substrate{ voltage = 0V }
-  Contact top{ voltage = 0V }
+  Contact top{ voltage = 3V }
 }
 
 
@@ -111,8 +158,11 @@ Module  driftdiffusion
 
 Module  efaschroedinger
 {
-  name = quantum
-  regions = (well, barrier)
+  name = efa
+  regions = (well_q, barrier_q)
+
+  x-periodicity = true
+  Dirichlet_bc_everywhere = false
 
   plot = (ProbabilityDensity, EigenEnergy, EnergyLevels)
 
@@ -127,12 +177,41 @@ Module  efaschroedinger
   }
 }
   
+ 
+Module empirical_tb
+{
+  regions = (well_q, barrier_q)
+  name = tb
+
+  atomistic_structure = tb
+  Harrison_scaling = true     # set to false if no strain is calculated
+
+  potential_simulation = dd
+ 
+  #plot = (tbstates, MeshStates)
+
+  Solver
+  {
+   
+   # use dynamic_search to improve the solver first guess 
+   #dynamic_search = true 
+
+
+   num_conduction_eigenvalues =  6  
+   num_valence_eigenvalues = 12 
+
+   long_tolerance = 1e-4
+
+  }
+
+}
+
 
 
 Simulation
 {
   temperature = 300
-  solve = (strain, dd, quantum)   
+  solve = (strain, vff, dd, efa, tb)   
   resultpath = output_10-1-1
   searchpath = .
 }

@@ -1,0 +1,666 @@
+
+Log start: Tue Sep 10 16:08:41 2024
+
+
+Writing log to output_10-1-1/in_10-1-1.log.0
+tiberCAD release 3.4.0 (rev. 5595, x86_64-linux)
+
+Input file: in_10-1-1.tib
+
+Initialize global simulation options
+  Simulation temperature: 300 K
+  Database search path  : .
+  Module library path   : .:/home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules
+  Log file              : output_10-1-1/in_10-1-1.log.0
+
+Setup mesh
+  Reading mesh file 'quantum_well.msh ...
+    mesh reading time: 0h 0m 0.0044s
+    mesh preparation time: 0h 0m 0.0019s
+    bd_regions preparation time: 0h 0m 3.1e-05s
+
+    mesh units          : 1e-09 m
+    mesh dimension      :       1
+    number of nodes     :    1500
+    number of elements  :    1499
+    number of subdomains:       6
+    number of boundaries:       2
+
+Create materials ...
+    BondMap progress  done.
+  Added material GaN for region 'nGaN' (mesh regions 1)
+    (using datafile ./GaN.dat)
+    Lattice type : hexagonal
+    a = 3.189, c = 5.185
+    x growth direction : (1 0 -1 -1)
+    y growth direction : (-1 2 -1 0)
+    z growth direction : (25 0 -25 88)
+    Euler angles : alpha = -30, beta = -28.0417, gamma = 0
+  InGaN is an alloy with components InN and GaN and molar fraction of InN 0.2.
+    BondMap progress  done.
+    BondMap progress  done.
+    BondMap progress  done.
+  Added material InGaN for region 'well' (mesh regions 2)
+    (using datafile ./InGaN.dat)
+    alloy with 0.2 InN, 0.8 GaN
+    Lattice type : hexagonal
+    a = 3.26, c = 5.2916
+    x growth direction : (1 0 -1 -1)
+    y growth direction : (-1 2 -1 0)
+    z growth direction : (100 0 -100 351)
+    Euler angles : alpha = -30, beta = -28.0814, gamma = 0
+    BondMap progress  done.
+  Added material GaN for region 'barrier' (mesh regions 4)
+    (using datafile ./GaN.dat)
+    Lattice type : hexagonal
+    a = 3.189, c = 5.185
+    x growth direction : (1 0 -1 -1)
+    y growth direction : (-1 2 -1 0)
+    z growth direction : (25 0 -25 88)
+    Euler angles : alpha = -30, beta = -28.0417, gamma = 0
+  InGaN is an alloy with components InN and GaN and molar fraction of InN 0.2.
+    BondMap progress  done.
+    BondMap progress  done.
+    BondMap progress  done.
+  Added material InGaN for region 'well_q' (mesh regions 3)
+    (using datafile ./InGaN.dat)
+    alloy with 0.2 InN, 0.8 GaN
+    Lattice type : hexagonal
+    a = 3.26, c = 5.2916
+    x growth direction : (1 0 -1 -1)
+    y growth direction : (-1 2 -1 0)
+    z growth direction : (100 0 -100 351)
+    Euler angles : alpha = -30, beta = -28.0814, gamma = 0
+    BondMap progress  done.
+  Added material GaN for region 'barrier_q' (mesh regions 5)
+    (using datafile ./GaN.dat)
+    Lattice type : hexagonal
+    a = 3.189, c = 5.185
+    x growth direction : (1 0 -1 -1)
+    y growth direction : (-1 2 -1 0)
+    z growth direction : (25 0 -25 88)
+    Euler angles : alpha = -30, beta = -28.0417, gamma = 0
+    BondMap progress  done.
+  Added material GaN for region 'pGaN' (mesh regions 6)
+    (using datafile ./GaN.dat)
+    Lattice type : hexagonal
+    a = 3.189, c = 5.185
+    x growth direction : (1 0 -1 -1)
+    y growth direction : (-1 2 -1 0)
+    z growth direction : (25 0 -25 88)
+    Euler angles : alpha = -30, beta = -28.0417, gamma = 0
+Creation of materials done.
+
+Building Atomistic Structure tb
+  Create reference lattice: GaN
+  Build a first oversized structure
+  Make conventional cell aligned with cartesian axes
+  Periodic (conventional) cell:
+    a1 = (43.87573, 0.00000, 0.00000)
+    a2 = (0.00000, 3.18900, 0.00000)
+    a3 = (0.00000, 0.00000, 11.74930)
+  Volume of periodic  cell : 1643.95881
+  Volume of primitive cell : 45.66552
+    => periodic cell contains 36 primitive lattice cells
+  Relative origin of atomic structure: 0.51221 3.66374e-15 1e-06
+  Making supercell with extensions 100.00x0.00x0.00 = 0.00 nm^3
+  Conventional cells along periodic directions: 2 1 1
+
+  Setup of grid mapper: 0h 0m 0.00012s, memory usage: 0 MB 
+  Assign elements progress  done.
+  Assign Species progress  done.
+  Check periodicity ... 
+    structure is periodic along x y z
+    BondMap progress  done.
+  done
+
+  Building random alloy ...
+    Initializing  MT19937 random generator with seed 1
+    Region 3 Label 1 Specie Ga: x = 0.8 -> 19 atoms out of 24 to be substituted (x_eff = 0.792)
+    Region 3 Label 1 Specie In: x = 0.2 -> 5 atoms out of 24 to be substituted (x_eff = 0.208)
+    Region 3 Label 2 Specie Ga: x = 0.8 -> 20 atoms out of 26 to be substituted (x_eff = 0.769)
+    Region 3 Label 2 Specie In: x = 0.2 -> 6 atoms out of 26 to be substituted (x_eff = 0.231)
+    Substituting atoms randomly
+    Needed 3489 random number extractions to substitute 50 atoms
+
+  Atomistic structure build time: 0h 0m 0.015s
+
+  Atomistic Structure containing 288 atoms has been built. 
+  Size not counting passivation hydrogens: 288
+  Supercell structure
+  Lattice vectors (A):
+    a1 = (87.7515 0.00000 0.00000 )
+    a2 = (0.00000 3.18900 0.00000 )
+    a3 = (0.00000 0.00000 11.7493 )
+    Output structure(s)
+    print structure file tb.xyz
+
+Setting up simulation of type 'elasticity' ...
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/elasticity/elasticity.so)
+    Adding boundary 'substrate'
+    (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/elasticity/ebnd_clamp.so)
+  Creating bulk models... 
+    Region: nGaN
+    Region: well
+    Region: well_q
+    Region: barrier
+    Region: barrier_q
+    Region: pGaN
+
+Setting up simulation of type 'vff' ...
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/vff/vff.so)
+  Creating bulk models... 
+    Region: well_q
+    Region: barrier_q
+
+Setting up simulation of type 'driftdiffusion' ...
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/driftdiffusion/driftdiffusion.so)
+    Adding boundary 'substrate'
+    (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/driftdiffusion/ddbnd_ohmic.so)
+    Adding boundary 'top'
+  Creating bulk models... 
+    Region: nGaN
+    (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/driftdiffusion/ddbulk_default.so)
+    Region: well
+    Region: well_q
+    Region: barrier
+    Region: barrier_q
+    Region: pGaN
+
+Setting up simulation of type 'efaschroedinger' ...
+  Creating bulk models... 
+    Region: well_q
+    Region: barrier_q
+
+Setting up simulation of type 'empirical_tb' ...
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/empirical_tb/empirical_tb.so)
+  Creating bulk models... 
+    Region: well_q
+    Region: barrier_q
+
+Setting up bulk models ...
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/elasticity/stiffness_anisotropic.so)
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/elasticity/body_force_lattice_mismatch.so)
+      BondMap progress  done.
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/driftdiffusion/band_properties.so)
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/permittivity_constant.so)
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/polarization_piezo.so)
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/polarization_pyro.so)
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/driftdiffusion/mobility_constant.so)
+    (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/density_of_states_bulk_kp.so)
+      BondMap progress  done.
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/vff/keating_automatic.so)
+      BondMap progress  done.
+      BondMap progress  done.
+      BondMap progress  done.
+      BondMap progress  done.
+      BondMap progress  done.
+      BondMap progress  done.
+      BondMap progress  done.
+      BondMap progress  done.
+
+Setting up lower dimensional (boundary) models ...
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for strain (elasticity)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+
+Available solution variables:
+------------------------------------------------------------------
+Name                     Units          Type      Association Plot
+------------------------------------------------------------------
+Strain                                  tensor    nodal       y
+StrainCell                              tensor    cell        n
+StrainCrystal                           tensor    nodal       n
+Stress                   GPa            tensor    nodal       n
+RelativeStrain                          tensor    nodal       n
+StressCrystal            GPa            tensor    nodal       n
+Displacement             m              vector    nodal       n
+ForceSource              N/m3           tensor    nodal       n
+StrainSource                            tensor    nodal       n
+StressSource             GPa            tensor    nodal       n
+HydrostaticStrain                       real      nodal       n
+EnergyDensity            J/m^3          real      nodal       n
+RegionIDs                               real      cell        n
+------------------------------------------------------------------
+
+Output directory      : output_10-1-1
+Output file format    : grace
+Output file basename  : strain
+
+
+# Region barrier, GaN
+  Stiffness Constants (GPa, in calculation coordinate system):
+    C11 = 343.376 C12 = 127.928 C13 = 135.022 C33 = 364.579 C44 = 99.6411
+
+# Region barrier_q, GaN
+  Stiffness Constants (GPa, in calculation coordinate system):
+    C11 = 343.376 C12 = 127.928 C13 = 135.022 C33 = 364.579 C44 = 99.6411
+
+# Region nGaN, GaN
+  Stiffness Constants (GPa, in calculation coordinate system):
+    C11 = 343.376 C12 = 127.928 C13 = 135.022 C33 = 364.579 C44 = 99.6411
+
+# Region pGaN, GaN
+  Stiffness Constants (GPa, in calculation coordinate system):
+    C11 = 343.376 C12 = 127.928 C13 = 135.022 C33 = 364.579 C44 = 99.6411
+
+# Region well, InGaN (x = 0.2)
+  Stiffness Constants (GPa, in calculation coordinate system):
+    C11 = 316.866 C12 = 124.308 C13 = 128.915 C33 = 333.905 C44 = 89.5885
+
+# Region well_q, InGaN (x = 0.2)
+  Stiffness Constants (GPa, in calculation coordinate system):
+    C11 = 316.866 C12 = 124.308 C13 = 128.915 C33 = 333.905 C44 = 89.5885
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for vff (vff)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+Initializing VFF module
+
+Available solution variables:
+------------------------------------------------------------------
+Name                     Units          Type      Association Plot
+------------------------------------------------------------------
+StrainNodes                             tensor    nodal       n
+StrainCells                             tensor    cell        y
+RegionIDs                               real      cell        n
+------------------------------------------------------------------
+
+Output directory      : output_10-1-1
+Output file format    : grace
+Output file basename  : vff
+
+
+# Region barrier_q, GaN
+  Keating parameters: alpha_0 = 82.028, alpha_1 = 90.9973, beta_0 = 19.8839, beta_1 = 21.4384
+  Stiffness Constants (in crystal coordinates): 
+    C11 = 367.563 C12 = 129.617 C13 = 104.907 C33 = 404.494 C44 = 112.998
+  (Weights for optimization:                    
+    C11 = 1 C12 = 1 C13 = 2 C33 = 2 C44 = 0.5)
+  Kleinmann Parameters: 
+    zeta2 = 0.283117 zeta3 = 0.666155
+
+# Region well_q, InGaN (x = 0.2)
+  Keating parameters: alpha_0 = 79.3795, alpha_1 = 86.7959, beta_0 = 17.9348, beta_1 = 19.5081
+  Stiffness Constants (in crystal coordinates): 
+    C11 = 338.691 C12 = 126.598 C13 = 102.367 C33 = 368.365 C44 = 101.072
+  (Weights for optimization:                    
+    C11 = 1 C12 = 1 C13 = 2 C33 = 2 C44 = 0.5)
+  Kleinmann Parameters: 
+    zeta2 = 0.295374 zeta3 = 0.683025
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for dd (driftdiffusion)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+
+Available solution variables:
+------------------------------------------------------------------
+Name                     Units          Type      Association Plot
+------------------------------------------------------------------
+Ec                       eV             real      nodal       y
+Ev                       eV             real      nodal       y
+eQFermi                  eV             real      nodal       n
+hQFermi                  eV             real      nodal       n
+ElPotential              V              real      nodal       y
+Ec0                      eV             real      nodal       n
+Ev0                      eV             real      nodal       n
+Eg                       eV             real      nodal       n
+ConductionBands          eV             n-tuple   cell        n
+ValenceBands             eV             n-tuple   cell        n
+eDensity                 cm^-3          real      nodal       n
+hDensity                 cm^-3          real      nodal       n
+ChargeDensity            cm^-3          real      nodal       n
+eMobility                cm^2/(V*s)     real      nodal       n
+hMobility                cm^2/(V*s)     real      nodal       n
+eConductivity            S/cm           real      nodal       n
+hConductivity            S/cm           real      nodal       n
+ElField                  V/cm           vector    cell        y
+Polarization             C/m^2          vector    cell        y
+Displacement             C/m^2          vector    cell        n
+CurrentDensity           A/cm^2         vector    cell        n
+eCurrentDensity          A/cm^2         vector    cell        n
+hCurrentDensity          A/cm^2         vector    cell        n
+IonizedDonors            cm^-3          real      nodal       n
+IonizedAcceptors         cm^-3          real      nodal       n
+IonizedElectronTraps     cm^-3          real      nodal       n
+IonizedHoleTraps         cm^-3          real      nodal       n
+eThElPower               eV/K           real      nodal       n
+hThElPower               eV/K           real      nodal       n
+eJoule                   W/cm^3         real      nodal       n
+hJoule                   W/cm^3         real      nodal       n
+ePowerFlux               W/cm^2         vector    nodal       n
+hPowerFlux               W/cm^2         vector    nodal       n
+ePeltier                 W/cm^3         real      nodal       n
+hPeltier                 W/cm^3         real      nodal       n
+RecombHeat               W/cm^3         real      nodal       n
+IQE                                     real      none        n
+ArtificialDiffusion                     real      nodal       n
+eNetRecombination        1/(s*cm^3)     real      nodal       n
+hNetRecombination        1/(s*cm^3)     real      nodal       n
+substrate.current        A/cm^2         real      none        n
+top.current              A/cm^2         real      none        n
+RegionIDs                               real      cell        n
+------------------------------------------------------------------
+
+Output directory      : output_10-1-1
+Output file format    : grace
+Output file basename  : dd
+
+
+solving for : poisson 
+using local scaling
+
+# Region barrier, GaN
+  Conduction band:
+    DOS: bulk_kp
+      band edge :  2.72727
+      eff. mass :  0.203325
+      degeneracy:  2
+    Ec = 2.72727, Nc = 2.30069e+18 cm^-3
+    m_dos = 0.203325, v_th = 2.59014e+07 cm/s
+  Valence band:
+    DOS: bulk_kp
+      band edge :  -0.732132  -0.715528  -0.71033
+      eff. mass :  0.414872  0.364748  0.498748
+      degeneracy:  2  2  2
+    Ev = -0.71033, Nv = 6.70569e+18 cm^-3
+    m_dos = 0.498748, v_th = 1.65378e+07 cm/s
+  Eg = 3.4376, Ef0 = 1.03304, ni = 8.16092e-11
+
+# Region barrier_q, GaN
+  Conduction band:
+    DOS: bulk_kp
+      band edge :  2.72727
+      eff. mass :  0.203325
+      degeneracy:  2
+    Ec = 2.72727, Nc = 2.30069e+18 cm^-3
+    m_dos = 0.203325, v_th = 2.59014e+07 cm/s
+  Valence band:
+    DOS: bulk_kp
+      band edge :  -0.732132  -0.715528  -0.71033
+      eff. mass :  0.414872  0.364748  0.498748
+      degeneracy:  2  2  2
+    Ev = -0.71033, Nv = 6.70569e+18 cm^-3
+    m_dos = 0.498748, v_th = 1.65378e+07 cm/s
+  Eg = 3.4376, Ef0 = 1.03304, ni = 8.16092e-11
+
+# Region nGaN, GaN
+  Conduction band:
+    DOS: bulk_kp
+      band edge :  2.72727
+      eff. mass :  0.203325
+      degeneracy:  2
+    Ec = 2.72727, Nc = 2.30069e+18 cm^-3
+    m_dos = 0.203325, v_th = 2.59014e+07 cm/s
+  Valence band:
+    DOS: bulk_kp
+      band edge :  -0.732132  -0.715528  -0.71033
+      eff. mass :  0.414872  0.364748  0.498748
+      degeneracy:  2  2  2
+    Ev = -0.71033, Nv = 6.70569e+18 cm^-3
+    m_dos = 0.498748, v_th = 1.65378e+07 cm/s
+  Eg = 3.4376, Ef0 = 2.73644, ni = 6.84998e-11
+
+# Region pGaN, GaN
+  Conduction band:
+    DOS: bulk_kp
+      band edge :  2.72727
+      eff. mass :  0.203325
+      degeneracy:  2
+    Ec = 2.72727, Nc = 2.30069e+18 cm^-3
+    m_dos = 0.203325, v_th = 2.59014e+07 cm/s
+  Valence band:
+    DOS: bulk_kp
+      band edge :  -0.732132  -0.715528  -0.71033
+      eff. mass :  0.414872  0.364748  0.498748
+      degeneracy:  2  2  2
+    Ev = -0.71033, Nv = 6.70569e+18 cm^-3
+    m_dos = 0.498748, v_th = 1.65378e+07 cm/s
+  Eg = 3.4376, Ef0 = -0.61526, ni = 8.1303e-11
+
+# Region well, InGaN (x = 0.2)
+  Conduction band:
+    DOS: bulk_kp
+      band edge :  2.11698
+      eff. mass :  0.17666
+      degeneracy:  2
+    Ec = 2.11698, Nc = 1.86329e+18 cm^-3
+    m_dos = 0.17666, v_th = 2.77875e+07 cm/s
+  Valence band:
+    DOS: bulk_kp
+      band edge :  -0.584482  -0.566778  -0.56033
+      eff. mass :  0.484807  0.348757  0.460883
+      degeneracy:  2  2  2
+    Ev = -0.56033, Nv = 8.47083e+18 cm^-3
+    m_dos = 0.460883, v_th = 1.72038e+07 cm/s
+  Eg = 2.67731, Ef0 = 0.805253, ni = 0.000172897
+
+# Region well_q, InGaN (x = 0.2)
+  Conduction band:
+    DOS: bulk_kp
+      band edge :  2.11698
+      eff. mass :  0.17666
+      degeneracy:  2
+    Ec = 2.11698, Nc = 1.86329e+18 cm^-3
+    m_dos = 0.17666, v_th = 2.77875e+07 cm/s
+  Valence band:
+    DOS: bulk_kp
+      band edge :  -0.584482  -0.566778  -0.56033
+      eff. mass :  0.484807  0.348757  0.460883
+      degeneracy:  2  2  2
+    Ev = -0.56033, Nv = 8.47083e+18 cm^-3
+    m_dos = 0.460883, v_th = 1.72038e+07 cm/s
+  Eg = 2.67731, Ef0 = 0.805253, ni = 0.000172897
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for quantum (efaschroedinger)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+Symmetry of k space: orthorhombic
+k-space initialized
+
+Available solution variables:
+------------------------------------------------------------------
+Name                     Units          Type      Association Plot
+------------------------------------------------------------------
+ProbabilityDensity       1/cm           n-tuple   nodal       y
+EigenEnergy              eV             n-tuple   none        y
+Occupation                              n-tuple   none        n
+EigenEnergyOnMesh        eV             n-tuple   nodal       n
+EnvelopeFunctions                       n-tuple   nodal       n
+RegionIDs                               real      cell        n
+------------------------------------------------------------------
+
+Output directory      : output_10-1-1
+Output file format    : grace
+Output file basename  : quantum
+
+Number of bands: 8
+Degeneracy: 1
+
+
+# Region barrier_q, GaN
+  KxP 8x8
+    L = -2.22283 M = -0.75 N = -1.47283 P0 = 0.493822
+    m_c = 1
+
+# Region well_q, InGaN (x = 0.2)
+  KxP 8x8
+    L = -2.22559 M = -0.78 N = -1.44559 P0 = 0.475765
+    m_c = 1
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for tb (empirical_tb)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+Symmetry of k space: orthorhombic
+k-space initialized
+
+*** Warning: Empirical tight binding calculations are preformed at T=0
+(tb) creating map elem->atoms
+(tb) database path: ./:/home/maufder/Projects/TIBERCAD/trunk/materials/ETB/Jancu
+(tb) work path: output_10-1-1
+(tb) output path: output_10-1-1
+
+*** Warning: found unused options in block Solver: long_tolerance, num_conduction_eigenvalues, num_valence_eigenvalues
+Assign Virtual Species
+Printing upg file
+
+Available solution variables:
+------------------------------------------------------------------
+Name                     Units          Type      Association Plot
+------------------------------------------------------------------
+MeshStates               1/cm           n-tuple   cell        y
+MeshStatesNodes          1/cm           n-tuple   nodal       n
+eDensity                 q/cm           real      nodal       n
+hDensity                 q/cm           real      nodal       n
+RegionIDs                               real      cell        n
+------------------------------------------------------------------
+
+Output directory      : output_10-1-1
+Output file format    : grace
+Output file basename  : tb
+
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+We solve: strain vff dd quantum tb 
+
+>>>>--------------------------------- (strain) ---------------------------------
+    New periodicity (ratios : 1 1 1)
+    (x,y,z)=( 87.7515,        0,        0)
+    (x,y,z)=(       0,    3.189,        0)
+    (x,y,z)=(       0,        0,  11.7493)
+    New periodicity (ratios : 1.01332 1 1.00693)
+    (x,y,z)=( 88.9202,        0,        0)
+    (x,y,z)=(       0,    3.189,        0)
+    (x,y,z)=(       0,        0,  11.8307)
+
+Solve time: 0h 0m 0.16s
+<<<<----------------------------------------------------------------------------
+
+>>>>---------------------------------- (vff) -----------------------------------
+  VFF boundary conditions set up
+  Number of free atoms: 288
+
+Solve time: 0h 0m 0.1s
+<<<<----------------------------------------------------------------------------
+Initializing atomistic strain projection
+Building reference lattice for region InGaN wz
+  BondMap progress  done.
+Building reference lattice for region GaN wz
+  BondMap progress  done.
+Calculating strain tensor... 
+Computation time: 0h 0m 0.00012s
+Build Elem->Atoms Map
+Computation time: 0h 0m 0.0007s
+
+>>>>----------------------------------- (dd) -----------------------------------
+  Setting max_iterations for nonlinear solver to 150
+  Solving equilibrium
+  it 1, |du| = 58.369, |r| = 0.0583069  alpha = 1
+  it 2, |du| = 14.3163, |r| = 0.0290995  alpha = 0.5
+  it 3, |du| = 1.37961, |r| = 0.00313606  alpha = 1
+  it 4, |du| = 0.223994, |r| = 0.000106476  alpha = 1
+  it 5, |du| = 0.00934557, |r| = 1.67746e-07  alpha = 1
+
+  iterations: 6, |du| = 1.50993e-05, |r| = 4.85169e-13
+  Equilibrium done
+  it 1, |du| = 116.045, |r| = 117.313  alpha = 1
+  it 2, |du| = 25.3331, |r| = 22.4227  alpha = 1
+  it 3, |du| = 8.53403, |r| = 4.51388  alpha = 1
+  it 4, |du| = 4.46136, |r| = 1.14252  alpha = 1
+  it 5, |du| = 3.75681, |r| = 0.356357  alpha = 1
+  it 6, |du| = 3.85593, |r| = 0.115971  alpha = 1
+  it 7, |du| = 3.21162, |r| = 0.03436  alpha = 1
+  it 8, |du| = 2.63756, |r| = 0.00692395  alpha = 1
+  it 9, |du| = 0.422967, |r| = 0.000145388  alpha = 1
+  it 10, |du| = 0.0118493, |r| = 1.50568e-07  alpha = 1
+
+  iterations: 11, |du| = 2.75998e-05, |r| = 9.08384e-13
+
+  iterations: 1, |du| = 1.83152e-10, |r| = 2.28702e-13
+  Surface recombination current = 0
+
+  contact name:       voltage:            current:
+  substrate           0                   0.000165325
+  top                 3                  -0.000165325
+
+Solve time: 0h 0m 4.3s
+<<<<----------------------------------------------------------------------------
+
+>>>>-------------------------------- (quantum) ---------------------------------
+  (EFA) Solving for k = (0.00000 0.00000 0.00000 ) /nm
+  Maximum of Ev (eV) :-2.91351
+  Minimum of Ec (eV) :-0.281813
+  (EFA) Estimated guess (eV): -2.65034
+  Copying matrices to SLEPc... done
+  Solver package used in Eigensolver: petsc
+  Solver package used in Eigensolver: petsc
+  Solver package used in Eigensolver: petsc
+
+Solve time: 0h 0m 0.48s
+<<<<----------------------------------------------------------------------------
+
+>>>>----------------------------------- (tb) -----------------------------------
+  Assign Virtual Species
+  Printing upg file
+  (tb) get band edges from model: dd
+        CB min = -0.284501  VB max = -2.91088
+  (tb) solving using lanczos
+   
+  (tb) copy states from uptight
+
+  #  type   level    stat.     pot.       pop.
+  0 hl -2.86234 Fermi         -3   0.995155
+  1 hl -2.86234 Fermi         -3   0.995155
+  2 hl -2.90344 Fermi         -3    0.97669
+  3 hl -2.90344 Fermi         -3    0.97669
+  4 hl -3.0078 Fermi         -3   0.425181
+  5 hl -3.0078 Fermi         -3   0.425181
+  6 hl -3.0993 Fermi         -3  0.0210149
+  7 hl -3.0993 Fermi         -3  0.0210149
+  8 hl -3.11115 Fermi         -3  0.0133921
+  9 hl -3.11115 Fermi         -3  0.0133921
+  10 hl -3.14847 Fermi         -3 0.00319502
+  11 hl -3.14847 Fermi         -3 0.00319502
+  12 el -0.143906 Fermi          0   0.996191
+  13 el -0.143906 Fermi          0   0.996191
+  14 el 0.124261 Fermi          0 0.00810908
+  15 el 0.124261 Fermi          0 0.00810908
+  16 el 0.325714 Fermi          0 3.37488e-06
+  17 el 0.325714 Fermi          0 3.37488e-06
+
+
+Solve time: 0h 0m 30s
+<<<<----------------------------------------------------------------------------
+(tb) compute atom-projected charges
+(tb) print atom-projected charges on files
+(tb) write wave functions on files
+
+Total solve time: 0h 0m 38s
+Simulation finished.
+
+2 warnings during run
+0 errors detected
+
+
+Log end: Tue Sep 10 16:09:19 2024
+
+
