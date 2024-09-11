@@ -13,6 +13,13 @@ Device
 Module pvmodule
 {
 
+  Physics
+  {
+
+    top_sheet_resistivity = 5
+    bottom_sheet_resistivity = 10
+  }
+
 }
 
 Simulation

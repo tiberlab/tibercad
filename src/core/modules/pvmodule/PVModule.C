@@ -1,7 +1,7 @@
 // $Id: PVModule.C 5514 2024-05-03 15:22:47Z maufder $
 
 #include "PVModule.h"
-//#include "PVModuleModel.h"
+#include "PVModuleModel.h"
 //#include "PVModuleBoundaryModel.h"
 #include "TiberLinearSystem.h"
 #include "Messages.h"
@@ -12,10 +12,10 @@
 #include "libmesh/quadrature_trap.h"
 #include "libmesh/sparse_matrix.h"
 #include "libmesh/dense_matrix.h"
-#include "libmesh/dense_vector.h"
-#include "libmesh/dense_submatrix.h"
-#include "libmesh/dense_subvector.h"
-#include "libmesh/vector_value.h"
+//#include "libmesh/dense_vector.h"
+//#include "libmesh/dense_submatrix.h"
+//#include "libmesh/dense_subvector.h"
+//#include "libmesh/vector_value.h"
 
 // This is needed in order to create the shared module library
 #include "TiberModule.h"
@@ -95,10 +95,6 @@ PVModule::do_solve(void)
 
   TiberLinearSystem& sys = get_equation_system<TiberLinearSystem>();
 
-
-  //system.set_options(get_solver_options());
-  //system.solve();
-
   sys.assemble();
 
   // write Spice netlist
@@ -107,6 +103,55 @@ PVModule::do_solve(void)
 
   // idea: loop through matrix, and take coupling elements as resistors
   // DOF indices can be used as node numbers
+
+  DofMap& dof_map =  sys.get_dof_map();
+  const unsigned int vtop = sys.variable_number("Vtop");
+  unsigned int n_dofs = dof_map.n_dofs();
+  // we have two DoFs per node
+
+  unsigned int next_node_id = n_dofs;
+
+  vector<numeric_index_type> indices;
+  vector<double> values;
+
+  for (unsigned int i = 0; i < n_dofs; i += 2)
+  {
+    // extract information from system matrix
+    sys.matrix->get_row(i, indices, values);
+
+    for (unsigned int j = 0; j < indices.size(); ++j)
+    {
+      unsigned int other_node = indices[j];
+
+      if (other_node == i)
+      {
+        double area = values[j];
+
+        if (area > 0)
+        {
+          // create netlist of the elementary cell, scaled with area
+          // adjust next_node_id
+          unsigned int bot_node = i + 1;
+        }
+
+      }
+      else
+      {
+
+        if (other_node < i)
+        {
+          // add bottom sheet resistance
+          unsigned int this_node = i + 1;
+          other_node += 1;
+        }
+        else
+        {
+          // add top sheet resistance or vertical connection
+        }
+      }
+
+    }
+  }
 
   of.close();
 
@@ -136,7 +181,7 @@ PhysicalModel*
 PVModule::create_bulk_model(const ModelOptions& options,
     const Material* mat) const
 {
-  //return PVModuleModel::create(mat, options);
+  return PVModuleModel::create(mat, options);
   return(nullptr);
 }
 
@@ -235,12 +280,13 @@ PVModule::assemble(void)
   unique_ptr<FEBase> fe(build_finite_element(dim, fe_type, true));
   unique_ptr<QBase> qrule(QBase::build(QTRAP, dim));
   fe->attach_quadrature_rule(qrule.get());
-/*
+
   const vector<Real>& JxW = fe->get_JxW();
   const vector<Point>& q_point = fe->get_xyz();
   const vector<vector<Real> >& phi = fe->get_phi();
   const vector<vector<RealGradient> >& dphi = fe->get_dphi();
 
+/*
   // the surface finite element
   unique_ptr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
   unique_ptr<QBase> qface(QBase::build(myopts.quadrature_type, dim-1, myopts.integration_order));
@@ -251,7 +297,7 @@ PVModule::assemble(void)
   const vector<vector<Real> >&  phi_face = fe_face->get_phi();
   const vector<vector<RealGradient> >& dphi_face = fe->get_dphi();
   const vector<Point>& normal = fe_face->get_normals();
-
+*/
   vector<unsigned int> dof_indices;
 
   DenseMatrix<Number> Ke;
@@ -276,32 +322,52 @@ PVModule::assemble(void)
 
     PVModuleModel& mod = *get_bulk_model<PVModuleModel>(elem);
 
-    mod.set_element(elem);
+    PVModuleModel::RegionType reg_type = mod.get_region_type();
+
+    /* Idea:
+     * the off-diagonal entries of the matrix will contain
+     * the conductance values between different nodes (top, bottom,
+     * and vertical connection). On the diagonal we put the area of
+     * the active region of the node, used later for scaling the 
+     * elementary cell parameters. Top and vertical connections are
+     * put with j > i, bottom ones with j < i
+     */
 
     // loop over the quadrature points
     for (unsigned int qp = 0; qp < qrule->n_points(); qp++)
     {
 
-      mod.set_point(q_point[qp]);
+      auto rsheet = mod.get_sheet_resistances(elem, q_point[qp]);
+      double stop = 1.0 / rsheet.first;
+      double sbot = 1.0 / rsheet.second;
 
-      mod.calculate();
+      if (reg_type == PVModuleModel::P3)
+        stop = 0.0;
 
-      const RealTensor& eps = mod.get_permittivity();
-      // units of polarization ??????
-      const RealVectorValue& pol = mod.get_polarization();
-      double rho =  mod.get_charge_density() * Lambda;
+      if (reg_type == PVModuleModel::P1)
+        sbot = 0.0;
 
-      for (unsigned int i = 0; i < n_dofs; i++)
+      double sconn = 1.0 / mod.get_connection_resistance(elem, q_point[qp]);
+
+      for (unsigned int i = 0; i < n_dofs/2; i++)
       {
-        for (unsigned int j = 0; j < n_dofs; j++)
-          Ke(i, j) += JxW[qp] * (dphi[i][qp] * (eps * dphi[j][qp]));
+        for (unsigned int j = i + 1; j < n_dofs/2; j++)
+        {
+          Ke(i, j) += JxW[qp] * (dphi[i][qp] * (stop * dphi[j][qp]));
+          //Ke(i+n_dofs/2, j+n_dofs/2) += JxW[qp] * (dphi[i][qp] * (sbot * dphi[j][qp]));
+          Ke(j, i) += JxW[qp] * (dphi[i][qp] * (sbot * dphi[j][qp]));
+        }
 
-        Fe(i) += JxW[qp] * (rho * phi[i][qp] + pol * dphi[i][qp]);
+        if (reg_type == PVModuleModel::ACTIVE)
+          Ke(i, i) += JxW[qp];
+
+        if (reg_type == PVModuleModel::P2)
+          Ke(i, i+n_dofs/2) += JxW[qp] * sconn;
       }
 
     }
 
-
+/*
     // the sides
     for (unsigned int s = 0; s < elem->n_sides(); s++)
     {
@@ -336,13 +402,14 @@ PVModule::assemble(void)
         }
       }
     }
+    */
 
     dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
     system.matrix->add_matrix(Ke, dof_indices);
-    system.rhs->add_vector(Fe, dof_indices);
+    //system.rhs->add_vector(Fe, dof_indices);
 
   }
   system.matrix->close();
-  //system.matrix->print_matlab("K.m");
-*/
+  system.matrix->print_matlab("K.m");
+
 }
