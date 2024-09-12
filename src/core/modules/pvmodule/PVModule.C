@@ -109,11 +109,16 @@ PVModule::do_solve(void)
   unsigned int n_dofs = dof_map.n_dofs();
   // we have two DoFs per node
 
+  // the elementary cell subcircuit will add new nodes,
+  // starting from this one
   unsigned int next_node_id = n_dofs;
 
   vector<numeric_index_type> indices;
   vector<double> values;
 
+  // new we loop through the matrix rows. Conductance values that are
+  // = 0 (no connection) should not appear in the matrix and so are
+  // automatically excluded
   for (unsigned int i = 0; i < n_dofs; i += 2)
   {
     // extract information from system matrix
@@ -130,23 +135,27 @@ PVModule::do_solve(void)
         if (area > 0)
         {
           // create netlist of the elementary cell, scaled with area
-          // adjust next_node_id
           unsigned int bot_node = i + 1;
+
+          // adjust next_node_id
         }
 
       }
       else
       {
+        double resistance = 1.0 / values[j];
 
         if (other_node < i)
         {
           // add bottom sheet resistance
+          // this_node -- R -- other_node
           unsigned int this_node = i + 1;
           other_node += 1;
         }
         else
         {
           // add top sheet resistance or vertical connection
+          // this_node -- R -- other_node
         }
       }
 
@@ -353,14 +362,19 @@ PVModule::assemble(void)
       {
         for (unsigned int j = i + 1; j < n_dofs/2; j++)
         {
+          // top layer conductance contribution
           Ke(i, j) += JxW[qp] * (dphi[i][qp] * (stop * dphi[j][qp]));
+
+          // bottom layer conductance contribution
           //Ke(i+n_dofs/2, j+n_dofs/2) += JxW[qp] * (dphi[i][qp] * (sbot * dphi[j][qp]));
           Ke(j, i) += JxW[qp] * (dphi[i][qp] * (sbot * dphi[j][qp]));
         }
 
+        // active are contribution
         if (reg_type == PVModuleModel::ACTIVE)
           Ke(i, i) += JxW[qp];
 
+        // vertical connection conductance contribution
         if (reg_type == PVModuleModel::P2)
           Ke(i, i+n_dofs/2) += JxW[qp] * sconn;
       }
