@@ -206,18 +206,24 @@ Sweep::parse_options(void)
     }
     else
     {
-      // check if specific values are given
-      double val;
-      try { val = boost::lexical_cast<double>(*it); }
-      catch(boost::bad_lexical_cast &)
-      {
-        continue;
-      }
+      // we might have a range specification
+      vector<double> vals;
+      Utils::extract_vector(*it, vals);
 
-      for (unsigned int i = 0; i < _values.size(); ++i)
+      for (unsigned int k = 0; k < vals.size(); ++k)
       {
-        if (Utils::almost_equal::compare(val, _values[i]))
-          _plot_data[i] = true;
+        double val = vals[k];
+        // try { val = boost::lexical_cast<double>(*it); }
+        // catch(boost::bad_lexical_cast &)
+        //{
+        //   continue;
+        // }
+
+        for (unsigned int i = 0; i < _values.size(); ++i)
+        {
+          if (Utils::almost_equal::compare(val, _values[i]))
+            _plot_data[i] = true;
+        }
       }
     }
   }
