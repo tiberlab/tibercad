@@ -453,10 +453,9 @@ Further options controlling a ``sweep`` are:
      The maximum allowed step size.
 
   ``plot_data``  
-     If set to true, output data will be written after
-     each step of the ``sweep``, otherwise this will be done only for the final sweep value.
-     The default is ``false`` to limit output data.
-     The amount of written data can be controlled using the ``max_step`` option
+     If set to ``true`` or ``each``, output data will be written after
+     each step of the ``sweep``. Other options are ``last`` or ``none``.
+     Alternatively, one can specifiy explicitly the values for which to write results.
 
 Once a ``sweep`` calculation has been defined, it is treated as an ordinary simulation
 and may therefore be used just like any other simulation by adding it to a ``solve`` statement (see below).
@@ -518,9 +517,8 @@ calculation to be run,that is  the process-flow of the simulation.
   ``resultpath`` : 
      path for output directory
 
-  ``output_format`` : 
-     format of the output data: ``grace`` for ascii data column type
-     ``vtk`` for VTK based output.
+  ``verbose`` :
+    a number to control the verbosity of output to the screen and the log file
 
 
 Output description

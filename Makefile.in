@@ -115,12 +115,13 @@ run_tests:
 
 
 
-completemanual:
+.PHONY: manual
+manual:
 	@$(MAKE) --no-print-directory -C manual/Sphinx/Complete latexpdf
 
 
 
-wininstaller linuxinstaller deb tgz tbz: completemanual SHAREDLIBS
+wininstaller linuxinstaller deb tgz tbz: manual SHAREDLIBS
 	@$(MAKE) --no-print-directory -C installer $(MAKECMDGOALS)
 
 
