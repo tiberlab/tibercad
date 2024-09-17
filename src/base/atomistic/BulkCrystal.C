@@ -973,7 +973,11 @@ BulkCrystal::set_cell_vectors(void)
     _prim_vec(2,3) = 0.0;
     _prim_vec(3,3) = _lattice_constant[2] * sin(beta);
 
-    _conv_vec = _prim_vec;
+    _conv_vec = 0;
+    _conv_vec(1,1) = _lattice_constant[0];
+    _conv_vec(2,2) = _lattice_constant[1];
+    _conv_vec(1,3) = _prim_vec(1,3);
+    _conv_vec(3,3) = _prim_vec(3,3);
 
   }
 
