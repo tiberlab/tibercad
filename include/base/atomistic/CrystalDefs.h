@@ -4,23 +4,48 @@
 
 class CrystalDefs {
 
-  private:
-
-  // std::map<std::string, std::map<Specie::Type, unsigned int> > ion_map;
-
   public:
 
     static bool is_anion(const std::string material, const Specie sp);
 
     static bool is_cation(const std::string material, const Specie sp);
 
+    //! Convert Schoenflies notation to International Symbol
+    static std::string schoenflies_to_IS(const std::string& schoenflies);
+
+    //! Convert Space group Symbol or number to International Symbol
+    static std::string spacegroup_to_IS(const std::string& sp_grp);
+
+    //! Convert International Symbol to crystal class
+    static std::string IS_to_crystal_class(const std::string& int_sym);
+
+    //! Convert International Symbol to crystal system
+    static std::string IS_to_crystal_system(const std::string& int_sym);
+
     static std::map<std::string, Specie::Type > anion;
     
     static std::map<std::string, Specie::Type > cation;
 
-  //  void add_material_types(const std::string material, const Specie sp, unsigned int label);
 
-  //static bool is_specie(const std::string& material, const Specie sp, unsigned int label);  
+
+  private:
+
+    //! International Symbols
+    static const std::vector<std::string> _international_sym;
+
+    //! Schoenflies Symbols, ordered as International Symbols
+    static const std::vector<std::string> _schoenflies;
+
+    //! Crystal classes, order as international symbols
+    static const std::vector<std::string> _crystal_classes;
+
+    //! Crystal class index to crystal system
+    static const std::vector<unsigned int> _class_to_system;
+
+    //! The space groups
+    static const std::vector<std::string> _space_groups;
+
+    static const std::vector<unsigned int> _space_grp_to_IS;
 
 };
 
