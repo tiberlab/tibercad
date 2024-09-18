@@ -22,6 +22,15 @@ class CrystalDefs {
     //! Convert International Symbol to crystal system
     static std::string IS_to_crystal_system(const std::string& int_sym);
 
+    //! Convert given lattice type string to a standard form
+    /*!
+     * Standard form is one of the 14 Bravais lattices
+     */
+    static std::string get_bravais_lattice(const std::string& name);
+
+    static std::string bravais_short_to_long_name(const std::string& in);
+
+
     static std::map<std::string, Specie::Type > anion;
     
     static std::map<std::string, Specie::Type > cation;
@@ -29,6 +38,8 @@ class CrystalDefs {
 
 
   private:
+    
+    static unsigned int spacegroup_to_IS_id(const std::string& sp_grp);
 
     //! International Symbols
     static const std::vector<std::string> _international_sym;
@@ -44,8 +55,6 @@ class CrystalDefs {
 
     //! The space groups
     static const std::vector<std::string> _space_groups;
-
-    static const std::vector<unsigned int> _space_grp_to_IS;
 
 };
 
