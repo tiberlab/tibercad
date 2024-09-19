@@ -15,13 +15,13 @@ Module tmm
 { 
   
   name = tmm_study 
-  plot = (Internal_Source_ElectricField,Internal_Poynting,Internal_Power,Internal_Absorption,Generation_regions)
+  plot = (Internal_Source_ElectricField,Internal_Poynting,Internal_Power,Internal_Absorption,Internal_Intensity)
   wavelengths = 300
-  wave_number_steps = 200
-  wave_number_ratio = 1
-  polarization = tm
-  orientation = h
-  dipole_power = 0.2
+  wave_number_steps = 1
+  polarization = TM
+  orientation = H
+  wave_number_ratio = 0
+  dipole_power = 1
   dipole_coordinate = 500
 
   Physics 
