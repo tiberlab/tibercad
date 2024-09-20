@@ -19,6 +19,7 @@ Module tmm
   name = tmm_study 
   plot = (Internal_Source_ElectricField,Internal_Poynting,Internal_Power,Internal_Absorption,Internal_Intensity)
   wavelengths = 450
+  Emission-spectrum-file = Spectrum.dat
   wave_number_steps = 1
   polarization = TM
   orientation = H
@@ -40,6 +41,7 @@ Simulation
   verbose = 2
   solve = tmm_study
 resultpath = output/
+searchpath = ./
 
 
 }
