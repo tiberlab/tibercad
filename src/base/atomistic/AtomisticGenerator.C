@@ -158,6 +158,15 @@ AtomisticGenerator::build(void)
   if (_dim > 2)
     _local_origin(3) += 1e-3;
 
+  if (_as->get_options().find_option("origin"))
+  {
+    Point orig;
+    _as->get_options().get_option("origin", orig);
+    _local_origin(1) = orig(0);
+    _local_origin(2) = orig(1);
+    _local_origin(3) = orig(2);
+  }
+
 
   double l1 = (fabs(max_x - min_x)) * scale;
   double l2 = (fabs(max_y - min_y)) * scale;
@@ -780,9 +789,9 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3)
         // without modifing _conv_basis
         for (auto basis_atom : _conv_basis)
         {
-           basis_atom.set_position( origin + tmp_conv + 
-                basis_atom.get_ttype_position() );
-            _super_basis.push_back(basis_atom);
+          basis_atom.set_position(origin + tmp_conv +
+                                  basis_atom.get_ttype_position());
+          _super_basis.push_back(basis_atom);
         }
        
       }
@@ -1085,8 +1094,8 @@ void AtomisticGenerator::minimal_conv_cell()
   _conv_vect(1,2) = v1(1); _conv_vect(2,2) = v1(2); _conv_vect(3,2) = v1(3); 
   _conv_vect(1,3) = v2(1); _conv_vect(2,3) = v2(2); _conv_vect(3,3) = v2(3); 
 
-  cerr << "conv_vect at end:\n";
-  cerr << _conv_vect << endl;
+  //cerr << "conv_vect at end:\n";
+  //cerr << _conv_vect << endl;
 }
 
 void AtomisticGenerator::make_conv_lattice()

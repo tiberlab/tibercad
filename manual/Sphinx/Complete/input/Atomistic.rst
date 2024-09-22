@@ -82,6 +82,9 @@ The  following keywords may  be  defined in **Atomistic**  block
     defines a translation vector as *(dx, dy, dz)* used to move the atomistic structure w.r.t. the mesh regions. 
     It is useful for fine alignments of atoms to the mesh. 
 
+ ``origin`` : real vector
+    one can specify explicitly the origin of the atomistic structure
+
  ``passivation`` : boolean
     if true an hydrogen passivation is  applied to the structure. 
     Hydrogen atoms are inserted at a defined distance in the same direction of the original crystal bond.
