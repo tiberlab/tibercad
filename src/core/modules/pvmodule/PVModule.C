@@ -5,7 +5,7 @@
 //#include "PVModuleBoundaryModel.h"
 #include "TiberLinearSystem.h"
 #include "Messages.h"
-
+#include "Database.h"
 #include "libmesh/equation_systems.h"
 #include "libmesh/dof_map.h"
 #include "libmesh/enum_quadrature_type.h"
@@ -76,6 +76,41 @@ PVModule::parse_options(void)
 
   _spice = get_option("spice_executable", _spice);
  
+ 
+  // reading jv_ref.dat file, as reference for JV curve
+  Database db;
+  db.set_material("jv_ref", get_option("jv_ref", ""));
+  ifstream ifs;
+  ifs.open(db.get_data_file().c_str());
+  if (ifs.fail() || !ifs.good())
+    throw InitFailedException("Cannot read spectrum "
+        "from file " + db.get_data_file());
+
+  size_t i = 0;
+  const size_t buf_len = 256;
+  char buf[buf_len];
+   while (ifs.good())
+   {
+     if (i == _jv_ref_v.size())
+     {
+       size_t n_new = _jv_ref_v.size() + 10;
+       _jv_ref_v.reserve(n_new);
+       _jv_ref_j.reserve(n_new);
+     }
+     ifs.getline(buf, buf_len);
+     if (buf[0] != '#')
+     {
+       istringstream in(buf);
+       double l, s;
+       if (in >> l >> s)
+       {
+         _jv_ref_v.push_back(s);
+         _jv_ref_j.push_back(l);
+         i++;
+       }
+     }
+   }
+   ifs.close();
 }
 
 
@@ -98,8 +133,9 @@ PVModule::do_solve(void)
   sys.assemble();
 
   // write Spice netlist
-  string netlist = get_output_directory() + "/" + get_name() + "_spice.net";
+  string netlist = get_output_directory() + "/" + get_name() + "_spice.cir";
   ofstream of(netlist);
+  of << "* Modules scale simulation model \n" << std::endl;
 
   // idea: loop through matrix, and take coupling elements as resistors
   // DOF indices can be used as node numbers
@@ -136,6 +172,13 @@ PVModule::do_solve(void)
         {
           // create netlist of the elementary cell, scaled with area
           unsigned int bot_node = i + 1;
+		  
+		  // Defining a voltage-dependent current source based on the JV-Ref file and the area of the element
+		  
+		  of << "B" << i/2  << " " << i << " " << i+1 << " I=pwl(V("<< i << ")-V(" << i+1<< ")";
+		  for (int nm =0;nm<_jv_ref_v.size();nm++)
+			  of << ", " << _jv_ref_j[nm] << ", " << _jv_ref_v[nm] * area << "m";
+		  of << ")\n" << std::endl;
 
           // adjust next_node_id
         }
@@ -143,7 +186,8 @@ PVModule::do_solve(void)
       }
       else
       {
-        double resistance = 1.0 / values[j];
+        double resistance = 1.0 / values[j];   // ! There are some zero values inside  values[j] ! Should contain only non-zero values?
+		
 
         if (other_node < i)
         {
@@ -151,17 +195,31 @@ PVModule::do_solve(void)
           // this_node -- R -- other_node
           unsigned int this_node = i + 1;
           other_node += 1;
+		  if (values[j] != 0)
+			of<<"R" <<i/2 << "_" << this_node << "_" << other_node << "B " << this_node << " " << other_node << " " << -resistance <<"\n";
         }
         else
         {
           // add top sheet resistance or vertical connection
           // this_node -- R -- other_node
+		  unsigned int this_node = i;
+		  if (values[j] != 0)
+			of<<"R" <<i/2 << "_" << this_node << "_" << other_node << "T " << this_node << " " << other_node<< " " << -resistance <<"\n";
         }
       }
 
     }
   }
 
+  of << "* End of netlist \n";
+  of << "* Simulation command \n";
+  of << ".control \n";
+  of << "	wrdata "  << get_name() << "_Spice_output.txt";
+  for (int nm = 0; nm < n_dofs; nm++ )
+	  of << " V(" << nm << ")";
+  of << "\n";
+  of << ".endc \n";
+  of << ".end \n";
   of.close();
 
   // call ngspice

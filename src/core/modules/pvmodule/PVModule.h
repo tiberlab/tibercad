@@ -106,6 +106,9 @@ class TBDLLOCAL PVModule : public SimulationInterface
     MyAssembly _my_assembly;
 
     std::string _spice {"ngspice"};
+	
+	std::vector<double> _jv_ref_v;
+	std::vector<double> _jv_ref_j;
 
 };
 

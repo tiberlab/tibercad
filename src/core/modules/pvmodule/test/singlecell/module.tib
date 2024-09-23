@@ -12,7 +12,7 @@ Device
 
 Module pvmodule
 {
-
+  name = pvmodule_sim
   Physics
   {
 
@@ -31,9 +31,10 @@ Simulation
 
   temperature = 300
   
-  solve = pvmodule
+  solve = pvmodule_sim
   
   resultpath = output
+  searchpath = ./
 }
 
 
