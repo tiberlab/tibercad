@@ -163,8 +163,11 @@ private:
   //! Atomic basis in primitive vectors units
   std::vector<Atom> _lattice_basis;
 
-  //! Name of lattice type
+  //! Name of lattice type, as in input file
   std::string _lattice_type;
+
+  //! Bravais lattice in standard short form
+  std::string _bravais_lattice;
 
   //! Primitive vectors (lattice constant included). Columnwise
   Tensor2Gen _prim_vec {0};

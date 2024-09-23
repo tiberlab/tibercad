@@ -1,4 +1,5 @@
 #include "BulkCrystal.h"
+#include "CrystalDefs.h"
 #include "Database.h"
 #include "Alloy.h"
 #include "RuntimeException.h"
@@ -31,10 +32,6 @@ BulkCrystal::init(void)
  
   //Careful with the order of the calls, it's important
   read_database();
-
-  // TODO: standardize crystal names, using Standard Symbols
-  // defined in SpaceTransformation class
-  //if (_lattice_type.compare("orthorhombic") == 0)
 
   set_cell_vectors();
 
@@ -482,7 +479,9 @@ void
 BulkCrystal::print_info(void) const
 {
   std::ostringstream os;
-  os << "Lattice type : " << get_lattice_type() << std::endl;
+  os << "Bravais lattice : "
+     << CrystalDefs::bravais_short_to_long_name(_bravais_lattice)
+     << " (" << get_lattice_type() << ")" << std::endl;
   os << "a = " << _lattice_constant[0];
   if (_lattice_constant[1] != _lattice_constant[0])
     os << ", b = " << _lattice_constant[1];
@@ -620,6 +619,9 @@ BulkCrystal::read_database(void)
     //lattice constant are expressed in Angstrom
 
     Database db = _mat->get_database();
+    
+    _lattice_type = db.get("structure", "none");
+
     db.set_section("lattice");
     _lattice_constant[0] = db.get("a", 0.0) * 10.0;
     //if (_lattice_constant[0] == 0.0) Messages::error("At least "
@@ -633,9 +635,6 @@ BulkCrystal::read_database(void)
     _angles[2] = db.get("gamma", 90.0);
 
     db.set_section("atomistic_structure");
-
-    // NOTE: would like to change to top level "structure", as this duplicates that one
-    _lattice_type = db.get("lattice_type", "none");
 
     unsigned int n_basis_specie = db.get("n_basis_specie", 0);
 
@@ -753,6 +752,7 @@ BulkCrystal::read_database(void)
 
     db = &tmp_db;
     db->set_section("");
+
     db->set_section("atomistic_structure");
 
     unsigned int n_basis_specie = db->get("n_basis_specie", 0);
@@ -760,10 +760,12 @@ BulkCrystal::read_database(void)
     // Read in basis vectors
     Database* dbB = &(mat_alloy->get_component_B()->get_database());
     Database* dbA = &(mat_alloy->get_component_A()->get_database());
+
+    dbA->set_section("");
+    _lattice_type = dbA->get("structure", "none");
+
     dbB->set_section("atomistic_structure");
     dbA->set_section("atomistic_structure");
-    // NOTE: would like to change to top level "structure", as this duplicates that one
-    _lattice_type = dbA->get("lattice_type", "none");
 
     // the unique label for atoms in the primitive cell
     Atom::label_t label = 0;
@@ -823,6 +825,8 @@ BulkCrystal::read_database(void)
 
   } 
 
+  _bravais_lattice = CrystalDefs::get_bravais_lattice(_lattice_type);
+
 }
 
 
@@ -834,87 +838,78 @@ BulkCrystal::set_cell_vectors(void)
   _prim_vec = 0.0;
   _conv_vec = 0.0;
 
-  if (_lattice_type.compare("orthorhombic") == 0)
+  if (_bravais_lattice.at(0) == 'a')
   {
-
-    prim_vec_dir(1,1) = 1.0; prim_vec_dir(2,1) = 0; prim_vec_dir(3,1) = 0;
-    prim_vec_dir(1,2) = 0; prim_vec_dir(2,2) = 1.0; prim_vec_dir(3,2) = 0;
-    prim_vec_dir(1,3) = 0; prim_vec_dir(2,3) = 0; prim_vec_dir(3,3) = 1.0;
-
-    _prim_vec(1,1) = prim_vec_dir(1,1) * _lattice_constant[0];
-    _prim_vec(2,2) = prim_vec_dir(2,2) * _lattice_constant[1];
-    _prim_vec(3,3) = prim_vec_dir(3,3) * _lattice_constant[2];
-
-    _conv_vec = _prim_vec;
-
   }
 
-  else if (_lattice_type.compare("tetragonal") == 0)
+  else if (_bravais_lattice.at(0) == 'm')
   {
- 
-    assert((_lattice_constant[0] == _lattice_constant[1]));
+    // following the definitions in Ponce et al. Phys. Rev. Research 2, 033102 (2020)
+    _conv_vec(1,1) = _lattice_constant[0];
+    _conv_vec(2,1) = 0.0;
+    _conv_vec(3,1) = 0.0;
 
-    prim_vec_dir(1,1) = 1.0; prim_vec_dir(2,1) = 0; prim_vec_dir(3,1) = 0;
-    prim_vec_dir(1,2) = 0; prim_vec_dir(2,2) = 1.0; prim_vec_dir(3,2) = 0;
-    prim_vec_dir(1,3) = 0; prim_vec_dir(2,3) = 0; prim_vec_dir(3,3) = 1.0;
+    _conv_vec(1,2) = 0.0;
+    _conv_vec(2,2) = _lattice_constant[1];
+    _conv_vec(3,2) = 0.0;
 
-    _prim_vec(1,1) = prim_vec_dir(1,1) * _lattice_constant[0];
-    _prim_vec(2,2) = prim_vec_dir(2,2) * _lattice_constant[1];
-    _prim_vec(3,3) = prim_vec_dir(3,3) * _lattice_constant[2];
-
-    _conv_vec = _prim_vec;
-
+    double beta = M_PI * _angles[1] / 180;
+    _conv_vec(1,3) = _lattice_constant[2] * cos(beta);
+    _conv_vec(2,3) = 0.0;
+    _conv_vec(3,3) = _lattice_constant[2] * sin(beta);
   }
 
-  else if (_lattice_type.compare("cubic") == 0)
+  else if (_bravais_lattice.at(0) == 'o')
   {
+    _conv_vec(1,1) = _lattice_constant[0];
+    _conv_vec(2,2) = _lattice_constant[1];
+    _conv_vec(3,3) = _lattice_constant[2];
 
-    assert((_lattice_constant[0] == _lattice_constant[1]) &&
-           (_lattice_constant[1] == _lattice_constant[2]));
+    if (_bravais_lattice.at(1) == 'I')
+    {
+      Tensor1 prim_vec1 = 0.5 * (-_conv_vec(1) + _conv_vec(2) + _conv_vec(3));
+      Tensor1 prim_vec2 = 0.5 * ( _conv_vec(1) - _conv_vec(2) + _conv_vec(3));
+      Tensor1 prim_vec3 = 0.5 * ( _conv_vec(1) + _conv_vec(2) - _conv_vec(3));
 
-    prim_vec_dir(1,1) = 1.0 ; prim_vec_dir(2,1) = 0; prim_vec_dir(3,1) = 0;
-    prim_vec_dir(1,2) = 0; prim_vec_dir(2,2) = 1.0; prim_vec_dir(3,2) = 0;
-    prim_vec_dir(1,3) = 0; prim_vec_dir(2,3) = 0; prim_vec_dir(3,3) = 1.0;
+      _prim_vec(1, 1) = prim_vec1(1); _prim_vec(2, 1) = prim_vec1(2); _prim_vec(3, 1) = prim_vec1(3);
+      _prim_vec(1, 2) = prim_vec2(1); _prim_vec(2, 2) = prim_vec2(2); _prim_vec(3, 2) = prim_vec2(3);
+      _prim_vec(1, 3) = prim_vec3(1); _prim_vec(2, 3) = prim_vec3(2); _prim_vec(3, 3) = prim_vec3(3);
+    }
+    else if (_bravais_lattice.at(1) == 'F')
+    {
+      Tensor1 prim_vec1 = 0.5 * (_conv_vec(2) + _conv_vec(3));
+      Tensor1 prim_vec2 = 0.5 * (_conv_vec(1) + _conv_vec(3));
+      Tensor1 prim_vec3 = 0.5 * (_conv_vec(1) + _conv_vec(2));
 
-    _prim_vec = prim_vec_dir * _lattice_constant[0];
-
-    _conv_vec = _prim_vec;
-
+      _prim_vec(1, 1) = prim_vec1(1); _prim_vec(2, 1) = prim_vec1(2); _prim_vec(3, 1) = prim_vec1(3);
+      _prim_vec(1, 2) = prim_vec2(1); _prim_vec(2, 2) = prim_vec2(2); _prim_vec(3, 2) = prim_vec2(3);
+      _prim_vec(1, 3) = prim_vec3(1); _prim_vec(2, 3) = prim_vec3(2); _prim_vec(3, 3) = prim_vec3(3);
+    }
   }
 
-  else if (_lattice_type.compare("bcc") == 0)
+  else if (_bravais_lattice.at(0) == 'c')
   {
-
-    assert((_lattice_constant[0] == _lattice_constant[1]) && (_lattice_constant[1] == _lattice_constant[2]));
-
-    prim_vec_dir(1,1) = -0.5; prim_vec_dir(2,1) = 0.5; prim_vec_dir(3,1) = 0.5;
-    prim_vec_dir(1,2) = 0.5; prim_vec_dir(2,2) = -0.5; prim_vec_dir(3,2) = 0.5;
-    prim_vec_dir(1,3) = 0.5; prim_vec_dir(2,3) = 0.5; prim_vec_dir(3,3) = -0.5;
-
-    _prim_vec = prim_vec_dir * _lattice_constant[0];
-
-    _conv_vec = _lattice_constant[0] * Tensor2Gen(1.0);
-  }
-
-  else if ((_lattice_type.compare("fcc") == 0) ||
-           (_lattice_type.compare("zb") == 0))
-  {
-
-    assert((_lattice_constant[0] == _lattice_constant[1]) && (_lattice_constant[1] == _lattice_constant[2]));
-
-    prim_vec_dir(1,1) = 0.0; prim_vec_dir(2,1) = 0.5; prim_vec_dir(3,1) = 0.5;
-    prim_vec_dir(1,2) = 0.5; prim_vec_dir(2,2) = 0.0; prim_vec_dir(3,2) = 0.5;
-    prim_vec_dir(1,3) = 0.5; prim_vec_dir(2,3) = 0.5; prim_vec_dir(3,3) = 0.0;
-
-    _prim_vec = prim_vec_dir * _lattice_constant[0];
-
     _conv_vec = _lattice_constant[0] * Tensor2Gen(1.0);
 
+    if (_bravais_lattice.at(1) == 'I')
+    {
+      prim_vec_dir(1, 1) = -0.5; prim_vec_dir(2, 1) = 0.5; prim_vec_dir(3, 1) = 0.5;
+      prim_vec_dir(1, 2) = 0.5; prim_vec_dir(2, 2) = -0.5; prim_vec_dir(3, 2) = 0.5;
+      prim_vec_dir(1, 3) = 0.5; prim_vec_dir(2, 3) = 0.5; prim_vec_dir(3, 3) = -0.5;
+
+      _prim_vec = prim_vec_dir * _lattice_constant[0];
+    }
+    else if (_bravais_lattice.at(1) == 'F')
+    {
+      prim_vec_dir(1,1) = 0.0; prim_vec_dir(2,1) = 0.5; prim_vec_dir(3,1) = 0.5;
+      prim_vec_dir(1,2) = 0.5; prim_vec_dir(2,2) = 0.0; prim_vec_dir(3,2) = 0.5;
+      prim_vec_dir(1,3) = 0.5; prim_vec_dir(2,3) = 0.5; prim_vec_dir(3,3) = 0.0;
+
+      _prim_vec = prim_vec_dir * _lattice_constant[0];
+    }
   }
 
-  else if ((_lattice_type.compare("hexagonal") == 0) ||
-           (_lattice_type.compare("TMD") == 0) ||
-           (_lattice_type.compare("wz") == 0))
+  else if (_bravais_lattice.compare("hP") == 0)
   {
 
     assert(_lattice_constant[0] == _lattice_constant[1]);
@@ -923,64 +918,65 @@ BulkCrystal::set_cell_vectors(void)
     prim_vec_dir(1,2) = 0.5; prim_vec_dir(2,2) = sqrt(3.0) / 2.0; prim_vec_dir(3,2) = 0.0;
     prim_vec_dir(1,3) = 0.0; prim_vec_dir(2,3) = 0.0; prim_vec_dir(3,3) = 1.0;
 
-    _prim_vec(1,1) = prim_vec_dir(1,1) * _lattice_constant[0]; 
-    _prim_vec(2,1) = prim_vec_dir(2,1) * _lattice_constant[0];
-    _prim_vec(3,1) = prim_vec_dir(3,1) * _lattice_constant[0];
-    _prim_vec(1,2) = prim_vec_dir(1,2) * _lattice_constant[0]; 
-    _prim_vec(2,2) = prim_vec_dir(2,2) * _lattice_constant[0];
-    _prim_vec(3,2) = prim_vec_dir(3,2) * _lattice_constant[0];
-    _prim_vec(1,3) = prim_vec_dir(1,3) * _lattice_constant[2];
-    _prim_vec(2,3) = prim_vec_dir(2,3) * _lattice_constant[2];
-    _prim_vec(3,3) = prim_vec_dir(3,3) * _lattice_constant[2];
-
-    _conv_vec = _prim_vec;
+    _conv_vec(1,1) = prim_vec_dir(1,1) * _lattice_constant[0]; 
+    _conv_vec(2,1) = prim_vec_dir(2,1) * _lattice_constant[0];
+    _conv_vec(3,1) = prim_vec_dir(3,1) * _lattice_constant[0];
+    _conv_vec(1,2) = prim_vec_dir(1,2) * _lattice_constant[0]; 
+    _conv_vec(2,2) = prim_vec_dir(2,2) * _lattice_constant[0];
+    _conv_vec(3,2) = prim_vec_dir(3,2) * _lattice_constant[0];
+    _conv_vec(1,3) = prim_vec_dir(1,3) * _lattice_constant[2];
+    _conv_vec(2,3) = prim_vec_dir(2,3) * _lattice_constant[2];
+    _conv_vec(3,3) = prim_vec_dir(3,3) * _lattice_constant[2];
 
   }
   
-  else if (_lattice_type.compare("anatase") == 0)
-  {
+  else if (_bravais_lattice.compare("hR") == 0)
+  { 
+  }
 
+  else if (_bravais_lattice.at(0) == 't')
+  {
     assert(_lattice_constant[0] == _lattice_constant[1]);
 
-    prim_vec_dir(1,1) = 1.0; prim_vec_dir(2,1) = 0.0; prim_vec_dir(3,1) = 0.0;
-    prim_vec_dir(1,2) = 0.0; prim_vec_dir(2,2) = 1.0; prim_vec_dir(3,2) = 0.0;
-    prim_vec_dir(1,3) = 0.5; prim_vec_dir(2,3) = 0.5; prim_vec_dir(3,3) = 0.5;
-
-    _prim_vec(1,1) = prim_vec_dir(1,1) * _lattice_constant[0];
-    _prim_vec(2,2) = prim_vec_dir(2,2) * _lattice_constant[0];
-    _prim_vec(1,3) = prim_vec_dir(1,3) * _lattice_constant[0]; 
-    _prim_vec(2,3) = prim_vec_dir(2,3) * _lattice_constant[0]; 
-    _prim_vec(3,3) = prim_vec_dir(3,3) * _lattice_constant[2];
-
-    _conv_vec = _prim_vec;
-
-  }
-
-  else if ((_lattice_type.compare("monoclinic") == 0) ||
-           (_lattice_type.compare("C2/m") == 0))
-  {
-    // following the definitions in Ponce et al. Phys. Rev. Research 2, 033102 (2020)
-    _prim_vec(1,1) = 0.5 * _lattice_constant[0];
-    _prim_vec(2,1) = -0.5 * _lattice_constant[1];
-    _prim_vec(3,1) = 0.0;
-
-    _prim_vec(1,2) = 0.5 * _lattice_constant[0];
-    _prim_vec(2,2) = 0.5 * _lattice_constant[1];
-    _prim_vec(3,2) = 0.0;
-
-    double beta = M_PI * _angles[1] / 180;
-    _prim_vec(1,3) = _lattice_constant[2] * cos(beta);
-    _prim_vec(2,3) = 0.0;
-    _prim_vec(3,3) = _lattice_constant[2] * sin(beta);
-
-    _conv_vec = 0;
     _conv_vec(1,1) = _lattice_constant[0];
-    _conv_vec(2,2) = _lattice_constant[1];
-    _conv_vec(1,3) = _prim_vec(1,3);
-    _conv_vec(3,3) = _prim_vec(3,3);
+    _conv_vec(2,2) = _lattice_constant[0];
+    _conv_vec(3,3) = _lattice_constant[2];
 
+    if (_bravais_lattice.at(1) == 'I')
+    {
+      _prim_vec(1,1) = _conv_vec(1,1);
+      _prim_vec(2,1) = _conv_vec(2,1);
+      _prim_vec(3,1) = _conv_vec(3,1);
+      _prim_vec(1,2) = _conv_vec(1,2);
+      _prim_vec(2,2) = _conv_vec(2,2);
+      _prim_vec(3,2) = _conv_vec(3,2);
+      Tensor1 prim_vec = 0.5 * (_conv_vec(1) + _conv_vec(2) + _conv_vec(3));
+      _prim_vec(1,3) = prim_vec(1);
+      _prim_vec(2,3) = prim_vec(2);
+      _prim_vec(3,3) = prim_vec(3);
+    }
   }
 
+  
+  
+  if (_bravais_lattice.at(1) == 'S')
+  {
+    Tensor1 prim_vec1 = 0.5 * (_conv_vec(1) - _conv_vec(2));
+    Tensor1 prim_vec2 = 0.5 * (_conv_vec(1) + _conv_vec(2));
+    Tensor1 prim_vec3 = _conv_vec(3);
+    _prim_vec(1, 1) = prim_vec1(1); _prim_vec(2, 1) = prim_vec1(2); _prim_vec(3, 1) = prim_vec1(3);
+    _prim_vec(1, 2) = prim_vec2(1); _prim_vec(2, 2) = prim_vec2(2); _prim_vec(3, 2) = prim_vec2(3);
+    _prim_vec(1, 3) = prim_vec3(1); _prim_vec(2, 3) = prim_vec3(2); _prim_vec(3, 3) = prim_vec3(3);
+  }
+  else if (_bravais_lattice.at(1) == 'F')
+  {
+
+  }
+  else if ((_bravais_lattice.at(1) == 'P') ||
+           (_bravais_lattice.at(1) == 'R'))
+  {
+    _prim_vec = _conv_vec;
+  }
 
   // create reciprocal lattice vectors
   Tensor1 a = _conv_vec(1);
