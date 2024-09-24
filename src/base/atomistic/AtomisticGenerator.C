@@ -1681,27 +1681,6 @@ AtomisticGenerator::double_to_int_value_checked(Tensor1& a)
 }
 
 
-int
-AtomisticGenerator::gcd(int a, int b)
-{
-  //Calculate greater common denominator between integers
-  //(return 0 if gcd(a,0) or gcd(0,a)
-
-  //Added: if illegal operation gcd(a,0) performed return abs(a) (useful for reduce_vector routine)
-  if ((a == 0) || (b == 0)) return std::max( std::abs(a), std::abs(b) );
-
-  //by Derek Chandler, MEng, MIEE
-  int reminder;
-  do{
-    reminder = a % b;
-    if (reminder != 0)
-    {
-      a = b;
-      b = reminder;
-    }
-  } while (reminder);
-  return b;
-}
 
 
 Tensor1
@@ -1714,8 +1693,8 @@ AtomisticGenerator::reduce_vector(Tensor1 v)
   if (norm(v) < tol) return v;
 
   //Find the maximimum common denominator
-  gcd_tmp = gcd(double_to_int_cast_checked(v(1)),double_to_int_cast_checked(v(2)));
-  gcd_value = gcd(gcd_tmp,double_to_int_cast_checked(v(3)));
+  gcd_tmp = std::gcd(double_to_int_cast_checked(v(1)),double_to_int_cast_checked(v(2)));
+  gcd_value = std::gcd(gcd_tmp,double_to_int_cast_checked(v(3)));
   v_tmp = v / double(fabs(gcd_value));
   double_to_int_value_checked(v_tmp);
   return v_tmp;

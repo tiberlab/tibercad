@@ -172,9 +172,6 @@ protected:
   //! Calculate a reciprocal basis from a real basis
   static Tensor2Gen reciprocal(Tensor2Gen real_basis);
 
-  //! Find greater common denominator between two integers
-  static int gcd(int a, int b);
-
   //! Reduce vector, dividing its members for GCD (cast from double to int temporary)
   static Tensor1 reduce_vector(Tensor1 v);
 
