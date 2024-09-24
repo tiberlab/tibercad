@@ -1648,39 +1648,6 @@ AtomisticGenerator::compare_tol(double a, double b)
 }
 
 
-int
-AtomisticGenerator::double_to_int_cast_checked(double a)
-{
-  //Convert a double to the nearest integer, within a certain tolerance
-  int n;
-  if (std::abs(std::floor(a)-a) < std::abs(std::ceil(a) - a)) n = int(std::floor(a));
-  else n = int(std::ceil(a));
-  //assert (std::abs(double(n) - a) < tol);
-  return n;
-}
-
-
-double
-AtomisticGenerator::double_to_int_value_checked(double a)
-{
-  //Gives the double number equal to the integer nearest to a, within a certain tolerance
-  double b;
-  b = double(double_to_int_cast_checked(a));
-  return b;
-}
-
-
-void
-AtomisticGenerator::double_to_int_value_checked(Tensor1& a)
-{
-  double tmp;;
-
-  tmp = double_to_int_value_checked(a(1)); a(1) = tmp;
-  tmp = double_to_int_value_checked(a(2)); a(2) = tmp;
-  tmp = double_to_int_value_checked(a(3)); a(3) = tmp;
-}
-
-
 
 
 Tensor1
@@ -1693,10 +1660,12 @@ AtomisticGenerator::reduce_vector(Tensor1 v)
   if (norm(v) < tol) return v;
 
   //Find the maximimum common denominator
-  gcd_tmp = std::gcd(double_to_int_cast_checked(v(1)),double_to_int_cast_checked(v(2)));
-  gcd_value = std::gcd(gcd_tmp,double_to_int_cast_checked(v(3)));
+  gcd_tmp = std::gcd(std::lround(v(1)), std::lround(v(2)));
+  gcd_value = std::gcd(gcd_tmp, std::lround(v(3)));
   v_tmp = v / double(fabs(gcd_value));
-  double_to_int_value_checked(v_tmp);
+  v_tmp(1) = round(v_tmp(1));
+  v_tmp(2) = round(v_tmp(2));
+  v_tmp(3) = round(v_tmp(3));
   return v_tmp;
 
 }
@@ -1715,9 +1684,9 @@ void AtomisticGenerator::scale_to_int(Tensor1& a)
       (fabs(a(2) - round(a(2))) < tol) &&
       (fabs(a(3) - round(a(3))) < tol))
   {
-    a(1) = double_to_int_value_checked(a(1));
-    a(2) = double_to_int_value_checked(a(2));
-    a(3) = double_to_int_value_checked(a(3));
+    a(1) = round(a(1));
+    a(2) = round(a(2));
+    a(3) = round(a(3));
   }
   else
   {

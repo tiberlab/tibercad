@@ -181,15 +181,6 @@ protected:
   //! Comparison with tolerance
   static int compare_tol(double a, double b);
 
-  //! Casting from double to int, checking that fractional part is minor than an internal  tolerance
-  static int double_to_int_cast_checked(double a);
-
-  //! Reduce double to nearest integer and checked whatever difference is greater than internal tolerance
-  static double double_to_int_value_checked(double a);
-
-  //! Reduce double to nearest integer and checked whatever difference is greater than internal tolerance
-  static void double_to_int_value_checked(Tensor1& a);
-
   //! Scale a vector with fractional parts to all integer vector
   static void scale_to_int(Tensor1& a);
 
