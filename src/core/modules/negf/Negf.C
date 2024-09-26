@@ -59,6 +59,8 @@ using namespace Constants;
 using namespace libMesh;
 using namespace std;
 
+typedef std::vector<double> dvector;
+
 namespace {
   struct sortclass{
       sortclass(const std::vector<Atom>& atoms) : _atoms(atoms) {}
@@ -1385,10 +1387,10 @@ Negf::plot_LDOS(const std::vector<double>& energies,
     of << erg << ", ";
   of.close();
 
-  std::vector<DofField> coordinates(3, DofField(_device_n_dofs));
+  vector<dvector> coordinates(3, dvector(_device_n_dofs));
   get_coordinates(coordinates);
-  std::vector<double> x = coordinates[0];
-  
+  vector<double> x = coordinates[0];
+
   string ldosfile = get_output_directory() + "/LDOS/" + get_output_filename_prefix()
       + "_ldos" + mod + TiberCad::get_filename_suffix() + ".dat";
   of.open(ldosfile);
@@ -1423,15 +1425,14 @@ Negf::plot_LDOS(const std::vector<double>& energies,
       n_planes = 0;
       double plane_dos = 0.0;
       double atom_dist = 0.0;
-      
+
       for (int j = 0; j < npoints; j += bands)
       {
-      
-        double node_dos = 0.0;
-        for (int b = 0; b < bands; ++b)
-          node_dos += ldos[i][j + b];
 
-        // This approach works only if atoms were previously reordered according to x-coorrdinate
+        for (int b = 0; b < bands; ++b)
+          plane_dos += ldos[i][j + b];
+
+        // This approach works only if atoms were previously reordered according to x-coordinate
         atom_dist = std::abs(x[j / bands] - x[(j+bands)/bands]);
 
         if (atom_dist > eps)
@@ -1441,12 +1442,8 @@ Negf::plot_LDOS(const std::vector<double>& energies,
           of << plane_dos << ", ";
           plane_dos = 0.0;
         }
-        else
-        {
-          plane_dos += node_dos;
-        }
       }
-      
+
       of << "\n";
     }
   }
@@ -1887,7 +1884,7 @@ Negf::calculate_for_k_point(const Point& k_point,
 
      plot_LDOS(erg, ldos, os.str());
    }
-      
+
    finalize();
 
 }
@@ -3278,12 +3275,12 @@ Negf::set_kpoints(KspaceIntegration* k_int, bool reduced_BZ)
   get_distributed_kpoints(k_int, kweights, _local_k_indices, _global_abs_kpoints, reduced_BZ);
   
   std::vector<int> n_equivalent;
-  std::vector<DofField> global_frac_kpoints;
-  std::vector<DofField> frac_eqv_points;
+  vector<dvector> global_frac_kpoints;
+  vector<dvector> frac_eqv_points;
   if (reduced_BZ)
   {
     //Find equivalent points
-    std::vector<DofField> equivalent_points;
+    vector<dvector> equivalent_points;
     get_equivalent_points(negf_kspace, _global_abs_kpoints, equivalent_points, n_equivalent);
 
     // libNEGF wants kpoints in fractional coordinates
@@ -3315,7 +3312,7 @@ Negf::get_distributed_kpoints(KspaceIntegration* k_int, std::vector<double>& kwe
   {
     //Get kpoints and weights and distribute them
     map<Point, double> kpoints = k_int->get_kpoints_and_weights();
-    map<DofField, double> global_kpoints_map = k_int->broadcast_kpoints(_k_comm, kpoints);
+    map<dvector, double> global_kpoints_map = k_int->broadcast_kpoints(_k_comm, kpoints);
     local_k_indices = k_int->distribute_kpoints(_k_comm, global_kpoints_map, uneven_distributed);
 
     if (uneven_distributed)
@@ -3332,12 +3329,12 @@ Negf::get_distributed_kpoints(KspaceIntegration* k_int, std::vector<double>& kwe
 
     double degeneracy_fact = negf_kspace->get_degeneracy_factor();
 
-    map<DofField, double>::iterator kp_it(global_kpoints_map.begin());
-    const map<DofField, double>::iterator kp_end(global_kpoints_map.end());
+    map<dvector, double>::iterator kp_it(global_kpoints_map.begin());
+    const map<dvector, double>::iterator kp_end(global_kpoints_map.end());
     int i=0;
     for (; kp_it != kp_end; kp_it++)
     {
-      DofField kp = kp_it->first;
+      vector<double> kp = kp_it->first;
       double w = kp_it->second;
       kweights[i] = w / degeneracy_fact;
       global_abs_kpoints[i] = kp;
@@ -3369,7 +3366,7 @@ Negf::get_distributed_kpoints(KspaceIntegration* k_int, std::vector<double>& kwe
       for (auto&& eq_pt : eq_points)  extended_kpoints[eq_pt] = w / degeneracy_fact;
     }
 
-    map<DofField, double> global_kpoints_map = k_int->broadcast_kpoints(_k_comm, extended_kpoints);
+    map<dvector, double> global_kpoints_map = k_int->broadcast_kpoints(_k_comm, extended_kpoints);
     local_k_indices = k_int->distribute_kpoints(_k_comm, global_kpoints_map, uneven_distributed);
 
     if (uneven_distributed)
@@ -3384,12 +3381,12 @@ Negf::get_distributed_kpoints(KspaceIntegration* k_int, std::vector<double>& kwe
     kweights.resize(global_kpoints_map.size());
     global_abs_kpoints.resize(global_kpoints_map.size());
 
-    map<DofField, double>::iterator kp_it(global_kpoints_map.begin());
-    const map<DofField, double>::iterator kp_end(global_kpoints_map.end());
+    map<dvector, double>::iterator kp_it(global_kpoints_map.begin());
+    const map<dvector, double>::iterator kp_end(global_kpoints_map.end());
     int i=0;
     for (; kp_it != kp_end; kp_it++)
     {
-      DofField kp = kp_it->first;
+      vector<double> kp = kp_it->first;
       double w = kp_it->second;
       kweights[i] = w;
       global_abs_kpoints[i] = kp;
@@ -3398,10 +3395,10 @@ Negf::get_distributed_kpoints(KspaceIntegration* k_int, std::vector<double>& kwe
   }
 }
 
-std::vector<DofField> 
-Negf::transform_to_fractional_coordinates(Kspace* kspace, const std::vector<DofField>& abs_kpoints)
+vector<dvector> 
+Negf::transform_to_fractional_coordinates(Kspace* kspace, const vector<dvector>& abs_kpoints)
 {
-  std::vector<DofField> frac_kpoints(abs_kpoints.size(), DofField(3, 0.0));
+  vector<dvector> frac_kpoints(abs_kpoints.size(), dvector(3, 0.0));
   int k = 0;
 
   for (auto&& kp_std : abs_kpoints)
@@ -3417,8 +3414,8 @@ Negf::transform_to_fractional_coordinates(Kspace* kspace, const std::vector<DofF
 
 
 void
-Negf::get_equivalent_points(Kspace* kspace, const vector<DofField> kpoints, 
-      vector<DofField>& equiv_points, vector<int>& n_equiv)
+Negf::get_equivalent_points(Kspace* kspace, const vector<dvector> kpoints, 
+      vector<dvector>& equiv_points, vector<int>& n_equiv)
 {
 
   n_equiv.resize(kpoints.size());
@@ -3426,7 +3423,7 @@ Negf::get_equivalent_points(Kspace* kspace, const vector<DofField> kpoints,
   for(int i=0; i<kpoints.size(); i++)
   { 
     
-    DofField kp_std = kpoints[i];
+    vector<double> kp_std = kpoints[i];
     const Point kp(kp_std[0], kp_std[1], kp_std[2]);
 
     // Get the equivalent points for a given kpoint
@@ -3441,7 +3438,7 @@ Negf::get_equivalent_points(Kspace* kspace, const vector<DofField> kpoints,
     {
       for (auto&& p : points)
       {
-        DofField std_p(3);
+        vector<double> std_p(3);
         for (int j=0; j<3; j++) std_p[j] = p(j);
         equiv_points.push_back(std_p);
       }
@@ -3453,8 +3450,8 @@ Negf::get_equivalent_points(Kspace* kspace, const vector<DofField> kpoints,
 }
 
 
-std::vector<DofField>
-Negf::get_lattice_vectors(std::vector<double>& r1, std::vector<double>& r2)
+vector<dvector>
+Negf::get_lattice_vectors(vector<double>& r1, vector<double>& r2)
 {
   Tensor1 vec1_real;
   Tensor1 vec2_real;
@@ -3468,7 +3465,7 @@ Negf::get_lattice_vectors(std::vector<double>& r1, std::vector<double>& r2)
   Tensor1 vec3_real = vectorProduct(vec1_real, vec2_real);
   vec3_real = vec3_real/norm(vec3_real);
 
-  std::vector<DofField> lattice_vectors(3);
+  vector<dvector> lattice_vectors(3);
   // libNEGF wants them in column order
   // 1 -> y, 2 -> z
   for (int j = 0; j < 3; j++)
@@ -3483,8 +3480,8 @@ Negf::get_lattice_vectors(std::vector<double>& r1, std::vector<double>& r2)
 }
 
 
-std::vector<DofField>
-Negf::get_lattice_vectors(std::vector<double>& r1)
+std::vector<dvector>
+Negf::get_lattice_vectors(vector<double>& r1)
 {
   Tensor1 vec1_real;
 
@@ -3499,7 +3496,7 @@ Negf::get_lattice_vectors(std::vector<double>& r1)
   Tensor1 vec3_real = vectorProduct(vec1_real, vec2_real);
   vec3_real = vec3_real/norm(vec3_real);
 
-  std::vector<DofField> lattice_vectors(3);
+  vector<dvector> lattice_vectors(3);
   // libNEGF wants them in column order
   // 1 -> z
   for (int j = 0; j < 3; j++)
@@ -3517,7 +3514,7 @@ Negf::get_lattice_vectors(std::vector<double>& r1)
 void
 Negf::init_basis(void)
 {
-  std::vector<DofField> coordinates(3);
+  vector<dvector> coordinates(3);
   for (int i = 0; i < 3; i++) coordinates[i].resize(_device_n_dofs);
   get_coordinates(coordinates);
 
@@ -3540,7 +3537,7 @@ Negf::init_basis(void)
 
 
 void
-Negf::get_coordinates(vector<DofField>& coordinates)
+Negf::get_coordinates(vector<dvector>& coordinates)
 {
   if (_hamil_type == "efa")
   {
@@ -3746,52 +3743,64 @@ Negf::setup_interactions(void)
 
     int Natoms = _device_n_dofs;
     int Norbs = _ext_module->get_number_of_bands();
-    std::vector<double> coup(Natoms*Norbs, inter.coupling);
+    vector<double> coup(Natoms*Norbs, inter.coupling);
 
     switch (inter.model)
     {
       case DEPHDIAGONAL:
+      {
         os << "Setting local fully diagonal elastic dephasing model" << std::endl;
         Messages::info(os.str()); os.str("");
         _libnegf->set_elph_dephasing(coup, inter.scba_niter);
         if ( inter.scba_tol < elastic_tol ) elastic_tol = inter.scba_tol;
         break;
+      }
       case DEPHATOMBLOCK:
+      {
         os << "Setting local block diagonal (BD) elastic dephasing model" << std::endl;
         Messages::info(os.str()); os.str("");
         _libnegf->set_elph_block_dephasing(coup, inter.orbsperatm, inter.scba_niter);
         if ( inter.scba_tol < elastic_tol ) elastic_tol = inter.scba_tol;
         break;
+      }
       case DEPHOVERLAP:
+      {
         os << "Setting overlap mask (OM) block diagonal elastic dephasing model" << std::endl;
         Messages::info(os.str()); os.str("");
         _libnegf->set_elph_s_dephasing(coup, inter.orbsperatm, inter.scba_niter);
         if ( inter.scba_tol < elastic_tol ) elastic_tol = inter.scba_tol;
         break;
+      }
       case POLAROPTICAL:
+      {
         os << "Setting polar-optical inelastic scattering model" << std::endl;
         Messages::info(os.str()); os.str("");
         _libnegf->set_elph_polaroptical(coup, inter.wq, kbT, deltaz, inter.eps_r, 
                   inter.eps_inf, inter.q0, cell_area, inter.scba_niter, inter.tTridiagonal);
         if ( inter.scba_tol < inelastic_tol ) inelastic_tol = inter.scba_tol;
         break;
+      }
       case NONPOLAROPTICAL:
+      {
         os << "Setting non polar-optical inelastic scattering model" << std::endl;
         Messages::info(os.str()); os.str("");
         _libnegf->set_elph_nonpolaroptical(coup, inter.wq, kbT, deltaz, inter.D0, 
                   cell_area, inter.scba_niter, inter.tTridiagonal);
         if ( inter.scba_tol < inelastic_tol ) inelastic_tol = inter.scba_tol;
         break;
-      
+      }
       default:
-        os << "Electron-phonon model in Scattering block " << i << " is not yet supported" << std::endl;
+      {
+        os << "Model in Scattering block " << i << " is not yet supported" << std::endl;
         throw std::runtime_error(os.str());
         break;
+      }
     }
 
   }
   _libnegf->set_scba_tolerances(elastic_tol, inelastic_tol);
 }
+
 
 void
 Negf::set_hamiltonians(void)
@@ -3800,7 +3809,7 @@ Negf::set_hamiltonians(void)
   for (_iK=0; _iK < _n_Hk; _iK++)
   {
     int k_index = _local_k_indices[_iK];
-    DofField kpoint = _global_abs_kpoints[k_index];
+    vector<double> kpoint = _global_abs_kpoints[k_index];
     for(short i=0;i<3;i++) _k_vec(i) = kpoint[i];
     setup_hamil();
     finalize();
