@@ -5,6 +5,8 @@
 
 #include "InitFailedException.h"
 
+#include "tensor.h"
+
 #include <typeinfo>
 #include <string>
 #include <vector>
@@ -94,6 +96,12 @@ class Utils
      */
     static void extract_tensor(const std::string& input, libMesh::RealTensor& tensor);
 
+
+    //! Scale a vector with fractional parts to all integer vector
+    static void scale_to_int(Tensor1& a, double tol = 0.001);
+
+    //! Scale 3 vectors (as tensor) with fractional parts to all integer vector
+    static void scale_to_int(Tensor2Gen &a, double tol = 0.001);
 
 
     //! Tokenize a string

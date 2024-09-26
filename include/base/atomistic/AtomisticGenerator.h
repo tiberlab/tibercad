@@ -172,21 +172,6 @@ protected:
   //! Calculate a reciprocal basis from a real basis
   static Tensor2Gen reciprocal(Tensor2Gen real_basis);
 
-  //! Reduce vector, dividing its members for GCD (cast from double to int temporary)
-  static Tensor1 reduce_vector(Tensor1 v);
-
-  //! Reduce vectors contained in a 2D tensor
-  static Tensor2Gen reduce_vector(Tensor2Gen a);
-
-  //! Comparison with tolerance
-  static int compare_tol(double a, double b);
-
-  //! Scale a vector with fractional parts to all integer vector
-  static void scale_to_int(Tensor1& a);
-
-  //! Scale 3 vectors (as tensor) with fractional parts to all integer vector
-  static void scale_to_int(Tensor2Gen& a);
-
   //! fold atoms into conventional cell
   static bool fold_in_cell(Atom& atom, const Point& orig, const Point& a1, const Point& a2, const Point& a3, bool fold=true);
 
@@ -214,9 +199,6 @@ private:
    * Used for internal purpose
    */
   std::vector<bool> _belong_to_structure;
-
-  //! Tolerance defined internally for casting and comparison
-  static const double tol;
 
   //! Scaling value respect to TiberCAD units (usually Angstrom instead of micron)
   double scale;

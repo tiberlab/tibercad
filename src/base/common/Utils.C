@@ -16,6 +16,7 @@
 #include <tensor_value.h>
 
 #include <cctype>
+#include <numeric>
 #include <iostream>
 #include <iomanip>
 #include <sstream>
@@ -339,6 +340,89 @@ Utils::trim(std::string& str, const std::string& chars)
   }
   else str.erase(str.begin(), str.end());
   */
+}
+
+
+
+void
+Utils::scale_to_int(Tensor1& a, double tol)
+{
+  //Expand a double vector to a vector having same direction but integer values
+  //If vector is not in a reduced form (having integer values with gcd > 1) it's reduced
+  //If input is a zero vector, a zero vector is returned
+
+  //Check if a is already almost integer
+  if ((fabs(a(1) - round(a(1))) < tol) &&
+      (fabs(a(2) - round(a(2))) < tol) &&
+      (fabs(a(3) - round(a(3))) < tol))
+  {
+    a(1) = round(a(1));
+    a(2) = round(a(2));
+    a(3) = round(a(3));
+  }
+  else
+  {
+    // this tolerance allows for 0.2 error on scaled vector
+    // NOTE: tol has been increased in order to allow for "strange" growth directions,
+    // where strict periodicity would be obtained only for very large supercell sizes.
+    // This gives problems in structure generation. So I prefer to allow a more "fuzzy"
+    // periodicity, also because usually the structure would be passivated, or maybe
+    // relaxation solves the issue related to non-ideal periodicity.
+
+    // first scale smallest element to 1
+    double v1 = abs(a(1));
+    if (v1 < 1e-6) v1 = 1.0;
+    double v2 = abs(a(2));
+    if (v2 < 1e-6) v2 = 1.0;
+    double v3 = abs(a(3));
+    if (v3 < 1e-6) v3 = 1.0;
+    double minval = min(v1, min(v2, v3));
+    a /= minval;
+
+    tol = 0.2;
+
+    int i = 0;
+    Tensor1 a_tmp;
+
+    do{
+      i = i + 1;
+      a_tmp = a * i;
+    } while ((fabs(a_tmp(1) - round(a_tmp(1))) >= tol) ||
+             (fabs(a_tmp(2) - round(a_tmp(2))) >= tol) ||
+             (fabs(a_tmp(3) - round(a_tmp(3))) >= tol));
+
+    a(1) = a_tmp(1); a(2) = a_tmp(2); a(3) = a_tmp(3);
+
+  }
+
+  int gcd_tmp = std::gcd(std::lround(a(1)), std::lround(a(2)));
+  int gcd_value = std::gcd(gcd_tmp, std::lround(a(3)));
+  a = a / double(fabs(gcd_value));
+  a(1) = round(a(1));
+  a(2) = round(a(2));
+  a(3) = round(a(3));
+
+}
+
+
+void
+Utils::scale_to_int(Tensor2Gen& a, double tol)
+{
+  //Same of scale_to_int with Tensor1 argument, considering the columns of a 2-rank tensor
+  Tensor1 tmp;
+  Tensor1 select_vect(0);
+
+  select_vect(1) = 1.0;  tmp = a * select_vect;
+  scale_to_int(tmp, tol);
+  a(1,1) = tmp(1); a(2,1) = tmp(2); a(3,1) = tmp(3);
+
+  select_vect(1) = 0.0; select_vect(2) = 1.0; tmp = a * select_vect;
+  scale_to_int(tmp, tol);
+  a(1,2) = tmp(1); a(2,2) = tmp(2); a(3,2) = tmp(3);
+
+  select_vect(2) = 0.0; select_vect(3) = 1.0; tmp = a * select_vect;
+  scale_to_int(tmp, tol);
+  a(1,3) = tmp(1); a(2,3) = tmp(2); a(3,3) = tmp(3);
 }
 
 

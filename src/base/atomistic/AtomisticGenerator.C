@@ -48,7 +48,6 @@ AtomisticGenerator::~AtomisticGenerator(void)
 }
 
 
-const double AtomisticGenerator::tol = 5e-2;
 
 AtomisticGenerator*
 AtomisticGenerator::create(AtomisticStructure* const as, unsigned int dimension)
@@ -823,7 +822,7 @@ void AtomisticGenerator::make_conv_cell()
   // then the columns of U are scaled to integers 
   //
   _conv_prim = inv(rotated_prim_vec);
-  scale_to_int(_conv_prim);
+  Utils::scale_to_int(_conv_prim);
  
   // now the matrix nij = _conv_prim
   // so the orthogonal cell vectors are 
@@ -1638,143 +1637,7 @@ AtomisticGenerator::reciprocal(Tensor2Gen real_basis)
 }
 
 
-int
-AtomisticGenerator::compare_tol(double a, double b)
-{
-  //Comparison routine with a tolerance defined as internal constant.
-  //If absolute value of difference between a and b is minor than tolerance,
-  //a and b are considered equal
-  return(std::fabs(a-b) < tol);
-}
 
-
-
-
-Tensor1
-AtomisticGenerator::reduce_vector(Tensor1 v)
-{
-  //Reduce a vector of double containing integer values to its minimal form
-  Tensor1 v_tmp;
-  int gcd_tmp,gcd_value;
-
-  if (norm(v) < tol) return v;
-
-  //Find the maximimum common denominator
-  gcd_tmp = std::gcd(std::lround(v(1)), std::lround(v(2)));
-  gcd_value = std::gcd(gcd_tmp, std::lround(v(3)));
-  v_tmp = v / double(fabs(gcd_value));
-  v_tmp(1) = round(v_tmp(1));
-  v_tmp(2) = round(v_tmp(2));
-  v_tmp(3) = round(v_tmp(3));
-  return v_tmp;
-
-}
-
-
-void AtomisticGenerator::scale_to_int(Tensor1& a)
-{
-  //Expand a double vector to a vector having same direction but integer values
-  //If vector is not in a reduced form (having integer values with gcd > 1) it's reduced
-  //If input is a zero vector, a zero vector is returned
-
-  double tol = 0.001;
-
-  //Check if a is already almost integer
-  if ((fabs(a(1) - round(a(1))) < tol) &&
-      (fabs(a(2) - round(a(2))) < tol) &&
-      (fabs(a(3) - round(a(3))) < tol))
-  {
-    a(1) = round(a(1));
-    a(2) = round(a(2));
-    a(3) = round(a(3));
-  }
-  else
-  {
-    // this tolerance allows for 0.2 error on scaled vector
-    // NOTE: tol has been increased in order to allow for "strange" growth directions,
-    // where strict periodicity would be obtained only for very large supercell sizes.
-    // This gives problems in structure generation. So I prefer to allow a more "fuzzy"
-    // periodicity, also because usually the structure would be passivated, or maybe
-    // relaxation solves the issue related to non-ideal periodicity.
-
-    // first scale smallest element to 1
-    double v1 = abs(a(1));
-    if (v1 < 1e-6) v1 = 1.0;
-    double v2 = abs(a(2));
-    if (v2 < 1e-6) v2 = 1.0;
-    double v3 = abs(a(3));
-    if (v3 < 1e-6) v3 = 1.0;
-    double minval = min(v1, min(v2, v3));
-    a /= minval;
-
-    tol = 0.2;
-
-    int i = 0;
-    Tensor1 a_tmp;
-
-    do{
-      i = i + 1;
-      a_tmp = a * i;
-    } while ((fabs(a_tmp(1) - round(a_tmp(1))) >= tol) ||
-             (fabs(a_tmp(2) - round(a_tmp(2))) >= tol) ||
-             (fabs(a_tmp(3) - round(a_tmp(3))) >= tol));
-
-    a(1) = a_tmp(1); a(2) = a_tmp(2); a(3) = a_tmp(3);
-
-  }
-
-  a = reduce_vector(a);
-
-}
-
-
-
-void
-AtomisticGenerator::scale_to_int(Tensor2Gen& a)
-{
-  //Same of scale_to_int with Tensor1 argument, considering the columns of a 2-rank tensor
-  Tensor1 tmp;
-  Tensor1 select_vect(0);
-
-  select_vect(1) = 1.0;  tmp = a * select_vect;
-  scale_to_int(tmp);
-  a(1,1) = tmp(1); a(2,1) = tmp(2); a(3,1) = tmp(3);
-
-  select_vect(1) = 0.0; select_vect(2) = 1.0; tmp = a * select_vect;
-  scale_to_int(tmp);
-  a(1,2) = tmp(1); a(2,2) = tmp(2); a(3,2) = tmp(3);
-
-  select_vect(2) = 0.0; select_vect(3) = 1.0; tmp = a * select_vect;
-  scale_to_int(tmp);
-  a(1,3) = tmp(1); a(2,3) = tmp(2); a(3,3) = tmp(3);
-}
-
-
-Tensor2Gen
-AtomisticGenerator::reduce_vector(Tensor2Gen a)
-{
-  //Same of reduce_vector with Tensor1 argument, considering the columns of a 2-rank tensor
-  Tensor1 tmp1,tmp2;
-  Tensor1 select_vect(0);
-  Tensor2Gen b(0);
-
-  //Select vector a1
-  select_vect(1) = 1.0;  tmp1 = a * select_vect;
-  tmp2 = reduce_vector(tmp1);
-  b(1,1) = tmp2(1); b(2,1) = tmp2(2); b(3,1) = tmp2(3);
-
-  //Select vector a2
-  select_vect(1) = 0.0; select_vect(2) = 1.0; tmp1 = a * select_vect;
-  tmp2 = reduce_vector(tmp1);
-  b(1,2) = tmp2(1); b(2,2) = tmp2(2); b(3,2) = tmp2(3);
-
-  //Select vector a3
-  select_vect(2) = 0.0; select_vect(3) = 1.0; tmp1 = a * select_vect;
-  tmp2 = reduce_vector(tmp1);
-  b(1,3) = tmp2(1); b(2,3) = tmp2(2); b(3,3) = tmp2(3);
-  return b;
-
-}
 
   
 void
