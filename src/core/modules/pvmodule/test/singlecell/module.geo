@@ -19,3 +19,11 @@ Plane Surface(1) = {1};
 Physical Surface("active") = {1};
 Physical Line("anode") = {2};
 Physical Line("cathode") = {4};
+
+N = 11;
+Transfinite Curve {1} = N Using Progression 1;
+Transfinite Curve {2} = N Using Progression 1;
+Transfinite Curve {3} = N Using Progression 1;
+Transfinite Curve {4} = N Using Progression 1;
+Transfinite Surface {1};
+Recombine Surface {1};

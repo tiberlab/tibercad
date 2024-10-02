@@ -67,6 +67,10 @@ PVModule::do_init(void)
   system.add_vector("currdens");
   system.attach_assemble_object(_my_assembly);
   system.init();
+
+  // we use cm as length units here
+  double mesh_units = 100 * get_mesh_units();
+  get_scaling().set_calc_mesh_units(mesh_units);
 }
 
 
@@ -153,8 +157,7 @@ PVModule::do_solve(void)
   vector<double> values;
 
   // new we loop through the matrix rows. Conductance values that are
-  // = 0 (no connection) should not appear in the matrix and so are
-  // automatically excluded
+  // < 1e-7 (no connection) can be ignored
   for (unsigned int i = 0; i < n_dofs; i += 2)
   {
     // extract information from system matrix
@@ -172,40 +175,41 @@ PVModule::do_solve(void)
         {
           // create netlist of the elementary cell, scaled with area
           unsigned int bot_node = i + 1;
-		  
-		  // Defining a voltage-dependent current source based on the JV-Ref file and the area of the element
-		  
-		  of << "B" << i/2  << " " << i << " " << i+1 << " I=pwl(V("<< i << ")-V(" << i+1<< ")";
-		  for (int nm =0;nm<_jv_ref_v.size();nm++)
-			  of << ", " << _jv_ref_j[nm] << ", " << _jv_ref_v[nm] * area << "m";
-		  of << ")\n" << std::endl;
+
+          // Defining a voltage-dependent current source based on the
+          // JV-Ref file and the area of the element
+
+          of << "B" << i / 2 << " " << i << " " << bot_node
+             << " I=pwl(V(" << i << ")-V(" << i + 1 << ")";
+
+          for (int nm = 0; nm < _jv_ref_v.size(); nm++)
+            of << ", " << _jv_ref_j[nm] << ", " << _jv_ref_v[nm] * area << "m";
+
+          of << ")\n" << std::endl;
 
           // adjust next_node_id
         }
 
       }
-      else
+      else if (values[j] > 1e-7)
       {
-        double resistance = 1.0 / values[j];   // ! There are some zero values inside  values[j] ! Should contain only non-zero values?
-		
+        // add bottom or top sheet resistance
+        // this_node -- R -- other_node
+
+        double resistance = 1.0 / values[j];   
+		    unsigned int this_node = i;
+        string t_or_b = "T ";
 
         if (other_node < i)
         {
-          // add bottom sheet resistance
-          // this_node -- R -- other_node
-          unsigned int this_node = i + 1;
-          other_node += 1;
-		  if (values[j] != 0)
-			of<<"R" <<i/2 << "_" << this_node << "_" << other_node << "B " << this_node << " " << other_node << " " << -resistance <<"\n";
+          // bottom
+          this_node++;
+          other_node++;
+          t_or_b = "B ";
         }
-        else
-        {
-          // add top sheet resistance or vertical connection
-          // this_node -- R -- other_node
-		  unsigned int this_node = i;
-		  if (values[j] != 0)
-			of<<"R" <<i/2 << "_" << this_node << "_" << other_node << "T " << this_node << " " << other_node<< " " << -resistance <<"\n";
-        }
+
+        of << "R" << i / 2 << "_" << this_node << "_" << other_node
+           << t_or_b << this_node << " " << other_node << " " << resistance << "\n";
       }
 
     }
@@ -344,7 +348,7 @@ PVModule::assemble(void)
   FEType fe_type = dof_map.variable_type(vtop);
 
   // the finite element
-  unique_ptr<FEBase> fe(build_finite_element(dim, fe_type, true));
+  unique_ptr<FEBase> fe(build_finite_element(dim, fe_type));
   unique_ptr<QBase> qrule(QBase::build(QTRAP, dim));
   fe->attach_quadrature_rule(qrule.get());
 
@@ -355,7 +359,7 @@ PVModule::assemble(void)
 
 /*
   // the surface finite element
-  unique_ptr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
+  unique_ptr<FEBase> fe_face(build_finite_element(dim, fe_type));
   unique_ptr<QBase> qface(QBase::build(myopts.quadrature_type, dim-1, myopts.integration_order));
   fe_face->attach_quadrature_rule(qface.get());
 
@@ -368,7 +372,9 @@ PVModule::assemble(void)
   vector<unsigned int> dof_indices;
 
   DenseMatrix<Number> Ke;
-  DenseVector<Number> Fe;
+  //DenseVector<Number> Fe;
+
+  DenseSubMatrix<Number> Ket(Ke);
 
 
   MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
@@ -385,7 +391,9 @@ PVModule::assemble(void)
 
     // resize the element matrix/rhs (does also zero them out)
     Ke.resize(n_dofs, n_dofs);
-    Fe.resize(n_dofs);
+    //Fe.resize(n_dofs);
+
+    Ket.reposition(0, 0, n_dofs/2, n_dofs/2);
 
     PVModuleModel& mod = *get_bulk_model<PVModuleModel>(elem);
 
@@ -420,23 +428,30 @@ PVModule::assemble(void)
       {
         for (unsigned int j = i + 1; j < n_dofs/2; j++)
         {
+          unsigned int ii = i;
+          unsigned int jj = j;
+          if (dof_indices[j] < dof_indices[i])
+          {
+            ii = j;
+            jj = i;
+          }
+
           // top layer conductance contribution
-          Ke(i, j) += JxW[qp] * (dphi[i][qp] * (stop * dphi[j][qp]));
+          Ke(ii, jj) -= JxW[qp] * (dphi[i][qp] * (stop * dphi[j][qp]));
 
           // bottom layer conductance contribution
-          //Ke(i+n_dofs/2, j+n_dofs/2) += JxW[qp] * (dphi[i][qp] * (sbot * dphi[j][qp]));
-          Ke(j, i) += JxW[qp] * (dphi[i][qp] * (sbot * dphi[j][qp]));
-        }
+          // Ke(i+n_dofs/2, j+n_dofs/2) += JxW[qp] * (dphi[i][qp] * (sbot * dphi[j][qp]));
+          Ke(jj, ii) -= JxW[qp] * (dphi[i][qp] * (sbot * dphi[j][qp]));
+          }
 
-        // active are contribution
-        if (reg_type == PVModuleModel::ACTIVE)
-          Ke(i, i) += JxW[qp];
+          // active area contribution
+          if (reg_type == PVModuleModel::ACTIVE)
+            Ke(i, i) += JxW[qp] * phi[i][qp] * phi[i][qp];
 
-        // vertical connection conductance contribution
-        if (reg_type == PVModuleModel::P2)
-          Ke(i, i+n_dofs/2) += JxW[qp] * sconn;
+          // vertical connection conductance contribution
+          if (reg_type == PVModuleModel::P2)
+            Ke(i, i + n_dofs / 2) += JxW[qp] * sconn * phi[i][qp] * phi[i][qp];
       }
-
     }
 
 /*
@@ -476,7 +491,7 @@ PVModule::assemble(void)
     }
     */
 
-    dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
+    //dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
     system.matrix->add_matrix(Ke, dof_indices);
     //system.rhs->add_vector(Fe, dof_indices);
 
