@@ -398,7 +398,7 @@ sub run_test($) {
   my $failure = 0;
   if (not $options{'testonly'}) {
     if ($command ne "") {
-      $failure = system("$command");
+      $failure = system("$command > /dev/null 2>&1");
     }
     else {
       $failure = run_executable($infile);
