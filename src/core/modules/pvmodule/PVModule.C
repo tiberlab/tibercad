@@ -169,6 +169,7 @@ PVModule::do_solve(void)
 
       if (other_node == i)
       {
+        // the area is given in cm^2
         double area = values[j];
 
         if (area > 0)
