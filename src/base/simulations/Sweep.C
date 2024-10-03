@@ -6,7 +6,6 @@
 #include "Variable.h"
 #include "Messages.h"
 
-#include "boost/lexical_cast.hpp"
 
 #include <fstream>
 #include <algorithm>

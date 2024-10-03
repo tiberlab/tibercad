@@ -1,6 +1,7 @@
 // $Id$
 
 #include "SpaceTransformation.h"
+#include "CrystalDefs.h"
 
 #include "libmesh/point.h"
 #include "libmesh/tensor_value.h"
@@ -15,6 +16,8 @@ using namespace libMesh;
 namespace {
 
   // The basic generator matrices
+  // sigma is written as s
+  // a trailing p indicates a prime (')
   map<string, RealTensor> generators = {
 
       {"E",   RealTensor(1, 0, 0,
@@ -78,80 +81,48 @@ namespace {
                          0, 0, -1)},
   };
 
-  // the International Symbols of crystal classes
-  // ID = 0 is reserved, if no symmetry is given. It map to C1 
-  vector<string> is_to_id = {
-    "",
-    "1", "-1",
-    "2", "m", "2/m",
-    "222", "mm2", "mmm", "4", "-4", "4/m", "422", "4mm", "-42m", "4/mmm",
-    "3", "-3", "32", "3m", "-3m",
-    "6", "-6", "6/m", "622", "6mm", "-6m2", "6/mmm",
-    "23", "m3", "432", "-43m", "m3m"
-  }; 
 
-  // a map from Schoenflies to internal indices
-  map<string, unsigned int> schoenflies_to_id = {
-    {"C1", 1},
-    {"Ci", 2},
-    {"S2", 2},
 
-    {"C2", 3},
-    {"Cs", 4},
-    {"C1h", 4},
-    {"C2h", 5},
-
-    {"D2", 6},
-    {"V", 6},
-    {"C2v", 7},
-    {"D2h", 8},
-    {"Vh", 8},
-
-    {"C4", 9},
-    {"S4", 10},
-    {"C4h", 11},
-    {"D4", 12},
-    {"C4v", 13},
-    {"D2d", 14},
-    {"Vd", 14},
-    {"D4h", 15},
-
-    {"C3", 16},
-    {"C6i", 17},
-    {"S6", 17},
-    {"D3", 18},
-    {"C3v", 19},
-    {"D3d", 20},
-
-    {"C6", 21},
-    {"S3", 22},
-    {"C3h", 22},
-    {"C6h", 23},
-    {"D6", 24},
-    {"C6v", 25},
-    {"D3h", 26},
-    {"D6h", 27},
-
-    {"T", 28},
-    {"Th", 29},
-    {"O", 30},
-    {"Td", 31},
-    {"Oh", 32}
-  }; 
 
   // list of generators for known symmetries
   map<string, vector<string>> symmetries = {
-      {"C4", { "C4" } },
+      {"1", { } },
+      {"-1", { "i" } },
+      {"2", { "C2" } },
+      {"m", { "sh" } },
+      {"2/m", { "C2", "sh" } },
 
-      {"C6", { "C6" } },
-      {"C6v", { "C6", "sn" } },
-      {"D6h", { "C6", "sn", "sv" } },
+      {"222", { "C2", "C2p" } },
+      {"mm2", { "C2", "sn" } },
+      {"mmm", { "sh", "sn", "snp" } },
 
-      {"T",  { "C2", "P" } },
-      {"Th", { "C2", "Pi" } },
-      {"O",  { "C4", "P" } },
-      {"Td", { "C4i", "P" } },
-      {"Oh", { "C4", "Pi" } },
+      {"4", { "C4" } },
+      {"-4", { "C4i" } },
+      {"4/m", { "C4", "sh" } },
+      {"422", { "C4", "snp" } },
+      {"4mm", { "C4", "sn" } },
+      {"-42m", { "C4i", "snp" } },
+      {"4/mmm", { "C4", "sn", "sh" } },
+
+      {"3", { "C3" } },
+      {"-3", { "C3i" } },
+      {"32", { "C3", "snp" } },
+      {"3m", { "C3", "sn" } },
+      {"-3m", { "C3i", "sn" } },
+
+      {"6", { "C6" } },
+      {"-6", { "C6i" } },
+      {"6/m", { "C6", "sh" } },
+      {"622", { "C6", "C2p" } },
+      {"6mm", { "C6", "sn" } },
+      {"-6m2", { "C6i", "sn" } },
+      {"6/mmm", { "C6", "sn", "sh" } },
+
+      {"23",  { "C2", "P" } },
+      {"m3", { "C2", "Pi" } },
+      {"432",  { "C4", "P" } },
+      {"-43m", { "C4i", "P" } },
+      {"m3m", { "C4", "Pi" } },
   };
 
   // list of transformation matrices for used symmetries
@@ -205,12 +176,14 @@ SpaceTransformation::create_star(const string& symmetry,
                                  const Point& point,
                                  vector<Point>& star)
 {
+  // convert given symmetry to International Symbol
+  string isym = CrystalDefs::convert_to_international_symbol(symmetry);
 
-  auto& trafos = transformations[symmetry];
+  auto& trafos = transformations[isym];
 
 
   if (trafos.empty())
-    generate_transformations(symmetry);
+    generate_transformations(isym);
 
   star.clear();
 
@@ -229,6 +202,7 @@ SpaceTransformation::create_star(const string& symmetry,
 void
 SpaceTransformation::generate_transformations(const std::string& symmetry)
 {
+
   auto& trafos = transformations[symmetry];
   trafos.push_back(generators["E"]);
 

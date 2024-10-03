@@ -71,7 +71,7 @@ CrystalDefs::_crystal_classes =
  
   "tetrahedral", "diploidal", "gyroidal", "hextetrahedral", "hexoctahedral",
 
-  "none"
+  ""
 };
 
 const std::vector<std::string>
@@ -157,6 +157,49 @@ CrystalDefs::_space_groups =
 };
 
 
+std::string
+CrystalDefs::convert_to_international_symbol(const std::string& symmetry)
+{
+  auto is = std::find(_international_sym.begin(),
+                      _international_sym.end(), symmetry);
+  if (is != _international_sym.end())
+    return *is;
+
+  std::string sym = schoenflies_to_IS(symmetry);
+
+  if (sym == "")
+    sym = spacegroup_to_IS(symmetry);
+
+  if (sym == "")
+    sym = crystal_class_to_IS(symmetry);
+
+  if (sym == "")
+  {
+    std::string lat = get_bravais_lattice(symmetry);
+
+    if (lat == "aP") sym = "-1";
+
+    if (lat == "mP") sym = "2/m";
+    if (lat == "mS") sym = "2/m";
+
+    if (lat == "oP") sym = "mmm";
+    if (lat == "oS") sym = "mmm";
+    if (lat == "oI") sym = "mmm";
+    if (lat == "oF") sym = "mmm";
+
+    if (lat == "tP") sym = "4/mmm";
+    if (lat == "tI") sym = "4/mmm";
+
+    if (lat == "hP") sym = "6/mmm";
+    if (lat == "hR") sym = "-3m";
+
+    if (lat == "cP") sym = "m3m";
+    if (lat == "cI") sym = "m3m";
+    if (lat == "cF") sym = "m3m";
+  }
+
+  return sym;
+}
 
 std::string
 CrystalDefs::get_bravais_lattice(const std::string& name)
@@ -212,7 +255,7 @@ CrystalDefs::get_bravais_lattice(const std::string& name)
       (name == "cF"))
       return "cF";
 
-  return "none";
+  return "";
 }
 
 
@@ -220,7 +263,7 @@ CrystalDefs::get_bravais_lattice(const std::string& name)
 std::string
 CrystalDefs::bravais_short_to_long_name(const std::string& in)
 {
-  std::string name = "none";
+  std::string name = "";
 
   switch (in.at(1))
   {
@@ -281,7 +324,7 @@ CrystalDefs::bravais_short_to_long_name(const std::string& in)
 std::string 
 CrystalDefs::IS_to_crystal_system(const std::string &int_sym)
 {
-  std::string system = "none";
+  std::string system = "";
 
   auto it = find(_international_sym.begin(), _international_sym.end(), int_sym);
   unsigned int id = std::distance(it, _international_sym.begin());
@@ -338,6 +381,20 @@ CrystalDefs::IS_to_crystal_class(const std::string& int_sym)
   }
 
   return cc;
+}
+
+std::string
+CrystalDefs::crystal_class_to_IS(const std::string& cclass)
+{
+  std::string sym;
+
+  auto it = find(_crystal_classes.begin(), _crystal_classes.end(), cclass);
+  if (it != _crystal_classes.end())
+  {
+    sym = _international_sym[std::distance(it, _crystal_classes.begin())]; 
+  }
+
+  return sym;
 }
 
 unsigned int

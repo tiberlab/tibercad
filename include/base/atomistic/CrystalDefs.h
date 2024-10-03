@@ -10,6 +10,9 @@ class CrystalDefs {
 
     static bool is_cation(const std::string material, const Specie sp);
 
+    //! Convert any type of symmetry name to its International Symbol
+    static std::string convert_to_international_symbol(const std::string& symmetry);
+
     //! Convert Schoenflies notation to International Symbol
     static std::string schoenflies_to_IS(const std::string& schoenflies);
 
@@ -18,6 +21,9 @@ class CrystalDefs {
 
     //! Convert International Symbol to crystal class
     static std::string IS_to_crystal_class(const std::string& int_sym);
+
+    //! Convert crystal class to International Symbol
+    static std::string crystal_class_to_IS(const std::string& cclass);
 
     //! Convert International Symbol to crystal system
     static std::string IS_to_crystal_system(const std::string& int_sym);

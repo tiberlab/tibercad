@@ -70,7 +70,7 @@ class SpaceTransformation
      * for the provided input point. The resulting vector does not contain
      * duplicate points. Operations are done in reference coordinates.
      *
-     * \param symmetry the space group (in Schoenflies notation)
+     * \param symmetry the space group (in any notation)
      * \param point original point
      * \param star the vector containing all equivalent points
      */
@@ -83,6 +83,7 @@ class SpaceTransformation
 
     /*! \brief Generate all transformation matrices for given symmetry
      *
+     * \param symmetry Symmetry as International Symbol
      */
     static void generate_transformations(const std::string& symmetry);
 
