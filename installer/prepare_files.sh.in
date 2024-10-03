@@ -32,9 +32,9 @@ make_windows_package () {
   fi
   cp -r ${topdir}/Tutorials/[^.]* ${files}/examples
   # for now:
-  rm -rf ${topdir}/${ARCH}/modules/dd_generic
-  rm -rf ${topdir}/${ARCH}/modules/excitons
-  rm -rf ${files}/examples/Modules
+  rm -rf ${files}/examples/Modules/PoissonT*
+  rm -rf ${files}/examples/Modules/PoissonD*
+  rm -rf ${files}/examples/Modules/DG*
   #rm -rf ${files}/examples/Example_1[7-9]
   #rm -rf ${files}/examples/Example_2[0-9]
   find ${files} -type d -name ".svn*" -exec rm -rf {} \;
