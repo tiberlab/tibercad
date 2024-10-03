@@ -21,6 +21,18 @@ Module pvmodule
     bottom_sheet_resistivity = 5
   }
 
+  Contact anode
+  {
+    type = source
+    layer = top
+  }
+
+  Contact cathode
+  {
+    type = ground
+    layer = bottom
+  }
+
 }
 
 Simulation

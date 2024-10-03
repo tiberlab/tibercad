@@ -2,7 +2,7 @@
 
 #include "PVModule.h"
 #include "PVModuleModel.h"
-//#include "PVModuleBoundaryModel.h"
+#include "PVModuleBoundaryModel.h"
 #include "TiberLinearSystem.h"
 #include "Messages.h"
 #include "Database.h"
@@ -127,6 +127,14 @@ PVModule::do_setup_solution_variables(void)
   declare_solution(CurrentDensity, REAL, NODES, "A/cm^2");
 }
 
+void
+PVModule::check_contact_node(unsigned int &id) const
+{
+  if (_gnd_ids.count(id))
+    id = *_gnd_ids.begin();
+  else if (_src_ids.count(id))
+    id = *_src_ids.begin();
+}
 
 void
 PVModule::do_solve(void)
@@ -175,18 +183,27 @@ PVModule::do_solve(void)
         if (area > 0)
         {
           // create netlist of the elementary cell, scaled with area
+          unsigned int this_node = i;
           unsigned int bot_node = i + 1;
+
+          // substitute node ids, if they are on contacts
+          check_contact_node(this_node);
+          check_contact_node(bot_node);
 
           // Defining a voltage-dependent current source based on the
           // JV-Ref file and the area of the element
 
-          of << "B" << i / 2 << " " << i << " " << bot_node
-             << " I=pwl(V(" << i << ")-V(" << i + 1 << ")";
+          if (this_node != bot_node)
+          {
+            of << "B" << i / 2 << " " << this_node << " " << bot_node
+               << " I=pwl(V(" << this_node << ")-V(" << bot_node << ")";
 
-          for (int nm = 0; nm < _jv_ref_v.size(); nm++)
-            of << ", " << _jv_ref_j[nm] << ", " << _jv_ref_v[nm] * area << "m";
+            for (int nm = 0; nm < _jv_ref_v.size(); nm++)
+              of << ", " << _jv_ref_j[nm] << ", " << _jv_ref_v[nm] * area << "m";
 
-          of << ")\n" << std::endl;
+            of << ")\n"
+               << std::endl;
+          }
 
           // adjust next_node_id
         }
@@ -209,8 +226,13 @@ PVModule::do_solve(void)
           t_or_b = "B ";
         }
 
-        of << "R" << i / 2 << "_" << this_node << "_" << other_node
-           << t_or_b << this_node << " " << other_node << " " << resistance << "\n";
+        // substitute node ids, if they are on contacts
+        check_contact_node(this_node);
+        check_contact_node(other_node);
+
+        if (this_node != other_node)
+          of << "R" << i / 2 << "_" << this_node << "_" << other_node
+             << t_or_b << this_node << " " << other_node << " " << resistance << "\n";
       }
 
     }
@@ -226,6 +248,14 @@ PVModule::do_solve(void)
   of << ".endc \n";
   of << ".end \n";
   of.close();
+
+  //for (auto&& a : _gnd_ids)
+  //  std::cerr  << a << " ";
+  //std::cerr << "\n\n";
+
+  //for (auto&& a : _src_ids)
+  //  std::cerr  << a << " ";
+  //std::cerr << "\n";
 
   // call ngspice
   Messages::info("calling Spice: " + _spice);
@@ -254,7 +284,6 @@ PVModule::create_bulk_model(const ModelOptions& options,
     const Material* mat) const
 {
   return PVModuleModel::create(mat, options);
-  return(nullptr);
 }
 
 
@@ -263,8 +292,7 @@ PhysicalModel*
 PVModule::create_boundary_model(const ModelOptions& options,
     const MaterialBoundary* boundary) const
 {
-  //return PVModuleBoundaryModel::create(boundary, options);
-  return(nullptr);
+  return PVModuleBoundaryModel::create(boundary, options);
 }
 
 
@@ -371,6 +399,8 @@ PVModule::assemble(void)
   const vector<Point>& normal = fe_face->get_normals();
 */
   vector<unsigned int> dof_indices;
+  vector<unsigned int> dof_indices_top;
+  vector<unsigned int> dof_indices_bot;
 
   DenseMatrix<Number> Ke;
   //DenseVector<Number> Fe;
@@ -387,6 +417,9 @@ PVModule::assemble(void)
 
     dof_map.dof_indices(elem, dof_indices);
     const unsigned int n_dofs = dof_indices.size();
+
+    dof_map.dof_indices(elem, dof_indices_top, vtop);
+    dof_map.dof_indices(elem, dof_indices_bot, vbot);
 
     fe->reinit(elem);
 
@@ -455,7 +488,7 @@ PVModule::assemble(void)
       }
     }
 
-/*
+
     // the sides
     for (unsigned int s = 0; s < elem->n_sides(); s++)
     {
@@ -464,33 +497,28 @@ PVModule::assemble(void)
 
       if (mod_int != NULL)
       {
-        fe_face->reinit(elem, s);
+        //auto side = elem->side_ptr(s);
 
-        for (unsigned int qp = 0; qp < qface->n_points(); qp++)
+        PVModuleBoundaryModel::ContactType type = mod_int->get_contact_type();
+        PVModuleBoundaryModel::ContactLayer layer = mod_int->get_contact_layer();
+
+        for (unsigned int n = 0; n < elem->n_nodes(); n++)
         {
-          mod_int->calculate(elem, s, qface_point[qp]);
-
-          double a, b, c;
-          mod_int->get_coefficients(a, b, c);
-
-          // we use a penalty approach here for its simplicity
-          if ((b < 1e-10) && (b >= 0)) b = 1e-10;
-          else if ((b > -1e-10) && (b<= 0)) b = -1e-10;
-
-          a /= b;
-          c /= b;
-
-          for (unsigned int i = 0; i < n_dofs; i++)
+          if (elem->is_node_on_side(n, s))
           {
-            for (unsigned int j = 0; j < n_dofs; j++)
-              Ke(i, j) += a * JxW_face[qp] * (phi_face[i][qp] * phi_face[j][qp]);
-
-            Fe(i) += c * JxW_face[qp] * phi_face[i][qp];
+            unsigned int dof_id = dof_indices_top[n];
+            if (layer == PVModuleBoundaryModel::BOTTOM)
+              dof_id = dof_indices_bot[n];
+            
+            if (type == PVModuleBoundaryModel::GND)
+              _gnd_ids.insert(dof_id);
+            else
+              _src_ids.insert(dof_id);
           }
         }
       }
     }
-    */
+    
 
     //dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
     system.matrix->add_matrix(Ke, dof_indices);

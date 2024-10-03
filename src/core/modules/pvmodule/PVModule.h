@@ -88,6 +88,9 @@ class TBDLLOCAL PVModule : public SimulationInterface
     //! The assembly function
     void assemble(void);
 
+    //! Check node id if it is a contact and substitute
+    void check_contact_node(unsigned int& id) const;
+
     // A local helper class to be used to access assembly routine
     class MyAssembly : public TiberLinearSystem::Assembly
     {
@@ -107,8 +110,14 @@ class TBDLLOCAL PVModule : public SimulationInterface
 
     std::string _spice {"ngspice"};
 	
-	std::vector<double> _jv_ref_v;
-	std::vector<double> _jv_ref_j;
+	  std::vector<double> _jv_ref_v;
+	  std::vector<double> _jv_ref_j;
+
+    //! The node ids for ground nodes
+    std::set<unsigned int> _gnd_ids {0};
+
+    //! The node ids for the voltage source
+    std::set<unsigned int> _src_ids;
 
 };
 

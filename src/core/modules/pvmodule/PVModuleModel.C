@@ -53,10 +53,10 @@ void
 PVModuleModel::do_init(void)
 {
   string type = get_option("region_type", "active");
-  if (type == "active") _region_type == ACTIVE;
-  if (type == "P1") _region_type == P1;
-  if (type == "P2") _region_type == P2;
-  if (type == "P3") _region_type == P3;
+  if (type == "active") _region_type = ACTIVE;
+  if (type == "P1") _region_type = P1;
+  if (type == "P2") _region_type = P2;
+  if (type == "P3") _region_type = P3;
 
   _top_rsheet = get_option("top_sheet_resistivity", _top_rsheet);
   _bottom_rsheet = get_option("bottom_sheet_resistivity", _bottom_rsheet);
