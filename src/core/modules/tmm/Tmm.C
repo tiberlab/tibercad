@@ -8,7 +8,9 @@
 #include "Device.h"
 #include "Messages.h"
 #include "Database.h"
+#include <filesystem>
 #include <cctype>
+#include <cmath>
 
 
 #include "libmesh/dof_map.h"
@@ -275,6 +277,8 @@ void Tmm::reset_global_variables()
     _kr.clear();
 
     _solutions.clear();
+	
+	_green_vector.clear();
 }
 
 void Tmm::dipole_source(double & A_P, double & A_N, double Mode, double Oraintation, double lambda, double cos_phi_inter)
@@ -417,20 +421,6 @@ void Tmm::solving_internal_source(vector<complex<double>> & E_int_f, vector<comp
 
   //*****************************loops to to sum up electric fields******************************
 
-  // for (double nm = 0; nm<dipole_loc-1;nm++)
-  // {
-    // E_int_f[nm] = E_int_f_l[nm+1];
-    // E_int_b[nm] = E_int_b_l[nm+1];
-  // }
-  // for (double nm = E_int_f_r.size()-1; nm>dipole_loc-1;nm--)
-  // {
-    // E_int_f[nm] = E_int_f_r[nm-1];
-    // E_int_b[nm] = E_int_b_r[nm-1];
-  // }
-  // E_int_f[dipole_loc-1] = (E_int_f[dipole_loc-2]+E_int_f[dipole_loc])/2;
-  // E_int_b[dipole_loc-1] = (E_int_b[dipole_loc-2]+E_int_b[dipole_loc])/2;
-  // for (double nm =0 ; nm<n_real.size();nm++)
-	  // std::cout<< nm <<"  " << real(E_int_f_l[nm]) <<","<<  real(E_int_b_l[nm]) <<","<<  real(E_int_f_r[nm]) <<","<<  real(E_int_b_r[nm]) <<std::endl;
   for (double nm = 0; nm<dipole_loc;nm++)
   {
     E_int_f[nm] = E_int_f_l[nm+1];
@@ -695,8 +685,43 @@ Tmm::parse_options(void)
       }
     }
     ifs.close();
-    //for (double nm =0;nm<=_eye_wl.size();nm++)
-      //std::cout<<_eye_wl[nm]<<"     "<<_eye_value[nm]<<std::endl;
+	
+	
+  Database db_spec;
+  ifstream ifs_spect;
+  db_spec.set_material("Emission-spectrum", get_option("Emission-spectrum-file", ""));
+  ifs_spect.open(db_spec.get_data_file().c_str());
+  if (ifs_spect.fail() || !ifs_spect.good())
+    throw InitFailedException("Cannot read spectrum "
+        "from file " + db_spec.get_data_file());
+
+  i = 0;
+    while (ifs_spect.good())
+    {
+      if (i == _eye_wl.size())
+      {
+        size_t n_new = _eye_wl.size() + 100;
+        _emission_wl.reserve(n_new);
+        _emission_value.reserve(n_new);
+      }
+      ifs_spect.getline(buf, buf_len);
+      if (buf[0] != '#')
+      {
+        istringstream in(buf);
+        double l, s;
+        if (in >> l >> s)
+        {
+          _emission_value.push_back(s);
+          // conversion from nm^-1 to J
+          _emission_wl.push_back(l);
+          i++;
+        }
+      }
+    }
+    ifs.close();
+	std::cout<<"emission sectrum: "<<std::endl;
+    for (double nm =0;nm<_emission_wl.size();nm++)
+      std::cout<<_emission_wl[nm]<<"     "<<_emission_value[nm]<<std::endl;
 
 }
 
@@ -739,7 +764,7 @@ Tmm::do_solve(void)
   NumericVector<libMesh::Number>& solution = system.get_local_solution_vector();
   solution.close();
   solution.zero();
-  
+  double dipole_sim_done = 0;
   reset_global_variables();
 
 
@@ -783,9 +808,12 @@ Tmm::do_solve(void)
   vector<double> eye_interp;
 
   vector<std::string> Names;
+  
+  vector<double> dipoles_power_global;
 
   double external_source_simulation=0;
   double internal_source_simulation=0;
+  
   vector<complex<double>> Ki;
   if (_wavelength_vector.empty())
     for (double i = _down_lambda; i<= _up_lambda; i += _wavelength_steps)
@@ -1001,6 +1029,9 @@ Tmm::do_solve(void)
 		_Abs.resize(n_real.size());
         _Internal_Intensity.resize(n_real.size());
 		_Energy_loss_internal.resize(n_real.size());
+		_green_vector.resize(n_real.size());
+
+    
 		 
     }
    
@@ -1311,19 +1342,36 @@ Tmm::do_solve(void)
 			dipole_pow_list.push_back(_dipole_power[dipole_num]);  // split the power
 			internal_source_simulation = 1;
 		  }
-	// std::cout<<lambda<<"  "<<internal_source_simulation<<std::endl;	  
+	// std::cout<<lambda<<"  "<<internal_source_simulation<<std::endl;	
+
+    double dipole_wl_index; //index of lambda in emiison speectrum file
 	if (!dipole_power.empty()) 
+	{
 		for (double elem=0; elem < dipole_power.size(); ++elem)
 			if (abs(dipole_power[elem]) >= 1e-18)      // minimum intensity to solve for 
 			{
 				dipole_loc_list.push_back(elem);
 				dipole_pow_list.push_back(dipole_power[elem]); // split the power
-				internal_source_simulation = 1;
+					for (int el=0;el<_emission_wl.size();el++)
+						if (lambda == int(_emission_wl[el]) && _emission_value[el] >=0.001 )
+						{
+							internal_source_simulation = 1;
+							dipole_wl_index = el;
+						}
 			    // std::cout<<lambda<<"  "<<"pow is : "<<dipole_power[elem]<<std::endl;
 			}
+
+	}
+	//store the emission rate in vector to avoid repeating simulation
+	// of teh internal source.
+	if (dipoles_power_global.empty() && internal_source_simulation)
+			for (double nm =0 ; nm <dipole_power.size(); nm++)
+				dipoles_power_global.push_back(dipole_pow_list[nm]) ;
+	
+	
 			
-	// std::cout<<lambda<<"  "<<internal_source_simulation<<std::endl;
-    if (internal_source_simulation)
+	//std::cout<<lambda<<"  "<<internal_source_simulation<<std::endl;
+    if (internal_source_simulation && !_green_vector_solved)  //solve if there is intrnal emission and the _green_vector is not ready yet
     {
 		_Internal_Wavelength.push_back(lambda);
 	 // if(!_dipole_coordinate.empty())
@@ -1352,19 +1400,20 @@ Tmm::do_solve(void)
       double A_N ; 
       
       double rnd = 1;
-      double phase_step;
+      double phase_step=0;
       
-      for (int nm = 0; nm<Incoh.size(); ++nm)
-        if(Incoh[nm]==1)
-          rnd = 5;
+      //for (int nm = 0; nm<Incoh.size(); ++nm)
+      //  if(Incoh[nm]==1)
+      //    rnd = 5;
       
-      phase_step = 2 * M_PI / rnd;
+      //phase_step = 2 * M_PI / rnd;
       
       _Fraction_ratio.resize(_steps);
       _kr.resize(_steps);
       _angle.resize(_steps);
       _Poynting_front.resize(_steps);
       _Poynting_back.resize(_steps);
+	  std::cout<<"solving internal source for :" <<lambda<<"  nm"<<std::endl;
 
 
 
@@ -1388,7 +1437,7 @@ Tmm::do_solve(void)
           for (double dipole_num=0 ;dipole_num<dipole_loc_list.size();++ dipole_num)
           {
             double dipole_loc = dipole_loc_list[dipole_num];
-            // std::cout<<"Solving for internal source --> dipole element is "<<dipole_loc<<" power is : "<<dipole_pow_list[dipole_num] <<" lambda is  "<<lambda <<std::endl;
+            //std::cout<<"Solving for internal source --> dipole element is "<<dipole_loc<<" power is : "<<dipole_pow_list[dipole_num] <<" lambda is  "<<lambda <<std::endl;
             complex<double> Ns (n_real[dipole_loc], n_imag[dipole_loc]);
 			// std::cout<<"Ns is : "<<Ns <<std::endl;
            //*****************************loop for radial wave numbers******************************
@@ -1399,12 +1448,14 @@ Tmm::do_solve(void)
               double Mode = _polarization_vec[polarization_num];    //TE Mode
               double Oraintation = _oraintation_vec[oraintation_num]; //Vertical Mode
               kr = kr_vec[kr_num];
-              // std::cout<<"kr is : "<<kr << "  , cnt is "<< cnt <<std::endl;
+              //std::cout<<"kr is : "<<kr << "  , cnt is "<< cnt <<std::endl;
 
               if (dipole_num == 0)
               {
                 _kr[cnt] = kr;
                 _Fraction_ratio[cnt] = abs(kr/ks);
+				for (int nm = 0; nm < dipole_power.size(); ++nm) 
+					_green_vector[nm].resize(n_real.size());
               }
                 
               complex<double> ki_s    ((2*M_PI*n_real[dipole_loc]) / lambda , (2*M_PI*n_imag[dipole_loc])  / lambda);		  
@@ -1423,9 +1474,11 @@ Tmm::do_solve(void)
               vector<complex<double>> E_int_b(n_real.size());
               vector<complex<double>> E_int(n_real.size());
 			  vector<complex<double>> E_int_norm(n_real.size());
+			  
               for (int iter = 0; iter <rnd; ++iter )    // loop over added phases
               {
                 solving_internal_source(E_int_f, E_int_b ,n_real,n_imag, l, lambda, dipole_loc,  kr, Mode, A_P,phase_step * iter);
+				//std::cout<<"phase_step * iter" << "	 =	"<< phase_step * iter<<std::endl;
                 for (double nm =0; nm < E_int_f.size(); ++nm)
                   E_int[nm] =  E_int[nm] + (E_int_f[nm]+E_int_b[nm])/rnd;
               }    
@@ -1474,14 +1527,13 @@ Tmm::do_solve(void)
 
                   }
 				  
-
                 
 
                 //*************a loop to take integral of the absorption and Poynting vector over wavelengths, polarization and orientation******
 
                 for (double nm = 0; nm < poynting.size(); ++nm)
                 {
-				           _Internal_Poynting   [nm] += poynting[nm] * coefficient;
+				   _Internal_Poynting   [nm] += poynting[nm] * coefficient;
                    _Energy_loss_internal[nm] += energy_loss[nm];
                 }	
 
@@ -1501,90 +1553,48 @@ Tmm::do_solve(void)
                 }
 
                //*****************************Assigning Output Power of two ends of the device ******************************
-         //_Poynting_back [cnt] +=  poynting[0] * coefficient;
-         //_Poynting_front[cnt] +=  poynting[n_real.size()] * coefficient;
+                //_Poynting_back [cnt] +=  poynting[0] * coefficient;
+                //_Poynting_front[cnt] +=  poynting[n_real.size()] * coefficient;
 
-
-       // std::cout<<"///////////////////////////////////////////////////////////////////////"<<std::endl;
 				vector<double> Abs(n_real.size());
-        double P0,Pend,Pdip, extraction, absorb;
-        P0 = abs(internal_power[0]);
-        Pend = abs(internal_power[n_real.size()]);
+                double P0,Pend,Pdip, extraction, absorb;
+                P0 = abs(internal_power[0]);
+                Pend = abs(internal_power[n_real.size()]);
+		        
+                Pdip = abs(internal_power[dipole_loc]) + abs(internal_power[dipole_loc-2]);
+		        
+                if (Pdip != 0)
+                {
+                  extraction = (P0+Pend) / Pdip;
+                 _Poynting_back [cnt] +=  P0 / Pdip;
+                 _Poynting_front[cnt] +=  Pend / Pdip;
+                }
+                else
+                {
+                  extraction = 0;
+                }
+                absorb = 1 - extraction ;
 
-        Pdip = abs(internal_power[dipole_loc]) + abs(internal_power[dipole_loc-2]);
-
-        if (Pdip != 0)
-        {
-          extraction = (P0+Pend) / Pdip;
-         _Poynting_back [cnt] +=  P0 / Pdip;
-         _Poynting_front[cnt] +=  Pend / Pdip;
-        }
-        else
-        {
-          extraction = 0;
-        }
-        absorb = 1 - extraction ;
-
-				//
-        //std::cout<<"kr is :"<<kr<<std::endl;
-				//double I0,Iend,Idip, extraction, absorb;
-				//I0 = n_real[0] * pow(abs(E_int[0]), 2) ;
-				//Iend = n_real[n_real.size()-1] * pow(abs(E_int[n_real.size()-1]), 2) ;
-        //std::cout<<"I0: "<<I0<< " Iend : " << Iend<<std::endl;
-//
-//				//Idip = n_real[dipole_loc] * pow(abs(E_int[dipole_loc]), 2) ;
-//
-//        //std::cout<<"Idip is : "<<Idip<<std::endl;
-//        //std::cout<<"Idip[-1] is : "<<n_real[dipole_loc-1] * pow(abs(E_int[dipole_loc-1]), 2)<<std::endl;
-//        //std::cout<<"Idip[+1] is : "<<n_real[dipole_loc+1] * pow(abs(E_int[dipole_loc+1]), 2)<<std::endl;
-//
-//				//extraction = (I0 + Iend) / Idip / 2 ;
-//				//absorb = 1 - extraction;
-				//std::cout<<"extraction: "<<extraction<< " absorb : " << absorb<<std::endl;
-
-
-        //if (absorb < -10 || kr == 0)
-        //  for (int nmj=0; nmj<n_real.size();nmj++)
-        //    std::cout<<nmj<<":   "<<n_real[nmj] * pow(abs(E_int[nmj]), 2)<<std::endl;
-
-				
-				// for (double nm = 0; nm < poynting.size()-1; ++nm)
-					// std::cout<<nm<<"  : "<< poynting[nm]<< "   &  "<< _Internal_Intensity[nm]<< std::endl;
 				double sum =0;
 				for (double nm = 1; nm < n_real.size(); ++nm)
 				{
 					Abs[nm] = 0.5 * c0 * 1e-9 * e0 * n_real[nm] * pow(abs(E_int[nm]), 2) * n_imag[nm];
 					sum += Abs[nm];
 				}
-				// std::cout<<"sum is " << sum <<std::endl;
+
 				for (double nm = 1; nm < n_real.size(); ++nm)
+				{
 					if (sum != 0)
-						Abs[nm] = Abs[nm] * absorb * dipole_pow_list[dipole_num] /sum;
-					
-				
-				
-				// for (double nm = 1; nm < dipole_loc-1; ++nm)
-					// Abs[nm] = abs(poynting[nm] - poynting[nm-1])/( abs(poynting[dipole_loc-2]) + abs(poynting[dipole_loc]) );
-				
-				// for (double nm = poynting.size()-2; nm > dipole_loc-1; --nm)
-					// Abs[nm] = abs(poynting[nm] - poynting[nm+1])/( abs(poynting[dipole_loc-2]) + abs(poynting[dipole_loc]) );
-					
-				// for (double nm = 0; nm < Abs.size(); ++nm)
-					// if (Abs[nm] < 1e-14)
-						// Abs[nm] = 0;
-					// else
-						// Abs[nm] *= dipole_pow_list[dipole_num]; 	
-					
-			    // std::cout<<"coefficient is : "<< coefficient<<std::endl;
-				// std::cout<<"dipole_pow_list is : "<< dipole_pow_list[dipole_num]<<std::endl;
-				// sum = 0;
+						Abs[nm] = Abs[nm] * absorb * coefficient *_emission_value[dipole_wl_index] /sum; 
+				}
+
 				for (double nm = 0; nm < Abs.size(); ++nm)
 				{
-					//std::cout<<nm <<"	"<< Abs[nm]<<std::endl;
-					_Internal_Absorption [nm] +=  Abs[nm]*coefficient;
-					sum += _Internal_Absorption [nm];
+					_Internal_Absorption [nm] +=  Abs[nm]*dipole_pow_list[dipole_num];
+					_green_vector[nm][dipole_num] += Abs[nm];
+					dipole_sim_done = 1;
 				}
-				// std::cout<<"sum is " << sum <<std::endl;
+
 
 
 			
@@ -1631,17 +1641,31 @@ Tmm::do_solve(void)
 
 
 
-
-
   }// end of loop of wavelength
-    for (double nm = 0; nm < _Generation_rate.size() ; ++nm)  // suming generation rate for internal adn external sources
-	    _Generation_rate[nm] += _Internal_Absorption[nm];
+
+
+  std::vector<double> _Internal_Absorption_green(_Internal_Absorption.size());
+  
+  if (dipole_sim_done) // _green_vector has been calculated
+	  _green_vector_solved = 1; 
+	  
+  if (_green_vector_solved && !dipoles_power_global.empty()) ///using _green_vector to calculate generation rate from internal source
+  	for (int i = 0; i < _green_vector.size(); ++i) 
+		for (int j = 0; j < _green_vector[i].size(); ++j) 
+		{
+			_Internal_Absorption_green[i] += _green_vector[i][j] * dipoles_power_global[j];
+			if (std::isnan(_Internal_Absorption_green[i]))
+				std::cout <<  " \033[33m NaN has been found \033[0m "<< std::endl;
+		}
+  
+  
+   for (double nm = 0; nm < _Generation_rate.size() ; ++nm)  // suming generation rate for internal and external sources
+	  _Generation_rate[nm] += _Internal_Absorption_green[nm];
   std::cout<<"Optical simulation is over"<<std::endl;
- // for (double nm = 0;nm<_Energy_loss_internal.size();nm++)
-   // std::cout<<nm<< "   "<<_Energy_loss_internal[nm]<<std::endl;
+
+
   solution.close();
   system.update();
-
 }
 
 

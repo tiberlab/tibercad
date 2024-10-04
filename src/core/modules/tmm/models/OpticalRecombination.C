@@ -48,11 +48,7 @@ OpticalRecombination::calculate(const libMesh::Elem* elem, const libMesh::Point&
 	double c0 = 2.998e8 * 1e9;  //speed of ligth [nm/s]
 	double power;
 	//energy of each photon multiplyed by number of recombinations
-	if ( _emission_wavelength == lambda)
-	 power = _recombination_rate * _multiplier ;// plank_const * (c0/lambda) * _recombination_rate /1000;  // [W/cm^2]
-    else 
-		power = 0;
-	
+	power = _recombination_rate ;
 	set_emission_power(power ); 
 }
 

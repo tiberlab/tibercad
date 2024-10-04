@@ -304,7 +304,16 @@ class TBDLLOCAL Tmm : public SimulationInterface
     std::vector<double> _eye_value;
     std::vector<double> _eye_wl;
 	
+	
+	std::vector<double> _emission_value;
+    std::vector<double> _emission_wl;
+	
 	std::map<ID, std::vector<double> > _solutions;
+	
+	
+	std::vector<std::vector<double>> _green_vector;
+	double _green_vector_solved;
+
 
 
 
