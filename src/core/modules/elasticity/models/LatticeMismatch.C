@@ -74,12 +74,6 @@ LatticeMismatch::do_init(void)
     }
   }
 
-  // TODO: we should be able to take a material from a region, too,
-  //       and to use the crystal directions from the region.
-  //       Also, we need to implement reading a subblock, here.
- 
-
-  //  get_options().print_all();
   if (name.empty())
     throw InitFailedException("Lattice mismatch: reference material is not defined");
 
@@ -106,12 +100,6 @@ LatticeMismatch::do_init(void)
 
 
   set_strain_source(eps0);
-
-  //RealTensor dummy_tens(0);
-  //set_stress_source(dummy_tens);
-
-  //RealGradient dummy_grad(0);
-  //set_force_source(dummy_grad);
 
   delete ref_mat;
  
