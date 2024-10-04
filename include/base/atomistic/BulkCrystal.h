@@ -86,6 +86,22 @@ public:
   bool get_lattice_matching_strain(const BulkCrystal& substrate,
                                    libMesh::RealTensor& strain) const;
 
+  //! Find the least common supercell
+  /*!
+   *
+   * \param substrate the substrate (reference) BulkCrystal
+   * \param trafo the transformation found for this material
+   * \param residual_strain the residual strain tensor
+   * \param super_ref the supercell needed for the reference material
+   * \param super_mat the supercell needed for this material 
+   */
+  void find_least_common_lattice(const BulkCrystal &substrate,
+                                 libMesh::RealTensor &trafo,
+                                 libMesh::RealTensor &residual_strain,
+                                 std::vector<unsigned int> &super_ref,
+                                 std::vector<unsigned int> &super_mat,
+                                 double max_strain) const;
+
   //! Print information on output
   void print_info(void) const;
 
@@ -134,6 +150,10 @@ private:
   //! Calculate Euler angles for rotation matrix
   void calculate_euler_angles(void);
 
+  //! Calculate strain for matching a lattice to a reference
+  void calculate_strain(Tensor2Gen& strain,
+                        const Tensor2Gen& reference,
+                        const Tensor2Gen& other_cell) const;
 
   //! Contains the options, as given when create is invoked
   ModelOptions _options;
