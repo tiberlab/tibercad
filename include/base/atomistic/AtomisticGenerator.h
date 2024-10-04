@@ -203,6 +203,27 @@ private:
   //! Scaling value respect to TiberCAD units (usually Angstrom instead of micron)
   double scale;
 
+  //! Options for clustering and alloy uniformity
+  struct ClusteringOptions
+  {
+    //! Clustering of certain species
+    bool clustering {false};
+
+    //! Suppression of nearest neighbors
+    bool supress_1st_NN {false};
+
+    //! Suppression of second nearest neighbors
+    bool supress_2nd_NN {false};
+
+    //! Suppression of third nearest neighbors
+    bool supress_3rd_NN {false};
+
+    //! Suppression of fourth nearest neighbors
+    bool supress_4th_NN {false};
+  };
+
+  ClusteringOptions _clustering_options;
+
 };
 
 
