@@ -29,13 +29,6 @@ class SpaceTransformation
 
   public:
 
-    /*! \brief Constructor
-     *
-     * Most of operations are using static members
-     */
-    SpaceTransformation(void);
-
-
     /*! \brief Rotate around specified axis 
      *
      * Rotate a Point around a specified arbitrary axis, by
@@ -80,6 +73,12 @@ class SpaceTransformation
 
 
   private:
+
+    /*! \brief Constructor
+     *
+     * All operations are using static members
+     */
+    SpaceTransformation(void);
 
     /*! \brief Generate all transformation matrices for given symmetry
      *
