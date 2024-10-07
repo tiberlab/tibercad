@@ -766,6 +766,16 @@ Tmm::do_solve(void)
   solution.zero();
   double dipole_sim_done = 0;
   reset_global_variables();
+  string outdir = get_output_directory();
+  std::ifstream file_test(outdir + "/green_matrix.dat");
+  if (file_test.is_open())
+  {
+	  _green_vector_solved = 1;
+	  std::cout<<"the green_matrix.dat exists" <<std::endl;
+  }
+
+
+		
 
 
   const MeshBase& mesh = get_mesh();
@@ -1029,7 +1039,8 @@ Tmm::do_solve(void)
 		_Abs.resize(n_real.size());
         _Internal_Intensity.resize(n_real.size());
 		_Energy_loss_internal.resize(n_real.size());
-		_green_vector.resize(n_real.size());
+		if (!_green_vector_solved)
+			_green_vector.resize(n_real.size());  //resize if internal source hasn't been solved yet
 
     
 		 
@@ -1365,7 +1376,7 @@ Tmm::do_solve(void)
 	//store the emission rate in vector to avoid repeating simulation
 	// of teh internal source.
 	if (dipoles_power_global.empty() && internal_source_simulation)
-			for (double nm =0 ; nm <dipole_power.size(); nm++)
+			for (double nm =0 ; nm <dipole_pow_list.size(); nm++)
 				dipoles_power_global.push_back(dipole_pow_list[nm]) ;
 	
 	
@@ -1455,7 +1466,7 @@ Tmm::do_solve(void)
                 _kr[cnt] = kr;
                 _Fraction_ratio[cnt] = abs(kr/ks);
 				for (int nm = 0; nm < dipole_power.size(); ++nm) 
-					_green_vector[nm].resize(n_real.size());
+					_green_vector[nm].resize(dipole_pow_list.size());
               }
                 
               complex<double> ki_s    ((2*M_PI*n_real[dipole_loc]) / lambda , (2*M_PI*n_imag[dipole_loc])  / lambda);		  
@@ -1594,17 +1605,10 @@ Tmm::do_solve(void)
 					_green_vector[nm][dipole_num] += Abs[nm];
 					dipole_sim_done = 1;
 				}
-
-
-
-			
-                
-
                 
 
                 ++cnt;
                // std::cout<<n_real.size()<<std::endl;
-
 
             } // end of radial wave numbers loop
 
@@ -1644,23 +1648,67 @@ Tmm::do_solve(void)
   }// end of loop of wavelength
 
 
-  std::vector<double> _Internal_Absorption_green(_Internal_Absorption.size());
+  std::vector<double> Internal_Absorption_green(_Internal_Absorption.size());
   
-  if (dipole_sim_done) // _green_vector has been calculated
-	  _green_vector_solved = 1; 
+  if (dipole_sim_done && !_green_vector_solved) // store _green_vector in file
+  {
+	  std::cout <<  " \033[33m saving green_matrix data  \033[0m "<< std::endl;
+	_green_vector_solved = 1;
+	std::ofstream outFile(outdir + "/green_matrix.dat");
+    if (!outFile) 
+        std::cerr << "\033[33m Cannot creat green_matrix.dat file! \033[0m " << std::endl;
+       
+
+    size_t rows = _green_vector.size();
+    size_t cols = _green_vector[0].size();
+    outFile << rows << " " << cols << std::endl;
+
+    // Now write the _green_vector elements
+    for (const auto& row : _green_vector) {
+        for (size_t j = 0; j < row.size(); ++j) {
+            outFile << row[j]; // Write the value as it is
+            if (j < row.size() - 1) {
+                outFile << " "; // Separate values by space
+            }
+        }
+        outFile << std::endl; // Newline after each row
+    }
+
+    outFile.close();
+
+
+  } else if (_green_vector_solved && !dipoles_power_global.empty())  // read from file to complet the _green_vector in the next iteration
+  {
 	  
-  if (_green_vector_solved && !dipoles_power_global.empty()) ///using _green_vector to calculate generation rate from internal source
-  	for (int i = 0; i < _green_vector.size(); ++i) 
-		for (int j = 0; j < _green_vector[i].size(); ++j) 
-		{
-			_Internal_Absorption_green[i] += _green_vector[i][j] * dipoles_power_global[j];
-			if (std::isnan(_Internal_Absorption_green[i]))
-				std::cout <<  " \033[33m NaN has been found \033[0m "<< std::endl;
-		}
-  
+	std::cout <<  " \033[33m reading and completting  green_matrix data  \033[0m "<< std::endl;
+	_green_vector.clear();
+	std::ifstream inFile(outdir + "/green_matrix.dat");
+	if (!inFile) 
+       std::cerr << "\033[33m Cannot open green_matrix.dat file! \033[0m " << std::endl;
+	size_t rows, cols;
+    inFile >> rows >> cols;
+	_green_vector.resize(rows);
+
+    // Create the _green_vector
+    for (size_t i = 0; i < rows; ++i) {
+        for (size_t j = 0; j < cols; ++j) {
+			_green_vector[i].resize(cols);
+            inFile >> _green_vector[i][j]; // Read each element
+        }
+    }
+        
+    inFile.close();
+
+	
+    }
+	
+	if (!dipoles_power_global.empty() && _green_vector_solved)
+		for (int i = 0; i < _green_vector.size(); ++i) 
+			for (int j = 0; j < _green_vector[i].size(); ++j) 
+				Internal_Absorption_green[i] += _green_vector[i][j] * dipoles_power_global[j];
   
    for (double nm = 0; nm < _Generation_rate.size() ; ++nm)  // suming generation rate for internal and external sources
-	  _Generation_rate[nm] += _Internal_Absorption_green[nm];
+		_Generation_rate[nm] += Internal_Absorption_green[nm];
   std::cout<<"Optical simulation is over"<<std::endl;
 
 
@@ -1903,14 +1951,6 @@ Tmm::plot_globaldata(void)
     }
     file.close();
   }
-  
-  //std::cout<<"we are here "<<std::endl;
-  //std::cout<<"we are here "<<_solutions.count(Transmission)<<std::endl;
-  //std::cout<<"we are here "<<_solutions.count(Reflection)<<std::endl;
-  //std::cout<<"we are here "<<_solutions.count(Absorption)<<std::endl;
-  //std::cout<<"we are here "<<_solutions.count(Internal_Source_ElectricField)<<std::endl;
-  //std::cout<<"we are here "<<_solutions.count(External_Source_ElectricField)<<std::endl;
-  //std::cout<<"we are here "<<_solutions.count(Generation_regions)<<std::endl;
   
   
   

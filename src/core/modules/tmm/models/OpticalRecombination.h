@@ -35,8 +35,6 @@ protected:
   private:
 
    double _recombination_rate;
-   double _emission_wavelength;
-   double _multiplier=0;
    
        //! The generation model
     std::vector<SimulationInterface*> _recombination_model;

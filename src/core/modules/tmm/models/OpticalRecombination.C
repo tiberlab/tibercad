@@ -35,20 +35,9 @@ OpticalRecombination::calculate(const libMesh::Elem* elem, const libMesh::Point&
           vector<Point>(1, point)))
         _recombination_rate += tmp[0];
     }
-	get_parameter("emission_peak", _emission_wavelength);
-	get_parameter("multiplier", _multiplier);
+
 	
-	if (_multiplier > 1 || _multiplier<= 0)
-		_multiplier = 1;
-	
-	
-	//std::cout << "_multiplier " << _multiplier << endl;
-	  
-	double plank_const = 6.62607015e-34;  //Planck constant[J*s]
-	double c0 = 2.998e8 * 1e9;  //speed of ligth [nm/s]
-	double power;
-	//energy of each photon multiplyed by number of recombinations
-	power = _recombination_rate ;
-	set_emission_power(power ); 
+
+	set_emission_power(_recombination_rate ); 
 }
 
