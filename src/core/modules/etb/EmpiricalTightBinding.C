@@ -5,7 +5,7 @@
 #include "EmpiricalTightBinding.h"
 #include "PhysicalModel.h"
 #include "AtomisticStructure.h"
-#include "Atom.h"
+#include "BondMap.h"
 #include "SimulationOptions.h"
 #include "TiberLinearSystem.h"
 #include "TiberCad.h"

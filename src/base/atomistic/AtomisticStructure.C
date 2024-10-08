@@ -3,6 +3,7 @@
 #include "AtomisticStructure.h"
 #include "AtomisticGenerator.h"
 #include "BondMap.h"
+#include "Device.h"
 #include "Messages.h"
 #include "MeshUtils.h"
 #include "Utils.h"
@@ -19,9 +20,6 @@
 //--------------------
 #include <vector>
 #include <set>
-#include <iostream>
-#include <fstream>
-#include <sstream>
 #include <map>
 #include <tr1/random>
 //---------------------

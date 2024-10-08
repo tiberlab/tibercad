@@ -3,6 +3,7 @@
 #include "AtomisticGenerator.h"
 #include "AtomisticStructure.h"
 #include "BondMap.h"
+#include "Device.h"
 #include "Messages.h"
 #include "MeshUtils.h"
 #include "Specie.h"
@@ -10,6 +11,7 @@
 #include "Atom.h"
 #include "BulkCrystal.h"
 
+#include <libmesh/point.h>
 #include <libmesh/plane.h>
 
 #include <stdio.h>
@@ -26,6 +28,7 @@
 
 
 using namespace std;
+using libMesh::Point;
 
 
 AtomisticGenerator::AtomisticGenerator(AtomisticStructure* const as)
@@ -601,7 +604,7 @@ AtomisticGenerator::substitution_probability(size_t id, const Specie& sp)
   const std::vector<unsigned int>& neigh = bm[id];
   for (unsigned int i = 0; i < neigh.size(); ++i)
   {
-    //Point transl1(bm.get_translation(id, neigh[i]));
+    Point transl1(bm.get_translation(id, neigh[i]));
 
     const std::vector<unsigned int>& nn = bm[neigh[i]];
     for (unsigned int j = 0; j < nn.size(); ++j)
@@ -613,9 +616,16 @@ AtomisticGenerator::substitution_probability(size_t id, const Specie& sp)
 
         Point transl2(bm.get_translation(neigh[i], nn[j]));
 
-        double dist = libMesh::Point(_structure_basis[nn[j]].get_position() - transl2 -
+        double dist1 = libMesh::Point(_structure_basis[neigh[i]].get_position() +
+                                      transl1 -
+                                      _structure_basis[id].get_position()).norm();
+        double dist2 = libMesh::Point(_structure_basis[nn[j]].get_position() +
+                                      transl2 -
+                                      _structure_basis[neigh[i]].get_position()).norm();
+        double dist = libMesh::Point(_structure_basis[nn[j]].get_position() +
+                                     transl1 + transl2 -
                                      _structure_basis[id].get_position()).norm_sq();
-        //std::cerr << dist << "\n";
+        std::cerr << dist1 << "  " << dist2 << "  " << dist << "\n";
 
         if (_structure_basis[nn[j]].get_specie() == sp)
         {
@@ -1725,16 +1735,16 @@ AtomisticGenerator::build_random_alloy()
   m.unindent();
 
   _clustering_options.supress_1st_NN =
-      _as->get_options().get_option("suppress_nearest_neighbor",
+      _as->get_options().get_option("suppress_nearest_neighbors",
                                     _clustering_options.supress_1st_NN);
   _clustering_options.supress_2nd_NN =
-      _as->get_options().get_option("suppress_2nd_nearest_neighbor",
+      _as->get_options().get_option("suppress_2nd_nearest_neighbors",
                                     _clustering_options.supress_2nd_NN);
   _clustering_options.supress_3rd_NN =
-      _as->get_options().get_option("suppress_3rd_nearest_neighbor",
+      _as->get_options().get_option("suppress_3rd_nearest_neighbors",
                                     _clustering_options.supress_3rd_NN);
   _clustering_options.supress_4th_NN =
-      _as->get_options().get_option("suppress_4th_nearest_neighbor",
+      _as->get_options().get_option("suppress_4th_nearest_neighbors",
                                     _clustering_options.supress_4th_NN);
   
   if (_clustering_options.supress_1st_NN)

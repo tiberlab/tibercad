@@ -1,15 +1,17 @@
 #include "StrainLattice.h"
 #include "TypeDefs.h"
+#include "Device.h"
 #include "Messages.h"
 #include "Material.h"
 #include "Alloy.h"
 #include "AtomisticStructure.h"
 #include "BulkCrystal.h"
-#include "RuntimeException.h"
 #include "AtomisticBasis.h"
 #include "Specie.h"
 #include "Atom.h"
-#include "mesh.h"
+#include "BondMap.h"
+
+#include "libmesh/mesh.h"
 
 StrainLattice::StrainLattice()
 :_as(NULL)

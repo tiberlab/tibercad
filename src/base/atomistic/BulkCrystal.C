@@ -2,6 +2,7 @@
 #include "CrystalDefs.h"
 #include "Database.h"
 #include "Alloy.h"
+#include "Messages.h"
 #include "RuntimeException.h"
 
 #include <boost/algorithm/string/replace.hpp>

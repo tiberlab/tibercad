@@ -3,18 +3,18 @@
 #ifndef _ATOMISTICSTRUCTURE_H_
 #define _ATOMISTICSTRUCTURE_H_
 
-#include "tensor.h"
 #include "ModelOptions.h"
 #include "TypeDefs.h"
-#include "Device.h"
-#include "Database.h"
-#include "InitFailedException.h"
 #include "AtomisticBasis.h"
 
-#include <boost/bind/bind.hpp>
+#include "tensor.h"
+
 #include <boost/function.hpp>
+#include <list>
 
 class Material;
+class Device;
+
 namespace libMesh
 {
   class UnstructuredMesh;
@@ -112,7 +112,8 @@ public:
   /*!
    * Will return -1 if no atom can be found up to a distance of \c cutoff nm
    */
-  int find_nearest_atom(const Elem *elem, const Point &point, double cutoff);
+  int find_nearest_atom(const libMesh::Elem *elem,
+                        const libMesh::Point &point, double cutoff);
 
   //! Set the model options
   void set_options(const ModelOptions &options);
@@ -144,7 +145,7 @@ public:
   void dorestrict(const std::set<ID> &rgn_ids);
 
   //! Get the atoms in a given mesh element
-  const std::vector<unsigned int> &get_atoms_in_elem(const Elem *element) const;
+  const std::vector<unsigned int> &get_atoms_in_elem(const libMesh::Elem *element) const;
 
   //! Used to set the virtual types.
   void set_virtual_types(const std::set<std::string> &types);

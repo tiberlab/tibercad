@@ -4,10 +4,6 @@
 #define _ATOMISTICBASIS_H_
 
 #include "Atom.h"
-#include "BondMap.h"
-#include "Messages.h"
-#include "Specie.h"
-#include "InitFailedException.h"
 
 #include "HashMap.h"
 
@@ -23,6 +19,7 @@ namespace libMesh
 }
 
 class ModelOptions;
+class BondMap;
 
 
 
@@ -354,12 +351,6 @@ AtomisticBasis::is_periodic(void) const
   return(_periodicity[0] || _periodicity[1] || _periodicity[2]);
 }
 
-inline
-const BondMap&
-AtomisticBasis::get_bond_map() const
-{
-  return *_bondmap;
-}
 
 
 inline
@@ -424,4 +415,5 @@ const std::vector<std::string>& AtomisticBasis::get_atom_types(void)
 {
   return _atom_types;
 }
+
 #endif // _ATOMISTICBASIS_H_

@@ -10,13 +10,14 @@
 #include "SimulationOptions.h"
 #include "SimulationEnvironment.h"
 #include "AtomisticStructure.h"
+#include "BondMap.h"
 #include "Constants.h"
 #include "PotentialInterface.h"
 #include "QuantumContact.h"
 
 
 //libmesh includes
-#include "mesh.h"
+#include "libmesh/mesh.h"
 
 #include <map>
 

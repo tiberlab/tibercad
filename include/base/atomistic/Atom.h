@@ -5,13 +5,15 @@
 
 #include "tensor.h"
 #include "TypeDefs.h"
-#include "point.h"
 #include "dof_object.h"
 #include "Specie.h"
 
 
-#include "elem.h"
+#include "libmesh/point.h"
 
+namespace libMesh {
+  class Elem;
+}
 
 
 

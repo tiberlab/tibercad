@@ -1,20 +1,16 @@
 // $Id$
 
 #include "AtomisticBasis.h"
-#include "Device.h"
+#include "BondMap.h"
 #include "ModelOptions.h"
+#include "TiberCad.h"
 
 #include "libmesh/vector_value.h"
 
 
-//STD library includes
-#include<iostream>
-#include<fstream>
-#include<sstream>
-//-------------------
-
 
 using namespace std;
+using namespace libMesh;
 
 
 
@@ -120,6 +116,12 @@ AtomisticBasis::set_atom_types(const std::set<std::string>& atom_types)
   {
     _atom_types.push_back( *types );
   }
+}
+
+const BondMap&
+AtomisticBasis::get_bond_map() const
+{
+  return *_bondmap;
 }
 
 

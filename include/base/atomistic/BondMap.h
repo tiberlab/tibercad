@@ -12,15 +12,16 @@
 
 #include <vector>
 #include <map>
+#include <set>
 
 
 
 //! A class for managing bond maps
 /*!
- *When BondMap is created, it can calculate
- *the bond map of the system with a O(N) algorithm.
- *single atom cutoff distancies (harcoded) are used.
- *Two atoms are neighbours if condition
+ * When BondMap is created, it can calculate
+ * the bond map of the system with a O(N) algorithm.
+ * single atom cutoff distancies (harcoded) are used.
+ * Two atoms are neighbours if condition
  * $|p_{1} - p_{2}| \leq  |c_{1} + c{2}|$
  * where p_{i} and c_{i} are position and cutoff parameter
  * of atom i, but only if 2 cannot be reached via another
@@ -67,6 +68,10 @@ public:
   Translation& get_translation(void);
 
   //! Get the spatial translation vector for a neighbor
+  /*
+   * Translation vector \c t is defined such that the real position of
+   * \c neighbor is \c r \c + \c t.
+   */
   libMesh::Point get_translation(unsigned int atom, unsigned int neighbor) const;
 
   //! print

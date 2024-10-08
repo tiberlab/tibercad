@@ -2,6 +2,7 @@
 
 #include "Device.h"
 #include "InputParser.h"
+#include "Database.h"
 #include "Material.h"
 #include "Alloy.h"
 #include "MeshUtils.h"

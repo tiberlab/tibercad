@@ -5,9 +5,11 @@
 #include "ElasticityBoundaryModel.h"
 #include "TiberLinearSystem.h"
 #include "Messages.h"
+#include "Database.h"
 #include "SimulationOptions.h"
 #include "SimulationEnvironment.h"
 #include "AtomisticStructure.h"
+#include "BondMap.h"
 #include "QuantumContact.h"
 #include "DataOutput.h"
 

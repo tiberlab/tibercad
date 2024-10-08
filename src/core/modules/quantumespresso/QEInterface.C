@@ -6,6 +6,7 @@
 #include "QEInterface.h"
 #include "AtomisticStructure.h"
 #include "TeeStream.h"
+#include "Messages.h"
 
 #include "TiberModule.h"
 
