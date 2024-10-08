@@ -601,6 +601,8 @@ AtomisticGenerator::substitution_probability(size_t id, const Specie& sp)
   const std::vector<unsigned int>& neigh = bm[id];
   for (unsigned int i = 0; i < neigh.size(); ++i)
   {
+    //Point transl1(bm.get_translation(id, neigh[i]));
+
     const std::vector<unsigned int>& nn = bm[neigh[i]];
     for (unsigned int j = 0; j < nn.size(); ++j)
     {
@@ -608,22 +610,32 @@ AtomisticGenerator::substitution_probability(size_t id, const Specie& sp)
       {
         n_neigh++;
         visited.insert(nn[j]);
-        if (_structure_basis[nn[j]].get_specie() == sp)
-          n_1st_neigh += 1;
-      }
 
-      const std::vector<unsigned int>& nn2 = bm[nn[j]];
-      for (unsigned int ii = 0; ii < nn2.size(); ++ii)
-      {
-        const std::vector<unsigned int>& nn3 = bm[nn2[ii]];
-        for (unsigned int jj = 0; jj < nn3.size(); ++jj)
+        Point transl2(bm.get_translation(neigh[i], nn[j]));
+
+        double dist = libMesh::Point(_structure_basis[nn[j]].get_position() - transl2 -
+                                     _structure_basis[id].get_position()).norm_sq();
+        //std::cerr << dist << "\n";
+
+        if (_structure_basis[nn[j]].get_specie() == sp)
         {
-          if (!visited.count(nn3[jj]))
+          n_1st_neigh++;
+        }
+
+        const std::vector<unsigned int> &nn2 = bm[nn[j]];
+        for (unsigned int ii = 0; ii < nn2.size(); ++ii)
+        {
+          const std::vector<unsigned int> &nn3 = bm[nn2[ii]];
+          for (unsigned int jj = 0; jj < nn3.size(); ++jj)
           {
-            n_neigh++;
-            visited.insert(nn3[jj]);
-            if (_structure_basis[nn3[jj]].get_specie() == sp)
-              n_2nd_neigh++;
+            if (!visited.count(nn3[jj]))
+            {
+              n_neigh++;
+              visited.insert(nn3[jj]);
+
+              if (_structure_basis[nn3[jj]].get_specie() == sp)
+                n_2nd_neigh++;
+            }
           }
         }
       }
@@ -634,7 +646,7 @@ AtomisticGenerator::substitution_probability(size_t id, const Specie& sp)
 
   // now we distinguish different kinds of clustering
 
-  double probability = 1;
+  double probability = 1.0;
 
   if (_clustering_options.clustering)
   {
@@ -648,13 +660,13 @@ AtomisticGenerator::substitution_probability(size_t id, const Specie& sp)
   }
 
   if (_clustering_options.supress_1st_NN && (n_1st_neigh > 0))
-    probability = 0;
+    probability = 0.0;
   if (_clustering_options.supress_2nd_NN && (n_2nd_neigh > 0))
-    probability = 0;
+    probability = 0.0;
   if (_clustering_options.supress_3rd_NN && (n_3rd_neigh > 0))
-    probability = 0;
+    probability = 0.0;
   if (_clustering_options.supress_4th_NN && (n_4th_neigh > 0))
-    probability = 0;
+    probability = 0.0;
 
   return probability;
 }
@@ -1688,7 +1700,6 @@ AtomisticGenerator::build_random_alloy()
   vector<string> cluster;
   _as->get_options().get_option("clustering", cluster);
   bool clustering = (cluster.size() > 0);
-  _clustering_options.clustering = clustering;
 
   vector<double> cluster_seeds(cluster.size(), 0.0);
   if (clustering)
@@ -1734,6 +1745,10 @@ AtomisticGenerator::build_random_alloy()
     Messages::info("Suppressing 3rd nearest neighbors.");
   if (_clustering_options.supress_4th_NN)
     Messages::info("Suppressing 4th nearest neighbors.");
+
+  _clustering_options.clustering = clustering &
+       !(_clustering_options.supress_1st_NN | _clustering_options.supress_2nd_NN |
+         _clustering_options.supress_3rd_NN | _clustering_options.supress_4th_NN);
 
   // A random starting seed is needed to actually have different sequences
   // we try to use something that is different also if launching simulations
@@ -1989,14 +2004,16 @@ AtomisticGenerator::build_random_alloy()
           // note: rand_percentage is used to see if a specie is a clustering specie
           if (rand_percentage.count(sp))  clust_sp = sp;
 
-          if (rand_percentage.count(sp) && num_substituted[regid][lb][sp] > 
+          if (rand_percentage.count(sp) && num_substituted[regid][lb][sp] >= 
                       rand_percentage[sp] * num_to_substitute[regid][lb][sp])
           {
-             rr = substitution_probability(id, sp);
-             ss = it->second; 
+            if (num_substituted[regid][lb][sp] < num_to_substitute[regid][lb][sp])
+              rr = substitution_probability(id, sp);
+
+            ss = it->second; 
              
-             new_frac[sp] = rr;
-             changed = true;
+            new_frac[sp] = rr;
+            changed = true;
           }
         }
 
@@ -2021,8 +2038,8 @@ AtomisticGenerator::build_random_alloy()
       double x = it->second;
 
       double rnd = static_cast<double>(generator()) / generator.max();
-      //std::cout<<"nsp "<<nsp<<" x "<<x<<" "<<rnd<<std::endl;
-      for (unsigned int i=0; i < nsp; i++)
+
+      for (unsigned int i = 0; i < nsp; i++)
       {
         if (rnd <= x)
         {
@@ -2043,8 +2060,7 @@ AtomisticGenerator::build_random_alloy()
         if (num_substituted[regid][lb][sp] < num_to_substitute[regid][lb][sp])
         {
           atm.set_specie(sp);
-          //std::cout<<sp.get_string()<<" subs "<<num_substituted[regid][lb][sp]
-          //              <<"/"<<num_to_substitute[regid][lb][sp] << std::endl;
+
           num_substituted[regid][lb][sp] += 1;
           atm.set_type(0); // flag atom as substituted
         }

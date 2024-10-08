@@ -425,6 +425,91 @@ BulkCrystal::build_rotation(void)
 
 
 
+void
+BulkCrystal::calculate_strain(Tensor2Gen &strain,
+                 const Tensor2Gen &reference,
+                 const Tensor2Gen &other_cell) const
+{
+  strain = inv(other_cell) * reference - Tensor2Gen(1.0);
+}
+
+
+
+void
+BulkCrystal::find_least_common_lattice(const BulkCrystal &substrate,
+                                       libMesh::RealTensor &trafo,
+                                       libMesh::RealTensor &residual_strain,
+                                       std::vector<unsigned int> &super_ref,
+                                       std::vector<unsigned int> &super_mat,
+                                       double max_strain) const
+{
+
+  double minResidualStrain = std::numeric_limits<double>::max();
+
+  Tensor2Gen inv_prim = inv(_rotated_prim_vec);
+
+  // Loop over possible supercell multiples (up to some reasonable limit)
+  int maxSupercell = 1; // Let's limit to multiples up to 3 for simplicity
+
+  Tensor2Gen diag(1);
+  Tensor2Gen superA;
+  Tensor2Gen superB;
+  Tensor2Gen strain(0.0);
+  Tensor2Gen deformation(1.0);
+
+  double residualStrain;
+
+  int i = 1, j, k;
+  for ( ; i <= maxSupercell; ++i)
+  {
+    diag(1, 1) = i;
+    for (j = 1; j <= maxSupercell; ++j)
+    {
+      diag(2, 2) = j;
+      for (k = 1; k <= maxSupercell; ++k)
+      {
+        diag(3, 3) = k;
+
+        // Form the supercells for both crystals
+        superA = diag * substrate.get_rotated_prim_vec();
+
+        // Try to find a linear transformation that maps our cell to superA
+        deformation = inv_prim * superA;
+
+        // extend to least integers
+        //Utils::scale_to_int(deformation, 0.02);
+
+        superB = _rotated_prim_vec * deformation;
+
+        // Compute the residual strain tensor
+        calculate_strain(strain, superA, superB);
+        residualStrain = trace(strain);
+
+        // If residual strain is within tolerance, update the best deformation
+        if (abs(residualStrain) < minResidualStrain)
+        {
+          minResidualStrain = abs(residualStrain);
+
+          if (abs(residualStrain) < max_strain)
+            break;
+        }
+      }
+      if (abs(residualStrain) < max_strain)
+        break;
+    }
+    if (abs(residualStrain) < max_strain)
+      break;
+  }
+/*
+  std::cerr << i << " " << j << " " << k << "\n";
+  std::cerr << superA;
+  std::cerr << superB;
+  std::cerr << deformation;
+  std::cerr << residualStrain << "\n";
+*/
+}
+
+
 
 bool
 BulkCrystal::get_lattice_matching_strain(const BulkCrystal& substrate,
@@ -433,6 +518,13 @@ BulkCrystal::get_lattice_matching_strain(const BulkCrystal& substrate,
   bool compatible = (get_lattice_type() == substrate.get_lattice_type());
 
   // TODO check also zb (111) on wz (0001) ore vice versa
+
+  libMesh::RealTensor trafo;
+  libMesh::RealTensor residual_strain;
+  std::vector<unsigned int> super_ref;
+  std::vector<unsigned int> super_mat;
+  find_least_common_lattice(substrate, trafo, residual_strain,
+  super_ref, super_mat, 0.001);
 
   if (compatible)
   {
