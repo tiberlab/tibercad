@@ -561,7 +561,7 @@ sub extract_data_from_characteristic($$) {
 
   open(SF, '<', $file);
 
-  eof(SF) && die "Data file does not exist.";
+  eof(SF) && print "Data file does not exist!\n";
 
   my @data = ();
 
@@ -579,7 +579,7 @@ sub extract_data_from_characteristic($$) {
   seek SF, $pos, 0;
 
   my @vars = (split(/\s+/, trim(<SF>)));
-  if ($#vars < 0) { die "Data file has no data??" };
+  if ($#vars < 0) { print "Data file has no data!\n" };
 
   my $index = 0;
   foreach my $item (@vars)
@@ -609,7 +609,7 @@ sub extract_data_from_xyz($$) {
 
   open(SF, '<', $file);
 
-  eof(SF) && die "Data file does not exist.";
+  eof(SF) && print "Data file does not exist!\n";
 
   my @data = ();
 
@@ -653,7 +653,7 @@ sub extract_data_from_gmv($$) {
 
   open(SF, '<', $file);
 
-  eof(SF) && die "Data file does not exist.";
+  eof(SF) && print "Data file does not exist!\n";
 
 
   # first, goto variable section
