@@ -589,15 +589,15 @@ AtomisticGenerator::dorestrict(bool passivation)
 
 
 double
-AtomisticGenerator::substitution_probability(size_t id, const Specie& sp)
+AtomisticGenerator::substitution_probability(size_t id, const Specie& sp,
+                                             const vector<double>& dist_to_ban)
 {
   const BondMap& bm = *_bondmap;
 
   int n_neigh = 0;
-  int n_1st_neigh = 0;
-  int n_2nd_neigh = 0;
-  int n_3rd_neigh = 0;
-  int n_4th_neigh = 0;
+  int same_species = 0;
+
+  bool suppress = false;
 
   std::set<size_t> visited;
   visited.insert(id);
@@ -614,27 +614,31 @@ AtomisticGenerator::substitution_probability(size_t id, const Specie& sp)
         n_neigh++;
         visited.insert(nn[j]);
 
-        Point transl2(bm.get_translation(neigh[i], nn[j]));
-
-        double dist1 = libMesh::Point(_structure_basis[neigh[i]].get_position() +
-                                      transl1 -
-                                      _structure_basis[id].get_position()).norm();
-        double dist2 = libMesh::Point(_structure_basis[nn[j]].get_position() +
-                                      transl2 -
-                                      _structure_basis[neigh[i]].get_position()).norm();
-        double dist = libMesh::Point(_structure_basis[nn[j]].get_position() +
-                                     transl1 + transl2 -
-                                     _structure_basis[id].get_position()).norm_sq();
-        std::cerr << dist1 << "  " << dist2 << "  " << dist << "\n";
+        Point transl2(bm.get_translation(neigh[i], nn[j]) + transl1);
 
         if (_structure_basis[nn[j]].get_specie() == sp)
         {
-          n_1st_neigh++;
+          same_species++;
+
+          if (!dist_to_ban.empty())
+          {
+            double dist = libMesh::Point(_structure_basis[nn[j]].get_position() +
+                                         transl2 -
+                                         _structure_basis[id].get_position()).norm();
+            cerr << nn[j]+1 << " -> " << id+1 << " : " << dist << "\n";                          
+            suppress |= binary_search(dist_to_ban.begin(), dist_to_ban.end(), dist,
+                                      [](double a, double b) { return(a < 0.9*b); } );
+
+            if (suppress)
+              break;
+          }
         }
 
         const std::vector<unsigned int> &nn2 = bm[nn[j]];
         for (unsigned int ii = 0; ii < nn2.size(); ++ii)
         {
+          Point transl3(bm.get_translation(nn[j], nn2[ii]) + transl2);
+
           const std::vector<unsigned int> &nn3 = bm[nn2[ii]];
           for (unsigned int jj = 0; jj < nn3.size(); ++jj)
           {
@@ -643,16 +647,43 @@ AtomisticGenerator::substitution_probability(size_t id, const Specie& sp)
               n_neigh++;
               visited.insert(nn3[jj]);
 
+              Point transl4(bm.get_translation(nn2[ii], nn3[jj]) + transl3);
+
               if (_structure_basis[nn3[jj]].get_specie() == sp)
-                n_2nd_neigh++;
+              {
+                same_species++;
+
+                if (!dist_to_ban.empty())
+                {
+                  double dist = libMesh::Point(_structure_basis[nn3[jj]].get_position() +
+                                               transl4 -
+                                               _structure_basis[id].get_position()).norm();
+
+            cerr << nn3[jj]+1 << " -> " << id+1 << " : " << dist << "\n";                          
+                  suppress |= binary_search(dist_to_ban.begin(), dist_to_ban.end(), dist,
+                                            [](double a, double b)
+                                            { return (a < 0.9 * b); });
+
+                  if (suppress)
+                    break;
+                }
+              }
             }
-          }
-        }
+          } // nn3
+
+          if (suppress)
+            break;
+        } // nn2
+
+        if (suppress)
+          break;
       }
-    }
+    } // nn
+
+    if (suppress)
+      break;
   }
 
-  int same_species = n_1st_neigh + n_2nd_neigh;
 
   // now we distinguish different kinds of clustering
 
@@ -669,14 +700,11 @@ AtomisticGenerator::substitution_probability(size_t id, const Specie& sp)
     probability = (1 - cos(ratio * M_PI / 2.0));
   }
 
-  if (_clustering_options.supress_1st_NN && (n_1st_neigh > 0))
+  if (suppress)
+  {
     probability = 0.0;
-  if (_clustering_options.supress_2nd_NN && (n_2nd_neigh > 0))
-    probability = 0.0;
-  if (_clustering_options.supress_3rd_NN && (n_3rd_neigh > 0))
-    probability = 0.0;
-  if (_clustering_options.supress_4th_NN && (n_4th_neigh > 0))
-    probability = 0.0;
+    cerr << "suppress : " << id << "\n";
+  }
 
   return probability;
 }
@@ -1783,6 +1811,10 @@ AtomisticGenerator::build_random_alloy()
   vector<vector<unsigned int>> atm_to_substitute;
   vector<vector<bool>> done;
 
+
+  // a map to hold first few NN distancess
+  map<unsigned int, map<Specie, vector<double>>> distances;
+
   // the number of regions is counted in excess as max between region ids + 1 
   int numregions = *(max_element(_as->get_IDset().begin(), _as->get_IDset().end())) + 1;
   frac.resize(numregions);
@@ -1950,7 +1982,95 @@ AtomisticGenerator::build_random_alloy()
         }
         not_finished.insert(*reg);
       }
-    }    
+    }
+
+    // for clustering AND neighbor suppression, we calculate
+    // some NN distances
+    if (clustering)
+    {
+      const Material *mat = _as->get_device()->get_material((*reg));
+      bool needs_dist = false;
+      for (auto& r : rand_percentage)
+      {
+        if (mat->has_specie(r.first))
+        {
+          needs_dist = true;
+          distances[*reg][r.first] = vector<double>();
+        }
+
+      }
+
+      if (needs_dist)
+      {
+        // now get bulk crystal and calculate distances
+        const BulkCrystal *crys = mat->get_bulk_crystal();
+        Tensor1 a = crys->get_prim_vec()(1);
+        Tensor1 b = crys->get_prim_vec()(2);
+        Tensor1 c = crys->get_prim_vec()(3);
+
+        // get the first atom of each species to check
+        map<Specie, Tensor1> ref_pos;
+        const vector<Atom>& basis = crys->get_basis();
+        for (auto&& at : basis)
+        {
+          if (distances[*reg].count(at.get_specie()))
+            ref_pos[at.get_specie()] = at.get_ttype_position();
+        }
+
+        const int N = 3;
+        for (int l = 0; l <= N; ++l)
+        {
+          for (int m = 0; m <= N; ++m)
+          {
+            for (int n = 0; n <= N; ++n)
+            {
+              Tensor1 R = l*a + m*b + n*c;
+
+              for (auto&& at : basis)
+              {
+                const auto& it = ref_pos.find(at.get_specie());
+                if (it != ref_pos.end())
+                {
+                  Tensor1 dr = R + at.get_ttype_position() - it->second;
+                  double dist = norm(dr);
+                  if (dist > 0.1)
+                    distances[*reg][at.get_specie()].push_back(dist);
+                }
+              }
+            } // n
+          } // m
+        } // l
+      } // if (needs_dist)
+      
+      for (auto&& rl : distances)
+      {
+        //cerr << rl.first << ":\n";
+        for (auto&& sl : rl.second)
+        {
+          vector<double> tmp(sl.second);
+          sort(tmp.begin(), tmp.end());
+          auto it = unique(tmp.begin(), tmp.end(),
+                           [](double a, double b)
+                           { return ((a > 0.999*b) && (b > 0.999*a)); });
+          tmp.erase(it, tmp.end());
+
+          sl.second.clear();
+          if (_clustering_options.supress_1st_NN)
+            sl.second.push_back(tmp[0]);
+          if (_clustering_options.supress_2nd_NN)
+            sl.second.push_back(tmp[1]);
+          if (_clustering_options.supress_3rd_NN)
+            sl.second.push_back(tmp[2]);
+          if (_clustering_options.supress_4th_NN)
+            sl.second.push_back(tmp[3]);
+
+          //cerr << "  " << sl.first << ":\n    ";
+          //for (auto dl : sl.second)
+          //  cerr << dl << ", ";
+          //cerr << "\n";
+        }
+      }
+    } // if (clustering)
   }
 
   
@@ -2018,7 +2138,7 @@ AtomisticGenerator::build_random_alloy()
                       rand_percentage[sp] * num_to_substitute[regid][lb][sp])
           {
             if (num_substituted[regid][lb][sp] < num_to_substitute[regid][lb][sp])
-              rr = substitution_probability(id, sp);
+              rr = substitution_probability(id, sp, distances[regid][sp]);
 
             ss = it->second; 
              

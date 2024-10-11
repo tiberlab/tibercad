@@ -173,10 +173,14 @@ protected:
   static Tensor2Gen reciprocal(Tensor2Gen real_basis);
 
   //! fold atoms into conventional cell
-  static bool fold_in_cell(Atom& atom, const Point& orig, const Point& a1, const Point& a2, const Point& a3, bool fold=true);
+  static bool fold_in_cell(Atom& atom, const Point& orig,
+                          const Point& a1, const Point& a2, const Point& a3,
+                          bool fold = true);
 
   //! fold point into conventional cell
-  static bool fold_in_cell(Point& p, const Point& orig, const Point& a1, const Point& a2, const Point& a3, bool fold=true);
+  static bool fold_in_cell(Point& p, const Point& orig,
+                           const Point& a1, const Point& a2, const Point& a3,
+                           bool fold = true);
 
 private:
 
@@ -189,7 +193,14 @@ private:
   void build_random_alloy(void);
   
   //! Calculate environment dependent substitution probability
-  double substitution_probability(size_t id, const Specie& sp);
+  /*!
+  * \param id the index of the atom to be substituted
+  * \param sp the species to be put
+  * \param dist_to_ban a vactor with neighbor distances of the same
+  *        species to suppress
+  */
+  double substitution_probability(size_t id, const Specie& sp,
+                                  const std::vector<double>& dist_to_ban);
 
   //! BulkCrystal of the reference material
   const BulkCrystal* _bulk {nullptr};
