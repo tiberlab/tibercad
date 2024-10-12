@@ -589,84 +589,183 @@ AtomisticGenerator::dorestrict(bool passivation)
 
 
 double
-AtomisticGenerator::substitution_probability(size_t id, const Specie& sp,
-                                             const vector<double>& dist_to_ban)
+AtomisticGenerator::substitution_probability(size_t id, const Specie& sp)
 {
   const BondMap& bm = *_bondmap;
 
   int n_neigh = 0;
   int same_species = 0;
 
-  bool suppress = false;
+  // fuzzy comparison of Points
+  class Comp
+  {
+    public:
+    bool operator()(const Point& a, const Point& b) const
+    { 
+      const double e = 1.0 - 1e-6;
+      bool x = a(0) < e * b(0);
+      bool y = a(1) < e * b(1);
+      bool z = a(2) < e * b(2);
+      return (x || y || z);
+    };
+  };
 
-  std::set<size_t> visited;
-  visited.insert(id);
+  // to keep track about visited atoms
+  // we use the position, because it turned out to be
+  // complicated using the id, as the same id stands
+  // for different periodic copies, possibly.
+  std::set<Point, Comp> visited;
+
+  visited.insert(_structure_basis[id].get_position());
+
   const std::vector<unsigned int>& neigh = bm[id];
   for (unsigned int i = 0; i < neigh.size(); ++i)
   {
-    Point transl1(bm.get_translation(id, neigh[i]));
+    Point transl1(bm.get_translation(id, i));
 
     const std::vector<unsigned int>& nn = bm[neigh[i]];
     for (unsigned int j = 0; j < nn.size(); ++j)
     {
-      if (!visited.count(nn[j]))
+      Point transl2(bm.get_translation(neigh[i], j) + transl1);
+      Point pos2(_structure_basis[nn[j]].get_position() + transl2);
+
+      if (!visited.count(pos2))
       {
         n_neigh++;
-        visited.insert(nn[j]);
-
-        Point transl2(bm.get_translation(neigh[i], nn[j]) + transl1);
+        visited.insert(pos2);
 
         if (_structure_basis[nn[j]].get_specie() == sp)
         {
           same_species++;
-
-          if (!dist_to_ban.empty())
-          {
-            double dist = libMesh::Point(_structure_basis[nn[j]].get_position() +
-                                         transl2 -
-                                         _structure_basis[id].get_position()).norm();
-            cerr << nn[j]+1 << " -> " << id+1 << " : " << dist << "\n";                          
-            suppress |= binary_search(dist_to_ban.begin(), dist_to_ban.end(), dist,
-                                      [](double a, double b) { return(a < 0.9*b); } );
-
-            if (suppress)
-              break;
-          }
         }
 
         const std::vector<unsigned int> &nn2 = bm[nn[j]];
         for (unsigned int ii = 0; ii < nn2.size(); ++ii)
         {
-          Point transl3(bm.get_translation(nn[j], nn2[ii]) + transl2);
+          Point transl3(bm.get_translation(nn[j], ii) + transl2);
 
           const std::vector<unsigned int> &nn3 = bm[nn2[ii]];
           for (unsigned int jj = 0; jj < nn3.size(); ++jj)
           {
-            if (!visited.count(nn3[jj]))
+            Point pos4(_structure_basis[nn3[jj]].get_position());
+            pos4 += bm.get_translation(nn2[ii], jj) + transl3;
+          
+            if (!visited.count(pos4))
             {
               n_neigh++;
-              visited.insert(nn3[jj]);
-
-              Point transl4(bm.get_translation(nn2[ii], nn3[jj]) + transl3);
+              visited.insert(pos4);
 
               if (_structure_basis[nn3[jj]].get_specie() == sp)
               {
                 same_species++;
+              }
+            }
+          } // nn3
+        } // nn2
+      }
+    } // nn
+  }
 
-                if (!dist_to_ban.empty())
-                {
-                  double dist = libMesh::Point(_structure_basis[nn3[jj]].get_position() +
-                                               transl4 -
-                                               _structure_basis[id].get_position()).norm();
+  // for zb, wz:
+  // # nn = 12
+  // # nn2 = 56
+  if (n_neigh == 0)
+    n_neigh = 1;
 
-            cerr << nn3[jj]+1 << " -> " << id+1 << " : " << dist << "\n";                          
-                  suppress |= binary_search(dist_to_ban.begin(), dist_to_ban.end(), dist,
-                                            [](double a, double b)
-                                            { return (a < 0.9 * b); });
+  double ratio = static_cast<double>(same_species) / n_neigh;
+  double probability = (1 - 0.99 * cos(ratio * M_PI / 2.0));
 
-                  if (suppress)
-                    break;
-                }
+  return probability;
+}
+
+
+bool
+AtomisticGenerator::suppress_substitution(size_t id, const Specie& sp,
+                                          const vector<double>& dist_to_ban)
+{
+
+  if (dist_to_ban.empty())
+    return(false);
+
+  const BondMap& bm = *_bondmap;
+
+  bool suppress = false;
+
+  // fuzzy comparison of Points
+  class Comp
+  {
+    public:
+    bool operator()(const Point& a, const Point& b) const
+    { 
+      const double e = 1.0 - 1e-6;
+      bool x = a(0) < e * b(0);
+      bool y = a(1) < e * b(1);
+      bool z = a(2) < e * b(2);
+      return (x || y || z);
+    };
+  };
+
+  // to keep track about visited atoms
+  // we use the position, because it turned out to be
+  // complicated using the id, as the same id stands
+  // for different periodic copies, possibly.
+  std::set<Point, Comp> visited;
+  visited.insert(_structure_basis[id].get_position());
+
+  const std::vector<unsigned int>& neigh = bm[id];
+  for (unsigned int i = 0; i < neigh.size(); ++i)
+  {
+    Point transl1(bm.get_translation(id, i));
+
+    const std::vector<unsigned int>& nn = bm[neigh[i]];
+    for (unsigned int j = 0; j < nn.size(); ++j)
+    {
+      Point transl2(bm.get_translation(neigh[i], j) + transl1);
+      Point pos2(_structure_basis[nn[j]].get_position() + transl2);
+
+      if (!visited.count(pos2))
+      {
+        visited.insert(pos2);
+
+        if (_structure_basis[nn[j]].get_specie() == sp)
+        {
+          double dist = libMesh::Point(pos2 -
+                                       _structure_basis[id].get_position()).norm();
+
+          suppress |= binary_search(dist_to_ban.begin(), dist_to_ban.end(), dist,
+                                    [](double a, double b)
+                                    { return (a < 0.9 * b); });
+
+          if (suppress)
+            break;
+        }
+
+        const std::vector<unsigned int> &nn2 = bm[nn[j]];
+        for (unsigned int ii = 0; ii < nn2.size(); ++ii)
+        {
+          Point transl3(bm.get_translation(nn[j], ii) + transl2);
+
+          const std::vector<unsigned int> &nn3 = bm[nn2[ii]];
+          for (unsigned int jj = 0; jj < nn3.size(); ++jj)
+          {
+            Point pos4(_structure_basis[nn3[jj]].get_position());
+            pos4 += bm.get_translation(nn2[ii], jj) + transl3;
+          
+            if (!visited.count(pos4))
+            {
+              visited.insert(pos4);
+
+              if (_structure_basis[nn3[jj]].get_specie() == sp)
+              {
+                double dist = libMesh::Point(pos4 -
+                                             _structure_basis[id].get_position()).norm();
+
+                suppress |= binary_search(dist_to_ban.begin(), dist_to_ban.end(), dist,
+                                          [](double a, double b)
+                                          { return (a < 0.9 * b); });
+
+                if (suppress)
+                  break;
               }
             }
           } // nn3
@@ -684,31 +783,8 @@ AtomisticGenerator::substitution_probability(size_t id, const Specie& sp,
       break;
   }
 
-
-  // now we distinguish different kinds of clustering
-
-  double probability = 1.0;
-
-  if (_clustering_options.clustering)
-  {
-    // for zb, wz:
-    // # nn = 12
-    // # nn2 = 56
-    if (n_neigh == 0) n_neigh = 1;
-
-    double ratio = static_cast<double>(same_species) / n_neigh;
-    probability = (1 - cos(ratio * M_PI / 2.0));
-  }
-
-  if (suppress)
-  {
-    probability = 0.0;
-    cerr << "suppress : " << id << "\n";
-  }
-
-  return probability;
+  return suppress;
 }
-
 
 
 
@@ -1762,31 +1838,42 @@ AtomisticGenerator::build_random_alloy()
   }
   m.unindent();
 
-  _clustering_options.supress_1st_NN =
-      _as->get_options().get_option("suppress_nearest_neighbors",
-                                    _clustering_options.supress_1st_NN);
-  _clustering_options.supress_2nd_NN =
-      _as->get_options().get_option("suppress_2nd_nearest_neighbors",
-                                    _clustering_options.supress_2nd_NN);
-  _clustering_options.supress_3rd_NN =
-      _as->get_options().get_option("suppress_3rd_nearest_neighbors",
-                                    _clustering_options.supress_3rd_NN);
-  _clustering_options.supress_4th_NN =
-      _as->get_options().get_option("suppress_4th_nearest_neighbors",
-                                    _clustering_options.supress_4th_NN);
-  
-  if (_clustering_options.supress_1st_NN)
-    Messages::info("Suppressing 1st nearest neighbors.");
-  if (_clustering_options.supress_2nd_NN)
-    Messages::info("Suppressing 2nd nearest neighbors.");
-  if (_clustering_options.supress_3rd_NN)
-    Messages::info("Suppressing 3rd nearest neighbors.");
-  if (_clustering_options.supress_4th_NN)
-    Messages::info("Suppressing 4th nearest neighbors.");
+  vector<string> sup_neigh;
+  map<Specie, vector<int>> neigh_suppression;
+  _as->get_options().get_option("suppress_neighbors", sup_neigh);
+  if (sup_neigh.size() == 1)
+  {
+    neigh_suppression[Specie(sup_neigh[0])] = {1};
+  }
+  else
+  {
+    for (unsigned int i = 0; i < sup_neigh.size(); i += 2)
+    {
+      Specie sp(sup_neigh[i]);
+      Utils::extract_vector(sup_neigh[i+1], neigh_suppression[sp]);
+    } 
+  }
 
-  _clustering_options.clustering = clustering &
-       !(_clustering_options.supress_1st_NN | _clustering_options.supress_2nd_NN |
-         _clustering_options.supress_3rd_NN | _clustering_options.supress_4th_NN);
+  if (!neigh_suppression.empty())
+  {
+    clustering = true;
+
+    Messages m;
+    m.info("Suppressing following atomic neighbors:");
+    m.indent();
+
+    ostringstream os;
+    for (auto&& a : neigh_suppression)
+    {
+      os << a.first << " : " << a.second[0];
+      for (unsigned int n = 1; n < a.second.size(); ++n)
+        os << ", " << a.second[n];
+
+      os << "\n";
+    }
+    m.info(os.str());
+  }
+
 
   // A random starting seed is needed to actually have different sequences
   // we try to use something that is different also if launching simulations
@@ -1984,13 +2071,12 @@ AtomisticGenerator::build_random_alloy()
       }
     }
 
-    // for clustering AND neighbor suppression, we calculate
-    // some NN distances
-    if (clustering)
+    // for neighbor suppression, we calculate some NN distances
+    if (!neigh_suppression.empty())
     {
       const Material *mat = _as->get_device()->get_material((*reg));
       bool needs_dist = false;
-      for (auto& r : rand_percentage)
+      for (auto& r : neigh_suppression)
       {
         if (mat->has_specie(r.first))
         {
@@ -2017,12 +2103,12 @@ AtomisticGenerator::build_random_alloy()
             ref_pos[at.get_specie()] = at.get_ttype_position();
         }
 
-        const int N = 3;
-        for (int l = 0; l <= N; ++l)
+        const int N = 4;
+        for (int l = -N; l <= N; ++l)
         {
-          for (int m = 0; m <= N; ++m)
+          for (int m = -N; m <= N; ++m)
           {
-            for (int n = 0; n <= N; ++n)
+            for (int n = -N; n <= N; ++n)
             {
               Tensor1 R = l*a + m*b + n*c;
 
@@ -2041,39 +2127,30 @@ AtomisticGenerator::build_random_alloy()
           } // m
         } // l
       } // if (needs_dist)
-      
-      for (auto&& rl : distances)
-      {
-        //cerr << rl.first << ":\n";
-        for (auto&& sl : rl.second)
-        {
-          vector<double> tmp(sl.second);
-          sort(tmp.begin(), tmp.end());
-          auto it = unique(tmp.begin(), tmp.end(),
-                           [](double a, double b)
-                           { return ((a > 0.999*b) && (b > 0.999*a)); });
-          tmp.erase(it, tmp.end());
-
-          sl.second.clear();
-          if (_clustering_options.supress_1st_NN)
-            sl.second.push_back(tmp[0]);
-          if (_clustering_options.supress_2nd_NN)
-            sl.second.push_back(tmp[1]);
-          if (_clustering_options.supress_3rd_NN)
-            sl.second.push_back(tmp[2]);
-          if (_clustering_options.supress_4th_NN)
-            sl.second.push_back(tmp[3]);
-
-          //cerr << "  " << sl.first << ":\n    ";
-          //for (auto dl : sl.second)
-          //  cerr << dl << ", ";
-          //cerr << "\n";
-        }
-      }
-    } // if (clustering)
+    } // if (suppression)
   }
 
-  
+  for (auto &&rl : distances)
+  {
+    for (auto &&sl : rl.second)
+    {
+      vector<double> tmp(sl.second);
+      sort(tmp.begin(), tmp.end());
+      auto it = unique(tmp.begin(), tmp.end(),
+                       [](double a, double b)
+                       { return ((a > 0.99 * b) && (b > 0.99 * a)); });
+      tmp.erase(it, tmp.end());
+
+      sl.second.clear();
+      const vector<int>& nn = neigh_suppression[sl.first];
+      // NOTE: nn contains NN numbers, so index will need -1
+      for (unsigned int i = 0; i < nn.size(); ++i)
+        if (nn[i] <= tmp.size())
+          sl.second.push_back(tmp[nn[i] - 1]);
+
+    }
+  }
+
   Messages::info("Substituting atoms randomly");
 
   //
@@ -2104,8 +2181,7 @@ AtomisticGenerator::build_random_alloy()
       map<Specie, double> new_frac(frac[regid][lb]);
       specie_fraction::iterator it = new_frac.begin(); 
       unsigned int nsp = new_frac.size();
-      Specie clust_sp(it->first); // clustering specie 
-
+      Specie clust_sp(it->first); // clustering specie
 
       // CLUSTERING
       // rr is used in case of clustering to increase the prob
@@ -2117,44 +2193,72 @@ AtomisticGenerator::build_random_alloy()
       //
       // x'+y'+z' = 1
       //
-      // NOTE 1: Clustering occurs only after some atoms have been placed at rnd. 
-      // NOTE 2: First we need to place all clustering ions 
+      // NOTE 1: Clustering occurs only after some atoms have been placed at rnd.
+      // NOTE 2: First we need to place all clustering ions
+      // changed=true when frac are actually redefined for clustering
       if (clustering)
       {
-        double rr=0.0;
-        double ss=0.0;
-        //changed=true when frac are actually redefined for clustering
-        bool changed = false; 
         it = new_frac.begin();
         Specie sp(it->first);
+        bool changed = false;
+        double rr = 0.0;
+        double ss = 0.0;
         // first sets rr and ss for the clustering specie
         for ( ; it != new_frac.end(); ++it)
         {
           sp = it->first;
+
           // note: rand_percentage is used to see if a specie is a clustering specie
-          if (rand_percentage.count(sp))  clust_sp = sp;
-
-          if (rand_percentage.count(sp) && num_substituted[regid][lb][sp] >= 
-                      rand_percentage[sp] * num_to_substitute[regid][lb][sp])
+          if (rand_percentage.count(sp))
           {
-            if (num_substituted[regid][lb][sp] < num_to_substitute[regid][lb][sp])
-              rr = substitution_probability(id, sp, distances[regid][sp]);
+             clust_sp = sp;
 
-            ss = it->second; 
-             
-            new_frac[sp] = rr;
-            changed = true;
+             if (num_substituted[regid][lb][sp] >=
+                 rand_percentage[sp] * num_to_substitute[regid][lb][sp])
+             {
+               if (num_substituted[regid][lb][sp] < num_to_substitute[regid][lb][sp])
+               {
+                 rr = substitution_probability(id, sp);
+               }
+
+               ss = it->second;
+               new_frac[sp] = rr;
+               changed = true;
+             }
+          }
+
+          if (distances.count(regid))
+          {
+            if (distances[regid].count(sp) &&
+                (num_substituted[regid][lb][sp] < num_to_substitute[regid][lb][sp]))
+            {
+              clust_sp = sp;
+
+              if (suppress_substitution(id, sp, distances[regid][sp]))
+              {
+                rr = 0.0;
+                ss = it->second;
+                new_frac[sp] = rr;
+                changed = true;
+              }
+            }
           }
         }
 
-        it = new_frac.begin();
-        for ( ; it != new_frac.end(); ++it)
+        if (changed)
         {
-          sp = it->first;
-          if (!rand_percentage.count(sp) &&  changed)
-             new_frac[sp] = (1.0 - rr)/(1.0 - ss) * new_frac[sp]; 
+          it = new_frac.begin();
+          for (; it != new_frac.end(); ++it)
+          {
+            Specie sp(it->first);
+            if (sp != clust_sp)
+              new_frac[sp] = (1.0 - rr) / (1.0 - ss) * new_frac[sp];
+          }
         }
       }
+
+
+     
 
       // Assign a specie according to fraction
       // we set one of the possible species at random

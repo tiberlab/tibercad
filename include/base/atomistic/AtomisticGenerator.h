@@ -194,13 +194,28 @@ private:
   
   //! Calculate environment dependent substitution probability
   /*!
-  * \param id the index of the atom to be substituted
-  * \param sp the species to be put
-  * \param dist_to_ban a vactor with neighbor distances of the same
-  *        species to suppress
-  */
-  double substitution_probability(size_t id, const Specie& sp,
-                                  const std::vector<double>& dist_to_ban);
+   * Here we count atoms of the same species around the
+   * position \c id, and increase the substitution 
+   * probability based on the ratio of found atoms and 
+   * possible positions.
+   * 
+   * \param id the index of the atom to be substituted
+   * \param sp the species to be put
+   */
+  double substitution_probability(size_t id, const Specie& sp);
+
+  //! Decide whether substition of atom is suppressed
+  /*!
+   * This method allows to suppress certian neighbors, like
+   * 1st NN, 2nd NN etc.
+   * 
+   * \param id the index of the atom to be substituted
+   * \param sp the species to be put
+   * \param dist_to_ban a vactor with neighbor distances of the same
+   *        species to suppress
+   */
+  bool suppress_substitution(size_t id, const Specie& sp,
+                             const std::vector<double>& dist_to_ban);
 
   //! BulkCrystal of the reference material
   const BulkCrystal* _bulk {nullptr};
