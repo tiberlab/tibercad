@@ -170,14 +170,17 @@ BondMap::solve(const std::vector<Atom>& basis,
   GridCells cells(basis, period, origin, 8.0);
 
   // Loop on all cells
-  Utils::Progress prog("BondMap", cells.size());
+  Utils::Progress* prog = nullptr;
+  if (basis.size() > 10000)
+    prog = new Utils::Progress("BondMap", cells.size());
 
   for (unsigned int c1 = 0; c1 < cells.size(); c1++)
   {
     GridCells::NeighborIterator it = cells.begin(c1);
     GridCells::NeighborIterator end = cells.end(c1);
  
-    prog.progress_message(c1+1);
+    if (prog != nullptr)
+      prog->progress_message(c1+1);
 
     // Loop on all 27 neighboring cells (periodicity is taken care by the iterator)
     for ( ; it != end; ++it)
@@ -198,6 +201,7 @@ BondMap::solve(const std::vector<Atom>& basis,
 
   fix_bondmap(basis);
 
+  delete prog;
 }
 
 
