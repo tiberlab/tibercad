@@ -316,7 +316,7 @@ Simulation
 {
 
   temperature = 300
-  solve = (strain, sweep_1)
+  solve = (strain)
 
 
   #symmetry = cylindrical
