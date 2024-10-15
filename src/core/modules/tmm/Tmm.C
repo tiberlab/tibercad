@@ -483,6 +483,9 @@ vector<double> Tmm::linear_interpolation1 (vector<double> xData, vector<double> 
 
 Tmm::~Tmm(void)
 {
+	string outdir = get_output_directory();
+	std::cout<<"\033[33m deletting  green_matrix data file \033[0m " <<endl;
+	std::filesystem::remove("./" + outdir + "/green_matrix.dat");
 }
 
 
@@ -619,9 +622,10 @@ Tmm::parse_options(void)
   ifstream is;
   db.set_material("Sun1p5am", get_option("illumination_spectrum", ""));
   is.open(db.get_data_file().c_str());
-  if (is.fail() || !is.good())
-    throw InitFailedException("Cannot read spectrum "
-        "from file " + db.get_data_file());
+  if (!is.fail() || is.good())
+  {
+    //throw InitFailedException("Cannot read spectrum "
+      //  "from file " + db.get_data_file());
 
   size_t i = 0;
   const size_t buf_len = 256;
@@ -652,16 +656,21 @@ Tmm::parse_options(void)
       }
     }
     is.close(); 
+  } else
+	   Messages::warning("Couldn't find External source spectrum" );
 
   Database datab;
   ifstream ifs;
   datab.set_material("Eye_sens", get_option("Eye_sens", ""));
   ifs.open(datab.get_data_file().c_str());
-  if (ifs.fail() || !ifs.good())
-    throw InitFailedException("Cannot read spectrum "
-        "from file " + datab.get_data_file());
+  if (!ifs.fail() || ifs.good())
+  {
+    //throw InitFailedException("Cannot read spectrum "
+      //  "from file " + datab.get_data_file());
 
-  i = 0;
+  size_t i = 0;
+  const size_t buf_len = 256;
+  char buf[buf_len];
     while (ifs.good())
     {
       if (i == _eye_wl.size())
@@ -685,17 +694,22 @@ Tmm::parse_options(void)
       }
     }
     ifs.close();
+  } else
+	   Messages::warning("Couldn't find (AVT spectrum)");
 	
 	
   Database db_spec;
   ifstream ifs_spect;
   db_spec.set_material("Emission-spectrum", get_option("Emission-spectrum-file", ""));
   ifs_spect.open(db_spec.get_data_file().c_str());
-  if (ifs_spect.fail() || !ifs_spect.good())
-    throw InitFailedException("Cannot read spectrum "
-        "from file " + db_spec.get_data_file());
+  if (!ifs_spect.fail() || ifs_spect.good())
+  {
+    //throw InitFailedException("Cannot read spectrum "
+      //  "from file " + db_spec.get_data_file());
 
-  i = 0;
+  size_t i = 0;
+  const size_t buf_len = 256;
+  char buf[buf_len];
     while (ifs_spect.good())
     {
       if (i == _eye_wl.size())
@@ -719,10 +733,8 @@ Tmm::parse_options(void)
       }
     }
     ifs.close();
-	std::cout<<"emission sectrum: "<<std::endl;
-    for (double nm =0;nm<_emission_wl.size();nm++)
-      std::cout<<_emission_wl[nm]<<"     "<<_emission_value[nm]<<std::endl;
-
+  }else
+	   Messages::warning("Couldn't find Internal source spectrum");
 }
 
 
@@ -835,8 +847,10 @@ Tmm::do_solve(void)
   //std::cout<<"starting running the tmm do_solve function -> "<< _spectrum.size()<<std::endl;
   //for (int i =0 ; i<_spectrum.size();i++)
 	//  std::cout<<i<<" is " << _spectrum[i] <<std::endl;
-  sun_interp = Tmm::linear_interpolation1(_lambda,_spectrum,lambda_interp);
-  eye_interp = Tmm::linear_interpolation1(_eye_wl,_eye_value,lambda_interp);
+  if (!_spectrum.empty())
+	sun_interp = Tmm::linear_interpolation1(_lambda,_spectrum,lambda_interp);
+  if (!_eye_value.empty())
+    eye_interp = Tmm::linear_interpolation1(_eye_wl,_eye_value,lambda_interp);
 
 
   Utils::Progress progress("Sweeping wavelength: ", lambda_interp.size());
@@ -848,8 +862,9 @@ Tmm::do_solve(void)
     //os << "Lambda is : " << lambda_interp[i] << "nm" << "\n" ;
     //Messages::info(os.str());
     progress.progress_message();
-
-    double eye = eye_interp[i];
+	double eye = 0;
+	if (!_eye_value.empty())
+		 eye = eye_interp[i];
 
     double lambda = lambda_interp[i];
     _Wavelength.push_back(lambda);
@@ -866,13 +881,10 @@ Tmm::do_solve(void)
 
     double E = 1.0;
     double incoming_angle=_incident_angle;
-
     double c0 = 2.998e8 * 1e9;
     double e0 = 8.85e-12;
-    double radiation = sun_interp[i] / 1e3;            // [W/m^2/nm]
-    double Esun2 = 2 * radiation / (c0 * 1e-9 * e0);   // [V^2/m^2/nm]
-    double w = 2 * M_PI * c0 / lambda;                 // [1/s]
-    double plank_const = 1.055e-34;                    // [J*s]
+    double w = 2 * M_PI * c0 / lambda;              
+    double plank_const = 1.055e-34;         
 
 
 
@@ -1051,6 +1063,11 @@ Tmm::do_solve(void)
     //*****************************External_source_simulation******************************
     if (external_source_simulation)
     {
+	  if (sun_interp.empty())
+		  throw InitFailedException("External illumination spectrum"
+			"is missing ");
+	  double radiation = sun_interp[i] / 1e3;            // [W/m^2/nm]
+      double Esun2 = 2 * radiation / (c0 * 1e-9 * e0);   // [V^2/m^2/nm]
       // std::cout<<"solving external source   " <<lambda<<std::endl;
       vector<double> theta(n_real.size());
       theta=Tmm::theta_cal(n_real,incoming_angle);
@@ -1265,9 +1282,11 @@ Tmm::do_solve(void)
 
       //****************************************************************************
       //*****************************AVT Calculation********************************
-
-      eye_num.push_back(eye*radiation*_Transmission[_Transmission.size()-1]);
-      eye_dum.push_back(eye*radiation);
+	  if (!_eye_value.empty())
+	  {
+		eye_num.push_back(eye*radiation*_Transmission[_Transmission.size()-1]);
+		eye_dum.push_back(eye*radiation);
+	  }
       //****************************************************************************
       //*******************Calculating integral over wavelengths********************
       double delta_wl;
@@ -1322,15 +1341,18 @@ Tmm::do_solve(void)
           _Intensity[nm] = intensity_integral[nm];
           _External_Source_ElectricField[nm] = Electric_Field_integral[nm];
           _Energy_loss_external[nm] = energy_loss_integral[nm];
-          _AVT = 0;
-          double num =0;
-          double dum =0;
-          for (double mm = 0; mm<eye_num.size();mm++)
-          {
-            num += eye_num[mm];
-            dum += eye_dum[mm];    ///asumming 1nm sweep of wavelength
-          }
-          _AVT = num / dum *100;
+		  if (!_eye_value.empty())
+		  {
+            _AVT = 0;
+            double num =0;
+            double dum =0;
+            for (double mm = 0; mm<eye_num.size();mm++)
+            {
+              num += eye_num[mm];
+              dum += eye_dum[mm];    ///asumming 1nm sweep of wavelength
+            }
+            _AVT = num / dum *100;
+		  }
 		  
         }
 
@@ -1356,7 +1378,7 @@ Tmm::do_solve(void)
 	// std::cout<<lambda<<"  "<<internal_source_simulation<<std::endl;	
 
     double dipole_wl_index; //index of lambda in emiison speectrum file
-	if (!dipole_power.empty()) 
+	if (!dipole_power.empty() && !_emission_value.empty()) 
 	{
 		for (double elem=0; elem < dipole_power.size(); ++elem)
 			if (abs(dipole_power[elem]) >= 1e-18)      // minimum intensity to solve for 
@@ -1384,6 +1406,10 @@ Tmm::do_solve(void)
 	//std::cout<<lambda<<"  "<<internal_source_simulation<<std::endl;
     if (internal_source_simulation && !_green_vector_solved)  //solve if there is intrnal emission and the _green_vector is not ready yet
     {
+		if (_emission_value.empty())
+			throw InitFailedException("Internal illumination spectrum"
+			"is missing ");
+			
 		_Internal_Wavelength.push_back(lambda);
 	 // if(!_dipole_coordinate.empty())
 
