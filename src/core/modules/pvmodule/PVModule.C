@@ -19,7 +19,9 @@
 
 // This is needed in order to create the shared module library
 #include "TiberModule.h"
-
+#include <fstream> 
+#include <sstream>
+#include <queue>
 
 using namespace std;
 using namespace libMesh;
@@ -79,6 +81,7 @@ PVModule::parse_options(void)
 {
 
   _spice = get_option("spice_executable", _spice);
+  //_spice = get_option("Voltage", _voltage);
  
  
   // reading jv_ref.dat file, as reference for JV curve
@@ -237,25 +240,37 @@ PVModule::do_solve(void)
 
     }
   }
-
+  
+  //of << "Vbias "<<*_gnd_ids.begin() <<" " << *_src_ids.begin() << " " << _voltage <<" \n";
+  of << "Vbias "<<*_gnd_ids.begin() <<" " << *_src_ids.begin() << " " << "0" <<" \n";
   of << "* End of netlist \n";
   of << "* Simulation command \n";
   of << ".control \n";
-  of << "	wrdata "  << get_name() << "_Spice_output.txt";
+  of << "	op\n";
+  of << "	dc Vbias 0 4 0.1 \n";
+  
+  string ngspice_res = get_output_directory() + "/" + get_name() + "_spice_output.txt";
+  of << "	wrdata " <<ngspice_res<<" i(Vbias)";
   for (int nm = 0; nm < n_dofs; nm++ )
-	  of << " V(" << nm << ")";
+	  if (!_gnd_ids.count(nm) && !_src_ids.count(nm))
+	    of << " V(" << nm << ")";
+		  
+		
   of << "\n";
   of << ".endc \n";
   of << ".end \n";
   of.close();
 
-  //for (auto&& a : _gnd_ids)
-  //  std::cerr  << a << " ";
-  //std::cerr << "\n\n";
 
-  //for (auto&& a : _src_ids)
-  //  std::cerr  << a << " ";
-  //std::cerr << "\n";
+
+
+  for (auto&& a : _gnd_ids)
+    std::cerr  << a << " ";
+  std::cerr << "\n\n";
+
+  for (auto&& a : _src_ids)
+    std::cerr  << a << " ";
+  std::cerr << "\n";
 
   // call ngspice
   Messages::info("calling Spice: " + _spice);
@@ -268,6 +283,43 @@ PVModule::do_solve(void)
     throw(SolveFailedException("Could not run Spice."));
 
   // parse output and populate solution vectors
+  Messages::info("parse output");
+  ifstream file(ngspice_res);
+  cout<<ngspice_res<<endl;
+  string line;
+  if (std::getline(file, line)) { // for test,  just reading the first line, voltage == 0 
+    stringstream ss(line);
+    double value;
+	int column_indx=1;
+	double src_vol;
+	
+	// parse output for given voltage and populate in an queue
+	queue<double> temp_res;
+	while (ss >> value) {
+	  if (column_indx == 4)  // column 4 represent the total current of the cell
+		  _current.push_back(value * 1e7); //mA/cm^2
+	  if (column_indx == 5) // column 5 represent source voltage
+	    src_vol = value;
+	  if (column_indx > 5 && column_indx % 2 == 0){  // ignoring odd column, they are just repeating the source voltage 
+	    temp_res.push(value);
+	  }
+      column_indx++;
+    
+	}
+	// map the ngspice results to actual elements
+	for (int nm = 0; nm < n_dofs; nm++)
+	  if (_gnd_ids.count(nm))
+	    _spic_res.push_back(0);
+	  else if (_src_ids.count(nm))
+        _spic_res.push_back(src_vol);
+	  else{
+	    _spic_res.push_back(temp_res.front()); //results
+	    temp_res.pop();
+	}		
+			
+  }
+  file.close();
+  
 }
 
 
@@ -359,7 +411,30 @@ PVModule::get_solution_secure(const Elem* elem,
 }
 
 
+void
+PVModule::plot_globaldata(void)
+{
+  string outdir = get_output_directory();
+  if (!_current.empty()){
+    string filename(outdir + "/" + get_output_filename() + "_CurrentDensity.dat");
+    ofstream file;
+    file.open(filename.c_str());
+    if (file.good())
+    {
+      file << "# " << get_type() << " CurrentDensity (" << get_name() << ")\n";
+      file << "# " << 1 << " CurrentDensity" << "\n";
+      file << "# " << "CurrentDensity" << "\n";
+      for (auto i :_current)
+        file << i << endl; 
+      
+	  file << "\n";
 
+    }
+    file.close();
+
+  }
+	
+}
 void
 PVModule::assemble(void)
 {

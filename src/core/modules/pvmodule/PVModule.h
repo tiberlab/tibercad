@@ -50,6 +50,9 @@ class TBDLLOCAL PVModule : public SimulationInterface
 
     //! Print some useful information
     virtual void do_print_info(void) final;
+	
+	//! Print global data
+	virtual void plot_globaldata(void);
 
 
     //! We need to create a physical model
@@ -110,14 +113,20 @@ class TBDLLOCAL PVModule : public SimulationInterface
 
     std::string _spice {"ngspice"};
 	
-	  std::vector<double> _jv_ref_v;
-	  std::vector<double> _jv_ref_j;
+	std::vector<double> _jv_ref_v;
+	std::vector<double> _jv_ref_j;
+	
+	std::vector<double> _spic_res;
+	std::vector<double> _current;
 
     //! The node ids for ground nodes
     std::set<unsigned int> _gnd_ids {0};
 
     //! The node ids for the voltage source
     std::set<unsigned int> _src_ids;
+	
+	
+	
 
 };
 
