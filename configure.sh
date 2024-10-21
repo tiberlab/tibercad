@@ -12,7 +12,7 @@ LIBMESHDIR=${BUILDDIR}/libmesh-1.7.1-${ARCH}-linux
 export CXX=${SDKDIR}/${ARCH}-linux/bin/mpicxx
 export CC=${SDKDIR}/${ARCH}-linux/bin/mpicc
 export FC=${SDKDIR}/${ARCH}-linux/bin/mpifort
-export MPIEXEC=${SDKDIR}/${ARCH}-linux/bin/mpiexec
+export MPIEXEC=${SDKDIR}/${ARCH}-linux/bin/mpirun
 #export FCFLAGS="${FCFLAGS} -fexceptions -gcc-name=${CC} -gxx-name=${CXX} -nofor-main"
 #export LDFLAGS="${LDFLAGS} `/usr/pack/tibercad_dev-2.2-ma/${ARCH}-linux/bin/mpicxx -showme:link`"
 #export LDFLAGS="${LDFLAGS} `${PETSC_DIR}/externalpackages/mpich2-1.0.8/bin/mpicxx -showme:link`"
