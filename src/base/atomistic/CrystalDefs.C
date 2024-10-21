@@ -327,7 +327,7 @@ CrystalDefs::IS_to_crystal_system(const std::string &int_sym)
   std::string system = "";
 
   auto it = find(_international_sym.begin(), _international_sym.end(), int_sym);
-  unsigned int id = std::distance(it, _international_sym.begin());
+  unsigned int id = std::distance(_international_sym.begin(), it);
 
   switch (id)
   {
@@ -377,7 +377,7 @@ CrystalDefs::IS_to_crystal_class(const std::string& int_sym)
   auto it = find(_international_sym.begin(), _international_sym.end(), int_sym);
   if (it != _international_sym.end())
   {
-    cc = _crystal_classes[std::distance(it, _international_sym.begin())]; 
+    cc = _crystal_classes[std::distance(_international_sym.begin(), it)]; 
   }
 
   return cc;
@@ -391,7 +391,7 @@ CrystalDefs::crystal_class_to_IS(const std::string& cclass)
   auto it = find(_crystal_classes.begin(), _crystal_classes.end(), cclass);
   if (it != _crystal_classes.end())
   {
-    sym = _international_sym[std::distance(it, _crystal_classes.begin())]; 
+    sym = _international_sym[std::distance(_crystal_classes.begin(), it)]; 
   }
 
   return sym;
@@ -409,7 +409,7 @@ CrystalDefs::spacegroup_to_IS_id(const std::string &sp_grp)
   catch (boost::bad_lexical_cast &)
   {
     auto it = find(_space_groups.begin(), _space_groups.end(), sp_grp);
-    id = std::distance(it, _space_groups.begin());
+    id = std::distance(_space_groups.begin(), it);
     
     id++;
   }
@@ -470,7 +470,7 @@ CrystalDefs::schoenflies_to_IS(const std::string &schoenflies)
   auto it = find(_schoenflies.begin(), _schoenflies.end(), schoenflies);
   if (it != _schoenflies.end())
   {
-    id = std::distance(it, _schoenflies.begin()); 
+    id = std::distance(_schoenflies.begin(), it); 
   }
   else
   {
