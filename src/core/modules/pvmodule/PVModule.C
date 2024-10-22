@@ -150,7 +150,7 @@ PVModule::do_solve(void)
   // write Spice netlist
   string netlist = get_output_directory() + "/" + get_name() + "_spice.cir";
   ofstream of(netlist);
-  of << "* Modules scale simulation model \n" << std::endl;
+  of << "* PV Module scale simulation model \n" << std::endl;
 
   // idea: loop through matrix, and take coupling elements as resistors
   // DOF indices can be used as node numbers
@@ -186,8 +186,9 @@ PVModule::do_solve(void)
         if (area > 0)
         {
           // create netlist of the elementary cell, scaled with area
-          unsigned int this_node = i;
-          unsigned int bot_node = i + 1;
+          // increase by one because 0 is reserved for ground
+          unsigned int this_node = i + 1;
+          unsigned int bot_node = i + 2;
 
           // substitute node ids, if they are on contacts
           check_contact_node(this_node);
@@ -229,6 +230,10 @@ PVModule::do_solve(void)
           t_or_b = "B ";
         }
 
+        // increase by one because 0 is reserved for ground
+        this_node++;
+        other_node++;
+
         // substitute node ids, if they are on contacts
         check_contact_node(this_node);
         check_contact_node(other_node);
@@ -248,10 +253,10 @@ PVModule::do_solve(void)
   of << ".control \n";
   of << "	op\n";
   of << "	dc Vbias 0 4 0.1 \n";
-  
+
   string ngspice_res = get_output_directory() + "/" + get_name() + "_spice_output.txt";
-  of << "	wrdata " <<ngspice_res<<" i(Vbias)";
-  for (int nm = 0; nm < n_dofs; nm++ )
+  of << "	wrdata " << ngspice_res << " i(Vbias)";
+  for (int nm = 1; nm <= n_dofs; nm++ )
 	  if (!_gnd_ids.count(nm) && !_src_ids.count(nm))
 	    of << " V(" << nm << ")";
 		  
@@ -276,7 +281,8 @@ PVModule::do_solve(void)
   Messages::info("calling Spice: " + _spice);
   string log = get_output_directory() + "/" + get_name() + "_spice.log";
   string outfile = get_output_directory() + "/" + get_name() + "_spice.dat";
-  string cmdline = _spice + " -b -o " + log + " -r " + outfile + " " + netlist ;
+  //string cmdline = _spice + " -b -o " + log + " -r " + outfile + " " + netlist ;
+  string cmdline = _spice + " -b -o " + log + " " + netlist ;
   int ret = std::system(cmdline.c_str());
 
   if (ret == -1)
@@ -307,7 +313,7 @@ PVModule::do_solve(void)
     
 	}
 	// map the ngspice results to actual elements
-	for (int nm = 0; nm < n_dofs; nm++)
+	for (int nm = 1; nm <= n_dofs; nm++)
 	  if (_gnd_ids.count(nm))
 	    _spic_res.push_back(0);
 	  else if (_src_ids.count(nm))
@@ -435,6 +441,8 @@ PVModule::plot_globaldata(void)
   }
 	
 }
+
+
 void
 PVModule::assemble(void)
 {
@@ -584,6 +592,9 @@ PVModule::assemble(void)
             unsigned int dof_id = dof_indices_top[n];
             if (layer == PVModuleBoundaryModel::BOTTOM)
               dof_id = dof_indices_bot[n];
+
+            // spice node id 0 is reserved for ground
+            dof_id++;
             
             if (type == PVModuleBoundaryModel::GND)
               _gnd_ids.insert(dof_id);
@@ -601,6 +612,6 @@ PVModule::assemble(void)
 
   }
   system.matrix->close();
-  system.matrix->print_matlab("K.m");
+  //system.matrix->print_matlab("K.m");
 
 }
