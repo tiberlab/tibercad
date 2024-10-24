@@ -587,7 +587,6 @@ AtomisticGenerator::dorestrict(bool passivation)
 }
 
 
-
 double
 AtomisticGenerator::substitution_probability(size_t id, const Specie& sp)
 {
@@ -673,10 +672,14 @@ AtomisticGenerator::substitution_probability(size_t id, const Specie& sp)
     n_neigh = 1;
 
   double ratio = static_cast<double>(same_species) / n_neigh;
-  double probability = (1 - 0.99 * cos(ratio * M_PI / 2.0));
+  //double probability = (1 - 0.99 * cos(ratio * M_PI / 2.0));
+  double probability = (1 - cos(ratio * M_PI / 2.0));
 
   return probability;
 }
+
+
+
 
 
 bool
