@@ -239,15 +239,17 @@ PVModule::do_solve(void)
         check_contact_node(other_node);
 
         if (this_node != other_node)
+		{
           of << "R" << i / 2 << "_" << this_node << "_" << other_node
              << t_or_b << this_node << " " << other_node << " " << resistance << "\n";
+		}
       }
 
     }
   }
   
   //of << "Vbias "<<*_gnd_ids.begin() <<" " << *_src_ids.begin() << " " << _voltage <<" \n";
-  of << "Vbias "<<*_gnd_ids.begin() <<" " << *_src_ids.begin() << " " << "0" <<" \n";
+  of << "Vbias "<<*_src_ids.begin() <<" " << *_gnd_ids.begin() << " " << "0" <<" \n";
   of << "* End of netlist \n";
   of << "* Simulation command \n";
   of << ".control \n";
@@ -268,11 +270,11 @@ PVModule::do_solve(void)
 
 
 
-
+  std::cerr << "gnd nodes : ";
   for (auto&& a : _gnd_ids)
     std::cerr  << a << " ";
   std::cerr << "\n\n";
-
+  std::cerr << "source nodes : ";
   for (auto&& a : _src_ids)
     std::cerr  << a << " ";
   std::cerr << "\n";
@@ -290,10 +292,11 @@ PVModule::do_solve(void)
 
   // parse output and populate solution vectors
   Messages::info("parse output");
+  
   ifstream file(ngspice_res);
   cout<<ngspice_res<<endl;
   string line;
-  if (std::getline(file, line)) { // for test,  just reading the first line, voltage == 0 
+  while (std::getline(file, line)) { // for test,  just reading the first line, voltage == 0 
     stringstream ss(line);
     double value;
 	int column_indx=1;
@@ -302,8 +305,8 @@ PVModule::do_solve(void)
 	// parse output for given voltage and populate in an queue
 	queue<double> temp_res;
 	while (ss >> value) {
-	  if (column_indx == 4)  // column 4 represent the total current of the cell
-		  _current.push_back(value * 1e7); //mA/cm^2
+	  if (column_indx == 2)  // column 4 represent the total current of the cell
+		  _current.push_back(value); //mA/cm^2
 	  if (column_indx == 5) // column 5 represent source voltage
 	    src_vol = value;
 	  if (column_indx > 5 && column_indx % 2 == 0){  // ignoring odd column, they are just repeating the source voltage 
@@ -313,18 +316,22 @@ PVModule::do_solve(void)
     
 	}
 	// map the ngspice results to actual elements
+	std::vector<double> spic_res;
 	for (int nm = 1; nm <= n_dofs; nm++)
 	  if (_gnd_ids.count(nm))
-	    _spic_res.push_back(0);
+	    spic_res.push_back(0);
 	  else if (_src_ids.count(nm))
-        _spic_res.push_back(src_vol);
+        spic_res.push_back(src_vol);
 	  else{
-	    _spic_res.push_back(temp_res.front()); //results
+	    spic_res.push_back(temp_res.front()); //results
 	    temp_res.pop();
+		
+	_spic_res.push_back(spic_res);
 	}		
 			
   }
   file.close();
+  
   
 }
 
@@ -592,9 +599,11 @@ PVModule::assemble(void)
             unsigned int dof_id = dof_indices_top[n];
             if (layer == PVModuleBoundaryModel::BOTTOM)
               dof_id = dof_indices_bot[n];
-
+		  
             // spice node id 0 is reserved for ground
-            dof_id++;
+			dof_id++;
+
+			
             
             if (type == PVModuleBoundaryModel::GND)
               _gnd_ids.insert(dof_id);

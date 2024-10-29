@@ -57,7 +57,7 @@ PVModuleBoundaryModel::do_init(void)
   if (type == "source") _contact_type = SRC;
 
   string layer = get_option("layer", "bottom");
-  if (type == "bottom") _contact_layer = BOTTOM;
-  if (type == "top") _contact_layer = TOP;
+  if (layer == "bottom") _contact_layer = BOTTOM;
+  if (layer == "top") _contact_layer = TOP;
 }
 

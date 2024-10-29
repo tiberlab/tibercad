@@ -116,8 +116,9 @@ class TBDLLOCAL PVModule : public SimulationInterface
 	std::vector<double> _jv_ref_v;
 	std::vector<double> _jv_ref_j;
 	
-	std::vector<double> _spic_res;
+	std::vector<std::vector<double>> _spic_res;
 	std::vector<double> _current;
+	std::vector<double> _voltage;
 
     //! The node ids for ground nodes
     std::set<unsigned int> _gnd_ids {0};
