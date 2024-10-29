@@ -683,16 +683,16 @@ AtomisticGenerator::substitution_probability(size_t id, const Specie& sp)
 
 
 bool
-AtomisticGenerator::suppress_substitution(size_t id, const Specie& sp,
-                                          const vector<double>& dist_to_ban)
+AtomisticGenerator::check_neighbors(size_t id, const Specie& sp,
+                                    const vector<double>& distances)
 {
 
-  if (dist_to_ban.empty())
+  if (distances.empty())
     return(false);
 
   const BondMap& bm = *_bondmap;
 
-  bool suppress = false;
+  bool found = false;
 
   // fuzzy comparison of Points
   class Comp
@@ -735,11 +735,11 @@ AtomisticGenerator::suppress_substitution(size_t id, const Specie& sp,
           double dist = libMesh::Point(pos2 -
                                        _structure_basis[id].get_position()).norm();
 
-          suppress |= binary_search(dist_to_ban.begin(), dist_to_ban.end(), dist,
+          found |= binary_search(distances.begin(), distances.end(), dist,
                                     [](double a, double b)
                                     { return (a < 0.9 * b); });
 
-          if (suppress)
+          if (found)
             break;
         }
 
@@ -763,30 +763,30 @@ AtomisticGenerator::suppress_substitution(size_t id, const Specie& sp,
                 double dist = libMesh::Point(pos4 -
                                              _structure_basis[id].get_position()).norm();
 
-                suppress |= binary_search(dist_to_ban.begin(), dist_to_ban.end(), dist,
+                found |= binary_search(distances.begin(), distances.end(), dist,
                                           [](double a, double b)
                                           { return (a < 0.9 * b); });
 
-                if (suppress)
+                if (found)
                   break;
               }
             }
           } // nn3
 
-          if (suppress)
+          if (found)
             break;
         } // nn2
 
-        if (suppress)
+        if (found)
           break;
       }
     } // nn
 
-    if (suppress)
+    if (found)
       break;
   }
 
-  return suppress;
+  return found;
 }
 
 
@@ -1843,7 +1843,14 @@ AtomisticGenerator::build_random_alloy()
 
   vector<string> sup_neigh;
   map<Specie, vector<int>> neigh_suppression;
+  bool amplify_neigh = false;
   _as->get_options().get_option("suppress_neighbors", sup_neigh);
+  if (sup_neigh.empty())
+  {
+    _as->get_options().get_option("amplify_neighbors", sup_neigh);
+    amplify_neigh = !sup_neigh.empty();
+  }
+
   if (sup_neigh.size() == 1)
   {
     neigh_suppression[Specie(sup_neigh[0])] = {1};
@@ -1862,7 +1869,10 @@ AtomisticGenerator::build_random_alloy()
     clustering = true;
 
     Messages m;
-    m.info("Suppressing following atomic neighbors:");
+    if (amplify_neigh)
+      m.info("Amplifying following atomic neighbors:");
+    else
+      m.info("Suppressing following atomic neighbors:");
     m.indent();
 
     ostringstream os;
@@ -2237,9 +2247,10 @@ AtomisticGenerator::build_random_alloy()
             {
               clust_sp = sp;
 
-              if (suppress_substitution(id, sp, distances[regid][sp]))
+              if (check_neighbors(id, sp, distances[regid][sp]))
               {
-                rr = 0.0;
+                // if we want to suppress, set to 0.0, otherwise to 1.0
+                rr = amplify_neigh ? 1.0 : 0.0;
                 ss = it->second;
                 new_frac[sp] = rr;
                 changed = true;

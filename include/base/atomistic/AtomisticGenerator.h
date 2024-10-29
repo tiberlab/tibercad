@@ -204,18 +204,20 @@ private:
    */
   double substitution_probability(size_t id, const Specie& sp);
 
-  //! Decide whether substition of atom is suppressed
+  //! Check for neighbors at certain distances
   /*!
-   * This method allows to suppress certian neighbors, like
-   * 1st NN, 2nd NN etc.
+   * This method allows to find certian neighbors, like
+   * 1st NN, 2nd NN etc. This is used to suppress or
+   * enhance certain neighbors in the structure.
+   * 
    * 
    * \param id the index of the atom to be substituted
-   * \param sp the species to be put
+   * \param sp the species to check for
    * \param dist_to_ban a vactor with neighbor distances of the same
-   *        species to suppress
+   *        species to check for
    */
-  bool suppress_substitution(size_t id, const Specie& sp,
-                             const std::vector<double>& dist_to_ban);
+  bool check_neighbors(size_t id, const Specie& sp,
+                       const std::vector<double>& distances);
 
   //! BulkCrystal of the reference material
   const BulkCrystal* _bulk {nullptr};
