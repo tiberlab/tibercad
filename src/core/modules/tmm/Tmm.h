@@ -4,7 +4,7 @@
 #define _TMM_H_
 
 #include "SimulationInterface.h"
-
+#include "matrix2by2.h"
 using namespace std;
 
 
@@ -36,58 +36,6 @@ class TBDLLOCAL Tmm : public SimulationInterface
 
 
 
-  class Matrix_2by2 {
-    public:
-
-    Matrix_2by2();
-    Matrix_2by2(double, double,double,double);
-
-    //! defining operator  for two matrics product
-    Matrix_2by2 operator*(Matrix_2by2 const & old_Matrix_2by2);
-
-
-    void inv();
-
-    void unit_matrix();
-
-
-
-    //! defining a function to print matrix elements
-    void print();
-
-    //! defining a functions to Set matrix elements
-    /*!
-     * elm = 0 is corresponding to element m00
-     * elm = 1 is corresponding to element m01
-     * elm = 2 is corresponding to element m10
-     * elm = 3 is corresponding to element m11
-     */
-    //!
-    void set(int elm, std::complex<double> a);
-
-    //! defining a functions to Get matrix elements
-    /*!
-     * elm = 0 is corresponding to element m00
-     * elm = 1 is corresponding to element m01
-     * elm = 2 is corresponding to element m10
-     * elm = 3 is corresponding to element m11
-     */
-    //!
-    std::complex<double> get(int elm);
-
-
-  private :
-
-    //! variables corresponding to elements of the matrix
-    std::complex<double> _m00;
-    std::complex<double> _m01;
-    std::complex<double> _m10;
-    std::complex<double> _m11;
-};
-
-
-
-
   //! defining a function to return M matrix
   /*!
   * "n_real" is real part of refractive index
@@ -96,9 +44,9 @@ class TBDLLOCAL Tmm : public SimulationInterface
   * "lambda" is the light's wavelength
   * "theta" is the light's traveling angle(normal incident is equal to '0')
   */
-  Tmm::Matrix_2by2 get_M(double n_real,double n_imag,double length,double lambda, double kr, double phase);
+  matrix2by2 get_M(double n_real,double n_imag,double length,double lambda, double kr, double phase);
 
-  Tmm::Matrix_2by2 Determinal_Matrix (Tmm::Matrix_2by2 MAT);
+  matrix2by2 Determinal_Matrix (matrix2by2 MAT);
 
 
   std::complex<double> cmlx_sqrt(std::complex<double> in);
@@ -117,7 +65,7 @@ class TBDLLOCAL Tmm : public SimulationInterface
   * "theta_layer1" is the first layer light's traveling angle(normal incident is equal to '0')
   * "theta_layer2" is the second layer light's traveling angle(normal incident is equal to '0')
   */
-  Tmm::Matrix_2by2 get_D(double n1_real,double n1_imag,double n2_real,double n2_imag, double kr, double lambda,double mode);
+  matrix2by2 get_D(double n1_real,double n1_imag,double n2_real,double n2_imag, double kr, double lambda,double mode);
 
   void dipole_source(double & A_P, double & A_N, double Mode, double Oraintation, double lambda, double cos_phi_inter);
 
@@ -234,7 +182,6 @@ class TBDLLOCAL Tmm : public SimulationInterface
     std::vector<double> _Generation_rate;
     std::vector<double> _Poynting_external;
     std::vector<double> _Energy_loss_external;
-    std::vector<double> _Energy_loss_internal;
 	
     std::vector<double> _Internal_Wavelength;
     std::vector<double> _Internal_Source_ElectricField;
