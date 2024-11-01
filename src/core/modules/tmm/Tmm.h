@@ -131,7 +131,6 @@ class TBDLLOCAL Tmm : public SimulationInterface
      * "incident_angle" is angle of light in the first layer
      * normal incident is equal to incident_angle = 0
      */
-    vector<double> theta_cal(vector<double> n_real , double incident_angle);
 
 
     Device* _device;
@@ -194,12 +193,6 @@ class TBDLLOCAL Tmm : public SimulationInterface
     std::vector<double> _angle;
     std::vector<double> _Poynting_front;
     std::vector<double> _Poynting_back;
-    std::vector<double> _Fraction_ratio;
-    std::vector<double> _kr;
-    //std::vector<double> _Output_back_angle;
-
-
-    
 
 
     /*!

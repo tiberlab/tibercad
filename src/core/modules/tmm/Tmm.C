@@ -159,8 +159,6 @@ void Tmm::reset_global_variables()
     _angle.clear();
     _Poynting_front.clear();
     _Poynting_back.clear();
-    _Fraction_ratio.clear();
-    _kr.clear();
 
     _solutions.clear();
 	
@@ -322,23 +320,6 @@ void Tmm::solving_internal_source(vector<complex<double>> & E_int_f, vector<comp
   E_int_b[dipole_loc-1] = (E_int_b_l[dipole_loc-1] + E_int_b_r[dipole_loc-1]) /2;
 }
 
-
-
-vector<double> Tmm::theta_cal(vector<double> n_real , double incident_angle)
-{
-  vector<double> theta(n_real.size());
-  theta[0]=incident_angle;
-  for (int k=1; k<n_real.size();k++)
-  {
-    theta[k]=sin(theta[k-1]*M_PI/180);
-
-    theta[k]=(n_real[k-1]/n_real[k])*theta[k];
- 
-    theta[k]=asin(theta[k])*180/M_PI;
-  
-  }
-  return theta;
-}
 
 
 vector<double> Tmm::linear_interpolation1 (vector<double> xData, vector<double> yData, vector<double> x_interp)
@@ -667,10 +648,8 @@ Tmm::do_solve(void)
   string outdir = get_output_directory();
   std::ifstream file_test(outdir + "/green_matrix.dat");
   if (file_test.is_open())
-  {
 	  _green_vector_solved = 1;
-	  std::cout<<"the green_matrix.dat exists" <<std::endl;
-  }
+
 
 
 		
@@ -860,9 +839,8 @@ Tmm::do_solve(void)
 
 	size_t mesh_size = n_real.size();
 
-    if (direction != "top to down propagation")
+    if (direction != "top to down propagation") // if the incomming wave is from the other sild, so the vectors should be revesed
     {
-		std::cout<<direction<<std::endl;
       for (int uu=BC_check_init.size()-2; uu>=0;uu -= 2)
         BC_check.push_back(BC_check_init[uu]);
       for (int uu=mesh_size-1; uu>=0;--uu)
@@ -877,7 +855,6 @@ Tmm::do_solve(void)
 
     }else
 	{
-		std::cout<<direction<<std::endl;
       for (size_t uu=1; uu<BC_check_init.size();uu += 2)
         BC_check.push_back(BC_check_init[uu]);
 	}
@@ -916,8 +893,8 @@ Tmm::do_solve(void)
 			"is missing ");
 	  double radiation = sun_interp[i] / 1e3;            // [W/m^2/nm]
       double Esun2 = 2 * radiation / (c0 * 1e-9 * e0);   // [V^2/m^2/nm]
-      vector<double> theta(mesh_size);
-      theta=Tmm::theta_cal(n_real,incoming_angle);
+      vector<double> theta(mesh_size,0);
+      //theta = Tmm::theta_cal(n_real,incoming_angle);
       double rnd = 1;
       double phase_step;
       vector<double> Generation_rate_avg(mesh_size,0);
@@ -1258,8 +1235,6 @@ Tmm::do_solve(void)
       double rnd = 1;
       double phase_step=0;
       
-      _Fraction_ratio.resize(_steps);
-      _kr.resize(_steps);
       _angle.resize(_steps);
       _Poynting_front.resize(_steps);
       _Poynting_back.resize(_steps);
@@ -1295,8 +1270,6 @@ Tmm::do_solve(void)
               kr = kr_vec[kr_num];
               if (dipole_num == 0)
               {
-                _kr[cnt] = kr;
-                _Fraction_ratio[cnt] = abs(kr/ks);
 				for (size_t nm = 0; nm < dipole_power.size(); ++nm) 
 					_green_vector[nm].resize(dipole_pow_list.size());
               }
