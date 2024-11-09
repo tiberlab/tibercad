@@ -1844,6 +1844,8 @@ AtomisticGenerator::build_random_alloy()
   vector<string> sup_neigh;
   map<Specie, vector<int>> neigh_suppression;
   bool amplify_neigh = false;
+  double neigh_probability = 1.0;
+
   _as->get_options().get_option("suppress_neighbors", sup_neigh);
   if (sup_neigh.empty())
   {
@@ -1868,6 +1870,8 @@ AtomisticGenerator::build_random_alloy()
   {
     clustering = true;
 
+    neigh_probability = _as->get_options().get_option("neighbor_probability", neigh_probability);
+
     Messages m;
     if (amplify_neigh)
       m.info("Amplifying following atomic neighbors:");
@@ -1884,6 +1888,7 @@ AtomisticGenerator::build_random_alloy()
 
       os << "\n";
     }
+    os << "with probability " << neigh_probability;
     m.info(os.str());
   }
 
@@ -2250,7 +2255,7 @@ AtomisticGenerator::build_random_alloy()
               if (check_neighbors(id, sp, distances[regid][sp]))
               {
                 // if we want to suppress, set to 0.0, otherwise to 1.0
-                rr = amplify_neigh ? 1.0 : 0.0;
+                rr = amplify_neigh ? neigh_probability : 1.0 - neigh_probability;
                 ss = it->second;
                 new_frac[sp] = rr;
                 changed = true;
