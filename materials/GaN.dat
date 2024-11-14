@@ -89,13 +89,6 @@ C33 = 405.0
 C44 = 95.0
 
 
-[stiffness]
-C11 = 367.0
-C12 = 135.0
-C13 = 103.0
-C33 = 405.0
-C44 = 95.0
-
 # piezoelectricity data 
 [piezoelectricity]
 e33 = 0.67
