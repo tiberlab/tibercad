@@ -164,6 +164,9 @@ class TBDLLOCAL Negf : public SimulationInterface
         
         //! area of the cell for computing inelastic coupling
         double cell_area;
+
+        //! volume of the cell for computing inelastic coupling
+        double volume;
     };
 
 
@@ -198,6 +201,7 @@ class TBDLLOCAL Negf : public SimulationInterface
       POLAROPTICAL,
       NONPOLAROPTICAL,
       ACOUSTICINEL,
+      PHOTON,
     };
 
     //! The structure containing elastic and inelastic scattering parameters. 
@@ -214,7 +218,7 @@ class TBDLLOCAL Negf : public SimulationInterface
       int scba_niter = 0;
 
       // Tolerance for self-consistent Born approximation
-      double scba_tol = 0.0;
+      double scba_tol = 1e-7;
 
       // List of orbitals per atom
       std::vector<int> orbsperatm = std::vector<int>(1, 0);
@@ -229,19 +233,27 @@ class TBDLLOCAL Negf : public SimulationInterface
       double eps_r = 1.0;
 
       // screening paramter
-      double q0 = 0.0;
+      double q0 = 1.0;
 
       // deformation potential
       double D0 = 0.0;
 
-      // whether Umklapp have to be added up
-      bool tUmklapp = false;
-
-      // whether k -> -k symmetry
-      bool tKSymmetry = true;
-
       // whether tri-diagonal blocks are computed
       bool tTridiagonal = true;
+
+      // the intensity of incident light
+      double intensity = 0.0;
+
+      // the energy of the incident photon
+      double Ephot = 0.0;
+
+      // the refraction index
+      double nr = 1.0;
+
+      // the direction of the polarization vector (1-indexed)
+      int poldir = 3;
+
+      int deb_id = 0;
     };
 
     double get_band_edge(const std::string& band) const;
@@ -313,6 +325,11 @@ class TBDLLOCAL Negf : public SimulationInterface
     //! Passes the Hamiltonians to libNEGF for each kpoint
     void set_hamiltonians(void);
 
+    //! Computes (R_a - R_b) * H_ab(k) for each k (in CSR format)
+    // void get_polarization_matrices(std::vector<std::vector<std::vector<std::complex<double>>>>& P, int poldir);
+    void get_polarization_matrices(std::vector<std::vector<int>>& IP, std::vector<std::vector<int>>& JP, 
+                                   std::vector<std::vector<std::complex<double>>>& P, int poldir);
+
     //! Pass information about atomistic structure such as: lattice vectors, coordinates of atoms, matrix_indices.
     void init_basis(void);
 
@@ -332,6 +349,10 @@ class TBDLLOCAL Negf : public SimulationInterface
     void setup_interactions(void);
 
     void print_interactions(void);
+
+    void  compute_area_and_volume(void);
+
+    template<typename T> void compute_area_and_volume(const T& a, const T& b, const T& c);
 
     Device* _device;
 

@@ -186,17 +186,20 @@ public:
   //! Print memory statistics
   void print_memory_statistics(void);
 
-  void set_elph_dephasing(std::vector<double> coupling, int scba_niter);
+  void set_elph_dephasing(std::vector<double>& coupling, int scba_niter);
 
-  void set_elph_block_dephasing(std::vector<double> coupling, std::vector<int> orbsperatm, int scba_niter);
+  void set_elph_block_dephasing(std::vector<double>& coupling, std::vector<int>& orbsperatm, int scba_niter);
 
-  void set_elph_s_dephasing(std::vector<double> coupling, std::vector<int>orbsperatm, int scba_niter);
+  void set_elph_s_dephasing(std::vector<double> &coupling, std::vector<int>& orbsperatm, int scba_niter);
 
-  void set_elph_polaroptical(std::vector<double> coupling,  double wq, double kbT, double deltaz, double eps_r,  double eps_inf, 
+  void set_elph_polaroptical(std::vector<double>& coupling,  double wq, double kbT, double deltaz, double eps_r,  double eps_inf, 
                              double q0, double cell_area, int scba_niter,  bool tTridiagonal);
 
-  void set_elph_nonpolaroptical(std::vector<double> coupling, double wq, double kbT, double deltaz, double D0, double cell_area, 
+  void set_elph_nonpolaroptical(std::vector<double>& coupling, double wq, double kbT, double deltaz, double D0, double cell_area, 
                                 int scba_niter, bool tTridiagonal);
+
+  void set_elphot(std::vector<double>& coupling, double cell_vol, double nr, double Ephot, double intensity, std::vector<std::vector<int>>& IP,
+                  std::vector<std::vector<int>>& JP, std::vector<std::vector<Complex>>& P, int poldir, int scba_niter, bool tTridiagonal, int deb_id);
 
   void set_scba_tolerances(double elastic_tol, double inelastic_tol);
 

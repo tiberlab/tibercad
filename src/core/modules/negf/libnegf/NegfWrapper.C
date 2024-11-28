@@ -7,7 +7,8 @@
 
 namespace
 {
-  void TwoDArray2Fortran(const std::vector<std::vector<double>> array_2d, std::vector<double>& out_array, 
+  template <typename T>
+  void TwoDArray2Fortran(const std::vector<std::vector<T>>& array_2d, std::vector<T>& out_array, 
        int& rows, int& columns, bool transpose=false)
   {
     // Note: Fortran uses column-major order  
@@ -518,28 +519,28 @@ NegfWrapper::print_mat(void)
 
 
 void
-NegfWrapper::set_elph_dephasing(std::vector<double> coupling, int scba_niter)
+NegfWrapper::set_elph_dephasing(std::vector<double>& coupling, int scba_niter)
 {
   negf_set_elph_dephasing(_handler, coupling.data(), coupling.size(), scba_niter);
 }
 
 
 void
-NegfWrapper::set_elph_block_dephasing(std::vector<double> coupling, std::vector<int> orbsperatm, int scba_niter)
+NegfWrapper::set_elph_block_dephasing(std::vector<double>& coupling, std::vector<int>& orbsperatm, int scba_niter)
 {
   negf_set_elph_block_dephasing(_handler, coupling.data(), coupling.size(), orbsperatm.data(), orbsperatm.size(), scba_niter);
 }
 
 
 void
-NegfWrapper::set_elph_s_dephasing(std::vector<double> coupling, std::vector<int>orbsperatm, int scba_niter)
+NegfWrapper::set_elph_s_dephasing(std::vector<double>& coupling, std::vector<int>& orbsperatm, int scba_niter)
 {
   negf_set_elph_s_dephasing(_handler, coupling.data(), coupling.size(), orbsperatm.data(), orbsperatm.size(), scba_niter);
 }
 
 
 void
-NegfWrapper::set_elph_polaroptical(std::vector<double> coupling,  double wq, double kbT, double deltaz, double eps_r,  double eps_inf, 
+NegfWrapper::set_elph_polaroptical(std::vector<double>& coupling,  double wq, double kbT, double deltaz, double eps_r,  double eps_inf, 
              double q0, double cell_area, int scba_niter,  bool tTridiagonal)
 {
   negf_set_elph_polaroptical(_handler, coupling.data(), coupling.size(), wq, kbT, deltaz, eps_r, eps_inf, q0, cell_area, 
@@ -548,10 +549,40 @@ NegfWrapper::set_elph_polaroptical(std::vector<double> coupling,  double wq, dou
 
 
 void
-NegfWrapper::set_elph_nonpolaroptical(std::vector<double> coupling, double wq, double kbT, double deltaz, double D0, double cell_area, 
+NegfWrapper::set_elph_nonpolaroptical(std::vector<double>& coupling, double wq, double kbT, double deltaz, double D0, double cell_area, 
              int scba_niter, bool tTridiagonal)
 {
   negf_set_elph_nonpolaroptical(_handler, coupling.data(), coupling.size(), wq, kbT, deltaz, D0, cell_area, scba_niter, tTridiagonal);
+}
+
+
+void
+NegfWrapper::set_elphot(std::vector<double>& coupling, double cell_vol, double nr, double Ephot, double intensity, 
+                        std::vector<std::vector<int>>& IP, std::vector<std::vector<int>>& JP, 
+                        std::vector<std::vector<Complex>>& P, int poldir, int scba_niter, bool tTridiagonal, int deb_id)
+{
+  std::vector<int> IP_f;
+  int rows = IP.size();
+  int cols = IP[0].size();
+  TwoDArray2Fortran(IP, IP_f, rows, cols);
+
+  std::vector<int> JP_f;
+  rows = JP.size();
+  cols = JP[0].size();
+  TwoDArray2Fortran(JP, JP_f, rows, cols);
+
+  std::vector<Complex> P_f;
+  rows = P.size();
+  cols = P[0].size();
+  TwoDArray2Fortran(P, P_f, rows, cols);
+
+  int nK = IP.size();
+  int nrow = IP[0].size() - 1;
+  int nnz = P[0].size();
+
+  negf_set_elphot(_handler, coupling.data(), coupling.size(), cell_vol, nr, Ephot, intensity, nK, nrow, nnz, IP_f.data(), JP_f.data(), P_f.data(),
+                  poldir, scba_niter, tTridiagonal, deb_id);
+
 }
 
 

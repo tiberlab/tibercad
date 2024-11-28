@@ -287,10 +287,10 @@ Negf::init_hamil(void)
     _qdens_sys->add_variable("hdens", libMeshEnums::FIRST, LAGRANGE, &get_region_ids());
     _qdens_sys->init();
   }
-    
-  
+
+
   std::cout<<"(negf) init done. " <<std::endl;
-  
+
 }
 
 
@@ -526,6 +526,10 @@ Negf::init_k_space(ModelOptions& kopts)
       const std::vector<libMesh::RealVectorValue>& vectors = as->get_lattice_vectors();
       std::vector<double> r1(3,0.0);
       std::vector<double> r2(3,0.0);
+
+      // Compute area and volume for inelastic scattering
+      compute_area_and_volume();
+      
       switch (dim)
       {
          case 2:
@@ -575,6 +579,9 @@ Negf::init_k_space(ModelOptions& kopts)
         b(1) = (bbox.second(1) - bbox.first(1)) * get_mesh_units() * 1e9;
       if (get_option("z-periodicity", false) && (mesh_dim > 2))
         c(2) = (bbox.second(2) - bbox.first(2)) * get_mesh_units() * 1e9;
+
+      // Compute area and volume for inelastic scattering
+      compute_area_and_volume(a, b, c);
 
       switch (dim)
       {
@@ -3255,7 +3262,7 @@ Negf::set_kpoints(std::string solution)
     kopts = it->second;
     bool reduced_BZ = kopts.get_option("reduced_BZ", true);
     set_kpoints(_k_int_current, reduced_BZ);
-  }                                                       
+  }
   if (solution == "elDensity" || solution == "hlDensity")
   {
     ModelOptions::submodel_iterator it(get_options().submodels_begin("k_integration_density"));
@@ -3617,7 +3624,6 @@ Negf::parse_scattering_options(void)
   ModelOptions& phys_block = phys_opts->second;
 
   opt.deltaz = phys_block.get_option("delta_z", 0.01);
-  opt.cell_area = phys_block.get_option("cell_area", 1.0);
 
   if(phys_block.has_submodel("Scattering"))
   {
@@ -3660,16 +3666,25 @@ Negf::parse_scattering_options(void)
         inter.model = get_scattering_model(input_model);
         if (inter.model == DUMMY) throw InitFailedException("Inelastic scattering block was added without a valid model.");
 
+        // General
         inter.coupling = inel_options.get_option("coupling", inter.coupling);
         inter.scba_niter = inel_options.get_option("max_scba_iterations", inter.scba_niter);
         inter.scba_tol = inel_options.get_option("scba_tolerance", inter.scba_tol);
+        inter.tTridiagonal = inel_options.get_option("tridiagonal", inter.tTridiagonal);
 
+        // Phonons
         inter.wq = inel_options.get_option("phonon_frequency", inter.wq);
         inter.eps_inf = inel_options.get_option("eps_infinity", inter.eps_inf);
         inter.eps_r = inel_options.get_option("eps_0", inter.eps_r);
         inter.D0 = inel_options.get_option("deformation_potential", inter.D0);
-        inter.q0 = inel_options.get_option("screening_length", inter.q0);
-        inter.tTridiagonal = inel_options.get_option("tridiagonal", inter.tTridiagonal);
+        inter.q0 = 1 / (inel_options.get_option("screening_length", inter.q0) );
+
+        // Photons
+        inter.intensity = inel_options.get_option("incident_intensity", inter.intensity);
+        inter.Ephot = inel_options.get_option("photon_energy", inter.Ephot);
+        inter.nr = inel_options.get_option("refractive_index", inter.nr);
+        inter.poldir = inel_options.get_option("polarization_direction", inter.poldir);
+        inter.deb_id = inel_options.get_option("debug_id", inter.deb_id);
 
         _interactions.push_back(inter);
       }
@@ -3720,6 +3735,7 @@ Negf::get_scattering_model(std::string input_model)
   else if (input_model == "polar_optical_phonon") model = POLAROPTICAL;
   else if (input_model == "non_polar_optical_phonon") model = NONPOLAROPTICAL;
   else if (input_model == "acoustic_phonon") model = ACOUSTICINEL;
+  else if (input_model == "photon") model = PHOTON;
   else model = DUMMY;
   
   return model;
@@ -3731,6 +3747,7 @@ Negf::setup_interactions(void)
 {
   double kbT = SimulationOptions::temperature * Constants::kb;
   double cell_area = opt.cell_area;
+  double volume = opt.volume;
   double deltaz = opt.deltaz;
   double elastic_tol = 10.0;
   double inelastic_tol = 10.0;
@@ -3789,6 +3806,21 @@ Negf::setup_interactions(void)
         if ( inter.scba_tol < inelastic_tol ) inelastic_tol = inter.scba_tol;
         break;
       }
+      case PHOTON:
+      {
+        os << "Setting photon inelastic scattering model" << std::endl;
+        Messages::info(os.str()); os.str("");
+        
+        vector<vector<int>> IP;
+        vector<vector<int>> JP;
+        vector<vector<Complex>> P;
+        get_polarization_matrices(IP, JP, P, inter.poldir);
+
+        _libnegf->set_elphot(coup, volume, inter.nr, inter.Ephot, inter.intensity, IP, JP, P, inter.poldir,
+                             inter.scba_niter,  inter.tTridiagonal, inter.deb_id);
+        if ( inter.scba_tol < inelastic_tol ) inelastic_tol = inter.scba_tol;
+        break;
+      }
       default:
       {
         os << "Model in Scattering block " << i << " is not yet supported" << std::endl;
@@ -3814,4 +3846,133 @@ Negf::set_hamiltonians(void)
     setup_hamil();
     finalize();
   }
+}
+
+
+void
+Negf::get_polarization_matrices(vector<vector<int>>& IP, vector<vector<int>>& JP, vector<vector<Complex>>& P, int poldir)
+{
+  ModelOptions::submodel_iterator it(get_options().submodels_begin("k_integration_current"));
+  ModelOptions kopts;
+  kopts = it->second;
+  bool reduced_BZ = kopts.get_option("reduced_BZ", true);
+
+  vector<double> kweights;
+  vector<int> local_k_indices;
+  vector<dvector> global_abs_kpoints;
+  // For now this works just with the current integration
+  get_distributed_kpoints(_k_int_current, kweights, local_k_indices, global_abs_kpoints, reduced_BZ);
+
+  int nK = local_k_indices.size();
+
+  IP.resize(nK);
+  JP.resize(nK);
+  P.resize(nK);
+
+  for (int iK=0; iK<nK; iK++)
+  {
+    int k_index = local_k_indices[iK];
+    vector<double> kpoint = global_abs_kpoints[k_index];
+    //  For now it works just with ETB
+    // start of setup_etb_hamil()
+    do_reinit();
+    _ext_module->get_atomistic_structure()->reorder(_perm);
+    Point k_point; 
+    for(short i=0;i<3;i++) k_point(i) = kpoint[i];
+    _ext_module->set_k_point(k_point);
+    _ext_module->reinit();
+    // end setup_etb_hamil()
+
+    ModelOptions options;
+    options.set_option("P_matrix", true);
+    options.set_option("poldir", poldir);
+    options.set_option("sparse_format", "full");
+    _ext_module->assemble(options);
+
+    //in setup_hamil() after setup_etb_hamil()
+    Messages::info("Getting polarization matrix ... ", 0);
+
+    int nrow = _ext_module->get_H_dim();
+    int nnz = _ext_module->get_H_nnz();
+
+    vector<int> IP_k(nrow+1,0);
+    vector<int> JP_k(nnz,0);
+    vector<Complex> P_k(nnz);
+    _ext_module->get_H_csr(P_k, JP_k, IP_k);
+    Messages::info("Done. ");
+
+    P[iK].resize(nnz);
+    JP[iK].resize(nnz);
+    IP[iK].resize(nrow+1);
+    for (int i=0; i<nnz; i++)
+    {
+      // Unit is A * eV for ETB but we want nm * eV
+      P[iK][i] = P_k[i] * 0.1;
+      JP[iK][i] = JP_k[i];
+    }
+    for (int i=0; i<nrow+1; i++)
+      IP[iK][i] = IP_k[i];
+
+    finalize();
+  }
+
+}
+
+
+void
+Negf::compute_area_and_volume(void)
+{
+
+  const AtomisticStructure* as = _ext_module->get_atomistic_structure();
+
+  libMesh::RealVectorValue a, b, c;
+  as->get_lattice_vectors(a, b, c);
+
+  // From Angstrom to nm
+  double cf = 0.1; 
+
+  Tensor1 x(0);
+  Tensor1 y(0);
+  Tensor1 z(0);
+
+  for (short i = 0; i < 3; i++)
+  {
+    x(i + 1) = cf * a(i);
+    y(i + 1) = cf * b(i);
+    z(i + 1) = cf * c(i);
+  }
+
+  Tensor1 area_cross_prod(0);
+  area_cross_prod = vectorProduct(y, z);
+  double area = std::sqrt(area_cross_prod * area_cross_prod);
+  double volume = x * area_cross_prod;
+
+  opt.cell_area = area;
+  opt.volume = volume;
+
+}
+
+template<typename T>
+void
+Negf::compute_area_and_volume(const T& a, const T& b, const T& c)
+{
+
+  Tensor1 x(0);
+  Tensor1 y(0);
+  Tensor1 z(0);
+
+  for (short i = 0; i < 3; i++)
+  {
+    x(i + 1) = a(i);
+    y(i + 1) = b(i);
+    z(i + 1) = c(i);
+  }
+
+  Tensor1 area_cross_prod(0);
+  area_cross_prod = vectorProduct(y, z);
+  double area = std::sqrt(area_cross_prod * area_cross_prod);
+  double volume = x * area_cross_prod;
+
+  opt.cell_area = area;
+  opt.volume = volume;
 }
