@@ -1110,7 +1110,9 @@ void ETB::do_assemble(const ModelOptions& options)
     //optical matrix computed in UPPER format (now also full works)
     char* sparse_fmt = new char[UPT_MC];    
     memset(sparse_fmt, UPT_PADCHAR, UPT_MC);
-    std::string string_fmt = "upper"; 
+    std::string string_fmt = "upper";
+    // If provided in options, set format differently than upper
+    string_fmt = options.get_option("sparse_format", string_fmt);
     string_fmt.copy( sparse_fmt, string_fmt.size() );
 
     inst->compute_P_matrix(poldir, sparse_fmt);
