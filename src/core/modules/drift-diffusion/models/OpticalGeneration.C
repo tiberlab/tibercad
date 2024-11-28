@@ -101,7 +101,7 @@ OpticalGeneration::get_net_recombination_rates(double& recomb_e,
         _generation += tmp[0];
     }
   }
-  else if  (_profile  != nullptr)
+  else if  (_profile != nullptr)
   {
     DriftDiffusionProperties& dd = get_driftdiffusionproperties();
     _generation = _profile->get_data(dd.get_element(), dd.get_coordinates());

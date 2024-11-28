@@ -55,10 +55,10 @@ class TBDLLOCAL OpticalGeneration : public RecombinationModelInterface
   private:
 
     //! Generation rate parameter
-    double _generation;
+    double _generation = 0.0;
 
     //! A multiplier
-    double _multiplier;
+    double _multiplier = 1.0;
 
     //! The generation model
     std::vector<SimulationInterface*> _generation_model;
@@ -67,7 +67,7 @@ class TBDLLOCAL OpticalGeneration : public RecombinationModelInterface
     std::vector<ID> _gen_id;
 
     //! Can use externally generated generation profiles
-    ExternalProfile* _profile;
+    ExternalProfile* _profile = nullptr;
 
 
 };
@@ -80,9 +80,7 @@ class TBDLLOCAL OpticalGeneration : public RecombinationModelInterface
 
 inline
 OpticalGeneration::OpticalGeneration(const ModelOptions& options)
-  : RecombinationModelInterface(options),
-    _generation(0.0),
-    _multiplier(1.0)
+  : RecombinationModelInterface(options)
 {
 }
 
