@@ -580,8 +580,8 @@ NegfWrapper::set_elphot(std::vector<double>& coupling, double cell_vol, double n
   int nrow = IP[0].size() - 1;
   int nnz = P[0].size();
 
-  negf_set_elphot(_handler, coupling.data(), coupling.size(), cell_vol, nr, Ephot, intensity, nK, nrow, nnz, IP_f.data(), JP_f.data(), P_f.data(),
-                  poldir, scba_niter, tTridiagonal, deb_id);
+  // negf_set_elphot(_handler, coupling.data(), coupling.size(), cell_vol, nr, Ephot, intensity, nK, nrow, nnz, IP_f.data(), JP_f.data(), P_f.data(),
+  //                 poldir, scba_niter, tTridiagonal, deb_id);
 
 }
 
