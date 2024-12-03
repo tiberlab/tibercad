@@ -130,14 +130,7 @@ PVModule::do_setup_solution_variables(void)
   declare_solution(CurrentDensity, REAL, NODES, "A/cm^2");
 }
 
-void
-PVModule::check_contact_node(unsigned int &id) const
-{
-  if (_gnd_ids.count(id))
-    id = *_gnd_ids.begin();
-  else if (_src_ids.count(id))
-    id = *_src_ids.begin();
-}
+
 
 void
 PVModule::do_solve(void)
@@ -153,7 +146,7 @@ PVModule::do_solve(void)
   of << "* PV Module scale simulation model \n" << std::endl;
 
   // idea: loop through matrix, and take coupling elements as resistors
-  // DOF indices can be used as node numbers
+  // DOF indices can be used as node names
 
   DofMap& dof_map =  sys.get_dof_map();
   const unsigned int vtop = sys.variable_number("Vtop");
@@ -162,13 +155,15 @@ PVModule::do_solve(void)
 
   // the elementary cell subcircuit will add new nodes,
   // starting from this one
-  unsigned int next_node_id = n_dofs;
+  unsigned int next_node_id = n_dofs + 1;
 
   vector<numeric_index_type> indices;
   vector<double> values;
 
   // new we loop through the matrix rows. Conductance values that are
   // < 1e-7 (no connection) can be ignored
+  // First we connect all module nodes, then we add two additional nodes
+  // for the voltage source and ground
   for (unsigned int i = 0; i < n_dofs; i += 2)
   {
     // extract information from system matrix
@@ -189,10 +184,6 @@ PVModule::do_solve(void)
           // increase by one because 0 is reserved for ground
           unsigned int this_node = i + 1;
           unsigned int bot_node = i + 2;
-
-          // substitute node ids, if they are on contacts
-          check_contact_node(this_node);
-          check_contact_node(bot_node);
 
           // Defining a voltage-dependent current source based on the
           // JV-Ref file and the area of the element
@@ -234,32 +225,47 @@ PVModule::do_solve(void)
         this_node++;
         other_node++;
 
-        // substitute node ids, if they are on contacts
-        check_contact_node(this_node);
-        check_contact_node(other_node);
-
         if (this_node != other_node)
-		{
+        {
           of << "R" << i / 2 << "_" << this_node << "_" << other_node
              << t_or_b << this_node << " " << other_node << " " << resistance << "\n";
-		}
+        }
       }
 
     }
   }
+
+  // the node where voltage source is attached to
+  unsigned int input_node = next_node_id;
+
+  // we could us this to add an additional series resistance, in principle
+  double input_resistance = 0.001;
+
+  // now add a small resistor from voltage source node to each of _src_ids
+  for (auto&& node : _src_ids)
+  {
+    of << "R" << input_node << "_" << node << " "
+       << input_node << " " << node << " " << input_resistance << "\n";
+  }
+
+  // and similarly from each of _gnd_id to "0"
+  for (auto&& node : _gnd_ids)
+  {
+    of << "R" << "0" << "_" << node << " "
+       << node << " 0 1e-6\n";
+  }
   
   //of << "Vbias "<<*_gnd_ids.begin() <<" " << *_src_ids.begin() << " " << _voltage <<" \n";
-  of << "Vbias "<<*_src_ids.begin() <<" " << *_gnd_ids.begin() << " " << "0" <<" \n";
+  of << "Vbias "<< input_node << " 0 0\n";
   of << "* End of netlist \n";
   of << "* Simulation command \n";
   of << ".control \n";
-  of << "	op\n";
-  of << "	dc Vbias 0 4 0.1 \n";
+  of << " op\n";
+  of << " dc Vbias 0 4 0.1 \n";
 
   string ngspice_res = get_output_directory() + "/" + get_name() + "_spice_output.txt";
-  of << "	wrdata " << ngspice_res << " i(Vbias)";
+  of << " wrdata " << ngspice_res << " i(Vbias)";
   for (int nm = 1; nm <= n_dofs; nm++ )
-	  if (!_gnd_ids.count(nm) && !_src_ids.count(nm))
 	    of << " V(" << nm << ")";
 		  
 		
@@ -269,15 +275,6 @@ PVModule::do_solve(void)
   of.close();
 
 
-
-  std::cerr << "gnd nodes : ";
-  for (auto&& a : _gnd_ids)
-    std::cerr  << a << " ";
-  std::cerr << "\n\n";
-  std::cerr << "source nodes : ";
-  for (auto&& a : _src_ids)
-    std::cerr  << a << " ";
-  std::cerr << "\n";
 
   // call ngspice
   Messages::info("calling Spice: " + _spice);
@@ -291,44 +288,57 @@ PVModule::do_solve(void)
     throw(SolveFailedException("Could not run Spice."));
 
   // parse output and populate solution vectors
-  Messages::info("parse output");
+  Messages::info("parse ngspice results");
+
+  _voltage.resize(0);
+  _voltage.reserve(41);
+  _current = _voltage;
   
   ifstream file(ngspice_res);
-  cout<<ngspice_res<<endl;
   string line;
-  while (std::getline(file, line)) { // for test,  just reading the first line, voltage == 0 
+
+  while (std::getline(file, line))
+  {
     stringstream ss(line);
     double value;
-	int column_indx=1;
-	double src_vol;
-	
-	// parse output for given voltage and populate in an queue
-	queue<double> temp_res;
-	while (ss >> value) {
-	  if (column_indx == 2)  // column 4 represent the total current of the cell
-		  _current.push_back(value); //mA/cm^2
-	  if (column_indx == 5) // column 5 represent source voltage
-	    src_vol = value;
-	  if (column_indx > 5 && column_indx % 2 == 0){  // ignoring odd column, they are just repeating the source voltage 
-	    temp_res.push(value);
-	  }
+    int column_indx = 1;
+    double src_vol;
+
+    // parse output for given voltage and populate in an queue
+    queue<double> temp_res;
+    while (ss >> value)
+    {
+      if (column_indx == 1)        // column 1 contains the bias voltage
+        _voltage.push_back(value);
+
+      if (column_indx == 2)        // column 4 represent the total current of the cell
+        _current.push_back(value); // mA
+
+      if (column_indx == 5)        // column 5 represent source voltage
+        src_vol = value;
+      if (column_indx > 5 && column_indx % 2 == 0)
+      { // ignoring odd column, they are just repeating the source voltage
+        temp_res.push(value);
+      }
       column_indx++;
-    
-	}
-	// map the ngspice results to actual elements
-	std::vector<double> spic_res;
-	for (int nm = 1; nm <= n_dofs; nm++)
-	  if (_gnd_ids.count(nm))
-	    spic_res.push_back(0);
-	  else if (_src_ids.count(nm))
+    }
+
+    // map the ngspice results to actual elements
+    std::vector<double> spic_res;
+    for (int nm = 1; nm <= n_dofs; nm++)
+    {
+      if (_gnd_ids.count(nm))
+        spic_res.push_back(0);
+      else if (_src_ids.count(nm))
         spic_res.push_back(src_vol);
-	  else{
-	    spic_res.push_back(temp_res.front()); //results
-	    temp_res.pop();
-		
-	_spic_res.push_back(spic_res);
-	}		
-			
+      else
+      {
+        spic_res.push_back(temp_res.front()); // results
+        temp_res.pop();
+
+        _spic_res.push_back(spic_res);
+      }
+    }
   }
   file.close();
   
@@ -429,16 +439,17 @@ PVModule::plot_globaldata(void)
 {
   string outdir = get_output_directory();
   if (!_current.empty()){
-    string filename(outdir + "/" + get_output_filename() + "_CurrentDensity.dat");
+    string filename(outdir + "/" + get_output_filename() + "_IV.dat");
     ofstream file;
     file.open(filename.c_str());
     if (file.good())
     {
-      file << "# " << get_type() << " CurrentDensity (" << get_name() << ")\n";
-      file << "# " << 1 << " CurrentDensity" << "\n";
-      file << "# " << "CurrentDensity" << "\n";
-      for (auto i :_current)
-        file << i << endl; 
+      file << "# " << get_type() << " IV characteristic (" << get_name() << ")\n";
+      file << "# " << "Voltage(V) Current(A)" << "\n";
+      for (unsigned int i = 0; i < _voltage.size(); ++i)
+      {
+        file << _voltage[i] << " " << _current[i] << endl; 
+      }
       
 	  file << "\n";
 

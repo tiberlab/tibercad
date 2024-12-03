@@ -51,8 +51,8 @@ class TBDLLOCAL PVModule : public SimulationInterface
     //! Print some useful information
     virtual void do_print_info(void) final;
 	
-	//! Print global data
-	virtual void plot_globaldata(void);
+    //! Print global data
+    virtual void plot_globaldata(void) final;
 
 
     //! We need to create a physical model
@@ -91,9 +91,6 @@ class TBDLLOCAL PVModule : public SimulationInterface
     //! The assembly function
     void assemble(void);
 
-    //! Check node id if it is a contact and substitute
-    void check_contact_node(unsigned int& id) const;
-
     // A local helper class to be used to access assembly routine
     class MyAssembly : public TiberLinearSystem::Assembly
     {
@@ -113,12 +110,12 @@ class TBDLLOCAL PVModule : public SimulationInterface
 
     std::string _spice {"ngspice"};
 	
-	std::vector<double> _jv_ref_v;
-	std::vector<double> _jv_ref_j;
+    std::vector<double> _jv_ref_v;
+    std::vector<double> _jv_ref_j;
 	
-	std::vector<std::vector<double>> _spic_res;
-	std::vector<double> _current;
-	std::vector<double> _voltage;
+    std::vector<std::vector<double>> _spic_res;
+    std::vector<double> _current;
+    std::vector<double> _voltage;
 
     //! The node ids for ground nodes
     std::set<unsigned int> _gnd_ids {0};
