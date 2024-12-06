@@ -1,13 +1,13 @@
-
-# Description of  the  device physical regions
 Device
 {
    meshfile = module.msh
    mesh_units = 0.01
 
-   Region active 
-   {
-   }
+   Region active { }
+
+   Region P1 { }
+   Region P2 { }
+   Region P3 { }
 
 }
 
@@ -21,15 +21,21 @@ Module pvmodule
 
   Physics
   {
+    
+    # assume ITO/cell/ITO with 10 Ohm/sq
+    top_sheet_resistivity = 10
+    bottom_sheet_resistivity = 10
 
-    top_sheet_resistivity = 5
-    bottom_sheet_resistivity = 5
+    P2_resistivity = 0.001
+
+    #elementary_cell list { }
+
   }
 
   Contact anode
   {
     type = source
-    layer = top
+    layer = bottom
   }
 
   Contact cathode
@@ -40,26 +46,27 @@ Module pvmodule
 
 }
 
-
 Module sweep
 {
   solve = pvmodule_sim
   variable = $Vb
-  values = (0:0.02:1.2)
 
-  plot_data = (0.0, 1.1)
+  values = (0:0.1:4.0)
+  plot_data = (0:0.5:4.0)
 }
+
 
 Simulation
 {
   verbose = 2
+
+  solve = sweep
 
   # look here first for modules
   modellibpath = ../..
 
   temperature = 300
   
-  solve = sweep
   
   resultpath = output
   searchpath = ./

@@ -1,0 +1,522 @@
+
+Log start: Fri Dec  6 13:00:29 2024
+
+
+Writing log to output/module.log.0
+tiberCAD release 3.4.0 (rev. 5658, x86_64-linux)
+
+Input file: module.tib
+
+Initialize global simulation options
+  Simulation temperature: 300 K
+  Database search path  : ./
+  Module library path   : ../..:/home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules
+  Log file              : output/module.log.0
+
+Setup mesh
+  Reading mesh file 'module.msh ...
+    mesh reading time: 0h 0m 0.0056s
+    mesh preparation time: 0h 0m 0.0025s
+    bd_regions preparation time: 0h 0m 4.1e-05s
+
+    mesh units          : 0.01 m
+    mesh dimension      :       2
+    number of nodes     :     758
+    number of elements  :    1384
+    number of subdomains:       4
+    number of boundaries:       2
+
+Create materials ...
+
+*** Warning: Cannot open material data file for none
+
+*** Warning: Cannot open material data file for none
+  Added material none for region 'active' (mesh regions 1)
+    (using datafile )
+
+*** Warning: Cannot open material data file for none
+
+*** Warning: Cannot open material data file for none
+  Added material none for region 'P1' (mesh regions 2)
+    (using datafile )
+
+*** Warning: Cannot open material data file for none
+
+*** Warning: Cannot open material data file for none
+  Added material none for region 'P2' (mesh regions 3)
+    (using datafile )
+
+*** Warning: Cannot open material data file for none
+
+*** Warning: Cannot open material data file for none
+  Added material none for region 'P3' (mesh regions 4)
+    (using datafile )
+Creation of materials done.
+
+Setting up simulation of type 'pvmodule' ...
+  (using /home/maufder/Projects/TIBERCAD/trunk/x86_64-linux/modules/pvmodule/pvmodule.so)
+    Adding boundary 'anode'
+    Adding boundary 'cathode'
+  Creating bulk models... 
+    Region: active
+    Region: P1
+    Region: P2
+    Region: P3
+
+Setting up simulation of type 'sweep' ...
+
+Setting up bulk models ...
+
+*** Warning: found unused options in block Physics: P2_resistivity
+
+*** Warning: found unused options in block Physics: P2_resistivity
+
+*** Warning: found unused options in block Physics: P2_resistivity
+
+Setting up lower dimensional (boundary) models ...
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for pvmodule_sim (pvmodule)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+
+Available solution variables:
+------------------------------------------------------------------
+Name                     Units          Type      Association Plot
+------------------------------------------------------------------
+TopPotential             V              real      nodal       y
+BottomPotential          V              real      nodal       y
+CurrentDensity           A/cm^2         real      nodal       n
+ContactCurrent           A              real      none        y
+RegionIDs                               real      cell        n
+------------------------------------------------------------------
+
+Output directory      : output
+Output file format    : vtk
+Output file basename  : pvmodule_sim
+
+PVModule: lumped element model for photovoltaic module simulation.
+
+# Region P1, none
+  Type of region : P1
+  Top    sheet resistivity : 10 Ohms/sq
+  Bottom sheet resistivity : 10 Ohms/sq
+
+# Region P2, none
+  Type of region : P2
+  Top    sheet resistivity : 10 Ohms/sq
+  Bottom sheet resistivity : 10 Ohms/sq
+
+# Region P3, none
+  Type of region : P3
+  Top    sheet resistivity : 10 Ohms/sq
+  Bottom sheet resistivity : 10 Ohms/sq
+
+# Region active, none
+  Type of region : active
+  Top    sheet resistivity : 10 Ohms/sq
+  Bottom sheet resistivity : 10 Ohms/sq
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for sweep (sweep)
+MPI: rank 0 of communicator with size 1
+MPI: solver parallelized on 1 processes
+
+Output directory      : output
+Output file format    : vtk
+Output file basename  : sweep
+
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+We solve: sweep 
+
+>>>>--------------------------------- (sweep) ----------------------------------
+  Ramping to sweep value $Vb = 0
+
+*** Warning: pvmodule_sim has never been solved before ramping.
+  Trying $Vb = 0
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.6s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.1
+  Trying $Vb = 0.1
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.5s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.2
+  Trying $Vb = 0.2
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.5s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.3
+  Trying $Vb = 0.3
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.5s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.4
+  Trying $Vb = 0.4
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.5s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.5
+  Trying $Vb = 0.5
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.5s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.6
+  Trying $Vb = 0.6
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.5s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.7
+  Trying $Vb = 0.7
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.5s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.8
+  Trying $Vb = 0.8
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.4s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 0.9
+  Trying $Vb = 0.9
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.5s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1
+  Trying $Vb = 1
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.5s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.1
+  Trying $Vb = 1.1
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.5s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.2
+  Trying $Vb = 1.2
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.6s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.3
+  Trying $Vb = 1.3
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.5s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.4
+  Trying $Vb = 1.4
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.5s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.5
+  Trying $Vb = 1.5
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.5s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.6
+  Trying $Vb = 1.6
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.4s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.7
+  Trying $Vb = 1.7
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.5s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.8
+  Trying $Vb = 1.8
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.6s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 1.9
+  Trying $Vb = 1.9
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.5s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 2
+  Trying $Vb = 2
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.5s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 2.1
+  Trying $Vb = 2.1
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.5s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 2.2
+  Trying $Vb = 2.2
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.6s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 2.3
+  Trying $Vb = 2.3
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.5s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 2.4
+  Trying $Vb = 2.4
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.5s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 2.5
+  Trying $Vb = 2.5
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.6s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 2.6
+  Trying $Vb = 2.6
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.5s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 2.7
+  Trying $Vb = 2.7
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.5s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 2.8
+  Trying $Vb = 2.8
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.6s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 2.9
+  Trying $Vb = 2.9
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.6s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 3
+  Trying $Vb = 3
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.6s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 3.1
+  Trying $Vb = 3.1
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.5s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 3.2
+  Trying $Vb = 3.2
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.5s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 3.3
+  Trying $Vb = 3.3
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.4s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 3.4
+  Trying $Vb = 3.4
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.5s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 3.5
+  Trying $Vb = 3.5
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.5s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 3.6
+  Trying $Vb = 3.6
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.6s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 3.7
+  Trying $Vb = 3.7
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.5s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 3.8
+  Trying $Vb = 3.8
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.5s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 3.9
+  Trying $Vb = 3.9
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.5s
+  <<<<--------------------------------------------------------------------------
+  Ramping to sweep value $Vb = 4
+  Trying $Vb = 4
+
+  >>>>----------------------------- (pvmodule_sim) -----------------------------
+    calling Spice: ngspice
+    parse ngspice results
+
+  Solve time: 0h 0m 1.5s
+  <<<<--------------------------------------------------------------------------
+
+Solve time: 0h 1m 2.6s
+<<<<----------------------------------------------------------------------------
+
+Total solve time: 0h 1m 2.6s
+Simulation finished.
+
+12 warnings during run
+0 errors detected
+
+
+Log end: Fri Dec  6 13:01:31 2024
+
+
