@@ -621,7 +621,7 @@ Utils::extract_vector(const string& input, vector<double>& vec)
         double sign = 1.0;
         if (step < 0) sign = -1.0;
 
-        for (double x = a; sign*x < (sign*b + 1e-3*step); x += step)
+        for (double x = a; sign*x < sign*(b - 1e-3*step); x += step)
           vec.push_back(x);
         vec.push_back(b);
       }
