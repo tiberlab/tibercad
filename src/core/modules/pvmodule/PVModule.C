@@ -167,15 +167,19 @@ PVModule::do_solve(void)
   // for the voltage source and ground
   for (unsigned int i = 0; i < n_dofs; i += 2)
   {
+    // top node id
+    // increase by one because 0 is reserved for ground
+    const unsigned int this_node = i + 1;
+
     // extract information from system matrix
     sys.matrix->get_row(i, indices, values);
 
     for (unsigned int j = 0; j < indices.size(); ++j)
     {
-      unsigned int other_node = indices[j];
+      unsigned int other_node = indices[j] + 1;
 
       // diagonal element
-      if (other_node == i)
+      if (other_node == this_node)
       {
         // the area is given in cm^2
         double area = values[j];
@@ -183,9 +187,8 @@ PVModule::do_solve(void)
         if (area > 0)
         {
           // create netlist of the elementary cell, scaled with area
-          // increase by one because 0 is reserved for ground
-          unsigned int this_node = i + 1;
-          unsigned int bot_node = i + 2;
+          // bottom node
+          unsigned int bot_node = this_node + 1;
 
           // Defining a voltage-dependent current source based on the
           // JV-Ref file and the area of the element
@@ -196,8 +199,7 @@ PVModule::do_solve(void)
           for (int nm = 0; nm < _jv_ref_v.size(); nm++)
             of << ", " << _jv_ref_j[nm] << ", " << _jv_ref_v[nm] * area << "m";
 
-          of << ")\n"
-             << std::endl;
+          of << ")\n\n";
 
           // adjust next_node_id
         }
@@ -209,28 +211,26 @@ PVModule::do_solve(void)
         // this_node -- R -- other_node
 
         double resistance = 1.0 / values[j];   
-		    unsigned int this_node = i;
         string t_or_b = "T ";
 
-        if (other_node < i)
+        unsigned int current_node = this_node;
+
+        if (other_node < this_node)
         {
-          // bottom
-          this_node++;
+          // bottom layer
+          current_node++;
           other_node++;
           t_or_b = "B ";
         }
 
         if (other_node == (this_node + 1))
         {
+          // P2 top-to-bottom connection
           t_or_b = "V ";
         }
 
-        // increase by one because 0 is reserved for ground
-        this_node++;
-        other_node++;
-
-        of << "R" << i / 2 << "_" << this_node << "_" << other_node
-           << t_or_b << this_node << " " << other_node << " " << resistance << "\n";
+        of << "R" << i / 2 << "_" << current_node << "_" << other_node
+           << t_or_b << current_node << " " << other_node << " " << resistance << "\n";
       }
 
     }
