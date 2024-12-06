@@ -53,6 +53,11 @@ void
 PVModuleModel::do_init(void)
 {
   string type = get_option("region_type", "active");
+  if (!has_option("region_type"))
+  {
+    // we try to guess it from the region name
+    type = get_owner()->get_options().get_name();
+  }
   if (type == "active") _region_type = ACTIVE;
   if (type == "P1") _region_type = P1;
   if (type == "P2") _region_type = P2;
@@ -80,7 +85,31 @@ PVModuleModel::do_print_info(void)
 {
   Messages m;
   ostringstream os;
-  os << "Type of region : " << _region_type << "\n";
+  os << "Type of region : ";
+  switch (_region_type)
+  {
+    case ACTIVE:
+      os << "active";
+      break;
+
+    case P1:
+      os << "P1";
+      break;
+
+    case P2:
+      os << "P2";
+      break;
+
+    case P3:
+      os << "P3";
+      break;
+
+    default:
+      os << "unknown";
+      break;
+  }
+  os << "\n";
+
   if ((_region_type != P2) || (_region_type != P3))
   {
     os << "Top    sheet resistivity : " << _top_rsheet << " Ohms/sq\n";

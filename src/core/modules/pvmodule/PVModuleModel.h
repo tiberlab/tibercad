@@ -76,13 +76,23 @@ class PVModuleModel : public PhysicalModel
     RegionType _region_type {ACTIVE};
 
     //! The top sheet resistivity
-    double _top_rsheet = 1.0;
+    /*!
+     * Units are Ohm/square
+     */
+    double _top_rsheet = 0.001;
 
     //! The bottom sheet resistivity
-    double _bottom_rsheet = 1.0;
+    /*!
+     * Units are Ohm/square
+     */
+    double _bottom_rsheet = 0.001;
 
     //! The top-to-bottom connection resistivity
-    double _connection_res = 1.0;
+    /*!
+     * Units are Ohm*cm^2, corresponding to the conductivity of
+     * the connection metal times the thickness of the layer stack.
+     */
+    double _connection_res = 0.001;
 
     //! The constructor method
     static TiberModelObject* _create(const ModelOptions& options, const void*);

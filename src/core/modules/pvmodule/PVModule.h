@@ -64,12 +64,14 @@ class TBDLLOCAL PVModule : public SimulationInterface
         const MaterialBoundary* boundary) const final;
 
 
-    //! We have to provide somehow our solution variables
+    //! Provide spatial solution variables
     virtual void get_solution_secure(const Elem* elem,
         std::map<ID, std::vector<double> >& values,
         const std::vector<Point>& p) final;
 
 
+    //! Provide the global solutions
+    virtual void get_solution_secure(std::map<ID, std::vector<double> >& values) final;
 
   private:
 
@@ -112,18 +114,18 @@ class TBDLLOCAL PVModule : public SimulationInterface
 	
     std::vector<double> _jv_ref_v;
     std::vector<double> _jv_ref_j;
-	
-    std::vector<std::vector<double>> _spic_res;
-    std::vector<double> _current;
-    std::vector<double> _voltage;
+
+    //! The applied voltage
+    double _voltage = 0.0;
+
+    //! The contact current
+    double _current;
 
     //! The node ids for ground nodes
-    std::set<unsigned int> _gnd_ids {0};
+    std::set<unsigned int> _gnd_ids;
 
     //! The node ids for the voltage source
     std::set<unsigned int> _src_ids;
-	
-	
 	
 
 };

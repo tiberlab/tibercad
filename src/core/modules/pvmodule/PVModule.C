@@ -81,7 +81,7 @@ PVModule::parse_options(void)
 {
 
   _spice = get_option("spice_executable", _spice);
-  //_spice = get_option("Voltage", _voltage);
+  get_parameter("voltage", _voltage);
  
  
   // reading jv_ref.dat file, as reference for JV curve
@@ -90,7 +90,7 @@ PVModule::parse_options(void)
   ifstream ifs;
   ifs.open(db.get_data_file().c_str());
   if (ifs.fail() || !ifs.good())
-    throw InitFailedException("Cannot read spectrum "
+    throw InitFailedException("Cannot read JV of elementary cell "
         "from file " + db.get_data_file());
 
   size_t i = 0;
@@ -128,6 +128,7 @@ PVModule::do_setup_solution_variables(void)
   declare_solution(TopPotential, REAL, NODES, "V");
   declare_solution(BottomPotential, REAL, NODES, "V");
   declare_solution(CurrentDensity, REAL, NODES, "A/cm^2");
+  declare_solution(ContactCurrent, REAL, GLOBAL, "A");
 }
 
 
@@ -153,14 +154,14 @@ PVModule::do_solve(void)
   unsigned int n_dofs = dof_map.n_dofs();
   // we have two DoFs per node
 
-  // the elementary cell subcircuit will add new nodes,
+  // the elementary cell subcircuit might add new nodes,
   // starting from this one
   unsigned int next_node_id = n_dofs + 1;
 
   vector<numeric_index_type> indices;
   vector<double> values;
 
-  // new we loop through the matrix rows. Conductance values that are
+  // now we loop through the matrix rows. Conductance values that are
   // < 1e-7 (no connection) can be ignored
   // First we connect all module nodes, then we add two additional nodes
   // for the voltage source and ground
@@ -173,6 +174,7 @@ PVModule::do_solve(void)
     {
       unsigned int other_node = indices[j];
 
+      // diagonal element
       if (other_node == i)
       {
         // the area is given in cm^2
@@ -188,25 +190,22 @@ PVModule::do_solve(void)
           // Defining a voltage-dependent current source based on the
           // JV-Ref file and the area of the element
 
-          if (this_node != bot_node)
-          {
-            of << "B" << i / 2 << " " << this_node << " " << bot_node
-               << " I=pwl(V(" << this_node << ")-V(" << bot_node << ")";
+          of << "B" << i / 2 << " " << this_node << " " << bot_node
+             << " I=pwl(V(" << this_node << ")-V(" << bot_node << ")";
 
-            for (int nm = 0; nm < _jv_ref_v.size(); nm++)
-              of << ", " << _jv_ref_j[nm] << ", " << _jv_ref_v[nm] * area << "m";
+          for (int nm = 0; nm < _jv_ref_v.size(); nm++)
+            of << ", " << _jv_ref_j[nm] << ", " << _jv_ref_v[nm] * area << "m";
 
-            of << ")\n"
-               << std::endl;
-          }
+          of << ")\n"
+             << std::endl;
 
           // adjust next_node_id
         }
 
       }
-      else if (values[j] > 1e-7)
+      else if (values[j] > 0.0)
       {
-        // add bottom or top sheet resistance
+        // add bottom or top sheet resistance, or vertical R
         // this_node -- R -- other_node
 
         double resistance = 1.0 / values[j];   
@@ -221,15 +220,17 @@ PVModule::do_solve(void)
           t_or_b = "B ";
         }
 
+        if (other_node == (this_node + 1))
+        {
+          t_or_b = "V ";
+        }
+
         // increase by one because 0 is reserved for ground
         this_node++;
         other_node++;
 
-        if (this_node != other_node)
-        {
-          of << "R" << i / 2 << "_" << this_node << "_" << other_node
-             << t_or_b << this_node << " " << other_node << " " << resistance << "\n";
-        }
+        of << "R" << i / 2 << "_" << this_node << "_" << other_node
+           << t_or_b << this_node << " " << other_node << " " << resistance << "\n";
       }
 
     }
@@ -252,20 +253,21 @@ PVModule::do_solve(void)
   for (auto&& node : _gnd_ids)
   {
     of << "R" << "0" << "_" << node << " "
-       << node << " 0 1e-6\n";
+       << node << " 0 0.001\n";
   }
   
-  //of << "Vbias "<<*_gnd_ids.begin() <<" " << *_src_ids.begin() << " " << _voltage <<" \n";
-  of << "Vbias "<< input_node << " 0 0\n";
+  of << "Vbias "<< input_node << " 0 DC " << _voltage << "\n";
   of << "* End of netlist \n";
   of << "* Simulation command \n";
   of << ".control \n";
   of << " op\n";
-  of << " dc Vbias 0 4 0.1 \n";
+  //of << " dc Vbias 0 4 0.1 \n";
 
   string ngspice_res = get_output_directory() + "/" + get_name() + "_spice_output.txt";
+  // this lets write the scale factor only once (e.g. the voltage in a spice sweep)
+  of << "set wr_singlescale\n";
   of << " wrdata " << ngspice_res << " i(Vbias)";
-  for (int nm = 1; nm <= n_dofs; nm++ )
+  for (int nm = 1; nm <= n_dofs; nm++)
 	    of << " V(" << nm << ")";
 		  
 		
@@ -290,13 +292,13 @@ PVModule::do_solve(void)
   // parse output and populate solution vectors
   Messages::info("parse ngspice results");
 
-  _voltage.resize(0);
-  _voltage.reserve(41);
-  _current = _voltage;
-  
+  // we need to put voltages into the solution vector
+  libMesh::NumericVector<Number>& solution = sys.get_local_solution_vector();
+
   ifstream file(ngspice_res);
   string line;
 
+  // in the current implementation we should have exactly one line
   while (std::getline(file, line))
   {
     stringstream ss(line);
@@ -304,43 +306,23 @@ PVModule::do_solve(void)
     int column_indx = 1;
     double src_vol;
 
-    // parse output for given voltage and populate in an queue
-    queue<double> temp_res;
     while (ss >> value)
     {
-      if (column_indx == 1)        // column 1 contains the bias voltage
-        _voltage.push_back(value);
+      if (column_indx == 2)        // column 2 represent the total current of the cell
+        _current = value; 
 
-      if (column_indx == 2)        // column 4 represent the total current of the cell
-        _current.push_back(value); // mA
-
-      if (column_indx == 5)        // column 5 represent source voltage
-        src_vol = value;
-      if (column_indx > 5 && column_indx % 2 == 0)
-      { // ignoring odd column, they are just repeating the source voltage
-        temp_res.push(value);
+      if (column_indx >= 3)
+      {
+        solution.set(column_indx - 3, value);
       }
       column_indx++;
     }
 
-    // map the ngspice results to actual elements
-    std::vector<double> spic_res;
-    for (int nm = 1; nm <= n_dofs; nm++)
-    {
-      if (_gnd_ids.count(nm))
-        spic_res.push_back(0);
-      else if (_src_ids.count(nm))
-        spic_res.push_back(src_vol);
-      else
-      {
-        spic_res.push_back(temp_res.front()); // results
-        temp_res.pop();
-
-        _spic_res.push_back(spic_res);
-      }
-    }
   }
   file.close();
+
+  solution.close();
+  sys.update();
   
   
 }
@@ -370,6 +352,23 @@ PVModule::create_boundary_model(const ModelOptions& options,
   return PVModuleBoundaryModel::create(boundary, options);
 }
 
+
+void
+PVModule::get_solution_secure(std::map<ID, std::vector<double> >& values)
+{
+  map<ID, vector<double> >::iterator mapit(values.begin());
+  const map<ID, vector<double> >::iterator mapend(values.end());
+  for ( ; mapit != mapend; ++mapit)
+  {
+    ID id = mapit->first;
+
+    if (id == ContactCurrent)
+    {
+      values[id] = vector<double>(1, _current);
+    }
+  }
+
+}
 
 
 void
@@ -437,8 +436,9 @@ PVModule::get_solution_secure(const Elem* elem,
 void
 PVModule::plot_globaldata(void)
 {
+  /*
   string outdir = get_output_directory();
-  if (!_current.empty()){
+  if (!_currents.empty()){
     string filename(outdir + "/" + get_output_filename() + "_IV.dat");
     ofstream file;
     file.open(filename.c_str());
@@ -446,9 +446,9 @@ PVModule::plot_globaldata(void)
     {
       file << "# " << get_type() << " IV characteristic (" << get_name() << ")\n";
       file << "# " << "Voltage(V) Current(A)" << "\n";
-      for (unsigned int i = 0; i < _voltage.size(); ++i)
+      for (unsigned int i = 0; i < _voltages.size(); ++i)
       {
-        file << _voltage[i] << " " << _current[i] << endl; 
+        file << _voltages[i] << " " << _currents[i] << endl; 
       }
       
 	  file << "\n";
@@ -457,6 +457,7 @@ PVModule::plot_globaldata(void)
     file.close();
 
   }
+  */
 	
 }
 
@@ -552,10 +553,10 @@ PVModule::assemble(void)
       double sbot = 1.0 / rsheet.second;
 
       if (reg_type == PVModuleModel::P3)
-        stop = 0.0;
+        stop = 1e-9;
 
       if (reg_type == PVModuleModel::P1)
-        sbot = 0.0;
+        sbot = 1e-9;
 
       double sconn = 1.0 / mod.get_connection_resistance(elem, q_point[qp]);
 
@@ -571,26 +572,25 @@ PVModule::assemble(void)
             jj = i;
           }
 
-          // top layer conductance contribution
+          // top layer conductance contribution, ii < jj
           Ke(ii, jj) -= JxW[qp] * (dphi[i][qp] * (stop * dphi[j][qp]));
 
-          // bottom layer conductance contribution
-          // Ke(i+n_dofs/2, j+n_dofs/2) += JxW[qp] * (dphi[i][qp] * (sbot * dphi[j][qp]));
+          // bottom layer conductance contribution, ii > jj
           Ke(jj, ii) -= JxW[qp] * (dphi[i][qp] * (sbot * dphi[j][qp]));
-          }
+        }
 
-          // active area contribution
-          if (reg_type == PVModuleModel::ACTIVE)
-            Ke(i, i) += JxW[qp] * phi[i][qp] * phi[i][qp];
+        // active area contribution
+        if (reg_type == PVModuleModel::ACTIVE)
+          Ke(i, i) += JxW[qp] * phi[i][qp] * phi[i][qp];
 
-          // vertical connection conductance contribution
-          if (reg_type == PVModuleModel::P2)
-            Ke(i, i + n_dofs / 2) += JxW[qp] * sconn * phi[i][qp] * phi[i][qp];
+        // vertical connection conductance contribution, i < j
+        if (reg_type == PVModuleModel::P2)
+          Ke(i, i + n_dofs / 2) += JxW[qp] * sconn * phi[i][qp] * phi[i][qp];
       }
     }
 
 
-    // the sides
+    // check the element sides, which may be associated with contacts
     for (unsigned int s = 0; s < elem->n_sides(); s++)
     {
       PVModuleBoundaryModel* mod_int =
@@ -612,7 +612,7 @@ PVModule::assemble(void)
               dof_id = dof_indices_bot[n];
 		  
             // spice node id 0 is reserved for ground
-			dof_id++;
+            dof_id++;
 
 			
             
