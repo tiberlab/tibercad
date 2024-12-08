@@ -283,7 +283,7 @@ PVModule::do_solve(void)
   string log = get_output_directory() + "/" + get_name() + "_spice.log";
   string outfile = get_output_directory() + "/" + get_name() + "_spice.dat";
   //string cmdline = _spice + " -b -o " + log + " -r " + outfile + " " + netlist ;
-  string cmdline = _spice + " -b -o " + log + " " + netlist ;
+  string cmdline = _spice + " -b -o " + log + " " + netlist + " > /dev/null";
   int ret = std::system(cmdline.c_str());
 
   if (ret == -1)
@@ -309,7 +309,7 @@ PVModule::do_solve(void)
     while (ss >> value)
     {
       if (column_indx == 2)        // column 2 represent the total current of the cell
-        _current = value; 
+        _current = -value; // we invert sign to get current referred to the simulated device 
 
       if (column_indx >= 3)
       {
@@ -324,6 +324,13 @@ PVModule::do_solve(void)
   solution.close();
   sys.update();
   
+  ostringstream os;
+  os << "Voltage at terminal : " << _voltage << " V\n";
+  os << "Current at terminal : " << _current << " A\n";
+  os << "Module power        : " << _current*_voltage << " W\n";
+  Messages m;
+  m.indent();
+  m.info(os.str());
   
 }
 
