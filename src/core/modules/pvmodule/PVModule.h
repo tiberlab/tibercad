@@ -93,6 +93,10 @@ class TBDLLOCAL PVModule : public SimulationInterface
     //! The assembly function
     void assemble(void);
 
+    //! Calculate current density in active nodes from the node voltages
+    void calculate_current_density(void);
+
+
     // A local helper class to be used to access assembly routine
     class MyAssembly : public TiberLinearSystem::Assembly
     {

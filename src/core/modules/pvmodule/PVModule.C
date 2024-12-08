@@ -323,6 +323,9 @@ PVModule::do_solve(void)
 
   solution.close();
   sys.update();
+
+  // now we can calculate the current density
+  calculate_current_density();
   
   ostringstream os;
   os << "Voltage at terminal : " << _voltage << " V\n";
@@ -333,6 +336,35 @@ PVModule::do_solve(void)
   m.info(os.str());
   
 }
+
+
+void
+PVModule::calculate_current_density(void)
+{
+
+  TiberLinearSystem& sys = get_equation_system<TiberLinearSystem>();
+
+  // loop through matrix, and take coupling elements as resistors
+  // calculate Kirchhoff in each active node and devide by area
+
+  DofMap& dof_map =  sys.get_dof_map();
+  const unsigned int vtop = sys.variable_number("Vtop");
+  unsigned int n_dofs = dof_map.n_dofs();
+
+  vector<numeric_index_type> indices;
+  vector<double> values;
+
+  for (unsigned int i = 0; i < n_dofs; i += 2)
+  {
+    // extract information from system matrix
+    sys.matrix->get_row(i, indices, values);
+
+    for (unsigned int j = 0; j < indices.size(); ++j)
+    {
+    }
+  }
+}
+
 
 
 void
