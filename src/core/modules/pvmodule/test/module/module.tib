@@ -15,7 +15,7 @@ Module pvmodule
 {
   name = pvmodule_sim
 
-  plot = (TopPotential, BottomPotential, ContactCurrent)
+  plot = (TopPotential, BottomPotential, CurrentDensity, ContactCurrent)
 
   voltage = $Vb[0]
 

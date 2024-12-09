@@ -158,11 +158,13 @@ PVModule::do_solve(void)
   // starting from this one
   unsigned int next_node_id = n_dofs + 1;
 
-  vector<numeric_index_type> indices;
-  vector<double> values;
+  vector<numeric_index_type> indices_t;
+  vector<numeric_index_type> indices_b;
+  vector<double> values_t;
+  vector<double> values_b;
 
   // now we loop through the matrix rows. Conductance values that are
-  // < 1e-7 (no connection) can be ignored
+  // = 0 (no connection) can be ignored
   // First we connect all module nodes, then we add two additional nodes
   // for the voltage source and ground
   for (unsigned int i = 0; i < n_dofs; i += 2)
@@ -172,17 +174,19 @@ PVModule::do_solve(void)
     const unsigned int this_node = i + 1;
 
     // extract information from system matrix
-    sys.matrix->get_row(i, indices, values);
+    sys.matrix->get_row(i, indices_t, values_t);
+    sys.matrix->get_row(i+1, indices_b, values_b);
 
-    for (unsigned int j = 0; j < indices.size(); ++j)
+    // indices_t.size() == indices_b.size() by construction
+    for (unsigned int j = 0; j < indices_t.size(); ++j)
     {
-      unsigned int other_node = indices[j] + 1;
+      unsigned int other_node = indices_t[j] + 1;
 
       // diagonal element
       if (other_node == this_node)
       {
         // the area is given in cm^2
-        double area = values[j];
+        double area = values_t[j];
 
         if (area > 0)
         {
@@ -205,32 +209,34 @@ PVModule::do_solve(void)
         }
 
       }
-      else if (values[j] > 0.0)
+      else if ((other_node > this_node) && (values_t[j] > 0.0))
       {
-        // add bottom or top sheet resistance, or vertical R
+        // add top sheet resistance, or vertical R
         // this_node -- R -- other_node
 
-        double resistance = 1.0 / values[j];   
-        string t_or_b = "T ";
-
-        unsigned int current_node = this_node;
-
-        if (other_node < this_node)
-        {
-          // bottom layer
-          current_node++;
-          other_node++;
-          t_or_b = "B ";
-        }
+        double resistance = 1.0 / values_t[j];   
+        string t_or_v = "T ";
 
         if (other_node == (this_node + 1))
         {
           // P2 top-to-bottom connection
-          t_or_b = "V ";
+          t_or_v = "V ";
         }
 
+        of << "R" << i / 2 << "_" << this_node << "_" << other_node
+           << t_or_v << this_node << " " << other_node << " " << resistance << "\n";
+      }
+
+
+      // now the bottom layer
+      unsigned int current_node = this_node + 1;
+      other_node = indices_b[j] + 1;
+      if ((other_node > this_node) && (values_b[j] > 0.0))
+      {
+        double resistance = 1.0 / values_b[j];   
+
         of << "R" << i / 2 << "_" << current_node << "_" << other_node
-           << t_or_b << current_node << " " << other_node << " " << resistance << "\n";
+           << "B " << current_node << " " << other_node << " " << resistance << "\n";
       }
 
     }
@@ -239,21 +245,18 @@ PVModule::do_solve(void)
   // the node where voltage source is attached to
   unsigned int input_node = next_node_id;
 
-  // we could us this to add an additional series resistance, in principle
-  double input_resistance = 0.001;
-
   // now add a small resistor from voltage source node to each of _src_ids
   for (auto&& node : _src_ids)
   {
     of << "R" << input_node << "_" << node << " "
-       << input_node << " " << node << " " << input_resistance << "\n";
+       << input_node << " " << node << " " << _rsource << "\n";
   }
 
   // and similarly from each of _gnd_id to "0"
   for (auto&& node : _gnd_ids)
   {
     of << "R" << "0" << "_" << node << " "
-       << node << " 0 0.001\n";
+       << node << " 0 " << _rgnd << "\n";
   }
   
   of << "Vbias "<< input_node << " 0 DC " << _voltage << "\n";
@@ -371,14 +374,27 @@ PVModule::calculate_current_density(void)
       unsigned int j = indices[jj];
 
       if (j == i)
+      {
         area  = values[jj];
-      
-      if (j > i)
+      }
+      else
       {
         double cond = values[jj];
         double voltage_j = solution(j);
         current += (voltage_i - voltage_j) * cond;
       }
+    }
+
+    // add current to voltage source
+    if (_src_ids.count(i+1))
+    {
+      current += (voltage_i - _voltage) / _rsource;
+    }
+
+    // add current to ground 
+    if (_gnd_ids.count(i+1))
+    {
+      current += voltage_i / _rgnd;
     }
 
     if (area > 0)
@@ -558,7 +574,7 @@ PVModule::assemble(void)
   const vector<vector<Real> >& phi = fe->get_phi();
   const vector<vector<RealGradient> >& dphi = fe->get_dphi();
 
-/*
+  /*
   // the surface finite element
   unique_ptr<FEBase> fe_face(build_finite_element(dim, fe_type));
   unique_ptr<QBase> qface(QBase::build(myopts.quadrature_type, dim-1, myopts.integration_order));
@@ -569,7 +585,8 @@ PVModule::assemble(void)
   const vector<vector<Real> >&  phi_face = fe_face->get_phi();
   const vector<vector<RealGradient> >& dphi_face = fe->get_dphi();
   const vector<Point>& normal = fe_face->get_normals();
-*/
+  */
+
   vector<unsigned int> dof_indices;
   vector<unsigned int> dof_indices_top;
   vector<unsigned int> dof_indices_bot;
@@ -597,7 +614,6 @@ PVModule::assemble(void)
 
     // resize the element matrix/rhs (does also zero them out)
     Ke.resize(n_dofs, n_dofs);
-    //Fe.resize(n_dofs);
 
     Ket.reposition(0, 0, n_dofs/2, n_dofs/2);
 
@@ -610,8 +626,7 @@ PVModule::assemble(void)
      * the conductance values between different nodes (top, bottom,
      * and vertical connection). On the diagonal we put the area of
      * the active region of the node, used later for scaling the 
-     * elementary cell parameters. Top and vertical connections are
-     * put with j > i, bottom ones with j < i
+     * elementary cell parameters. 
      */
 
     // loop over the quadrature points
@@ -632,30 +647,37 @@ PVModule::assemble(void)
 
       for (unsigned int i = 0; i < n_dofs/2; i++)
       {
-        for (unsigned int j = i + 1; j < n_dofs/2; j++)
+        // for the bottom layer
+        unsigned int ii = i + n_dofs/2;
+
+        for (unsigned int j = 0; j < n_dofs/2; j++)
         {
-          unsigned int ii = i;
-          unsigned int jj = j;
-          if (dof_indices[j] < dof_indices[i])
-          {
-            ii = j;
-            jj = i;
-          }
+          if (j == i)
+            continue;
 
-          // top layer conductance contribution, ii < jj
-          Ke(ii, jj) -= JxW[qp] * (dphi[i][qp] * (stop * dphi[j][qp]));
+          // top layer conductance contribution
+          double topcon = JxW[qp] * (dphi[i][qp] * (stop * dphi[j][qp]));
+          Ke(i, j) -= topcon;
 
-          // bottom layer conductance contribution, ii > jj
-          Ke(jj, ii) -= JxW[qp] * (dphi[i][qp] * (sbot * dphi[j][qp]));
+          // bottom layer conductance contribution
+          unsigned int jj = j + n_dofs/2;
+          double botcon = JxW[qp] * (dphi[i][qp] * (sbot * dphi[j][qp]));
+          Ke(ii, jj) -= botcon;
         }
+
+        double area = JxW[qp] * phi[i][qp] * phi[i][qp];
 
         // active area contribution
         if (reg_type == PVModuleModel::ACTIVE)
-          Ke(i, i) += JxW[qp] * phi[i][qp] * phi[i][qp];
+          Ke(i, i) += area;
 
-        // vertical connection conductance contribution, i < j
+        // vertical connection conductance contribution
         if (reg_type == PVModuleModel::P2)
-          Ke(i, i + n_dofs / 2) += JxW[qp] * sconn * phi[i][qp] * phi[i][qp];
+        {
+          double vertconn = sconn * area;
+          Ke(i, ii) += vertconn;
+          Ke(ii, i) += vertconn;
+        }
       }
     }
 

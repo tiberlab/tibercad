@@ -130,6 +130,12 @@ class TBDLLOCAL PVModule : public SimulationInterface
 
     //! The node ids for the voltage source
     std::set<unsigned int> _src_ids;
+
+    //! The small resistance used to connect voltage source
+    double _rsource = 0.001;
+
+    //! The small resistance used to connect ground nodes
+    double _rgnd = 0.001;
 	
 
 };
