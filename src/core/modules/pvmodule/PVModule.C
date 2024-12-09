@@ -343,6 +343,8 @@ PVModule::calculate_current_density(void)
 {
 
   TiberLinearSystem& sys = get_equation_system<TiberLinearSystem>();
+  const NumericVector<libMesh::Number>& solution = sys.get_solution_vector();
+  NumericVector<libMesh::Number>& currdens = sys.get_vector("currdens");
 
   // loop through matrix, and take coupling elements as resistors
   // calculate Kirchhoff in each active node and devide by area
@@ -354,15 +356,38 @@ PVModule::calculate_current_density(void)
   vector<numeric_index_type> indices;
   vector<double> values;
 
+  // we put the vertical current density on the first of the two DoFs
   for (unsigned int i = 0; i < n_dofs; i += 2)
   {
     // extract information from system matrix
     sys.matrix->get_row(i, indices, values);
 
-    for (unsigned int j = 0; j < indices.size(); ++j)
+    double voltage_i = solution(i);
+    double current = 0.0;
+    double area = 0.0;
+
+    for (unsigned int jj = 0; jj < indices.size(); ++jj)
     {
+      unsigned int j = indices[jj];
+
+      if (j == i)
+        area  = values[jj];
+      
+      if (j > i)
+      {
+        double cond = values[jj];
+        double voltage_j = solution(j);
+        current += (voltage_i - voltage_j) * cond;
+      }
+    }
+
+    if (area > 0)
+    {
+      currdens.set(i, current / area);
     }
   }
+
+  currdens.close();
 }
 
 
@@ -420,6 +445,7 @@ PVModule::get_solution_secure(const Elem* elem,
   TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
 
   const NumericVector<libMesh::Number>& solution = system.get_solution_vector();
+  const NumericVector<libMesh::Number>& currdens = system.get_vector("currdens");
 
   const unsigned int dim = get_mesh().mesh_dimension();
 
@@ -454,12 +480,14 @@ PVModule::get_solution_secure(const Elem* elem,
   {
     double ut  = 0.0;
     double ub  = 0.0;
+    double curr = 0.0;
 
     // do interpolation
     for (unsigned int i = 0; i < n_dofs; i++)
     {
       ut += phi[i][n] * solution(dofs_top[i]);
       ub += phi[i][n] * solution(dofs_bot[i]);
+      curr += phi[i][n] * currdens(dofs_top[i]);
     }
 
     if (values.count(TopPotential))
@@ -467,6 +495,9 @@ PVModule::get_solution_secure(const Elem* elem,
 
     if (values.count(BottomPotential))
       values[BottomPotential][n] = ub;
+
+    if (values.count(CurrentDensity))
+      values[CurrentDensity][n] = curr;
 
   }
 }
