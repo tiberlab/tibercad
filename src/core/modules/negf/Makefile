@@ -8,11 +8,11 @@ target := modules
 #target := 
 
 modules: libnegf module.conf
-	@$(BUILDMODULE) module.conf 
+	@$(BUILDMODULE) module.conf > NEGF_compile.log 2>&1 
 
 .PHONY: libnegf clean
 libnegf:
-	-@$(MAKE) --no-print-directory -C libnegf $(MAKECMDGOALS)
+	-@$(MAKE) --no-print-directory -C libnegf $(MAKECMDGOALS) > WRAPPER_compile.log 2>&1 
 	@mkdir -p $(topdir)/$(ARCH)/modules/negf
 	-@cp libnegf/libnegf.so $(topdir)/$(ARCH)/modules/negf
 
