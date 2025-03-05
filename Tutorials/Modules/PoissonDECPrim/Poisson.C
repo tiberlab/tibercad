@@ -373,7 +373,7 @@ Poisson::circumcenter(const libMesh::Elem* elem, int s)
     if (!elem->contains_point(x_i))
     {
       cerr << "outside!\n"; 
-      //x_i = elem->centroid();
+      //x_i = elem->vertex_average();
     }
     else
     {
@@ -405,11 +405,11 @@ Poisson::circumcenter(const libMesh::Elem* elem, int s)
 
     if (!elem->contains_point(x_i))
     {
-      x_i = elem->centroid();
+      x_i = elem->vertex_average();
     }
   }
   else
-    x_i = elem->centroid();
+    x_i = elem->vertex_average();
 
   return(x_i);
 }
@@ -435,7 +435,7 @@ Poisson::hodge_pd(const libMesh::Elem* elem,
   // circumcenter and thus Voronoi-construction works only
   // for triangles, otherwise we fall back to barycentric Hodge
   if ((nn != 3) || (myopts.dual_constr == BARYCENTER))
-    center = elem->centroid();
+    center = elem->vertex_average();
   else
     center = circumcenter(elem);
 
@@ -655,7 +655,7 @@ Poisson::assemble(void)
       {
         auto side_elem = elem->side_ptr(k);
         double side_vol = side_elem->volume();
-        Point side_ctr = side_elem->centroid();
+        Point side_ctr = side_elem->vertex_average();
 
         mod_int->calculate(elem, k, side_ctr);
 
