@@ -127,11 +127,15 @@ class TBDLLOCAL Control
 
 
     //! The device we control
-    Device* _device;
+    Device* _device = nullptr;
+
+
+    //! The time variable
+    double _time = 0.0;
 
 
     //! The database we use
-    Database* _database;
+    Database* _database = nullptr;
 
 
     //! The list of simulations to be solved
@@ -139,7 +143,7 @@ class TBDLLOCAL Control
 
 
     //! The directory where to put output
-    std::string _outputdir;
+    std::string _outputdir = ".";
 
 
     //! The output format

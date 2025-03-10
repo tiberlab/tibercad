@@ -112,9 +112,6 @@ Control::SignalHandler::sigint(int sig)
 
 
 Control::Control(void)
-  : _inputfile(""),
-    _device(0),
-    _outputdir(".")
 {
 
 }
@@ -396,6 +393,9 @@ Control::setup_globals(const ModelOptions& opts)
     m.info(os.str());
     m.newline();
   }
+
+  // create a global variable for time
+  VariableValue::check_and_register("$time", _time);
 
   {
     int omp_procs = omp_get_max_threads();

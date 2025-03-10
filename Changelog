@@ -7,7 +7,7 @@ New features:
 	- can now provide crystal directions as planes (hkl) or directions
 	  [utw], both Miller or Miller-Bravais. Also, only one or two
 	  directions need to be given
-	- changed output of symmetric tensors to reflect ordering in Voigt notation.
+	- can now specify values when to plot data in Sweep
 
 
 Version 3.3.0
