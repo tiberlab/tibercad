@@ -907,7 +907,7 @@ Negf::setup_negf(void)
   params.delta = opt.delta;
   //params.deltaModel = ;
   //params.wmax = ;
-  //params.dos_delta = ;
+  params.dos_delta = opt.dos_delta;
 
   //std::vector <double> phi(_quantum_contacts.size(), 0.0);
   //std::vector <double> mu_n(_quantum_contacts.size(), 0.0);
@@ -956,6 +956,8 @@ Negf::setup_negf(void)
   double Ev = _ext_module->get_band_edge("Ev");
   params.ec = Ec;
   params.ev = Ev;
+
+  // params.dump_matrices = opt.dump_matrices;
 
   params.deltaec = opt.DEc;
   params.deltaev = opt.DEv;
@@ -2267,6 +2269,8 @@ Negf::parse_options(void)
   sol_opt.get_option("Np_contour", opt.Np_n);
 
   opt.delta = sol_opt.get_option("delta",2e-3);
+  
+  opt.dos_delta = sol_opt.get_option("dos_delta", 0.0);
 
   opt.deltaE =  sol_opt.get_option("deltaE",opt.delta/2.0);
 
@@ -2285,6 +2289,8 @@ Negf::parse_options(void)
   //sol_opt.check_unused();
   opt.writeLDOS = plot_solution("LDOS");
   opt.writeLDOS = sol_opt.get_option("writeLDOS", opt.writeLDOS);
+
+  // opt.dump_matrices = get_option("debug_dump_Gn_and_A", false);
   
   parse_scattering_options();
 

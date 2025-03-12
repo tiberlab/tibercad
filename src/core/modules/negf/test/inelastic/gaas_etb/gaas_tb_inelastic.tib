@@ -139,8 +139,8 @@ Module negf
 
     #delta = 1e-3
     Emin = 0.30
-    Emax = 0.70
-    #Estep = 0.05
+    Emax = 2.70
+    Estep = 0.05
     #writeLDOS = 1
   }
 
@@ -159,10 +159,10 @@ Module negf
         coupling = 1.0
         max_scba_iterations = 6000
         scba_tolerance = 1e-7
-        phonon_frequency = 0.05
-        eps_infinity = 1.0
-        eps_0 = 3.0
-        screening_length = 10
+        phonon_frequency = 0.035
+        eps_infinity = 10.86
+        eps_0 = 12.80
+        screening_length = 30
         tridiagonal = true 
       }
     }

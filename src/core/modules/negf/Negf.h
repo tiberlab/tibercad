@@ -151,6 +151,8 @@ class TBDLLOCAL Negf : public SimulationInterface
 
         double delta;
 
+        double dos_delta;
+
 	      double deltaE;
 
         bool writeLDOS;
@@ -167,6 +169,8 @@ class TBDLLOCAL Negf : public SimulationInterface
 
         //! volume of the cell for computing inelastic coupling
         double volume;
+
+        // bool dump_matrices;
     };
 
 
