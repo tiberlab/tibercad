@@ -169,7 +169,13 @@ class TBDLLOCAL Poisson : public SimulationInterface
                                         unsigned int>>& incidence,
                   std::vector<double>& vol);
 
-    
+
+    //! Get the element star associated to a point of an element
+    /*!
+     * This will search for all elements touching the given point.
+     */
+    void get_element_star(const Elem* elem, unsigned int node,
+                          std::vector<const Elem*>& elemlist) const;
 
 };
 

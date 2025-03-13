@@ -21,6 +21,8 @@
 #include "libmesh/fe.h"
 #include "libmesh/fe_interface.h"
 
+#include <queue>
+
 // This is needed in order to create the shared module library
 #include "TiberModule.h"
 
@@ -403,6 +405,41 @@ Poisson::hodge_pd(const libMesh::Elem* elem,
     }
   }
   */
+}
+
+
+
+void
+Poisson::get_element_star(const Elem *elem, unsigned int node,
+                          std::vector<const Elem *>& elemlist) const
+{
+  elemlist.push_back(elem);
+
+  queue<const Elem*> elems;
+  elems.push(elem);
+
+  while (!queue.empty())
+  {
+    const Elem *nextelem = queue.front();
+
+    for (unsigned int s = 0; s < nextelem->n_sides(); ++s)
+    {
+      if (nextelem->is_node_on_side(node, s))
+      {
+        const Elem* neigh = nextelem->neighbor_ptr(s);
+
+        if ((neigh != nullptr) &&
+            !find(elemlist.begin(), elemlist.end(), neigh))
+        {
+          elemlist.push_back(neigh);
+          elems.push(neigh);
+        }
+      }
+    }
+
+    // remove the element processed
+    queue.pop();
+  }
 }
 
 
