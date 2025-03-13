@@ -418,18 +418,21 @@ Poisson::get_element_star(const Elem *elem, unsigned int node,
   queue<const Elem*> elems;
   elems.push(elem);
 
-  while (!queue.empty())
+  dof_id_type nodeid = elem->node_id(node);
+
+  while (!elems.empty())
   {
-    const Elem *nextelem = queue.front();
+    const Elem *nextelem = elems.front();
+    unsigned int node_local_id = nextelem->local_node(nodeid);
 
     for (unsigned int s = 0; s < nextelem->n_sides(); ++s)
     {
-      if (nextelem->is_node_on_side(node, s))
+      if (nextelem->is_node_on_side(node_local_id, s))
       {
         const Elem* neigh = nextelem->neighbor_ptr(s);
 
         if ((neigh != nullptr) &&
-            !find(elemlist.begin(), elemlist.end(), neigh))
+            (find(elemlist.begin(), elemlist.end(), neigh) == elemlist.end()))
         {
           elemlist.push_back(neigh);
           elems.push(neigh);
@@ -438,7 +441,7 @@ Poisson::get_element_star(const Elem *elem, unsigned int node,
     }
 
     // remove the element processed
-    queue.pop();
+    elems.pop();
   }
 }
 
@@ -518,6 +521,12 @@ Poisson::assemble(void)
 
     double rho = mod.get_charge_density() * Lambda;
     Fe(0) = rho * vol;
+
+    for (unsigned int i = 0; i < elem->n_nodes(); ++i)
+    {
+      vector<const Elem*> elemlist;
+      get_element_star(elem, i, elemlist);
+    }
 
     // loop over all sides, but do something only on sides with neighbor
     for (unsigned int i = 0, j = 0; i < elem->n_sides(); ++i)
