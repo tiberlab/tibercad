@@ -16,10 +16,7 @@ ARCH = $(shell uname -m)
 
 CXXFLAGS = -fPIC  
 
-UPTREV=HEAD 
-#UPTREV=257
-#UPTREPO=https://afrodite.eln.uniroma2.it/svn/uptight/branches/tibercad/src
-UPTREPO=https://afrodite.eln.uniroma2.it/svn/uptight/branches/tibercad_mixing/src
+UPTREPO=https://github.com/tiberlab/uptight.git
 
 target := libuptight$(shared_libext)
 
@@ -34,19 +31,24 @@ libuptight$(shared_libext) :  .$(ARCH)/UptWrapper$(obj-suffix) libuptight_$(ARCH
 	
 .$(ARCH)/UptWrapper$(obj-suffix) : libuptight_$(ARCH).a 
 
-libuptight_$(ARCH).a: checkout
-	@echo "Updating libuptight ..."
-	@cd src; $(SVN) -r $(UPTREV) up;  $(SVN) -r $(UPTREV) up lib_uptight;  $(SVN) -r $(UPTREV) up api; \
+libuptight_$(ARCH).a: update
 	echo "Compiling libuptight ..."; \
+	cd uptight/src; \
 	CC=$(CC) CXX=$(CXX) FC=$(FC) ./configure $(CUDACONF) $(MKLCONF) --with-subversion=$(SVN); \
 	$(MAKE) -C api libuptight; 
-	@mv src/api/libuptight_$(ARCH).a .	
-	@cp src/api/fortran.h .
-	@cp src/api/uptight.h . 
+	@mv uptight/src/api/libuptight_$(ARCH).a .	
+	@cp uptight/src/api/fortran.h .
+	@cp uptight/src/api/uptight.h . 
+
+update: checkout
+	cd uptight; git pull origin;
 	
 checkout:
-	@echo "Checkout libuptight ..."
-	@if [ ! -d src/api ]; then $(SVN) -r $(UPTREV) --depth files co $(UPTREPO); fi
+	@if [ ! -e uptight ]; then \
+		echo "Checkout libuptight ..."; \
+		git clone $(UPTREPO); \
+		cd uptight; \
+	fi
 	
 
 	
