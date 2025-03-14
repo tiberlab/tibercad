@@ -177,6 +177,9 @@ class TBDLLOCAL Poisson : public SimulationInterface
     void get_element_star(const Elem* elem, unsigned int node,
                           std::vector<const Elem*>& elemlist) const;
 
+    //! Get the weight function in \c x for a given polytope
+    double weight(const Point& x,
+                  const std::vector<const Point>& polytope) const;
 };
 
 

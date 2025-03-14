@@ -446,6 +446,12 @@ Poisson::get_element_star(const Elem *elem, unsigned int node,
 }
 
 
+double
+Poisson::weight(const Point &x,
+                const std::vector<const Point> &polytope) const
+{
+}
+
 
 void
 Poisson::assemble(void)
@@ -526,6 +532,7 @@ Poisson::assemble(void)
     {
       vector<const Elem*> elemlist;
       get_element_star(elem, i, elemlist);
+
     }
 
     // loop over all sides, but do something only on sides with neighbor
