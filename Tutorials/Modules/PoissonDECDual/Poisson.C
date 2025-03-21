@@ -5,6 +5,8 @@
 #include "PoissonBoundaryModel.h"
 #include "TiberLinearSystem.h"
 #include "Messages.h"
+#include "DECdual.h"
+#include "PolyTope.h"
 
 #include "libmesh/equation_systems.h"
 #include "libmesh/dof_map.h"
@@ -286,171 +288,13 @@ Poisson::hodge_pd(const libMesh::Elem* elem,
                   vector<pair<unsigned int, unsigned int>>& incidence,
                   vector<double>& vol)
 {
-  /*
-  unsigned int dim = elem->dim();
-  unsigned int ne = elem->n_edges();
-  unsigned int nn = elem->n_nodes();
-
-  hodge.resize(ne, ne);
-  incidence.resize(0);
-  incidence.reserve(ne);
-
-  vol = vector<double>(nn, 0.0);
-
-  // circumcenter and thus Voronoi-construction works only
-  // for triangles, otherwise we fall back to barycentric Hodge
-  center = elem->vertex_average();
-
-  vector<Point> prim(ne);
-
-  // get primal 1-chains
-  // Works ONLY for 1D and 2D in this form
-  for (unsigned int i = 0; i < nn; ++i)
-  {
-    unsigned int j = (i + 1) % nn;
-    prim[i] = (elem->point(j) - elem->point(i));
-
-    incidence.push_back(make_pair(i, j));
-
-    vol[0] = vol[1] = 0.5 * elem->volume();
-  }
-
-  if (dim == 1)
-  {
-    // in this case the Hodge is automatically diagonal
-    // dual form has volume 1
-    hodge(0, 0) = 1.0 / prim[0].norm();
-
-  }
-  else if (dim == 2)
-  {
-
-    vector<Point> dual(ne);
-    vector<Point> x_m(ne);
-    for (unsigned int i = 0; i < nn; ++i)
-    {
-      unsigned int j = (i + 1) % nn;
-      x_m[i] = 0.5 * (elem->point(j) + elem->point(i));
-
-      dual[i] = center - x_m[i];
-    }
-
-    auto cross2d = [] (Point& a, Point& b) { return (a(0)*b(1) - a(1)*b(0)); };
-
-    if (myopts.hodge_type == WHITNEY)
-    {
-      vector<double> w0;
-      vector<Point> w1;
-
-      Point p = libMesh::FEInterface::inverse_map(2, libMesh::FEType(), elem, center);
-      whitney_interpolation(*elem, p, w0, w1);
-
-      for (unsigned int i = 0; i < nn; ++i)
-      {
-        hodge(i, 0) += 0.5 * cross2d(w1[0], dual[i]);
-        hodge(i, 1) += 0.5 * cross2d(w1[1], dual[i]);
-        hodge(i, 2) += 0.5 * cross2d(w1[2], dual[i]);
-
-        double e_x_ed = cross2d(prim[i], dual[i]);
-
-        // calculate the volume contribution associated to the node
-        unsigned int r = (i + 1) % nn;
-        vol[i] += 0.25 * e_x_ed;
-        vol[r] += 0.25 * e_x_ed;
-      }
-
-      for (unsigned int i = 0; i < nn; ++i)
-      {
-        p = libMesh::FEInterface::inverse_map(2, libMesh::FEType(), elem, x_m[i]);
-        whitney_interpolation(*elem, p, w0, w1);
-        
-        hodge(i, 0) += 0.5 * cross2d(w1[0], dual[i]);
-        hodge(i, 1) += 0.5 * cross2d(w1[1], dual[i]);
-        hodge(i, 2) += 0.5 * cross2d(w1[2], dual[i]);
-
-      }
-    }
-    else
-    {
-
-      for (unsigned int i = 0; i < ne; ++i)
-      {
-        double e_norm = prim[i].norm_sq();
-        double e_x_ed = cross2d(prim[i], dual[i]);
-        double e_dot_ed = prim[i] * dual[i];
-
-        // calculate the volume contribution associated to the node
-        unsigned int r = (i + 1) % nn;
-        vol[i] += 0.25 * e_x_ed;
-        vol[r] += 0.25 * e_x_ed;
-
-        hodge(i, i) = e_x_ed / e_norm;
-
-        // the following takes for side i the next two
-        // sides for expanding skew-transformed 1-chain:
-        // -J e_i = a_i^(i+1)*e_(i+1) + a_i^(i+2)*e_(i+2)
-        // It should work for all n-angles, unless two
-        // subsequent sides are collinear
-        for (unsigned int j = 1; j < 3; ++j)
-        {
-          unsigned int k = (i + j) % ne;
-          unsigned int l = (i + 3 - j) % ne;
-
-          double ei_dot_el = prim[i] * prim[l];
-          double ek_x_el = cross2d(prim[k], prim[l]);
-
-          hodge(i, k) = (e_dot_ed / e_norm) * (ei_dot_el / ek_x_el);
-        }
-      }
-    }
-  }
-  */
 }
 
 
 
-void
-Poisson::get_element_star(const Elem *elem, unsigned int node,
-                          std::vector<const Elem *>& elemlist) const
-{
-  elemlist.push_back(elem);
-
-  queue<const Elem*> elems;
-  elems.push(elem);
-
-  dof_id_type nodeid = elem->node_id(node);
-
-  while (!elems.empty())
-  {
-    const Elem *nextelem = elems.front();
-    unsigned int node_local_id = nextelem->local_node(nodeid);
-
-    for (unsigned int s = 0; s < nextelem->n_sides(); ++s)
-    {
-      if (nextelem->is_node_on_side(node_local_id, s))
-      {
-        const Elem* neigh = nextelem->neighbor_ptr(s);
-
-        if ((neigh != nullptr) &&
-            (find(elemlist.begin(), elemlist.end(), neigh) == elemlist.end()))
-        {
-          elemlist.push_back(neigh);
-          elems.push(neigh);
-        }
-      }
-    }
-
-    // remove the element processed
-    elems.pop();
-  }
-}
 
 
-double
-Poisson::weight(const Point &x,
-                const std::vector<const Point> &polytope) const
-{
-}
+
 
 
 void
@@ -530,8 +374,9 @@ Poisson::assemble(void)
 
     for (unsigned int i = 0; i < elem->n_nodes(); ++i)
     {
-      vector<const Elem*> elemlist;
-      get_element_star(elem, i, elemlist);
+      DECdual dual(elem, i);
+      PolyTope pt;
+      dual.get_polytope(pt);
 
     }
 
