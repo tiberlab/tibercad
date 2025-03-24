@@ -18,13 +18,15 @@ void
 DECdual::build_dual_element(const libMesh::Elem* elem, unsigned int node)
 {
   _center_id = elem->node_id(node);
-  _star.clear();
+
+  // a reasonable guess for triangular grids
+  _star.reserve(6);
 
   std::queue<const libMesh::Elem*> elems;
-  std::set<const libMesh::Elem*> el_done;
 
   elems.push(elem);
 
+  std::set<const libMesh::Elem*> el_done;
   while (!elems.empty())
   {
     const libMesh::Elem* nextelem = elems.front();
@@ -38,19 +40,34 @@ DECdual::build_dual_element(const libMesh::Elem* elem, unsigned int node)
 
         if (!el_done.count(neigh))
         {
-          _star.push_back(OneChain2D(nextelem, s));
+          if (el_done.count(nextelem) && (neigh != nullptr))
+          {
+            for (unsigned int ns = 0; ns < neigh->n_sides(); ++ns)
+            {
+              if (neigh->neighbor_ptr(ns) == nextelem)
+              {
+                _star.push_back(OneChain2D(neigh, ns));
+                el_done.insert(neigh);
+              }
+            }
+          }
+          else
+          {
+            _star.push_back(OneChain2D(nextelem, s));
+            el_done.insert(nextelem);
+          }
 
           if (neigh != nullptr)
           {
             elems.push(neigh);
           }
         }
-        
       }
     }
-    el_done.insert(nextelem);
     elems.pop();
   }
+
+  _star.shrink_to_fit();
 }
 
 
@@ -69,53 +86,8 @@ DECdual::get_polytope(PolyTope &poly) const
   // 2D elements have exactly two sides touching the
   // center node.
 
-  const OneChain2D& c = _star[0];
-  Point p0(c.get_elem()->vertex_average());
-  poly.add_node(p0);
-
-  const Elem *neigh = _star[1].get_elem()->neighbor_ptr(_star[1].get_side());
-  Point p1(_star[1].get_elem()->vertex_average());
-
-  // check orientation
-  Point s1 = p0 - c.get_elem()->point(c.get_elem()->local_node(_center_id));
-  Point d1 = p1 - p0;
-  double orientation = s1.cross(d1)(2);
-std::cerr <<"orientation: " << orientation << "\n";
-  if (orientation > 0)
+  for (unsigned int i = 0; i < _star.size(); ++i)
   {
-    poly.add_node(p1);
-
-    for (unsigned int i = 3; i < _star.size(); ++i)
-    {
-      poly.add_node(_star[i].get_elem()->vertex_average());
-    }
-
-    if (_star[2].get_elem() != nullptr)
-    {
-      const Elem* neigh = _star[1].get_elem()->neighbor_ptr(_star[1].get_side());
-      poly.add_node(neigh->vertex_average());
-    }
+    poly.add_node(_star[i].get_elem()->vertex_average());
   }
-  else
-  {
-    if (_star[2].get_elem() != nullptr)
-    {
-      const Elem* neigh = _star[1].get_elem()->neighbor_ptr(_star[1].get_side());
-      poly.add_node(neigh->vertex_average());
-    }
-
-    for (unsigned int i = _star.size() - 1; i >= 3; --i)
-    {
-      poly.add_node(_star[i].get_elem()->vertex_average());
-    }
-
-    poly.add_node(p1);
-  }
-
-for (unsigned int i = 0; i < poly.get_nodes().size(); ++i)
-{
-  std::cerr << poly.get_nodes().at(i) - 
-      c.get_elem()->point(c.get_elem()->local_node(_center_id)) << "\n";
-}
-std::cerr << "\n";
 }
