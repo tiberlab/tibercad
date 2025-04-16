@@ -47,7 +47,15 @@ checkout:
 	@if [ ! -e uptight ]; then \
 		echo "Checkout libuptight ..."; \
 		git clone $(UPTREPO); \
-		cd uptight; \
+		cd $(topdir)/materials; \
+		if [ -e ETB ]; then \
+		  if [ ! -h ETB ]; then \
+		    printf '%b\n' '\033[1;31m\e[1mmaterials/ETB already exists. Please resolve manually.\e[0m'; \
+		    printf "%b\n" "\033[1;31m  --> should be a symbolic link to modules/etb/libuptight/uptight/parameters\e[0m"; \
+		  fi \
+		else \
+		  ln -s src/core/modules/etb/libuptight/uptight/parameters ETB; \
+		fi \
 	fi
 	
 
