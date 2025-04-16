@@ -54,7 +54,7 @@ checkout:
 		    printf "%b\n" "\033[1;31m  --> should be a symbolic link to modules/etb/libuptight/uptight/parameters\e[0m"; \
 		  fi \
 		else \
-		  ln -s src/core/modules/etb/libuptight/uptight/parameters ETB; \
+		  ln -s ../src/core/modules/etb/libuptight/uptight/parameters ETB; \
 		fi \
 	fi
 	
