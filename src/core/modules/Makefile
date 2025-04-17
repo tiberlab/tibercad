@@ -6,7 +6,7 @@ topdir := ../../..
 # we have to compile each module
 subdirs += common signals
 subdirs += thermal drift-diffusion elasticity
-subdirs += vff etb 
+subdirs += vff etb efa
 subdirs += dd_generic
 subdirs += quantumespresso
 subdirs += data_importer

@@ -11,18 +11,20 @@
 #include "SimulationOptions.h"
 #include "TensorOperators.h"
 #include "tensor.h"
-
 #include "EigenSolver.h"
-#include "quadrature_gauss.h"
+
+#include "libmesh/quadrature_gauss.h"
 
 
-#include <edge_edge2.h>
-#include <equation_systems.h>
-#include <dense_submatrix.h>
-#include <quadrature_gauss.h>
+#include "libmesh/edge_edge2.h"
+#include "libmesh/equation_systems.h"
+#include "libmesh/dense_submatrix.h"
+#include "libmesh/quadrature_gauss.h"
 
 
 #include "Messages.h"
+
+#include "TiberModule.h"
 
 
 extern "C"

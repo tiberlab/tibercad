@@ -21,9 +21,6 @@
 
 #include "Variable.h"
 
-#include "EnvelopFunctionApprox.h"
-
-#include "OpticsKP.h"
 #include "OpticsTB.h"
 
 #include "Sweep.h"
@@ -40,6 +37,7 @@
 
 // LibMesh includes
 #include "libmesh/system.h"
+#include "libmesh/dof_map.h"
 #include "libmesh/elem.h"
 #include "libmesh/mesh.h"
 #include "libmesh/fe_interface.h"
@@ -137,16 +135,12 @@ SimulationInterface::create(const string& type,
   if (flavour.size() != 0)
     type_name += "_" + flavour;
 
-  if (type_name == "efaschroedinger")
-    sim = EnvelopFunctionApprox::create(options);
-  else if (type_name == "sweep")
+  if (type_name == "sweep")
     sim = Sweep::create(options);
   else if (type_name == "selfconsistent")
     sim = RelaxationMethod::create(options);
   else if (type_name == "selfconsistent_relaxation")
     sim = RelaxationMethod::create(options);
-  else if (type_name == "opticskp")
-    sim = OpticsKP::create(options);
   else if (type_name == "opticstb")
     sim = OpticsTB::create(options);
 

@@ -8,7 +8,6 @@ topdir := ../..
 subdirs := semiconductormodels
 subdirs += solver-interfaces
 subdirs += kintegrations
-subdirs += quantumEFAmodels
 subdirs += tightbinding
 subdirs += optics 
 subdirs += eigenvalue
