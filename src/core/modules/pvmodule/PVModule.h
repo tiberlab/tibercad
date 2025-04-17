@@ -84,6 +84,13 @@ class TBDLLOCAL PVModule : public SimulationInterface
       ContactCurrent,   /*!< the currents at the contacts */
     };
 
+    //! The discretization type
+    enum Discretization
+    {
+      FEM,    /*!< FEM */
+      DEC     /*!< DEC with dual grid */
+    };
+
     //! The constructor
     /*!
      * Being private disables further inheritance.
@@ -92,6 +99,12 @@ class TBDLLOCAL PVModule : public SimulationInterface
 
     //! The assembly function
     void assemble(void);
+
+    //! The assembly function using FEM
+    void assemble_fem(void);
+    
+    //! The assembly function using DEC on dual grid
+    void assemble_dec_dual(void);
 
     //! Calculate current density in active nodes from the node voltages
     void calculate_current_density(void);
@@ -113,6 +126,9 @@ class TBDLLOCAL PVModule : public SimulationInterface
     };
 
     MyAssembly _my_assembly;
+
+    //! The discretization to be used
+    Discretization _discretization = FEM;
 
     std::string _spice {"ngspice"};
 	

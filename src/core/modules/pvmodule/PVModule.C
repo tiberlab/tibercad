@@ -64,8 +64,16 @@ PVModule::do_init(void)
   TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
 
   // add variables and attach the assemble function
-  system.add_variable("Vtop", FIRST);
-  system.add_variable("Vbot", FIRST);
+  if (_discretization == DEC)
+  {
+    system.add_variable("Vtop", CONSTANT, MONOMIAL);
+    system.add_variable("Vbot", CONSTANT, MONOMIAL);
+  }
+  else
+  {
+    system.add_variable("Vtop", FIRST);
+    system.add_variable("Vbot", FIRST);
+  }
   system.add_vector("currdens");
   system.attach_assemble_object(_my_assembly);
   system.init();
@@ -79,6 +87,19 @@ PVModule::do_init(void)
 void
 PVModule::parse_options(void)
 {
+
+  string discr = get_option("discretization", "FEM");
+  if (discr == "FEM")
+    _discretization = FEM;
+  else if (discr == "DEC")
+    _discretization = DEC;
+  else
+    throw InitFailedException("Unknown discretization scheme: "
+                              + discr);
+
+  if (_discretization == DEC)
+    throw InitFailedException("DEC discretization is not implemented yet.");
+
 
   _spice = get_option("spice_executable", _spice);
   get_parameter("voltage", _voltage);
@@ -125,10 +146,20 @@ void
 PVModule::do_setup_solution_variables(void)
 {
   // we declare our solution variables
-  declare_solution(TopPotential, REAL, NODES, "V");
-  declare_solution(BottomPotential, REAL, NODES, "V");
-  declare_solution(CurrentDensity, REAL, NODES, "A/cm^2");
-  declare_solution(ContactCurrent, REAL, GLOBAL, "A");
+  if (_discretization == DEC)
+  {
+    declare_solution(TopPotential, REAL, CELL, "V");
+    declare_solution(BottomPotential, REAL, CELL, "V");
+    declare_solution(CurrentDensity, REAL, CELL, "A/cm^2");
+    declare_solution(ContactCurrent, REAL, GLOBAL, "A");
+  }
+  else
+  {
+    declare_solution(TopPotential, REAL, NODES, "V");
+    declare_solution(BottomPotential, REAL, NODES, "V");
+    declare_solution(CurrentDensity, REAL, NODES, "A/cm^2");
+    declare_solution(ContactCurrent, REAL, GLOBAL, "A");
+  }
 }
 
 
@@ -550,6 +581,36 @@ PVModule::plot_globaldata(void)
 
 void
 PVModule::assemble(void)
+{
+  if (_discretization == DEC)
+    assemble_dec_dual();
+  else
+    assemble_fem();
+}
+
+
+
+void
+PVModule::assemble_dec_dual(void)
+{
+  TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
+
+  const MeshBase& mesh = get_mesh();
+  const unsigned int dim = mesh.mesh_dimension();
+ 
+  
+  DofMap& dof_map =  system.get_dof_map();
+
+  const unsigned int vtop = system.variable_number("Vtop");
+  const unsigned int vbot = system.variable_number("Vbot");
+
+
+}
+
+
+
+void
+PVModule::assemble_fem(void)
 {
   TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
 
