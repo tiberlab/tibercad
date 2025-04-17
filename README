@@ -1,3 +1,0 @@
-On OLAB system, use configure.sh for configuration, then run make
-
-On other systems, use configure providing all necessary options, or use scripts in misc directory
