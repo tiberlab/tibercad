@@ -20,7 +20,7 @@ Modules can have their pwn changelog file.
 - changed several filenames in preparation of migrating to github  
 
 
-# [v3.4.0]
+# [v3.4.0] - 2024-10-03
 
 ### Added
 - upgraded to libmesh 1.7.1, PETSc/SLEPc 3.17, cuda 11.5  
@@ -31,7 +31,7 @@ Modules can have their pwn changelog file.
 - can now specify values when to plot data in Sweep  
 
 
-## [3.3.0]
+## [3.3.0] - 2024-04-17
 
 - implemented Tan scheme in uptight  
 - ETB parameters are organized in subdirectories for different schemes  
