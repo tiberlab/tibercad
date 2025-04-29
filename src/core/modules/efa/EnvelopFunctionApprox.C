@@ -13,8 +13,6 @@
 #include "tensor.h"
 #include "EigenSolver.h"
 
-#include "libmesh/quadrature_gauss.h"
-
 
 #include "libmesh/edge_edge2.h"
 #include "libmesh/equation_systems.h"
@@ -50,16 +48,6 @@ namespace
   }
 }
 
-//---------------------------------------------------------------------------------//
-
-
-/*
-inline void EnvelopFunctionApprox::get_electric_potential(const Elem* elem, const std::vector<Point>& q_point,
-						   std::vector<double> electric_potential) const
-{
-  poisson_equation->get_solution (elem, q_point, potential_ID, electric_potential);
-}
-*/
 //---------------------------------------------------------------------------------//
 
 inline double EnvelopFunctionApprox::get_band_edge(const Elem* elem, const std::string& particle) const
@@ -184,14 +172,6 @@ void EnvelopFunctionApprox::get_occupations(std::vector<double>& values) const
 }
 
 
-
-
-//====================================================================================//
-
-//const std::vector<eigen_problem_solution >& EnvelopFunctionApprox::get_solution() const
-//{
-//  return(solution);
-//}
 
 
 //====================================================//
@@ -1993,7 +1973,7 @@ pair<unsigned int, double> EnvelopFunctionApprox::read_slepc_solution(void)
 
     //-----------------------------------------------------------------------------
     //put independent dofs in the eigenvectors that may contain also non independent dofs
-    for (int j = 0; j < number_of_all_dofs; j++)
+    for (int j = 0; j < _solution[index].eigen_vector.size(); j++)
     {
       //_solution[index].eigen_vector[j] = temp[j];
       //if (new_dofs[j].independent)
@@ -2005,7 +1985,7 @@ pair<unsigned int, double> EnvelopFunctionApprox::read_slepc_solution(void)
 /*
     //put constrained dofs
 
-    for (unsigned int j = 0; j < number_of_all_dofs; j++)
+    for (unsigned int j = 0; j < _solution[index].eigen_vector.size(); j++)
     {
       DofConstraints::iterator it(my_dof_constraints.find(j));
 
@@ -2058,7 +2038,7 @@ pair<unsigned int, double> EnvelopFunctionApprox::read_slepc_solution(void)
         Complex norm = sqrt(scalar_product(_solution[ind], _solution[ind]));
         Complex alpha = scalar_product(_solution[ind].eigen_vector, tempvec) / norm;
         //cerr << " (" << ind << ") " << alpha << ",";
-        for (size_t j = 0; j < number_of_all_dofs; j++)
+        for (size_t j = 0; j < _solution[ind].eigen_vector.size(); j++)
           tempvec[j] -= alpha * _solution[ind].eigen_vector[j];
 
         ind--;
@@ -2079,7 +2059,7 @@ pair<unsigned int, double> EnvelopFunctionApprox::read_slepc_solution(void)
     //
     double norm = eigenstate_norm(index);
 
-    for (unsigned int j = 0; j < number_of_all_dofs; j++)
+    for (unsigned int j = 0; j < _solution[index].eigen_vector.size(); j++)
       _solution[index].eigen_vector[j] /= Complex(norm, 0.0);
 
 
@@ -2340,7 +2320,7 @@ void EnvelopFunctionApprox::transform_eigenstate(vector<Complex>& eigvec)
 //-----------------------------------------------------------------------------//
 double  EnvelopFunctionApprox::eigenstate_norm(unsigned int state_number, vector<double> *projections) const
 {
-  double  result;
+  double result = 0.0;
 
   const vector< Complex > &  eigen_vector =  _solution[state_number].eigen_vector;
 
