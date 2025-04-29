@@ -10,16 +10,14 @@
 #include "DataOutput.h"
 
 #include "SimulationOptions.h"
-#include <petsc_matrix.h>
 
-
-#include <petsc_matrix.h>
 
 #include "libmesh/elem.h"
 #include "libmesh/mesh.h"
 #include "libmesh/quadrature_gauss.h"
 #include "libmesh/mesh_tools.h"
 #include "libmesh/mesh_generation.h"
+#include "libmesh/petsc_matrix.h"
 
 #include <boost/shared_ptr.hpp>
 

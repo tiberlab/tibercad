@@ -112,13 +112,6 @@ class FEMEigenvalueProblem : public  EigenvalueProblem
   short dim;
 
 
-  //!number of independent dofs
-  int number_of_new_dofs;
-
-
-  //!total number of dofs 
-  int number_of_all_dofs;
-
 
   //!vector: each element contains information about dof
   std::vector<FEMEigenvalueProblem::dof_new> new_dofs;

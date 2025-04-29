@@ -7,15 +7,11 @@
 #include "EigenSolver.h"
 #include "Messages.h"
 
-#include "equation_systems.h"
-#include "quadrature_gauss.h"
-#include "fe_interface.h"
-#include "linear_implicit_system.h"
-
-#include "quadrature_gauss.h"
-#include "quadrature_gauss.h"
-
-#include <petsc_matrix.h>
+#include "libmesh/equation_systems.h"
+#include "libmesh/quadrature_gauss.h"
+#include "libmesh/fe_interface.h"
+#include "libmesh/linear_implicit_system.h"
+#include "libmesh/petsc_matrix.h"
 
 #include <numeric>
 
@@ -75,7 +71,7 @@ void FEMEigenvalueProblem::make_new_dofs( )
   DofMap& dof_map = system->get_dof_map();
 
   
-  number_of_all_dofs  =   dof_map.n_dofs();
+  int number_of_all_dofs  =   dof_map.n_dofs();
   
   new_dofs.resize(number_of_all_dofs);
   const std::set<unsigned int> :: const_iterator  n_begin = dirichlet_dofs.begin();
@@ -104,7 +100,6 @@ void FEMEigenvalueProblem::make_new_dofs( )
     }
 
   
-  number_of_new_dofs = number_it;
 
 }
 //=====================================================================//
