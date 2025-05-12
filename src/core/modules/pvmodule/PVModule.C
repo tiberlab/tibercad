@@ -106,13 +106,17 @@ PVModule::parse_options(void)
  
  
   // reading jv_ref.dat file, as reference for JV curve
-  Database db;
-  db.set_material("jv_ref", get_option("jv_ref", ""));
+  string jv_file;
+  jv_file = get_option("jv_data", jv_file);
+  if (jv_file == "")
+    throw InitFailedException("JV of elementary cell needs to be "
+       "specified via 'jv_data' option.");
+
   ifstream ifs;
-  ifs.open(db.get_data_file().c_str());
+  ifs.open(jv_file);
   if (ifs.fail() || !ifs.good())
     throw InitFailedException("Cannot read JV of elementary cell "
-        "from file " + db.get_data_file());
+        "from file " + jv_file);
 
   size_t i = 0;
   const size_t buf_len = 256;
@@ -150,6 +154,7 @@ PVModule::do_setup_solution_variables(void)
   {
     declare_solution(TopPotential, REAL, CELL, "V");
     declare_solution(BottomPotential, REAL, CELL, "V");
+    declare_solution(CellPotential, REAL, CELL, "V");
     declare_solution(CurrentDensity, REAL, CELL, "A/cm^2");
     declare_solution(ContactCurrent, REAL, GLOBAL, "A");
   }
@@ -157,6 +162,7 @@ PVModule::do_setup_solution_variables(void)
   {
     declare_solution(TopPotential, REAL, NODES, "V");
     declare_solution(BottomPotential, REAL, NODES, "V");
+    declare_solution(CellPotential, REAL, NODES, "V");
     declare_solution(CurrentDensity, REAL, NODES, "A/cm^2");
     declare_solution(ContactCurrent, REAL, GLOBAL, "A");
   }
@@ -543,6 +549,9 @@ PVModule::get_solution_secure(const Elem* elem,
     if (values.count(BottomPotential))
       values[BottomPotential][n] = ub;
 
+    if (values.count(CellPotential))
+      values[CellPotential][n] = ut - ub;
+
     if (values.count(CurrentDensity))
       values[CurrentDensity][n] = curr;
 
@@ -756,6 +765,8 @@ PVModule::assemble_fem(void)
         PVModuleBoundaryModel::ContactType type = mod_int->get_contact_type();
         PVModuleBoundaryModel::ContactLayer layer = mod_int->get_contact_layer();
 
+        auto& id_set = (type == PVModuleBoundaryModel::GND) ? _gnd_ids : _src_ids;
+
         for (unsigned int n = 0; n < elem->n_nodes(); n++)
         {
           if (elem->is_node_on_side(n, s))
@@ -767,12 +778,10 @@ PVModule::assemble_fem(void)
             // spice node id 0 is reserved for ground
             dof_id++;
 
-			
-            
-            if (type == PVModuleBoundaryModel::GND)
-              _gnd_ids.insert(dof_id);
-            else
-              _src_ids.insert(dof_id);
+            id_set.insert(dof_id);
+
+            if (layer == PVModuleBoundaryModel::BOTH)
+              id_set.insert(dof_indices_bot[n]+1);
           }
         }
       }

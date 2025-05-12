@@ -59,5 +59,6 @@ PVModuleBoundaryModel::do_init(void)
   string layer = get_option("layer", "bottom");
   if (layer == "bottom") _contact_layer = BOTTOM;
   if (layer == "top") _contact_layer = TOP;
+  if (layer == "both") _contact_layer = BOTH;
 }
 

@@ -29,6 +29,7 @@ class PVModuleBoundaryModel : public PhysicalModel
     {
       BOTTOM,  /*!< bottom layer */
       TOP,     /*!< top layer */
+      BOTH,    /*!< contact on both layers*/
     };
 
     //! Destructor

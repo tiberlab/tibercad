@@ -80,6 +80,7 @@ class TBDLLOCAL PVModule : public SimulationInterface
     {
       TopPotential,     /*!< the potential on top surface*/
       BottomPotential,  /*!< the potential on bottom surface */
+      CellPotential,    /*!< the potential difference top - bottom*/
       CurrentDensity,   /*!< the local current density */
       ContactCurrent,   /*!< the currents at the contacts */
     };
