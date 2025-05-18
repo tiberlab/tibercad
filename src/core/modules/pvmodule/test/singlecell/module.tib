@@ -19,6 +19,8 @@ Module pvmodule
 
   voltage = $Vb[0]
 
+  jv_data = jv_ref.dat
+
   Physics
   {
 

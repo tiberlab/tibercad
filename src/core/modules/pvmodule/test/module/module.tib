@@ -17,6 +17,8 @@ Module pvmodule
 
   plot = (TopPotential, BottomPotential, CurrentDensity, ContactCurrent)
 
+  jv_data = jv_ref.dat
+
   voltage = $Vb[0]
 
   Physics
