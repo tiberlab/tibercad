@@ -136,8 +136,8 @@ PVModule::parse_options(void)
        double l, s;
        if (in >> l >> s)
        {
-         _jv_ref_v.push_back(s);
-         _jv_ref_j.push_back(l);
+         _jv_ref_v.push_back(l);
+         _jv_ref_j.push_back(s);
          i++;
        }
      }
@@ -238,7 +238,7 @@ PVModule::do_solve(void)
              << " I=pwl(V(" << this_node << ")-V(" << bot_node << ")";
 
           for (int nm = 0; nm < _jv_ref_v.size(); nm++)
-            of << ", " << _jv_ref_j[nm] << ", " << _jv_ref_v[nm] * area << "m";
+            of << ", " << _jv_ref_v[nm] << ", " << _jv_ref_j[nm] * area << "m";
 
           of << ")\n\n";
 
