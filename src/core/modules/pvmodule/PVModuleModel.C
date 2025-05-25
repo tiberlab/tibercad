@@ -1,6 +1,7 @@
 // $Id$
 
 #include "PVModuleModel.h"
+#include "ElementaryCell.h"
 #include "Messages.h"
 
 using namespace std;
@@ -74,11 +75,12 @@ PVModuleModel::do_init(void)
 void
 PVModuleModel::prepare_submodels(void)
 {
-  
-  //create_submodel(_charge_density_model, "charge_density");
-  //create_submodels(_pm, "polarization");
+  create_submodel(_elementary_cell, "elementary_cell");
 
+  if (_elementary_cell == nullptr)
+    throw InitFailedException("No elementary cell model provided in pvmodule.");
 }
+
 
 void
 PVModuleModel::do_print_info(void)

@@ -30,7 +30,7 @@ Module pvmodule
 
     P2_resistivity = 0.001
 
-    #elementary_cell list { }
+    elementary_cell pwl { }
 
   }
 

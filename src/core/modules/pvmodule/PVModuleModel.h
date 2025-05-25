@@ -8,6 +8,7 @@
 
 
 class Elem;
+class ElementaryCell;
 
 
 //! This is the basic physical modle of PVModule
@@ -46,7 +47,7 @@ class PVModuleModel : public PhysicalModel
     double get_connection_resistance(const Elem* elem,
                                      const Point& point) const;
     
-    //! Get the elementary cell representation
+    //! Get the elementary cell model
     /*!
      * If the area is zero, an empty representation is returned,
      * otherwise the elementary cell scaled to the given area.
@@ -55,7 +56,7 @@ class PVModuleModel : public PhysicalModel
      * For example, we might have to pass top and bottom node
      * indices, and next free node index.
      */
-    void get_elementary_cell(const Elem* elem, double area) const;
+    ElementaryCell* get_elementary_cell(void) const;
 
 
   protected:
@@ -94,6 +95,9 @@ class PVModuleModel : public PhysicalModel
      */
     double _connection_res = 0.001;
 
+    //! The elementary cell model
+    ElementaryCell* _elementary_cell = nullptr;
+
     //! The constructor method
     static TiberModelObject* _create(const ModelOptions& options, const void*);
 
@@ -109,6 +113,14 @@ PVModuleModel::RegionType
 PVModuleModel::get_region_type(void) const
 {
   return(_region_type);
+}
+
+
+inline
+ElementaryCell*
+PVModuleModel::get_elementary_cell(void) const
+{
+  return _elementary_cell;
 }
 
 #endif // _PVMODULEMODEL_H_

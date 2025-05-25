@@ -26,6 +26,8 @@ Module pvmodule
 
     top_sheet_resistivity = 5
     bottom_sheet_resistivity = 5
+
+    elementary_cell pwl { }
   }
 
   Contact anode

@@ -3,9 +3,11 @@
 #include "PVModule.h"
 #include "PVModuleModel.h"
 #include "PVModuleBoundaryModel.h"
+#include "ElementaryCell.h"
 #include "TiberLinearSystem.h"
 #include "Messages.h"
 #include "Database.h"
+
 #include "libmesh/equation_systems.h"
 #include "libmesh/dof_map.h"
 #include "libmesh/enum_quadrature_type.h"
@@ -231,6 +233,17 @@ PVModule::do_solve(void)
           // bottom node
           unsigned int bot_node = this_node + 1;
 
+          // for now we just take one of them, assuming that all
+          // are equivalent
+          PVModuleModel* pvm = dynamic_cast<PVModuleModel*>(
+                                           *get_physical_models().begin());
+
+          ElementaryCell* elementary = pvm->get_elementary_cell();
+
+          elementary->write_netlist(this_node, bot_node,
+                                    next_node_id, area,
+                                    get_mesh().point(i/2), of);
+
           // Defining a voltage-dependent current source based on the
           // JV-Ref file and the area of the element
 
@@ -242,7 +255,6 @@ PVModule::do_solve(void)
 
           of << ")\n\n";
 
-          // adjust next_node_id
         }
 
       }
