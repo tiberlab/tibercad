@@ -106,45 +106,6 @@ PVModule::parse_options(void)
   _spice = get_option("spice_executable", _spice);
   get_parameter("voltage", _voltage);
  
- 
-  // reading jv_ref.dat file, as reference for JV curve
-  string jv_file;
-  jv_file = get_option("jv_data", jv_file);
-  if (jv_file == "")
-    throw InitFailedException("JV of elementary cell needs to be "
-       "specified via 'jv_data' option.");
-
-  ifstream ifs;
-  ifs.open(jv_file);
-  if (ifs.fail() || !ifs.good())
-    throw InitFailedException("Cannot read JV of elementary cell "
-        "from file " + jv_file);
-
-  size_t i = 0;
-  const size_t buf_len = 256;
-  char buf[buf_len];
-   while (ifs.good())
-   {
-     if (i == _jv_ref_v.size())
-     {
-       size_t n_new = _jv_ref_v.size() + 10;
-       _jv_ref_v.reserve(n_new);
-       _jv_ref_j.reserve(n_new);
-     }
-     ifs.getline(buf, buf_len);
-     if (buf[0] != '#')
-     {
-       istringstream in(buf);
-       double l, s;
-       if (in >> l >> s)
-       {
-         _jv_ref_v.push_back(l);
-         _jv_ref_j.push_back(s);
-         i++;
-       }
-     }
-   }
-   ifs.close();
 }
 
 
@@ -243,17 +204,6 @@ PVModule::do_solve(void)
           elementary->write_netlist(this_node, bot_node,
                                     next_node_id, area,
                                     get_mesh().point(i/2), of);
-
-          // Defining a voltage-dependent current source based on the
-          // JV-Ref file and the area of the element
-
-          of << "B" << i / 2 << " " << this_node << " " << bot_node
-             << " I=pwl(V(" << this_node << ")-V(" << bot_node << ")";
-
-          for (int nm = 0; nm < _jv_ref_v.size(); nm++)
-            of << ", " << _jv_ref_v[nm] << ", " << _jv_ref_j[nm] * area << "m";
-
-          of << ")\n\n";
 
         }
 

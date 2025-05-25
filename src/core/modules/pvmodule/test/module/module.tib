@@ -17,7 +17,6 @@ Module pvmodule
 
   plot = (TopPotential, BottomPotential, CurrentDensity, ContactCurrent)
 
-  jv_data = jv_ref.dat
 
   voltage = $Vb[0]
 
@@ -30,7 +29,7 @@ Module pvmodule
 
     P2_resistivity = 0.001
 
-    elementary_cell pwl { }
+    elementary_cell pwl { jv_data = jv_ref.dat }
 
   }
 

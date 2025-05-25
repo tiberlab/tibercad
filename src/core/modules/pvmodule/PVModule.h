@@ -134,9 +134,6 @@ class TBDLLOCAL PVModule : public SimulationInterface
 
     std::string _spice {"ngspice"};
 
-    std::vector<double> _jv_ref_v;
-    std::vector<double> _jv_ref_j;
-
     //! The applied voltage
     double _voltage = 0.0;
 

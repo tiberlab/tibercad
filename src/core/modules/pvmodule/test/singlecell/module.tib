@@ -19,7 +19,6 @@ Module pvmodule
 
   voltage = $Vb[0]
 
-  jv_data = jv_ref.dat
 
   Physics
   {
@@ -27,7 +26,10 @@ Module pvmodule
     top_sheet_resistivity = 5
     bottom_sheet_resistivity = 5
 
-    elementary_cell pwl { }
+    elementary_cell pwl
+    { 
+      jv_data = jv_ref.dat
+    }   
   }
 
   Contact anode

@@ -18,6 +18,8 @@ class ElementaryPWL : public ElementaryCell
 
     ElementaryPWL(const ModelOptions& options);
 
+    virtual void do_init(void) override;
+
     //! Write the netlist
     virtual void do_write_netlist(unsigned int top_node, unsigned int bottom_node,
                                   unsigned int& next_free,
@@ -27,8 +29,10 @@ class ElementaryPWL : public ElementaryCell
 
   private:
 
+    //! The voltage data points
     std::vector<double> _jv_v;
 
+    //! The current density data points
     std::vector<double> _jv_j;
 
 };
