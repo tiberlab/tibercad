@@ -39,7 +39,7 @@ Elementary1Diode::do_write_netlist(unsigned int top_node, unsigned int bottom_no
 {
   os << "Rs" << top_node << " " << top_node << " " << next_free << " " << _rseries/area << "\n";
   os << "I" << top_node << " " << next_free << " " << bottom_node << " DC " << _photocurr*area << "\n";
-  os << "D" << top_node << " " << bottom_node << " " << next_free << " DModel" << top_node << "\n";
+  os << "D" << top_node << " " << next_free << " " << bottom_node << " DModel" << top_node << "\n";
   os << "Rsh" << top_node << " " << next_free << " " << bottom_node << " " << _rshunt/area << "\n";
   os << ".model DModel" << top_node << " D(IS=" << _isat*area << " N=" << _ideality << ")\n";
 
