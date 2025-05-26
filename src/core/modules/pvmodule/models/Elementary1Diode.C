@@ -1,4 +1,5 @@
 #include "Elementary1Diode.h"
+#include "Photocurrent.h"
 
 #include "TiberModule.h"
 
@@ -18,6 +19,11 @@ Elementary1Diode::create(const ModelOptions& options)
 }
 
 
+void
+Elementary1Diode::prepare_submodels(void)
+{
+  create_submodel(_photocurr_model, "photocurrent");
+}
 
 void
 Elementary1Diode::do_init(void)
@@ -34,11 +40,18 @@ void
 Elementary1Diode::do_write_netlist(unsigned int top_node, unsigned int bottom_node,
                                 unsigned int& next_free,
                                 double area,
-                                const libMesh::Point& /* p */,
+                                const libMesh::Elem* elem,
+                                const libMesh::Point& p,
                                 std::ostream& os) const 
 {
+  double photocurr = _photocurr;
+  if (_photocurr_model != nullptr)
+    photocurr = _photocurr_model->get_photocurrent(elem, p);
+
+  photocurr *= area;
+
   os << "Rs" << top_node << " " << top_node << " " << next_free << " " << _rseries/area << "\n";
-  os << "I" << top_node << " " << next_free << " " << bottom_node << " DC " << _photocurr*area << "\n";
+  os << "I" << top_node << " " << next_free << " " << bottom_node << " DC " << -photocurr << "\n";
   os << "D" << top_node << " " << next_free << " " << bottom_node << " DModel" << top_node << "\n";
   os << "Rsh" << top_node << " " << next_free << " " << bottom_node << " " << _rshunt/area << "\n";
   os << ".model DModel" << top_node << " D(IS=" << _isat*area << " N=" << _ideality << ")\n";

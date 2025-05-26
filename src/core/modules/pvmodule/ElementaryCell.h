@@ -6,7 +6,6 @@
 
 #include <ostream>
 
-class Point;
 
 // Base class for elementary cell models
 class ElementaryCell : public PhysicalModel
@@ -19,22 +18,25 @@ class ElementaryCell : public PhysicalModel
     //! Write the netlist
     /*!
      * This method writes the elementary cell netlist into the
-     * circuit file.
+     * circuit file. Note that \c next_free must be a valid unused
+     * node id at return.
      *
      * \param top_node the index of the top layer node
      * \param bottom_node the index of the bottom layer node
      * \param next_free the next free circuit node, will be updated during
      *        the call
      * \param area the cell area in cm^2
+     * \param elem the mesh element pointer
      * \param p the coordinates of the elementary cell
      * \param os the stream to write to
      */
     void write_netlist(unsigned int top_node, unsigned int bottom_node,
                        unsigned int& next_free,
                        double area,
+                       const libMesh::Elem* elem,
                        const libMesh::Point& p,
                        std::ostream& os) const
-    { do_write_netlist(top_node, bottom_node, next_free, area, p, os); };
+    { do_write_netlist(top_node, bottom_node, next_free, area, elem, p, os); };
 
 
   protected:
@@ -52,6 +54,7 @@ class ElementaryCell : public PhysicalModel
      * \param next_free the next free circuit node, will be updated during
      *        the call
      * \param area the cell area in cm^2
+     * \param elem the mesh element pointer
      * \param p the coordinates of the elementary cell
      * \param os the stream to write to
      */
@@ -59,6 +62,7 @@ class ElementaryCell : public PhysicalModel
     virtual void do_write_netlist(unsigned int top_node, unsigned int bottom_node,
                                   unsigned int& next_free,
                                   double area,
+                                  const libMesh::Elem* elem,
                                   const libMesh::Point& p,
                                   std::ostream& os) const = 0;
 

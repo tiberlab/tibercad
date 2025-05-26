@@ -201,8 +201,13 @@ PVModule::do_solve(void)
 
           ElementaryCell* elementary = pvm->get_elementary_cell();
 
+          // call the model
+          // TODO: for now we do not have an element to pass
+          // NOTE: next_node_id is expected to be a valid new node id
+          // at return
           elementary->write_netlist(this_node, bot_node,
                                     next_node_id, area,
+                                    nullptr,
                                     get_mesh().point(i/2), of);
 
         }

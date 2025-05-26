@@ -3,6 +3,7 @@
 
 #include "ElementaryCell.h"
 
+class Photocurrent;
 
 class Elementary1Diode : public ElementaryCell
 {
@@ -19,31 +20,36 @@ class Elementary1Diode : public ElementaryCell
     Elementary1Diode(const ModelOptions& options);
 
     virtual void do_init(void) override;
+    
+    virtual void prepare_submodels(void) override;
 
     //! Write the netlist
     virtual void do_write_netlist(unsigned int top_node, unsigned int bottom_node,
                                   unsigned int& next_free,
                                   double area,
+                                  const libMesh::Elem* elem,
                                   const libMesh::Point& p,
                                   std::ostream& os) const override;
 
   private:
 
     //! The series resistance, Ohms*cm^2
-    double _rseries = 0.01;
+    double _rseries = 1;
 
     //! The shunt resistance, Ohms*cm^2
-    double _rshunt = 1000;
+    double _rshunt = 10000;
 
     //! The photocurrent density, A/cm^2
     double _photocurr = 0.02;
 
     //! The diode saturation current, A/cm^2
-    double _isat = 1e-9;
+    double _isat = 1e-11;
 
     //! The diode ideality factor
-    double _ideality = 1;
+    double _ideality = 2;
     
+    //! We can have a submodel for the photocurrent
+    Photocurrent* _photocurr_model = nullptr;
 
 };
 

@@ -48,14 +48,6 @@ class PVModuleModel : public PhysicalModel
                                      const Point& point) const;
     
     //! Get the elementary cell model
-    /*!
-     * If the area is zero, an empty representation is returned,
-     * otherwise the elementary cell scaled to the given area.
-     * 
-     * TODO need to define what to return, and what else is needed.
-     * For example, we might have to pass top and bottom node
-     * indices, and next free node index.
-     */
     ElementaryCell* get_elementary_cell(void) const;
 
 
