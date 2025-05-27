@@ -3,6 +3,8 @@
 #include "WaterIngress.h"
 #include "WIModel.h"
 #include "WIBoundaryModel.h"
+#include "WIUtils.h"
+#include "SimulationOptions.h"
 #include "TiberLinearSystem.h"
 #include "Messages.h"
 
@@ -73,6 +75,7 @@ void
 WaterIngress::parse_options(void)
 {
   // no options right now 
+  _cell_temp = get_option("cell_temperature", SimulationOptions::temperature);
 }
 
 
@@ -82,6 +85,7 @@ WaterIngress::do_setup_solution_variables(void)
   // we declare our solution variables
   declare_solution(PartialPressure, REAL, NODES, "Pascal");
   declare_solution(Concentration, REAL, NODES, "g/cm^3");
+  declare_solution(RelativeHumidity, REAL, NODES, "%");
   declare_solution(Flux, VECTOR, CELL, "g/cm^2/s");
   declare_solution(Solubility, REAL, NODES, "g/cm^3/P");
   declare_solution(Diffusivity, REAL, NODES, "cm^2/s");
@@ -192,6 +196,12 @@ WaterIngress::get_solution_secure(const Elem* elem,
     if (values.count(Concentration))
       values[Concentration][n] = S*p;
 
+    if (values.count(RelativeHumidity))
+    {
+      double psat = WIUtils::goff_gratch(_cell_temp);
+      values[RelativeHumidity][n] = 100 * p / psat;
+    }
+
     if (values.count(Solubility))
       values[Solubility][n] = S;
 
@@ -201,8 +211,7 @@ WaterIngress::get_solution_secure(const Elem* elem,
   }
 
 
-  // this is a very primitive way of estimating the mean value. Better
-  // would be to really integrate
+  // this is a very primitive way of estimating the mean value.
   if (values.count(Flux))
   {
     values[Flux][0] = flux(0) / np;

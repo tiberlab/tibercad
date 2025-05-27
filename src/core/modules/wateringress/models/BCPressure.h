@@ -43,9 +43,6 @@ class BCPressure : public WIBoundaryModel
     /* We do not use this here: */
     // virtual void read_interface_database(void);
 
-    //! Get the saturated water vapor pressure
-    double get_saturation_pressure(double T) const;
-
 
   private:
 

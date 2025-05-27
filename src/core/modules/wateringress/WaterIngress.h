@@ -77,6 +77,7 @@ class TBDLLOCAL WaterIngress : public SimulationInterface
     {
       PartialPressure,  /*!< the partial water pressure */
       Concentration,    /*!< the water concentration given by Henry's law */
+      RelativeHumidity, /*!< the relative humidity, from the partial pressure */
       Flux,             /*!< the flux */
       Solubility,       /*!< the solubility */
       Diffusivity       /*!< the diffusion constant cm^2/s */
@@ -112,6 +113,9 @@ class TBDLLOCAL WaterIngress : public SimulationInterface
 
     //! The old time
     double _old_time = 0.0;
+
+    //! The cell temperature
+    double _cell_temp = 300;
 
 };
 
