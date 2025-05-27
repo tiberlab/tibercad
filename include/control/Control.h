@@ -65,6 +65,10 @@ class TBDLLOCAL Control
     void run_simulation(void);
 
 
+    //! Get the simulation time coordinate
+    double get_time(void);
+
+
     //! Plots the results of all simulation models
     void plot_all(void);
 

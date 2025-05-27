@@ -262,6 +262,11 @@ TiberCad::cleanup(void)
 }
 
 
+double
+TiberCad::get_global_time(void)
+{
+  return _control->get_time();
+}
 
 
 const std::string&

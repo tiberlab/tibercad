@@ -505,6 +505,12 @@ Control::setup_module(Device* device, const ModelOptions& opts)
 
 
 
+double
+Control::get_time(void)
+{
+  return _time;
+}
+
 
 
 void

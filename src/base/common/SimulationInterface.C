@@ -2689,6 +2689,19 @@ SimulationInterface::get_nodal_results(std::vector<double>& results,
 }
 
 
+bool
+SimulationInterface::get_solution(map<ID, vector<double> >& values,
+  const vector<libMesh::Point>& p)
+{
+  if (!is_solved()) return false;
+
+  // TODO we should look for all nodes
+  const Elem* elem = MeshUtils::search_element(&get_mesh(), p[0]);
+
+  return get_solution(elem, values, p, false);
+
+}
+
 
 bool
 SimulationInterface::get_solution(const libMesh::Elem* elem,
@@ -2697,6 +2710,9 @@ SimulationInterface::get_solution(const libMesh::Elem* elem,
 {
   if (!is_solved()) return false;
 
+  if (elem == nullptr)
+    throw RuntimeException("No element provided in get_solution(Elem*, ...).");
+  
   vector<libMesh::Point> points(p);
 
 
@@ -2704,6 +2720,7 @@ SimulationInterface::get_solution(const libMesh::Elem* elem,
   unsigned int nn = points.size();
   if (nn == 0)
   {
+
     nn = elem->n_nodes();
     points.resize(nn);
     for (unsigned int i = 0; i < nn; i++)
@@ -2901,91 +2918,7 @@ SimulationInterface::get_solution(const libMesh::Elem* elem,
             }
 
           }
-
         }
-
-/*
-      set<const Elem*> elem_list;
-      unsigned int len = tree.size();
-      for (unsigned int i = 0; i < len; i++)
-      {
-        const Elem* elem_i = tree[i];
-        if (env.contains_element(elem_i))
-          elem_list.insert(elem_i);
-      }
-
-      if (elem_list.size() == 0)
-        flag = false;
-      else
-      {
-
-        // we need a copy of values
-        map<ID, vector<double> > valcopy(values);
-
-        // area of elem
-        double elem_vol = elem->volume();
-
-        set<unsigned int> nodenr;
-        for (unsigned int i = 0; i < nn; i++)
-          nodenr.insert(i);
-
-        set<const Elem*>::iterator el_it = elem_list.begin();
-        set<const Elem*>::iterator el_end = elem_list.end();
-        for ( ; el_it != el_end; ++el_it)
-        {
-          el = *el_it;
-
-          vector<Point> my_p;
-          vector<unsigned int> pid;
-          my_p.reserve(1);
-          pid.reserve(1);
-
-          set<unsigned int>::iterator nit(nodenr.begin());
-          const set<unsigned int>::iterator nend(nodenr.end());
-          for ( ; nit != nend; ++nit)
-          {
-            unsigned int node = *nit;
-            if (libMesh::FEInterface::on_reference_element(points[node], el->type()))
-            {
-              nodenr.erase(nit);
-              my_p.push_back(points[node]);
-              pid.push_back(node);
-            }
-            else
-              my_p.push_back(el->vertex_average());
-          }
-
-          get_solution_secure(el, valcopy, my_p);
-
-          double weight = el->volume() / elem_vol;
-
-          // now copy nodal values to their right position
-          // make mean value of cell values
-          for (it = values.begin(); it != end; ++it)
-          {
-            const SolutionDescriptor& sd = get_solution_descriptor(it->first);
-            unsigned int n_comp = sd.n_components();
-            vector<double>& vals = values[it->first];
-            vector<double>& newvals = valcopy[it->first];
-            switch (sd.location())
-            {
-              case SolutionDescriptor::CELL:
-                for (unsigned int i = 0; i < n_comp; i++)
-                  vals[i] += newvals[i] * weight;
-                break;
-
-              case SolutionDescriptor::NODES:
-                for (unsigned int i = 0; i < p.size(); i++)
-                  for (unsigned int j = 0; j < n_comp; j++)
-                    vals[pid[i] + j] = newvals[i + j];
-                break;
-
-              default:
-                break;
-            }
-          }
-        }
-      }*/
       }
     }
     else

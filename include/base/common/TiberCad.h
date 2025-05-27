@@ -71,6 +71,9 @@ class TiberCad
     void run(void);
 
 
+    //! Get the current global time (i.e. simulation time coordinate)
+    static double get_global_time(void);
+
 
     //! The full TiberCAD version string
     static std::string version_string(bool include_svn_release = false);

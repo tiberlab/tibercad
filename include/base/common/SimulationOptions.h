@@ -15,7 +15,7 @@ class SimulationOptions
   public:
 
 
-    //! The ambient temperature
+    //! The ambient temperature in K
     static double temperature;
     static double& temp;
     static double& T;

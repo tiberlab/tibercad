@@ -80,7 +80,7 @@ class PhysicalModel : public TiberModelObject
      * If it is not known, the NULL pointer is returned.
      *
      * \param name the model name
-     * \param owner the PhysicalObject this model is associated with (can be \c NULL)
+     * \param owner the PhysicalObject this model is associated with (can be \c nullptr)
      * \param options the options as given in the input file
      * \param module the module this model belongs to (in most cases
      *   found automatically)

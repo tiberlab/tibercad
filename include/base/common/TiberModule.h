@@ -47,6 +47,7 @@ extern "C" {
 #include xstr(CREATORCODE)
 #else
     obj = CREATABLE::create(options);
+    //obj = new CREATABLE(options); maybe should change to this
 #endif
     static_cast<const void*>(handle);
     return obj;

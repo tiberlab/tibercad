@@ -555,6 +555,17 @@ class SimulationInterface : public TiberModelObject
         const std::vector<libMesh::Point>& p = std::vector<libMesh::Point>(),
         bool local_coords = false);
 
+    //! Get solution in given points
+    /*!
+     * First, the element containing the provided points will
+     * be searched, using the GridMapper utility.
+     * 
+     * \note This method should not be used usually, as the element
+     * search adds additional inefficiency.
+     */
+    bool get_solution(std::map<ID, std::vector<double> >& values,
+        const std::vector<libMesh::Point>& p);
+
     //! Get a single solution
     /*!
      * \see get_solution(const Elem*, std::map<ID, std::vector<double> >&,
