@@ -2,6 +2,7 @@
 #define _PCDEGRADATIONH2O_H_
 
 #include "Photocurrent.h"
+#include "SolutionProvider.h"
 
 /*!
  * \brief An example for photocurrent dependency on H20 concentration
@@ -33,8 +34,24 @@ class PCDegradationH2O : public Photocurrent
 
     PCDegradationH2O(const ModelOptions& options);
 
+    //! The current degradation factor
+    /*!
+     * The formula is based on a fit of the data in [ref].
+     * It uses a generalized logistic function.
+     */
+    double degradation_factor(double humidity) const;
+
     //! The initial (undegraded) photocurrent
     double _initial_current = 0.02;
+
+    //! The reference humidity in the degradation fit
+    double _RH_ref = 0.721;
+
+    //! The exponent in the degradation fit
+    double _exponent = 8.28;
+
+    //! From where to get relative humidity
+    SolutionProvider _humidity_model;
 
 };
 
