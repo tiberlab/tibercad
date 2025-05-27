@@ -1,0 +1,51 @@
+Device
+{
+  meshfile = square.msh
+  material = Si
+  mesh_units = 0.01
+
+
+  Region bulk 
+  {
+  }
+
+}
+
+Module wateringress
+{
+  name = wi
+
+  plot = (PartialPressure, Concentration, Flux)
+
+  Physics
+  {
+  }
+
+  Contact surface
+  {
+    relative_humidity = 60
+  }
+}
+
+
+
+Module sweep
+{
+  solve = wi
+  variable = $time
+  values = (0:1e6:3e7)
+  #start = 0.0
+  #stop =  3e7
+  #steps = 1e6
+  plot_data = each
+}
+
+
+Simulation
+{
+  temperature = 300
+  solve = sweep
+  resultpath = output
+}
+
+
