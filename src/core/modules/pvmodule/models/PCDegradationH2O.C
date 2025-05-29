@@ -46,9 +46,8 @@ PCDegradationH2O::do_get_photocurrent(const libMesh::Elem* elem,
   double humidity = 0;
   if (_humidity_model.first != nullptr)
   {
-    _humidity_model.first->get_solution(elem, _humidity_model.second, humidity, p, true);
-
-    curr *= degradation_factor(humidity);
+    if (_humidity_model.first->get_solution(elem, _humidity_model.second, humidity, p, false))
+      curr *= degradation_factor(humidity);
   }
 
   return curr;

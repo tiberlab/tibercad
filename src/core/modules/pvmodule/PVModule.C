@@ -68,13 +68,13 @@ PVModule::do_init(void)
   // add variables and attach the assemble function
   if (_discretization == DEC)
   {
-    system.add_variable("Vtop", CONSTANT, MONOMIAL);
-    system.add_variable("Vbot", CONSTANT, MONOMIAL);
+    system.add_variable("Vtop", CONSTANT, MONOMIAL, &(this->get_region_ids()));
+    system.add_variable("Vbot", CONSTANT, MONOMIAL, &(this->get_region_ids()));
   }
   else
   {
-    system.add_variable("Vtop", FIRST);
-    system.add_variable("Vbot", FIRST);
+    system.add_variable("Vtop", FIRST, &(this->get_region_ids()));
+    system.add_variable("Vbot", FIRST, &(this->get_region_ids()));
   }
   system.add_vector("currdens");
   system.attach_assemble_object(_my_assembly);
@@ -281,6 +281,7 @@ PVModule::do_solve(void)
   of << "\n";
   of << ".endc \n";
   of << ".end \n";
+  of.flush();
   of.close();
 
 
@@ -634,8 +635,8 @@ PVModule::assemble_fem(void)
   DenseSubMatrix<Number> Ket(Ke);
 
 
-  MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
+  MeshBase::const_element_iterator       el     = this->active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
 
   for ( ; el != end_el ; ++el)
   {

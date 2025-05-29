@@ -45,7 +45,7 @@ class PCDegradationH2O : public Photocurrent
     double _initial_current = 0.02;
 
     //! The reference humidity in the degradation fit
-    double _RH_ref = 0.721;
+    double _RH_ref = 72.1;
 
     //! The exponent in the degradation fit
     double _exponent = 8.28;
