@@ -9,6 +9,7 @@ own TODO list. For historical reason, some module-specific TODO's are left in th
 
 - [ ] change input parser so that it reads first into a string (with all includes) and then parses 
 - [ ] change get_solution to have source argument, to allow different meshes  
+- [ ] allow reading individual meshes in modules
 - [ ] get rid of read_database(), put database access into get_option() and get_parameter()  
 - [ ] throw exception if get_option() gets a string with "$"  
 - [ ] in 1D/2D check if mesh is along x or in x/y  
