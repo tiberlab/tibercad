@@ -283,11 +283,13 @@ Control::init(void)
       string default_format = "vtk";
       if (_device->get_mesh().mesh_dimension() == 1)
         default_format = "grace";
-      opts.set_option("output_format", global_opts.get_option("output_format", default_format));
+      opts.set_option("output_format",
+          global_opts.get_option("output_format", default_format));
     }
 
     if (!opts.find_option("binary_output"))
-      opts.set_option("binary_output", global_opts.get_option("binary_output", "true"));
+      opts.set_option("binary_output",
+          global_opts.get_option("binary_output", "true"));
 
 
     setup_module(_device, opts);
@@ -302,8 +304,8 @@ Control::init(void)
 
 
   // initialize the simulations, but only if they are not initialized yet
-  SimulationInterface::SimulationIterator simit(SimulationInterface::simulations_begin());
-  const SimulationInterface::SimulationIterator simend(SimulationInterface::simulations_end());
+  auto simit = SimulationInterface::simulations_begin();
+  const auto simend = SimulationInterface::simulations_end();
   for ( ; simit != simend; ++simit)
     if (!(*simit)->is_initialized())
       (*simit)->init();

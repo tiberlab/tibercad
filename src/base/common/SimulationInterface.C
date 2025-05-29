@@ -1079,6 +1079,13 @@ SimulationInterface::setup_mesh(void)
     get_environment().set_mesh(mesh);
   }
 
+  // TODO allow reading individual mesh
+  if (has_option("meshfile"))
+  {
+    //NOTE: we need to also fix from where to get mesh_units!
+    throw InitFailedException("Reading mesh in modules not yet implemented.");
+  }
+
   _mesh = &get_environment().get_mesh();
 }
 
@@ -2693,13 +2700,7 @@ bool
 SimulationInterface::get_solution(map<ID, vector<double> >& values,
   const vector<libMesh::Point>& p)
 {
-  if (!is_solved()) return false;
-
-  // TODO we should look for all nodes
-  const Elem* elem = MeshUtils::search_element(&get_mesh(), p[0]);
-
-  return get_solution(elem, values, p, false);
-
+  return get_solution(nullptr, values, p, false);
 }
 
 
@@ -2709,6 +2710,15 @@ SimulationInterface::get_solution(const libMesh::Elem* elem,
     const vector<libMesh::Point>& p, bool local_coord)
 {
   if (!is_solved()) return false;
+
+  if (elem == nullptr)
+  {
+    if ((p.size() == 0) || local_coord)
+      throw RuntimeException("Need at least one point in global coordinates"
+         " in get_solution(Elem* elem, ...) with elem = nullptr.");
+
+    elem = MeshUtils::search_element(&get_mesh(), p[0]);
+  }
 
   if (elem == nullptr)
     throw RuntimeException("No element provided in get_solution(Elem*, ...).");
