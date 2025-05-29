@@ -84,11 +84,11 @@ void
 WaterIngress::do_setup_solution_variables(void)
 {
   // we declare our solution variables
-  declare_solution(PartialPressure, REAL, NODES, "Pascal");
+  declare_solution(PartialPressure, REAL, NODES, "Pa");
   declare_solution(Concentration, REAL, NODES, "g/cm^3");
   declare_solution(RelativeHumidity, REAL, NODES, "%");
   declare_solution(Flux, VECTOR, CELL, "g/cm^2/s");
-  declare_solution(Solubility, REAL, NODES, "g/cm^3/P");
+  declare_solution(Solubility, REAL, NODES, "g/cm^3/Pa");
   declare_solution(Diffusivity, REAL, NODES, "cm^2/s");
 }
 
@@ -247,7 +247,6 @@ WaterIngress::assemble(void)
   //                                                ^ false is the default  
   //get_scaling().set_length_scaling(100 * get_mesh_units());
   get_scaling().set_calc_mesh_units(100 * get_mesh_units());
-  double x0 = get_scaling().get_length_scaling();
   
   DofMap& dof_map =  system.get_dof_map();
 
