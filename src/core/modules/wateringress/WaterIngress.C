@@ -63,9 +63,10 @@ WaterIngress::do_init(void)
   // we use the partial pressure as variable, as this is the quantity
   // that is continuous
   // The concentration then is given by Henry's law as c = S*p
-  system.add_variable("p", FIRST);
+  system.add_variable("p", FIRST, &(this->get_region_ids()));
   system.attach_assemble_object(_my_assembly);
   system.init();
+  //system.get_solution_vector().zero();
 
   _old_time = TiberCad::get_global_time();
 }
@@ -190,6 +191,10 @@ WaterIngress::get_solution_secure(const Elem* elem,
 
     flux += S*D*grad;
 
+    // it might happen that numerical noise needs
+    // to small negative values. We assure p >= 0
+    if (p < 0) p = 0;
+
     if (values.count(PartialPressure))
       values[PartialPressure][n] = p;
 
@@ -240,8 +245,8 @@ WaterIngress::assemble(void)
   //        get_scaling().set_length_scaling(get_mesh_units());
   //     2. use  build_finite_element(dim, fe_type, true)  
   //                                                ^ false is the default  
-  get_scaling().set_length_scaling(get_mesh_units());
-  get_scaling().set_calc_mesh_units(get_mesh_units());
+  //get_scaling().set_length_scaling(100 * get_mesh_units());
+  get_scaling().set_calc_mesh_units(100 * get_mesh_units());
   double x0 = get_scaling().get_length_scaling();
   
   DofMap& dof_map =  system.get_dof_map();
