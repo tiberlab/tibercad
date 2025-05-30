@@ -42,7 +42,7 @@ class WIModel : public PhysicalModel
   private:
  
     //! The water solubility in g/cm^3/P
-    double _solubility = 0.45e-6;;
+    double _solubility = 0.45e-6;
  
     //! The water diffusivity in cm^2/s
     double _diffusivity = 3.43e-7;

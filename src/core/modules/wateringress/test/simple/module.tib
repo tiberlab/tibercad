@@ -15,7 +15,7 @@ Module wateringress
 {
   name = wi
 
-  plot = (PartialPressure, Concentration, Flux)
+  plot = (PartialPressure, Concentration, RelativeHumidity, Flux)
 
   Physics
   {
