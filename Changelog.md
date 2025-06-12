@@ -2,7 +2,7 @@
 
 All notable changes to tibercad should be reported here.
 The format is based on The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-Modules can have their pwn changelog file.
+Modules can have their own changelog file.
 
 
 ## [Unreleased]
@@ -10,6 +10,7 @@ Modules can have their pwn changelog file.
 ### Added
 
 - added new module pvmodule  
+- added new module wateringress  
 
 ### Fixed
 

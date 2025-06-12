@@ -3,7 +3,7 @@
 .. _TMMTheory:
 
 TMM
-=================================================
+===
 
 
 
@@ -11,13 +11,13 @@ TMM
 
 
 Theory
-------------
+------
 
 TMM modules is a Finite Element solver for analysis propagation of the light in the multi-layer
 strucrue, and calculating generation rate, Intensity and Electric Field inside the layers. Ligth source can be either external source
 or internal emission fo the dipole.
 Combination of TMM and Drift and Difution modules Could be used in the Electro-Optical simulation of the Solar cells. 
-It can also be used to calculate Reflection, Transmision and absorbtion of the multi-layer structures.
+It can also be used to calculate Reflection, Transmision and absorption of the multi-layer structures.
 
 Solution/Plot variables
 -----------------------
@@ -46,8 +46,9 @@ In the following we will describe all the physical models. As mentioned in the I
 
 
 Incident wave (External source)
----------------
-Incident wave boundry condition(external source) should be used to determin incoming wave point. It should be note that this point shouldn't be at the middle of the geometry. 
+-------------------------------
+
+Incident wave boundry condition(external source) should be used to determine incoming wave point. It should be noted that this point shouldn't be at the middle of the geometry. 
 
   		Contact point1
   		{
@@ -56,7 +57,8 @@ Incident wave boundry condition(external source) should be used to determin inco
 
 
 Dipole Coordinate (Internal source)
----------------
+-----------------------------------
+
 With this parameter one can specify coordinate of the dipoles, the value should mesh based (similer to geometry).
 it is possiable to solve for both external source and
 
@@ -70,7 +72,8 @@ Or
 
 
 Dipole Modes (Internal source)
----------------
+------------------------------
+
 Dipoles polarization can be 'TE' or 'TM', one can solve for both polarizations by typing 'TEM'.
 Dipole orientation can be 'V' or 'H', it would be possiable to solve for both of these two modes by specifying 'VH'.
 
@@ -84,8 +87,9 @@ Solving for TE and TM mode with both horizental and vertical dirrection:
   polarization = TEM
   orientation = VH
 
-Dipole Power ( Used only for Internal source)
----------------
+Dipole Power (Used only for Internal source)
+---------------------------------------------
+
 This parmeter specify the power of the Dipole. in the case of multiple dipole, by specifying the scaler dipole power, power of all
 dipoles would be identical, but it is possiable to defing non uniform power.
 
@@ -97,8 +101,9 @@ Non-Uniform emission:
 	  dipole_power = (0.2 0.3 0.4)
 	  dipole_coordinate = ( 100 200 300)
 
-Dipole Radial Wave Number ( Used only for Internal source)
----------------
+Dipole Radial Wave Number (Used only for Internal source)
+----------------------------------------------------------
+
 Emission of the dipole angle can be studied by varying radial wave number of the dipole emission.  And instead of giving the exact value
 of the radial wave number, one could specify the ratio of the radial wave number('x' component) with respect to wave number in the dipole layer
 ('z' componenet). in this way ratio of '0' equal to normal incident and ratio of '1' means 90[deg] emission angle.
@@ -113,20 +118,20 @@ Solving for a range of angles:
 	  dipole_ratio = 1 // solving from 0[deg] to 90[deg] emission angle with 100 steps
 
 reflectivity ( Used only for External source)
----------------
+---------------------------------------------
 this parameter indicate reflectivity at the other side of Incoming wave. 
 back_reflectivity = 1 is equal to total reflection at the end of the geometry.
 
 		back_reflectivity = 0
 
 incident angle ( Used only for External source)
----------------
+-----------------------------------------------
 This parameter determin angle of the incoming external wave. The value should be less than 90[deg].
 
 		incident_angle = 0
 
 Wave Length ( Used for External source as well as Internal source)
----------------
+------------------------------------------------------------------
 There are two ways to specify emission angle of the external and internal source.
 First by giving exact value of the Wave length in form of scaler or vector in "nm" unit:
 
