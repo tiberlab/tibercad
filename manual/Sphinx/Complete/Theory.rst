@@ -11,5 +11,5 @@ Modules
 .. include:: modules/Dsc.rst
 .. include:: modules/VFF.rst
 .. include:: modules/ETB.rst
-.. include:: modules/TMM.rst
+.. include:: Modules.rst
 
