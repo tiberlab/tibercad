@@ -181,6 +181,7 @@ class TBDLLOCAL Tmm : public SimulationInterface
     std::vector<double> _Generation_rate;
     std::vector<double> _Poynting_external;
     std::vector<double> _Energy_loss_external;
+	std::vector<double> _OutCoupling;
 	
     std::vector<double> _Internal_Wavelength;
     std::vector<double> _Internal_Source_ElectricField;
@@ -252,7 +253,7 @@ class TBDLLOCAL Tmm : public SimulationInterface
 	
 	
 	std::vector<std::vector<double>> _green_vector;
-	double _green_vector_solved;
+	bool _green_vector_solved;
 
 
 

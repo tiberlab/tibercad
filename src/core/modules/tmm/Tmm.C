@@ -646,9 +646,10 @@ Tmm::do_solve(void)
   double dipole_sim_done = 0;
   reset_global_variables();
   string outdir = get_output_directory();
-  std::ifstream file_test(outdir + "/green_matrix.dat");
-  if (file_test.is_open())
-	  _green_vector_solved = 1;
+  //std::ifstream file_test(outdir + "/green_matrix.dat");
+  //if (file_test.is_open())
+	//  _green_vector_solved = 1;
+  _green_vector_solved =0;
 
 
 
@@ -716,7 +717,7 @@ Tmm::do_solve(void)
   Utils::Progress progress("Sweeping wavelength: ", lambda_interp.size());
   for (unsigned int i = 0; i < lambda_interp.size(); ++i)   //loop over wavelength
   {
-					 					
+					 			
 						 
     progress.progress_message();
 	double eye = 0;
@@ -759,11 +760,7 @@ Tmm::do_solve(void)
     vector<double> elem_coordinate;;
     vector<double> eps_real;
     vector<double> eps_imag;
-	
-	
   	vector<double> dipole_power;
-    
-    
 
 
     vector<int> BC_check;
@@ -830,6 +827,7 @@ Tmm::do_solve(void)
                direction = "top to down propagation";
              else
                direction = "down to top propagation";
+		   
            }
          }
            if (mod_int == NULL)
@@ -839,21 +837,7 @@ Tmm::do_solve(void)
 
 	size_t mesh_size = n_real.size();
 
-    if (direction != "top to down propagation") // if the incomming wave is from the other sild, so the vectors should be revesed
-    {
-      for (int uu=BC_check_init.size()-2; uu>=0;uu -= 2)
-        BC_check.push_back(BC_check_init[uu]);
-      for (int uu=mesh_size-1; uu>=0;--uu)
-      {
-	    std::reverse(n_real.begin(), n_real.end());
-		std::reverse(n_imag.begin(), n_imag.end());
-		std::reverse(l.begin(), l.end());
-		std::reverse(eps_imag.begin(), eps_imag.end());
-		std::reverse(eps_real.begin(), eps_real.end());
-		std::reverse(Incoh.begin(), Incoh.end());
-      }
-
-    }else
+    if (direction = "top to down propagation") // if the incomming wave is from the other sild, so the vectors should be revesed
 	{
       for (size_t uu=1; uu<BC_check_init.size();uu += 2)
         BC_check.push_back(BC_check_init[uu]);
@@ -1189,7 +1173,6 @@ Tmm::do_solve(void)
 							internal_source_simulation = 1;  // solve the internal source
 							dipole_wl_index = el;
 						}
-			    // std::cout<<lambda<<"  "<<"pow is : "<<dipole_power[elem]<<std::endl;
 			}
 
 	}
@@ -1201,9 +1184,9 @@ Tmm::do_solve(void)
 	
 	
 			
-	//std::cout<<lambda<<"  "<<internal_source_simulation<<std::endl;
     if (internal_source_simulation && !_green_vector_solved)  //solve if there is intrnal emission and the _green_vector is not ready yet
     {
+		//std::cout<<"start solving ... "<<std::endl;
 		if (_emission_value.empty())
 			throw InitFailedException("Internal illumination spectrum"
 			"is missing ");
@@ -1212,6 +1195,7 @@ Tmm::do_solve(void)
 
 
       vector<double> kr_vec;
+	  std::vector<double> outcoupling;
  
       double ks = 2*M_PI*n_real[dipole_loc_list[0]]/lambda;
       if (_steps != 0)
@@ -1239,27 +1223,19 @@ Tmm::do_solve(void)
       _Poynting_front.resize(_steps);
       _Poynting_back.resize(_steps);
 
-      for (auto Mode : _polarization_vec)
+      for (size_t dipole_num=0 ;dipole_num<dipole_loc_list.size();++ dipole_num)
       {
+		double dipole_loc = dipole_loc_list[dipole_num];
+		vector<double> internal_power_per_dipole(mesh_size,0);
         for (auto Oraintation : _oraintation_vec)
         { 	
-          if (!Mode)    //TE Mode
-                if (!Oraintation)  // Horizontal 
-                  std::cout<<"TE Mode and Horizontal"<<std::endl;         
-                else   //Vertical
-                  std::cout<<"TE Mode and Vertical"<<std::endl;  
-          else     //TM Mode
-                if (!Oraintation) // Horizontal 
-                  std::cout<<"TM Mode and Horizontal"<<std::endl;            
-                else   //Vertical
-                  std::cout<<"TM Mode and Vertical"<<std::endl; 
 
 
         //*****************************loop for number of dipoles******************************
-          for (size_t dipole_num=0 ;dipole_num<dipole_loc_list.size();++ dipole_num)
+          for (auto Mode : _polarization_vec)
           {
-            double dipole_loc = dipole_loc_list[dipole_num];
-            //std::cout<<"Solving for internal source --> dipole element is "<<dipole_loc<<" power is : "<<dipole_pow_list[dipole_num] <<" lambda is  "<<lambda <<std::endl;
+            
+            std::cout<<"Solving for internal source --> dipole element is "<<dipole_loc<<" power is : "<<dipole_pow_list[dipole_num] <<" lambda is  "<<lambda <<std::endl;
             complex<double> Ns (n_real[dipole_loc], n_imag[dipole_loc]);
 			// std::cout<<"Ns is : "<<Ns <<std::endl;
            //*****************************loop for radial wave numbers******************************
@@ -1321,7 +1297,7 @@ Tmm::do_solve(void)
 
                 //**************a loop to calculate Poynting Vector from electric field******************************
                 double poynting;
-				vector<double> internal_power(mesh_size);
+				double internal_power;
 				complex<double> Ns ( n_real[dipole_loc] , n_imag[dipole_loc] );
                 complex<double> kis ((2*M_PI*n_real[dipole_loc])/lambda , (2*M_PI*n_imag[dipole_loc])/lambda);
                 complex<double> kzs;
@@ -1331,44 +1307,29 @@ Tmm::do_solve(void)
                 double dkr = ks*_ratio[0]/_steps;
                 for (size_t nm = 0; nm < mesh_size;nm++)
                   {
-                      complex<double> ki ((2*M_PI*n_real[nm])/lambda , (2*M_PI*n_imag[nm])/lambda);
-                      complex<double> kzi (1,0);
+                    complex<double> ki ((2*M_PI*n_real[nm])/lambda , (2*M_PI*n_imag[nm])/lambda);
+                    complex<double> kzi (1,0);
 
-                      kzi  = ki * cmlx_sqrt(complex<double> (1.0 - (pow(kr,2)/pow(ki,2))));
-                      complex<double> cos_phi;
-                      cos_phi= kzi/ki;
-                      complex<double> Ni (n_real[nm], n_imag[nm]);
-                      if (Mode == 0 )  //TE Mode
-                        poynting = real(Ni*cos_phi      *conj(E_int_f[nm]+E_int_b[nm])*(E_int_f[nm]-E_int_b[nm]));
-                      else    //TM Mode
-                        poynting = real(Ni*conj(cos_phi)*conj(E_int_f[nm]+E_int_b[nm])*(E_int_f[nm]-E_int_b[nm]));
-						
-                      _Internal_Poynting[nm] += poynting * coefficient;
-					  internal_power[nm] = real( (2*M_PI) * (poynting* coefficient) * kr * dkr / Ns / kzs2 );
-					  _Internal_Power[nm] += internal_power[nm];
+                    kzi  = ki * cmlx_sqrt(complex<double> (1.0 - (pow(kr,2)/pow(ki,2))));
+                    complex<double> cos_phi;
+                    cos_phi= kzi/ki;
+                    complex<double> Ni (n_real[nm], n_imag[nm]);
+                    if (Mode == 0 )  //TE Mode
+                      poynting = real(Ni*cos_phi      *conj(E_int_f[nm]+E_int_b[nm])*(E_int_f[nm]-E_int_b[nm]));
+                    else    //TM Mode
+                      poynting = real(Ni*conj(cos_phi)*conj(E_int_f[nm]+E_int_b[nm])*(E_int_f[nm]-E_int_b[nm]));
+					
+                    _Internal_Poynting[nm] += poynting * coefficient;
+					internal_power = real( (2*M_PI) * (poynting* coefficient) * kr * dkr / Ns / kzs2 );
+					_Internal_Power[nm] += internal_power;
+					internal_power_per_dipole[nm] += poynting * coefficient;
 
                   }
 
                //*****************************Assigning Output Power of two ends of the device ******************************
 
 				vector<double> Abs(mesh_size);
-                double P0,Pend,Pdip, extraction, absorb;
-                P0 = abs(internal_power[0]);
-                Pend = abs(internal_power[mesh_size]);
-		        
-                Pdip = abs(internal_power[dipole_loc]) + abs(internal_power[dipole_loc-2]);
-		        
-                if (Pdip != 0)
-                {
-                  extraction = (P0+Pend) / Pdip;
-                 _Poynting_back [cnt] +=  P0 / Pdip;
-                 _Poynting_front[cnt] +=  Pend / Pdip;
-                }
-                else
-                {
-                  extraction = 0;
-                }
-                absorb = 1 - extraction ;
+                double absorb = 1 ;
 
 				double sum =0;
 				for (size_t nm = 1; nm < mesh_size; ++nm)
@@ -1392,15 +1353,40 @@ Tmm::do_solve(void)
                 
 
                 ++cnt;
-               // std::cout<<n_real.size()<<std::endl;
 
             } // end of radial wave numbers loop
 
-          } // end of number of dipoles loop
+          } // end of number of modes loop
 
          } // end of number of orain loop
+		 double P0,Pend,Pdip, extraction;
+		 P0 = abs(internal_power_per_dipole[0]);
+		 Pend = abs(internal_power_per_dipole[mesh_size-1]);
+			 
+		 
+		 Pdip = abs(internal_power_per_dipole[dipole_loc]) + abs(internal_power_per_dipole[dipole_loc-2]);
+		 
+		 if (Pdip != 0)
+		 {
+		   extraction = (P0+Pend) / Pdip ;
+		 }
+		 else
+		 {
+		   extraction = 0;
+		 }
+		 double sum_power = 0;
+		 for (auto dipole_power : dipole_pow_list)
+		   sum_power += dipole_power;
+		 outcoupling.push_back(extraction*dipole_pow_list[dipole_num]); 
+     }// end of number of dipoles
+	 double avg = 0;
+	 
+	 for (auto dipole_outcoupling : outcoupling)
+		 avg += dipole_outcoupling;
+	 
 
-     }// end of number of modes loop
+	 _OutCoupling.push_back(avg/outcoupling.size()); //pushing the average outcoupling for dipoles
+
 	 
      vector<double> sumation;
      for(size_t re =1; re < Regions.size(); re++)
@@ -1438,7 +1424,7 @@ Tmm::do_solve(void)
 	_green_vector_solved = 1;
 	std::ofstream outFile(outdir + "/green_matrix.dat");
     if (!outFile) 
-        std::cerr << "\033[33m Cannot creat green_matrix.dat file! \033[0m " << std::endl;
+        std::cout << "\033[33m Cannot creat green_matrix.dat file!!! \033[0m " << std::endl;
        
 
     size_t rows = _green_vector.size();
@@ -1462,15 +1448,18 @@ Tmm::do_solve(void)
   } else if (_green_vector_solved && !dipoles_power_global.empty())  // read from file to complet the _green_vector in the next iteration
   {
 	  
-	std::cout <<  " \033[33m reading and completting  green_matrix data  \033[0m "<< std::endl;
+	//std::cout<<"Optical simulation is over-2"<<std::endl;  
+	std::cout <<  " \033[33m reading and completting green_matrix data  \033[0m "<< std::endl;
 	_green_vector.clear();
 	std::ifstream inFile(outdir + "/green_matrix.dat");
 	if (!inFile) 
-       std::cerr << "\033[33m Cannot open green_matrix.dat file! \033[0m " << std::endl;
+	{
+       std::cout << "\033[33m Cannot open green_matrix.dat file! \033[0m " << std::endl;
+	}
 	size_t rows, cols;
     inFile >> rows >> cols;
 	_green_vector.resize(rows);
-
+	//std::cout<<"Optical simulation is over-1"<<std::endl;
     // Create the _green_vector
     for (size_t i = 0; i < rows; ++i) {
         for (size_t j = 0; j < cols; ++j) {
@@ -1479,7 +1468,9 @@ Tmm::do_solve(void)
         }
     }
     inFile.close();
-    }
+	
+  }
+  //std::cout<<"Optical simulation is over0"<<std::endl;
 	
 	if (!dipoles_power_global.empty() && _green_vector_solved)
 		for (size_t i = 0; i < _green_vector.size(); ++i) 
@@ -1526,7 +1517,7 @@ Tmm::create_boundary_model(const ModelOptions& options,
 void
 Tmm::plot_globaldata(void)
 {
-  
+  //std::cout<<"Tmm::plot_globaldata(void) "<<std::endl;
   string outdir = get_output_directory();
   //std::cout<<"AVT IS "<<_solutions.count(AVT)<<std::endl;
   if (_solutions.count(AVT))
@@ -1594,6 +1585,8 @@ Tmm::plot_globaldata(void)
 
   if (!_Generation_regions_internal.empty())
   {
+	  
+	  //std::cout<<"if (!_Generation_regions_internal.empty()) "<<std::endl;
 
 
     string filename(outdir + "/" + get_output_filename() + "_Absorption_Regions_Internal.dat");
@@ -1604,13 +1597,14 @@ Tmm::plot_globaldata(void)
     if (file.good())
     {
       file << "# " << get_type() << " Absorption_Regions_Internal (" << get_name() << ")\n";
-      file << "# " << 0 << " Region_ID" << "\n";
+      file << "# " << 0 << " Wavelength" << "\n";
+	  file << "# " << 1 << " OutCoupling" << "\n";
       for (double i = 0; i < _regions_name.size(); ++i)
       {
-          file <<"# " << i+1 << " Region => "<< _regions_name[i] << "\n"; 
+          file <<"# " << i+2 << " Region => "<< _regions_name[i] << "\n"; 
       }
 
-      file << "# " << "Region_ID ";
+      file << "# " << "Wavelength " << "OutCoupling ";
       for (double i = 0; i < _regions_name.size(); ++i)
       {
           file << _regions_name[i] << " "; 
@@ -1619,7 +1613,8 @@ Tmm::plot_globaldata(void)
 
       for (unsigned int i = 0; i < _Generation_regions_internal.size(); i++) //internal emission Wavelength
       {
-          file << 1000 + i   << " " ;
+          file << _Internal_Wavelength[i]   << " " ;
+		  file << _OutCoupling[i]   << " " ;
           for (unsigned int j =0; j < _regions_name.size() ; j++)
             file << _Generation_regions_internal[i][j]   << " " ;
           file << "\n";
@@ -1629,7 +1624,7 @@ Tmm::plot_globaldata(void)
       
     file.close();
   }
-
+		//std::cout<<"f (_solutions.count(External_Source_ElectricField))"<<std::endl;
   if (_solutions.count(External_Source_ElectricField))
   if (!_Electric_Field_External.empty())
   {
@@ -1683,6 +1678,7 @@ Tmm::plot_globaldata(void)
     }
     file.close();
   }
+  //std::cout<<" if (_solutions.count(Internal_Source_ElectricField))"<<std::endl;
   if (_solutions.count(Internal_Source_ElectricField))
   if (!_Electric_Field_Internal.empty())
   {
@@ -1704,11 +1700,17 @@ Tmm::plot_globaldata(void)
       else
       {
         wl_vect.resize(10);
+		//std::cout<<_Internal_Wavelength.size() << " vs " << floor(_Internal_Wavelength.size() / 9.0) <<std::endl;
         step = (_Internal_Wavelength.size()) / 9;
         for (double i = 0; i< 10; i++)
+		{
           wl_vect[i] = _Internal_Wavelength[step * i];
+		  //std::cout<<i << " vs " <<step * i <<std::endl;
+		}
 
       }
+	  //std::cout<<" _Electric_Field_Internal.size() "<< _Electric_Field_Internal.size()<<std::endl;
+	 // std::cout<<" passed the mid"<<std::endl;
       // header
       file << "# " << get_type() << " TMMM (" << get_name() << ")\n";
       for (double i = 0; i < wl_vect.size(); ++i)
@@ -1724,9 +1726,10 @@ Tmm::plot_globaldata(void)
       for (double j = 0; j<_Internal_Source_ElectricField.size(); ++j)
       {
         file << j   << " ";
+		///std::cout<<" _Electric_Field_Internal[j].size() "<< _Electric_Field_Internal[j].size()<<std::endl;
         for (double i = 0; i < wl_vect.size(); ++i)
         {
-            file << _Electric_Field_Internal[i*step][j] << " ";
+            file << _Electric_Field_Internal[j][i*step] << " ";
         }
         file << "\n";
       }
@@ -1734,10 +1737,10 @@ Tmm::plot_globaldata(void)
     file.close();
   }
   
-  
+   //std::cout<<" if (_solutions.count(Transmission) || _solutions.count(Reflection) || _solutions.count(Absorption))"<<std::endl;
   
   if (_solutions.count(Transmission) || _solutions.count(Reflection) || _solutions.count(Absorption))
-  //if (!_Electric_Field_External.empty())
+  if (!_Electric_Field_External.empty())
   {
     string filename(outdir + "/" + get_output_filename() + ".dat");
 
@@ -1746,7 +1749,7 @@ Tmm::plot_globaldata(void)
 
     if (file.good())
     {
-		std::cout<<"start printing "<<std::endl;
+		//std::cout<<"start printing "<<std::endl;
       // header
       file << "# " << get_type() << " TMM (" << get_name() << ")\n";
 
@@ -1764,7 +1767,8 @@ Tmm::plot_globaldata(void)
     }
     file.close();
   }
-
+  
+//std::cout<<" END OF GLOBAL PLOTTING"<<std::endl;
 }
 
 void
