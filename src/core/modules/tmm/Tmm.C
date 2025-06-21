@@ -837,7 +837,7 @@ Tmm::do_solve(void)
 
 	size_t mesh_size = n_real.size();
 
-    if (direction = "top to down propagation") // if the incomming wave is from the other sild, so the vectors should be revesed
+    if (direction == "top to down propagation") // if the incomming wave is from the other sild, so the vectors should be revesed
 	{
       for (size_t uu=1; uu<BC_check_init.size();uu += 2)
         BC_check.push_back(BC_check_init[uu]);
