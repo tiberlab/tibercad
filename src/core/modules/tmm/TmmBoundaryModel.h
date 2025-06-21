@@ -17,48 +17,48 @@ namespace libMesh
 class TmmBoundaryModel : public  PhysicalModel
 {
 
-  public:
+public:
 
-    //! Destructor
-    ~TmmBoundaryModel(void) {};
+  //! Destructor
+  ~TmmBoundaryModel(void) {};
 
-    //! Creator function
-    static TmmBoundaryModel* create(const MaterialBoundary* boundary,
-        const ModelOptions& options);
+  //! Creator function
+  static TmmBoundaryModel* create(const MaterialBoundary* boundary,
+    const ModelOptions& options);
 
-    virtual void Calculate_M_Matrix (void) = 0;
-    void set_elements(double, double, double, double);
-    virtual double get_element(int);
-    virtual double get_kr(void);
-    virtual double get_steps(void);
-    void set_dipole_elements(double, double);
-    std::string read_type(void);
-
-
+  virtual void Calculate_M_Matrix(void) = 0;
+  void set_elements(double, double, double, double);
+  virtual double get_element(int);
+  virtual double get_kr(void);
+  virtual double get_steps(void);
+  void set_dipole_elements(double, double);
+  std::string read_type(void);
 
 
 
 
 
 
-  protected:
-
-    //! Constructor
-    TmmBoundaryModel(const ModelOptions& options);
-    void write_type(std::string);
 
 
+protected:
+
+  //! Constructor
+  TmmBoundaryModel(const ModelOptions& options);
+  void write_type(std::string);
 
 
 
-  private:
-    std::string typer;
-    double _mmm00;
-    double _mmm01;
-    double _mmm10;
-    double _mmm11;
-    double __kr;
-    double __steps;
+
+
+private:
+  std::string typer;
+  double _mmm00;
+  double _mmm01;
+  double _mmm10;
+  double _mmm11;
+  double __kr;
+  double __steps;
 
 
 

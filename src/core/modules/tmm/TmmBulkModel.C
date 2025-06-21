@@ -69,7 +69,7 @@ TmmBulkModel::interpolate(double wavelength) const
   unsigned int ctr = _addressing[index];
 
   while ((ctr < _wavelengths.size()) && (_wavelengths[ctr] < wavelength))
-      ++ctr;
+    ++ctr;
 
   double n, k;
 
@@ -93,7 +93,7 @@ TmmBulkModel::interpolate(double wavelength) const
     k = (_k_data[ctr] - _k_data[ctr - 1]) * frac + _k_data[ctr - 1];
   }
 
-  return(std::make_pair(n,k));
+  return(std::make_pair(n, k));
 }
 
 
@@ -122,7 +122,7 @@ double
 TmmBulkModel::get_coherent_index(void) const
 {
 
-  double ri= _incoherent_index;
+  double ri = _incoherent_index;
 
   return(ri);
 }
@@ -131,7 +131,7 @@ double
 TmmBulkModel::get_emission_power(void) const
 {
 
-  double ri= _emission_power;
+  double ri = _emission_power;
 
   return(ri);
 }
@@ -259,9 +259,9 @@ TmmBulkModel::do_print_info(void)
 
 void
 TmmBulkModel::prepare_submodels(void)
-{  
+{
 
-   create_submodels(_DS, "dipole_source");
+  create_submodels(_DS, "dipole_source");
 }
 
 
@@ -269,10 +269,10 @@ void
 TmmBulkModel::calculate(const libMesh::Elem* elem, const libMesh::Point& point, double lambda)
 {
   _emission_power = 0;
-  for (ID n = 0 ; n <_DS.size() ; n++)
+  for (ID n = 0; n < _DS.size(); n++)
   {
-    _DS[n]->calculate(elem,point,lambda);
-	_emission_power  +=  _DS[n]->get_emission_power();
+    _DS[n]->calculate(elem, point, lambda);
+    _emission_power += _DS[n]->get_emission_power();
   }
 
 }

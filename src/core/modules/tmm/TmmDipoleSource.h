@@ -13,38 +13,38 @@ using namespace std;
 class TmmDipoleSource : public PhysicalModel
 {
 
-  public:
+public:
 
 
-    //! Destructor
+  //! Destructor
   virtual ~TmmDipoleSource(void) {};
 
-    //! Creator function
+  //! Creator function
   static TmmDipoleSource* create(const ModelOptions& options);
-	
-	
+
+
   const double& get_emission_power(void) const;
-	
-	
-  virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point, double lambda){};
+
+
+  virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point, double lambda) {};
 
 
 
 
 
 
-  protected:
+protected:
 
-    //! Constructor
+  //! Constructor
   TmmDipoleSource(const ModelOptions& options);
 
 
   void set_emission_power(const double& emission_power);
 
 
-  private:
+private:
 
-	
+
   double _emission_power;
 
 

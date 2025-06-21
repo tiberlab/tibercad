@@ -27,7 +27,7 @@ TmmDipoleSource::get_emission_power(void) const
 }
 
 
-void 
+void
 TmmDipoleSource::set_emission_power(const double& emission_power)
 {
   _emission_power = emission_power;
