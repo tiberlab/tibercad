@@ -1277,8 +1277,8 @@ Tmm::do_solve(void)
               }
 
 
-              double coefficient;
-              coefficient = 1 / _steps / _oraintation_vec.size() / _polarization_vec.size();  ///lambda_interp.size()
+              double coefficient = 1 / _steps / _oraintation_vec.size() / _polarization_vec.size();  ///lambda_interp.size()
+              
               for (size_t nm = 0; nm < E_int_f.size(); ++nm)
               {
                 _Internal_Source_ElectricField[nm] += real(E_int[nm]) * coefficient;
@@ -1558,13 +1558,13 @@ Tmm::plot_globaldata(void)
       {
         file << "# " << get_type() << " Absorption_Regions (" << get_name() << ")\n";
         file << "# " << 0 << " WaveLength [nm]" << "\n";
-        for (double i = 0; i < _regions_name.size(); ++i)
+        for (unsigned int i = 0; i < _regions_name.size(); ++i)
         {
           file << "# " << i + 1 << " Region => " << _regions_name[i] << "\n";
         }
 
         file << "# " << "WaveLength ";
-        for (double i = 0; i < _regions_name.size(); ++i)
+        for (unsigned int i = 0; i < _regions_name.size(); ++i)
         {
           file << _regions_name[i] << " ";
         }
@@ -1601,13 +1601,13 @@ Tmm::plot_globaldata(void)
         file << "# " << get_type() << " Absorption_Regions_Internal (" << get_name() << ")\n";
         file << "# " << 0 << " Wavelength" << "\n";
         file << "# " << 1 << " OutCoupling" << "\n";
-        for (double i = 0; i < _regions_name.size(); ++i)
+        for (unsigned int i = 0; i < _regions_name.size(); ++i)
         {
           file << "# " << i + 2 << " Region => " << _regions_name[i] << "\n";
         }
 
         file << "# " << "Wavelength " << "OutCoupling ";
-        for (double i = 0; i < _regions_name.size(); ++i)
+        for (unsigned int i = 0; i < _regions_name.size(); ++i)
         {
           file << _regions_name[i] << " ";
         }
@@ -1637,19 +1637,19 @@ Tmm::plot_globaldata(void)
 
       if (file.good())
       {
-        long int step = 1;
+        unsigned int step = 1;
         std::vector<double> wl_vect;
         if (_Wavelength.size() < 10)
         {
           wl_vect.resize(_Wavelength.size());
-          for (double i = 0; i < _Wavelength.size(); i++)
+          for (unsigned int i = 0; i < _Wavelength.size(); i++)
             wl_vect[i] = _Wavelength[i];
         }
         else
         {
           wl_vect.resize(10);
           step = (_Wavelength.size()) / 9;
-          for (double i = 0; i < 10; i++)
+          for (unsigned int i = 0; i < 10; i++)
             wl_vect[i] = _Wavelength[step * i];
 
         }
@@ -1657,21 +1657,21 @@ Tmm::plot_globaldata(void)
         // header
         file << "# " << get_type() << " TMMM (" << get_name() << ")\n";
         file << "# " << "Electric Field [V/m/nm]" << "\n";
-        for (double i = 0; i < wl_vect.size(); ++i)
+        for (unsigned int i = 0; i < wl_vect.size(); ++i)
         {
           file << "# " << i << " WaveLength = " << wl_vect[i] << "[nm]" << "\n";
         }
         file << "# " << "x ";
-        for (double i = 0; i < wl_vect.size(); ++i)
+        for (unsigned int i = 0; i < wl_vect.size(); ++i)
         {
           file << wl_vect[i] << "[nm] ";
         }
         file << "\n";
 
-        for (double j = 0; j < _External_Source_ElectricField.size(); ++j)
+        for (unsigned int j = 0; j < _External_Source_ElectricField.size(); ++j)
         {
           file << j << " ";
-          for (double i = 0; i < wl_vect.size(); ++i)
+          for (unsigned int i = 0; i < wl_vect.size(); ++i)
           {
             file << _Electric_Field_External[i * step][j] << " ";
           }
@@ -1691,12 +1691,12 @@ Tmm::plot_globaldata(void)
 
       if (file.good())
       {
-        long int step = 1;
+        unsigned int step = 1;
         std::vector<double> wl_vect;
         if (_Internal_Wavelength.size() < 10)
         {
           wl_vect.resize(_Internal_Wavelength.size());
-          for (double i = 0; i < _Internal_Wavelength.size(); i++)
+          for (unsigned int i = 0; i < _Internal_Wavelength.size(); i++)
             wl_vect[i] = _Internal_Wavelength[i];
         }
         else
@@ -1704,32 +1704,30 @@ Tmm::plot_globaldata(void)
           wl_vect.resize(10);
           //std::cout<<_Internal_Wavelength.size() << " vs " << floor(_Internal_Wavelength.size() / 9.0) <<std::endl;
           step = (_Internal_Wavelength.size()) / 9;
-          for (double i = 0; i < 10; i++)
+          for (unsigned int i = 0; i < 10; i++)
           {
             wl_vect[i] = _Internal_Wavelength[step * i];
             //std::cout<<i << " vs " <<step * i <<std::endl;
           }
 
         }
-        //std::cout<<" _Electric_Field_Internal.size() "<< _Electric_Field_Internal.size()<<std::endl;
-       // std::cout<<" passed the mid"<<std::endl;
-          // header
-        file << "# " << get_type() << " TMMM (" << get_name() << ")\n";
-        for (double i = 0; i < wl_vect.size(); ++i)
+        
+        file << "# " << get_type() << " TMM (" << get_name() << ")\n";
+        for (unsigned int i = 0; i < wl_vect.size(); ++i)
         {
           file << "# " << i << " WaveLength = " << wl_vect[i] << "[nm]" << "\n";
         }
         file << "# " << "x ";
-        for (double i = 0; i < wl_vect.size(); ++i)
+        for (unsigned int i = 0; i < wl_vect.size(); ++i)
         {
           file << wl_vect[i] << "[nm] ";
         }
         file << "\n";
-        for (double j = 0; j < _Internal_Source_ElectricField.size(); ++j)
+        
+        for (unsigned int j = 0; j < _Electric_Field_Internal.size(); ++j)
         {
           file << j << " ";
-          ///std::cout<<" _Electric_Field_Internal[j].size() "<< _Electric_Field_Internal[j].size()<<std::endl;
-          for (double i = 0; i < wl_vect.size(); ++i)
+          for (unsigned int i = 0; i < wl_vect.size(); ++i)
           {
             file << _Electric_Field_Internal[j][i * step] << " ";
           }
