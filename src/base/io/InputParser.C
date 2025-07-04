@@ -1,17 +1,18 @@
 // $Id$
 
+#include "InputParser.h"
+#include "Messages.h"
+#include "Utils.h"
+#include "InitFailedException.h"
+
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
 
 #include <vector>
 #include <string>
-
-#include "InputParser.h"
-#include "Messages.h"
-#include "Utils.h"
-#include "InitFailedException.h"
-
+#include <regex>
 
 
 
@@ -85,10 +86,16 @@ InputParser::get_defined(const string& name)
 void
 InputParser::expand_macro(string& in)
 {
-  map<string, string>::iterator it(_defined.find(in));
-  if (it != _defined.end())
-    in = it->second;
+  //map<string, string>::iterator it(_defined.find(in));
+  //if (it != _defined.end())
+  //  in = it->second;
+  for (auto& def : _defined)
+  {
+    std::regex re(def.first);
+    in = std::regex_replace(in, re, def.second);
+  }
 }
+
 
 void InputParser::read_block(istream& in_stream, ModelOptions& options)
 {
@@ -309,6 +316,7 @@ string InputParser::get_token(istream& in_stream, bool expand)
 
     case '(':
       token += '(' + get_until_closing_brace(in_stream);
+      expand_macro(token);
       return token;
       break;
 
