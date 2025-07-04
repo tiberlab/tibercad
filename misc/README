@@ -2,9 +2,10 @@ To build TiberCAD from scratch:
 
 - if needed, edit appropriate INSTALL.xx in compiler directory and
   run it with bash (bash ./INSTALL.xx)
-- run ./configure, if needed with --host=XXX option
+- create a site_config.sh file providing some basic configuration options (see in site_configuration for examples)
 - run build_all
 
+The default behavior is to download PETSc, SLEPc, libmesh, maybe openmpi, to extern/, compile everything and install into SDK/ directory inside the tibercad top directory.
 
 The first step is needed when cross-compiling win32 version on linux, and
 maybe on darwin to get a gcc with all needed features.

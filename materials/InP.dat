@@ -63,6 +63,8 @@ permittivity = 12.61
 
 optical_epsilon = 9.61
 
+optical_data = optics/InP.nk
+
 
 # stiffness data
 [elasticity] # [1]

@@ -17,9 +17,9 @@
 
 #include "petscerror.h"
 
-#ifdef _WIN32
+//#ifdef _WIN32
  #include "omp.h"
-#endif
+//#endif
 
 
 #ifndef ARCH
@@ -32,7 +32,7 @@ namespace
   int __empty_argc = 2;
   char** __empty_argv = new char*[2];
   char __executable[] = "tibercad";
-  char __option[] = "--node_major_dofs";
+  char __option[] = "--node-major-dofs";
 }
 
 
@@ -207,6 +207,8 @@ TiberCad::init(const std::string& inputfile)
   // prepare libMesh
   _libmeshinit = new libMesh::LibMeshInit(__empty_argc, __empty_argv, _mpi_comm.get(), omp_procs);
 
+  // do not pass all arguments to slepc
+  __empty_argc = 1;
   EigenSolver::slepc_init(__empty_argc, __empty_argv, _mpi_comm.get());
 
   PetscPopSignalHandler();

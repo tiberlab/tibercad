@@ -2,7 +2,6 @@
 
 
 #include <boost/filesystem/operations.hpp>
-#include <boost/filesystem/convenience.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
 
@@ -135,8 +134,8 @@ Control::~Control(void)
   // clear all variables
   VariableValue::clear_all();
 
-  // This gives a problem with some MPI comm
-  //Device::destroy(_device);
+  // This in the past gave a problem with some MPI comm
+  Device::destroy(_device);
 
 }
 
@@ -348,7 +347,7 @@ Control::setup_globals(const ModelOptions& opts)
     path in(_inputfile);
     path out(_outputdir + "/" + Utils::basename(_inputfile) + ".tib");
     if (!equivalent(in, out))
-      copy_file(in, out, copy_option::overwrite_if_exists);
+      copy_file(in, out, copy_options::overwrite_existing);
   }
 
   {

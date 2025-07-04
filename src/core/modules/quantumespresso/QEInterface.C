@@ -1,7 +1,6 @@
 // $Id$
 //
 #include <boost/filesystem/operations.hpp>
-#include <boost/filesystem/convenience.hpp>
 
 #include "QEInterface.h"
 #include "AtomisticStructure.h"

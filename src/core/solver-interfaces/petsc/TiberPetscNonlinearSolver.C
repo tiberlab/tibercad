@@ -373,7 +373,7 @@ void TiberPetscNonlinearSolver::init(const char*)
 
 #if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3) && \
     (PETSC_VERSION_SUBMINOR > 2)) || (PETSC_VERSION_MAJOR >= 3)
-    SNESMonitorSet(_snes, __tiber_petsc_snes_monitor, (void*) this, PETSC_NULL);
+    SNESMonitorSet(_snes, __tiber_petsc_snes_monitor, (void*) this, PETSC_NULLPTR);
 #else
     SNESSetMonitor(_snes, __tiber_petsc_snes_monitor, (void*) this, PETSC_NULL);
 #endif
@@ -574,7 +574,7 @@ TiberPetscNonlinearSolver::solve(SparseMatrix<double>&  jacobian,
   // 2.3.x & newer style
 #else
 
-  ierr = SNESSolve(_snes, PETSC_NULL, x->vec());
+  ierr = SNESSolve(_snes, PETSC_NULLPTR, x->vec());
   TiberPetscUtils::checkerr(ierr);
 
 #endif

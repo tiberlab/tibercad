@@ -101,8 +101,7 @@ ifeq ($(METHOD),dbg)
   mode := "debug"
 endif
 
-# build modules or not
-build_modules := @BUILD_TIBER_MODULES@
+# module library path
 module_dir := $(topdir)/$(ARCH)/modules
 
 # The file extension for object files.

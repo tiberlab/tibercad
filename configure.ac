@@ -278,7 +278,7 @@ AC_CONFIG_FILES([Make.common
                  Makefile
                  doc/Makefile
                  src/tibercad/Makefile
-                 src/utils/SLEPC/Makefile
+                 src/core/solver-interfaces/slepc/Makefile
                  src/core/modules/etb/libuptight/Makefile
                  src/core/modules/negf/libnegf/config.cmake
                  contrib/crypto++/make.defs

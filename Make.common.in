@@ -52,15 +52,10 @@ LDFLAGS += $(BOOST_LIBS)
 
 LDFLAGS += @LDFLAGS@
 
-ifeq ($(build_modules),yes)
-  TIBER_OBJECTS = $(shell find $(topdir)/src -name "*$(obj-suffix)" -a -path "*.${ARCH}/*" -a ! -path "*/src/tibercad/*" -a ! -path "*/src/utils/*" -a ! -path "*/src/core/modules/*" -a ! -path "*/src/SDK/*")
-else
-  TIBER_OBJECTS = $(shell find $(topdir)/src -name "*$(obj-suffix)" -a ! -path "*/src/tibercad/*" -a ! -path "*/src/utils/*" -a ! -path "*/src/SDK/*")
-endif
+TIBER_OBJECTS = $(shell find $(topdir)/src -name "*$(obj-suffix)" -a -path "*.${ARCH}/*" -a ! -path "*/src/tibercad/*" -a ! -path "*/src/utils/*" -a ! -path "*/src/core/solver-interfaces/slepc/*" -a ! -path "*/src/core/modules/*" -a ! -path "*/src/SDK/*")
 
 
 INCLUDE  := $(shell export METHOD=$(LIBMESHMETHOD) && $(libmesh_config) --include) -I@LIBMESH_PREFIX@/include/libmesh -I@LIBMESH_PREFIX@/include  -I@LIBMESH_PREFIX@/contrib/eigen/eigen  -I@LIBMESH_PREFIX@/contrib/timpi/src/parallel/include  -I@LIBMESH_PREFIX@/contrib/timpi/src/utilities/include  -I@LIBMESH_PREFIX@/contrib/timpi/src/algorithms/include 
-#INCLUDE  := -I@LIBMESH_PREFIX@/include/libmesh
 
 NON_TIBER_INCLUDES := @BOOST_CPPFLAGS@ @TAO_INCLUDES@ $(INCLUDE) 
 
@@ -89,26 +84,22 @@ ifeq ($(target_os), linux)
 endif
 
 
-NON_TIBER_INCLUDES := $(patsubst -I%,%,$(NON_TIBER_INCLUDES))
 
 # the machine architecture
 CPPFLAGS += -DARCH=\"$(ARCH)\"
 
 CPPFLAGS += -DMPICH_IGNORE_CXX_SEEK -DLIBMESH_REQUIRE_SEPARATE_NAMESPACE
 CPPFLAGS += $(TIBER_INCLUDES)
-CPPFLAGS += $(patsubst %,-isystem %,$(NON_TIBER_INCLUDES))
+CPPFLAGS += $(NON_TIBER_INCLUDES)
 
 CXXFLAGS += $(shell METHOD=$(LIBMESHMETHOD) $(libmesh_config) --cxxflags) 
-#LDFLAGS  += $(shell METHOD=$(LIBMESHMETHOD) $(libmesh_config) --ldflags) 
 
 ifneq ($(target_os),win32)
-  CXXFLAGS += -fPIC -pthread
+
+  CXXFLAGS += -fPIC -pthread -fvisibility=default -fvisibility-inlines-hidden
   FCFLAGS  += -fPIC
   CFLAGS  += -fPIC
 
-  ifeq ($(build_modules), yes)
-    CXXFLAGS += -fvisibility=default -fvisibility-inlines-hidden
-  endif
 endif
 
 vpath %.h $(include_dirs)

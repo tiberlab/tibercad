@@ -37,40 +37,8 @@ class TiberLinearSolver : public TiberModelObject, public libMesh::LinearSolver<
 
     
     //! Create a linear solver
-   static TiberLinearSolver* create(const libMesh::Parallel::Communicator &comm_in, const ModelOptions& options);
+    static TiberLinearSolver* create(const libMesh::Parallel::Communicator &comm_in, const ModelOptions& options);
     
-    
-
-
-    //! Solve the linear system
-    /*!
-     * In TiberCAD, this method should be used instead of the
-     * ones defined in libMesh
-     */
-    std::pair<unsigned int, Real>
-      solve(SparseMatrix<Number> &matrix,
-          SparseMatrix<Number> &preconditioner,
-          NumericVector<Number> &solution,
-          NumericVector<Number> &rhs)
-      {
-        parse_options();
-        return this->do_solve(matrix, preconditioner, solution, rhs);
-      }
-
-
-    //! Solve the linear system
-    /*!
-     * In TiberCAD, this method should be used instead of the
-     * ones defined in libMesh
-     */
-    std::pair<unsigned int, Real>
-      solve(SparseMatrix<Number> &matrix,
-          NumericVector<Number> &solution,
-          NumericVector<Number> &rhs)
-      {
-        parse_options();
-        return this->do_solve(matrix, matrix, solution, rhs);
-      }
 
 
     //! Call the  solver.
@@ -78,33 +46,31 @@ class TiberLinearSolver : public TiberModelObject, public libMesh::LinearSolver<
      * It calls the method below, using the
      * same matrix for the system and preconditioner matrices.
      *
-     * This method is used only for compatibility with libMesh.
      */    
     virtual std::pair<unsigned int, Real> 
       solve(SparseMatrix<Number> &matrix,
           NumericVector<Number> &solution,
           NumericVector<Number> &rhs,
-          const double,
-          const unsigned int)
+          const std::optional<double> = std::nullopt,
+          const std::optional<unsigned int> = std::nullopt) override
       {
-        return this->solve(matrix, matrix, solution, rhs);
+        parse_options();
+        return this->do_solve(matrix, matrix, solution, rhs);
       }
 
 
 
     //! Call the linear solver specifying explicitly the preconditioner matrix
-    /*!
-     * This method is used only for compatibility with libMesh.
-     */
     virtual std::pair<unsigned int, Real> 
       solve(SparseMatrix<Number> &matrix,
           SparseMatrix<Number> &preconditioner,
           NumericVector<Number> &solution,
           NumericVector<Number> &rhs,
-          const double,
-          const unsigned int)
+          const std::optional<double> = std::nullopt,
+          const std::optional<unsigned int> = std::nullopt) override
       {
-        return this->solve(matrix, preconditioner, solution, rhs);
+        parse_options();
+        return this->do_solve(matrix, matrix, solution, rhs);
       }
 
 
@@ -114,8 +80,8 @@ class TiberLinearSolver : public TiberModelObject, public libMesh::LinearSolver<
       solve(const libMesh::ShellMatrix<Number>&,
         NumericVector<Number>&,
         NumericVector<Number>&,
-          const double,
-          const unsigned int);
+        const std::optional<double> = std::nullopt,
+        const std::optional<unsigned int> = std::nullopt) override;
   
 
 
@@ -125,8 +91,8 @@ class TiberLinearSolver : public TiberModelObject, public libMesh::LinearSolver<
           const SparseMatrix<Number>&,
           NumericVector<Number>&,
           NumericVector<Number>&,
-          const double,
-          const unsigned int);
+          const std::optional<double> = std::nullopt,
+          const std::optional<unsigned int> = std::nullopt) override;
   
 
 

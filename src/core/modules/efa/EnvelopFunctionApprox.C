@@ -1711,6 +1711,9 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
   _H_imag->close();
   if (_haveS)
     _S_real->close();
+
+  if (get_options().get_option("print_hamiltonian", false))
+    print_H(get_output_directory());
   //_H_real->print_matlab("Hr.m");
   //_H_imag->print_matlab("Hi.m");
   //if (_haveS)

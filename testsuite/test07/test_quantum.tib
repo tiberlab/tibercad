@@ -178,6 +178,9 @@ Module efaschroedinger
   poisson_model_name = dd
   strain_model_name = str
 
+  print_hamiltonian = true
+  write_matrices_to_files = true
+
 
   quadrature_rule = trapez
 

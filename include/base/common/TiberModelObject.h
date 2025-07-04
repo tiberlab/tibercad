@@ -9,7 +9,7 @@
 #include "libMeshDefs.h"
 
 // For debugging
-#include "reference_counted_object.h"
+#include "libmesh/reference_counted_object.h"
 
 
 // stringify

@@ -1,5 +1,7 @@
 #include "Specie.h"
+
 #include <set>
+#include <vector>
 #include <map>
 
 class CrystalDefs {

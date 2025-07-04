@@ -52,11 +52,6 @@ fi
 #cd libmesh-${LIBMESHVERSION}-${TCHOST}/libmesh
 cd libmesh-${LIBMESHVERSION}-${TCHOST}
 
-# we have modifications to the configuration
-#aclocal -I m4
-#autoconf
-#cp ${TOPDIR}/misc/configure.libmesh configure
-
 
 export SLEPC_DIR=${BUILDDIR}/slepc-${SLEPCVERSION}${SLEPCPATCHLEVEL}
 export PETSC_DIR=${BUILDDIR}/petsc-${PETSCVERSION}${PETSCPATCHLEVEL}
@@ -88,9 +83,6 @@ dll_name=${dll_name}${dll_libext}
   
 export LDFLAGS
 
-#--with-cc=${PETSC_DIR}/externalpackages/mpich2-1.0.8/bin/mpicc
-#--with-cxx=${PETSC_DIR}/externalpackages/mpich2-1.0.8/bin/mpicxx 
-
 #export METHODS=opt
 #if [ $DEBUG == 'y' ]
 #then
@@ -101,28 +93,29 @@ METHOD=devel
 
 
 ./configure --enable-petsc-required --enable-slepc --disable-complex \
-    --enable-periodic ${SHARED} --disable-pfem --enable-static \
+    --enable-periodic ${SHARED} --enable-static \
     --disable-strict-lgpl \
     --enable-second --enable-exceptions --disable-laspack --disable-sfc \
     --disable-gzstreams --disable-bzip2 --disable-vtk \
     --disable-tecplot --disable-netcdf --disable-netcdf-4 --disable-exodus --disable-nemesis \
     --disable-libHilbert --disable-perflog  --disable-gmv \
-    --disable-reference-counting --disable-legacy-using-namespace --enable-unique-ptr \
+    --enable-reference-counting --disable-legacy-using-namespace --enable-unique-ptr \
+    --disable-fparser --with-fparser=none \
     --disable-deprecated \
     --disable-metaphysicl \
     --disable-openmp \
     --with-thread-model=none \
     --disable-hdf5 \
     --with-subdomain-id-bytes=2 \
-    --disable-fparser \
     --with-boost=${SDKDIR} \
     --with-methods="$METHOD" \
     --host=$HOST --build=$BUILD \
     --prefix=${SDKDIR} --exec-prefix=${SDKDIR}/${TCHOST}
 
+#    --disable-pfem \
 
 #make |tee make.log
 
-make install
+make -j 4 install
 
 

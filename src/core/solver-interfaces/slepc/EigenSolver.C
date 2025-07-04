@@ -191,7 +191,7 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt,
 
       PetscNew(&fold_ctx);
       fold_ctx->A = A;
-      MatCreateVecs(A, &fold_ctx->w, NULL);
+      MatCreateVecs(A, &fold_ctx->w, nullptr);
       //VecDuplicate(x, &ctx->w);
 
       MatCreateShell(slepc_comm, nloc, mloc, N, N, fold_ctx, &M);
@@ -217,9 +217,9 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt,
   else
   {
     if (opt.spectral_trans == "folding")
-      ierr = EPSSetOperators(eps, M, PETSC_NULL);
+      ierr = EPSSetOperators(eps, M, PETSC_NULLPTR);
     else
-      ierr = EPSSetOperators(eps, A, PETSC_NULL);
+      ierr = EPSSetOperators(eps, A, PETSC_NULLPTR);
 
     TiberPetscUtils::checkerr(ierr);
 
@@ -591,10 +591,10 @@ double EigenSolver::get_eigenvalue(int i)
   if (fold_ctx != nullptr)
   {
     Vec eigen_vector;
-    ierr = MatCreateVecs(A, PETSC_NULL, &eigen_vector);
+    ierr = MatCreateVecs(A, PETSC_NULLPTR, &eigen_vector);
     TiberPetscUtils::checkerr(ierr);
 
-    ierr = EPSGetEigenpair(eps, i, &ev, &ev_i, eigen_vector, PETSC_NULL);
+    ierr = EPSGetEigenpair(eps, i, &ev, &ev_i, eigen_vector, PETSC_NULLPTR);
     TiberPetscUtils::checkerr(ierr);
 
     ierr = RayleighQuotient(A, eigen_vector, &ev);
@@ -621,9 +621,9 @@ void EigenSolver::get_eigen_vector(int i, std::vector<Complex>& eigen_vector_out
 
 
 
-  MatCreateVecs(A,PETSC_NULL,&eigen_vector);
+  MatCreateVecs(A,PETSC_NULLPTR,&eigen_vector);
 
-  EPSGetEigenpair(eps,i,&kr,&ki,eigen_vector,PETSC_NULL);
+  EPSGetEigenpair(eps,i,&kr,&ki,eigen_vector,PETSC_NULLPTR);
 
   PetscScalar *loc_part;
   VecGetArray(eigen_vector, &loc_part);
@@ -655,7 +655,7 @@ void EigenSolver::set_initial_vector( const std::vector<Complex>& in_vector)
 
 
 
-  MatCreateVecs(A,PETSC_NULL,&v0);
+  MatCreateVecs(A,PETSC_NULLPTR,&v0);
 
   PetscScalar y[_size_of_matrix];
   PetscInt ix[_size_of_matrix];
@@ -690,7 +690,7 @@ int EigenSolver::prepare_slepc(MPI_Comm comm)
   slepc_comm = comm;
 
 
-//  if (eps == NULL)
+//  if (eps == NULLPTR)
   {
     ierr = EPSCreate(slepc_comm,&eps);TiberPetscUtils::checkerr(ierr);
   }
@@ -709,7 +709,7 @@ EigenSolver::set_deflation_space(
 
 
   Vec* defl = new Vec[solutions.size()];
-  //vector<PetscVector<Complex>*> vecs(solutions.size(), NULL);
+  //vector<PetscVector<Complex>*> vecs(solutions.size(), NULLPTR);
 
   PetscScalar y[_size_of_matrix];
   PetscInt ix[_size_of_matrix];
@@ -723,7 +723,7 @@ EigenSolver::set_deflation_space(
     //vecs[i] = new PetscVector<Complex>(libMesh::CommWorld);
     //vecs[i]->init(solutions[i]->size());
     //*vecs[i] = *solutions[i];
-    MatCreateVecs(A, PETSC_NULL, &defl[i]);
+    MatCreateVecs(A, PETSC_NULLPTR, &defl[i]);
     for (int j= 0; j < _size_of_matrix ; j++)
       y[j]  = (*solutions[i])[j];
     VecSetValues(defl[i], _size_of_matrix, ix, y, INSERT_VALUES);
@@ -762,7 +762,7 @@ int EigenSolver::clear_slepc()
   // NOTE: with real MPI this leads to too many communicators
   // in a future version of SLEPc one could maybe use EPSReset()
   ierr = EPSDestroy(&eps);TiberPetscUtils::checkerr(ierr);
-  //eps = NULL;
+  //eps = NULLPTR;
 
 
   for (int i = 0; i < _deflation_space.size(); ++i)
@@ -797,7 +797,7 @@ int EigenSolver::do_solve(const SLEPCoptions& opt)
 
 #if ((SLEPC_VERSION_MAJOR == 2) && (SLEPC_VERSION_MINOR == 3) && \
     (SLEPC_VERSION_SUBMINOR <= 2))
-  if (opt.monitor) EPSSetMonitor(eps, EPSDefaultMonitor, PETSC_NULL);
+  if (opt.monitor) EPSSetMonitor(eps, EPSDefaultMonitor, PETSC_NULLPTR);
 #else
   if (opt.monitor)
   {
@@ -839,7 +839,7 @@ int EigenSolver::do_solve(const SLEPCoptions& opt)
 
     Vec* v = new Vec[nconv];
     for (int i = 0; i < nconv; ++i)
-      MatCreateVecs(A,PETSC_NULL,&v[i]);
+      MatCreateVecs(A,PETSC_NULLPTR,&v[i]);
 
     EPSGetInvariantSubspace(eps, v);
 
@@ -1002,7 +1002,7 @@ bool EigenSolver::check_matrices(double tol, bool verbose)
   bool ans;
 
   ans = false;
-  if(A->hermitian_set)
+  if(A->hermitian)
   {
     if (verbose)
       std::cout<<"   (ES) Hamiltonian is defined Hermitian"<<std::endl;
@@ -1027,7 +1027,7 @@ bool EigenSolver::check_matrices(double tol, bool verbose)
 
 
 
-  if(B->hermitian_set)
+  if(B->hermitian)
   {
     if (verbose)
       std::cout<<"   (ES) Overlap is defined Hermitian"<<std::endl;
@@ -1086,7 +1086,7 @@ void set_sub_pc(PC pc, PCType pc_type)
   PetscInt n_local;
 
   // Fill array of local KSP contexts
-  ierr = PCBJacobiGetSubKSP(pc, &n_local, PETSC_NULL, &subksps);
+  ierr = PCBJacobiGetSubKSP(pc, &n_local, PETSC_NULLPTR, &subksps);
 
   // Loop over sub-ksp objects, set ILU preconditioner
   for (PetscInt i = 0; i < n_local; ++i)

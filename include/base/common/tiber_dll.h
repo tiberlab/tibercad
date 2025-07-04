@@ -6,8 +6,8 @@
 #include "tiber_config.h"
 
 #if defined(_WIN32)
-//#  define TBDLEXPORT __declspec(dllexport)
-//#  define TBDLLOCAL __declspec(dllimport)
+#  define TBDLEXPORT __declspec(dllexport)
+#  define TBDLLOCAL __declspec(dllimport)
 # define TBDLEXPORT
 # define TBDLLOCAL
 #else

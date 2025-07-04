@@ -6,7 +6,7 @@ topdir := ../../..
 include $(topdir)/Make.common
 
 # we have to compile each module
-subdirs := petsc
+subdirs := petsc slepc
 ifeq ($(enable_pardiso), yes)
  subdirs += pardiso
 endif

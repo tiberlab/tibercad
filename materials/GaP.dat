@@ -63,6 +63,8 @@ permittivity = 11.1
 
 optical_epsilon = 9.075
 
+optical_data = optics/GaP.nk
+
 
 # stiffness data
 [elasticity] # [1]

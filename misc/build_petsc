@@ -7,7 +7,13 @@ fi
 
 . common.sh
 
-MKLINCLUDE=-I${MKLDIR}/include
+MKLINCLUDE=
+#-I${MKLDIR}/include
+
+if [ "$GNUFORTRAN" = "1" ]; then
+  FCFLAGS="${FCFLAGS} -ffree-line-length-512"
+  FFLAGS="${FFLAGS} -ffree-line-length-512"
+fi
 
 
 # Does the actual build
@@ -33,22 +39,22 @@ make_petsc()
   if [ ! -e  reconfigure-${PETSC_ARCH}.py ] && [ ! -e  conftest-${PETSC_ARCH} ]; then
 
     ./configure \
-    --CC="$CC" --CXX="$CXX" --FC="$FC" --F77="$F77" --CPP="$CPP" \
+    --CC="$CC" --CXX="$CXX" --FC="$FC" --CPP="$CPP" \
     --CXXFLAGS="$CXXFLAGS ${MKLINCLUDE}" --FCFLAGS="$FCFLAGS ${MKLINCLUDE}" --CFLAGS="$CFLAGS ${MKLINCLUDE}" \
     --FFLAGS="$FFLAGS ${MKLINCLUDE}" --LDFLAGS="$LDFLAGS" \
-    --FOPTFLAGS="-g -O3" --COPTFLAGS="-g -O3" --CXXOPTFLAGS="-g -O3" --with-cxx-dialect=c++17 --with-cuda-dialect=c++17 \
+    --FOPTFLAGS="-g -O3" --COPTFLAGS="-g -O3" --CXXOPTFLAGS="-g -O3" --with-cxx-dialect=c++17 \
     --with-debugging=${debug} --with-scalar-type=${datatype} \
     $SHARED  $MPIFLAGS $COMPILERS --with-x=0 ${petsc_host} --with-ssl=0 --known-64-bit-blas-indices=0  \
-    --CUDAFLAGS="-ccbin=$CXX --compiler-options=-fPIC" --with-cudac=${CUDADIR}/bin/nvcc --with-cuda-dir=${CUDADIR} \
-    --with-matlab=0 --download-mumps --download-metis \
+    --with-matlab=0 --download-metis \
     --with-blas-lapack-lib="${LAPACK_LIBS}" \
-    --with-scalapack=1  --with-scalapack-include=${MKLDIR}/include \
-    --with-scalapack-lib="-L${MKLDIR}/lib/intel64 -Wl,-rpath,${MKLDIR}/lib/intel64 -lmkl_scalapack_lp64 -lmkl_blacs_openmpi_lp64" \
-    --with-mkl_pardiso=1 --with-mkl_pardiso-dir=${MKLDIR} \
-    --with-mkl_sparse-dir=${MKLDIR}
 
 
-
+    #--with-cuda-dialect=c++17 --CUDAFLAGS="-ccbin=$CXX --compiler-options=-fPIC" --with-cudac=${CUDADIR}/bin/nvcc --with-cuda-dir=${CUDADIR} \
+    #--download-mumps
+    #--with-scalapack=1  --with-scalapack-include=${MKLDIR}/include \
+    #--with-scalapack-lib="-L${MKLDIR}/lib/intel64 -Wl,-rpath,${MKLDIR}/lib/intel64 -lmkl_scalapack_lp64 -lmkl_blacs_openmpi_lp64" \
+    #--with-mkl_pardiso=1 --with-mkl_pardiso-dir=${MKLDIR} \
+    #--with-mkl_sparse-dir=${MKLDIR}
     #cp conftest conftest-${PETSC_ARCH}
 
     if [ "$target_os" != "win32" ] && [ -e conftest-${PETSC_ARCH} ]; then
@@ -68,7 +74,7 @@ make_petsc()
 
   fi
 
-  make all
+  make -j 4 all
 
   rm conftest* reconfigure*
 }
@@ -140,7 +146,8 @@ fi
 
 cd $BUILDDIR
 if [ ! -e ${ARCHIVE} ]; then
-  wget ftp://ftp.mcs.anl.gov/pub/petsc/release-snapshots/${ARCHIVE}
+  wget https://web.cels.anl.gov/projects/petsc/download/release-snapshots/${ARCHIVE}
+  #wget https://ftp.mcs.anl.gov/pub/petsc/release-snapshots/${ARCHIVE}
 fi
 
 if [ ! -e ${ARCHIVE} ]; then
@@ -166,15 +173,6 @@ cd petsc-${PETSCVERSION}${PETSCPATCHLEVEL}
 SHARED="--with-shared-libraries=0 "
   
 
-#COMPILERS="--with-cc=$CC --with-cxx=$CXX --with-fc=$FC --with-ranlib=$RANLIB \
-#  --with-cpp=$(echo $CC | sed 's/gcc.*/cpp/') --with-shared-ld=$(echo $CC | sed 's/gcc.*/ld/') \
-#  --with-ar=$(echo $CC | sed 's/gcc.*/ar/')"
-#COMPILERS="--CC=$CC --CXX=$CXX --FC=$FC --F77=$F77 --CPP=$CPP --CXXFLAGS=$CXXFLAGS --FCFLAGS=$FCFLAGS --CFLAGS=$CFLAGS --FFLAGS=$FFLAGS"
-#COMPILERS="--CXXFLAGS=$CXXFLAGS --FCFLAGS=$FCFLAGS --CFLAGS=$CFLAGS --FFLAGS=$FFLAGS"
-#COMPILERS="--with-cc=$CC --with-cxx=$CXX --with-fc=$FC --with-ranlib=$RANLIB --with-cpp=$CPP --with-shared-ld=$LD --with-ar=${AR}"
-#COMPILERS="--with-cc=$CC --with-cxx=$CXX --with-fc=$FC --with-ranlib=$RANLIB \
-#  --with-cpp=$(echo $CC | sed 's/gcc.*/cpp/') --with-shared-ld=$(echo $CC | sed 's/gcc.*/ld/') --fPIC\
-#  --with-ar=$(echo $CC | sed 's/gcc.*/ar/')"
 
 if [ "${target_os}" = "win32" ]
 then
@@ -183,11 +181,7 @@ then
     --with-shared-ld=$(echo $CC | sed 's/gcc.*/ld/') \
     --with-ar=$(echo $CC | sed 's/gcc.*/ar/')"
 else
-
-#  COMPILERS="--with-cc=$CC --with-cxx=$CXX --with-fc=$FC"
-#COMPILERS="--CXXFLAGS=$CXXFLAGS --FCFLAGS=$FCFLAGS --CFLAGS=$CFLAGS --FFLAGS=$FFLAGS"
-#COMPILERS="--LDFLAGS=\"${LDFLAGS}\""
-COMPILERS=
+  COMPILERS=
 fi
 
 
@@ -226,7 +220,7 @@ link_library real
 
 export PETSC_ARCH=${TCHOST}-complex
 if [ "x$LINKONLY" == 'x' ]; then
-  make_petsc complex 
+  make_petsc complex
 fi
 link_library complex
 

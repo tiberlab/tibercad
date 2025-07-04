@@ -1201,7 +1201,7 @@ Device::get_boundary_region_ids(const string& name, IDSet& ids) const
 
       for ( ; el != el_end; ++el)
       {
-        Elem* elem = *el;
+        const Elem* elem = *el;
         const ID id = elem->subdomain_id();
 
         // if id is not used, skip to next element
@@ -1338,8 +1338,8 @@ Device::reassign_alloy_regions(const string& source,
   {
     m.info("Alloy composition provided by " + provider.first->get_name());
 
-    MeshBase::const_element_iterator el(get_mesh().level_elements_begin(0));
-    const MeshBase::const_element_iterator el_end(get_mesh().level_elements_end(0));
+    MeshBase::element_iterator el(get_mesh().level_elements_begin(0));
+    const MeshBase::element_iterator el_end(get_mesh().level_elements_end(0));
 
     for ( ; el != el_end; ++el)
     {
@@ -1641,8 +1641,8 @@ Device::decompose_region(const ModelOptions& options,
 
     //srand(time(NULL));
 
-    MeshBase::const_element_iterator el(get_mesh().level_elements_begin(0));
-    const MeshBase::const_element_iterator el_end(get_mesh().level_elements_end(0));
+    MeshBase::element_iterator el(get_mesh().level_elements_begin(0));
+    const MeshBase::element_iterator el_end(get_mesh().level_elements_end(0));
 
     for ( ; el != el_end; ++el)
     {

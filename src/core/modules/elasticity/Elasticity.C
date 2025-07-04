@@ -1083,9 +1083,9 @@ Elasticity::apply_shape_deformation()
   //
   // now move the mesh
   //
-  const MeshBase& mesh = get_mesh();
-  MeshBase::const_node_iterator  nd  = mesh.local_nodes_begin();
-  const MeshBase::const_node_iterator nd_end = mesh.local_nodes_end();
+  MeshBase& mesh = get_mesh();
+  MeshBase::node_iterator  nd  = mesh.local_nodes_begin();
+  const MeshBase::node_iterator nd_end = mesh.local_nodes_end();
 
   for ( ;  nd != nd_end ; ++nd)
   {
@@ -1245,10 +1245,10 @@ Elasticity::restore_shape()
   const libMesh::NumericVector<Number>& solution = *sol;
 
   const unsigned int system_number = system->number();
-  const MeshBase& mesh = get_mesh();
+  MeshBase& mesh = get_mesh();
   ID  dim = get_mesh().mesh_dimension();
-  MeshBase::const_node_iterator  nd  = mesh.local_nodes_begin();
-  const MeshBase::const_node_iterator nd_end = mesh.local_nodes_end();
+  MeshBase::node_iterator  nd  = mesh.local_nodes_begin();
+  const MeshBase::node_iterator nd_end = mesh.local_nodes_end();
   
   for ( ;  nd != nd_end ; ++nd)
   {

@@ -93,6 +93,8 @@ d = -4.8
 # static dielectric constant
 permittivity = 12.93
 
+optical_data = optics/GaAs.nk
+
 optical_epsilon = 10.1
 
 

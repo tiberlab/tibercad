@@ -16,7 +16,8 @@ PETSC_ARCH = @COMPLEX_PETSC_ARCH@
 SLEPC_DIR  = @SLEPC_DIR@
 
 include $(SLEPC_DIR)/lib/slepc/conf/slepc_variables
-CXXFLAGS += $(SLEPC_HAVE_ARPACK) -fPIC  $(SLEPC_INCLUDE) $(PETSC_CC_INCLUDES) -I$(topdir)/include/utils/SLEPC $(TIBER_INCLUDES)
+CXXFLAGS += $(SLEPC_HAVE_ARPACK) -fPIC  $(SLEPC_INCLUDE) $(PETSC_CC_INCLUDES) -I$(topdir)/include/utils/SLEPC $(TIBER_INCLUDES) -fvisibility=hidden
+
 
 
 
@@ -33,15 +34,10 @@ $(libdir)/$(dll_prefix)eigen_solver$(shared_libext):  .$(ARCH)/EigenSolver$(obj-
 	@mkdir -p $(libdir)
 ifneq ($(target_os),darwin)
 	@$(CXX) -shared -o $@ $<  \
-		-Wl,--version-script,export.map \
-		-Wl,-Bsymbolic -Wl,-Bstatic \
-		-L$(SLEPC_LIB_DIR) -lslepc \
-		$(SLEPC_EXTERNAL_LIB) \
-		-L$(PETSC_LIB_DIR) $(PETSC_KSP_LIB_BASIC) \
-		-Wl,-Bdynamic -Wl,--as-needed @LDFLAGS@ \
-		$(BLASLAPACK_LDFLAGS) $(FORTRAN_LDFLAGS) $(CUDA_LDFLAGS)
-       
-	
+		-Wl,--exclude-libs,ALL \
+		$(SLEPC_LIB_DIR)/libslepc.a $(PETSC_LIB_DIR)/libpetsc.a
+
+
 #$(PETSC_EXTERNAL_LIB_BASIC)
 else
 	@$(CXX) -shared -o $@ $< -Wl,-install_name,@rpath/lib/$(dll_prefix)eigen_solver$(shared_libext) \

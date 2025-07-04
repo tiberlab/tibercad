@@ -1,7 +1,46 @@
 #!/bin/bash
 
-./build_petsc
-./build_slepc
-./build_libmesh
-#./build_boost
-#./build_tibercad
+if test -e site_config.sh
+then
+  . site_config.sh
+fi
+
+
+
+
+if test -e ${MPIEXEC}
+then 
+  MPIBINDIR=$(dirname $MPIEXEC)
+
+  export CC=${MPIBINDIR}/mpicc
+  export CXX=${MPIBINDIR}/mpicxx
+  export FC=${MPIBINDIR}/mpifort
+  export F77=${MPIBINDIR}/mpifort
+
+else
+  MAKE_MPI=1
+fi
+
+export CC CXX FC F77 MPIEXEC
+export FFLAGS FCFLAGS CXXFLAGS CFLAGS
+
+#export LINKONLY=1
+
+./configure
+
+if test "${MAKE_MPI}x" != "x"
+then 
+  echo "MPI not yet present, I will now compile MPI"
+  echo "Re-run build_all after this has finished"
+  #./build_mpich
+  ./build_mpi
+
+  echo "Finished installing MPI. Now re-run build_all."
+else
+  ./build_petsc
+  ./build_slepc
+  ./build_boost
+  ./build_libmesh
+  ./build_tibercad
+fi
+

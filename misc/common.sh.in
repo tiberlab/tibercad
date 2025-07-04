@@ -1,6 +1,6 @@
 
 # load variables
-#[ -e variables ] && . variables
+[ -e site_config.sh ] && . site_config.sh
 
 # top directory
 TOPDIR=${TOPDIR:-"$(dirname `pwd`)"}
@@ -12,16 +12,19 @@ BUILDDIR=${BUILDDIR:-"$(dirname `pwd`)/extern"}
 SDKDIR=${SDKDIR:-"$(dirname `pwd`)/SDK"}
 
 # PETSc version
-PETSCVERSION=${PETSCVERSION:-"3.7.4"}
+PETSCVERSION=${PETSCVERSION:-"3.23.3"}
 PETSCPATCHLEVEL=${PETSCPATCHLEVEL:-""}
-SLEPCVERSION=${SLEPCVERSION:-${PETSCVERSION}}
+SLEPCVERSION=${SLEPCVERSION:-"3.23.1"}
 SLEPCPATCHLEVEL=${SLEPCPATCHLEVEL:-""}
 
 # libMesh version
-LIBMESHVERSION=${LIBMESHVERSION:-"1.2.1"}
+LIBMESHVERSION=${LIBMESHVERSION:-"1.8.1"}
 
 # GMSH version
-GMSHVERSION=${GMSHVERSION:-"4.8.3"}
+GMSHVERSION=${GMSHVERSION:-"4.13.1"}
+
+# BOOST version
+BOOSTVERSION=${BOOSTVERSION:-"1_88_0"}
 
 # whether to compile debug mode or not (y/n)
 DEBUG=${DEBUG:-'n'}
@@ -32,14 +35,20 @@ DEBUG=${DEBUG:-'n'}
 shared_libs=${shared_libs:-'n'}
 
 # CUDA
-CUDADIR=${CUDADIR:-'/usr/pack-a/cudatoolkit-11.4-ma'}
+CUDADIR=${CUDADIR:-'/usr/pack/cudatoolkit-11.4-ma'}
 
 # use MKL (yes/no)
-MKL=${MKL:-'n'}
-MKLDIR=${MKLDIR:-"/usr/pack/intel_mkl-10.2-gp"}
+if [ -n "$MKLDIR" ]; then
+    MKL="y"
+else
+  MKL="n"
+fi
+#MKLDIR=${MKLDIR:-"/usr/pack/intel_oneapi-2021-ma/mkl/latest"}
 
 # MPI
-MPI=${MPI:-'n'}
+# NOTE: now MPI is necessary, although one might try again without
+#       (for Windows, e.g.)
+MPI=${MPI:-'y'}
 MPIDIR=${MPIDIR:-"/usr/lib/openmpi/"}
 
 target=@host_cpu@-@host_os@
@@ -94,15 +103,6 @@ then
   export LD_LIBRARY_PATH=${TOPDIR}/SDK/${TCHOST}/lib:${TOPDIR}/SDK/${TCHOST}/lib64
 fi
 
-#CC=${CC:-"${pre}gcc${gcc_version}"}
-#CXX=${CXX:-"${pre}g++${gcc_version}"}
-#F77=${F77:-"${pre}gfortran${gcc_version}"}
-#F90=${F90:-$F77}
-#FC=${FC:-$F77}
-#AR=${AR:-"${pre}ar"}
-#LD=${LD:-"${pre}ld"}
-#RANLIB=${RANLIB:-"${pre}ranlib"}
-#CPP=${CPP:-"${pre}cpp${gcc_version}"}
 CPP="@CPP@"
 CC="@CC@"
 CXX="@CXX@"
@@ -112,10 +112,17 @@ F77="${F77:-$FC}"
 RANLIB="@RANLIB@"
 
 
-#if [ "x$pre" != "x" ] || [ "x$gcc_version" != "x" ]
-#then
-  export CC CXX F77 FC F90 RANLIB LD AR CPP
-#fi
+export CC CXX F77 FC F90 RANLIB LD AR CPP
+
+GNUFORTRAN=0
+if command -v "$FC" >/dev/null 2>&1; then
+  compiler_id=$("$FC" --version 2>/dev/null | head -n 1)
+  if echo "$compiler_id" | grep -qi "GNU Fortran"; then
+    GNUFORTRAN=1
+  fi
+fi
+
+
 
 # compiler flags
 CFLAGS="${CFLAGS} -fexceptions -fPIC"
@@ -127,12 +134,19 @@ if [ "$march" == "x86_64" ] &&  [ "${target_os}" != "win32" ] ; then
 fi
 #CXXFLAGS="${CXXFLAGS} -fPIC -std=gnu++17"
 CXXFLAGS="${CXXFLAGS} -fPIC"
+
+if [ ! "$GNUFORTRAN" = "1" ]; then
+  FCFLAGS="${FCFLAGS} -gcc-name=$(which ${CC}) -gxx-name=$(which ${CXX}) -nofor-main"
+fi
+
 FFLAGS=${FCFLAGS}
+
 export CXXFLAGS CFLAGS FFLAGS FCFLAGS
 
 
 FORTRAN_LIBS="@FCLIBS@"
 
+# then it is intel (for now we can only use gfortran ot intel ifort)
 if [ "x$FORTRANDIR" != "x" ]; then
   case $march in
     x86_64) FLIBDIR=${FORTRANDIR}/lib/intel64 ;;
@@ -145,29 +159,28 @@ if [ "x$FORTRANDIR" != "x" ]; then
 fi
 
 
-if [ "$MPI" = y ]; then
-  export MPIDIR
-  #if [ -x ${MPIDIR}/bin/mpicxx ]; then
-  #  LDFLAGS="${LDFLAGS} `${MPIDIR}/bin/mpicxx -showme:link`"
-  #fi
-  if [ "${target_os}" = win32 ]
-  then
-    CXXFLAGS="${CXXFLAGS} -I${MPIDIR}/Include"
-    CFLAGS="${CFLAGS} -I${MPIDIR}/Include"
-    FCFLAGS="${FCFLAGS} -I${MPIDIR}/Include"
-    LDFLAGS="-L${MPIDIR}/Lib/x86"
-    MPI_LIBS="-L${MPIDIR}/Lib/x86 -lmsmpifec -lmsmpi"
-  fi
+export MPIDIR
+
+if [ "${target_os}" = win32 ]
+then
+  CXXFLAGS="${CXXFLAGS} -I${MPIDIR}/Include"
+  CFLAGS="${CFLAGS} -I${MPIDIR}/Include"
+  FCFLAGS="${FCFLAGS} -I${MPIDIR}/Include"
+  LDFLAGS="-L${MPIDIR}/Lib/x86"
+  MPI_LIBS="-L${MPIDIR}/Lib/x86 -lmsmpifec -lmsmpi"
 fi
 
 # BLAS/LAPACK
 if [ "$MKL" = y ]; then
   if [ $march = x86_64 ]; then
     LDFLAGS="${LDFLAGS} -L${MKLDIR}/lib/intel64 -Wl,-rpath,${MKLDIR}/lib/intel64"
-    LAPACKLIBS="--with-blas-lapack-lib=\"-Wl,--no-as-needed -Wl,-rpath,${MKLDIR}/lib/intel64 -L${MKLDIR}/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread\""
-    LAPACK_LIBS="${LDFLAGS} -L${MKLDIR}/lib/intel64 -Wl,-rpath,${MKLDIR}/lib/intel64 -Wl,--no-as-needed -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread"
-    #LAPACKLIBS="--with-blas-lapack-lib=\"-Wl,--no-as-needed -Wl,-rpath,${MKLDIR}/lib/intel64 -L${MKLDIR}/lib/intel64 -lmkl_intel_lp64 -lmkl_gnu_thread -lmkl_core -lgomp -lm -lpthread\""
-    #LAPACK_LIBS="${LDFLAGS} -L${MKLDIR}/lib/intel64 -Wl,-rpath,${MKLDIR}/lib/intel64 -Wl,--no-as-needed -lmkl_intel_lp64 -lmkl_gnu_thread -lmkl_core -lgomp -lm -lpthread"
+    if [ "$GNUFORTRAN" = "1" ]; then
+      LAPACKLIBS="--with-blas-lapack-lib=\"-Wl,--no-as-needed -Wl,-rpath,${MKLDIR}/lib/intel64 -L${MKLDIR}/lib/intel64 -lmkl_intel_lp64 -lmkl_gnu_thread -lmkl_core -lgomp -lm -lpthread\""
+      LAPACK_LIBS="${LDFLAGS} -L${MKLDIR}/lib/intel64 -Wl,-rpath,${MKLDIR}/lib/intel64 -Wl,--no-as-needed -lmkl_intel_lp64 -lmkl_gnu_thread -lmkl_core -lgomp -lm -lpthread"
+    else
+      LAPACKLIBS="--with-blas-lapack-lib=\"-Wl,--no-as-needed -Wl,-rpath,${MKLDIR}/lib/intel64 -L${MKLDIR}/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread\""
+      LAPACK_LIBS="${LDFLAGS} -L${MKLDIR}/lib/intel64 -Wl,-rpath,${MKLDIR}/lib/intel64 -Wl,--no-as-needed -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread"
+    fi
  
   else
     LAPACKLIBS="--with-blas-lapack-lib=[-L${MKLDIR}/lib/32,-lmkl_intel,-lmkl_intel_thread,-lmkl_core,-liomp5,-lm,-lpthread]"

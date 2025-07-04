@@ -36,6 +36,5 @@ AC_SUBST([LDFLAGS])
 #AC_PROG_LIBTOOL
 
 AC_CONFIG_FILES([common.sh])
-#AC_CONFIG_FILES([installer/prepare_files.sh], [chmod +x installer/prepare_files.sh])
 
 AC_OUTPUT

@@ -2,7 +2,6 @@
 
 #include <boost/version.hpp>
 #include <boost/filesystem/operations.hpp>
-#include <boost/filesystem/convenience.hpp>
 
 #include "Messages.h"
 #include "TeeStream.h"
@@ -127,10 +126,9 @@ Messages::set_log_file(const string& logfile, libMesh::Parallel::Communicator& c
   path logpath(logfile, native);
 #endif
 #if defined(_WIN32)
-  logpath = logpath.branch_path();
+  logpath = logpath.parent_path();
 #else
-  logpath.remove_leaf();
-  //logpath.remove_filename();
+  logpath.remove_filename();
 #endif
   if (logpath.string().size() > 0)
   {

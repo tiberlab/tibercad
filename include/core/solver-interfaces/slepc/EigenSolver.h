@@ -1,6 +1,7 @@
 #ifndef _EIGENSOLVER_H_
 #define _EIGENSOLVER_H_
 
+#include "tiber_dll.h"
 
 #include <vector>
 #include <string>
@@ -14,7 +15,7 @@ using libMesh::Complex;
 
 
 //! SLEPc interface class 
-class EigenSolver
+class TBDLEXPORT EigenSolver
 {
  public:
   //!parameters for solver

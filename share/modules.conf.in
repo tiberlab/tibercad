@@ -40,12 +40,12 @@ Library tibercad
     core/embracing,
     core/solver-interfaces,
     core/solver-interfaces/petsc,
+    core/solver-interfaces/slepc,
     core/quantumEFAmodels,
     core/optics,
     core/kintegrations,
     core/eigenvalue,
     utils/Tensor,
-    utils/SLEPC,
     utils/FADBAD++
   )
   libpath = @ARCH/lib
@@ -86,4 +86,4 @@ Library slepc
   linker_flags = -lslepc_real
 }
 
-		
+

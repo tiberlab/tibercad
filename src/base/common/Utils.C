@@ -6,14 +6,13 @@
 #include "boost/tokenizer.hpp"
 #include "boost/algorithm/string/trim.hpp"
 #include "boost/filesystem/operations.hpp"
-#include "boost/filesystem/convenience.hpp"
 
 #include "Utils.h"
 #include "Messages.h"
 #include "RuntimeException.h"
 
-#include <type_vector.h>
-#include <tensor_value.h>
+#include "libmesh/type_vector.h"
+#include "libmesh/tensor_value.h"
 
 #include <cctype>
 #include <numeric>
@@ -184,7 +183,7 @@ Utils::dirname(const std::string& file)
   boost::filesystem::path p(file, boost::filesystem::native);
 #endif
 
-  return p.branch_path().string();
+  return p.parent_path().string();
 }
 
 
@@ -198,12 +197,17 @@ Utils::basename(const std::string& file)
   boost::filesystem::path p(file, boost::filesystem::native);
 #endif
 
+#if BOOST_VERSION >= 107700
+  return p.stem().string();
+#else
   return boost::filesystem::basename(p);
+#endif
 }
 
 std::string
 Utils::file_extension(const std::string& file)
 {
+
 #if BOOST_VERSION >= 104700
   boost::filesystem::path p(file);
 #else
@@ -211,7 +215,11 @@ Utils::file_extension(const std::string& file)
 #endif
 
 
+#if BOOST_VERSION >= 107700
+  return p.extension().string();;
+#else
   return boost::filesystem::extension(p);
+#endif
 }
 
 

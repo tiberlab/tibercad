@@ -142,7 +142,7 @@ SimulationEnvironment::create_bc_maps(void)
 
   for ( ; el != el_end; ++el)
   {
-    Elem* elem = *el;
+    const Elem* elem = *el;
     const ID id = elem->subdomain_id();
 
     // only if the element is inside of our simulation region it can have

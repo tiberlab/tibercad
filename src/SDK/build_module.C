@@ -186,9 +186,11 @@ int main(int argc, char** argv)
 
       case 'm':
         BuildModule::compile_method = string(optarg);
+        break;
 
       case '?':
         cout << "Unknown option: -" << (char) optopt << endl;
+        [[fallthrough]];
       default:
         BuildModule::usage();
         return 1;
@@ -233,7 +235,7 @@ int main(int argc, char** argv)
 
 
     char* root = getenv("TIBERCADROOT");
-    if (root == NULL)
+    if (root == nullptr)
     {
       const size_t bufsize = 1024;
       char buffer[bufsize];
@@ -308,7 +310,7 @@ int main(int argc, char** argv)
 
   {
     char* root = getenv("TIBERCADROOT");
-    if (root == NULL)
+    if (root == nullptr)
     {
       cerr << "TIBERCADROOT environment variable is not set.\n";
       return 1;
@@ -563,9 +565,10 @@ Compiler::Compiler(const ModelOptions& options) :
 
   _compiler_flags = options.get_option("compiler_flags", "");
 
-  _outdir = "." + string(ARCH);
+  string arch_str(ARCH);
+  _outdir = "." + arch_str;
 
-  if ((ARCH == "i686-linux") || (ARCH == "x86_64-linux"))
+  if ((arch_str == "i686-linux") || (arch_str == "x86_64-linux"))
     _linker_flags = "-Wl,--as-needed ";
 
   _linker_flags += options.get_option("linker_flags", "");
@@ -573,7 +576,7 @@ Compiler::Compiler(const ModelOptions& options) :
   BuildModule::replace(_linker_flags, "@ROOT", BuildModule::tc_root);
   BuildModule::replace(_linker_flags, "@ARCH", ARCH);
 
-  if ((ARCH == "i686-w64-mingw32") || (ARCH == "x86_64-w64-mingw32"))
+  if ((arch_str == "i686-w64-mingw32") || (arch_str == "x86_64-w64-mingw32"))
   {
     BuildModule::replace(_compiler_flags, "-fPIC", "");
     BuildModule::replace(_compiler_flags, "-pthread", "");
@@ -826,11 +829,12 @@ void process_module(const string& , const ModelOptions& options)
   BuildModule::replace(instpath, "@ROOT", BuildModule::tc_root);
   BuildModule::replace(instpath, "@MODULE", modulename);
 
+  string arch_str(ARCH);
 
   // the compile and link flags
   string cpflags = options.get_option("compiler_flags", "");
   string ldflags = options.get_option("linker_flags", "");
-  if ((ARCH == "i686-linux") || (ARCH == "x86_64-linux"))
+  if ((arch_str == "i686-linux") || (arch_str == "x86_64-linux"))
     ldflags = " -Wl,--as-needed " + ldflags + " ";
 
 
@@ -861,7 +865,7 @@ void process_module(const string& , const ModelOptions& options)
       creatable = Utils::basename(sources[0]);
     }
 
-    char* root = getenv("TIBERCADROOT");
+    //char* root = getenv("TIBERCADROOT");
 
 
     string compileflags = options.get_option("compiler_flags", "");
@@ -892,18 +896,18 @@ void process_module(const string& , const ModelOptions& options)
 
     string binsuffix;
     string libsuffix(".so");
-    if ((ARCH == "i686-w64-mingw32") || (ARCH == "x86_64-w64-mingw32"))
+    if ((arch_str == "i686-w64-mingw32") || (arch_str == "x86_64-w64-mingw32"))
     {
       libsuffix = ".dll";
       binsuffix = ".exe";
     }
-    else if ((ARCH == "i686-darwin") || (ARCH == "x86_64-darwin"))
+    else if ((arch_str == "i686-darwin") || (arch_str == "x86_64-darwin"))
       libsuffix = ".dylib";
 
     modulelib = modulename + libsuffix;
 
     string linkflags(ldflags);
-    if ((ARCH == "i686-linux") || (ARCH == "x86_64-linux"))
+    if ((arch_str == "i686-linux") || (arch_str == "x86_64-linux"))
       linkflags += " -Wl,-soname," + modulelib + " ";
 
     using namespace boost::filesystem;

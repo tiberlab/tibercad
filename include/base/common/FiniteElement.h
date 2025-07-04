@@ -7,18 +7,13 @@
 
 #include "TiberCad.h"
 #include "tiber_dll.h"
-//#include "libMeshDefs.h"
 
 
-#include "fe.h"
-#include "elem.h"
-#include "point.h"
+#include "libmesh/fe.h"
+#include "libmesh/elem.h"
+#include "libmesh/point.h"
 
 
-
-//USELIBMESHTYPE(FEType);
-//USELIBMESHTYPE(Point);
-//USELIBMESHTYPE(Elem);
 
 
 //! A finite element extension which adds scaling and symmetry
@@ -38,15 +33,15 @@ class FiniteElement : public libMesh::FE<Dim, T>
     FiniteElement(const libMesh::FEType& type);
     
     virtual void reinit(const libMesh::Elem* elem,
-        const std::vector<libMesh::Point>* const points = NULL,
-        const std::vector<double>* const weights = NULL);
+        const std::vector<libMesh::Point>* const points = nullptr,
+        const std::vector<double>* const weights = nullptr);
 
 
 
     virtual void reinit(const libMesh::Elem* elem, const unsigned int side,
         const double tolerance = libMesh::TOLERANCE,
-        const std::vector<libMesh::Point>* const points = NULL,
-        const std::vector<double>* const weights = NULL);
+        const std::vector<libMesh::Point>* const points = nullptr,
+        const std::vector<double>* const weights = nullptr);
     
     //! Set the symmetry
     void set_symmetry(TiberCad::Symmetry symmetry);

@@ -100,8 +100,8 @@ std::pair<unsigned int, Real>
 TiberLinearSolver::solve(const libMesh::ShellMatrix<Number>&,
     NumericVector<Number>&,
     NumericVector<Number>&,
-    const double,
-    const unsigned int)
+    const std::optional<double>,
+    const std::optional<unsigned int>)
 {
   Messages::error("Solving with shell matrix is not implemented");
   return std::make_pair(0, 0.0);
@@ -114,8 +114,8 @@ TiberLinearSolver::solve(const libMesh::ShellMatrix<Number>&,
     const SparseMatrix<Number>&,
     NumericVector<Number>&,
     NumericVector<Number>&,
-    const double,
-    const unsigned int)
+    const std::optional<double>,
+    const std::optional<unsigned int>)
 {
   Messages::error("Solving with shell matrix is not implemented");
   return std::make_pair(0, 0.0);

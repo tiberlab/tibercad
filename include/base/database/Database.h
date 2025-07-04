@@ -6,10 +6,11 @@
 #include "ModelOptions.h"
 #include "tiber_dll.h"
 
+#include "libmesh/vector_value.h"
+#include "libmesh/tensor_value.h"
+
 #include <string>
 #include <vector>
-#include "vector_value.h"
-#include "tensor_value.h"
 
 class GetPot;
 

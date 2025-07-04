@@ -388,10 +388,10 @@ void FEMEigenvalueProblem::copy_matrix_to_solver(const char matrix)
     PetscErrorCode ierr;
     //const PetscReal *values_r, *values_i;
 
-    ierr = MatGetRow(H_real->mat(), i, &ncols_r, &row_r, PETSC_NULL);
+    ierr = MatGetRow(H_real->mat(), i, &ncols_r, &row_r, PETSC_NULLPTR);
 
     if (matrix == 'H')
-      ierr = MatGetRow(H_imag->mat(), i, &ncols_i, &row_i, PETSC_NULL);
+      ierr = MatGetRow(H_imag->mat(), i, &ncols_i, &row_i, PETSC_NULLPTR);
 
     int diag = 0;
     int offdiag = 0;
@@ -415,10 +415,10 @@ void FEMEigenvalueProblem::copy_matrix_to_solver(const char matrix)
     d_nnz[i - offset] = diag;
     o_nnz[i - offset] = offdiag;
 
-    ierr = MatRestoreRow(H_real->mat(), i, &ncols_r, &row_r, PETSC_NULL);
+    ierr = MatRestoreRow(H_real->mat(), i, &ncols_r, &row_r, PETSC_NULLPTR);
 
     if (matrix == 'H')
-      ierr = MatRestoreRow(H_imag->mat(), i, &ncols_i, &row_i, PETSC_NULL);
+      ierr = MatRestoreRow(H_imag->mat(), i, &ncols_i, &row_i, PETSC_NULLPTR);
   }
 
   EigenSolver::preallocate_matrix(matrix, size_matrix, local_size, d_nnz, o_nnz);
@@ -624,7 +624,7 @@ void FEMEigenvalueProblem::apply_periodic_bc()
 
             for ( ; ( (el3 != end_el3) ) ; ++el3)
             {
-              Elem* elem = *el3;
+              const Elem* elem = *el3;
 
               for (unsigned int ns = 0; ns < elem->n_sides(); ++ns)
               {

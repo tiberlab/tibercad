@@ -8,8 +8,8 @@ fi
 
 . common.sh
 
-TIBEROPTS=${TIBEROPTS:-"--enable-uptight --enable-license-check --disable-hetero"}
-#TIBEROPTS=${TIBEROPTS:-"--enable-uptight --disable-license-check --disable-hetero"}
+#TIBEROPTS=${TIBEROPTS:-"--enable-uptight --enable-license-check --disable-hetero"}
+TIBEROPTS=${TIBEROPTS:-"--enable-uptight --disable-license-check --disable-hetero"}
 
 if [ "$MKL" = y ]; then
 TIBEROPTS="${TIBEROPTS} --with-mkl=${MKLDIR}"
@@ -35,17 +35,21 @@ fi
 #export LD_RUN_PATH=`pwd`/SDK/${TCHOST}/lib
 #export LD_LIBRARY_PATH=`pwd`/SDK/${TCHOST}/lib
 
+threadlib="intel"
+if [ "$GNUFORTRAN" = "1" ]; then
+  threadlib="gnu"
+fi
+
 echo ${BUILDDIR}/libmesh-${LIBMESHVERSION}-${TCHOST}
 
 export CXXFLAGS="$CXXFLAGS -fopenmp"
 export LDFLAGS="$LDFLAGS -fopenmp"
 
 ./configure \
-  --with-cuda=${CUDADIR} \
   --with-petsc-prefix=${BUILDDIR}/petsc-${PETSCVERSION}${PETSCPATCHLEVEL} \
   --with-petsc-arch=${TCHOST} \
   --with-mpiexec=${MPIEXEC} \
-  --with-thread-library=intel \
+  --with-thread-library=${threadlib} \
   --with-slepc-prefix=${BUILDDIR}/slepc-${SLEPCVERSION}${SLEPCPATCHLEVEL} \
   $TIBEROPTS \
   --with-libmesh-prefix=${BUILDDIR}/libmesh-${LIBMESHVERSION}-${TCHOST} \
@@ -53,13 +57,14 @@ export LDFLAGS="$LDFLAGS -fopenmp"
   --with-boost-prefix=${SDKDIR} --with-boost-libdir=${TOPDIR}/${TCHOST}/lib \
   --host=$HOST --build=$BUILD
 
+#  --with-cuda=${CUDADIR} \
 #  --with-mkl=${MKLDIR} \
 #  --with-boost-prefix=${SDKDIR} --with-boost-libdir=${SDKDIR}/${TCHOST}/lib \
 
-make METHOD=opt
+make -j 4 METHOD=opt
 
 if test "${MPIDIR}" != "${SDKDIR}"
 then
   mkdir -p SDK/bin
-  cp ${MPIDIR}/bin/mpiexec.hydra SDK/bin
+  cp ${MPIEXEC} SDK/bin
 fi

@@ -37,7 +37,7 @@ fi
 if [ ! -d boost_${VERSION} ]; then
   tar jxf ${ARCHIVE}
   cd boost_${VERSION}
-  [ -e ${TOPDIR}/misc/boost.patch ] && patch -p0 < ${TOPDIR}/misc/boost.patch
+  [ -e ${TOPDIR}/misc/boost.patch ] && patch -t -p0 < ${TOPDIR}/misc/boost.patch
   #cp tools/build/v2/user-config.jam tools/build/v2/user-config.jam.orig
   cd ..
 fi

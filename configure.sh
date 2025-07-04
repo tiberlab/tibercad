@@ -2,12 +2,12 @@
 
 ARCH=`uname -m`
 
-BASEDIR=/usr/pack/tibercad_dev-3.3-ma/latest
+BASEDIR=/usr/pack/tibercad_dev-3.5-ma/
 BUILDDIR=${BASEDIR}/build
 SDKDIR=${BASEDIR}/SDK
-PETSC_DIR=${BUILDDIR}/petsc-3.17.4
-SLEPC_DIR=${BUILDDIR}/slepc-3.17.2
-LIBMESHDIR=${BUILDDIR}/libmesh-1.7.1-${ARCH}-linux
+PETSC_DIR=${BUILDDIR}/petsc-3.23.3
+SLEPC_DIR=${BUILDDIR}/slepc-3.23.1
+LIBMESHDIR=${BUILDDIR}/libmesh-1.8.1-${ARCH}-linux
 
 export CXX=${SDKDIR}/${ARCH}-linux/bin/mpicxx
 export CC=${SDKDIR}/${ARCH}-linux/bin/mpicc
@@ -26,13 +26,6 @@ BOOST="${SDKDIR}"
 
 
 SVN=svn-1.9.5
-
-#  --enable-hetero \
-#  --enable-dftb \
-#  --with-mkl=/usr/pack/intel_mkl-10.2-gp \
-#  --enable-pardiso \
-#  --with-boost-prefix=/usr/pack/boost-1.33.1-ma \
-#  --with-tao-prefix=/usr/pack/tibercad_dev-2.2-ma/tao-1.10-p1 \
 
 ./configure \
   --with-cuda=/usr/pack/cudatoolkit-11.4-ma \
