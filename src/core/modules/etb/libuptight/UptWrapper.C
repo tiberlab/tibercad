@@ -6,17 +6,17 @@
 
 UptWrapper::UptWrapper(){
     std::cout << "\nCreating UPTIGHT instance... ";
-    f77_upt_initsession(_handler);
+    upt_initsession_(_handler);
     std::cout << _handler << std::endl;
 
     std::cout << std::endl;
-    f77_upt_getversion(_handler);
+    upt_getversion_(_handler);
 }
 
 
 UptWrapper::~UptWrapper(){
-    f77_upt_destructuptight(_handler);
-    f77_upt_destructsession(_handler);
+    upt_destructuptight_(_handler);
+    upt_destructsession_(_handler);
 }
 
 
@@ -30,7 +30,7 @@ void UptWrapper::set_paths(const char* databasePath,
                           const char* workPath, const char* outPath) 
 {
 
-   f77_upt_set_paths(_handler, databasePath, workPath, outPath);
+   upt_set_paths_(_handler, databasePath, workPath, outPath);
 }
 
 void UptWrapper::fill_param(int verbose_lev,  
@@ -55,7 +55,7 @@ void UptWrapper::fill_param(int verbose_lev,
   hybrid=0;
   if (hybrid_passivation){hybrid=1;}
 
-  f77_upt_fillbasicparameters(_handler, verbose_lev, 
+  upt_fillbasicparameters_(_handler, verbose_lev, 
 			      gen_filename, gen_outname, sparse_fmt, max_n_n, 
 			      harrison_flag, relat_flag, potential_flag, optmat_flag, 
 			      poldir, c_axis[0], c_axis[1], c_axis[2], check_nn, 
@@ -65,25 +65,25 @@ void UptWrapper::fill_param(int verbose_lev,
 
 void UptWrapper::set_solver_flag(int flag)
 { 
-  f77_upt_solver_flag(_handler, flag);
+  upt_solver_flag_(_handler, flag);
 }
 
 void UptWrapper::set_output(int format, double step)
 {
-  f77_upt_setoutput(_handler, format, step);
+  upt_setoutput_(_handler, format, step);
 }
 
 int UptWrapper::inituptight() 
 {
     int hsize;
-    f77_upt_gethandlersize(hsize);
+    upt_gethandlersize_(hsize);
 
     if(hsize!=UPT_HSIZE){
       return 1;      
     }
     else
     {
-      f77_upt_inituptight(_handler);
+      upt_inituptight_(_handler);
       return 0;
     }
 }
@@ -101,60 +101,60 @@ int UptWrapper::set_mpi_comm(MPI_Comm comm)
     //}
     //else
     {
-      f77_upt_setmpicomm(_handler, MPI_Comm_c2f(comm));
+      upt_setmpicomm_(_handler, MPI_Comm_c2f(comm));
       return 0;
     }
 }
 
 void UptWrapper::get_version()
 {
-    f77_upt_getversion(_handler);
+    upt_getversion_(_handler);
 }
 
 
 //!destroy container variables (allocations)
 void UptWrapper::cleanuptight() 
 {
-    f77_upt_destructuptight(_handler);
+    upt_destructuptight_(_handler);
 }
 
 
 void UptWrapper::add_potential(std::vector<double>& potential)
 {
 int size = potential.size();  
-  f77_upt_addpotential(_handler,size,&potential.front());
+  upt_addpotential_(_handler,size,&potential.front());
 }
 
 
 void UptWrapper::clear_potential(void)
 {
   
-  f77_upt_erasepotential(_handler);
+  upt_erasepotential_(_handler);
 }
 
 
 
 void UptWrapper::set_kpoint(double *k_vec)
 {
-  f77_upt_setkpoint(_handler, k_vec);
+  upt_setkpoint_(_handler, k_vec);
 }
 
 
 
 void UptWrapper::compute_H(char* sprs_fmt){	
-  f77_upt_createhamiltonian(_handler, sprs_fmt);
+  upt_createhamiltonian_(_handler, sprs_fmt);
 }
 
 void UptWrapper::print_H(void){	
-  f77_upt_printhamiltonian(_handler);
+  upt_printhamiltonian_(_handler);
 }
 
 
 void UptWrapper::compute_P_matrix(int poldir, char* sprs_fmt)
 {
-  f77_upt_setpmatrix(_handler, 1, poldir);
-  f77_upt_createhamiltonian(_handler, sprs_fmt);
-  f77_upt_setpmatrix(_handler, 0, poldir);
+  upt_setpmatrix_(_handler, 1, poldir);
+  upt_createhamiltonian_(_handler, sprs_fmt);
+  upt_setpmatrix_(_handler, 0, poldir);
 }
 
 
@@ -163,7 +163,7 @@ void UptWrapper::lanczos_diag(int st_vb, int st_cb, int n_vb, int n_cb, double g
 				                        double fast_tol, double long_tol, double ort_tol,
 				                      int dynamic, double bitoff) {
 
-  f77_upt_lanczosdiag(_handler, st_vb, st_cb, n_vb, n_cb, guess_vb, guess_cb, min_iter, long_iter,
+  upt_lanczosdiag_(_handler, st_vb, st_cb, n_vb, n_cb, guess_vb, guess_cb, min_iter, long_iter,
 		       max_iter, fast_tol, long_tol, ort_tol, dynamic, bitoff);
 
 
@@ -173,77 +173,77 @@ void UptWrapper::lanczos_diag(int st_vb, int st_cb, int n_vb, int n_cb, double g
 void UptWrapper::jacobidavidson(int st_cb, int st_vb, int n_vb, int n_cb, double guess_vb, double guess_cb,
       double long_tol)
 {
-  f77_upt_jd_diag(_handler, st_cb, st_vb, n_vb, n_cb, guess_vb, guess_cb, long_tol);
+  upt_jd_diag_(_handler, st_cb, st_vb, n_vb, n_cb, guess_vb, guess_cb, long_tol);
 }
 
 
 void UptWrapper::feast(double emin, double emax, int m0) {
 
-  f77_upt_feastsolver(_handler, emin, emax, m0);
+  upt_feastsolver_(_handler, emin, emax, m0);
 
 }
 
 void UptWrapper::lapack(int n_vb, int n_cb, double guess_vb, double guess_cb) {
 
-  f77_upt_lapacksolver(_handler, n_vb, n_cb, guess_vb, guess_cb);
+  upt_lapacksolver_(_handler, n_vb, n_cb, guess_vb, guess_cb);
 
 }
 
 void UptWrapper::set_num_states(int n_vb, int n_cb)
 {
-  f77_upt_set_num_states(_handler,n_vb,n_cb);
+  upt_set_num_states_(_handler,n_vb,n_cb);
 }
 
 
 int UptWrapper::get_H_dim(void) {
   int hdim;	
-  f77_upt_get_hamildim(_handler,hdim);
+  upt_get_hamildim_(_handler,hdim);
   return hdim;
 }
 
 int UptWrapper::get_H_nnz(void) {
   int hdim;	
-  f77_upt_get_hamilnnz(_handler,hdim);
+  upt_get_hamilnnz_(_handler,hdim);
   return hdim;
 }
 
 int UptWrapper::get_H_row_size(int row) {
    int size;
-   f77_upt_get_hamil_rowsize(_handler,row,size);
+   upt_get_hamil_rowsize_(_handler,row,size);
    return size;
 }
 
 void UptWrapper::get_H_row(int row, int* colind, Complex* vals) {
-   f77_upt_get_hamil_row(_handler,row,colind,vals);
+   upt_get_hamil_row_(_handler,row,colind,vals);
 }
 
 void UptWrapper::set_statefile(const char* filename)
 {
-  f77_upt_setstatefile(_handler, filename);
+  upt_setstatefile_(_handler, filename);
 }
 
 void UptWrapper::write_states() {
-  f77_upt_write_states(_handler);
+  upt_write_states_(_handler);
 }
 
 void UptWrapper::set_outpath(const char* outpath) {
-  f77_upt_setoutpath(_handler, outpath); 
+  upt_setoutpath_(_handler, outpath); 
 }
 
 void UptWrapper::set_workpath(const char* workpath) {
-  f77_upt_setworkpath(_handler, workpath); 
+  upt_setworkpath_(_handler, workpath); 
 }
 
 void UptWrapper::read_old_states(char* load_path, int& nev, int& nec) {	
-  //f77_upt_setloadpath(_handler, load_path);
-  f77_upt_read_states(_handler, load_path, nev, nec);
+  //upt_setloadpath(_handler, load_path);
+  upt_read_states_(_handler, load_path, nev, nec);
 }
 
 
 void UptWrapper::get_states(int num_ev, int hdim, double* eigenvals, 
                             Complex* eigenvec, int* particles) {
 
-  f77_upt_get_states (_handler, num_ev, hdim, eigenvals, eigenvec, particles);
+  upt_get_states_ (_handler, num_ev, hdim, eigenvals, eigenvec, particles);
 
 
 }
@@ -252,7 +252,7 @@ void UptWrapper::get_states(int num_ev, int hdim, double* eigenvals,
 void UptWrapper::set_state(int num_ev, int id, int hdim, double eigval,
     const std::vector<Complex>& state, int particle)
 {
-  f77_upt_set_state(_handler, num_ev, id+1, hdim, eigval, state.data(), particle);
+  upt_set_state_(_handler, num_ev, id+1, hdim, eigval, state.data(), particle);
 }
 
 
@@ -262,7 +262,7 @@ Complex UptWrapper::get_matel(int i, int j)
   Complex matel;
   //double matel_re, matel_im;
 
-  f77_upt_get_matel(_handler,i,j,matel);
+  upt_get_matel_(_handler,i,j,matel);
 
   //matel = Complex(matel_re,matel_im);
 
@@ -276,7 +276,7 @@ void UptWrapper::get_ion_numorbitals(std::vector<int>& ion_block_vector)
   //int nAtoms = ion_block_vector.size(); 
   //int* p_ion_block_vec = new int[nAtoms];
 
-  f77_upt_get_ion_numorbitals(_handler, &ion_block_vector.front());
+  upt_get_ion_numorbitals_(_handler, &ion_block_vector.front());
 
   //for (int j = 0; j < nAtoms; j++) 
   //  ion_block_vector[j] = p_ion_block_vec[j];
@@ -288,14 +288,14 @@ void UptWrapper::get_ion_numorbitals(std::vector<int>& ion_block_vector)
 
 void UptWrapper::get_ion_orbitals(int i, std::vector<int>& orbitals)
 {
-  f77_upt_get_ion_orbitals(_handler, i, &orbitals.front());
+  upt_get_ion_orbitals_(_handler, i, &orbitals.front());
 }
 
 
 void UptWrapper::set_verbose(int verbose_lev)
 {
 
-  f77_upt_set_verbosity(_handler,verbose_lev);
+  upt_set_verbosity_(_handler,verbose_lev);
 
 }
 
@@ -304,7 +304,7 @@ void UptWrapper::set_strain(std::vector<double>& e_xx, std::vector<double>& e_yy
                             std::vector<double>& e_zz)
 {
   int size = e_xx.size();	
-  f77_upt_setstrain(_handler, size, &e_xx.front(), &e_yy.front(), &e_zz.front());
+  upt_setstrain_(_handler, size, &e_xx.front(), &e_yy.front(), &e_zz.front());
 }
  
 
@@ -312,7 +312,7 @@ void UptWrapper::get_H_csr(int nrow, char fmt, std::vector<Complex >& A,
                            std::vector<int>& JA, std::vector<int>& IA)
 {
 
-  f77_upt_get_csr_hamiltonian(_handler,nrow,fmt,&A.front(),&JA.front(),&IA.front());
+  upt_get_csr_hamiltonian_(_handler,nrow,fmt,&A.front(),&JA.front(),&IA.front());
 
 }
 
@@ -320,18 +320,18 @@ void UptWrapper::set_H_csr(int nrow, char fmt, std::vector<Complex >& A,
                            std::vector<int>& JA, std::vector<int>& IA)
 {
 
-  f77_upt_set_csr_hamiltonian(_handler,nrow,fmt,&A.front(),&JA.front(),&IA.front());
+  upt_set_csr_hamiltonian_(_handler,nrow,fmt,&A.front(),&JA.front(),&IA.front());
 
 }
 
 void UptWrapper::complex_test(double& re, double& im, Complex& zz)
 {
-  f77_complex_test(re,im,zz);
+  complex_test_(re,im,zz);
 }
 
 double UptWrapper::real_test()
 {
   double re;
-  f77_real_test(re);
+  real_test_(re);
   return re;
 }
