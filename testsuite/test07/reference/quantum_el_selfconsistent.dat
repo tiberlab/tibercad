@@ -1,0 +1,8 @@
+# efaschroedinger eigenstates (quantum_el)
+# Index Particle EigenEnergy     Occupation  FermiLevel Temperature
+      0      el   -0.00107246        0.51037              0         300
+      1      el     0.0240714       0.282697              0         300
+      2      el     0.0753175      0.0514947              0         300
+      3      el      0.146191     0.00348811              0         300
+      4      el      0.232077    0.000126248              0         300
+      5      el      0.287629    1.47249e-05              0         300
