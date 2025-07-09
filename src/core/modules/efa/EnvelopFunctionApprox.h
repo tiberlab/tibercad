@@ -367,6 +367,9 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
 
   bool check_confinement(const std::vector<libMesh::Complex>& state);
 
+  double eigenstate_norm(const std::vector<libMesh::Complex>& eigen_vector,
+                         std::vector<double> *projections = nullptr) const;
+
   //! Get strain in crystal coordinates
   void get_crystal_strain(const libMesh::Elem* elem,
       const libMesh::Point& point, Tensor2Sym& strain);

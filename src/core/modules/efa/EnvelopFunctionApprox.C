@@ -12,6 +12,7 @@
 #include "TensorOperators.h"
 #include "tensor.h"
 #include "EigenSolver.h"
+#include "Utils.h"
 
 
 #include "libmesh/edge_edge2.h"
@@ -1762,30 +1763,7 @@ void EnvelopFunctionApprox::estimate_spectrum_shift(void)
 //=============================================================//
 double EnvelopFunctionApprox::get_new_spectrum_shift(void)
 {
-/*
-  double st_shift_value ;
-
-  int v = verbose();
-  verbose() = 0;
-  read_SLEPC_solution(1);
-  verbose() = v;
-
-  assert(_solution.size() == 1);
-
-
-  //st_shift_value = (_solution[0].eigen_energy - opt.spectrum_shift)/Hartree;
-  st_shift_value = (_solution[0].eigen_energy)/Hartree;
-
-  if (opt.particle == "el")
-    st_shift_value -= 0.01/Hartree;
-  else
-    st_shift_value += 0.01/Hartree;
-
-  return st_shift_value;
-  */
-
   return solver_opt.spectrum_shift / Constants::Hartree;
-
 }
 
 
@@ -1813,38 +1791,64 @@ pair<unsigned int, double> EnvelopFunctionApprox::read_slepc_solution(void)
   //store also eigenvalue index for sorting
 
   vector<EigenvalueProblem::eigen_state>  ev(number_of_converged_solutions);
+  vector<vector<Complex>> eigenvectors(number_of_converged_solutions);
   double shift = EigenSolver::get_shift() * Hartree;
 
-  // if we have already solutions, we should use their energy levels to discriminate
-  // between el and hl
-  if (opt.num_hl_states < _solution.size() &&
-      _solution[opt.num_hl_states].eigen_vector.size() > 0)
+  double Ec = shift;
+  double Ev = shift;
+  if (opt.estimate_spectrum_shift)
   {
-    shift = _solution[opt.num_hl_states].eigen_energy;
+    Ec = get_band_edge("el");
+    Ev = get_band_edge("hl");
   }
-  else if ((opt.num_hl_states > 0) &&
-           (_solution[opt.num_hl_states - 1].eigen_vector.size() > 0))
-  {
-    shift = _solution[opt.num_hl_states - 1].eigen_energy;
-  }
+
+  // States with energy > Ec are electrons, while states with E < Ev are holes
+  // UNLESS Ec < Ev. In that case, we need to check somehow. For now, we look
+  // at the projection onto the Bloch states
+  // Unless it turns out to be too inefficient, we actually extract the projections
+  // even if not needed.
 
   for (unsigned ind = 0; ind < number_of_converged_solutions; ind++)
   {
-    ev[ind].energy =  EigenSolver::get_eigenvalue(ind) * Hartree; // + shift;
+    ev[ind].energy =  EigenSolver::get_eigenvalue(ind) * Hartree;
     ev[ind].index = ind;
 
-    if (ev[ind].energy > shift)
+    EigenSolver::get_eigen_vector(ind, eigenvectors[ind]);
+
+    this->get_solver_communicator().allgather(eigenvectors[ind]);
+
+    // apply transformation if needed
+    transform_eigenstate(eigenvectors[ind]);
+
+    vector<double> projection;
+    double norm = eigenstate_norm(eigenvectors[ind], &projection);
+
+    // normalization
+    if (!Utils::almost_equal::compare(norm, 1.0))
+      for (unsigned int j = 0; j < eigenvectors[ind].size(); j++)
+        eigenvectors[ind][j] /= Complex(norm, 0.0);
+
+    double cb_proj = 1;
+
+    if (ev[ind].energy > Ev)
+      cb_proj = 1;
+    else if (ev[ind].energy < Ec)
+      cb_proj = 0;
+    else
+    {
+      if (number_of_bands >= 8)
+      {
+        cb_proj = projection[0] + projection[1];
+      }
+    }
+
+    if (cb_proj > 0.5)
       ev[ind].particle = "el";
     else
       ev[ind].particle = "hl";
   }
 
-  // sorting of the solutions
-  // we sort both electrons and holes by distance from the ground state
-
-  sort(ev.begin(), ev.end(), compare_eigen_energy);
-
-  if (verbose() > 1)
+    if (verbose() > 1)
   {
     Messages m;
     ostringstream os;
@@ -1856,7 +1860,7 @@ pair<unsigned int, double> EnvelopFunctionApprox::read_slepc_solution(void)
     os.str("");
     for (unsigned int i = 0; i < number_of_converged_solutions; ++i)
     {
-      os << ev[i].energy << " ";
+      os << ev[i].energy << " (" << ev[i].particle << ") ";
       if (i%8 == 7)
         os << "\n";
     }
@@ -1864,28 +1868,8 @@ pair<unsigned int, double> EnvelopFunctionApprox::read_slepc_solution(void)
     m.newline();
   }
 
-
-  // find the first electron state
-
-  unsigned int first_el_index = number_of_converged_solutions;
-  bool finish = false;
-
-  for (unsigned int i = 0; i < number_of_converged_solutions; i++)
-  {
-    if (ev[i].particle == "el")
-    {
-      first_el_index = i;
-      break;
-    }
-  }
-
-
-  //--------------------------------------------------------------------
-  //read eigenvectors
-
-  // The idea is that arriving here the _solution structure is set up,
-  // but all eigenvectors are empty or already calculated, valid eigenstates
-
+  // check all states and put them into the solution structure
+  // in an appropriate position
 
   // the first num_hl_states in _solution are holes, the upper
   // num_el_states ones are electrons
@@ -1893,99 +1877,39 @@ pair<unsigned int, double> EnvelopFunctionApprox::read_slepc_solution(void)
 
   const int n_states = _solution.size();
 
-  //----------------------------------------------------------------------
-  for (unsigned int i = 0; i < number_of_converged_solutions; i++)
+  for (unsigned int i = 0; i < number_of_converged_solutions; ++i)
   {
-    // calculate the index in the final solution structure
-    int index = static_cast<int>(opt.num_hl_states + i) - first_el_index;
-    if (ev[i].particle == "hl")
-      index = i;
-
-    if (((ev[i].particle == "hl") && (index >= opt.num_hl_states)) ||
-        ((ev[i].particle == "el") && (index < opt.num_hl_states)) ||
-        ((index < 0) || (index >= n_states)))
-        continue;
-
-
-    // we need a small delta to decide if two states may be degenerate
-    // TODO adjust it automatically
-    const double delta = 1e-5;
-    // if this is true, then we have to check linear dependency with neighbouring
-    // states in the interval +/- delta
-    int check_linear_dependency = false;
-
-    // look for the first available slot
+    unsigned int start = 0;
+    unsigned int stop = opt.num_hl_states;
+    double cmp_sign = 1.0;
     if (ev[i].particle == "el")
     {
-      while ((index < n_states) &&
-             (_solution[index].eigen_vector.size() > 0))
+      start = stop;
+      stop = n_states;
+      cmp_sign = -1.0;
+    }
+
+      for (int j = start; j < stop; ++j)
       {
-        index++;
-      }
-
-      if (index > opt.num_hl_states)
-      {
-        if ((index >= n_states) ||
-            (ev[i].energy < (_solution[index - 1].eigen_energy - delta))) // go to the next state
-          continue;
-
-
-        if (ev[i].energy < (_solution[index - 1].eigen_energy + delta))
+        if (_solution[j].eigen_vector.empty())
         {
-          // we may have found a degenerate eigenvalue
-          check_linear_dependency = true;
+          // no state was there, so we fill it in
+          _solution[j].eigen_energy = ev[i].energy;
+          _solution[j].particle = ev[i].particle;
+          _solution[j].statistics = "Fermi";
+          _solution[j].eigen_vector.swap(eigenvectors[i]);
+          break;
+        }
+        else if (cmp_sign*(ev[i].energy - _solution[j].eigen_energy) > 0.0)
+        {
+          std::swap(_solution[j].eigen_energy, ev[i].energy);
+          // particle must already be hole, then
+          _solution[j].eigen_vector.swap(eigenvectors[i]);
         }
       }
-    }
-    else // if (ev[i].particle == "hl")
-    {
-      while ((index < static_cast<int>(opt.num_hl_states)) &&
-             (_solution[index].eigen_vector.size() > 0))
-      {
-        index++;
-      }
-
-      if (index > 0)
-      {
-        if ((index >= static_cast<int>(opt.num_hl_states)) ||
-            (ev[i].energy > _solution[index - 1].eigen_energy + delta)) // go to the next state
-          continue;
 
 
-        if (ev[i].energy > _solution[index - 1].eigen_energy - delta)
-        {
-          // we may have found a degenerate eigenvalue
-          check_linear_dependency = true;
-        }
-      }
-    }
-    // TODO this test seems not to work for very dense states
-    check_linear_dependency = false;
-
-    // we found a (potentially) valid slot and fill it
-    _solution[index].eigen_energy = ev[i].energy;
-    _solution[index].particle = ev[i].particle;
-    _solution[index].statistics = "Fermi";
-    
-    
-    unsigned int solution_number = ev[i].index;
-
-    EigenSolver::get_eigen_vector(solution_number, _solution[index].eigen_vector);
-
-    this->get_solver_communicator().allgather(_solution[index].eigen_vector);
-
-    //-----------------------------------------------------------------------------
-    //put independent dofs in the eigenvectors that may contain also non independent dofs
-    for (int j = 0; j < _solution[index].eigen_vector.size(); j++)
-    {
-      //_solution[index].eigen_vector[j] = temp[j];
-      //if (new_dofs[j].independent)
-      //{
-      //  _solution[index].eigen_vector[j] = temp[new_dofs[j].new_number];
-      //}
-    }
-
-/*
+    /*
     //put constrained dofs
 
     for (unsigned int j = 0; j < _solution[index].eigen_vector.size(); j++)
@@ -2006,12 +1930,8 @@ pair<unsigned int, double> EnvelopFunctionApprox::read_slepc_solution(void)
         }
       }
     }
-*/
+    */
 
-    //
-    // apply transformation if needed
-    //
-    transform_eigenstate(_solution[index].eigen_vector);
 
 
 
@@ -2024,6 +1944,7 @@ pair<unsigned int, double> EnvelopFunctionApprox::read_slepc_solution(void)
     //      should be so even if it is a generalized EVP. But actually, it should not be
     //      needed because now we add a deflation space.
     //
+    /*
     if (check_linear_dependency)
     {
       vector<Complex> tempvec(_solution[index].eigen_vector);
@@ -2056,29 +1977,12 @@ pair<unsigned int, double> EnvelopFunctionApprox::read_slepc_solution(void)
         continue;
       }
     }
-
-    //
-    //normalization
-    //
-    double norm = eigenstate_norm(index);
-
-    for (unsigned int j = 0; j < _solution[index].eigen_vector.size(); j++)
-      _solution[index].eigen_vector[j] /= Complex(norm, 0.0);
-
-
+    */
 
   }
 
   // the 1e-5 below is to not make the Hamiltonian singular,
   // and to be sure to take all states
-
-  double Ec = shift;
-  double Ev = shift;
-  if (opt.estimate_spectrum_shift)
-  {
-    Ec = get_band_edge("el");
-    Ev = get_band_edge("hl");
-  }
 
   bool foundall = true;
 
@@ -2104,8 +2008,12 @@ pair<unsigned int, double> EnvelopFunctionApprox::read_slepc_solution(void)
       // If there is no gap, we leave the guess at the mean band edge energy.
       // Sooner or later we will find all states, and el/hl does not make
       // really sense here anyway.
-      if ((Ec - Ev) <= 0.0)
-        solver_opt.spectrum_shift = (Ec + Ev) / 2.0;
+      // 07/07/2025 we change the logic: for electrons, always look from 
+      // min(Ec) - eps, for holes from max(Ev) + eps. If we are able to identify
+      // all states, and since we are using a deflation space, we should find all
+      // states. 
+      //if ((Ec - Ev) <= 0.0)
+      //  solver_opt.spectrum_shift = (Ec + Ev) / 2.0;
     }
     else
       solver_opt.spectrum_shift += 0.3;  //!? Rise a little the guess and restart  
@@ -2136,16 +2044,15 @@ pair<unsigned int, double> EnvelopFunctionApprox::read_slepc_solution(void)
       if (opt.estimate_spectrum_shift)
       {
         solver_opt.spectrum_shift = Ev + 0.05;
-        if ((Ec - Ev) <= 0.0)
-          solver_opt.spectrum_shift = (Ec + Ev) / 2.0;
+        // see above
+        //if ((Ec - Ev) <= 0.0)
+        //  solver_opt.spectrum_shift = (Ec + Ev) / 2.0;
       }
       else
         solver_opt.spectrum_shift -= 0.3;  //!? Lower a little the guess and restart
 
     }
     solver_opt.number_of_eigenstates = n_eig + 1;
-
-    //redeclare_solutions();
   }
 
   if (foundall)
@@ -2162,12 +2069,6 @@ pair<unsigned int, double> EnvelopFunctionApprox::read_slepc_solution(void)
       //Temperature calculation
       _solution[i].temperature = calculate_temperature_averaged(i);
 
-//    if (!check_confinement(_solution[i].eigen_vector))
-//    {
-//      ostringstream os;
-//      os << "State " << i << " is not confined!";
-//      Messages::warning(os.str());
-//    }
     }
   }
   
@@ -2257,42 +2158,6 @@ EnvelopFunctionApprox::check_confinement(const vector<Complex>& state)
 }
 
 
-/*
-void
-EnvelopFunctionApprox::plot_globaldata(void)
-{
-
-  string outdir = get_output_directory();
-
-  string filename(outdir + "/" + get_output_filename() + ".dat");
-  ofstream file;
-  file.open(filename.c_str());
-  if (file.good())
-  {
-    // header
-    file << "# EFA eigenstates (" << get_name() << ")\n";
-    file << "\n#\n";
-    file << "# Index" << setw(12) << "EigenEnergy" << setw(15) << "Occupation"
-        << setw(12) << "FermiLevel" << setw(12) << "Temperature" << "\n";
-
-    for (unsigned int i = 0; i < _solution.size(); i++)
-    {
-      file << setw(7) << i << " "
-          << setw(11) << _solution[i].eigen_energy << " "
-          << setw(14) << Fermi_statistics_probability(_solution[i].eigen_energy,
-              _solution[i].electro_chem_pot, _solution[i].temperature, _solution[i].particle) << " "
-          << setw(11) << _solution[i].electro_chem_pot << " "
-          << setw(11) << _solution[i].temperature << "\n";
-    }
-  }
-
-
-}
-*/
-
-
-//=======================================================================//
-
 
 EnvelopFunctionApprox:: ~EnvelopFunctionApprox(void)
 {
@@ -2300,7 +2165,6 @@ EnvelopFunctionApprox:: ~EnvelopFunctionApprox(void)
   // es->delete_system(system_name);
 }
 
-//=======================================================================//
 
 
 
@@ -2320,14 +2184,20 @@ void EnvelopFunctionApprox::transform_eigenstate(vector<Complex>& eigvec)
 
 }
 
-//-----------------------------------------------------------------------------//
 double  EnvelopFunctionApprox::eigenstate_norm(unsigned int state_number, vector<double> *projections) const
 {
-  double result = 0.0;
 
   const vector< Complex > &  eigen_vector =  _solution[state_number].eigen_vector;
 
+  return eigenstate_norm(eigen_vector, projections);
+}
 
+
+
+//-----------------------------------------------------------------------------//
+double  EnvelopFunctionApprox::eigenstate_norm(const vector<Complex>&  eigen_vector, vector<double> *projections) const
+{
+  double result = 0.0;
 
   DofMap& dof_map = system->get_dof_map();
 
@@ -2384,6 +2254,8 @@ double  EnvelopFunctionApprox::eigenstate_norm(unsigned int state_number, vector
 
 
   this->get_solver_communicator().sum(temp);
+  if (projections != nullptr)
+    projections->resize(number_of_bands);
 
   for (unsigned int i = 0; i < number_of_bands; ++i)
   {
