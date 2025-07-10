@@ -1308,7 +1308,7 @@ void ETB::parse_options(void)
 
   _upt_options.verbose = get_option("verbose", SimulationOptions::verbose());
 
-  _upt_options.etb_dataset = get_option("dataset", "");
+  //_upt_options.etb_dataset = get_option("dataset", "");
   _upt_options.max_TB_order = get_option("max_TB_order", 2);
 
   std::string sparse_fmt = get_option("sparse_format", "full");
@@ -1324,7 +1324,7 @@ void ETB::parse_options(void)
 
   if (_upt_options.temperature != 0.0)
   {
-     Messages::warning("Empirical tight binding calculations are preformed at T=0");
+     Messages::warning("Empirical tight binding calculations are performed at T=0");
   }
 
   //_upt_options.opt_flag = get_option("optical_transitions", false);

@@ -39,7 +39,7 @@ class ETB : public TightBinding
     int poldir;
     std::string potential_sim;
     std::string strain_sim;
-    std::string etb_dataset;
+    //std::string etb_dataset;
     char* database_path;
     char* work_path;
     char* out_path;

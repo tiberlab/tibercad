@@ -1,0 +1,234 @@
+
+
+Device
+{
+  
+  meshfile = SL.msh
+  mesh_units = 1e-9
+
+  x-growth-direction = (1, 0, 0)
+  y-growth-direction = (0, 1, 0)
+
+  
+  Region GaSb
+  {
+    material = GaSb
+  }
+
+  Region InAs
+  {
+    material = InAs
+  }
+
+  Cluster quantum
+  {
+    regions = (GaSb,InAs)
+  }
+
+  Atomistic tb
+  {
+    reference_material GaSb {}
+    regions = quantum
+    passivation = no
+    print = xyz
+
+    periodicity = true
+    minimal_cell = true
+    #cells_along_x = 2
+    #cells_along_y = 2
+    #fold_into_box = true
+    #use_primitive_cell = true
+
+  }
+
+}
+
+Module elasticity 
+{
+
+  name = strain
+  nonlinear_strain = true
+
+  plot = (Strain, Stress)
+
+
+  Physics 
+  {
+    body_force lattice_mismatch 
+    {
+      reference_material = GaSb
+      x-growth-direction = (1, 0, 0)
+      y-growth-direction = (0, 1, 0)
+    }
+       
+  }
+
+  Contact left  
+  {type = clamp}
+
+}
+
+
+
+Module vff
+{
+
+ regions = quantum
+ atomistic_structure = tb
+ #boundary_conditions = substrate
+ #substrate_plane = x
+ #substrate_tol = 0.1 # 0.519
+
+ plot = xyz
+
+ Physics
+ {
+
+  keating automatic
+  {
+  }
+
+ }
+}
+
+
+Module driftdiffusion
+{ 
+
+  name = driftdiffusion
+  coupling = poisson
+
+  #save_state = true
+  #load_state = dd.tsv
+
+  plot = (Ec, Ev, eQFermi, hQFermi , eDensity, hDensity, ElPotential)
+
+  Solver linesearch
+  {
+    relative_tolerance = 1e-14  
+    absolute_tolerance =  1e-50  
+    step_tolerance = 1e-3
+    max_step = 1.0 
+    max_iterations = 30
+  }
+
+  Physics
+  {
+    particle_density
+    {
+    }
+  }   
+
+}
+
+Module efaschroedinger
+{
+
+  name = efa
+  regions = quantum
+
+  plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)
+
+  num_electron_states = 10
+  num_hole_states = 10
+  poisson_simulation = driftdiffusion
+  strain_simulation = strain 
+
+  Dirichlet_bc_everywhere = false
+  x-periodicity = true
+
+
+  Physics
+  {
+    model = 8x8    
+  }
+
+# This is not yet fully working
+#  PeriodicBoundary
+#  {
+#    periodicity = (4.8, 0, 0)
+#    boundary_pair = (left, right)
+#  }
+
+  Dispersion
+  {
+    k_path = X-G-Z
+    number_of_nodes = (20,10)
+  }
+
+}
+
+
+ 
+Module empirical_tb
+{
+  regions = quantum
+  name = tb
+
+  atomistic_structure = tb
+  Harrison_scaling = true     #set false when no strain
+  strain_simulation = strain
+  potential_simulation = driftdiffusion
+  relativistic = true
+  sparse_format = full
+  add_band_shifts = false
+
+  dataset = Tan
+
+  jmol_output_format = cube
+
+  #plot = (tbstates)
+
+  Solver
+  {
+    solver = lapack
+    
+    num_conduction_eigenvalues = 10
+    num_valence_eigenvalues = 10
+
+    # we have to still implement identification of states
+    guess_conduction = -0.2
+    guess_valence = -0.2
+    long_tolerance = 1e-9
+
+  }
+
+  Dispersion
+  {
+    #unfold_to = quantum
+    #write_k_points = kpoints.dat
+    #write_SC_mesh = SC
+    #write_PC_mesh = PC
+    #k_path = G-M-Z-A-R-X
+    k_path = X-G-Z
+    number_of_nodes = (100,10)
+  }
+
+  #DOS
+  #{
+  #  k_max = 0.05
+  #  number_of_nodes = (10, 10)	
+  #}
+}
+
+
+Module opticstb
+{
+  name = spectrum
+  plot = optical_spectrum_k_0
+  initial_state_model = tb
+  final_state_model = tb
+  Emin = 3.0
+  Emax = 5.0
+  dE = 0.001
+}
+ 
+
+Simulation
+{  
+  verbose = 0
+  #temperature = 300
+  solve =  (strain, vff, driftdiffusion, efa, tb)
+  resultpath = output
+
+}
