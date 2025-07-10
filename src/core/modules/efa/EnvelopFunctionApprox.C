@@ -1995,8 +1995,9 @@ pair<unsigned int, double> EnvelopFunctionApprox::read_slepc_solution(void)
       foundall = false;
       break;
     }
-    else
-      solver_opt.spectrum_shift = _solution[n_eig].eigen_energy - 1e-5;
+    // Apparently this only makes problems:
+    //else
+    //  solver_opt.spectrum_shift = _solution[n_eig].eigen_energy - 1e-5;
   }
 
   if (n_eig == opt.num_hl_states)
@@ -2034,8 +2035,8 @@ pair<unsigned int, double> EnvelopFunctionApprox::read_slepc_solution(void)
         foundall = false;
         break;
       }
-      else
-        solver_opt.spectrum_shift = _solution[n_eig].eigen_energy + 1e-5;
+      //else
+      //  solver_opt.spectrum_shift = _solution[n_eig].eigen_energy + 1e-5;
     }
 
     if (n_eig == static_cast<int>(opt.num_hl_states) - 1)
