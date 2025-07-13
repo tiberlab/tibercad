@@ -260,29 +260,15 @@ Complex UptWrapper::get_matel(int i, int j)
 {
 
   Complex matel;
-  //double matel_re, matel_im;
 
   upt_get_matel_(_handler,i,j,matel);
-
-  //matel = Complex(matel_re,matel_im);
-
-  //std::cerr<<matel<<std::endl;
 
   return matel;
 }
 
 void UptWrapper::get_ion_numorbitals(std::vector<int>& ion_block_vector)
 {
-  //int nAtoms = ion_block_vector.size(); 
-  //int* p_ion_block_vec = new int[nAtoms];
-
   upt_get_ion_numorbitals_(_handler, &ion_block_vector.front());
-
-  //for (int j = 0; j < nAtoms; j++) 
-  //  ion_block_vector[j] = p_ion_block_vec[j];
-
-  //delete [] p_ion_block_vec;
-
 }
 
 

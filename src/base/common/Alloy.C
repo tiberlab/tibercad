@@ -146,6 +146,11 @@ Alloy::do_init(void)
   _mat_A->init();
   _mat_B->init();
 
+  _cb_bloch_states = _mat_A->get_cb_bloch_functions();
+  _vb_bloch_states = _mat_A->get_vb_bloch_functions();
+  _cb_atomic_orbitals = _mat_A->get_cb_atomic_orbitals();
+  _vb_atomic_orbitals = _mat_A->get_vb_atomic_orbitals();
+
   //
   // build VCA of the models
   //

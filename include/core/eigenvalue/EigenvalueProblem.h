@@ -342,13 +342,14 @@ class EigenvalueProblem : public SimulationInterface
     /*!
      * The ordering of the k-points is as in k-space mesh (\c _kspace)
      */
-    std::vector< std::vector<double> > _dispersion;
+    std::vector<std::vector<double>> _dispersion;
+
 
     //! Stores projection weights for the k points
     /*!
      * This is filled only in case of unfolding
      */
-    std::vector< std::vector<double> > _projection_weights;
+    std::vector<std::vector<double>> _projection_weights;
 
 
     //! The names for the projection onto bases/orbitals/atoms
@@ -358,6 +359,8 @@ class EigenvalueProblem : public SimulationInterface
     /*!
      * This is filled only if projection option is given in input. It will
      * create an additional file, to be used together with the dispersion data.
+     * 
+     * The first index is the k-point, the second the state index
      */
     std::vector<std::vector<std::vector<double>>> _state_projections;
 
@@ -367,12 +370,16 @@ class EigenvalueProblem : public SimulationInterface
     
     JobKind _job; //!< a job to do
 
-    //!point for bulk dispersion
+    //! point for bulk dispersion
     Point _bulk_point;
 
   private:
 
     //! A map to contain solutions at k-points
+    /*!
+     * TODO: this should be transformed into a datastructure that
+     * can be automatically serialized to file if it gets large.
+     */
     typedef std::map<const Point, std::vector<eigen_problem_solution> > KSolutions;
 
     bool _new_k;
@@ -385,7 +392,7 @@ class EigenvalueProblem : public SimulationInterface
     //! The reciprocal space description
     Kspace* _kspace;
 
-    //! k-vector in arbitrary units (for now)
+    //! k-vector in 1/nm
     double _k_vector[3];
 
     //! to remember solutions
@@ -394,6 +401,15 @@ class EigenvalueProblem : public SimulationInterface
 
     //! to set that k-vector is not new
     void k_is_old(void);
+
+
+    //! Reorder all states to a global order
+    /*!
+     * States are ordered independent of energy by projecting onto 
+     * the nearest k-point. The idea is that coefficients as function
+     * of k, c(k), have to be continuous functions of k.
+     */
+    void reorder_states(const Point& kpoint);
 
   
 };
@@ -405,9 +421,6 @@ EigenvalueProblem::EigenvalueProblem(const ModelOptions& options)
 {
   _k_vector[0]=0.0;   _k_vector[1]=0.0;   _k_vector[2]=0.0; 
   _kspace = NULL;
-  //do_dispersion = false;
-  //disp_range[0]=0;
-  //disp_range[1]=0;
 }
 
 inline

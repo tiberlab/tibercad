@@ -432,9 +432,6 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     sc_bb.max() += Point(1e-2, 1e-2, 1e-2);
     sc_bb.min() -= Point(1e-2, 1e-2, 1e-2);
 
-    // for debugging
-    //ofstream of("test.dat");
-
     G.resize(0);
 
     pc_kspace.get_basis(a, b, c);
@@ -468,6 +465,8 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     cerr << kc << endl;
     */
 
+
+    // Now we look for all possible G vectors
 
     // these are absolute upper limits
     int Na = ceil(0.5 * pc_diam / a.norm() + 1);
@@ -672,26 +671,6 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
 
     }
 
-    /*
-    for (unsigned int i = 0; i < K_to_k.size(); ++i)
-    {
-      cerr << i << " : ";
-      for (auto&& j : K_to_k[i])
-        cerr << j << " ";
-      cerr << endl;
-    }
-    cerr << endl;
-    */
-
-    /*
-    for (unsigned int i = 0; i < k_to_K.size(); ++i)
-    {
-      //cerr << i << " : " << k_to_K[i] << endl;
-      cerr << i << " : " << k_to_K[i] << endl;
-    }
-    cerr << endl;
-    */
-
 
     os.str("");
     os << num_k_points << " primitive cell k points are folded into "
@@ -775,6 +754,12 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     if (i > 0)
       solve_for_kpoint(k_point);
 
+    if (kopts.get_option("reorder_states", "true"))
+    {
+      reorder_states(k_point);
+      _ksolutions[k_point] = _solution;
+    }
+
     // if requested, project onto basis functions
     vector<vector<double>> proj;
     if (!_projection_names.empty())
@@ -826,6 +811,62 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
 
   // in case of unfolding we have to set the correct k space back
   _kspace = kspace_for_plot;
+
+}
+
+
+
+void
+EigenvalueProblem::reorder_states(const Point& kpoint)
+{
+  // first, find the nearest k-point
+  double distance = std::numeric_limits<double>::max();
+  KSolutions::iterator nearest_k(_ksolutions.end());
+  for (auto it = _ksolutions.begin(); it != _ksolutions.end(); ++it)
+  {
+    Point d = it->first - kpoint;
+    double d_norm = d.norm();
+    if (d_norm < distance)
+    {
+      distance = d_norm;
+      nearest_k = it;
+    }
+  }
+
+  // next, check if corresponding states are actually from
+  // the same band, and if necessary reorder
+
+  if (nearest_k != _ksolutions.end())
+  {
+
+    const std::vector<eigen_problem_solution>& ref_sol = nearest_k->second;
+
+    for (unsigned int i = 0; i < ref_sol.size(); ++i)
+    {
+      double max_proj = 0;
+      unsigned int max_id = 0;
+      for (unsigned int j = i; j < _solution.size(); ++j)
+      {
+        if (_solution[j].particle == ref_sol[i].particle)
+        {
+          libMesh::Complex proj = scalar_product(_solution[j].eigen_vector,
+                                                 ref_sol[i].eigen_vector);
+        
+          double proj_abs = std::abs(proj);
+          if (proj_abs > max_proj)
+          {
+            max_proj = proj_abs;
+            max_id = j;
+          }
+        }
+      }
+
+      if (max_id != i)
+      {
+        std::swap(_solution[i], _solution[max_id]);
+      }
+    }
+  }
 
 }
 

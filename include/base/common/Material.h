@@ -78,6 +78,23 @@ class Material : public PhysicalObject
     //! Get the bulk crystal
     const BulkCrystal* get_bulk_crystal(void) const;
 
+    //! Get the Bloch basis functions defining the CB
+    const std::vector<std::string>& get_cb_bloch_functions(void) const; 
+
+    //! Get the Bloch basis functions defining the VB
+    const std::vector<std::string>& get_vb_bloch_functions(void) const; 
+
+    //! Get the atomic orbital basis functions defining the CB
+    /*!
+     * The first index refers to the atom in the basis
+     */
+    const std::vector<std::vector<std::string>>& get_cb_atomic_orbitals(void) const; 
+
+    //! Get the atomic orbital basis functions defining the VB
+    /*!
+     * The first index refers to the atom in the basis
+     */
+    const std::vector<std::vector<std::string>>& get_vb_atomic_orbitals(void) const; 
 
     //! Get the rotation matrix
     /*!
@@ -209,6 +226,25 @@ class Material : public PhysicalObject
      */ 
     std::map<unsigned int, std::set<Specie>> _crystal_type_map;
 
+    //! The Bloch basis states contributig to the CB
+    std::vector<std::string> _cb_bloch_states;
+
+    //! The Bloch basis states contributig to the VB
+    std::vector<std::string> _vb_bloch_states;
+
+    //! The atomic orbitals contributing to the CB
+    /*!
+     * Here the first index refers to the atom in the basis
+     */
+    std::vector<std::vector<std::string>> _cb_atomic_orbitals;
+
+    //! The atomic orbitals contributing to the VB
+    /*!
+     * Here the first index refers to the atom in the basis
+     */
+    std::vector<std::vector<std::string>> _vb_atomic_orbitals;
+
+
   private:
 
 
@@ -233,11 +269,8 @@ class Material : public PhysicalObject
     //! The list acceptors
     std::set<Dopant*> _acceptors;
 
-
     //! Clear all doping
     void clear_doping(void) TBDLLOCAL;
-
-
 };
 
 
@@ -286,7 +319,33 @@ Material::set_structure(const std::string& structure)
   _structure = structure;
 }
 
+inline
+const std::vector<std::string>&
+Material::get_cb_bloch_functions(void) const
+{
+  return _cb_bloch_states;
+} 
 
+inline
+const std::vector<std::string>&
+Material::get_vb_bloch_functions(void) const
+{
+  return _vb_bloch_states;
+}
+
+inline
+const std::vector<std::vector<std::string>>&
+Material::get_cb_atomic_orbitals(void) const
+{
+  return _cb_atomic_orbitals;
+}
+
+inline
+const std::vector<std::vector<std::string>>&
+Material::get_vb_atomic_orbitals(void) const
+{
+  return _vb_atomic_orbitals;
+} 
 
 
 inline

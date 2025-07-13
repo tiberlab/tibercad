@@ -58,6 +58,15 @@ Material::do_init(void)
   setup_doping();
 
   PhysicalObject::do_init();
+
+  Database& db = get_database();
+  db.set_section("conductionband");
+  db.get("bloch_states", _cb_bloch_states);
+  db.get("atomic_orbitals", _cb_atomic_orbitals);
+
+  db.set_section("valenceband");
+  db.get("bloch_states", _vb_bloch_states);
+  db.get("atomic_orbitals", _vb_atomic_orbitals);
 }
 
 

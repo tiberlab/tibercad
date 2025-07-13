@@ -1711,7 +1711,7 @@ ETB::calculate_fermi_averaged(unsigned int i)
       atom_sum = 0.0;
       for (k = k_at; k < k_at + _ion_num_orbitals[j]; k++)
       {
-	atom_sum += std::norm(_solution[i].eigen_vector[k]);
+	      atom_sum += std::norm(_solution[i].eigen_vector[k]);
       }
       //cout<<atom_sum<<"  ";
       k_at = k;
@@ -1729,7 +1729,7 @@ ETB::calculate_fermi_averaged(unsigned int i)
       atom_sum = 0.0;
       for (k = k_at; k < k_at + _ion_num_orbitals[j]; k++)
       {
-	atom_sum += std::norm(_solution[i].eigen_vector[k]);
+	      atom_sum += std::norm(_solution[i].eigen_vector[k]);
       }
       //cout<<atom_sum<<"  ";
       k_at = k;
@@ -1773,27 +1773,26 @@ ETB::compute_atomic_charges(const std::string& particle, std::vector<double>& qm
       k = 0; k_at = 0;
       for (j = 0; j < N_atoms_wo_H; j++)
       {
-	atom_sum = 0.0;
-	for (k = k_at; k < k_at + _ion_num_orbitals[j]; k++)
-	{
-	    atom_sum += std::norm(_solution[i].eigen_vector[k]);
-	}
+        atom_sum = 0.0;
+        for (k = k_at; k < k_at + _ion_num_orbitals[j]; k++)
+        {
+          atom_sum += std::norm(_solution[i].eigen_vector[k]);
+        }
 
-	k_at = k;
+        k_at = k;
 
-	// TODO it may be better to change sign of energies for holes, instead of doing the
-	// 1-pop thing afterwards
-	double pop = Fermi(_solution[i].eigen_energy, _solution[i].electro_chem_pot,
-		       _solution[i].temperature);
+        // TODO it may be better to change sign of energies for holes, instead of doing the
+        // 1-pop thing afterwards
+        double pop = Fermi(_solution[i].eigen_energy, _solution[i].electro_chem_pot,
+                           _solution[i].temperature);
 
-	if ( (_solution[i].particle == "hl") || (_solution[i].particle == "hole") )
-	  {
-	    pop = 1 - pop;
-	  }
+        if ((_solution[i].particle == "hl") || (_solution[i].particle == "hole"))
+        {
+          pop = 1 - pop;
+        }
 
-	qmat[j] += pop * atom_sum;
+        qmat[j] += pop * atom_sum;
       }
-
     }
   }
 

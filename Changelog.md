@@ -9,6 +9,7 @@ Modules can have their own changelog file.
 
 ### Added
 
+- implmenented reordering of states when calculating dispersions based on projection on nearby k-points
 - added new module pvmodule  
 - added new module wateringress  
 
