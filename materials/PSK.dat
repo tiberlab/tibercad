@@ -3,10 +3,18 @@ E_v = -5.57
 
 m_dos = 0.13
 
+bloch_states = s
+# to be defined
+atomic_orbitals = ( (), (), () )
+
 
 [conductionband]
 m_G = 0.13
 m_dos = 0.13
+
+bloch_states = p
+# to be defined
+atomic_orbitals = ( (), (), () )
 
 [bandgap]
 Eg_G = 1.67

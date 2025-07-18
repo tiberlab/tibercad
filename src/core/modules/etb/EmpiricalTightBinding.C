@@ -284,6 +284,8 @@ void ETB::set_band_extrema(void)
   {
     double cb_min, vb_max;
     get_band_extrema(cb_min, vb_max);
+    _cb_min = cb_min;
+    _vb_max = vb_max;
     ostringstream os;
     os << "      CB min = " << cb_min << "  VB max = " << vb_max << endl;
     Messages::info(os.str());
@@ -305,6 +307,11 @@ void ETB::set_band_extrema(void)
 
     _upt_solver_options.guess_cb = cb_min;
     _upt_solver_options.guess_vb = vb_max;
+  }
+  else
+  {
+    _cb_min = solopts.get_option("guess_conduction", _cb_min);
+    _vb_max = solopts.get_option("guess_valence", _vb_max);
   }
 }
 
@@ -853,48 +860,64 @@ ETB::call_uptight(void)
 std::pair<unsigned int, double>
 ETB::read_slepc_solution(void)
 {
+
   //--------------------------------------------------------------------
   //how many solutions do we have from SLEPC?
   unsigned int number_of_converged_solutions;
 
   number_of_converged_solutions = EigenSolver::number_of_converged_eigenvalues();
 
-  unsigned int number_of_eigenstates = _upt_solver_options.n_vb + _upt_solver_options.n_cb;
   //--------------------------------------------------------------------
   //read eigenvalues
   //store also eigenvalue index for sorting
 
   vector<EigenvalueProblem::eigen_state>  ev(number_of_converged_solutions);
+  vector<vector<Complex>> eigenvectors(number_of_converged_solutions);
   double shift = EigenSolver::get_shift();
 
-  // if we have already solutions, we should use their energy levels to discriminate
-  // between el and hl
-  if (_upt_solver_options.n_vb < _solution.size() &&
-      _solution[_upt_solver_options.n_vb].eigen_vector.size() > 0)
-  {
-    shift = _solution[_upt_solver_options.n_vb].eigen_energy;
-  }
-  else if ((_upt_solver_options.n_vb > 0) &&
-           (_solution[_upt_solver_options.n_vb - 1].eigen_vector.size() > 0))
-  {
-    shift = _solution[_upt_solver_options.n_vb - 1].eigen_energy;
-  }
+  double Ec = _cb_min;
+  double Ev = _vb_max;
+
+  // States with energy > Ec are electrons, while states with E < Ev are holes
+  // UNLESS Ec < Ev. In that case, we need to check somehow. For now, we look
+  // at the projection onto the Bloch states
+  // Unless it turns out to be too inefficient, we actually extract the projections
+  // even if not needed.
 
   for (unsigned ind = 0; ind < number_of_converged_solutions; ind++)
   {
     ev[ind].energy =  EigenSolver::get_eigenvalue(ind);
     ev[ind].index = ind;
 
-    if (ev[ind].energy > shift)
+    EigenSolver::get_eigen_vector(ind, eigenvectors[ind]);
+
+    this->get_solver_communicator().allgather(eigenvectors[ind]);
+
+
+    vector<double> proj;
+    project_on_band_orbitals(eigenvectors[ind], proj);
+
+
+    double cb_proj = 1;
+    double vb_proj = 0;
+
+    if (ev[ind].energy < Ec)
+    {
+      cb_proj = 0;
+      vb_proj = 1;
+    }
+    else if (ev[ind].energy < Ev)
+    {
+      vb_proj = proj[0];
+      cb_proj = proj[1];
+    }
+
+    if (cb_proj > vb_proj)
       ev[ind].particle = "el";
     else
       ev[ind].particle = "hl";
+
   }
-
-  // sorting of the solutions
-  // we sort both electrons and holes by distance from the ground state
-
-  sort(ev.begin(), ev.end(), compare_eigen_energy);
 
   if (verbose() > 1)
   {
@@ -908,7 +931,7 @@ ETB::read_slepc_solution(void)
     os.str("");
     for (unsigned int i = 0; i < number_of_converged_solutions; ++i)
     {
-      os << ev[i].energy << " ";
+      os << ev[i].energy << " (" << ev[i].particle << ") ";
       if (i%8 == 7)
         os << "\n";
     }
@@ -916,26 +939,8 @@ ETB::read_slepc_solution(void)
     m.newline();
   }
 
-
-  // find the first electron state
-
-  unsigned int first_el_index = number_of_converged_solutions;
-  bool finish = false;
-
-  for (unsigned int i = 0; i < number_of_converged_solutions; i++)
-  {
-    if (ev[i].particle == "el")
-    {
-      first_el_index = i;
-      break;
-    }
-  }
-  //--------------------------------------------------------------------
-  //read eigenvectors
-
-  // The idea is that arriving here the _solution structure is set up,
-  // but all eigenvectors are empty or already calculated, valid eigenstates
-
+  // check all states and put them into the solution structure
+  // in an appropriate position
 
   // the first num_hl_states in _solution are holes, the upper
   // num_el_states ones are electrons
@@ -943,107 +948,40 @@ ETB::read_slepc_solution(void)
 
   const int n_states = _solution.size();
 
-  //----------------------------------------------------------------------
-  for (unsigned int i = 0; i < number_of_converged_solutions; i++)
+  for (unsigned int i = 0; i < number_of_converged_solutions; ++i)
   {
-    // calculate the index in the final solution structure
-    int index = static_cast<int>(_upt_solver_options.n_vb + i) - first_el_index;
-    if (ev[i].particle == "hl")
-      index = i;
-
-    if (((ev[i].particle == "hl") && (index >= _upt_solver_options.n_vb)) ||
-        ((ev[i].particle == "el") && (index < _upt_solver_options.n_vb)) ||
-        ((index < 0) || (index >= n_states)))
-        continue;
-
-
-    // we need a small delta to decide if two states may be degenerate
-    // TODO adjust it automatically
-    const double delta = 1e-5;
-
-    // look for the first available slot
+    unsigned int start = 0;
+    unsigned int stop = _upt_solver_options.n_vb;
+    double cmp_sign = 1.0;
     if (ev[i].particle == "el")
     {
-      while ((index < n_states) &&
-             (_solution[index].eigen_vector.size() > 0))
-      {
-        index++;
-      }
-
-      if (index > _upt_solver_options.n_vb)
-      {
-        if ((index >= n_states) ||
-            (ev[i].energy < (_solution[index - 1].eigen_energy - delta))) // go to the next state
-          continue;
-
-      }
+      start = stop;
+      stop = n_states;
+      cmp_sign = -1.0;
     }
-    else // if (ev[i].particle == "hl")
+
+    for (int j = start; j < stop; ++j)
     {
-      while ((index < static_cast<int>(_upt_solver_options.n_vb)) &&
-             (_solution[index].eigen_vector.size() > 0))
+      if (_solution[j].eigen_vector.empty())
       {
-        index++;
+        // no state was there, so we fill it in
+        _solution[j].eigen_energy = ev[i].energy;
+        _solution[j].particle = ev[i].particle;
+        _solution[j].statistics = "Fermi";
+        _solution[j].eigen_vector.swap(eigenvectors[i]);
+        break;
       }
-
-      if (index > 0)
+      else if (cmp_sign * (ev[i].energy - _solution[j].eigen_energy) > 0.0)
       {
-        if ((index >= static_cast<int>(_upt_solver_options.n_vb)) ||
-            (ev[i].energy > _solution[index - 1].eigen_energy + delta)) // go to the next state
-          continue;
-
+        std::swap(_solution[j].eigen_energy, ev[i].energy);
+        // particle must already be hole, then
+        _solution[j].eigen_vector.swap(eigenvectors[i]);
       }
     }
-
-    // we found a (potentially) valid slot and fill it
-    _solution[index].eigen_energy = ev[i].energy;
-    _solution[index].particle = ev[i].particle;
-    _solution[index].statistics = "Fermi";
-    _solution[index].temperature = _upt_options.temperature;
-
-
-    unsigned int solution_number = ev[i].index;
-
-    //EigenSolver::get_eigen_vector(solution_number, temp);
-    EigenSolver::get_eigen_vector(solution_number, _solution[index].eigen_vector);
-
-    this->get_solver_communicator().allgather(_solution[index].eigen_vector);
-
-    if (_upt_options.potential_flag)
-    {
-      _solution[index].electro_chem_pot = calculate_fermi_averaged(index);
-    }
-    else
-    {
-      if (_solution[index].particle == "el")
-        _solution[i].electro_chem_pot = _upt_options.el_chem_pot;
-      else
-        _solution[i].electro_chem_pot = _upt_options.hl_chem_pot;
-    }
-
-    //
-    //normalization
-    //
-    //double norm = eigenstate_norm(index);
-
-    //for (unsigned int j = 0; j < number_of_all_dofs; j++)
-    //  _solution[index].eigen_vector[j] /= Complex(norm, 0.0);
-
-
-
   }
-
-
-  //vector<double> proj;
-  //project_on_vb_orbitals(_solution, proj);
-  //for (unsigned int i = 0; i < proj.size(); ++i)
-  //cerr << i << " : " << proj[i] << "\n";
 
   // the 1e-5 below is to not make the Hamiltonian singular,
   // and to be sure to take all states
-
-  double Ec = shift;
-  double Ev = shift;
 
   double new_shift = shift;
 
@@ -1068,7 +1006,7 @@ ETB::read_slepc_solution(void)
     new_shift = _upt_solver_options.guess_cb;
   }
   // if not all are found, look for so many electron states:
-  number_of_eigenstates = _upt_solver_options.n_cb - (n_eig - _upt_solver_options.n_vb) + 1;
+  int number_of_eigenstates = _upt_solver_options.n_cb - (n_eig - _upt_solver_options.n_vb) + 1;
 
   if (foundall)
   {
@@ -1875,13 +1813,12 @@ ETB::get_orbital_ids(const std::vector<std::string>& names, std::set<int>& ids) 
 }
 
 void
-ETB::project_on_vb_orbitals(const std::vector<eigen_problem_solution>& solutions,
+ETB::project_on_band_orbitals(const std::vector<libMesh::Complex>& solution,
                             std::vector<double>& projections) const
 {
 
-  int n_states = solutions.size();
   projections.clear();
-  projections.resize(n_states, 0.0);
+  projections.resize(2, 0.0);
 
   const std::vector<Atom>& atom = get_atomistic_structure()->get_structure_atoms();
   size_t N = get_atomistic_structure()->get_N_without_H();
@@ -1903,30 +1840,43 @@ ETB::project_on_vb_orbitals(const std::vector<eigen_problem_solution>& solutions
 
     // get the atomic orbitals contributing to the VB
     auto& vb_orb = mat->get_vb_atomic_orbitals();
+    auto& cb_orb = mat->get_cb_atomic_orbitals();
 
     unsigned int atom_id = static_cast<unsigned int>(atom[i].get_label()) - 1;
 
     // only if the current atom contributes to the VB we have to check
-    if ((atom_id < vb_orb.size()) && !vb_orb[atom_id].empty())
+    //if ((atom_id < vb_orb.size()) && !vb_orb[atom_id].empty())
     {
 
       set<int> orb_ids;
       get_orbital_ids(vb_orb[atom_id], orb_ids);
+
+      set<int> cb_orb_ids;
+      get_orbital_ids(cb_orb[atom_id], cb_orb_ids);
       
       for (size_t orb_i = 0; orb_i < orbitals.size(); ++orb_i)
       {
         if (orb_ids.count(orbitals[orb_i]))
         {
-          for (int s = 0; s < n_states; ++s)
-          {
-            double val = std::abs(solutions[s].eigen_vector[ii + orb_i]);
-            projections[s] += val * val;
+          double val = std::abs(solution[ii + orb_i]);
+          projections[0] += val * val;
 
-            if (_upt_options.relat_flag)
-            {
-              val = std::abs(solutions[s].eigen_vector[ii + orb_i + orbitals.size()]);
-              projections[s] += val * val;
-            }
+          if (_upt_options.relat_flag)
+          {
+            val = std::abs(solution[ii + orb_i + orbitals.size()]);
+            projections[0] += val * val;
+          }
+        }
+        
+        if (cb_orb_ids.count(orbitals[orb_i]))
+        {
+          double val = std::abs(solution[ii + orb_i]);
+          projections[1] += val * val;
+
+          if (_upt_options.relat_flag)
+          {
+            val = std::abs(solution[ii + orb_i + orbitals.size()]);
+            projections[1] += val * val;
           }
         }
       }
@@ -1934,7 +1884,6 @@ ETB::project_on_vb_orbitals(const std::vector<eigen_problem_solution>& solutions
 
     ii += _ion_num_orbitals[i];
   }
-
 }
 
 

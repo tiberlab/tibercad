@@ -266,9 +266,13 @@ class ETB : public TightBinding
   //! get the uptight orbital ids for given names
   void get_orbital_ids(const std::vector<std::string>& names, std::set<int>& ids) const;
 
-  //! get projection on VB atomic orbitals
-  void project_on_vb_orbitals(const std::vector<eigen_problem_solution>& solutions,
-                              std::vector<double>& projections) const;
+  //! get projection on VB and CB atomic orbitals
+  /*!
+   * This is temporary, I would like to implement a more generic projection
+   * method with API shared with EFA
+   */
+  void project_on_band_orbitals(const std::vector<libMesh::Complex>& solution,
+                                std::vector<double>& projections) const;
 
   //! Structure containing options for DFTB+ tight binding builder
   UptOptions _upt_options;
@@ -312,14 +316,22 @@ class ETB : public TightBinding
   //!Vector for atom-projected band shifts
   std::vector<double> _band_shift;
   
-  double _vb_shift;
+  double _vb_shift = 0;
+
+  //! the CB minimum
+  double _cb_min = 0;
+
+  //! the VB maximum
+  double _vb_max = 0;
 
   //! Size of the solution (number of states)
-  unsigned int _solution_size;
+  unsigned int _solution_size = 0;
   
+  //! strain interface
   StrainInterface _strain_int;
 
-  SimulationInterface* _dd_int;
+  //! source for the potentials
+  SimulationInterface* _dd_int = nullptr;
 
 };
 

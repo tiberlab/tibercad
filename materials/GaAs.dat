@@ -14,6 +14,12 @@ m_HH = 0.51
 m_LH = 0.082
 m_SO = 0.15
 
+# these are used to identify states,
+# the given values are the defaults
+bloch_states = p
+atomic_orbitals = ( (),
+                    (p) )
+
 
 [conductionband] # [1]
 m_G = 0.067
@@ -22,6 +28,11 @@ m_L_t = 0.0754
 m_X_l = 1.3
 m_X_t = 0.23
 
+# these are used to identify states,
+# the given values are the defaults
+bloch_states = s
+atomic_orbitals = ( (s),
+                    () )
 
 
 [bandgap] # [1]

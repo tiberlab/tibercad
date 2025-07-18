@@ -153,7 +153,8 @@ Module efaschroedinger
   Dispersion
   {
     k_path = X-G-Z
-    number_of_nodes = (20,10)
+    number_of_nodes = (50,10)
+    reorder_states = true
   }
 
 }
@@ -181,14 +182,13 @@ Module empirical_tb
 
   Solver
   {
-    solver = lapack
+    solver_type = slepc
+    #solver = lapack
+    preconditioner = lu
     
     num_conduction_eigenvalues = 10
     num_valence_eigenvalues = 10
 
-    # we have to still implement identification of states
-    guess_conduction = -0.2
-    guess_valence = -0.2
     long_tolerance = 1e-9
 
   }
@@ -201,7 +201,10 @@ Module empirical_tb
     #write_PC_mesh = PC
     #k_path = G-M-Z-A-R-X
     k_path = X-G-Z
-    number_of_nodes = (100,10)
+    number_of_nodes = (100, 10)
+    # so that we get a global ordering of states
+    # (same ordering in all k-points)
+    reorder_states = true
   }
 
   #DOS

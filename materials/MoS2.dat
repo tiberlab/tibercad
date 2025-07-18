@@ -18,9 +18,14 @@ m_LH = 0.16
 
 m_dos = 1.63813
 
+# has to be checked
+atomic_orbitals = ( (d), (), () )
 
 [conductionband]
 m_G = 0.156
+
+# has to be checked
+atomic_orbitals = ( (), (p), (p) )
 
 
 [bandgap]
