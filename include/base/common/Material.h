@@ -227,22 +227,24 @@ class Material : public PhysicalObject
     std::map<unsigned int, std::set<Specie>> _crystal_type_map;
 
     //! The Bloch basis states contributig to the CB
-    std::vector<std::string> _cb_bloch_states;
+    std::vector<std::string> _cb_bloch_states {"s"};
 
     //! The Bloch basis states contributig to the VB
-    std::vector<std::string> _vb_bloch_states;
+    std::vector<std::string> _vb_bloch_states {"p"};
 
     //! The atomic orbitals contributing to the CB
     /*!
-     * Here the first index refers to the atom in the basis
+     * Here the first index refers to the atom in the basis (label).
+     * The default is for III-V materials
      */
-    std::vector<std::vector<std::string>> _cb_atomic_orbitals;
+    std::vector<std::vector<std::string>> _cb_atomic_orbitals { { "s" }, {}};
 
     //! The atomic orbitals contributing to the VB
     /*!
-     * Here the first index refers to the atom in the basis
+     * Here the first index refers to the atom in the basis (label)
+     * The default is for III-V materials
      */
-    std::vector<std::vector<std::string>> _vb_atomic_orbitals;
+    std::vector<std::vector<std::string>> _vb_atomic_orbitals { {}, { "p" }};
 
 
   private:

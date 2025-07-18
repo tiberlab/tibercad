@@ -409,29 +409,11 @@ Database::get(const string& variable,
   Utils::extract_vector(s, vec);
 
   size_t n = vec.size();
-  if ((data.size() > 0) && (data.size() != n))
-  {
-    ostringstream msg;
-    msg << "Variable \'" << variable << "\' in section \'" << _section
-      << "\' of material data file " << _datafile
-      << " has to provide an array with " << data.size() << " rows";
-    throw DatabaseException(msg.str());
-  }
-
   data.resize(n);
   for (size_t i = 0; i < n; i++)
   {
     size_t ns = data[i].size();
     Utils::extract_vector(vec[i], data[i]);
-    if ((ns > 0) && (data[i].size() != ns))
-    {
-      ostringstream msg;
-      msg << "Row " << (i + 1) << " of variable \'" << variable
-        << "\' in secton \'" << _section
-        << "\' of material data file " << _datafile
-        << " has to have " << ns << " components";
-      throw DatabaseException(msg.str());
-    }
   }
 }
 

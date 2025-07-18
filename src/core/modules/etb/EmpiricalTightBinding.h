@@ -108,9 +108,6 @@ class ETB : public TightBinding
 
   void set_num_states(int num_vb, int num_cb);
 
-  //! computes the solution
-  void solve_for_particle(const std::string& particle);
-
   //! Computes the Fermi level averaged according to the state density
   double calculate_fermi_averaged(unsigned int i);
 
@@ -264,7 +261,14 @@ class ETB : public TightBinding
   void create_dummy_H(void);
 
   //! compute the Hamiltonian dimension using uptight
-  unsigned int  compute_H_dim(void);
+  unsigned int compute_H_dim(void);
+
+  //! get the uptight orbital ids for given names
+  void get_orbital_ids(const std::vector<std::string>& names, std::set<int>& ids) const;
+
+  //! get projection on VB atomic orbitals
+  void project_on_vb_orbitals(const std::vector<eigen_problem_solution>& solutions,
+                              std::vector<double>& projections) const;
 
   //! Structure containing options for DFTB+ tight binding builder
   UptOptions _upt_options;

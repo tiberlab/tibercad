@@ -1760,6 +1760,8 @@ void EnvelopFunctionApprox::estimate_spectrum_shift(void)
  }
 
 }
+
+
 //=============================================================//
 double EnvelopFunctionApprox::get_new_spectrum_shift(void)
 {
@@ -1848,7 +1850,7 @@ pair<unsigned int, double> EnvelopFunctionApprox::read_slepc_solution(void)
       ev[ind].particle = "hl";
   }
 
-    if (verbose() > 1)
+  if (verbose() > 1)
   {
     Messages m;
     ostringstream os;

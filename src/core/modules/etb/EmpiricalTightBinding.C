@@ -687,8 +687,8 @@ ETB::call_uptight(void)
 
     for(int i=1; i<= num_ev; i++)
     {
-	Complex matel = inst->get_matel(i,i);
-	std::cout << "  <"<<i<<"| H |"<<i<<"> = " << matel << std::endl;
+	    Complex matel = inst->get_matel(i,i);
+	    std::cout << "  <"<<i<<"| H |"<<i<<"> = " << matel << std::endl;
     }
   }
 
@@ -1033,6 +1033,12 @@ ETB::read_slepc_solution(void)
 
   }
 
+
+  //vector<double> proj;
+  //project_on_vb_orbitals(_solution, proj);
+  //for (unsigned int i = 0; i < proj.size(); ++i)
+  //cerr << i << " : " << proj[i] << "\n";
+
   // the 1e-5 below is to not make the Hamiltonian singular,
   // and to be sure to take all states
 
@@ -1187,6 +1193,9 @@ void ETB::create_dummy_H(void)
    if (_upt_options.potential_flag)  add_pot_shifts(); 
 
 }
+
+
+
 //-------------------------------------------------------------------------
 Complex ETB::calculate_matrix_element(const std::string& i_particle,
 						   unsigned int i,
@@ -1210,31 +1219,8 @@ Complex ETB::calculate_matrix_element(const std::string& i_particle,
 
   return inst->get_matel(i,j);
 }
-//-------------------------------------------------------------------------
-void ETB::solve_for_particle(const std::string& particle)
-{
 
-  if (particle == "el" || particle == "electron")
-  {
-    int temp_n_vb = _upt_solver_options.n_vb;
-    _upt_solver_options.n_vb = 0;
 
-    this->do_solve();
-
-    _upt_solver_options.n_vb = temp_n_vb;
-
-  }
-  if (particle == "hl" || particle == "hole")
-  {
-    int temp_n_cb = _upt_solver_options.n_cb;
-    _upt_solver_options.n_cb = 0;
-
-    this->do_solve();
-
-    _upt_solver_options.n_cb = temp_n_cb;
-  }
-
-}
 
 //-------------------------------------------------------------------------
 void 
@@ -1797,6 +1783,160 @@ ETB::compute_atomic_charges(const std::string& particle, std::vector<double>& qm
   }
 
 }
+
+
+void
+ETB::get_orbital_ids(const std::vector<std::string>& names, std::set<int>& ids) const
+{
+  if (names.empty())
+    return;
+
+  for (auto& name : names)
+  {
+
+    if (name == "s")
+    {
+      ids.insert(1);
+      continue;
+    }
+
+    if (name == "s*")
+    {
+      ids.insert(5);
+      continue;
+    }
+
+    if (name == "p")
+    {
+      ids.insert(2);
+      ids.insert(3);
+      ids.insert(4);
+      continue;
+    }
+
+    if (name == "px")
+    {
+      ids.insert(2);
+      continue;
+    }
+
+    if (name == "py")
+    {
+      ids.insert(3);
+      continue;
+    }
+
+    if (name == "pz")
+    {
+      ids.insert(4);
+      continue;
+    }
+
+    if (name == "d")
+    {
+      ids.insert(6);
+      ids.insert(7);
+      ids.insert(8);
+      ids.insert(9);
+      ids.insert(10);
+      continue;
+    }
+
+    if (name == "dxy")
+    {
+      ids.insert(6);
+      continue;
+    }
+
+    if (name == "dyz")
+    {
+      ids.insert(7);
+      continue;
+    }
+
+    if (name == "dzx")
+    {
+      ids.insert(8);
+      continue;
+    }
+
+    if (name == "dx2y2")
+    {
+      ids.insert(9);
+      continue;
+    }
+
+    if (name == "dz2r2")
+    {
+      ids.insert(10);
+      continue;
+    }
+  }
+}
+
+void
+ETB::project_on_vb_orbitals(const std::vector<eigen_problem_solution>& solutions,
+                            std::vector<double>& projections) const
+{
+
+  int n_states = solutions.size();
+  projections.clear();
+  projections.resize(n_states, 0.0);
+
+  const std::vector<Atom>& atom = get_atomistic_structure()->get_structure_atoms();
+  size_t N = get_atomistic_structure()->get_N_without_H();
+
+  int n_spin = _upt_options.relat_flag ? 2 : 1;
+
+  vector<int> orbitals;
+  size_t ii = 0;
+
+  for (size_t i = 0; i < N; i++)
+  {
+    // WARNING: _ion_num_orbitals considers the two spins!
+    orbitals.resize(_ion_num_orbitals[i] / n_spin);
+    inst->get_ion_orbitals(i+1, orbitals);
+
+    const Material* mat = get_material(atom[i].get_elem());
+    if (mat == nullptr)
+      continue;
+
+    // get the atomic orbitals contributing to the VB
+    auto& vb_orb = mat->get_vb_atomic_orbitals();
+
+    unsigned int atom_id = static_cast<unsigned int>(atom[i].get_label()) - 1;
+
+    // only if the current atom contributes to the VB we have to check
+    if ((atom_id < vb_orb.size()) && !vb_orb[atom_id].empty())
+    {
+
+      set<int> orb_ids;
+      get_orbital_ids(vb_orb[atom_id], orb_ids);
+      
+      for (size_t orb_i = 0; orb_i < orbitals.size(); ++orb_i)
+      {
+        if (orb_ids.count(orbitals[orb_i]))
+        {
+          for (int s = 0; s < n_states; ++s)
+          {
+            double val = std::abs(solutions[s].eigen_vector[ii + orb_i]);
+            projections[s] += val * val;
+
+            if (_upt_options.relat_flag)
+            {
+              val = std::abs(solutions[s].eigen_vector[ii + orb_i + orbitals.size()]);
+              projections[s] += val * val;
+            }
+          }
+        }
+      }
+    }
+
+    ii += _ion_num_orbitals[i];
+  }
+
+}
+
 
 
 void
