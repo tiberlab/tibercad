@@ -754,7 +754,7 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     if (i > 0)
       solve_for_kpoint(k_point);
 
-    if (kopts.get_option("reorder_states", "true"))
+    if (kopts.get_option("reorder_states", true))
     {
       reorder_states(k_point);
       _ksolutions[k_point] = _solution;
@@ -1242,9 +1242,6 @@ void EigenvalueProblem::calculate_dos(void)
   const MeshBase* kmesh = _kspace->get_k_mesh();
   unsigned int number_of_k_points = kmesh->n_nodes();
 
-  //typedef boost::shared_ptr<eigen_problem_solution> ptr_type;
-
-  //vector<vector<ptr_type>> solutions(number_of_k_points);
   vector<vector<eigen_problem_solution>> solutions(number_of_k_points);
 
   for (unsigned int i = 0; i < number_of_k_points; i++)
@@ -1257,7 +1254,6 @@ void EigenvalueProblem::calculate_dos(void)
 
     for (unsigned int j = 0 ; j < number_of_eigs; j++)
       solutions[i][j] = _solution[j];
-//      solutions[i][j] = ptr_type(new eigen_problem_solution(_solution[j]));
 
   }
 
@@ -1870,34 +1866,30 @@ void EigenvalueProblem::get_populations(const std::string& particle,
       num_st++;
 
       if (_solution[i].statistics == "Fermi")
-      {      
-	if (p == "el" || p == "electron")
-	{
-          double val = Fermi(_solution[i].eigen_energy, _solution[i].electro_chem_pot, 
-		       _solution[i].temperature);
+      {
+        if (p == "el" || p == "electron")
+        {
+          double val = Fermi(_solution[i].eigen_energy, _solution[i].electro_chem_pot,
+                             _solution[i].temperature);
 
-	  values.push_back(val);	  
-	}	
+          values.push_back(val);
+        }
         else if (p == "hl" || p == "hole")
-	{
-          double val = Fermi(-_solution[i].eigen_energy, -_solution[i].electro_chem_pot, 
-		       _solution[i].temperature);
+        {
+          double val = Fermi(-_solution[i].eigen_energy, -_solution[i].electro_chem_pot,
+                             _solution[i].temperature);
 
-	  values.push_back(val);	  
-	}
-
+          values.push_back(val);
+        }
       }
       else
       {
-	double val = Bose(_solution[i].eigen_energy, _solution[i].electro_chem_pot, 
-		       _solution[i].temperature);
+        double val = Bose(_solution[i].eigen_energy, _solution[i].electro_chem_pot,
+                          _solution[i].temperature);
 
-	values.push_back(val);	
-	
+        values.push_back(val);
       }
-
     }
-     
   }
 
   values.resize(num_st);

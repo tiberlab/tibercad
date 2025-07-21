@@ -1844,40 +1844,37 @@ ETB::project_on_band_orbitals(const std::vector<libMesh::Complex>& solution,
 
     unsigned int atom_id = static_cast<unsigned int>(atom[i].get_label()) - 1;
 
-    // only if the current atom contributes to the VB we have to check
-    //if ((atom_id < vb_orb.size()) && !vb_orb[atom_id].empty())
-    {
-
-      set<int> orb_ids;
+    set<int> orb_ids;
+    if ((atom_id < vb_orb.size()) && !vb_orb[atom_id].empty())
       get_orbital_ids(vb_orb[atom_id], orb_ids);
 
-      set<int> cb_orb_ids;
+    set<int> cb_orb_ids;
+    if ((atom_id < cb_orb.size()) && !cb_orb[atom_id].empty())
       get_orbital_ids(cb_orb[atom_id], cb_orb_ids);
-      
-      for (size_t orb_i = 0; orb_i < orbitals.size(); ++orb_i)
+
+    for (size_t orb_i = 0; orb_i < orbitals.size(); ++orb_i)
+    {
+      if (orb_ids.count(orbitals[orb_i]))
       {
-        if (orb_ids.count(orbitals[orb_i]))
+        double val = std::abs(solution[ii + orb_i]);
+        projections[0] += val * val;
+
+        if (_upt_options.relat_flag)
         {
-          double val = std::abs(solution[ii + orb_i]);
+          val = std::abs(solution[ii + orb_i + orbitals.size()]);
           projections[0] += val * val;
-
-          if (_upt_options.relat_flag)
-          {
-            val = std::abs(solution[ii + orb_i + orbitals.size()]);
-            projections[0] += val * val;
-          }
         }
-        
-        if (cb_orb_ids.count(orbitals[orb_i]))
-        {
-          double val = std::abs(solution[ii + orb_i]);
-          projections[1] += val * val;
+      }
 
-          if (_upt_options.relat_flag)
-          {
-            val = std::abs(solution[ii + orb_i + orbitals.size()]);
-            projections[1] += val * val;
-          }
+      if (cb_orb_ids.count(orbitals[orb_i]))
+      {
+        double val = std::abs(solution[ii + orb_i]);
+        projections[1] += val * val;
+
+        if (_upt_options.relat_flag)
+        {
+          val = std::abs(solution[ii + orb_i + orbitals.size()]);
+          projections[1] += val * val;
         }
       }
     }

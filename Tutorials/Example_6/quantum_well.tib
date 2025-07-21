@@ -14,7 +14,8 @@ Device
 
   Region well
   {
-    material = GaN
+    material = InGaN
+    x = 0.3
     
     Doping
     {
@@ -138,12 +139,18 @@ Module  efaschroedinger
   number_of_eigenstates = 10
   poisson_simulation = dd
   strain_simulation  = strain 
+  verbose = 5
+
  
   Dispersion
   {
     k-path = X-G-S
     k_max = 1
     number_of_nodes = 10	
+
+    reorder_states = true
+
+    #project_on_states = (s, p)
   }	
 
   Solver {
@@ -153,7 +160,7 @@ Module  efaschroedinger
 
   Physics
   {
-    model = conduction_band  
+    model = 8x8  
   }
   
 
@@ -199,7 +206,7 @@ Simulation
    
   dimension = 1
   temperature = 300
-  solve = (strain, dd, quantum_el, quantum_hl)   
+  solve = (strain, dd, quantum_el)   
   resultpath = output
   output_format = grace
 

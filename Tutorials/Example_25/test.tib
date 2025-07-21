@@ -143,6 +143,7 @@ Module empirical_tb
     #write_PC_mesh = PC
     k_path = M-G-A
     number_of_nodes = 40
+    reorder_states = false
   }
 
 #  DOS
