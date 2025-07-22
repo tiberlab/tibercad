@@ -403,6 +403,10 @@ class EigenvalueProblem : public SimulationInterface
     void k_is_old(void);
 
 
+    //! Reorder states according to a reference solution
+    void reorder_states(const std::vector<EigenvalueProblem::eigen_problem_solution>& reference);
+
+
     //! Reorder all states to a global order
     /*!
      * States are ordered independent of energy by projecting onto 

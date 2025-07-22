@@ -17,9 +17,15 @@ thermal_coefficient = (4.15e-6, 5.27e-6)
 # from Nextnano
 E_v = -1.52554
 
+bloch_states = p
+atomic_orbitals = ( (), (p), (), (p) )
+
 
 [conductionband]
 m_G = (0.3, 0.3, 0.32)
+
+bloch_states = s
+atomic_orbitals = ( (s), (), (s), () )
 
 [bandgap]
 # T = 0

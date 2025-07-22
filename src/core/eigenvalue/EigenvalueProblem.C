@@ -730,6 +730,10 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
   unsigned int number_of_K_points = Kpoints.size();
 
   solve_for_kpoint(Kpoints[0]);
+  vector<eigen_problem_solution> last_states;
+  
+  if (kopts.get_option("reorder_states", true))
+    last_states = _solution;
 
   unsigned int number_of_eigs = get_num_states();;
 
@@ -752,12 +756,14 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     const Point& k_point = Kpoints[i];
 
     if (i > 0)
+    {
       solve_for_kpoint(k_point);
 
-    if (kopts.get_option("reorder_states", true))
-    {
-      reorder_states(k_point);
-      _ksolutions[k_point] = _solution;
+      if (kopts.get_option("reorder_states", true))
+      {
+        reorder_states(last_states);
+        last_states = _solution;
+      }
     }
 
     // if requested, project onto basis functions
@@ -838,36 +844,56 @@ EigenvalueProblem::reorder_states(const Point& kpoint)
 
   if (nearest_k != _ksolutions.end())
   {
+    reorder_states(nearest_k->second);
+  }
+}
 
-    const std::vector<eigen_problem_solution>& ref_sol = nearest_k->second;
 
-    for (unsigned int i = 0; i < ref_sol.size(); ++i)
+
+void
+EigenvalueProblem::reorder_states(const std::vector<EigenvalueProblem::eigen_problem_solution>& reference)
+{
+
+  vector<unsigned int> ids(_solution.size());
+
+  set<unsigned int> ref_ids;
+
+  for (unsigned int j = 0; j < _solution.size(); ++j)
+  {
+    double max_proj = 0;
+    unsigned int max_id = 0;
+    for (unsigned int i = 0; i < reference.size(); ++i)
     {
-      double max_proj = 0;
-      unsigned int max_id = 0;
-      for (unsigned int j = i; j < _solution.size(); ++j)
+       if (ref_ids.count(i))
+         continue;
+
+      if (_solution[j].particle == reference[i].particle)
       {
-        if (_solution[j].particle == ref_sol[i].particle)
+        libMesh::Complex proj = scalar_product(_solution[j].eigen_vector,
+                                               reference[i].eigen_vector);
+
+        double proj_abs = std::abs(proj);
+        if (proj_abs >= max_proj)
         {
-          libMesh::Complex proj = scalar_product(_solution[j].eigen_vector,
-                                                 ref_sol[i].eigen_vector);
-        
-          double proj_abs = std::abs(proj);
-          if (proj_abs > max_proj)
-          {
-            max_proj = proj_abs;
-            max_id = j;
-          }
+          max_proj = proj_abs;
+          max_id = i;
         }
       }
-
-      if (max_id != i)
-      {
-        std::swap(_solution[i], _solution[max_id]);
-      }
     }
+
+    ids[j] = max_id;
+    ref_ids.insert(max_id);
   }
 
+  unsigned int next_id = 0;
+  for (unsigned i = 0; i < ids.size(); ++i)
+  {
+    if (ids[i] != i)
+    {
+      std::swap(_solution[i], _solution[ids[i]]);
+      std::swap(ids[i], ids[ids[i]]);
+    }
+  }
 }
 
 

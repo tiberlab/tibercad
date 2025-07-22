@@ -17,9 +17,15 @@ E_v = 0.03967
 # osram ??
 #E_v = 0.289
 
+bloch_states = p
+atomic_orbitals = ( (), (p), (), (p) )
+
 
 [conductionband]
 m_G = (0.07, 0.07, 0.07)
+
+bloch_states = s
+atomic_orbitals = ( (s), (), (s), () )
 
 
 [bandgap]

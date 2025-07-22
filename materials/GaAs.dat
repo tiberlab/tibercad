@@ -17,8 +17,7 @@ m_SO = 0.15
 # these are used to identify states,
 # the given values are the defaults
 bloch_states = p
-atomic_orbitals = ( (),
-                    (p) )
+atomic_orbitals = ( (), (p) )
 
 
 [conductionband] # [1]
@@ -31,8 +30,7 @@ m_X_t = 0.23
 # these are used to identify states,
 # the given values are the defaults
 bloch_states = s
-atomic_orbitals = ( (s),
-                    () )
+atomic_orbitals = ( (s), () )
 
 
 [bandgap] # [1]
