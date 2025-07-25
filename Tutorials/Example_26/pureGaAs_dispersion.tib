@@ -133,6 +133,7 @@ Module empirical_tb
     #k-path = G-X
     number_of_nodes = 80
     #unfold_to = quantum
+    reorder_states = false
   }	
 }
 
