@@ -7,6 +7,8 @@ own TODO list. For historical reason, some module-specific TODO's are left in th
 
 ### Todo
 
+- [ ] eliminate interlayer for libMesh system and solver classes (and solver re-implementations)
+- [ ] add more useful common API for projecting quantum states on bases/orbitals
 - [ ] change input parser so that it reads first into a string (with all includes) and then parses 
 - [ ] change get_solution to have source argument, to allow different meshes  
 - [ ] allow reading individual meshes in modules
@@ -21,6 +23,7 @@ own TODO list. For historical reason, some module-specific TODO's are left in th
 ### In Progress
 
 - [ ] add possibility to have independent meshes  
+- [ ] add transient solver 
 
 
 ### Done ✓
@@ -32,7 +35,7 @@ own TODO list. For historical reason, some module-specific TODO's are left in th
 - [x] add something like @define, @if etc. in InputParser  
 - [x] Complete the Elasticity module  
 - [x] add possibility to read RealGradient type from input file  
-- [x] add the *operator between tensor.h and tensor_value.h related types.  
+- [x] add the \*operator between tensor.h and tensor_value.h related types.  
 - [x] put plot keyword into modules  
 - [x] put mesh, dimension into $Device  
 - [x] review approach for variables  

@@ -6,7 +6,7 @@
 #include "TiberEqSystem.h"
 #include "libMeshDefs.h"
 
-#include "linear_implicit_system.h"
+#include "libmesh/linear_implicit_system.h"
 
 
 class TiberLinearSolver;
@@ -38,14 +38,6 @@ class TiberLinearSystem : public TiberEqSystem, public libMesh::LinearImplicitSy
      */
     static TiberLinearSystem* create(libMesh::EquationSystems& es,
         const std::string& sysname, const ModelOptions& options);
-
-
-    /*! \copydoc ImplicitSystem::clear() */
-    //virtual void clear(void);
-
-
-    /*! \copydoc ImplicitSystem::reinit() */
-    //virtual void reinit(void);
 
 
     /*! \copydoc ImplicitSystem::solve() */

@@ -7,8 +7,8 @@
 #include "TiberCad.h"
 
 
-#include "equation_systems.h"
-#include "linear_solver.h"
+#include "libmesh/equation_systems.h"
+#include "libmesh/linear_solver.h"
 
 #include <cassert>
 
@@ -30,10 +30,10 @@ TiberLinearSystem*
 TiberLinearSystem::create(libMesh::EquationSystems& es,
     const string& sysname, const ModelOptions& options)
 {
-  TiberLinearSystem* sys = NULL;
+  TiberLinearSystem* sys = nullptr;
   sys = &(es.add_system<TiberLinearSystem>(sysname));
 
-  if (sys == NULL)
+  if (sys == nullptr)
     throw InitFailedException("Could not create linear system " + sysname);
 
   sys->set_options(options);

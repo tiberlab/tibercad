@@ -3,6 +3,7 @@
 #include "TiberEqSystem.h"
 #include "TiberNonlinearSystem.h"
 #include "TiberLinearSystem.h"
+#include "TiberTransientSystem.h"
 #include "InitFailedException.h"
 
 #include <libmesh/numeric_vector.h>
@@ -34,6 +35,8 @@ TiberEqSystem::create(libMesh::EquationSystems& es,
     sys_type = LINEAR;
   else if (type == "nonlinear")
     sys_type = NONLINEAR;
+  else if (type == "transient")
+    sys_type = TRLINEAR;
   else
     throw InitFailedException("Unknown equation system type " + sys_type);
 
@@ -57,6 +60,10 @@ TiberEqSystem::create(libMesh::EquationSystems& es,
 
     case NONLINEAR:
       sys = TiberNonlinearSystem::create(es, sysname, options);
+      break;
+
+    case TRLINEAR:
+      sys = TiberTransientSystem<libMesh::LinearImplicitSystem>::create(es, sysname, options);
       break;
 
     default:

@@ -36,7 +36,8 @@ class TiberEqSystem
     {
       UNDEFINED = 0, //!< undefined system type
       LINEAR,        //!< linear system
-      NONLINEAR      //!< nonlinear system
+      NONLINEAR,     //!< nonlinear system
+      TRLINEAR       //!< transient linear system
     };
     
     //! The type of norms
@@ -59,7 +60,6 @@ class TiberEqSystem
      * \param[in] options the options for the new system
      * \return a reference to the newly created system
      */
-
     static TiberEqSystem* create(libMesh::EquationSystems& es,
         const std::string& sysname, SystemType type,
         const ModelOptions& options);

@@ -5,7 +5,7 @@
 #include "WIBoundaryModel.h"
 #include "WIUtils.h"
 #include "SimulationOptions.h"
-#include "TiberLinearSystem.h"
+#include "TiberTransientSystem.h"
 #include "Messages.h"
 
 #include "libmesh/equation_systems.h"
@@ -55,10 +55,10 @@ WaterIngress::do_init(void)
   parse_options();
 
   // create a linear equation system 
-  create_equation_system("linear");
+  create_equation_system("transient");
 
   // get the reference to it
-  TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
+  TiberTransientLinSystem& system = get_equation_system<TiberTransientLinSystem>();
 
   // we use the partial pressure as variable, as this is the quantity
   // that is continuous
@@ -98,7 +98,7 @@ WaterIngress::do_solve(void)
 {
   double current_time = TiberCad::get_global_time();
 
-  TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
+  TiberTransientLinSystem& system = get_equation_system<TiberTransientLinSystem>();
 
 
   system.set_options(get_solver_options());
@@ -140,7 +140,7 @@ WaterIngress::get_solution_secure(const Elem* elem,
 {
   unsigned int np = p.size();
 
-  TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
+  TiberTransientLinSystem& system = get_equation_system<TiberTransientLinSystem>();
 
   const NumericVector<libMesh::Number>& solution = system.get_solution_vector();
 
@@ -231,7 +231,7 @@ WaterIngress::get_solution_secure(const Elem* elem,
 void
 WaterIngress::assemble(void)
 {
-  TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
+  TiberTransientLinSystem& system = get_equation_system<TiberTransientLinSystem>();
 
   const NumericVector<libMesh::Number>& solution = system.get_solution_vector();
 
