@@ -237,6 +237,7 @@ WaterIngress::assemble(void)
 
   // this vector contains the diagonal of the (lumped) A matrix
   NumericVector<libMesh::Number>& t_weight = system.get_vector("t_weight");
+  t_weight.zero();
 
   const MeshBase& mesh = get_mesh();
   const unsigned int dim = mesh.mesh_dimension();
@@ -285,9 +286,6 @@ WaterIngress::assemble(void)
   DenseVector<Number> A;
   DenseVector<Number> sol;
 
-  double delta_t = TiberCad::get_global_time() - _old_time;
-
-
   MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
   const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
 
@@ -320,21 +318,15 @@ WaterIngress::assemble(void)
     for (unsigned int qp = 0; qp < qrule->n_points(); qp++)
     {
 
-
       for (unsigned int i = 0; i < n_dofs; i++)
       {
         for (unsigned int j = 0; j < n_dofs; j++)
         {
-          Ke(i, j) += JxW[qp] * delta_t * S * D * (dphi[i][qp] * dphi[j][qp]);
+          Ke(i, j) += JxW[qp] * S * D * (dphi[i][qp] * dphi[j][qp]);
+
+          // we use mass lumping here
+          A(i) += JxW[qp] * S * (phi[i][qp] * phi[j][qp]);
         }
-
-        // we use mass lumping here
-        Ke(i, i) += JxW[qp] * S;
-
-        Fe(i) += JxW[qp] * S * sol(i);
-
-        // we use mass lumping here
-        A(i) += JxW[qp] * S;
       }
 
     }
@@ -382,9 +374,10 @@ WaterIngress::assemble(void)
 
   }
   system.matrix->close();
-  //system.matrix->print_matlab("K.m");
   system.rhs->close();
   t_weight.close();
-  //system.rhs->print_matlab("F.m");
+  //system.matrix->print_matlab("K_wi.m");
+  //system.rhs->print_matlab("F_wi.m");
+  //t_weight.print_matlab("A_wi.m");
 
 }

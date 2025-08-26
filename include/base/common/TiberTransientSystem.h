@@ -14,6 +14,8 @@
 /*!
  * \brief First order transient system in tibercad
  *
+ * This system is used to describe/solve a first order ODE of type
+ * a\partial u \partial t + Lu = f
  */
 template <class Base>
 class TiberTransientSystem : public TiberEqSystem, public libMesh::TransientSystem<Base>

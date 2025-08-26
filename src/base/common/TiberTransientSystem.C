@@ -3,6 +3,8 @@
 
 #include "libmesh/equation_systems.h"
 #include "libmesh/linear_implicit_system.h"
+#include "libmesh/sparse_matrix.h"
+#include "libmesh/numeric_vector.h"
 
 
 template <class Base>
@@ -54,6 +56,10 @@ TiberTransientSystem<Base>::solve(void)
   if (_target_time <= this->time)
     return;
 
+  // the full time step to achieve
+  double delta_t = _target_time - this->time;
+
+  // I think this should be always true, here
   if (this->assemble_before_solve)
     this->assemble();
 
@@ -67,6 +73,28 @@ TiberTransientSystem<Base>::solve(void)
 
   double lin_rel_tol = lin_solver->get_linear_rtol();
   int lin_max_it = lin_solver->get_linear_max_it();
+
+  // setup the final system matrix
+  // 1/delta_t*A + K
+  // A is the diagonal, so we have to add element wise
+  //
+  // setup the final rhs
+  // 1/delta_t*A*u_old + f
+  //
+  NumericVector<libMesh::Number>& A = this->get_vector("t_weight");
+  for (auto i = this->matrix->row_start(); i < this->matrix->row_stop(); ++i)
+  {
+    double mul = 1.0/delta_t * A.el(i);
+    this->matrix->add(i, i, mul);
+    this->rhs->add(i, mul * this->solution->el(i));
+  }
+
+  this->matrix->close();
+  this->rhs->close();
+  //this->matrix->print_matlab("K_solver.m");
+  //this->rhs->print_matlab("F_solver.m");
+
+
 
   // Solve the linear system
   const std::pair<unsigned int, Real> rval;
