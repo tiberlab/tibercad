@@ -62,10 +62,16 @@ class TiberTransientSystem : public TiberEqSystem, public libMesh::TransientSyst
     virtual libMesh::NumericVector<double>& get_local_solution_vector(void) override;
 
 
+    //! Set the target time
+    void set_target_time(double time);
+
 
   private:
 
     typedef libMesh::TransientSystem<Base> parent_type;
+
+    //! The next target time
+    double _target_time = 0.;
 
 };
     

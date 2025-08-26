@@ -37,6 +37,12 @@ TiberTransientSystem<Base>::create(libMesh::EquationSystems& es,
 }
 
 
+template <class Base>
+void
+TiberTransientSystem<Base>::set_target_time(double time)
+{
+  _target_time = time;
+}
 
 
 template <class Base>
@@ -44,7 +50,11 @@ void
 TiberTransientSystem<Base>::solve(void)
 {
 
- if (this->assemble_before_solve)
+  // if the time has not been updated, we can return back
+  if (_target_time <= this->time)
+    return;
+
+  if (this->assemble_before_solve)
     this->assemble();
 
   // Get a reference to the EquationSystems
@@ -75,6 +85,8 @@ TiberTransientSystem<Base>::solve(void)
   // Update the system after the solve
   this->update();
 
+  this->time = _target_time;
+
   lin_solver->clear();
 }
 
@@ -86,6 +98,9 @@ TiberTransientSystem<Base>::user_initialization(void)
   TiberLinearSolver* lin_solver = TiberLinearSolver::create(this->comm(), get_options());
   libMesh::TransientSystem<Base>::linear_solver.reset();
   libMesh::TransientSystem<Base>::linear_solver = std::unique_ptr<libMesh::LinearSolver<Real> >(lin_solver);
+
+  // we add a vector for the weight function of the time derivative
+  this->add_vector("t_weight");
 }
 
 

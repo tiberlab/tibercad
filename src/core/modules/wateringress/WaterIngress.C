@@ -100,8 +100,8 @@ WaterIngress::do_solve(void)
 
   TiberTransientLinSystem& system = get_equation_system<TiberTransientLinSystem>();
 
-
   system.set_options(get_solver_options());
+  system.set_target_time(current_time);
   system.solve();
 
   _old_time = current_time;
@@ -235,6 +235,9 @@ WaterIngress::assemble(void)
 
   const NumericVector<libMesh::Number>& solution = system.get_solution_vector();
 
+  // this vector contains the diagonal of the (lumped) A matrix
+  NumericVector<libMesh::Number>& t_weight = system.get_vector("t_weight");
+
   const MeshBase& mesh = get_mesh();
   const unsigned int dim = mesh.mesh_dimension();
   // NB: Tibercad by default uses length-scale in meters 
@@ -279,6 +282,7 @@ WaterIngress::assemble(void)
 
   DenseMatrix<Number> Ke;
   DenseVector<Number> Fe;
+  DenseVector<Number> A;
   DenseVector<Number> sol;
 
   double delta_t = TiberCad::get_global_time() - _old_time;
@@ -299,6 +303,7 @@ WaterIngress::assemble(void)
     // resize the element matrix/rhs (does also zero them out)
     Ke.resize(n_dofs, n_dofs);
     Fe.resize(n_dofs);
+    A.resize(n_dofs);
     sol.resize(n_dofs);
 
     // get the current solution
@@ -327,6 +332,9 @@ WaterIngress::assemble(void)
         Ke(i, i) += JxW[qp] * S;
 
         Fe(i) += JxW[qp] * S * sol(i);
+
+        // we use mass lumping here
+        A(i) += JxW[qp] * S;
       }
 
     }
@@ -370,11 +378,13 @@ WaterIngress::assemble(void)
     dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
     system.matrix->add_matrix(Ke, dof_indices);
     system.rhs->add_vector(Fe, dof_indices);
+    t_weight.add_vector(A, dof_indices);
 
   }
   system.matrix->close();
   //system.matrix->print_matlab("K.m");
   system.rhs->close();
+  t_weight.close();
   //system.rhs->print_matlab("F.m");
 
 }
