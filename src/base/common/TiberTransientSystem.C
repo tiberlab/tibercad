@@ -1,11 +1,13 @@
 #include "TiberTransientSystem.h"
 #include "TiberLinearSolver.h"
+#include "Messages.h"
 
 #include "libmesh/equation_systems.h"
 #include "libmesh/linear_implicit_system.h"
 #include "libmesh/sparse_matrix.h"
 #include "libmesh/numeric_vector.h"
 
+#include <stdexcept>
 
 template <class Base>
 TiberTransientSystem<Base>::TiberTransientSystem(libMesh::EquationSystems& es,
@@ -56,8 +58,33 @@ TiberTransientSystem<Base>::solve(void)
   if (_target_time <= this->time)
     return;
 
+  std::string method = "backward_euler";
+  method = get_options().get_option("method", method);
+
+  if (method == "backward_euler")
+    backward_euler();
+  else if (method == "forward_euler")
+    forward_euler();
+  else
+  {
+    Messages::error("Unknown transient solver: " + method);
+    throw std::runtime_error("Unknown transient solver: " + method);
+  }
+
+}
+
+
+template <class Base>
+void
+TiberTransientSystem<Base>::forward_euler(void)
+{
+
   // the full time step to achieve
   double delta_t = _target_time - this->time;
+
+  // set the systems time to the target, for assembly
+  //double old_time = this->time;
+  this->time = _target_time;
 
   // I think this should be always true, here
   if (this->assemble_before_solve)
@@ -69,7 +96,12 @@ TiberTransientSystem<Base>::solve(void)
 
   TiberLinearSolver* lin_solver =
     static_cast<TiberLinearSolver*>(this->linear_solver.get());
-  lin_solver->set_options(get_options());
+
+  if (get_options().has_submodel("linear_solver"))
+  {
+    auto lin_opts = get_options().submodels_begin("linear_solver");
+    lin_solver->set_options(lin_opts->second);
+  }
 
   double lin_rel_tol = lin_solver->get_linear_rtol();
   int lin_max_it = lin_solver->get_linear_max_it();
@@ -113,7 +145,84 @@ TiberTransientSystem<Base>::solve(void)
   // Update the system after the solve
   this->update();
 
+  //this->time = _target_time;
+
+  lin_solver->clear();
+}
+
+
+template <class Base>
+void
+TiberTransientSystem<Base>::backward_euler(void)
+{
+
+  // the full time step to achieve
+  double delta_t = _target_time - this->time;
+
+  // set the systems time to the target, for assembly
+  //double old_time = this->time;
   this->time = _target_time;
+
+  // I think this should be always true, here
+  if (this->assemble_before_solve)
+    this->assemble();
+
+  // Get a reference to the EquationSystems
+  const libMesh::EquationSystems& es =
+    this->get_equation_systems();
+
+  TiberLinearSolver* lin_solver =
+    static_cast<TiberLinearSolver*>(this->linear_solver.get());
+
+  if (get_options().has_submodel("linear_solver"))
+  {
+    auto lin_opts = get_options().submodels_begin("linear_solver");
+    lin_solver->set_options(lin_opts->second);
+  }
+
+  double lin_rel_tol = lin_solver->get_linear_rtol();
+  int lin_max_it = lin_solver->get_linear_max_it();
+
+  // setup the final system matrix
+  // 1/delta_t*A + K
+  // A is the diagonal, so we have to add element wise
+  //
+  // setup the final rhs
+  // 1/delta_t*A*u_old + f
+  //
+  NumericVector<libMesh::Number>& A = this->get_vector("t_weight");
+  for (auto i = this->matrix->row_start(); i < this->matrix->row_stop(); ++i)
+  {
+    double mul = 1.0/delta_t * A.el(i);
+    this->matrix->add(i, i, mul);
+    this->rhs->add(i, mul * this->solution->el(i));
+  }
+
+  this->matrix->close();
+  this->rhs->close();
+  //this->matrix->print_matlab("K_solver.m");
+  //this->rhs->print_matlab("F_solver.m");
+
+
+
+  // Solve the linear system
+  const std::pair<unsigned int, Real> rval;
+  if (this->have_matrix("Preconditioner"))
+    lin_solver->solve(*this->matrix, this->get_matrix("Preconditioner"),
+        *this->solution, *this->rhs, lin_rel_tol, lin_max_it);
+  else
+    lin_solver->solve(*this->matrix, *this->solution, *this->rhs, lin_rel_tol, lin_max_it);
+
+
+  // Store the number of linear iterations required to
+  // solve and the final residual.
+  this->_n_linear_iterations   = rval.first;
+  this->_final_linear_residual = rval.second;
+
+  // Update the system after the solve
+  this->update();
+
+  //this->time = _target_time;
 
   lin_solver->clear();
 }
@@ -123,7 +232,12 @@ template <class Base>
 void
 TiberTransientSystem<Base>::user_initialization(void)
 {
-  TiberLinearSolver* lin_solver = TiberLinearSolver::create(this->comm(), get_options());
+  ModelOptions solver_opts;
+  auto lin_opts = get_options().submodels_begin("linear_solver");
+  if (lin_opts != get_options().submodels_end("linear_solver"))
+    solver_opts = lin_opts->second;
+  
+  TiberLinearSolver* lin_solver = TiberLinearSolver::create(this->comm(), solver_opts);
   libMesh::TransientSystem<Base>::linear_solver.reset();
   libMesh::TransientSystem<Base>::linear_solver = std::unique_ptr<libMesh::LinearSolver<Real> >(lin_solver);
 

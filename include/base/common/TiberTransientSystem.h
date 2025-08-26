@@ -72,6 +72,12 @@ class TiberTransientSystem : public TiberEqSystem, public libMesh::TransientSyst
 
     typedef libMesh::TransientSystem<Base> parent_type;
 
+    //! Forward Euler time stepping
+    void forward_euler(void);
+
+    //! Backward Euler time stepping
+    void backward_euler(void);
+
     //! The next target time
     double _target_time = 0.;
 
