@@ -68,7 +68,6 @@ WaterIngress::do_init(void)
   system.init();
   //system.get_solution_vector().zero();
 
-  _old_time = TiberCad::get_global_time();
 }
 
 
@@ -104,7 +103,6 @@ WaterIngress::do_solve(void)
   system.set_target_time(current_time);
   system.solve();
 
-  _old_time = current_time;
 }
 
 
@@ -239,6 +237,9 @@ WaterIngress::assemble(void)
   NumericVector<libMesh::Number>& t_weight = system.get_vector("t_weight");
   t_weight.zero();
 
+  // the time relevant for assembly
+  double current_time = system.time;
+
   const MeshBase& mesh = get_mesh();
   const unsigned int dim = mesh.mesh_dimension();
   // NB: Tibercad by default uses length-scale in meters 
@@ -251,7 +252,12 @@ WaterIngress::assemble(void)
   //                                                ^ false is the default  
   //get_scaling().set_length_scaling(100 * get_mesh_units());
   get_scaling().set_calc_mesh_units(100 * get_mesh_units());
-  
+
+  // a set with all Dirichlet DoF indices
+  std::set<dof_id_type> dirichlet_dofs;
+
+  double penalty_value = 1e-12;
+
   DofMap& dof_map =  system.get_dof_map();
 
   const unsigned int uvar = system.variable_number("p");
@@ -331,7 +337,6 @@ WaterIngress::assemble(void)
 
     }
 
-
     // the sides
     for (unsigned int s = 0; s < elem->n_sides(); s++)
     {
@@ -342,6 +347,8 @@ WaterIngress::assemble(void)
       {
         fe_face->reinit(elem, s);
 
+        bool is_dirichlet = false;
+
         for (unsigned int qp = 0; qp < qface->n_points(); qp++)
         {
           mod_int->calculate(elem, s, qface_point[qp]);
@@ -350,8 +357,16 @@ WaterIngress::assemble(void)
           mod_int->get_coefficients(a, b, c);
 
           // we use a penalty approach here for its simplicity
-          if ((b < 1e-10) && (b >= 0)) b = 1e-10;
-          else if ((b > -1e-10) && (b<= 0)) b = -1e-10;
+          if ((b < penalty_value) && (b >= 0))
+          {
+            b = penalty_value;
+            is_dirichlet = true;
+          }
+          else if ((b > -penalty_value) && (b<= 0))
+          {
+            b = -penalty_value;
+            is_dirichlet = true;
+          }
 
           a /= b;
           c /= b;
@@ -362,10 +377,23 @@ WaterIngress::assemble(void)
               Ke(i, j) += a * JxW_face[qp] * (phi_face[i][qp] * phi_face[j][qp]);
 
             Fe(i) += c * JxW_face[qp] * phi_face[i][qp];
+            
+          }
+        }
+
+        if (is_dirichlet)
+        {
+          for (unsigned int i = 0; i < elem->n_nodes(); ++i)
+          {
+            if (elem->is_node_on_side(i, s))
+            {
+              dirichlet_dofs.insert(dof_indices[i]);
+            }
           }
         }
       }
     }
+
 
     dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
     system.matrix->add_matrix(Ke, dof_indices);
@@ -380,4 +408,19 @@ WaterIngress::assemble(void)
   //system.rhs->print_matlab("F_wi.m");
   //t_weight.print_matlab("A_wi.m");
 
+  // let the system know which are Dirichlet DoFs
+  system.set_dirichlet_dofs(dirichlet_dofs);
+
+  // for Dirichlet DoFs we set A to zero, so the corresponding
+  // equations become algebraic. This zero might be used by the
+  // transient solver, and it is more elegant for fulfilling
+  // essential boundy conditions
+  for (auto& i : dirichlet_dofs)
+  {
+    //double value = system.rhs->el(i) / (*system.matrix)(i, i);
+    //system.solution->set(i, value);
+    t_weight.set(i, 0.0);
+  }
+
+  t_weight.close();
 }

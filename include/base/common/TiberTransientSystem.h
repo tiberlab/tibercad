@@ -15,7 +15,16 @@
  * \brief First order transient system in tibercad
  *
  * This system is used to describe/solve a first order ODE of type
- * a\partial u \partial t + Lu = f
+ * a*\partial u \partial t + Lu = f
+ * 
+ * The following methods are implemented:
+ * - Forward Euler
+ * - Backward Euler
+ * - trapezoidal
+ * - adaptive time step using trapezoidal and backward Euler
+ * 
+ * Matrices and vectors are assembled on the final time coordinate in all
+ * cases for now.
  */
 template <class Base>
 class TiberTransientSystem : public TiberEqSystem, public libMesh::TransientSystem<Base>
@@ -68,6 +77,15 @@ class TiberTransientSystem : public TiberEqSystem, public libMesh::TransientSyst
     void set_target_time(double time);
 
 
+    //! Pass a set with Dirichlet DoF IDs
+    /*!
+     * We use this information in the explicit Euler implementation,
+     * in order to set the residual to 0, so that the boundary nodes
+     * do not change their value even for large timesteps
+     */
+    void set_dirichlet_dofs(const std::set<libMesh::dof_id_type>& dirichlet_dofs);
+
+
   private:
 
     typedef libMesh::TransientSystem<Base> parent_type;
@@ -78,8 +96,23 @@ class TiberTransientSystem : public TiberEqSystem, public libMesh::TransientSyst
     //! Backward Euler time stepping
     void backward_euler(void);
 
+    //! Backward Euler time stepping
+    void trapezoidal(void);
+
+    //! Backward Euler time stepping
+    void adaptive(void);
+
     //! The next target time
     double _target_time = 0.;
+
+    //! The current time step
+    double _time_step = 1e12;
+
+    //! The minimum allowed time step
+    double _min_time_step = 1e-12;
+
+    //! The Dirichlet DoFs
+    std::set<libMesh::dof_id_type> _dirichlet_dofs;
 
 };
     
