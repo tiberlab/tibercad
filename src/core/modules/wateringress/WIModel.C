@@ -47,11 +47,9 @@ WIModel::do_init(void)
 {
   // we read it in g/m^3/Pa
   _solubility = get_option("solubility", _solubility);
-  _solubility / 1e6;
 
   // we read it in m^2/S
   _diffusivity = get_option("diffusivity", _diffusivity);
-  _diffusivity * 1e4;
 }
 
 

@@ -21,10 +21,10 @@ class WIModel : public PhysicalModel
     //! Calculate everything
     void calculate(const Elem* elem, const Point& point);
 
-    //! Get the water solubility
+    //! Get the water solubility in g/m^3/P
     double get_solubility(void) const;
 
-    //! Get the water diffusivity
+    //! Get the water diffusivity in m^2/s
     double get_diffusivity(void) const;
 
 
@@ -41,11 +41,11 @@ class WIModel : public PhysicalModel
 
   private:
  
-    //! The water solubility in g/cm^3/P
-    double _solubility = 0.45e-6;
+    //! The water solubility in g/m^3/P
+    double _solubility = 0.45;
  
-    //! The water diffusivity in cm^2/s
-    double _diffusivity = 3.43e-7;
+    //! The water diffusivity in m^2/s
+    double _diffusivity = 3.43e-11;
 
     //! The constructor method
     static TiberModelObject* _create(const ModelOptions& options, const void*);

@@ -171,8 +171,9 @@ WaterIngress::get_solution_secure(const Elem* elem,
 
   mod.calculate(elem, elem->vertex_average());
   
-  double S = mod.get_solubility();
-  double D = mod.get_diffusivity();
+  // parameters are given in units of m
+  double S = 1e-6 * mod.get_solubility();
+  double D = 1e4 * mod.get_diffusivity();
 
  
   for (unsigned int n = 0; n < np; n++)
@@ -317,8 +318,8 @@ WaterIngress::assemble(void)
 
     mod.calculate(elem, elem->vertex_average());
 
-    double S = mod.get_solubility();
-    double D = mod.get_diffusivity();
+    double S = 1e-6 * mod.get_solubility();
+    double D = 1e4 * mod.get_diffusivity();
 
     // loop over the quadrature points
     for (unsigned int qp = 0; qp < qrule->n_points(); qp++)
