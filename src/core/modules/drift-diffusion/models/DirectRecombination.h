@@ -60,6 +60,10 @@ class TBDLLOCAL DirectRecombination : public RecombinationModelInterface
     //! Recombination rate parameter
     double C_;
 
+
+    //! The temperature coefficient
+    double _gamma = 0.0;
+
     //! The quantum optics simulation, if available
     SimulationInterface* _quantum_optics;
 

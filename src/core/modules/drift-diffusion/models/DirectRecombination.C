@@ -26,6 +26,7 @@ DirectRecombination::read_database(void)
   db.set_section("recombination/direct");
 
   C_ = db.get("C", C_);
+  _gamma = db.get("gamma", _gamma);
 
 }
 
@@ -35,6 +36,7 @@ void
 DirectRecombination::do_init(void)
 {
   get_parameter("C", C_);
+  get_parameter("gamma", _gamma);
 
   string quantumsim = get_option("optics_simulation", "");
   if (!quantumsim.empty())
@@ -67,8 +69,10 @@ DirectRecombination::get_net_recombination_rates(double& recomb_e,
   double p  = dd.get_hole_density();
   double T = dd.get_lattice_temperature();
 
-  double c = 1.0 - exp((Efp - Efn) / T);
-  recomb_e = recomb_h = C_ * n * p * c;
+  double C = C_*pow(T/0.02585, _gamma);
+
+  double f = 1.0 - exp((Efp - Efn) / T);
+  recomb_e = recomb_h = C * n * p * f;
 }
 
 
@@ -85,13 +89,15 @@ DirectRecombination::get_net_recombination_rate_derivatives(
   double p  = dd.get_hole_density();
   double T = dd.get_lattice_temperature();
 
-  double expf = exp((Efp - Efn) / T);
-  double c = 1.0 - expf;
+  double C = C_*pow(T/0.02585, _gamma);
 
-  recomb_e[0] = recomb_h[0] = C_ * p * c; // dR/dn
-  recomb_e[1] = recomb_h[1] = C_ * n * c; // dR/dp
-  recomb_e[2] = recomb_h[2] = -C_ * n * p / T * expf; // dR/dEfn
-  recomb_e[3] = recomb_h[3] = C_ * n * p / T * expf; // dR/dEfn
+  double expf = exp((Efp - Efn) / T);
+  double f = 1.0 - expf;
+
+  recomb_e[0] = recomb_h[0] = C * p * f; // dR/dn
+  recomb_e[1] = recomb_h[1] = C * n * f; // dR/dp
+  recomb_e[2] = recomb_h[2] = -C * n * p / T * expf; // dR/dEfn
+  recomb_e[3] = recomb_h[3] = C * n * p / T * expf; // dR/dEfn
 }
 
 
