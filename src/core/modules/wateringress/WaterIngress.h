@@ -111,9 +111,6 @@ class TBDLLOCAL WaterIngress : public SimulationInterface
     MyAssembly _my_assembly;
 
 
-    //! The old time
-    double _old_time = 0.0;
-
     //! The cell temperature
     double _cell_temp = 300;
 
