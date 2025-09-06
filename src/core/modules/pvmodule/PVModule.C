@@ -14,13 +14,10 @@
 #include "libmesh/quadrature_trap.h"
 #include "libmesh/sparse_matrix.h"
 #include "libmesh/dense_matrix.h"
-//#include "libmesh/dense_vector.h"
-//#include "libmesh/dense_submatrix.h"
-//#include "libmesh/dense_subvector.h"
-//#include "libmesh/vector_value.h"
 
 // This is needed in order to create the shared module library
 #include "TiberModule.h"
+
 #include <fstream> 
 #include <sstream>
 #include <queue>

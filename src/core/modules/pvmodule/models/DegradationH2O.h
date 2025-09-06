@@ -11,6 +11,16 @@
  * on relative humidity, calculated from a water ingress model.
  * The formulas have been obtained by fitting to data in
  * Bhatt et al., Organic Electronics 39 (2016) 258e266.
+ * 
+ * The fit functions are power laws, in particular:
+ * 
+ * \f{eqnarray*}
+ *  \frac{R_s}{R_{s,0}} & = & 1 + \left(\frac{RH}{RH_0})^\gamma \\
+ *  \frac{I_ph}{I_{ph,0}} & = & \frac{1}{1 + \left(\frac{RH}{RH_0})^\gamma} \\
+ * \f}
+ * 
+ * Here \f$ RH \f$ is the relative humidity, which has to be provided by
+ * another module.
  */
 class DegradationH2O : public DegradationModel
 {
@@ -40,21 +50,17 @@ class DegradationH2O : public DegradationModel
      */
     DegradationH2O(const ModelOptions& options);
 
-    //! The current degradation factor
-    /*!
-     * The formula is based on a fit of the data in [ref].
-     * It uses a generalized logistic function.
-     */
-    double degradation_factor(double humidity) const;
+    //! The reference humidity in the photocurrent degradation fit
+    double _RH_ref_ph = 1e9;
 
-    //! The initial (undegraded) photocurrent
-    double _initial_current = 0.02;
+    //! The exponent in the photocurrent degradation fit
+    double _exponent_ph = 1;
 
-    //! The reference humidity in the degradation fit
-    double _RH_ref = 72.1;
+    //! The reference humidity in the series resistance degradation fit
+    double _RH_ref_rs = 1e9;
 
-    //! The exponent in the degradation fit
-    double _exponent = 8.28;
+    //! The exponent in the series resistance degradation fit
+    double _exponent_rs = 1;
 
     //! From where to get relative humidity
     SolutionProvider _humidity_model;
