@@ -1,5 +1,6 @@
 #include "Elementary1Diode.h"
 #include "Photocurrent.h"
+#include "DegradationModel.h"
 
 #include "TiberModule.h"
 
@@ -23,6 +24,7 @@ void
 Elementary1Diode::prepare_submodels(void)
 {
   create_submodel(_photocurr_model, "photocurrent");
+  create_submodel(_degradation_model, "degradation");
 }
 
 void
@@ -47,6 +49,11 @@ Elementary1Diode::do_write_netlist(unsigned int top_node, unsigned int bottom_no
   double photocurr = _photocurr;
   if (_photocurr_model != nullptr)
     photocurr = _photocurr_model->get_photocurrent(elem, p);
+
+  if (_degradation_model != nullptr)
+  {
+    DegradationModel::Parameters p;
+  }
 
   photocurr *= area;
 

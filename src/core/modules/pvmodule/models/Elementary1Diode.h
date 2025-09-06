@@ -4,6 +4,7 @@
 #include "ElementaryCell.h"
 
 class Photocurrent;
+class DegradationModel;
 
 class Elementary1Diode : public ElementaryCell
 {
@@ -23,7 +24,7 @@ class Elementary1Diode : public ElementaryCell
     
     virtual void prepare_submodels(void) override;
 
-    //! Write the netlist
+    //! Write the netlist to the provided stream
     virtual void do_write_netlist(unsigned int top_node, unsigned int bottom_node,
                                   unsigned int& next_free,
                                   double area,
@@ -50,6 +51,13 @@ class Elementary1Diode : public ElementaryCell
     
     //! We can have a submodel for the photocurrent
     Photocurrent* _photocurr_model = nullptr;
+    
+    //! We can have a submodel for the cell degradation
+    /*!
+     * In future we might allow for several model, acting
+     * on different parameters based on different quantities
+     */
+    DegradationModel* _degradation_model = nullptr;
 
 };
 
