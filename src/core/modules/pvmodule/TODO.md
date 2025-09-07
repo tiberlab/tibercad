@@ -7,10 +7,11 @@ https://github.com/todomd/todo.md
 
 - [ ] implement 2- and 3-diode models
 - [ ] implement other models including e.g. reactive elements for EIS
-- [ ] improve output
+- [ ] improve output (e.g. write elementary parameters)
 - [ ] implement element-based (dual) discretization
 - [ ] improve P1-P2-P3 implementation, especially P2
 - [ ] add manual
+- [ ] add performance parameters as global output (Isc, Voc, FF, Pmax)
 
 ### In Progress
 

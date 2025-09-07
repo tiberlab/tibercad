@@ -40,11 +40,11 @@ Elementary1Diode::do_init(void)
 
 void
 Elementary1Diode::do_write_netlist(unsigned int top_node, unsigned int bottom_node,
-                                unsigned int& next_free,
-                                double area,
-                                const libMesh::Elem* elem,
-                                const libMesh::Point& p,
-                                std::ostream& os) const 
+                                  unsigned int& next_free,
+                                  double area,
+                                  const libMesh::Elem* elem,
+                                  const libMesh::Point& p,
+                                  std::ostream& os) const 
 {
   double photocurr = _photocurr;
   double rseries = _rseries;
