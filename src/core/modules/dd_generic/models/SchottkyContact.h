@@ -33,26 +33,35 @@ class TBDLLOCAL SchottkyContact : public ElectricalContact
   private:
 
     //! The metal Fermi level (negative of work function)
-    double _metal_Ef;
+    double _metal_Ef = 0.0;
 
     //! The reference band
     std::string _band;
 
     //! Is this a fixed barrier or not?
-    bool _fixed_barrier;
+    bool _fixed_barrier = true;
 
 
     //! Do we include thermionic emission?
-    bool _thermionic_emission;
+    bool _thermionic_emission = true;
 
     /*!
      * \brief Do we use Scott and Malliaras field and mobility dependent recombination velocity?
      * For details, see Chem. Phys. Lett. 299 (1999) 115
      */
-    bool _scott_malliaras;
+    bool _scott_malliaras = false;
 
     //! Image-force lowering
-    bool _barrier_lowering;
+    bool _barrier_lowering = false;
+
+    /*!
+     * \brief Additional multiplicative factor
+     * 
+     * This can be used to adjust the Richardson constant, for example due to
+     * additional thin oxide layers beneath the metal.
+     */
+    double _correction_factor = 1.0;
+
 };
 
 

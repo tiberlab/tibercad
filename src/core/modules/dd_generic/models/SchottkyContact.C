@@ -9,10 +9,7 @@
 
 
 SchottkyContact::SchottkyContact(const ModelOptions& options)
-  : ElectricalContact(options),
-    _fixed_barrier(true),
-    _thermionic_emission(true),
-    _metal_Ef(0)
+  : ElectricalContact(options)
 {
 
 }
@@ -93,6 +90,7 @@ SchottkyContact::do_init(void)
 
 
 
+  _correction_factor = get_option("correction_factor", _correction_factor);
 
   _thermionic_emission = get_option("thermionic_emission", true);
   if (_thermionic_emission)
@@ -101,7 +99,7 @@ SchottkyContact::do_init(void)
       set_type(i, NEUMANN);
 
     double temp = Constants::k_B * SimulationOptions::T;
-    const double fac = 0.23032943;
+    const double fac = 0.23032943 * _correction_factor;
 
     for ( auto&& it : get_bulk_dd_properties()->get_carrier_properties())
     {
@@ -112,12 +110,12 @@ SchottkyContact::do_init(void)
      // use the Scott and Malliaras formula for recombination velocities;
     _scott_malliaras = get_option("scott_malliaras", false);
     _barrier_lowering = get_option("barrier_lowering", false);
-   }
-   else
-   {
-     for (unsigned int i = 0; i < this->n_known_carriers(); i++)
-      set_type(i, DIRICHLET);
-   }
+  }
+  else
+  {
+    for (unsigned int i = 0; i < this->n_known_carriers(); i++)
+     set_type(i, DIRICHLET);
+  }
 }
 
 
@@ -137,7 +135,7 @@ SchottkyContact::do_compute(void)
 
   if (_thermionic_emission)
   {
-    const double fac = 0.23032943;
+    const double fac = 0.23032943 * _correction_factor;
     const double pi = 3.14159265358979323846;
     double epsilon = Constants::e0 / (Constants::e * 100);
     libMesh::RealGradient e_field = dd->get_electric_field();
