@@ -6,7 +6,7 @@
 TOPDIR=${TOPDIR:-"$(dirname `pwd`)"}
 
 # build directory
-BUILDDIR=${BUILDDIR:-"$(dirname `pwd`)/extern"}
+BUILDDIR=${BUILDDIR:-"$(dirname `pwd`)/external"}
 
 # SDK directory
 SDKDIR=${SDKDIR:-"$(dirname `pwd`)/SDK"}

@@ -2,7 +2,7 @@
 
 topdir=`pwd`
 #builddir=/usr/pack/tibercad_dev-2.5-ma/build
-builddir=${topdir}/extern
+builddir=${topdir}/external
 libmesh=libmesh-1.7.1-x86_64-linux
 
 ARCH=`${topdir}/share/arch.sh`

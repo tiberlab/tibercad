@@ -13,9 +13,9 @@ target += $(cobjects)
 ifeq ($(target_os),win32)
 target += .$(ARCH)/dlfcn$(obj-suffix)
 
-CPPFLAGS += -I$(topdir)/contrib/dlfcn-win32-r19
+CPPFLAGS += -I$(topdir)/external/dlfcn-win32-r19
 
-.$(ARCH)/dlfcn$(obj-suffix): $(topdir)/contrib/dlfcn-win32-r19/dlfcn.c
+.$(ARCH)/dlfcn$(obj-suffix): $(topdir)/external/dlfcn-win32-r19/dlfcn.c
 	@echo "Compiling win32 compatibility layer for <dlfcn.h> ..."
 	@$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ -c $<
 endif

@@ -54,9 +54,9 @@ modules-clean:
 
 
 $(libdir)/libdl.a:
-	@touch contrib/dlfcn-win32-r19/config.mak
-	@$(MAKE) --no-print-directory -C contrib/dlfcn-win32-r19
-	@cp contrib/dlfcn-win32-r19/libdl.a $(libdir)
+	@touch external/dlfcn-win32-r19/config.mak
+	@$(MAKE) --no-print-directory -C external/dlfcn-win32-r19
+	@cp external/dlfcn-win32-r19/libdl.a $(libdir)
 
 
 clean: clean-src clean-doc
