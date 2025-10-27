@@ -1,7 +1,0 @@
-# the compilers
-CXX := @CXX@
-CC := @CC@
-FC := @FC@
-RANLIB := @RANLIB@
-
-
