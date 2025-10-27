@@ -1,0 +1,50 @@
+# C/C++ build
+*.o
+*.obj
+*.so
+*.a
+*.dll
+*.exe
+*.out
+*.log
+
+# Make and build files
+Makefile~
+cmake-build-*/
+CMakeCache.txt
+CMakeFiles/
+*.cmake
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+env/
+venv/
+*.egg-info/
+
+# Perl
+*.bs
+blib/
+*.pmc
+*.plc
+
+# IDE / editor
+*.swp
+*.swo
+*.bak
+*.tmp
+.idea/
+.vscode/
+*.iml
+*.db
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Large test data (if handled via LFS or external storage)
+# *.dat
+# /testsuite/data/
+

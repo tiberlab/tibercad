@@ -5,7 +5,7 @@ tiberCAD Multiscale Device Simulator
 Last updated: $Date$
 Current Version: <TIBERVERSION>
 
-Web   : http://www.tiberlab.com
+Web   : http://www.tibercad.org
 E-Mail: support@tibercad.org
 
 

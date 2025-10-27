@@ -7,10 +7,11 @@ own TODO list. For historical reason, some module-specific TODO's are left in th
 
 ### Todo
 
+- [ ] eliminate tibercad.in in bin, transfer to TiberCAD.sh.in and link  
 - [ ] eliminate interlayer for libMesh system and solver classes (and solver re-implementations)
 - [ ] add more useful common API for projecting quantum states on bases/orbitals
 - [ ] change input parser so that it reads first into a string (with all includes) and then parses 
-- [ ] change get_solution to have source argument, to allow different meshes  
+- [ ] change get_solution to have source argument, to allow different meshes more easily  
 - [ ] allow reading individual meshes in modules
 - [ ] get rid of read_database(), put database access into get_option() and get_parameter()  
 - [ ] throw exception if get_option() gets a string with "$"  
@@ -19,6 +20,7 @@ own TODO list. For historical reason, some module-specific TODO's are left in th
 - [ ] implement inspect output  
 - [ ] in DriftDiffusion, put calculated currents into contacts  
 - [ ] implement model for Zb valence band mass at small strain  
+- [ ] allow for more complex aomistic structures, like wz-zb
 
 ### In Progress
 

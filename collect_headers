@@ -36,7 +36,7 @@ awk ' {system("mkdir -p $(dirname tibercad/"$1") ; cp -r '${topdir}'/include/"$1
 mv tibercad/base/common/tiber_config.h tibercad/$ARCH
 rm tibercad/base/common/*.in
 #find tibercad -path "tibercad/utils/Tensor/*" -prune -o -name "*.h" -execdir echo {} \;
-find tibercad -path "tibercad/utils/Tensor/*" -prune -o -name "*.h" -execdir sh -c "cat ${topdir}/share/Copyright_sdk.txt {} > {}.tmp && mv {}.tmp {}" \;
+#find tibercad -path "tibercad/utils/Tensor/*" -prune -o -name "*.h" -execdir sh -c "cat ${topdir}/share/Copyright_sdk.txt {} > {}.tmp && mv {}.tmp {}" \;
 
 find . -type d -name .svn -exec rm -rf {} \;
 find . -name .cvsignore -exec rm {} \;
