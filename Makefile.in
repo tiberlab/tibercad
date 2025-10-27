@@ -109,7 +109,7 @@ wininstaller linuxinstaller deb tgz tbz: manual SHAREDLIBS
 
 sdk:
 	@mkdir -p SDK/etc
-	@cp share/modules.conf.sdk SDK/etc/modules.conf
+	@cp share/modules.conf SDK/etc
 	@./collect_headers
 	@if test -e $(doxygen); then $(doxygen) share/Doxyfile_SDK; fi
 	@tar jcf SDK.tbz SDK
