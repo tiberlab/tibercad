@@ -3,7 +3,6 @@
 // module includes
 #include "SimulationInterface.h"
 #include "DSSC.h"
-#include "License.h"
 #include "SimulationEnvironment.h"
 #include "Scaling.h"
 #include "Material.h"

@@ -1,6 +1,0 @@
-
-script colormap.jmol
-load "SiNW_4.xyz"
-isosurface pl1 fullplane plane {-1.2 0.8 0 0} color range all colorscheme 'user' 'pot.cube'
-
-

@@ -5,7 +5,6 @@
 #include "SimulationEnvironment.h"
 #include "Material.h"
 #include "Database.h"
-#include "License.h"
 
 #include "TiberModule.h"
 

@@ -36,7 +36,6 @@ SVN=svn-1.9.5
   --with-mkl=/usr/pack/intel_oneapi-2021-ma/mkl/latest \
   --with-thread-library=intel \
   --with-subversion=${SVN} \
-  --disable-license-check \
   --enable-uptight\
   --disable-pardiso \
   --with-boost-prefix=$BOOST \

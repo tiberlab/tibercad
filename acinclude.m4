@@ -302,21 +302,6 @@ AC_DEFUN([TC_HETERO],
 ])dnl
 
 
-dnl enable or disable license tools
-dnl
-AC_DEFUN([TC_LICENSE],
-[AC_ARG_ENABLE([license-check], AS_HELP_STRING([--enable-license-check],
-	[enable license check]),
-	[if test $enableval != "no"; then
-	  AC_DEFINE([LICENSE_CHECK], [1],
-	  	[Define to 1 if license check is enabled])
-	  AC_SUBST([LICENSE_CHECK], ["yes"])
-	else
-	  AC_SUBST([LICENSE_CHECK], ["no"])
-	fi], [AC_SUBST([LICENSE_CHECK], ["yes"])])
-])dnl
-
-
 
 
 dnl check for GNU GSL

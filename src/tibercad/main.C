@@ -4,7 +4,6 @@
 
 #include "DLLoader.h"
 #include "TiberCad.h"
-#include "License.h"
 #include "Utils.h"
 #include "Messages.h"
 
@@ -252,22 +251,6 @@ int main (int argc, char** argv)
       }
     }
 #endif
-
-
-#ifdef LICENSE_CHECK
-    // check the license
-    if (!License::check_license())
-    {
-      cerr << "Sorry, cannot start TiberCAD as I could not find "
-          "a valid license." << endl;
-#if defined(_WIN32)
-      cout << endl << "press Enter ...";
-      if (interactive) cin.get();
-# endif
-      return 1;
-    }
-#endif
-
   }
 
   //
