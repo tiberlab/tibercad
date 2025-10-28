@@ -22,10 +22,10 @@ AC_DEFUN([TC_HAVE_CONSTEXPR],
  AC_LANG_PUSH([C++])
  CXXFLAGS_save=$CXXFLAGS
  CXXFLAGS="-std=c++0x"
- AC_TRY_COMPILE([
+ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
   class ClassWithConst {
     constexpr static double p = 3.1415;
-  };], [ClassWithConst cl;],[tc_cv_have_constexpr=yes])
+  };]], [[ClassWithConst cl;]])],[tc_cv_have_constexpr=yes],[])
  CXXFLAGS=$CXXFLAGS_save
  AC_LANG_POP()
  if test "${tc_cv_have_constexpr+set}" == "set"; then
@@ -42,7 +42,7 @@ AC_DEFUN([TC_HAVE_CONSTEXPR],
 dnl check for boost
 dnl
 AC_DEFUN([TC_BOOST],
-[AC_REQUIRE([AC_CXX_NAMESPACES])dnl
+[AC_REQUIRE([AX_CXX_NAMESPACES])dnl
  AC_MSG_NOTICE([])
  AC_MSG_NOTICE([****************************************])
  AC_MSG_NOTICE([* Checking for boost...])
@@ -575,13 +575,11 @@ AC_DEFUN([ACX_TR1_UNORDERED_MAP],
 [AC_CACHE_CHECK(whether the compiler supports std::tr1::unordered_map,
 ac_cv_cxx_tr1_unordered_map,
 [AC_LANG_SAVE
- AC_LANG_CPLUSPLUS
- AC_TRY_COMPILE([#include <tr1/unordered_map>],
-[
+ AC_LANG([C++])
+ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <tr1/unordered_map>]], [[
   std::tr1::unordered_map<int, int> m;
   m.insert(std::make_pair(1, 2));
-],
- ac_cv_cxx_tr1_unordered_map=yes, ac_cv_cxx_tr1_unordered_map=no)
+]])],[ac_cv_cxx_tr1_unordered_map=yes],[ac_cv_cxx_tr1_unordered_map=no])
  AC_LANG_RESTORE
 ])
 if test "$ac_cv_cxx_tr1_unordered_map" = yes; then
@@ -600,13 +598,11 @@ AC_DEFUN([ACX_TR1_UNORDERED_SET],
 [AC_CACHE_CHECK(whether the compiler supports std::tr1::unordered_set,
 ac_cv_cxx_tr1_unordered_set,
 [AC_LANG_SAVE
- AC_LANG_CPLUSPLUS
- AC_TRY_COMPILE([#include <tr1/unordered_set>],
-[
+ AC_LANG([C++])
+ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <tr1/unordered_set>]], [[
   std::tr1::unordered_set<int> m;
   m.insert(1);  m.insert(2);
-],
- ac_cv_cxx_tr1_unordered_set=yes, ac_cv_cxx_tr1_unordered_set=no)
+]])],[ac_cv_cxx_tr1_unordered_set=yes],[ac_cv_cxx_tr1_unordered_set=no])
  AC_LANG_RESTORE
 ])
 if test "$ac_cv_cxx_tr1_unordered_set" = yes; then
@@ -625,13 +621,11 @@ AC_DEFUN([ACX_UNORDERED_MAP],
 [AC_CACHE_CHECK(whether the compiler supports std::unordered_map,
 ac_cv_cxx_unordered_map,
 [AC_LANG_SAVE
- AC_LANG_CPLUSPLUS
- AC_TRY_COMPILE([#include <unordered_map>],
-[
+ AC_LANG([C++])
+ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <unordered_map>]], [[
   std::unordered_map<int, int> m;
   m.insert(std::make_pair(1, 2));
-],
- ac_cv_cxx_unordered_map=yes, ac_cv_cxx_unordered_map=no)
+]])],[ac_cv_cxx_unordered_map=yes],[ac_cv_cxx_unordered_map=no])
  AC_LANG_RESTORE
 ])
 if test "$ac_cv_cxx_unordered_map" = yes; then
@@ -650,13 +644,11 @@ AC_DEFUN([ACX_UNORDERED_SET],
 [AC_CACHE_CHECK(whether the compiler supports std::unordered_set,
 ac_cv_cxx_unordered_set,
 [AC_LANG_SAVE
- AC_LANG_CPLUSPLUS
- AC_TRY_COMPILE([#include <unordered_set>],
-[
+ AC_LANG([C++])
+ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <unordered_set>]], [[
   std::unordered_set<int, int> m;
   m.insert(std::make_pair(1, 2));
-],
- ac_cv_cxx_unordered_set=yes, ac_cv_cxx_unordered_set=no)
+]])],[ac_cv_cxx_unordered_set=yes],[ac_cv_cxx_unordered_set=no])
  AC_LANG_RESTORE
 ])
 if test "$ac_cv_cxx_unordered_set" = yes; then
@@ -676,13 +668,11 @@ AC_DEFUN([ACX_EXT_HASH_MAP],
 [AC_CACHE_CHECK(whether the compiler supports __gnu_cxx::hash_map,
 ac_cv_cxx_ext_hash_map,
 [AC_LANG_SAVE
- AC_LANG_CPLUSPLUS
- AC_TRY_COMPILE([#include <ext/hash_map>],
-[
+ AC_LANG([C++])
+ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <ext/hash_map>]], [[
   __gnu_cxx::hash_map<int, int> m;
   m.insert(std::make_pair(1, 2));
-],
- ac_cv_cxx_ext_hash_map=yes, ac_cv_cxx_ext_hash_map=no)
+]])],[ac_cv_cxx_ext_hash_map=yes],[ac_cv_cxx_ext_hash_map=no])
  AC_LANG_RESTORE
 ])
 if test "$ac_cv_cxx_ext_hash_map" = yes; then
@@ -701,13 +691,11 @@ AC_DEFUN([ACX_EXT_HASH_SET],
 [AC_CACHE_CHECK(whether the compiler supports __gnu_cxx::hash_set,
 ac_cv_cxx_ext_hash_set,
 [AC_LANG_SAVE
- AC_LANG_CPLUSPLUS
- AC_TRY_COMPILE([#include <ext/hash_set>],
-[
+ AC_LANG([C++])
+ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <ext/hash_set>]], [[
   __gnu_cxx::hash_set<int> m;
   m.insert(1);  m.insert(2);
-],
- ac_cv_cxx_ext_hash_set=yes, ac_cv_cxx_ext_hash_set=no)
+]])],[ac_cv_cxx_ext_hash_set=yes],[ac_cv_cxx_ext_hash_set=no])
  AC_LANG_RESTORE
 ])
 if test "$ac_cv_cxx_ext_hash_set" = yes; then
@@ -726,13 +714,11 @@ AC_DEFUN([ACX_HASH_MAP],
 [AC_CACHE_CHECK(whether the compiler supports std::hash_map,
 ac_cv_cxx_hash_map,
 [AC_LANG_SAVE
- AC_LANG_CPLUSPLUS
- AC_TRY_COMPILE([#include <hash_map>],
-[
+ AC_LANG([C++])
+ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <hash_map>]], [[
   std::hash_map<int, int> m;
   m.insert(std::make_pair(1, 2));
-],
- ac_cv_cxx_hash_map=yes, ac_cv_cxx_hash_map=no)
+]])],[ac_cv_cxx_hash_map=yes],[ac_cv_cxx_hash_map=no])
  AC_LANG_RESTORE
 ])
 if test "$ac_cv_cxx_hash_map" = yes; then
@@ -751,13 +737,11 @@ AC_DEFUN([ACX_HASH_SET],
 [AC_CACHE_CHECK(whether the compiler supports std::hash_set,
 ac_cv_cxx_hash_set,
 [AC_LANG_SAVE
- AC_LANG_CPLUSPLUS
- AC_TRY_COMPILE([#include <hash_set>],
-[
+ AC_LANG([C++])
+ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <hash_set>]], [[
   std::hash_set<int> m;
   m.insert(1);  m.insert(2);
-],
- ac_cv_cxx_hash_set=yes, ac_cv_cxx_hash_set=no)
+]])],[ac_cv_cxx_hash_set=yes],[ac_cv_cxx_hash_set=no])
  AC_LANG_RESTORE
 ])
 if test "$ac_cv_cxx_hash_set" = yes; then

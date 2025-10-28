@@ -1,11 +1,11 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_INIT([TiberCAD], [1.0], [support@tibercad.org])
-AC_PREREQ(2.59)
+AC_INIT([TiberCAD],[1.0],[support@tibercad.org])
+AC_PREREQ([2.71])
 
 AC_CONFIG_SRCDIR([include/base/common/TiberCad.h])
-AC_CONFIG_HEADER([include/base/common/tiber_config.h
+AC_CONFIG_HEADERS([include/base/common/tiber_config.h
                   include/base/common/tiber_version.h])
 
 AC_REVISION([$Revision: 1.0$])
@@ -56,7 +56,7 @@ TC_MPIEXEC
 #AC_PROG_LIBTOOL
 
 # check for libreadline
-VL_LIB_READLINE
+AX_LIB_READLINE
 #[LIBREADLINE]=""
 if test "$ax_cv_lib_readline" != "no"
 then
@@ -213,7 +213,9 @@ AC_MSG_NOTICE([])
 #
 # Checks for header files.
 #
-AC_HEADER_STDC
+AC_CHECK_INCLUDES_DEFAULT
+AC_PROG_EGREP
+
 AC_CHECK_HEADERS([float.h stdlib.h dlfcn.h cassert])
 ACX_TR1_UNORDERED_MAP
 ACX_TR1_UNORDERED_SET
@@ -248,10 +250,6 @@ AC_CHECK_FUNCS([setenv putenv])
 
 # enable/disable modules
 TC_BUILD_MODULES
-
-# use licensing tools
-TC_LICENSE
-
 
 
 if test "x$DOXYGEN" == x

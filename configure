@@ -651,7 +651,6 @@ ac_includes_default="\
 
 ac_header_cxx_list=
 ac_subst_vars='LTLIBOBJS
-LICENSE_CHECK
 BUILD_TIBER_MODULES
 LIBOBJS
 EGREP
@@ -784,7 +783,6 @@ with_boost_libdir
 with_boost_regex_lib
 with_boost_filesystem_lib
 enable_modules
-enable_license_check
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1427,7 +1425,6 @@ Optional Features:
   --enable-hetero         enable HETERO for tunneling current
   --enable-modules        build TiberCAD models as dynamically loadable
                           libraries
-  --enable-license-check  enable license check
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -6506,6 +6503,7 @@ printf "%s\n" "$as_me: " >&6;}
 #
 # Checks for header files.
 #
+
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for grep that handles long lines and -e" >&5
 printf %s "checking for grep that handles long lines and -e... " >&6; }
 if test ${ac_cv_path_GREP+y}
@@ -6574,9 +6572,6 @@ fi
 printf "%s\n" "$ac_cv_path_GREP" >&6; }
  GREP="$ac_cv_path_GREP"
 
-
-# Autoupdate added the next two lines to ensure that your configure
-# script's behavior did not change.  They are probably safe to remove.
 
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for egrep" >&5
 printf %s "checking for egrep... " >&6; }
@@ -7503,8 +7498,7 @@ printf "%s\n" "#define BUILD_TIBER_MODULES 1" >>confdefs.h
 
 	  BUILD_TIBER_MODULES="yes"
 
-  cp ${topdir}/extern/${ARCH}/lib/*.dll ${files}
-	 6lse
+	 else
 	 BUILD_TIBER_MODULES="no"
 
 	 fi
@@ -7514,28 +7508,6 @@ else $as_nop
 printf "%s\n" "#define BUILD_TIBER_MODULES 1" >>confdefs.h
 
 fi
-
-
-
-# use licensing tools
-# Check whether --enable-license-check was given.
-if test ${enable_license_check+y}
-then :
-  enableval=$enable_license_check; if test $enableval != "no"; then
-
-printf "%s\n" "#define LICENSE_CHECK 1" >>confdefs.h
-
-	  LICENSE_CHECK="yes"
-
-	else
-	  LICENSE_CHECK="no"
-
-	fi
-else $as_nop
-  LICENSE_CHECK="yes"
-
-fi
-
 
 
 
@@ -7567,7 +7539,7 @@ fi
 
 ac_config_files="$ac_config_files stamp-h"
 
-ac_config_files="$ac_config_files Make.common Make.defs doc/Doxyfile Makefile doc/Makefile src/tibercad/Makefile src/core/solver-interfaces/slepc/Makefile src/core/modules/etb/libuptight/Makefile src/core/modules/negf/libnegf/config.cmake contrib/crypto++/make.defs installer/Makefile installer/windows/tibercad.bim installer/linux/deb/control installer/linux/tar/install share/modules.conf share/Doxyfile_SDK"
+ac_config_files="$ac_config_files Make.common Make.defs doc/Doxyfile Makefile doc/Makefile src/tibercad/Makefile src/core/solver-interfaces/slepc/Makefile src/core/modules/etb/libuptight/Makefile src/core/modules/negf/libnegf/config.cmake installer/Makefile installer/windows/tibercad.bim installer/linux/deb/control installer/linux/tar/install share/modules.conf share/Doxyfile_SDK"
 
 ac_config_files="$ac_config_files installer/prepare_files.sh"
 
@@ -8272,7 +8244,6 @@ do
     "src/core/solver-interfaces/slepc/Makefile") CONFIG_FILES="$CONFIG_FILES src/core/solver-interfaces/slepc/Makefile" ;;
     "src/core/modules/etb/libuptight/Makefile") CONFIG_FILES="$CONFIG_FILES src/core/modules/etb/libuptight/Makefile" ;;
     "src/core/modules/negf/libnegf/config.cmake") CONFIG_FILES="$CONFIG_FILES src/core/modules/negf/libnegf/config.cmake" ;;
-    "contrib/crypto++/make.defs") CONFIG_FILES="$CONFIG_FILES contrib/crypto++/make.defs" ;;
     "installer/Makefile") CONFIG_FILES="$CONFIG_FILES installer/Makefile" ;;
     "installer/windows/tibercad.bim") CONFIG_FILES="$CONFIG_FILES installer/windows/tibercad.bim" ;;
     "installer/linux/deb/control") CONFIG_FILES="$CONFIG_FILES installer/linux/deb/control" ;;
