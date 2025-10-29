@@ -16,3 +16,8 @@ License (LGPL) version 3.0.
 
 Modules are released under the same GNU General Public License (GPL), unless otherwise noted
 
+
+Compilation
+-----------
+
+tibercad can be compiled by defining a site configuration in compilation/ and running build_all. This will download necessary libraries and configure and compile all code.
