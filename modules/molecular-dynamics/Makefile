@@ -1,6 +1,6 @@
 # $Id: Makefile 2212 2010-12-07 18:53:51Z gromano $
 
-topdir := ../../../..
+topdir := ../..
 
 MODULE_NAME := molecular-dynamics
 export MODULE_NAME

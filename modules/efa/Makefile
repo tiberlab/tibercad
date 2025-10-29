@@ -1,6 +1,6 @@
 # $Id: Makefile 3004 2011-10-17 22:03:35Z maufder $
 
-topdir := ../../../..
+topdir := ../..
 
 include $(topdir)/Make.common
 

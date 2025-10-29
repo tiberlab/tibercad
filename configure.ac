@@ -275,8 +275,8 @@ AC_CONFIG_FILES([Make.common
                  doc/Makefile
                  src/tibercad/Makefile
                  src/core/solver-interfaces/slepc/Makefile
-                 src/core/modules/etb/libuptight/Makefile
-                 src/core/modules/negf/libnegf/config.cmake
+                 modules/etb/libuptight/Makefile
+                 modules/negf/libnegf/config.cmake
                  installer/Makefile
 		 installer/windows/tibercad.bim
                  installer/linux/deb/control
