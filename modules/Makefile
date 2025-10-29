@@ -1,7 +1,7 @@
 # $Id$
 #
 
-topdir := ../../..
+topdir := ../
 
 # we have to compile each module
 subdirs += common signals

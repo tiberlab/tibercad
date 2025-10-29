@@ -46,11 +46,11 @@ modules: $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext)
 	@mkdir -p SDK/etc
 	@cp share/modules.conf SDK/etc
 	@$(MAKE) --no-print-directory -C src/SDK
-	@$(MAKE) --no-print-directory -C src/core/modules
+	@$(MAKE) --no-print-directory -C modules
 
 modules-clean:
 	@$(MAKE) --no-print-directory -C src/SDK clean
-	@$(MAKE) --no-print-directory -C src/core/modules clean
+	@$(MAKE) --no-print-directory -C modules clean
 
 
 $(libdir)/libdl.a:
@@ -62,7 +62,7 @@ $(libdir)/libdl.a:
 clean: clean-src clean-doc
 	@$(MAKE) --no-print-directory -C src/tibercad $(MAKECMDGOALS)
 	@$(MAKE) --no-print-directory -C src/SDK $(MAKECMDGOALS)
-	@$(MAKE) --no-print-directory -C src/core/modules $(MAKECMDGOALS)
+	@$(MAKE) --no-print-directory -C modules $(MAKECMDGOALS)
 
 
 
@@ -70,7 +70,7 @@ distclean: clean-src clean-doc
 	@$(MAKE) --no-print-directory -C manual $(MAKECMDGOALS)
 	@$(MAKE) --no-print-directory -C src/tibercad $(MAKECMDGOALS)
 	@$(MAKE) --no-print-directory -C src/SDK $(MAKECMDGOALS)
-	@$(MAKE) --no-print-directory -C src/core/modules $(MAKECMDGOALS)
+	@$(MAKE) --no-print-directory -C modules $(MAKECMDGOALS)
 	@rm -rf $(ARCH)
 
 
