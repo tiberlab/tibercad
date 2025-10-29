@@ -1,7 +1,6 @@
 // $Id$
 
 #include "tiber_config.h"
-#include "tiber_version.h"
 #include "TiberCad.h"
 #include "Control.h"
 #include "EigenSolver.h"
@@ -52,20 +51,17 @@ std::string
 TiberCad::_tiberroot = "";
 
 
-const int
-TiberCad::_MajorVersion = TIBERMAJORVERSION;
-
-
-const int
-TiberCad::_MinorVersion = TIBERMINORVERSION;
-
-
-const int
-TiberCad::_SubMinorVersion = TIBERSUBMINORVERSION;
-
+const std::string
+TiberCad::_git_revision = TC_REVISION;
 
 const std::string
-TiberCad::_SvnRevision = TC_REVISION;
+TiberCad::_git_modified = TC_MODIFIED;
+
+const std::string
+TiberCad::_compilation_date = TC_COMPDATE;
+
+const std::string
+TiberCad::_compilation_system = TC_COMPSYS;
 
 
 libMesh::Parallel::Communicator
@@ -99,14 +95,34 @@ TiberCad::get_mpi_comm()
 
 
 std::string
-TiberCad::version_string(bool include_svn_release)
+TiberCad::version_string(bool include_compilation_date)
 {
   std::ostringstream os;
-  os << _MajorVersion << "." << _MinorVersion << "." << _SubMinorVersion;
-  if (include_svn_release)
-    os << " rev. " << _SvnRevision;
+  os << _git_revision;
+  if (include_compilation_date)
+    os << " compiled on " << _compilation_date;
 
   return os.str();
+}
+
+const std::string&
+TiberCad::compilation_date(void)
+{
+  return _compilation_date;
+}
+
+
+const std::string&
+TiberCad::compilation_system(void)
+{
+  return _compilation_system;
+}
+
+
+const std::string&
+TiberCad::last_modification(void)
+{
+  return _git_modified;
 }
 
 
@@ -119,33 +135,10 @@ TiberCad::arch_string(void)
 
 
 
-int
-TiberCad::major_version(void)
-{
-  return _MajorVersion;
-}
-
-
-int
-TiberCad::minor_version(void)
-{
-  return _MinorVersion;
-}
-
-
-
-int
-TiberCad::subminor_version(void)
-{
-  return _SubMinorVersion;
-}
-
-
-
 const std::string&
 TiberCad::software_revision(void)
 {
-  return _SvnRevision;
+  return _git_revision;
 }
 
 

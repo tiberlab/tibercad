@@ -1802,7 +1802,7 @@ DriftDiffusion::RSTFSys::plot(void)
 
   const MeshBase& mesh = get_mesh();
 
-  DataOutput data_output(mesh, TiberCad::get_output_format());
+  DataOutput data_output(mesh);
   data_output.set_output_directory(TiberCad::get_output_dir());
 
 

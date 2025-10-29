@@ -75,23 +75,23 @@ class TiberCad
 
 
     //! The full TiberCAD version string
-    static std::string version_string(bool include_svn_release = false);
+    static std::string version_string(bool include_compilation_date = false);
 
 
     //! The architecture as string
     static std::string arch_string(void);
 
 
-    //! The major version number
-    static int major_version(void);
+    //! The compilation date
+    static const std::string& compilation_date(void);
 
 
-    //! The minor version number
-    static int minor_version(void);
+    //! The compilation system
+    static const std::string& compilation_system(void);
 
 
-    //! The subminor version number
-    static int subminor_version(void);
+    //! Last modification date
+    static const std::string& last_modification(void);
 
 
     //! The software revision version number
@@ -143,21 +143,20 @@ class TiberCad
 
   private:
 
-
-    //! The TiberCAD major version
-    static const int _MajorVersion;
-
-
-    //! The TiberCAD minor version
-    static const int _MinorVersion;
-
-
-    //! The TiberCAD subminor version
-    static const int _SubMinorVersion;
-
-
     //! The TiberCAD subversion release number
-    static const std::string _SvnRevision;
+    static const std::string _git_revision;
+
+
+    //! Last modified date
+    static const std::string _git_modified;
+
+
+    //! Compilation date
+    static const std::string _compilation_date;
+
+
+    //! Compilation system
+    static const std::string _compilation_system;
 
 
     //! A counter to assure that there is only one instance of this class

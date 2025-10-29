@@ -352,10 +352,9 @@ Control::setup_globals(const ModelOptions& opts)
 
   {
     ostringstream os;
-    os << "tiberCAD release " << TiberCad::version_string()
-          << " ("
-          << "rev. " << TiberCad::software_revision() << ", "
-          << TiberCad::arch_string() << ")";
+    os << "tiberCAD release " << TiberCad::version_string(true)
+       << " (" << TiberCad::arch_string() << ")\n"
+       << TiberCad::compilation_system();
     Messages::info(os.str());
 
   }
