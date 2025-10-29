@@ -92,7 +92,7 @@ CPPFLAGS += -DMPICH_IGNORE_CXX_SEEK -DLIBMESH_REQUIRE_SEPARATE_NAMESPACE
 CPPFLAGS += $(TIBER_INCLUDES)
 CPPFLAGS += $(NON_TIBER_INCLUDES)
 
-TC_GITREVISION='"$(shell git describe --always --tags --dirty )"'
+TC_GITREVISION='"$(shell git describe --always --tags --dirty | sed 's:releases/::' )"'
 TC_GITMODIFIED='"$(shell git log -n 1 | grep Date | awk '{print $$3, $$4, $$5, $$6}' )"'
 TC_COMPDATE='"$(shell date +'%F')"'
 
