@@ -132,6 +132,6 @@ doctest: findmodules
 
 findmodules:
 	@rm -f Modules.rst
-	@find ../../../src/core -type f -name "*.rst" | grep "/manual/" | while read filepath; do \
+	@find ../../../modules -type f -name "*.rst" | grep "/manual/" | while read filepath; do \
 		echo ".. include:: $$filepath" >> Modules.rst; \
 	done
