@@ -20,9 +20,9 @@ test17     QW GaN/InGaN         Elasticity + Macrostrain + DD + TB + opticsTB
 test18     Atomistic            Atomistic generator test 
 test19     Large InGaAs QDot    Elasticity + VFF + DD + TB
 test20     Negf tests           negf + DD
-test21
+test21     - unused -
 test22     Image import         imagereader + DD
-test23
-test24
-test25
+test23     Alloy profile	DD
+test24     - missing -
+test25     - unused -
 test26     MAPbI                combination of MAPbI atomic structures in different phases
