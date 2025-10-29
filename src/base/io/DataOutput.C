@@ -35,6 +35,13 @@ DataOutput::DataOutput(const MeshBase& mesh, const std::string& format)
   for (unsigned int i = 0; i < formats.size(); i++)
     _format |= tell_data_format(formats[i]);
 
+  if (_format == 0x0000)
+  {
+    if (mesh.mesh_dimension() < 2)
+      _format = GRACE;
+    else
+      _format = VTK;
+  }
 }
 
 

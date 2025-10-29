@@ -2,7 +2,6 @@
 
 #include "tiber_config.h"
 #include "tiber_version.h"
-#include "svnrevision.h"
 #include "TiberCad.h"
 #include "Control.h"
 #include "EigenSolver.h"
@@ -14,7 +13,6 @@
 
 #include "libmesh/libmesh.h"
 #include "petscsys.h"
-
 #include "petscerror.h"
 
 //#ifdef _WIN32
@@ -66,8 +64,8 @@ const int
 TiberCad::_SubMinorVersion = TIBERSUBMINORVERSION;
 
 
-const int
-TiberCad::_SvnRevision = SVNREVISION;
+const std::string
+TiberCad::_SvnRevision = TC_REVISION;
 
 
 libMesh::Parallel::Communicator
@@ -90,14 +88,6 @@ TiberCad::~TiberCad(void)
 {
   cleanup();
 }
-
-
-
-//const libMesh::Parallel::Communicator&
-//TiberCad::get_mpi_comm()
-//{
-//  return(_mpi_comm);
-//}
 
 
 
@@ -152,7 +142,7 @@ TiberCad::subminor_version(void)
 
 
 
-int
+const std::string&
 TiberCad::software_revision(void)
 {
   return _SvnRevision;
@@ -268,13 +258,6 @@ double
 TiberCad::get_global_time(void)
 {
   return _control->get_time();
-}
-
-
-const std::string&
-TiberCad::get_output_format(void)
-{
-  return _control->get_output_format();
 }
 
 

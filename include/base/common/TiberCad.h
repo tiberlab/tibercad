@@ -1,10 +1,9 @@
-// $Id$
+// This header is part of the public tibercad API
 
 #ifndef _TIBERCAD_H_
 #define _TIBERCAD_H_
 
 #include "tiber_dll.h"
-//#include "TiberMath.h"
 
 #include <string>
 #include <list>
@@ -96,7 +95,7 @@ class TiberCad
 
 
     //! The software revision version number
-    static int software_revision(void);
+    static const std::string& software_revision(void);
 
 
     //! Get the directory where to put output files
@@ -137,19 +136,6 @@ class TiberCad
     static void drop_last_filename_suffix(void);
 
 
-    //! Get the output format
-    /*!
-     * \return a string that identifies the type of output files
-     * to generate
-     *
-     * Currently the following formats are supported:
-     * \li \c gmv for GMV
-     * \li \c ise for Tecplot
-     * \li \c gnu for GnuPlot
-     */
-    static const std::string& get_output_format(void);
-
-
     //! Get our MPI Communicator
     static libMesh::Parallel::Communicator& get_mpi_comm(void);
 
@@ -171,7 +157,7 @@ class TiberCad
 
 
     //! The TiberCAD subversion release number
-    static const int _SvnRevision;
+    static const std::string _SvnRevision;
 
 
     //! A counter to assure that there is only one instance of this class

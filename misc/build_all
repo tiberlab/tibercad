@@ -37,9 +37,9 @@ then
 
   echo "Finished installing MPI. Now re-run build_all."
 else
-  ./build_petsc
-  ./build_slepc
-  ./build_boost
+#  ./build_petsc
+#  ./build_slepc
+#  ./build_boost
   ./build_libmesh
   ./build_tibercad
 fi

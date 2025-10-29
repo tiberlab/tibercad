@@ -29,7 +29,7 @@ export TIBERLIBNAME
 
 
 # TIBERCAD includes
-include_dirs := $(shell find $(topdir)/include -type d -a ! -path "*.svn*")
+include_dirs := $(shell find $(topdir)/include -type d -a ! -path "*.git*")
 TIBER_INCLUDES := $(foreach dir,$(include_dirs),-I$(dir))
 
 
@@ -91,6 +91,17 @@ CPPFLAGS += -DARCH=\"$(ARCH)\"
 CPPFLAGS += -DMPICH_IGNORE_CXX_SEEK -DLIBMESH_REQUIRE_SEPARATE_NAMESPACE
 CPPFLAGS += $(TIBER_INCLUDES)
 CPPFLAGS += $(NON_TIBER_INCLUDES)
+
+TC_GITREVISION='"$(shell git describe --always --tags --dirty )"'
+TC_GITMODIFIED='"$(shell git log -n 1 | grep Date | awk '{print $$3, $$4, $$5, $$6}' )"'
+TC_COMPDATE='"$(shell date +'%F')"'
+
+
+CPPFLAGS += -DTC_REVISION=$(TC_GITREVISION)
+CPPFLAGS += -DTC_MODIFIED=$(TC_GITMODIFIED)
+CPPFLAGS += -DTC_COMPDATE=$(TC_COMPDATE)
+
+
 
 CXXFLAGS += $(shell METHOD=$(LIBMESHMETHOD) $(libmesh_config) --cxxflags) 
 

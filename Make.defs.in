@@ -71,10 +71,9 @@ ifeq ($(cross_compiling), yes)
   BUILDMODULE := export TIBERCADROOT=$(topdir) && $(topdir)/bin/build_module-$(BUILD) -c $(topdir)/share/modules.conf
 endif
 
-SVN := @SVN@
-
 # the subversion revision number
-SVNREVISION = $(shell $(SVN) info $(topdir) | awk '/^Last Changed Rev/ {print $$4}')
+# We keep this for historical reasons. It is the revision where transfer to git happened
+SVNREVISION = "5777" 
 
 # the full TiberCAD version number
 TIBERVERSION = $(shell echo "`cat $(topdir)/VERSION`.$(SVNREVISION)")

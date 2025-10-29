@@ -46,8 +46,11 @@ class DataOutput
      *
      * \param mesh the mesh
      * \param format the output file format in string representation
+     * 
+     * If no format is specified, then a default based on mesh dmension is
+     * used (1D: dat, 2D/3D: VTK)
      */
-    DataOutput(const MeshBase& mesh, const std::string& format);
+    DataOutput(const MeshBase& mesh, const std::string& format = "");
 
 
     //! Create a writer for a given format

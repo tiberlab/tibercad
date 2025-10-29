@@ -121,8 +121,6 @@ AC_SUBST([GMSH])
 #esac
 #AC_SUBST([BINSTALLMAKER])
 
-TC_SUBVERSION
-
 #
 # Checks for libraries.
 #
