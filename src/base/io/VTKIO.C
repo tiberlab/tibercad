@@ -8,7 +8,7 @@
 #include "libmesh/elem.h"
 #include "libmesh/mesh_base.h"
 
-#include "b64/encode.h"
+#include "encode.h"
 
 
 
