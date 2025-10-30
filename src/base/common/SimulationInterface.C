@@ -22,8 +22,8 @@
 
 #include "OpticsTB.h"
 
-#include "Sweep.h"
-#include "RelaxationMethod.h"
+#include "base/simulations/Sweep.h"
+#include "base/simulations/RelaxationMethod.h"
 #include "Utils.h"
 #include "DataOutput.h"
 #include "Messages.h"

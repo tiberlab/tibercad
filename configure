@@ -2861,7 +2861,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-ac_config_headers="$ac_config_headers include/base/common/tiber_config.h include/base/common/tiber_version.h"
+ac_config_headers="$ac_config_headers include/base/common/tiber_config.h"
 
 
 
@@ -8176,7 +8176,6 @@ for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
     "include/base/common/tiber_config.h") CONFIG_HEADERS="$CONFIG_HEADERS include/base/common/tiber_config.h" ;;
-    "include/base/common/tiber_version.h") CONFIG_HEADERS="$CONFIG_HEADERS include/base/common/tiber_version.h" ;;
     "stamp-h") CONFIG_FILES="$CONFIG_FILES stamp-h" ;;
     "Make.common") CONFIG_FILES="$CONFIG_FILES Make.common" ;;
     "Make.defs") CONFIG_FILES="$CONFIG_FILES Make.defs" ;;

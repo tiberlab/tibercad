@@ -13,7 +13,6 @@
 #include <map>
 
 //! Class used to define a regular structured grid 
-
 class GridCells
 {
 

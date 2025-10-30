@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 
+//! This class contains static definitions and utilities for Crystals
 class CrystalDefs {
 
   public:
