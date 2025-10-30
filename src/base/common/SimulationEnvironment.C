@@ -1,7 +1,7 @@
 // $Id$
 
 #include "SimulationEnvironment.h"
-#include "Control.h"
+#include "control/Control.h"
 #include "Device.h"
 #include "Boundary.h"
 

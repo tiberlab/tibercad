@@ -2,7 +2,7 @@
 
 #include "tiber_config.h"
 #include "TiberCad.h"
-#include "Control.h"
+#include "control/Control.h"
 #include "EigenSolver.h"
 #include "Database.h"
 #include "DLLoader.h"
