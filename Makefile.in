@@ -93,7 +93,9 @@ doc:
 
 
 run_tests:
-	@cd testsuite && ./run_tests -t all -v -i
+	@if test -d testsuite; then \
+	 cd testsuite && ./run_tests -t all -v -i ; \
+	fi
 
 
 
