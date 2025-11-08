@@ -2,7 +2,6 @@
 
 #include "boost/algorithm/string/trim.hpp"
 
-#include "DLLoader.h"
 #include "TiberCad.h"
 #include "Utils.h"
 #include "Messages.h"

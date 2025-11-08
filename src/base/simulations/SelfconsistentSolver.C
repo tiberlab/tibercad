@@ -1,7 +1,7 @@
 // $Id$
 
 #include "SelfconsistentSolver.h"
-#include "Multiscale.h"
+#include "base/common/Multiscale.h"
 #include "XMonitor.h"
 
 using namespace std;
