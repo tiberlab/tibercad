@@ -24,6 +24,9 @@
 #include "SimulationEnvironment.h"
 #include "SimulationInterface.h"
 #include "RuntimeException.h"
+#include "SolveFailedException.h"
+#include "ModelErrorException.h"
+#include "InitFailedException.h"
 
 #include <sstream>
 #include <vector>

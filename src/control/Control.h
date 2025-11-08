@@ -3,10 +3,6 @@
 #ifndef _CONTROL_H_
 #define _CONTROL_H_
 
-#include "ModelErrorException.h"
-#include "InitFailedException.h"
-#include "DatabaseException.h"
-#include "SolveFailedException.h"
 #include "TypeDefs.h"
 #include "IDSet.h"
 #include "tiber_dll.h"
