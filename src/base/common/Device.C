@@ -1,7 +1,7 @@
 // $Id$
 
 #include "Device.h"
-#include "InputParser.h"
+#include "base/io/InputParser.h"
 #include "Database.h"
 #include "Material.h"
 #include "Alloy.h"

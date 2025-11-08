@@ -13,7 +13,6 @@
 #include "libmesh/kelly_error_estimator.h"
 
 #include "KspaceIntegration.h"
-#include "VTKIO.h"
 
 #include "SimulationOptions.h"
 #include "Messages.h"

@@ -7,7 +7,7 @@
 
 #include "TiberCad.h"
 #include "Utils.h"
-#include "InputParser.h"
+#include "base/io/InputParser.h"
 #include "ModelOptions.h"
 
 #include "tiber_config.h"

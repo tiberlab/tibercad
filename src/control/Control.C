@@ -5,7 +5,7 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
 
-#include "InputParser.h"
+#include "base/io/InputParser.h"
 #include "Control.h"
 #include "Database.h"
 #include "base/io/DLLoader.h"
