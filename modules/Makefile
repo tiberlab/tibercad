@@ -14,7 +14,7 @@ subdirs += imagereader
 subdirs += polarizationgrid 
 subdirs += negf 
 subdirs += tmm 
-subdirs += pvmodule 
+subdirs += wateringress pvmodule 
 
 .IGNORE:
 
