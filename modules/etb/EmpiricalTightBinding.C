@@ -1576,7 +1576,7 @@ ETB::project_atom_strain(void)
   std::vector<double> eyy(Number_of_atoms, 0.0);  
   std::vector<double> ezz(Number_of_atoms, 0.0);
 
-  Tensor2Sym epsilon;
+  Tensor2Gen epsilon;
 
   for (unsigned int i = 0; i < Number_of_atoms ; i++)
   { 

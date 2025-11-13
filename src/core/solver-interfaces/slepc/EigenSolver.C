@@ -7,7 +7,7 @@
 #include "EigenSolver.h"
 #include "Messages.h"
 #include "RuntimeException.h"
-#include "TiberPetscUtils.h"
+#include "core/solver-interfaces/petsc/TiberPetscUtils.h"
 #include "slepceps.h"
 
 

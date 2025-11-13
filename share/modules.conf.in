@@ -45,8 +45,8 @@ Library tibercad
     core/optics,
     core/kintegrations,
     core/eigenvalue,
-    utils/Tensor,
-    utils/FADBAD++
+    @ROOT/third-party/Tensor,
+    @ROOT/third-party/FADBAD++
   )
   libpath = @ARCH/lib
   linker_flags = -ltibercad

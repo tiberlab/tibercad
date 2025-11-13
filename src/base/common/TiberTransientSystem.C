@@ -1,5 +1,5 @@
 #include "TiberTransientSystem.h"
-#include "TiberLinearSolver.h"
+#include "core/solver-interfaces/TiberLinearSolver.h"
 #include "SolveFailedException.h"
 #include "Messages.h"
 

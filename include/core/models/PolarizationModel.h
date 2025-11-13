@@ -44,7 +44,7 @@ class PolarizationModel : public PhysicalModel
    /*!
     * Strain tensor has to be provided in crystal coordinate system
     */
-   void set_strain(const Tensor2Sym& strain);
+   void set_strain(const Tensor2Gen& strain);
 
    //! Calculate the polarization
    /*!
@@ -77,7 +77,7 @@ class PolarizationModel : public PhysicalModel
    //! Rotate the polarization vector to calculation system
    void rotate(void);
 
-   Tensor2Sym& get_strain(void);
+   Tensor2Gen& get_strain(void);
 
    //! Get strain tensor
    void get_strain(libMesh::RealTensor& strain) const;
@@ -92,7 +92,7 @@ class PolarizationModel : public PhysicalModel
    libMesh::RealVectorValue _polarization;
 
    //! Polarization might typically depend on strain
-   Tensor2Sym _strain;
+   Tensor2Gen _strain;
 
    //! We may take it from some other module
    SolutionProvider _polarization_source;
@@ -105,7 +105,7 @@ class PolarizationModel : public PhysicalModel
 
 inline
 void 
-PolarizationModel::set_strain(const Tensor2Sym& strain)
+PolarizationModel::set_strain(const Tensor2Gen& strain)
 {
   _strain = strain;
 
@@ -113,7 +113,7 @@ PolarizationModel::set_strain(const Tensor2Sym& strain)
 
 
 inline
-Tensor2Sym&
+Tensor2Gen&
 PolarizationModel::get_strain(void)
 {
   return _strain;

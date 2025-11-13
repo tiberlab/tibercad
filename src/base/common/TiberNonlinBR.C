@@ -2,12 +2,12 @@
 
 
 #include "TiberNonlinBR.h"
-#include "TiberLinearSolver.h"
-#include "TiberPetscLinearSolver.h"
+#include "core/solver-interfaces/TiberLinearSolver.h"
+#include "core/solver-interfaces/petsc/TiberPetscLinearSolver.h"
 #include "InitFailedException.h"
 
-#include "PetscDivergedError.h"
-#include "SNESDivergedError.h"
+#include "core/solver-interfaces/petsc/PetscDivergedError.h"
+#include "core/solver-interfaces/petsc/SNESDivergedError.h"
 
 
 #include "linear_solver.h"

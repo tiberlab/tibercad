@@ -2,8 +2,8 @@
 
 
 #include "TiberNonlinTR.h"
-#include "TiberLinearSolver.h"
-#include "TiberPetscLinearSolver.h"
+#include "core/solver-interfaces/TiberLinearSolver.h"
+#include "core/solver-interfaces/petsc/TiberPetscLinearSolver.h"
 #include "InitFailedException.h"
 
 #include "SolveFailedException.h"

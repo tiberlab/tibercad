@@ -2,7 +2,7 @@
 
 #include "SelfconsistentSolver.h"
 #include "base/common/Multiscale.h"
-#include "XMonitor.h"
+#include "core/solver-interfaces/XMonitor.h"
 
 using namespace std;
 

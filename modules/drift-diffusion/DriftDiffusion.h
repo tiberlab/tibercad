@@ -33,7 +33,6 @@ class MeshBase;
 //class Point;
 class Node;
 class EquationSystems;
-class TiberLinearSolver;
 
 
 template<typename T> class DenseMatrix;

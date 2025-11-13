@@ -1,18 +1,18 @@
 // $Id$
 
 
-#include "TiberPetscNonlinearSolver.h"
 #include "TiberNonlinPetsc.h"
 
+#include "core/solver-interfaces/petsc/TiberPetscNonlinearSolver.h"
 
 #include "InitFailedException.h"
-#include "PetscDivergedError.h"
+#include "core/solver-interfaces/petsc/PetscDivergedError.h"
 #include "SolveFailedException.h"
 
 
-#include "equation_systems.h"
-#include "nonlinear_implicit_system.h"
-#include "mesh.h"
+#include "libmesh/equation_systems.h"
+#include "libmesh/nonlinear_implicit_system.h"
+#include "libmesh/mesh.h"
 
 #include "Messages.h"
 #include <cassert>

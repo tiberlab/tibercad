@@ -3,7 +3,7 @@
 #ifndef _TIBERPETSCNONLINEARSOLVER_H_
 #define _TIBERPETSCNONLINEARSOLVER_H_
 
-#include "TiberNonlinearSolver.h"
+#include "core/solver-interfaces/TiberNonlinearSolver.h"
 #include "PetscRuntimeError.h"
 
 

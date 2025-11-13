@@ -9,7 +9,7 @@
 #include "TiberNonlinBR.h"
 #include "TiberNonlinPetsc.h"
 
-#include "XMonitor.h"
+#include "core/solver-interfaces/XMonitor.h"
 #include "InitFailedException.h"
 
 

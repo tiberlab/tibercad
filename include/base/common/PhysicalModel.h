@@ -16,8 +16,6 @@
 #include <sstream>
 #include <iostream>
 
-#include "tensor.h"
-#include "xtensor.h"
 
 
 #ifndef MODULE_NAME

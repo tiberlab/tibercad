@@ -73,7 +73,7 @@ NonlinearPolarization::do_calculate(const Elem* elem, const Point& point)
 
   RealVectorValue polarization(0);
 
-  Tensor2Sym& strain = get_strain();
+  Tensor2Gen& strain = get_strain();
   _strain.get_crystal_strain(elem, point, strain);
 
   // strain in Voigt notation

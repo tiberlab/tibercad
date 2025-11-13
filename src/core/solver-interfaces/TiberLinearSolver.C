@@ -2,7 +2,7 @@
 
 #include "tiber_config.h"
 #include "TiberLinearSolver.h"
-#include "TiberPetscLinearSolver.h"
+#include "petsc/TiberPetscLinearSolver.h"
 
 #include "TiberCad.h"
 

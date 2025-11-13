@@ -362,10 +362,10 @@ class DriftDiffusionProperties : public PhysicalModel
     const libMesh::Point& get_coordinates(void) const;
 
     //! Set the strain
-    void set_strain(const Tensor2Sym& strain);
+    void set_strain(const Tensor2Gen& strain);
 
     //! Get the strain
-    const Tensor2Sym& get_strain(void) const;
+    const Tensor2Gen& get_strain(void) const;
 
 
     //! Set the lattice temperature (in K)
@@ -842,7 +842,7 @@ class DriftDiffusionProperties : public PhysicalModel
 
 
     //! Get the strain as writable reference
-    Tensor2Sym& get_strain(void);
+    Tensor2Gen& get_strain(void);
 
 
     // ! Get the strain interface
@@ -975,7 +975,7 @@ class DriftDiffusionProperties : public PhysicalModel
     int _coupling;
 
     //! The strain
-    Tensor2Sym _strain;
+    Tensor2Gen _strain;
 
     //! The conduction band properties
     /*!
@@ -1306,14 +1306,14 @@ DriftDiffusionProperties::get_recombination_model(ID id) const
 
 inline
 void
-DriftDiffusionProperties::set_strain(const Tensor2Sym& strain)
+DriftDiffusionProperties::set_strain(const Tensor2Gen& strain)
 {
   _strain = strain;
 }
 
 
 inline
-const Tensor2Sym&
+const Tensor2Gen&
 DriftDiffusionProperties::get_strain(void) const
 {
   return _strain;
@@ -1321,7 +1321,7 @@ DriftDiffusionProperties::get_strain(void) const
 
 
 inline
-Tensor2Sym&
+Tensor2Gen&
 DriftDiffusionProperties::get_strain(void)
 {
   return _strain;

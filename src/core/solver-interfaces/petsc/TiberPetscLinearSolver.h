@@ -4,7 +4,7 @@
 #ifndef _TIBERPETSCLINEARSOLVER_H_
 #define _TIBERPETSCLINEARSOLVER_H_
 
-#include "TiberLinearSolver.h"
+#include "core/solver-interfaces/TiberLinearSolver.h"
 #include "PetscRuntimeError.h"
 #include "KSPDivergedError.h"
 

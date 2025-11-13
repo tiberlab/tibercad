@@ -1,7 +1,7 @@
 // $Id$
 
 #include "TiberLinearSystem.h"
-#include "TiberLinearSolver.h"
+#include "core/solver-interfaces/TiberLinearSolver.h"
 #include "InitFailedException.h"
 
 #include "TiberCad.h"

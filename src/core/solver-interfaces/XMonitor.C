@@ -1,7 +1,7 @@
 // $Id$
 
 #include "XMonitor.h"
-#include "TiberPetscUtils.h"
+#include "petsc/TiberPetscUtils.h"
 
 
 XMonitor::XMonitor(const std::string& title)

@@ -1,7 +1,7 @@
 // $Id$
 
 #include "TiberNonlinearSolver.h"
-#include "TiberPetscNonlinearSolver.h"
+#include "petsc/TiberPetscNonlinearSolver.h"
 #include "ModelOptions.h"
 #include "XMonitor.h"
 
