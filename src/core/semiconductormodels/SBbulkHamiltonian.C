@@ -126,7 +126,7 @@ void SBbulkHamiltonian::calculate_Hamiltonian_k_par(void)
 
 //======================================================================//
 
-void SBbulkHamiltonian::apply_strain_and_potential(Tensor2Sym& strain_crystal, double el_potential)
+void SBbulkHamiltonian::apply_strain_and_potential(Tensor2Gen& strain_crystal, double el_potential)
 {
   Hamiltonian[0][0].constant = Hamiltonian_without_strain_pot[0][0].constant  -  el_potential/Hartree;
 }
@@ -143,7 +143,7 @@ void SBbulkHamiltonian::do_init( )
 
   edge = 0.0;
  
-  imass = Tensor2Sym(1);
+  imass = Tensor2Gen(1);
   
 }
 

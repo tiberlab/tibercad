@@ -763,7 +763,7 @@ void  Kspace::define_k_space(Tensor1 k_vector)
   Tensor1& basis1 = k_vector;
 
   if (basis1(1) == 1)
-    transform_matrix = Tensor2Sym(1);
+    transform_matrix = Tensor2Gen(1);
   else
   {
     Tensor1 basis2;

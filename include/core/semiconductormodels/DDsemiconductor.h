@@ -32,7 +32,7 @@ class TBDLEXPORT DDsemiconductor : public PhysicalModel
   };
 
 
-  void set_strain(const Tensor2Sym& strain);
+  void set_strain(const Tensor2Gen& strain);
 
   //!sets temperature for semiconductor object
   void set_temperature(const double T);
@@ -140,7 +140,7 @@ class TBDLEXPORT DDsemiconductor : public PhysicalModel
   bool strained ;
 
   //! strain tensor in crystal system
-  Tensor2Sym   strain;
+  Tensor2Gen   strain;
 
 
   //! information about conduction bands

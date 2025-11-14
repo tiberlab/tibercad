@@ -30,7 +30,7 @@ class SBbulkHamiltonian : public EFAbulkHamiltonian
 
 
   //! Applies ONLY potential. Strain in applied only in derived classes
-  virtual void apply_strain_and_potential(Tensor2Sym& strain_crystal, double el_potential);
+  virtual void apply_strain_and_potential(Tensor2Gen& strain_crystal, double el_potential);
 
    
 
@@ -49,7 +49,7 @@ class SBbulkHamiltonian : public EFAbulkHamiltonian
   double edge;
 
   //!\f$ \left(\frac{1}{m}\right)_{ij} \f$ tensor
-  Tensor2Sym imass;
+  Tensor2Gen imass;
 
   //!The only matrix element of the Hamiltonian
   MatrixElement single_band_ham;

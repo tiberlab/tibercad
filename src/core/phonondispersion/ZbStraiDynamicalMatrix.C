@@ -100,7 +100,7 @@ void  ZbStrainDynamicalMatrix::re_init(void)
   if  (_simul->get_solution(elem,h_point,ID_set,solution))
   {
     
-    Tensor2Sym strain;
+    Tensor2Gen strain;
     
     strain(1,1) = solution[0].find(var_map[E_XX])->second;
     strain(2,1) = solution[0].find(var_map[E_XY])->second;

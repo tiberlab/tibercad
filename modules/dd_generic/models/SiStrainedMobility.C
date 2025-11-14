@@ -65,7 +65,7 @@ SiStrainedMobility::do_init(void)
 double
 SiStrainedMobility::get_mobility(void)
 {
-  Tensor2Sym strain(0);
+  Tensor2Gen strain(0);
   _strain.get_strain(get_driftdiffusionproperties().get_element(),
       get_driftdiffusionproperties().get_coordinates(), strain);
 

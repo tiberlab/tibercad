@@ -43,7 +43,7 @@ class KPbulkHamiltonian : public EFAbulkHamiltonian
 
 
 
-  virtual void apply_strain_and_potential(Tensor2Sym& strain_crystal, double el_potential);
+  virtual void apply_strain_and_potential(Tensor2Gen& strain_crystal, double el_potential);
 
 
   //!calculates momentum operator P without k|| application

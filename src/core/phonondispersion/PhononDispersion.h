@@ -81,7 +81,7 @@ class PhononDispersion : public SimulationInterface
   std::vector<double> E;                          //eignvalue
   std::vector<std::vector< double > > _eignvectors; //eignvector
   
-  Tensor2Sym dynamical_matrix;
+  Tensor2Gen dynamical_matrix;
  
   //! Order the solution in correct mode
   virtual void 	build_nodal_results(const std::set< std::string > &variables, 

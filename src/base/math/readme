@@ -1,0 +1,5 @@
+Fermi-Dirac integrals are taken from:
+Allan J. MacLeod
+Algorithm 779: Fermi-Dirac functions of order -1/2, 1/2, 3/2, 5/2
+ACM Transactions on Mathematical Software (TOMS), Volume 24, Issue 1
+https://doi.org/10.1145/285861.285862

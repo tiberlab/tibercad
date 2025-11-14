@@ -9,19 +9,6 @@
 #include <tensor_value.h>
 
 
-//! Multiplication of symmetric 2-rank tensor with vector
-inline
-libMesh::RealVectorValue operator*(const Tensor2Sym& A, const libMesh::RealVectorValue& x)
-{
-  libMesh::RealVectorValue v(0);
-  v(0) += A(1, 1) * x(0) + A(2, 1) * x(1) + A(3, 1) * x(2);
-  v(1) += A(1, 2) * x(0) + A(2, 2) * x(1) + A(3, 2) * x(2);
-  v(2) += A(1, 3) * x(0) + A(2, 3) * x(1) + A(3, 3) * x(2);
-
-  return v;
-}
-
-
 //! Multiplication of generic 2-rank tensor with vector
 inline
 libMesh::RealVectorValue operator*(const Tensor2Gen& A, const libMesh::RealVectorValue& x)

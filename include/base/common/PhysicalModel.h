@@ -507,9 +507,9 @@ class PhysicalModel : public TiberModelObject
 
 
     /*! \copydoc alloy(double, double, double, double) */
-    void alloy(Tensor2Sym& result, const Tensor2Sym& val_a,
-        const Tensor2Sym& val_b, double xa,
-        const Tensor2Sym& bowing = Tensor2Sym(0));
+    void alloy(Tensor2Gen& result, const Tensor2Gen& val_a,
+        const Tensor2Gen& val_b, double xa,
+        const Tensor2Gen& bowing = Tensor2Gen(0));
 
     /*//! used if a model needs a unique id to set _has_unique_id = true
     void has_unique_id(bool flag = false)
@@ -523,11 +523,6 @@ class PhysicalModel : public TiberModelObject
 
     //! An iterator for the models
     typedef std::map<const std::string, ID>::iterator model_id_iterator;
-
-    /*//! An iterator for models with unique ID
-    typedef std::map< std::pair<const std::string,
-                                const std::string>,
-                      ID >::iterator unique_model_id_iterator;*/
 
 
     //! Disable copy constructor
@@ -694,8 +689,8 @@ PhysicalModel::alloy(Tensor4DSym& result, const Tensor4DSym& val_a,
 
 inline
 void
-PhysicalModel::alloy(Tensor2Sym& result, const Tensor2Sym& val_a,
-    const Tensor2Sym& val_b, double xa, const Tensor2Sym& bowing)
+PhysicalModel::alloy(Tensor2Gen& result, const Tensor2Gen& val_a,
+    const Tensor2Gen& val_b, double xa, const Tensor2Gen& bowing)
 {
   result = (1 - xa) * val_b + xa * val_a - xa * (1 - xa) * bowing ;
 }

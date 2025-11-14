@@ -216,7 +216,7 @@ void DDsemiconductor::prepare_submodels(void)
 //--------------------------------------------------------------------------------------------//
 void DDsemiconductor::do_init ()
 {
-  strain = Tensor2Sym(0);
+  strain = Tensor2Gen(0);
 
   const ModelOptions& opt =  get_options ();
 
@@ -245,7 +245,7 @@ void DDsemiconductor::read_database(void)
 
 //----------------------------------------------------------------------------------------------//
 
-void DDsemiconductor::set_strain(const Tensor2Sym& strain_1)
+void DDsemiconductor::set_strain(const Tensor2Gen& strain_1)
 {
  
   // attention: want norm() defined in tensor.h
@@ -256,7 +256,7 @@ void DDsemiconductor::set_strain(const Tensor2Sym& strain_1)
     }
   else
     {
-      strain = Tensor2Sym(0);
+      strain = Tensor2Gen(0);
       strained = false;
     }
 
@@ -678,7 +678,7 @@ void DDsemiconductor::do_calculate_valence_band_extremum(void)
   //--------------------------------------------------
   vector< vector<double> >  eigenvalue = calculate_vb_bulk_states(k_vector);
 
-  Tensor2Sym imass;
+  Tensor2Gen imass;
 
   double Eh_kmax = Constants::Hartree * k_max * k_max;
 
@@ -696,13 +696,13 @@ void DDsemiconductor::do_calculate_valence_band_extremum(void)
       imass(3,3) = (2.0 *(eigenvalue[0][ind*2] - eigenvalue[3][ind*2] )) / Eh_kmax;
 
 
-      imass(2,1) = (eigenvalue[0][ind*2] - eigenvalue[4][ind*2]) / Eh_kmax
+      imass(2,1) = imass(1,2) = (eigenvalue[0][ind*2] - eigenvalue[4][ind*2]) / Eh_kmax
           - 0.5 * (imass(1,1) + imass(2,2));
 
-      imass(3,1) = (eigenvalue[0][ind*2] - eigenvalue[5][ind*2]) / Eh_kmax
+      imass(3,1) = imass(1,3) = (eigenvalue[0][ind*2] - eigenvalue[5][ind*2]) / Eh_kmax
           - 0.5 * (imass(1,1) + imass(3,3));
 
-      imass(3,2) = (eigenvalue[0][ind*2] - eigenvalue[6][ind*2]) / Eh_kmax
+      imass(3,2) = imass(2,3) = (eigenvalue[0][ind*2] - eigenvalue[6][ind*2]) / Eh_kmax
           - 0.5 * (imass(2,2) + imass(3,3));
 
 

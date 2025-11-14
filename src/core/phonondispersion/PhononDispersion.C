@@ -608,7 +608,7 @@ PhononDispersion::diagonalize_double(void)
 void PhononDispersion::solve_phonon_dispersion(void)
 {
 
-     std::vector<Tensor2Sym> raman_tensor;
+     std::vector<Tensor2Gen> raman_tensor;
      std::vector<Tensor1> light_polarization;
   
 

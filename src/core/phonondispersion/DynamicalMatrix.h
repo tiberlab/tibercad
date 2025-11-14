@@ -27,7 +27,7 @@ public:
   ~DynamicalMatrix(){};
 
    //!provides conductivity in simulation system W/(cm K)
-   void get_dynamical_matrix(Tensor2Sym& D); 
+   void get_dynamical_matrix(Tensor2Gen& D); 
 
    virtual void re_init(void)=0;
 
@@ -51,7 +51,7 @@ protected:
   //!rotates dynamical matrix into the simulation system
    void rotate_to_calculation_system(const Tensor2Gen& RotMatrix);
 
-  Tensor2Sym _dynamical_matrix;
+  Tensor2Gen _dynamical_matrix;
   
 
    PhononModel* _phonon_model;
@@ -74,7 +74,7 @@ DynamicalMatrix::rotate_to_calculation_system(const Tensor2Gen& RotMatrix)
 
 inline
 void
-DynamicalMatrix::get_dynamical_matrix(Tensor2Sym& dynamical_matrix) 
+DynamicalMatrix::get_dynamical_matrix(Tensor2Gen& dynamical_matrix) 
 {
    this->re_init();
    dynamical_matrix = _dynamical_matrix;

@@ -56,7 +56,7 @@ class EFAbulkHamiltonian: public PhysicalModel
     \param strain_crystal strain tensor in crystal system
     \param el_potentia electric potential [V]
   */
-  virtual void apply_strain_and_potential(Tensor2Sym& strain_crystal, double el_potential) = 0;
+  virtual void apply_strain_and_potential(Tensor2Gen& strain_crystal, double el_potential) = 0;
 
 
   //!returns Hamiltonian
