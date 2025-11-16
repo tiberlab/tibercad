@@ -5,13 +5,12 @@
 
 #include "PhysicalModel.h"
 
-#include "libmesh/tensor_value.h"
 #include "tensor.h"
-#include "xtensor.h"
-#include "libmesh/elem.h"
 #include "Material.h"
 #include "TensorOperators.h"
 
+#include "libmesh/elem.h"
+#include "libmesh/tensor_value.h"
 
 
 using namespace std;

@@ -8,6 +8,9 @@
 #include "boost/filesystem/operations.hpp"
 
 #include "Utils.h"
+#include "Tensor1.h"
+#include "Tensor2.h"
+#include "TensorOperators.h"
 #include "Messages.h"
 #include "RuntimeException.h"
 
@@ -414,7 +417,7 @@ Utils::scale_to_int(Tensor1& a, double tol)
 
 
 void
-Utils::scale_to_int(Tensor2Gen& a, double tol)
+Utils::scale_to_int(Tensor2& a, double tol)
 {
   //Same of scale_to_int with Tensor1 argument, considering the columns of a 2-rank tensor
   Tensor1 tmp;

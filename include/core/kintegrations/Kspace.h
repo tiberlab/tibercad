@@ -6,6 +6,7 @@
 #include "InitFailedException.h"
 #include "parallel.h"
 
+#include "libmesh/point.h"
 #include "libmesh/enum_order.h"
 #include "libmesh/vector_value.h"
 

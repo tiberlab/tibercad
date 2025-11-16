@@ -2,6 +2,7 @@
 
 #include "SignalGenerator.h"
 #include "Variable.h"
+#include "InitFailedException.h"
 
 using namespace std;
 

@@ -7,6 +7,7 @@
 #include "HashMap.h"
 #include "HashSet.h"
 #include "RuntimeException.h"
+#include "InitFailedException.h"
 #include "TiberCad.h"
 
 #include "libmesh/mesh.h"

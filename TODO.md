@@ -7,6 +7,7 @@ own TODO list. For historical reason, some module-specific TODO's are left in th
 
 ### Todo
 
+- [ ] reorganize and unpack stuff in Utils.h
 - [ ] eliminate tibercad.in in bin, transfer to TiberCAD.sh.in and link  
 - [ ] eliminate interlayer for libMesh system and solver classes (and solver re-implementations)
 - [ ] add more useful common API for projecting quantum states on bases/orbitals
@@ -24,6 +25,7 @@ own TODO list. For historical reason, some module-specific TODO's are left in th
 
 ### In Progress
 
+- [ ] eliminate Tensor1 and Tensor2 in favor of libmesh classes
 - [ ] add possibility to have independent meshes  
 - [ ] add transient solver 
 

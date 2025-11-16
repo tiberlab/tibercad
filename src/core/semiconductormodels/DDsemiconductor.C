@@ -706,10 +706,7 @@ void DDsemiconductor::do_calculate_valence_band_extremum(void)
           - 0.5 * (imass(2,2) + imass(3,3));
 
 
-      double imass_DOS = 0.0;
-      double temp1, temp2;
-
-      imass.invariants(&temp1, &temp2, &imass_DOS);
+      double imass_DOS = imass.det();
 
       if (imass_DOS <= 0.0)
       {

@@ -671,7 +671,7 @@ Elasticity::assemble(void)
 
   std::vector<libMesh::DenseSubVector<Number>> F(3, DenseSubVector<Number>(Fe));
   std::vector<std::vector<libMesh::DenseSubMatrix<Number>>> K(3,
-      vector<libMesh::DenseSubMatrix<Number>>(3, libMesh::DenseSubMatrix<Number>(Ke)));
+  std::vector<libMesh::DenseSubMatrix<Number>>(3, libMesh::DenseSubMatrix<Number>(Ke)));
 
   //----------------------------------------------------------
   std::vector< std::vector<unsigned int> > dof_indices_vec(3);
@@ -708,7 +708,7 @@ Elasticity::assemble(void)
       for (unsigned int j = 0;j <3; j++)
       {
         K[i][j].reposition(uvar[i] * n_dofs_vec[i], uvar[j] * n_dofs_vec[i],  n_dofs_vec[i] , n_dofs_vec[j] );
-	K[i][j].zero();
+	      K[i][j].zero();
       }
     }
 
@@ -728,6 +728,7 @@ Elasticity::assemble(void)
      
        mod.calculate(elem, qrule.qp(qp));
        const Tensor4DSym& C = mod.get_stiffness();
+       
        const libMesh::RealGradient& force =  mod.get_force_source();
        //const RealTensor& strain_source =  mod.get_strain_source();
        const libMesh::RealTensor& stress_source =  mod.get_stress_source();

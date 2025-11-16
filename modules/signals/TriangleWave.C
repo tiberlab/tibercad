@@ -2,6 +2,7 @@
 
 #include "TriangleWave.h"
 #include "Variable.h"
+#include "InitFailedException.h"
 
 //#include <fstream>
 

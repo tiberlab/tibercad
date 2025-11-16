@@ -1,6 +1,7 @@
 #include "TiberTransientSystem.h"
 #include "core/solver-interfaces/TiberLinearSolver.h"
 #include "SolveFailedException.h"
+#include "InitFailedException.h"
 #include "Messages.h"
 
 #include "libmesh/equation_systems.h"

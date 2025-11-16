@@ -67,7 +67,7 @@ StrainInterface::set_simulation(const std::string& name)
 
 
 void
-StrainInterface::get_strain(const Elem* elem, const Point& point, Tensor2Gen& strain)
+StrainInterface::get_strain(const Elem* elem, const Point& point, Tensor2& strain)
 {
   if (_simulation)
   {
@@ -81,7 +81,7 @@ StrainInterface::get_strain(const Elem* elem, const Point& point, Tensor2Gen& st
 
 
 void
-StrainInterface::get_crystal_strain(const Elem* elem, const Point& point, Tensor2Gen& strain)
+StrainInterface::get_crystal_strain(const Elem* elem, const Point& point, Tensor2& strain)
 {
   if (_simulation)
   {
@@ -95,7 +95,7 @@ StrainInterface::get_crystal_strain(const Elem* elem, const Point& point, Tensor
 
 
 void
-StrainInterface::get_stress(const Elem* elem, const Point& point, Tensor2Gen& stress)
+StrainInterface::get_stress(const Elem* elem, const Point& point, Tensor2& stress)
 {
   if (_simulation)
   {
@@ -109,7 +109,7 @@ StrainInterface::get_stress(const Elem* elem, const Point& point, Tensor2Gen& st
 
 
 void
-StrainInterface::get_crystal_stress(const Elem* elem, const Point& point, Tensor2Gen& stress)
+StrainInterface::get_crystal_stress(const Elem* elem, const Point& point, Tensor2& stress)
 {
   if (_simulation)
   {
@@ -125,7 +125,7 @@ StrainInterface::get_crystal_stress(const Elem* elem, const Point& point, Tensor
 inline
 void
 StrainInterface::_get_data(const Elem* elem, const Point& point,
-    Tensor2Gen& data, ID id)
+    Tensor2& data, ID id)
 {
   std::vector<Point> p(1);
   p[0] = point;

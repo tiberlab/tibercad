@@ -5,7 +5,7 @@
 
 #include "Utils.h"
 #include "tiber_dll.h"
-
+#include "tensor.h"
 
 #include <map>
 #include <set>

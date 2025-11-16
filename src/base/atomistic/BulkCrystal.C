@@ -4,6 +4,7 @@
 #include "Alloy.h"
 #include "Messages.h"
 #include "RuntimeException.h"
+#include "InitFailedException.h"
 
 #include <boost/algorithm/string/replace.hpp>
 

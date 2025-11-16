@@ -3,14 +3,11 @@
 #ifndef _UTILS_H_
 #define _UTILS_H_
 
-#include "InitFailedException.h"
-
-#include "tensor.h"
+//#include "InitFailedException.h"
 
 #include <typeinfo>
 #include <string>
 #include <vector>
-#include <iostream>
 #include <cmath>
 #include <cstdlib>
 
@@ -22,6 +19,9 @@ typedef VectorValue<double> RealVectorValue;
 template <typename T> class TensorValue;
 typedef TensorValue<double> RealTensor;
 }
+
+class Tensor1;
+class Tensor2;
 
 //! This class contains useful methods for different tasks
 class Utils
@@ -101,7 +101,7 @@ class Utils
     static void scale_to_int(Tensor1& a, double tol = 0.001);
 
     //! Scale 3 vectors (as tensor) with fractional parts to all integer vector
-    static void scale_to_int(Tensor2Gen &a, double tol = 0.001);
+    static void scale_to_int(Tensor2& a, double tol = 0.001);
 
 
     //! Tokenize a string
