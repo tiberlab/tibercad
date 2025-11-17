@@ -4,8 +4,8 @@
 
 
 #include "Atom.h"
-#include "tensor.h"
-#include "tiber_dll.h"
+#include "Tensor1.h"
+#include "Tensor2.h"
 
 #include "libmesh/tensor_value.h"
 
@@ -20,7 +20,7 @@ class GridCells
   
   class NeighborIterator;
 
-  GridCells(const std::vector<Atom>& basis, const Tensor2Gen& period,
+  GridCells(const std::vector<Atom>& basis, const Tensor2& period,
       const libMesh::Point& origin,
       const double minimum_spacing, unsigned int projected_dim = 3);
 
@@ -36,7 +36,7 @@ class GridCells
   unsigned int n_z;
   
   //! Supercell vectors
-  Tensor2Gen _period;
+  Tensor2 _period;
  
 
   void init(void);  
@@ -75,15 +75,15 @@ class GridCells
   std::vector<std::vector<unsigned int> > _grid_cell; 
 
   //! Define edges of atomic basis
-  void define_edges(const std::vector<Atom>& basis) TBDLLOCAL;
+  void define_edges(const std::vector<Atom>& basis);
 
   
   //! Set private members related to grid definition
-  void define_grid(void) TBDLLOCAL;
+  void define_grid(void);
 
 
   //! Include atom indexes in proper cells
-  void include_atoms(const std::vector<Atom>& basis) TBDLLOCAL;
+  void include_atoms(const std::vector<Atom>& basis);
 
   //! The transformation matrix to get point coordinates in given basis
   libMesh::RealTensor _inv_transform;

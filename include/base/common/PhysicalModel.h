@@ -28,6 +28,8 @@ class EdgeObject;
 class NodeObject;
 class Database;
 class Material;
+class Tensor2;
+class Tensor4DSym;
 
 
 //! Base class for the different physical models
@@ -502,14 +504,29 @@ class PhysicalModel : public TiberModelObject
      * \param result the value for material \f$  A_xB_{1-x}C\f$
      */
     void alloy(Tensor4DSym& result, const Tensor4DSym& val_a,
+        const Tensor4DSym& val_b, double xa);
+
+
+    /*!
+     * \copydoc alloy(double, double, double, double)
+     *
+     * \param result the value for material \f$  A_xB_{1-x}C\f$
+     */
+    void alloy(Tensor4DSym& result, const Tensor4DSym& val_a,
         const Tensor4DSym& val_b, double xa,
-        const Tensor4DSym& bowing = Tensor4DSym(0));
+        const Tensor4DSym& bowing);
 
 
     /*! \copydoc alloy(double, double, double, double) */
-    void alloy(Tensor2Gen& result, const Tensor2Gen& val_a,
-        const Tensor2Gen& val_b, double xa,
-        const Tensor2Gen& bowing = Tensor2Gen(0));
+    void alloy(Tensor2& result, const Tensor2& val_a,
+        const Tensor2& val_b, double xa);
+
+
+    /*! \copydoc alloy(double, double, double, double) */
+    void alloy(Tensor2& result, const Tensor2& val_a,
+        const Tensor2& val_b, double xa,
+        const Tensor2& bowing);
+
 
     /*//! used if a model needs a unique id to set _has_unique_id = true
     void has_unique_id(bool flag = false)
@@ -676,24 +693,6 @@ PhysicalModel::alloy(double val_a, double val_b,
   return val_b + (val_a - val_b) * xa - bowing * xa * (1 - xa);
 }
 
-
-
-inline
-void
-PhysicalModel::alloy(Tensor4DSym& result, const Tensor4DSym& val_a,
-    const Tensor4DSym& val_b, double xa, const Tensor4DSym& bowing)
-{
- result = (1 - xa) * val_b + xa * val_a - xa * (1 - xa) * bowing ;
-}
-
-
-inline
-void
-PhysicalModel::alloy(Tensor2Gen& result, const Tensor2Gen& val_a,
-    const Tensor2Gen& val_b, double xa, const Tensor2Gen& bowing)
-{
-  result = (1 - xa) * val_b + xa * val_a - xa * (1 - xa) * bowing ;
-}
 
 
 

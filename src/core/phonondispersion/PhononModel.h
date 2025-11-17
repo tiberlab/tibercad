@@ -22,7 +22,7 @@ class PhononModel: public PhysicalModel
   static  PhononModel* create(const ModelOptions& options);
 
   //!Get the thermal lattice conductivity
-  // void get_dynamical_tensor(Tensor2Gen& dynamical_tensor){};
+  // void get_dynamical_tensor(Tensor2& dynamical_tensor){};
   void fake(void);
 
    //! Init all fields
@@ -36,10 +36,10 @@ class PhononModel: public PhysicalModel
   //!get the current element
    const Elem* get_element(void);
   //  void get_free_dynamical_matrix(std::vector<std::vector< double > >& D);
-   void get_free_dynamical_matrix(Tensor2Gen& dynamical_matrix);
-   void get_full_dynamical_matrix(Tensor2Gen& dynamical_matrix);
+   void get_free_dynamical_matrix(Tensor2& dynamical_matrix);
+   void get_full_dynamical_matrix(Tensor2& dynamical_matrix);
 
-   void get_raman_tensor(std::vector<Tensor2Gen> & raman_tensor);
+   void get_raman_tensor(std::vector<Tensor2> & raman_tensor);
 
    void get_light_polarization(std::vector<Tensor1>& light_polarization);
 

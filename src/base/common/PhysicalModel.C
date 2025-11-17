@@ -6,6 +6,7 @@
 #include "MaterialBoundary.h"
 #include "Material.h"
 #include "Database.h"
+#include "TensorOperators.h"
 
 #include "Utils.h"
 #include "Trap.h"
@@ -792,3 +793,32 @@ PhysicalModel::_create_submodels(void)
 }
 
 
+
+void
+PhysicalModel::alloy(Tensor4DSym& result, const Tensor4DSym& val_a,
+    const Tensor4DSym& val_b, double xa)
+{
+ result = (1 - xa) * val_b + xa * val_a;
+}
+
+void
+PhysicalModel::alloy(Tensor4DSym& result, const Tensor4DSym& val_a,
+    const Tensor4DSym& val_b, double xa, const Tensor4DSym& bowing)
+{
+ result = (1 - xa) * val_b + xa * val_a - xa * (1 - xa) * bowing;
+}
+
+
+void
+PhysicalModel::alloy(Tensor2& result, const Tensor2& val_a,
+    const Tensor2& val_b, double xa)
+{
+  result = (1 - xa) * val_b + xa * val_a;
+}
+
+void
+PhysicalModel::alloy(Tensor2& result, const Tensor2& val_a,
+    const Tensor2& val_b, double xa, const Tensor2& bowing)
+{
+  result = (1 - xa) * val_b + xa * val_a - xa * (1 - xa) * bowing ;
+}

@@ -4,6 +4,7 @@
 #include "ZbSemiconductor.h"
 #include "Constants.h"
 #include "Messages.h"
+#include "TensorOperators.h"
 
 using namespace std;
 using namespace Constants;
@@ -44,7 +45,7 @@ void SBZbCondBandBulkHamiltonian::calculate_for_init(void)
 
   if (min_name == "Gamma")
     {
-      imass = Tensor2Gen(0);
+      imass = Tensor2(0);
       imass(1,1) = 1.0/par.m_G;
       imass(2,2) = 1.0/par.m_G;
       imass(3,3) = 1.0/par.m_G;
@@ -59,7 +60,7 @@ void SBZbCondBandBulkHamiltonian::calculate_for_init(void)
     {
       if ( opt.get_option("valley", 1) == 1)
 	{
-	  imass = Tensor2Gen(0);
+	  imass = Tensor2(0);
 	  imass(1,1) = 1.0/par.m_l_X;
 	  imass(2,2) = 1.0/par.m_t_X;
 	  imass(3,3) = 1.0/par.m_t_X;
@@ -70,7 +71,7 @@ void SBZbCondBandBulkHamiltonian::calculate_for_init(void)
 	}
       if ( opt.get_option("valley", 1) == 2)
 	{
-	  imass = Tensor2Gen(0);
+	  imass = Tensor2(0);
 	  imass(1,1) = 1.0/par.m_t_X;
 	  imass(2,2) = 1.0/par.m_l_X;
 	  imass(3,3) = 1.0/par.m_t_X;
@@ -81,7 +82,7 @@ void SBZbCondBandBulkHamiltonian::calculate_for_init(void)
 	}
       if ( opt.get_option("valley", 1) == 3)
 	{
-	  imass = Tensor2Gen(0);
+	  imass = Tensor2(0);
 	  imass(1,1) = 1.0/par.m_t_X;
 	  imass(2,2) = 1.0/par.m_t_X;
 	  imass(3,3) = 1.0/par.m_l_X;
@@ -103,7 +104,7 @@ void SBZbCondBandBulkHamiltonian::calculate_for_init(void)
 }
 
 //===========================================================================//
-void SBZbCondBandBulkHamiltonian::apply_strain_and_potential(Tensor2Gen& strain_crystal, double el_potential)
+void SBZbCondBandBulkHamiltonian::apply_strain_and_potential(const Tensor2& strain_crystal, double el_potential)
 {
 
   //TODO: Redundance with methods in ZbDDSemiconductor::do_calculate_conduction_band_extremum.

@@ -4,6 +4,7 @@
 #include "Material.h"
 #include "Messages.h"
 #include "Constants.h"
+#include "Tensor2.h"
 
 using namespace Constants;
 
@@ -845,7 +846,7 @@ void KPbulkHamiltonian:: calculate_Hamiltonian_k_par (void)
 }
 
 //-------------------------------------------------------//
-void KPbulkHamiltonian::apply_strain_and_potential(Tensor2Gen& strain_crystal, double el_potential)
+void KPbulkHamiltonian::apply_strain_and_potential(const Tensor2& strain_crystal, double el_potential)
 {
 
 

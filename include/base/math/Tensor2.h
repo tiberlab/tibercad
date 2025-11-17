@@ -85,7 +85,6 @@ class Tensor2
 
 };
 
-typedef Tensor2 Tensor2Gen;
 
 
 inline

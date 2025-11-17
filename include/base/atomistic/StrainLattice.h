@@ -2,10 +2,12 @@
 #define _STRAINLATTICE_H_
 
 #include "TiberModelObject.h"
-#include "tensor.h"
 #include "Specie.h"
-#include "point.h"
+#include "Tensor1.h"
+#include "Tensor2.h"
 #include "Atom.h"
+
+#include "libmesh/point.h"
 
 //Forward declarations
 class AtomisticStructure;
@@ -38,7 +40,7 @@ class StrainLattice
     //Point coord;
     //------------------------------------------------------------
     const Atom* atom_p;
-    Tensor2Gen tensor;
+    Tensor2 tensor;
   };
 
   //! Get solution vector
@@ -55,7 +57,7 @@ class StrainLattice
       Tetra(void);
 
       //!Edges R12, R23, R34 stored by columns
-      Tensor2Gen edges;
+      Tensor2 edges;
 
       //! Bonds R01, R02, R03, R04 
       /*! Note: bonds are redundant, geometry is defined by edges,

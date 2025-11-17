@@ -27,7 +27,7 @@ class SBZbCondBandBulkHamiltonian : public SBCondBandBulkHamiltonian
   unsigned int min_number;
 
   
-  virtual void apply_strain_and_potential(Tensor2Gen& strain_crystal, double el_potential);
+  virtual void apply_strain_and_potential(const Tensor2& strain_crystal, double el_potential);
 
   static SBZbCondBandBulkHamiltonian* create(const ModelOptions& options);
 

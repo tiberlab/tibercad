@@ -3349,7 +3349,7 @@ SimulationInterface::build_map_elem_atoms(double sigma, double cutoff)
   const std::vector<Atom>& structure = get_atomistic_structure()->get_structure_atoms();
 
   // Partition the structure into cells for O(N) scheme
-  Tensor2Gen period = get_atomistic_structure()->get_ttype_lattice_vectors(); 
+  Tensor2 period = get_atomistic_structure()->get_ttype_lattice_vectors(); 
   GridCells cells(structure, period,
       get_atomistic_structure()->get_origin(),
       deltar_max, get_mesh().mesh_dimension());

@@ -5,9 +5,11 @@
 #include <complex>
 #include <vector>
 #include <map>
-#include "tensor.h"
 
 #include "PhysicalModel.h"
+
+class Tensor2;
+
 class EFAbulkHamiltonian: public PhysicalModel
 {
 
@@ -40,7 +42,7 @@ class EFAbulkHamiltonian: public PhysicalModel
   /*!
     \param k_in - k vector [a.u.]
   */  
-  void set_k_vector(Tensor1 k_in); 
+  void set_k_vector(const Tensor1& k_in); 
 
  
 
@@ -56,7 +58,7 @@ class EFAbulkHamiltonian: public PhysicalModel
     \param strain_crystal strain tensor in crystal system
     \param el_potentia electric potential [V]
   */
-  virtual void apply_strain_and_potential(Tensor2Gen& strain_crystal, double el_potential) = 0;
+  virtual void apply_strain_and_potential(const Tensor2& strain_crystal, double el_potential) = 0;
 
 
   //!returns Hamiltonian

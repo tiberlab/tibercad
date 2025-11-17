@@ -6,6 +6,7 @@
 #include "Messages.h"
 #include "Utils.h"
 #include "SpaceTransformation.h"
+#include "TensorOperators.h"
 
 #include "libmesh/replicated_mesh.h"
 #include "libmesh/mesh_modification.h"
@@ -54,7 +55,7 @@ Kspace::Kspace(const ModelOptions& options, const libMesh::Parallel::Communicato
   // we create a serial communicator
   comm.split(0, 0, kspace_comm); 
 
-  transform_matrix = Tensor2Gen(1);
+  transform_matrix = Tensor2(1);
 
   do_init();
 }
@@ -763,7 +764,7 @@ void  Kspace::define_k_space(Tensor1 k_vector)
   Tensor1& basis1 = k_vector;
 
   if (basis1(1) == 1)
-    transform_matrix = Tensor2Gen(1);
+    transform_matrix = Tensor2(1);
   else
   {
     Tensor1 basis2;
@@ -1702,7 +1703,7 @@ void Kspace::inv_rotate_mesh(void)
 
   Tensor1 vec1;
 
-  Tensor2Gen inv_matrix = inv(transform_matrix); //.transpose();
+  Tensor2 inv_matrix = inv(transform_matrix); //.transpose();
 
   for (unsigned int n=0; n < kmesh->n_nodes(); n++)
   {

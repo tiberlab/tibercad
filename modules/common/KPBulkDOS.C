@@ -85,7 +85,7 @@ KPBulkDOS::do_init(void)
   string thermal_simul = get_option("thermal_simulation", "");
   _thermal_if = SimulationInterface::find_solution_provider(thermal_simul, "T");
 
-  _bulk_model->set_strain(Tensor2Gen(0.0));
+  _bulk_model->set_strain(Tensor2(0.0));
   _bulk_model->set_temperature(SimulationOptions::T);
   _solve_kp();
 
@@ -115,7 +115,7 @@ KPBulkDOS::do_reinit(const Elem* elem)
   }
   else
   {
-    Tensor2Gen strain(0);
+    Tensor2 strain(0);
 
     vector<Point> p(1);
     p[0] = elem->vertex_average();
@@ -134,7 +134,7 @@ KPBulkDOS::do_reinit(const Elem* elem)
 
     const Material* mat = get_material();
     const libMesh::RealTensor& rotm = mat->get_rotation_matrix();
-    Tensor2Gen rotate;
+    Tensor2 rotate;
     transform_tensor_format(rotm, rotate);
     strain = rotate.transpose() * strain * rotate;
 

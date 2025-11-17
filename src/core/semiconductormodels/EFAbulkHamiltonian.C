@@ -2,6 +2,7 @@
 
 #include "EFAbulkHamiltonian.h"
 #include "Material.h" 
+#include "Tensor1.h" 
 
 using namespace std; 
 
@@ -79,7 +80,7 @@ void EFAbulkHamiltonian::set_k_vector (const double k_vector_in[3])
 }
 
 
-void EFAbulkHamiltonian::set_k_vector (Tensor1 k_vector_in)
+void EFAbulkHamiltonian::set_k_vector (const Tensor1& k_vector_in)
 {
   k_vector[0] =  k_vector_in(1);
   k_vector[1] =  k_vector_in(2);

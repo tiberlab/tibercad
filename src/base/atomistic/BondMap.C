@@ -139,7 +139,7 @@ BondMap::get_translation(unsigned int atom, unsigned int neighbor) const
 
 void
 BondMap::solve(const std::vector<Atom>& basis,
-    const Tensor2Gen& period, const libMesh::Point& origin)
+    const Tensor2& period, const libMesh::Point& origin)
 {
 
   Messages::debug("BondMap::solve");

@@ -6,13 +6,14 @@
 //--------------------------------------------------------------------------------------------
 
 #include "Atom.h"
-#include "tensor.h"
 #include "ModelOptions.h"
 #include "TypeDefs.h"
 #include "Material.h"
 #include "Database.h"
 #include "Alloy.h"
-#include "mesh.h"
+#include "Tensor2.h"
+
+#include "libmesh/mesh.h"
 
 
 
@@ -77,10 +78,10 @@ protected:
 
 
   //! Conventional cell vectors in absolute basis
-  Tensor2Gen _conv_vect;
+  Tensor2 _conv_vect;
 
   //! Conventional cell vectors in primitive real basis
-  Tensor2Gen _conv_prim;
+  Tensor2 _conv_prim;
 
   //! Lattice points in conventional basis
   std::vector<Tensor1> _conv_lattice;
@@ -132,7 +133,7 @@ protected:
 
 
   //!Supercell periodicity vectors
-  Tensor2Gen _period;
+  Tensor2 _period;
 
   //! Map for cutoff parameters
   std::map<std::string, double> _cutoff;
@@ -170,7 +171,7 @@ protected:
 
 
   //! Calculate a reciprocal basis from a real basis
-  static Tensor2Gen reciprocal(Tensor2Gen real_basis);
+  static Tensor2 reciprocal(const Tensor2& real_basis);
 
   //! fold atoms into conventional cell
   static bool fold_in_cell(Atom& atom, const Point& orig,

@@ -3,11 +3,11 @@
 
 #include <complex>
 #include <vector>
-#include "tensor.h"
 #include "EFAbulkHamiltonian.h"
 #include "PhysicalModel.h"
 #include "Semiconductor.h"
 #include "KPparameters.h"
+
 
 /*!
  * \brief A class that builds kp bulk Hamiltonian
@@ -43,7 +43,7 @@ class KPbulkHamiltonian : public EFAbulkHamiltonian
 
 
 
-  virtual void apply_strain_and_potential(Tensor2Gen& strain_crystal, double el_potential);
+  virtual void apply_strain_and_potential(const Tensor2& strain_crystal, double el_potential);
 
 
   //!calculates momentum operator P without k|| application

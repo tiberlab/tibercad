@@ -4,6 +4,7 @@
 #include "ZbSemiconductor.h"
 #include "Semiconductor.h"
 #include "Constants.h"
+#include "TensorOperators.h"
 
 using namespace std;
 using namespace Constants;

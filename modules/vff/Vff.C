@@ -843,7 +843,7 @@ Vff::get_solution_secure(const libMesh::Elem* elem,
       }
       
       //double min = 1e5;
-      Tensor2Gen sol(0);
+      Tensor2 sol(0);
       double min = 1e5;
       unsigned int contribs = 0;
       unsigned int minidx = 0;
@@ -891,7 +891,7 @@ Vff::get_solution_secure(const libMesh::Elem* elem,
   if (values.count(StrainCells))
   {
     
-    Tensor2Gen sol(0);
+    Tensor2 sol(0);
     double min = 1e5;
     unsigned int minidx = 0;
     unsigned int contribs = 0;

@@ -5,7 +5,6 @@
 
 #include "Utils.h"
 #include "tiber_dll.h"
-#include "tensor.h"
 
 #include <map>
 #include <set>
@@ -161,7 +160,7 @@ class ModelOptions
     //! Set an option
     /*!
      * \param name the name of the option
-     * \param value the value to set
+     * \param value the value to set/home/maufder/Work/TiberCAD/TransferToGit/include/base/common/ModelOptions.h
      */
     template <typename T>
     void set_option(const std::string& name, const T& value);

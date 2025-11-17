@@ -3,7 +3,6 @@
 #define _OPTICSTB_H_
 
 #include "Optics.h"
-#include <tensor.h>
 #include "EigenvalueProblem.h"
 
 //! A base class of optics calculation

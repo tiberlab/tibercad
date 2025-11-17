@@ -10,7 +10,6 @@
 #include "TiberLinearSystem.h"
 #include "SimulationOptions.h"
 #include "TensorOperators.h"
-#include "tensor.h"
 #include "EigenSolver.h"
 #include "Utils.h"
 
@@ -1302,7 +1301,7 @@ void EnvelopFunctionApprox::do_solve_for_kpoint(const Point& k_point)
 
 void
 EnvelopFunctionApprox::get_crystal_strain(
-    const libMesh::Elem* elem, const libMesh::Point& point, Tensor2Gen& strain)
+    const libMesh::Elem* elem, const libMesh::Point& point, Tensor2& strain)
 {
 
   if (_strain_interface.is_valid())
@@ -1323,7 +1322,7 @@ EnvelopFunctionApprox::get_crystal_strain(
     }
 
     const Material* mat = get_material(elem);
-    Tensor2Gen rotate;
+    Tensor2 rotate;
     transform_tensor_format(mat->get_rotation_matrix(), rotate);
     strain = rotate.transpose() * strain * rotate;
   }
@@ -1491,7 +1490,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 	    We assume that strain and electric potential may be different for different quadrature points
 	    It is done for a sake of a multiscale generalization
          */
-        Tensor2Gen strain_crystal_system(0);
+        Tensor2 strain_crystal_system(0);
         get_crystal_strain(elem, q_point[qp], strain_crystal_system);
 
 
@@ -2996,7 +2995,7 @@ void EnvelopFunctionApprox::solve_bulk(void)
 
   element_hamiltonian->calculate_Hamiltonian_k_par();
 
-  Tensor2Gen strain_crystal_system(0);
+  Tensor2 strain_crystal_system(0);
   get_crystal_strain(_bulk_mat_element, qp, strain_crystal_system);
 
   //std::cout<<"strain"<<std::endl;

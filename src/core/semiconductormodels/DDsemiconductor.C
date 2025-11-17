@@ -7,11 +7,12 @@
 #include "Database.h"
 #include "Messages.h"
 #include "BulkCrystal.h"
+#include "TensorOperators.h"
 #include "SolverException.h"
 #include "RuntimeException.h"
 
-#include "tensor_value.h"
-#include "dense_matrix.h"
+#include "libmesh/tensor_value.h"
+#include "libmesh/dense_matrix.h"
 
 
 typedef std::complex<double> Complex;
@@ -29,7 +30,7 @@ namespace {
     // NOTE This is not tested well
     libMesh::DenseVector<Complex> tmp(vec);
 
-    const Tensor2Gen& mat = cr.get_rotation();
+    const Tensor2& mat = cr.get_rotation();
 
     double a, b, c; // euler angles
     cr.get_euler_angles(a, b, c);
@@ -216,7 +217,7 @@ void DDsemiconductor::prepare_submodels(void)
 //--------------------------------------------------------------------------------------------//
 void DDsemiconductor::do_init ()
 {
-  strain = Tensor2Gen(0);
+  strain = Tensor2(0);
 
   const ModelOptions& opt =  get_options ();
 
@@ -245,7 +246,7 @@ void DDsemiconductor::read_database(void)
 
 //----------------------------------------------------------------------------------------------//
 
-void DDsemiconductor::set_strain(const Tensor2Gen& strain_1)
+void DDsemiconductor::set_strain(const Tensor2& strain_1)
 {
  
   // attention: want norm() defined in tensor.h
@@ -256,7 +257,7 @@ void DDsemiconductor::set_strain(const Tensor2Gen& strain_1)
     }
   else
     {
-      strain = Tensor2Gen(0);
+      strain = Tensor2(0);
       strained = false;
     }
 
@@ -396,7 +397,7 @@ vector< vector<double> > DDsemiconductor::calculate_vb_bulk_states(const vector<
 //--------------------------------------------------------//
 
 
-vector<vector<double> > DDsemiconductor::get_valence_kp_dispersion(Tensor1 k_i, Tensor1 k_f, unsigned int number_of_points)
+vector<vector<double> > DDsemiconductor::get_valence_kp_dispersion(const Tensor1& k_i, const Tensor1& k_f, unsigned int number_of_points)
 {
   if (number_of_points < 2) number_of_points = 2;
 
@@ -649,7 +650,7 @@ void DDsemiconductor::do_calculate_valence_band_extremum(void)
 
   //-----------------------------------------------
 
-  const Tensor2Gen& rotm = get_material()->get_bulk_crystal()->get_rotation();
+  const Tensor2& rotm = get_material()->get_bulk_crystal()->get_rotation();
 
   // [100]
   k(1) = k_max ; k(2) = 0; k(3) = 0;
@@ -678,7 +679,7 @@ void DDsemiconductor::do_calculate_valence_band_extremum(void)
   //--------------------------------------------------
   vector< vector<double> >  eigenvalue = calculate_vb_bulk_states(k_vector);
 
-  Tensor2Gen imass;
+  Tensor2 imass;
 
   double Eh_kmax = Constants::Hartree * k_max * k_max;
 

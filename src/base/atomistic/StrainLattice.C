@@ -10,6 +10,7 @@
 #include "Specie.h"
 #include "Atom.h"
 #include "BondMap.h"
+#include "TensorOperators.h"
 
 #include "libmesh/mesh.h"
 
@@ -137,8 +138,8 @@ StrainLattice::fill_materials_set(void)
 void
 StrainLattice::do_solve(void)
 {
-  Tensor2Gen strain, strain2;
-  Tensor2Gen identity(1);
+  Tensor2 strain, strain2;
+  Tensor2 identity(1);
   Tetra tet, tmp;
   const BondMap& bondmap = _as->get_bond_map();
   const std::vector<Atom>& atoms = _as->get_structure_atoms();

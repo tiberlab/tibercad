@@ -42,7 +42,7 @@ class Tensor1
     }
 
     //! Const access elements
-    const double& operator()(unsigned int i) const
+    double operator()(unsigned int i) const
     {
       assert((i > 0) && (i < 4));
       return _comp[i-1];

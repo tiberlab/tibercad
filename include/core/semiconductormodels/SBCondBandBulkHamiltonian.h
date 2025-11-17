@@ -19,7 +19,7 @@ class SBCondBandBulkHamiltonian: public SBbulkHamiltonian
  ~SBCondBandBulkHamiltonian(void);
 
   
- virtual void apply_strain_and_potential(Tensor2Gen& strain_crystal, double el_potential) = 0;
+ virtual void apply_strain_and_potential(const Tensor2& strain_crystal, double el_potential) = 0;
   
   
 

@@ -3,8 +3,8 @@
 #include "SBuserHamiltonian.h"
 #include "Database.h"
 #include "Constants.h"
+#include "TensorOperators.h"
 
-#include "Constants.h"
 
 using namespace std;
 
@@ -21,7 +21,7 @@ SBuserHamiltonian::SBuserHamiltonian(const ModelOptions& options)
   edge = 0.0;
  
   
-  imass = Tensor2Gen(1);
+  imass = Tensor2(1);
 }
 
 
@@ -64,7 +64,7 @@ void SBuserHamiltonian::do_init( )
 
   if (mass == 0.0) throw InitFailedException("User-defined Hamiltonian: zero mass");
 
-  imass = -(1.0 / mass) * Tensor2Gen(1.0);
+  imass = -(1.0 / mass) * Tensor2(1.0);
   
 
   calculate_Hamiltonian_gen();

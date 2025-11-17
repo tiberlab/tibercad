@@ -15,7 +15,6 @@
 #include "Constants.h"
 #include "TypeDefs.h"
 
-#include "tensor.h"
 
 #include "tensor_value.h"
 #include "vector_value.h"

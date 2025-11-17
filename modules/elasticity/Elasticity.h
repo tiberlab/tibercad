@@ -8,9 +8,9 @@
 #include "tiber_dll.h"
 #include "Device.h"
 
-#include "tensor_value.h"
-#include "tensor.h"
+#include "libmesh/tensor_value.h"
 
+class Tensor4DSym;
 
 /*!
  * 

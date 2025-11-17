@@ -7,6 +7,7 @@
 
 #include "Atom.h"
 #include "Specie.h"
+#include "Tensor2.h"
 
 #include "libmesh/vector_value.h"
 
@@ -46,7 +47,7 @@ public:
 
   //! Calculates bond map
   void solve(const std::vector<Atom>& basis,
-      const Tensor2Gen& period, const libMesh::Point& origin);
+      const Tensor2& period, const libMesh::Point& origin);
 
   //! Set the periodicity vectors
   /*!
@@ -120,7 +121,7 @@ private:
   Translation _translation;
 
   //! Structure periodicity
-  Tensor2Gen _period;
+  Tensor2 _period;
 
 };
 

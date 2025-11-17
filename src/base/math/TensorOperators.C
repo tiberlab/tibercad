@@ -50,7 +50,7 @@ void doubleContraction(const Tensor4DSym& A, libMesh::RealTensorValue& B)
 }
 
 
-Tensor2Gen doubleContraction(const Tensor4DSym& A, const Tensor2& B)
+Tensor2 doubleContraction(const Tensor4DSym& A, const Tensor2& B)
 {
   Tensor2 R;
 

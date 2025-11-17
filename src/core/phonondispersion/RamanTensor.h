@@ -21,7 +21,7 @@ public:
    //!Destructor
   ~RamanTensor(){};
 
-   void get_raman_tensor(std::vector< Tensor2Gen> & RT); 
+   void get_raman_tensor(std::vector< Tensor2> & RT); 
 
    virtual void re_init(void)=0;
 
@@ -43,9 +43,9 @@ protected:
   virtual PhysicalModel* create_new (void) const =0;
 
   //!rotates dynamical matrix into the simulation system
-   void rotate_to_calculation_system(const Tensor2Gen& RotMatrix);
+   void rotate_to_calculation_system(const Tensor2& RotMatrix);
 
-  std::vector< Tensor2Gen >  _raman_tensor;
+  std::vector< Tensor2 >  _raman_tensor;
   
   PhononModel* _phonon_model;
 
@@ -55,7 +55,7 @@ protected:
 
 inline
 void 
-RamanTensor::rotate_to_calculation_system(const Tensor2Gen& RotMatrix)
+RamanTensor::rotate_to_calculation_system(const Tensor2& RotMatrix)
 {
 
   // generates dynamical matrix in calculation system
@@ -67,7 +67,7 @@ RamanTensor::rotate_to_calculation_system(const Tensor2Gen& RotMatrix)
 
 inline
 void
-RamanTensor::get_raman_tensor(std::vector<Tensor2Gen>& raman_tensor) 
+RamanTensor::get_raman_tensor(std::vector<Tensor2>& raman_tensor) 
 {
    //this->re_init();
    raman_tensor = _raman_tensor;

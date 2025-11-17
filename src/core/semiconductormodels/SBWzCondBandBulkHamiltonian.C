@@ -18,7 +18,7 @@ void SBWzCondBandBulkHamiltonian::calculate_for_init( )
 
 
    //--------------------------------------------------
-  imass = Tensor2Gen(0);
+  imass = Tensor2(0);
   imass(1,1) = 1.0/par.m_c_xx;
   imass(2,2) = 1.0/par.m_c_xx;
   imass(3,3) = 1.0/par.m_c_zz;
@@ -38,7 +38,7 @@ void SBWzCondBandBulkHamiltonian::calculate_for_init( )
 
 
 //===========================================================================//
-void SBWzCondBandBulkHamiltonian::apply_strain_and_potential(Tensor2Gen& strain_crystal, double el_potential)
+void SBWzCondBandBulkHamiltonian::apply_strain_and_potential(const Tensor2& strain_crystal, double el_potential)
 {
 
   //now strain and potential

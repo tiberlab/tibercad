@@ -20,17 +20,17 @@ PhononModel::~PhononModel()
 
 }
 
-void PhononModel::get_full_dynamical_matrix(Tensor2Gen& dynamical_matrix)
+void PhononModel::get_full_dynamical_matrix(Tensor2& dynamical_matrix)
 {
 
   dyn_mat_iterator it  =  _dynamical_matrix_models.begin();
   dyn_mat_iterator it_end =  _dynamical_matrix_models.end();
 
 
-  Tensor2Gen total(0);
+  Tensor2 total(0);
   for ( ; it != it_end; ++it)
   {
-    Tensor2Gen partial(0);
+    Tensor2 partial(0);
 
     (it->second)->get_dynamical_matrix(partial);
 
@@ -44,16 +44,16 @@ void PhononModel::get_full_dynamical_matrix(Tensor2Gen& dynamical_matrix)
 
 
 //void PhononModel::get_free_dynamical_matrix(std::vector<std::vector< double > >& D)
-void PhononModel::get_free_dynamical_matrix(Tensor2Gen& dynamical_matrix)
+void PhononModel::get_free_dynamical_matrix(Tensor2& dynamical_matrix)
 {
 
-  //Tensor2Gen DM;
+  //Tensor2 DM;
    _dynamical_matrix_models[free_ID]->get_dynamical_matrix(dynamical_matrix);
    //(_dynamical_matrix_models.begin()->second)->get_dynamical_matrix(dynamical_matrix);
 
 }
 
-void PhononModel::get_raman_tensor(std::vector<Tensor2Gen>& raman_tensor)
+void PhononModel::get_raman_tensor(std::vector<Tensor2>& raman_tensor)
 {
 
  raman_tensor_model->get_raman_tensor(raman_tensor);

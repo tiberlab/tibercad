@@ -15,11 +15,10 @@
 #include "Constants.h"
 #include "TypeDefs.h"
 
-#include "tensor.h"
 
-#include "tensor_value.h"
-#include "vector_value.h"
-#include "point.h"
+#include "libmesh/tensor_value.h"
+#include "libmesh/vector_value.h"
+#include "libmesh/point.h"
 
 
 #include <vector>

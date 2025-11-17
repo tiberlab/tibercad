@@ -7,13 +7,13 @@
 #include "TypeDefs.h"
 #include "AtomisticBasis.h"
 
-#include "tensor.h"
 
 #include <boost/function.hpp>
 #include <list>
 
 class Material;
 class Device;
+class Tensor1;
 
 namespace libMesh
 {

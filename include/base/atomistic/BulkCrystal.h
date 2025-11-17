@@ -4,7 +4,7 @@
 #include "AtomisticBasis.h"
 #include "ModelOptions.h"
 #include "Material.h"
-#include "tensor.h"
+#include "Tensor2.h"
 
 //! Contains data for a bulk crystal
 /*!
@@ -48,19 +48,19 @@ public:
   const std::vector<double>& get_ortho_lattice_constants(void) const;
 
   //! Return primitive vectors in reference coordinates (3x3 tensor, stored columnwise)
-  const Tensor2Gen& get_prim_vec(void) const;
+  const Tensor2& get_prim_vec(void) const;
 
   //! Return primitive vectors (3x3 tensor, stored columnwise)
-  const Tensor2Gen& get_rotated_prim_vec(void) const;
+  const Tensor2& get_rotated_prim_vec(void) const;
 
   //! Return conventional vectors in reference coordinates (3x3 tensor, stored columnwise)
-  const Tensor2Gen& get_conv_vec(void) const;
+  const Tensor2& get_conv_vec(void) const;
 
   //! Return conventional vectors (3x3 tensor, stored columnwise)
-  const Tensor2Gen& get_rotated_conv_vec(void) const;
+  const Tensor2& get_rotated_conv_vec(void) const;
 
   //! Return rotation matrix
-  const Tensor2Gen& get_rotation(void) const;
+  const Tensor2& get_rotation(void) const;
 
   //! Get the Euler angles
   /*!
@@ -151,9 +151,9 @@ private:
   void calculate_euler_angles(void);
 
   //! Calculate strain for matching a lattice to a reference
-  void calculate_strain(Tensor2Gen& strain,
-                        const Tensor2Gen& reference,
-                        const Tensor2Gen& other_cell) const;
+  void calculate_strain(Tensor2& strain,
+                        const Tensor2& reference,
+                        const Tensor2& other_cell) const;
 
   //! Contains the options, as given when create is invoked
   ModelOptions _options;
@@ -190,19 +190,19 @@ private:
   std::string _bravais_lattice;
 
   //! Primitive vectors (lattice constant included). Columnwise
-  Tensor2Gen _prim_vec {0};
+  Tensor2 _prim_vec {0};
 
   //! Rotated primitive vectors
-  Tensor2Gen _rotated_prim_vec {0};
+  Tensor2 _rotated_prim_vec {0};
 
   //! Conventional cell vectors. Columnwise
-  Tensor2Gen _conv_vec {0};
+  Tensor2 _conv_vec {0};
 
   //! Rotated conventional cell vectors
-  Tensor2Gen _rotated_conv_vec {0};
+  Tensor2 _rotated_conv_vec {0};
 
   //! Rotation matrix
-  Tensor2Gen _rotation {1};
+  Tensor2 _rotation {1};
 
   //! The Euler angles \f$\alpha$\f, \f$\beta$\f and \f$\gamma$\f
   /*!
@@ -258,14 +258,14 @@ BulkCrystal::get_ortho_lattice_constants(void) const
 
 
 inline
-const Tensor2Gen& 
+const Tensor2& 
 BulkCrystal::get_prim_vec(void) const
 {
   return _prim_vec;
 }
 
 inline
-const Tensor2Gen& 
+const Tensor2& 
 BulkCrystal::get_rotated_prim_vec(void) const
 {
   return _rotated_prim_vec;
@@ -273,14 +273,14 @@ BulkCrystal::get_rotated_prim_vec(void) const
 
 
 inline
-const Tensor2Gen& 
+const Tensor2& 
 BulkCrystal::get_conv_vec(void) const
 {
   return _conv_vec;
 }
 
 inline
-const Tensor2Gen& 
+const Tensor2& 
 BulkCrystal::get_rotated_conv_vec(void) const
 {
   return _rotated_conv_vec;
@@ -288,7 +288,7 @@ BulkCrystal::get_rotated_conv_vec(void) const
 
 
 inline
-const Tensor2Gen&
+const Tensor2&
 BulkCrystal::get_rotation(void) const
 {
   return _rotation;

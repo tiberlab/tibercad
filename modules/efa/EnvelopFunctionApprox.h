@@ -372,7 +372,7 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
 
   //! Get strain in crystal coordinates
   void get_crystal_strain(const libMesh::Elem* elem,
-      const libMesh::Point& point, Tensor2Gen& strain);
+      const libMesh::Point& point, Tensor2& strain);
 
 };
 

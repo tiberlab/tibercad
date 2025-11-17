@@ -42,7 +42,7 @@ int Atom::get_region_ID(void) const
 }
 
 
-void Atom::set_position(const Tensor1 pos)
+void Atom::set_position(const Tensor1& pos)
 {
   _position(0) = pos(1); _position(1) = pos(2); _position(2) = pos(3);
 }

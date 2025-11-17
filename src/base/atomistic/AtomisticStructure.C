@@ -2,6 +2,7 @@
 
 #include "AtomisticStructure.h"
 #include "AtomisticGenerator.h"
+#include "TensorOperators.h"
 #include "BondMap.h"
 #include "Device.h"
 #include "Messages.h"

@@ -1,22 +1,22 @@
 #ifndef _DDSEMICONDUCTOR_H_
 #define _DDSEMICONDUCTOR_H_
 
+
+#include "PhysicalModel.h"
+#include "libMeshDefs.h"
+#include "Tensor2.h"
+#include "KPbulkHamiltonian.h"
+
+#include "libmesh/dense_vector.h"
+
+#include <vector>
+
 //!  A class to provide all neccessary parameters for drift-diffusion calculation.
 /*!
      The class can calculate information about the band structure, such as
      band edge energy, effective mass for the density of states calculation and
      degeneracy 
 */
-
-#include "PhysicalModel.h"
-#include "libMeshDefs.h"
-#include "KPbulkHamiltonian.h"
-
-#include "tensor.h"
-#include "dense_vector.h"
-
-#include <vector>
-
 class TBDLEXPORT DDsemiconductor : public PhysicalModel
 {
   public:
@@ -32,7 +32,7 @@ class TBDLEXPORT DDsemiconductor : public PhysicalModel
   };
 
 
-  void set_strain(const Tensor2Gen& strain);
+  void set_strain(const Tensor2& strain);
 
   //!sets temperature for semiconductor object
   void set_temperature(const double T);
@@ -89,7 +89,7 @@ class TBDLEXPORT DDsemiconductor : public PhysicalModel
     \param  k_f - final k-point
     \param  number_of_points number k-points between the initial and the final point 
    */
-  std::vector<std::vector<double> >  get_valence_kp_dispersion(Tensor1 k_i, Tensor1 k_f, unsigned int number_of_points);
+  std::vector<std::vector<double> >  get_valence_kp_dispersion(const Tensor1& k_i, const Tensor1& k_f, unsigned int number_of_points);
 
   std::vector< std::vector<double> > calculate_vb_bulk_states(const std::vector<Tensor1>& k_vector) ; 
 
@@ -140,7 +140,7 @@ class TBDLEXPORT DDsemiconductor : public PhysicalModel
   bool strained ;
 
   //! strain tensor in crystal system
-  Tensor2Gen   strain;
+  Tensor2   strain;
 
 
   //! information about conduction bands

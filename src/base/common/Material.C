@@ -262,7 +262,7 @@ Material::preinit(void)
   if (_bulk_crystal != nullptr)
   {
     _bulk_crystal->init();
-    const Tensor2Gen& rot = _bulk_crystal->get_rotation();
+    const Tensor2& rot = _bulk_crystal->get_rotation();
 
     for (unsigned int i = 0; i < 3; ++i)
       for (unsigned int j = 0; j < 3; ++j)

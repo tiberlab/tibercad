@@ -9,6 +9,7 @@
 #include "Messages.h"
 #include "DataOutput.h"
 #include "Constants.h"
+#include "TensorOperators.h"
 
 #include "libmesh/mesh.h"
 #include "libmesh/mesh_generation.h"

@@ -1,12 +1,14 @@
 
 #include "GridCells.h"
+#include "TensorOperators.h"
+
 #include "libmesh/vector_value.h"
 #include "libmesh/tensor_value.h"
 
 
 
 
-GridCells::GridCells(const std::vector<Atom>& basis, const Tensor2Gen& period,
+GridCells::GridCells(const std::vector<Atom>& basis, const Tensor2& period,
     const libMesh::Point& origin,
     const double minimum_spacing, unsigned int projected_dim)
 {

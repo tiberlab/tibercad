@@ -15,7 +15,7 @@
 #include "Messages.h"
 #include "TypeDefs.h"
 
-#include "elem.h"
+#include "libmesh/elem.h"
 
 
 #include <cmath>

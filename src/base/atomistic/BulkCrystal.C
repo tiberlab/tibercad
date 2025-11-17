@@ -1,5 +1,6 @@
 #include "BulkCrystal.h"
 #include "CrystalDefs.h"
+#include "TensorOperators.h"
 #include "Database.h"
 #include "Alloy.h"
 #include "Messages.h"
@@ -167,7 +168,7 @@ BulkCrystal::build_rotation(void)
   std::ostringstream os;
 
   // reset to unit element
-  _rotation = Tensor2Gen(1);
+  _rotation = Tensor2(1);
 
   // the crystal directions along x, y, z
   Tensor1 vec_x;
@@ -428,11 +429,11 @@ BulkCrystal::build_rotation(void)
 
 
 void
-BulkCrystal::calculate_strain(Tensor2Gen &strain,
-                 const Tensor2Gen &reference,
-                 const Tensor2Gen &other_cell) const
+BulkCrystal::calculate_strain(Tensor2 &strain,
+                 const Tensor2 &reference,
+                 const Tensor2 &other_cell) const
 {
-  strain = inv(other_cell) * reference - Tensor2Gen(1.0);
+  strain = inv(other_cell) * reference - Tensor2(1.0);
 }
 
 
@@ -448,16 +449,16 @@ BulkCrystal::find_least_common_lattice(const BulkCrystal &substrate,
 
   double minResidualStrain = std::numeric_limits<double>::max();
 
-  Tensor2Gen inv_prim = inv(_rotated_prim_vec);
+  Tensor2 inv_prim = inv(_rotated_prim_vec);
 
   // Loop over possible supercell multiples (up to some reasonable limit)
   int maxSupercell = 1; // Let's limit to multiples up to 3 for simplicity
 
-  Tensor2Gen diag(1);
-  Tensor2Gen superA;
-  Tensor2Gen superB;
-  Tensor2Gen strain(0.0);
-  Tensor2Gen deformation(1.0);
+  Tensor2 diag(1);
+  Tensor2 superA;
+  Tensor2 superB;
+  Tensor2 strain(0.0);
+  Tensor2 deformation(1.0);
 
   double residualStrain;
 
@@ -543,9 +544,9 @@ BulkCrystal::get_lattice_matching_strain(const BulkCrystal& substrate,
     // (x', y', z')' = (1 + eps)*(x, y, z)'
     // => eps = (x', y', z') - 1, because (x, y, z) = 1
 
-    Tensor2Gen A(inv(_conv_vec));
+    Tensor2 A(inv(_conv_vec));
 
-    Tensor2Gen eps = A * substrate.get_conv_vec() - Tensor2Gen(1.0);
+    Tensor2 eps = A * substrate.get_conv_vec() - Tensor2(1.0);
 
     // symmetrize to eliminate possible rotations
     eps *= 0.5;
@@ -928,7 +929,7 @@ void
 BulkCrystal::set_cell_vectors(void)
 {
 
-  Tensor2Gen prim_vec_dir(0);
+  Tensor2 prim_vec_dir(0);
   _prim_vec = 0.0;
   _conv_vec = 0.0;
 
@@ -983,7 +984,7 @@ BulkCrystal::set_cell_vectors(void)
 
   else if (_bravais_lattice.at(0) == 'c')
   {
-    _conv_vec = _lattice_constant[0] * Tensor2Gen(1.0);
+    _conv_vec = _lattice_constant[0] * Tensor2(1.0);
 
     if (_bravais_lattice.at(1) == 'I')
     {

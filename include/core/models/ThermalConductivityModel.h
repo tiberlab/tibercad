@@ -95,10 +95,10 @@ ThermalConductivityModel::rotate(void)
 
 // inline
 // void
-// ThermalConductivityModel::rotate_to_calculation_system(const Tensor2Gen& RotMatrix)
+// ThermalConductivityModel::rotate_to_calculation_system(const Tensor2& RotMatrix)
 // {
 
-//   Tensor2Gen kappa(0);
+//   Tensor2 kappa(0);
 //   for (ID i = 0; i<3; i ++)
 //     for (ID j = i; j<3; j ++)
 //       kappa(i+1,j+1) = _kappa(i,j);

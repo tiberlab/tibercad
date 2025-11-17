@@ -608,7 +608,7 @@ PhononDispersion::diagonalize_double(void)
 void PhononDispersion::solve_phonon_dispersion(void)
 {
 
-     std::vector<Tensor2Gen> raman_tensor;
+     std::vector<Tensor2> raman_tensor;
      std::vector<Tensor1> light_polarization;
   
 
@@ -666,7 +666,7 @@ void PhononDispersion::solve_phonon_dispersion(void)
        for(unsigned int nm =0; nm<3;nm ++)
        {
          
-          Tensor2Gen D =  raman_tensor[0]*_eignvectors[0][nm] +
+          Tensor2 D =  raman_tensor[0]*_eignvectors[0][nm] +
                           raman_tensor[1]*_eignvectors[1][nm] +
                           raman_tensor[2]*_eignvectors[2][nm];
        
@@ -764,7 +764,7 @@ PhononDispersion::diagonalize_tensor(void)
 
    int n = 3;
    
-   Tensor2Gen  V;
+   Tensor2  V;
    double landa1;
    double landa2;
    double landa3;

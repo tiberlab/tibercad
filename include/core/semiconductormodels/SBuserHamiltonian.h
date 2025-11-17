@@ -4,10 +4,8 @@
 
 #include <complex>
 #include <vector>
-#include "tensor.h"
 #include "SBbulkHamiltonian.h"
 #include "PhysicalModel.h"
-//class DDsemiconductor;
 
 
 class SBuserHamiltonian : public SBbulkHamiltonian

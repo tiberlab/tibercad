@@ -16,8 +16,9 @@
 #include "TypeDefs.h"
 #include "PolarizationModel.h"
 #include "PermittivityModel.h"
+#include "TensorOperators.h"
 
-#include "elem.h"
+#include "libmesh/elem.h"
 
 
 #include <cmath>

@@ -8,8 +8,8 @@
 #include "Tensor2.h"
 #include "Tensor4DSym.h"
 
-#include <vector_value.h>
-#include <tensor_value.h>
+#include <libmesh/vector_value.h>
+#include <libmesh/tensor_value.h>
 
 #include <iostream>
 
@@ -69,7 +69,7 @@ libMesh::RealTensor operator*(const Tensor2& A, const libMesh::RealTensor& B)
 }
 
 
-//! Transform RealTensor into Tensor2Gen
+//! Transform RealTensor into Tensor2
 inline
 void transform_tensor_format(const libMesh::RealTensor& in, Tensor2& out)
 {
@@ -89,7 +89,7 @@ libMesh::RealTensorValue doubleContraction(const Tensor4DSym& A, const libMesh::
 void doubleContraction(const Tensor4DSym& A, libMesh::RealTensorValue& B);
 
 //! Double contraction \f$A_{ijkl}B_{kl}\f$
-Tensor2Gen doubleContraction(const Tensor4DSym& A, const Tensor2& B);
+Tensor2 doubleContraction(const Tensor4DSym& A, const Tensor2& B);
 
 inline
 libMesh::RealTensorValue operator*(const Tensor4DSym& A, const libMesh::RealTensorValue& B)
@@ -106,7 +106,7 @@ double norm(const Tensor1& t)
 
 //! norm of Tensor2
 inline
-double norm(const Tensor2 &t)
+double norm(const Tensor2& t)
 {
   return t.norm();
 }
@@ -342,4 +342,4 @@ std::ostream& operator<<(std::ostream &s, const Tensor2 &T);
 std::ostream& operator<<(std::ostream &s, const Tensor4DSym &T);
 
 
-#endif /* _TENSOROPERATORS_H_ */
+#endif // _TENSOROPERATORS_H_

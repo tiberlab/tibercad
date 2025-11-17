@@ -6,10 +6,10 @@
 #include "InitFailedException.h"
 #include "RuntimeException.h"
 #include "Messages.h"
+#include "Tensor2.h"
 
-#include "elem.h"
+#include "libmesh/elem.h"
 
-#include "tensor.h"
 
 
 

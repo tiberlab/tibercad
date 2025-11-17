@@ -1,15 +1,15 @@
 #ifndef _SBBULKHAMILTONIAN_H_
 #define _SBBULKHAMILTONIAN_H_
-//! A class that builds single band Hamiltonian
+
+#include "EFAbulkHamiltonian.h"
+#include "Tensor2.h"
 
 #include <complex>
 #include <vector>
-#include "tensor.h"
-#include "EFAbulkHamiltonian.h"
-
-//class DDsemiconductor;
 
 
+
+//! A class that builds single band Hamiltonian
 class SBbulkHamiltonian : public EFAbulkHamiltonian
 {
 
@@ -30,7 +30,7 @@ class SBbulkHamiltonian : public EFAbulkHamiltonian
 
 
   //! Applies ONLY potential. Strain in applied only in derived classes
-  virtual void apply_strain_and_potential(Tensor2Gen& strain_crystal, double el_potential);
+  virtual void apply_strain_and_potential(const Tensor2& strain_crystal, double el_potential);
 
    
 
@@ -49,7 +49,7 @@ class SBbulkHamiltonian : public EFAbulkHamiltonian
   double edge;
 
   //!\f$ \left(\frac{1}{m}\right)_{ij} \f$ tensor
-  Tensor2Gen imass;
+  Tensor2 imass;
 
   //!The only matrix element of the Hamiltonian
   MatrixElement single_band_ham;

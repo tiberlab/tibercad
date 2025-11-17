@@ -1,14 +1,15 @@
 #ifndef _KSPACE_H_
 #define _KSPACE_H_
 
-#include "tensor.h"
 #include "ModelOptions.h"
 #include "InitFailedException.h"
-#include "parallel.h"
+#include "Tensor1.h"
+#include "Tensor2.h"
 
 #include "libmesh/point.h"
 #include "libmesh/enum_order.h"
 #include "libmesh/vector_value.h"
+#include "libmesh/parallel.h"
 
 #include <vector>
 
@@ -163,7 +164,7 @@ class Kspace
    std::vector<unsigned int>  num_nodes;
 
    //! matrix that rotates mesh
-   Tensor2Gen transform_matrix;
+   Tensor2 transform_matrix;
 
    //! k-space basis vector 1
    libMesh::Point k_basis_vector1;

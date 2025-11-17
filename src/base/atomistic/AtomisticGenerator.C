@@ -10,6 +10,7 @@
 #include "Utils.h"
 #include "Atom.h"
 #include "BulkCrystal.h"
+#include "TensorOperators.h"
 
 #include <libmesh/point.h>
 #include <libmesh/plane.h>
@@ -801,7 +802,7 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3)
   int start_i = 0, start_j = 0, start_l = 0;
   Atom basis_atom;
   Tensor1 lattice_point;
-  Tensor2Gen supercell_vect,inv_supercell_vect;
+  Tensor2 supercell_vect,inv_supercell_vect;
   Tensor1 tmp_check, tmp_conv;
   std::ostringstream os;
 
@@ -862,7 +863,7 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3)
   Messages::info(os.str());
 
   //Set supercell periodical vectors
-  Tensor2Gen lmat(0);
+  Tensor2 lmat(0);
   lmat(1,1) = n1;
   lmat(2,2) = n2;
   lmat(3,3) = n3;
@@ -959,7 +960,7 @@ void AtomisticGenerator::make_conv_cell()
 
   //Calculate conventional cell vectors in the directions given by cut planes (conventional growth cell)
   Tensor1 vec_x(0),vec_y(0),vec_z(0);
-  Tensor2Gen rotated_prim_vec = _bulk->get_rotated_prim_vec();
+  Tensor2 rotated_prim_vec = _bulk->get_rotated_prim_vec();
 
   // In general:
   // vj = e1 * _conv_prim(1,j) + e2 * _conv_prim(2,j) + e3 * _conv_prim(3,j)   
@@ -1066,7 +1067,7 @@ void AtomisticGenerator::minimal_conv_cell()
   Tensor1 v1, v2, vF, prim_pos1, prim_pos2;
   double c[4], F, Fmin, AngMax, Ang, F1, F2;
   int i,j, k,l, ilow,jlow,klow,llow, lower_2, lower_3, upper_2, upper_3;
-  Tensor2Gen rotated_prim_vec = _bulk->get_rotated_prim_vec();
+  Tensor2 rotated_prim_vec = _bulk->get_rotated_prim_vec();
 
 
 
@@ -1092,7 +1093,7 @@ void AtomisticGenerator::minimal_conv_cell()
   //cerr << id1 << " " << id2 << " " << id3 << endl;
   //cerr << "rot : " << rotated_prim_vec << endl;
 
-  Tensor2Gen tmp = rotated_prim_vec;
+  Tensor2 tmp = rotated_prim_vec;
   for (i = 1; i <= 3; ++i)
   {
     rotated_prim_vec(i, 1) = tmp(i, id1);
@@ -1120,7 +1121,7 @@ void AtomisticGenerator::minimal_conv_cell()
   }
   cerr << rotated_prim_vec << "\n";
 
-  Tensor2Gen inv_prim = inv(rotated_prim_vec);
+  Tensor2 inv_prim = inv(rotated_prim_vec);
 
   // get indices for basis vector along y
   Tensor1 n2 = inv_prim * Tensor1(Point(0, 1.0, 0));
@@ -1252,7 +1253,7 @@ void AtomisticGenerator::make_conv_lattice()
 {
   //Fill the conventional growth cell with atomic basis
   
-  Tensor2Gen rotated_prim_vec = _bulk->get_rotated_prim_vec();
+  Tensor2 rotated_prim_vec = _bulk->get_rotated_prim_vec();
 
   /* IMPORTANT NOTE:
    * The lattice points covering the conventional cells are obtained by looking at the indeces
@@ -1322,7 +1323,7 @@ void AtomisticGenerator::make_conv_lattice()
   double tol = 0.0;
   Point orig(-tol,-tol,-tol);
 
-  Tensor2Gen inv_conv_vec(inv(_conv_vect));
+  Tensor2 inv_conv_vec(inv(_conv_vect));
 
   int counter = 0;
 
@@ -1532,7 +1533,7 @@ void AtomisticGenerator::check_periodic(void)
   // the add two layers on both sides in case of non-periodic directions.
   // This should be enough to exclude spurious periodic bondings.
   /*
-  Tensor2Gen double_non_periodic(0);
+  Tensor2 double_non_periodic(0);
   double_non_periodic(1,1) = 1;
   double_non_periodic(2,2) = 1;
   double_non_periodic(3,3) = 1;
@@ -1753,15 +1754,15 @@ void AtomisticGenerator::passivate(void)
 
 //Some data manipulation function useful only in this class
 
-Tensor2Gen
-AtomisticGenerator::reciprocal(Tensor2Gen real_basis)
+Tensor2
+AtomisticGenerator::reciprocal(const Tensor2& real_basis)
 {
 
   //Build the reciprocal basis related to input 2-rank tensor
   Tensor1 a1(0),a2(0),a3(0);
   Tensor1 b1(0),b2(0),b3(0);
   Tensor1 select_vect(0);
-  Tensor2Gen reciprocal(0);
+  Tensor2 reciprocal(0);
 
   //Select vector a1
   select_vect(1) = 1.0; a1 = real_basis * select_vect;

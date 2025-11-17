@@ -4,7 +4,7 @@
 #define _ATOMISTICBASIS_H_
 
 #include "Atom.h"
-
+#include "Tensor2.h"
 #include "HashMap.h"
 
 //STD library includes
@@ -72,10 +72,10 @@ class AtomisticBasis
                            const libMesh::RealVectorValue& c);
 
   //! Set the periodicity
-  void set_ttype_lattice_vectors(const Tensor2Gen& T);
+  void set_ttype_lattice_vectors(const Tensor2& T);
   
   //! Set the periodicity
-  Tensor2Gen get_ttype_lattice_vectors(void);
+  Tensor2 get_ttype_lattice_vectors(void);
 
   //! Refresh (or build) information as bondmap, number of atoms etc.
   /*! This can be needed if we move atoms and the bondmap change, or

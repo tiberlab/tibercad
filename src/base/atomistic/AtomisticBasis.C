@@ -2,6 +2,7 @@
 
 #include "AtomisticBasis.h"
 #include "BondMap.h"
+#include "Tensor2.h"
 #include "ModelOptions.h"
 #include "TiberCad.h"
 
@@ -71,7 +72,7 @@ AtomisticBasis::set_lattice_vectors(const libMesh::RealVectorValue& a,
 
 
 void
-AtomisticBasis::set_ttype_lattice_vectors(const Tensor2Gen& T)
+AtomisticBasis::set_ttype_lattice_vectors(const Tensor2& T)
 {
   libMesh::RealVectorValue a(T(1,1), T(2,1), T(3,1));
   libMesh::RealVectorValue b(T(1,2), T(2,2), T(3,2));
@@ -80,10 +81,10 @@ AtomisticBasis::set_ttype_lattice_vectors(const Tensor2Gen& T)
   set_lattice_vectors(a, b, c);
 }
 
-Tensor2Gen 
+Tensor2 
 AtomisticBasis::get_ttype_lattice_vectors(void)
 {
-  Tensor2Gen T;
+  Tensor2 T;
   for (int j = 0; j < 3 ; j++)
   {
     T(j+1,1) = _lattice_vectors[0](j);
@@ -130,7 +131,7 @@ AtomisticBasis::build_bond_map(bool periodicity[3]) const
 {
   BondMap* bm = new BondMap(_atoms.size());
 
-  Tensor2Gen period;
+  Tensor2 period;
   for (unsigned int i = 0; i < 3; i++)
   {
     double scale = periodicity[i] ? 1 : 10;
@@ -154,7 +155,7 @@ AtomisticBasis::build_bond_map(void)
   }
   _bondmap = new BondMap(_atoms.size());
 
-  Tensor2Gen period;
+  Tensor2 period;
   for (unsigned int i = 0; i < 3; i++)
     {
       for (unsigned int j = 0; j < 3; j++)

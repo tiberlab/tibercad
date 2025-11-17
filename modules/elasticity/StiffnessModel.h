@@ -5,7 +5,6 @@
 
 #include "PhysicalModel.h"
 
-#include "tensor.h"
 #include "Material.h"
 #include "TensorOperators.h"
 
@@ -79,7 +78,7 @@ StiffnessModel::rotate()
 
   const Material* mat = get_material();
   const libMesh::RealTensor& rot = mat->get_rotation_matrix();
-  Tensor2Gen rotm;
+  Tensor2 rotm;
   for (unsigned int i = 0; i < 3; ++i)
     for (unsigned int j = 0; j < 3; ++j)
       rotm(i+1, j+1) = rot(i, j);

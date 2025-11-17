@@ -17,7 +17,7 @@ class SBWzCondBandBulkHamiltonian : public SBCondBandBulkHamiltonian
 
 
   
-  virtual void apply_strain_and_potential(Tensor2Gen& strain_crystal, double el_potential);
+  virtual void apply_strain_and_potential(const Tensor2& strain_crystal, double el_potential);
 
   
   static SBWzCondBandBulkHamiltonian* create(const ModelOptions& options);

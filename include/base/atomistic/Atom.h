@@ -3,13 +3,13 @@
 #ifndef _ATOM_H_
 #define _ATOM_H_
 
-#include "tensor.h"
 #include "TypeDefs.h"
-#include "dof_object.h"
 #include "Specie.h"
+#include "Tensor1.h"
 
 
 #include "libmesh/point.h"
+#include "libmesh/dof_object.h"
 
 namespace libMesh {
   class Elem;
@@ -50,7 +50,7 @@ public:
   const Specie& get_specie() const;
 
   //!Set atom position (1X3 Tensor is used)
-  void set_position(const Tensor1 pos);
+  void set_position(const Tensor1& pos);
 
   //! Set position number i
   void set_position(int i, double x);

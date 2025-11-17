@@ -6,8 +6,7 @@
 #include "PhysicalModel.h"
 #include "SolutionProvider.h"
 #include "Material.h"
-#include "tensor.h"
-#include "TensorOperators.h"
+#include "Tensor2.h"
 #include "libMeshDefs.h"
 
 #include "libmesh/vector_value.h"
@@ -44,7 +43,7 @@ class PolarizationModel : public PhysicalModel
    /*!
     * Strain tensor has to be provided in crystal coordinate system
     */
-   void set_strain(const Tensor2Gen& strain);
+   void set_strain(const Tensor2& strain);
 
    //! Calculate the polarization
    /*!
@@ -77,7 +76,7 @@ class PolarizationModel : public PhysicalModel
    //! Rotate the polarization vector to calculation system
    void rotate(void);
 
-   Tensor2Gen& get_strain(void);
+   Tensor2& get_strain(void);
 
    //! Get strain tensor
    void get_strain(libMesh::RealTensor& strain) const;
@@ -92,7 +91,7 @@ class PolarizationModel : public PhysicalModel
    libMesh::RealVectorValue _polarization;
 
    //! Polarization might typically depend on strain
-   Tensor2Gen _strain;
+   Tensor2 _strain;
 
    //! We may take it from some other module
    SolutionProvider _polarization_source;
@@ -105,7 +104,7 @@ class PolarizationModel : public PhysicalModel
 
 inline
 void 
-PolarizationModel::set_strain(const Tensor2Gen& strain)
+PolarizationModel::set_strain(const Tensor2& strain)
 {
   _strain = strain;
 
@@ -113,7 +112,7 @@ PolarizationModel::set_strain(const Tensor2Gen& strain)
 
 
 inline
-Tensor2Gen&
+Tensor2&
 PolarizationModel::get_strain(void)
 {
   return _strain;

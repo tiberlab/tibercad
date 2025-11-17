@@ -3,7 +3,6 @@
 #include "ConstantPermittivity.h"
 #include "Database.h"
 #include "Material.h"
-#include "tensor.h"
 
 #include "TiberModule.h"
 
