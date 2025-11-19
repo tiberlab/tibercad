@@ -1,9 +1,9 @@
 // $Id: ThermoelectricPower.C 3599 2013-05-07 08:38:43Z maufder $
 
 #include "ThermoelectricPower.h"
-#include "Material.h"
-#include "Database.h"
-#include "Constants.h"
+#include "tibercad/physics/Material.h"
+#include "tibercad/io/Database.h"
+#include "tibercad/physics/Constants.h"
 
 
 //TIBER _ MODULE(ThermoelectricPower, default)

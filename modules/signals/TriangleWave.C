@@ -1,12 +1,12 @@
 // $Id$
 
 #include "TriangleWave.h"
-#include "Variable.h"
-#include "InitFailedException.h"
+#include "tibercad/base/Variable.h"
+#include "tibercad/base/InitFailedException.h"
 
 //#include <fstream>
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 using namespace std;
 

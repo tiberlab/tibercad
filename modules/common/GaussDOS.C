@@ -1,14 +1,14 @@
 // $Id$
 
 #include "GaussDOS.h"
-#include "Constants.h"
-#include "Material.h"
-#include "TiberMath.h"
-#include "Database.h"
-#include "InitFailedException.h"
-#include "Messages.h"
+#include "tibercad/physics/Constants.h"
+#include "tibercad/physics/Material.h"
+#include "tibercad/math/TiberMath.h"
+#include "tibercad/io/Database.h"
+#include "tibercad/base/InitFailedException.h"
+#include "tibercad/io/Messages.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 
 using namespace std;

@@ -1,10 +1,10 @@
 // $Id$
 
-#include "AtomisticBasis.h"
-#include "BondMap.h"
-#include "Tensor2.h"
-#include "ModelOptions.h"
-#include "TiberCad.h"
+#include "tibercad/atomistic/AtomisticBasis.h"
+#include "tibercad/atomistic/BondMap.h"
+#include "tibercad/math/Tensor2.h"
+#include "tibercad/base/ModelOptions.h"
+#include "tibercad/base/TiberCad.h"
 
 #include "libmesh/vector_value.h"
 

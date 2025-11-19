@@ -1,10 +1,10 @@
 // $Id$
 
-#include "KPbulkHamiltonian.h"
-#include "Material.h"
-#include "Messages.h"
-#include "Constants.h"
-#include "Tensor2.h"
+#include "tibercad/physics/semiconductormodels/KPbulkHamiltonian.h"
+#include "tibercad/physics/Material.h"
+#include "tibercad/io/Messages.h"
+#include "tibercad/physics/Constants.h"
+#include "tibercad/math/Tensor2.h"
 
 using namespace Constants;
 

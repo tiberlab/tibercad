@@ -3,9 +3,9 @@
 #include "Thermal.h"
 #include "ThermalModel.h"
 #include "ThermalBoundaryModel.h"
-#include "Messages.h"
-#include "SimulationOptions.h"
-#include "ModelOptions.h"
+#include "tibercad/io/Messages.h"
+#include "tibercad/base/SimulationOptions.h"
+#include "tibercad/base/ModelOptions.h"
 
 
 #include "libmesh/equation_systems.h"
@@ -18,7 +18,7 @@
 #include "libmesh/dense_subvector.h"
 #include "libmesh/fe_interface.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 
 using namespace std;

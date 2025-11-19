@@ -1,7 +1,7 @@
 // $Id$
 
-#include "FiniteElement.h"
-#include "Constants.h"
+#include "tibercad/math/FiniteElement.h"
+#include "tibercad/physics/Constants.h"
 
 
 
@@ -10,7 +10,7 @@
 #include "fe_map.h"
 //#include "fe_abstract.h"
 //#include "fe_base.h"
-#include "libMeshDefs.h"
+#include "tibercad/base/libMeshDefs.h"
 
 using namespace std;
 

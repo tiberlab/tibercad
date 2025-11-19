@@ -3,10 +3,10 @@
 #include "Boltzmann.h"
 #include "BoltzmannModel.h"
 #include "BoltzmannBoundaryModel.h"
-#include "TiberLinearSystem.h"
-#include "Messages.h"
-#include "ModelOptions.h"
-#include "SimulationOptions.h"
+#include "tibercad/solver/TiberLinearSystem.h"
+#include "tibercad/io/Messages.h"
+#include "tibercad/base/ModelOptions.h"
+#include "tibercad/base/SimulationOptions.h"
 #include "libmesh/equation_systems.h"
 #include "libmesh/dof_map.h"
 #include "libmesh/quadrature_gauss.h"
@@ -18,7 +18,7 @@
 #include "libmesh/fe_interface.h"
 #include "libmesh/id_types.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 
 

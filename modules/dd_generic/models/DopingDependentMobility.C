@@ -3,10 +3,10 @@
 #include "DopingDependentMobility.h"
 #include "DriftDiffusionProperties.h"
 
-#include "Material.h"
-#include "Database.h"
+#include "tibercad/physics/Material.h"
+#include "tibercad/io/Database.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 
 

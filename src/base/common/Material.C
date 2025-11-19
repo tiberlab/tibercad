@@ -1,13 +1,13 @@
 // $Id$
 
-#include "Material.h"
-#include "PhysicalModel.h"
-#include "Alloy.h"
-#include "Database.h"
-#include "BulkCrystal.h"
-#include "Dopant.h"
-#include "Messages.h"
-#include "CrystalDefs.h"
+#include "tibercad/physics/Material.h"
+#include "tibercad/physics/PhysicalModel.h"
+#include "tibercad/physics/Alloy.h"
+#include "tibercad/io/Database.h"
+#include "tibercad/atomistic/BulkCrystal.h"
+#include "tibercad/model_base/Dopant.h"
+#include "tibercad/io/Messages.h"
+#include "tibercad/atomistic/CrystalDefs.h"
 
 
 

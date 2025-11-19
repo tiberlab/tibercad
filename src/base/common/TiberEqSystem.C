@@ -1,10 +1,10 @@
 // $Id$
 
-#include "TiberEqSystem.h"
-#include "TiberNonlinearSystem.h"
-#include "TiberLinearSystem.h"
-#include "TiberTransientSystem.h"
-#include "InitFailedException.h"
+#include "tibercad/solver/TiberEqSystem.h"
+#include "tibercad/solver/TiberNonlinearSystem.h"
+#include "tibercad/solver/TiberLinearSystem.h"
+#include "tibercad/solver/TiberTransientSystem.h"
+#include "tibercad/base/InitFailedException.h"
 
 #include <libmesh/numeric_vector.h>
 #include <libmesh/dense_vector.h>

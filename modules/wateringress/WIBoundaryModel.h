@@ -3,7 +3,7 @@
 #ifndef _WIBOUNDARYMODEL_H_
 #define _WIBOUNDARYMODEL_H_
 
-#include "PhysicalModel.h"
+#include "tibercad/physics/PhysicalModel.h"
 
 
 class Elem;

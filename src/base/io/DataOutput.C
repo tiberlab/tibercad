@@ -1,7 +1,7 @@
 // $Id$
 
-#include "DataOutput.h"
-#include "Utils.h"
+#include "tibercad/io/DataOutput.h"
+#include "tibercad/utils/Utils.h"
 
 //#include "GMVIO_cell.h"
 #include "tecplot_IO_cell.h"

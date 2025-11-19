@@ -7,7 +7,7 @@
 
 #include "Mirror.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 void Mirror::do_init(void)
 {

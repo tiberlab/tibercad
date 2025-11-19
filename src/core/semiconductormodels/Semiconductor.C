@@ -1,9 +1,9 @@
 // $Id$
 
-#include "Semiconductor.h"
-#include "Database.h"
-#include "Alloy.h"
-#include "SimulationOptions.h"
+#include "tibercad/physics/semiconductormodels/Semiconductor.h"
+#include "tibercad/io/Database.h"
+#include "tibercad/physics/Alloy.h"
+#include "tibercad/base/SimulationOptions.h"
 
 
 

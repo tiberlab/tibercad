@@ -1,6 +1,6 @@
 // $Id$
 
-#include "MeshRegionInfo.h"
+#include "tibercad/geom/MeshRegionInfo.h"
 
 #include "libmesh/mesh_base.h"
 #include "libmesh/parallel_implementation.h"

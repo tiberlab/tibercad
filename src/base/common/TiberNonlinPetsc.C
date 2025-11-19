@@ -5,16 +5,16 @@
 
 #include "core/solver-interfaces/petsc/TiberPetscNonlinearSolver.h"
 
-#include "InitFailedException.h"
+#include "tibercad/base/InitFailedException.h"
 #include "core/solver-interfaces/petsc/PetscDivergedError.h"
-#include "SolveFailedException.h"
+#include "tibercad/base/SolveFailedException.h"
 
 
 #include "libmesh/equation_systems.h"
 #include "libmesh/nonlinear_implicit_system.h"
 #include "libmesh/mesh.h"
 
-#include "Messages.h"
+#include "tibercad/io/Messages.h"
 #include <cassert>
 
 

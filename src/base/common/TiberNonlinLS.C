@@ -4,10 +4,10 @@
 #include "TiberNonlinLS.h"
 #include "core/solver-interfaces/TiberLinearSolver.h"
 #include "core/solver-interfaces/petsc/TiberPetscLinearSolver.h"
-#include "InitFailedException.h"
-#include "SimulationInterface.h"
+#include "tibercad/base/InitFailedException.h"
+#include "tibercad/module/SimulationInterface.h"
 
-#include "SolveFailedException.h"
+#include "tibercad/base/SolveFailedException.h"
 #include "core/solver-interfaces/petsc/PetscDivergedError.h"
 #include "core/solver-interfaces/petsc/SNESDivergedError.h"
 
@@ -17,7 +17,7 @@
 #include "equation_systems.h"
 #include "dof_map.h"
 
-#include "Messages.h"
+#include "tibercad/io/Messages.h"
 
 #include <cassert>
 

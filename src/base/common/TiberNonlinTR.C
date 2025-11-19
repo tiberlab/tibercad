@@ -4,9 +4,9 @@
 #include "TiberNonlinTR.h"
 #include "core/solver-interfaces/TiberLinearSolver.h"
 #include "core/solver-interfaces/petsc/TiberPetscLinearSolver.h"
-#include "InitFailedException.h"
+#include "tibercad/base/InitFailedException.h"
 
-#include "SolveFailedException.h"
+#include "tibercad/base/SolveFailedException.h"
 
 
 #include "libmesh/linear_solver.h"
@@ -14,7 +14,7 @@
 #include "libmesh/equation_systems.h"
 #include "libmesh/dof_map.h"
 
-#include "Messages.h"
+#include "tibercad/io/Messages.h"
 
 #include <cassert>
 

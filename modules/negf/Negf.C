@@ -2,23 +2,23 @@
 
 #include "Negf.h"
 #include "NegfModel.h"
-#include "Device.h"
-#include "QuantumContact.h"
-#include "SimulationEnvironment.h"
-#include "SimulationOptions.h"
-#include "DataOutput.h"
-#include "Messages.h"
-#include "InitFailedException.h"
-#include "PotentialInterface.h"
-#include "KspaceIntegration.h"
-#include "Kspace.h"
+#include "tibercad/base/Device.h"
+#include "tibercad/geom/QuantumContact.h"
+#include "tibercad/module/SimulationEnvironment.h"
+#include "tibercad/base/SimulationOptions.h"
+#include "tibercad/io/DataOutput.h"
+#include "tibercad/io/Messages.h"
+#include "tibercad/base/InitFailedException.h"
+#include "tibercad/physics/PotentialInterface.h"
+#include "tibercad/kintegration/KspaceIntegration.h"
+#include "tibercad/kintegration/Kspace.h"
 #include <mpi.h>
 
 
 #include "libnegf/NegfWrapper.h"
 
 // To be able to compile as module
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 // Basic include files needed for the mesh functionality.
 #include "libmesh/fe.h"

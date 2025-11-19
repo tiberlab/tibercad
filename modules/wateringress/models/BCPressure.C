@@ -2,9 +2,9 @@
 
 #include "BCPressure.h"
 #include "WIUtils.h"
-#include "SimulationOptions.h"
+#include "tibercad/base/SimulationOptions.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 using namespace libMesh;
 

@@ -2,9 +2,9 @@
 
 #include "Sweep.h"
 #include "Ramp.h"
-#include "Utils.h"
-#include "Variable.h"
-#include "Messages.h"
+#include "tibercad/utils/Utils.h"
+#include "tibercad/base/Variable.h"
+#include "tibercad/io/Messages.h"
 
 
 #include <fstream>

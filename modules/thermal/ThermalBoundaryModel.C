@@ -1,7 +1,7 @@
 // $Id: ThermalBoundaryModel.C 2362 2011-02-21 01:02:31Z gromano $
 
 #include "ThermalBoundaryModel.h"
-#include "MaterialBoundary.h"
+#include "tibercad/physics/MaterialBoundary.h"
 
 using namespace std;
 

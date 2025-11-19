@@ -4,7 +4,7 @@
 #define _AUGERBARE_H_
 
 #include "RecombinationModelInterface.h"
-#include "TypeDefs.h"
+#include "tibercad/base/TypeDefs.h"
 
 
 //! Implementation of bare Auger process

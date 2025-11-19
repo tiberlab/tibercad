@@ -2,9 +2,9 @@
 
 #include "SchottkyContact.h"
 #include "DriftDiffusionProperties.h"
-#include "ModelErrorException.h"
+#include "tibercad/base/ModelErrorException.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 
 

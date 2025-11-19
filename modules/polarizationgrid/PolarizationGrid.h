@@ -1,8 +1,8 @@
 #ifndef _POLAGRID_H_
 #define _POLAGRID_H_
 
-#include "SimulationInterface.h"
-#include "TensorGrid.h"
+#include "tibercad/module/SimulationInterface.h"
+#include "tibercad/geom/TensorGrid.h"
 #include <random>
 #include "mesh.h"
 #include "elem.h"

@@ -2,10 +2,10 @@
 
 #include "AugerBare.h"
 #include "DriftDiffusionProperties.h"
-#include "Database.h"
-#include "TiberMath.h"
+#include "tibercad/io/Database.h"
+#include "tibercad/math/TiberMath.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 
 void

@@ -1,9 +1,9 @@
 #ifndef _KEATING_H_
 #define _KEATING_H_
 
-#include "PhysicalModel.h"
-#include "Material.h"
-#include "Messages.h"
+#include "tibercad/physics/PhysicalModel.h"
+#include "tibercad/physics/Material.h"
+#include "tibercad/io/Messages.h"
 
 //! The base class for Keating model parameters
 class Keating : public PhysicalModel

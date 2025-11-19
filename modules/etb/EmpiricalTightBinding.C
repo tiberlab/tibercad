@@ -3,19 +3,19 @@
 #include <boost/filesystem/operations.hpp>
 
 #include "EmpiricalTightBinding.h"
-#include "PhysicalModel.h"
-#include "AtomisticStructure.h"
-#include "BondMap.h"
-#include "SimulationOptions.h"
-#include "TiberLinearSystem.h"
-#include "TiberCad.h"
+#include "tibercad/physics/PhysicalModel.h"
+#include "tibercad/atomistic/AtomisticStructure.h"
+#include "tibercad/atomistic/BondMap.h"
+#include "tibercad/base/SimulationOptions.h"
+#include "tibercad/solver/TiberLinearSystem.h"
+#include "tibercad/base/TiberCad.h"
 #include "UptWrapper.h"
 #include "uptight.h"
-#include "Material.h"
-#include "Alloy.h"
-#include "Messages.h"
-#include "EigenSolver.h"
-#include "Utils.h"
+#include "tibercad/physics/Material.h"
+#include "tibercad/physics/Alloy.h"
+#include "tibercad/io/Messages.h"
+#include "tibercad/solver/slepc/EigenSolver.h"
+#include "tibercad/utils/Utils.h"
 
 #include "libmesh/mesh.h"
 #include "libmesh/dof_map.h"
@@ -28,7 +28,7 @@
 #include <algorithm>
 #include <limits>
  
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 //#include <complex>
 using namespace std;
@@ -700,7 +700,7 @@ ETB::call_uptight(void)
   }
 
   string solver_type = get_solver_options().get_option("solver_type", "cpu");
-  if (solver_type.compare("slepc") == 0)
+  if (solver_type.compare("tibercad/solver/slepc") == 0)
   {
     Messages::info("Solving Tight Binding with SLEPc eigensolver");
     initialize_solution_container(_upt_solver_options.n_vb + _upt_solver_options.n_cb);

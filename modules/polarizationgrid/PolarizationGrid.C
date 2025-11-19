@@ -1,13 +1,13 @@
 #include "PolarizationGrid.h"
-#include "InitFailedException.h"
-#include "MeshUtils.h"
-#include "Constants.h"
+#include "tibercad/base/InitFailedException.h"
+#include "tibercad/geom/MeshUtils.h"
+#include "tibercad/physics/Constants.h"
 #include "mesh_generation.h" 
-#include "SimulationEnvironment.h"
-#include "Messages.h"
+#include "tibercad/module/SimulationEnvironment.h"
+#include "tibercad/io/Messages.h"
 #include <sstream> 
 #include <fstream> 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 #include "gmsh_io.h"
 
 using std::string;

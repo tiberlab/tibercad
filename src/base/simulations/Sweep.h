@@ -3,7 +3,7 @@
 #ifndef _SWEEP_H_
 #define _SWEEP_H_
 
-#include "SimulationInterface.h"
+#include "tibercad/module/SimulationInterface.h"
 
 #include <set>
 #include <vector>

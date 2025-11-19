@@ -2,8 +2,8 @@
 
 #include "HeatReservoir.h"
 
-#include "TiberModule.h"
-#include "SimulationInterface.h"
+#include "tibercad/module/TiberModule.h"
+#include "tibercad/module/SimulationInterface.h"
 
 
 void

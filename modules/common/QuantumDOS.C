@@ -1,13 +1,13 @@
 // $Id: QuantumDOS.C 3258 2012-04-03 15:10:22Z maufder $
 
 #include "QuantumDOS.h"
-#include "SimulationInterface.h"
-#include "SimulationEnvironment.h"
-#include "Embracing.h"
-#include "Device.h"
-#include "Messages.h"
+#include "tibercad/module/SimulationInterface.h"
+#include "tibercad/module/SimulationEnvironment.h"
+#include "tibercad/embracing/Embracing.h"
+#include "tibercad/base/Device.h"
+#include "tibercad/io/Messages.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 
 using namespace std;

@@ -3,8 +3,8 @@
 #ifndef _PVMODULEBOUNDARYMODEL_H_
 #define _PVMODULEBOUNDARYMODEL_H_
 
-#include "PhysicalModel.h"
-#include "MaterialBoundary.h"
+#include "tibercad/physics/PhysicalModel.h"
+#include "tibercad/physics/MaterialBoundary.h"
 
 
 

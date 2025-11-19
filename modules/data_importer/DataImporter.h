@@ -5,7 +5,7 @@
 
 #include <string>
 
-#include "SimulationInterface.h"
+#include "tibercad/module/SimulationInterface.h"
 
 class TensorGrid;
 

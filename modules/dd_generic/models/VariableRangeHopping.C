@@ -6,9 +6,9 @@
  */
 #include "VariableRangeHopping.h"
 #include "DriftDiffusionProperties.h"
-#include "Constants.h"
+#include "tibercad/physics/Constants.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 
 

@@ -1,8 +1,8 @@
 // $Id$
 
-#include "SBWzCondBandBulkHamiltonian.h"
-#include "Material.h"
-#include "Constants.h"
+#include "tibercad/physics/semiconductormodels/SBWzCondBandBulkHamiltonian.h"
+#include "tibercad/physics/Material.h"
+#include "tibercad/physics/Constants.h"
 
 using namespace std;
 using namespace Constants;

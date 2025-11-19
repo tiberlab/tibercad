@@ -2,7 +2,7 @@
 
 #include "PVModuleModel.h"
 #include "ElementaryCell.h"
-#include "Messages.h"
+#include "tibercad/io/Messages.h"
 
 using namespace std;
 

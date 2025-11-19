@@ -4,7 +4,7 @@
 #define _EPQUENCHING_H_
 
 #include "RecombinationModelInterface.h"
-#include "TypeDefs.h"
+#include "tibercad/base/TypeDefs.h"
 
 class SimulationInterface;
 

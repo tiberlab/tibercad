@@ -4,7 +4,7 @@
 #include "TiberNonlinBR.h"
 #include "core/solver-interfaces/TiberLinearSolver.h"
 #include "core/solver-interfaces/petsc/TiberPetscLinearSolver.h"
-#include "InitFailedException.h"
+#include "tibercad/base/InitFailedException.h"
 
 #include "core/solver-interfaces/petsc/PetscDivergedError.h"
 #include "core/solver-interfaces/petsc/SNESDivergedError.h"

@@ -1,17 +1,17 @@
 // $Id$
 
-#include "AtomisticStructure.h"
+#include "tibercad/atomistic/AtomisticStructure.h"
 #include "AtomisticGenerator.h"
-#include "TensorOperators.h"
-#include "BondMap.h"
-#include "Device.h"
-#include "Messages.h"
-#include "MeshUtils.h"
-#include "Utils.h"
-#include "TiberCad.h"
-#include "Material.h"
-#include "DataOutput.h"
-#include "RuntimeException.h"
+#include "tibercad/math/TensorOperators.h"
+#include "tibercad/atomistic/BondMap.h"
+#include "tibercad/base/Device.h"
+#include "tibercad/io/Messages.h"
+#include "tibercad/geom/MeshUtils.h"
+#include "tibercad/utils/Utils.h"
+#include "tibercad/base/TiberCad.h"
+#include "tibercad/physics/Material.h"
+#include "tibercad/io/DataOutput.h"
+#include "tibercad/base/RuntimeException.h"
 
 #include "libmesh/mesh_tetgen_interface.h"
 // unfortunately tetgen defines REAL

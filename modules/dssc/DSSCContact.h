@@ -3,7 +3,7 @@
 #ifndef _DSSCCONTACT_H_
 #define _DSSCCONTACT_H_
 
-#include "PhysicalModel.h"
+#include "tibercad/physics/PhysicalModel.h"
 
 
 class DSSCContact : public PhysicalModel

@@ -1,12 +1,12 @@
 // $Id$
 
-#include "Embracing.h"
-#include "ModelOptions.h"
-#include "InitFailedException.h"
-#include "SimulationInterface.h"
-#include "SimulationEnvironment.h"
-#include "DataOutput.h"
-#include "TiberCad.h"
+#include "tibercad/embracing/Embracing.h"
+#include "tibercad/base/ModelOptions.h"
+#include "tibercad/base/InitFailedException.h"
+#include "tibercad/module/SimulationInterface.h"
+#include "tibercad/module/SimulationEnvironment.h"
+#include "tibercad/io/DataOutput.h"
+#include "tibercad/base/TiberCad.h"
 
 #include "libmesh/mesh.h"
 #include "libmesh/equation_systems.h"

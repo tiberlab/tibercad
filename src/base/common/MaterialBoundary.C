@@ -1,9 +1,9 @@
 // $Id$
 
-#include "MaterialBoundary.h"
-#include "Material.h"
-#include "PhysicalModel.h"
-#include "Database.h"
+#include "tibercad/physics/MaterialBoundary.h"
+#include "tibercad/physics/Material.h"
+#include "tibercad/physics/PhysicalModel.h"
+#include "tibercad/io/Database.h"
 
 #include <cassert>
 

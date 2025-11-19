@@ -3,9 +3,9 @@
 #ifndef _SEMICONDUCTORMODEL_H_
 #define _SEMICONDUCTORMODEL_H_
 
-#include "SimulationOptions.h"
+#include "tibercad/base/SimulationOptions.h"
 #include "DDBulkModel.h"
-#include "StrainInterface.h"
+#include "tibercad/physics/StrainInterface.h"
 
 #include <vector>
 #include <string>

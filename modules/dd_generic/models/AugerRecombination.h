@@ -4,7 +4,7 @@
 #define _AUGERRECOMBINATION_H_
 
 #include "RecombinationModelInterface.h"
-#include "TypeDefs.h"
+#include "tibercad/base/TypeDefs.h"
 
 
 //! Implementation of Auger recombination

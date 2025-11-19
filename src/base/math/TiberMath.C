@@ -1,7 +1,7 @@
 // $Id$
 
-#include "TiberMath.h"
-#include "Messages.h"
+#include "tibercad/math/TiberMath.h"
+#include "tibercad/io/Messages.h"
 
 #include <cmath>
 

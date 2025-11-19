@@ -1,6 +1,6 @@
 // $Id$
 
-#include "SimulationInterface.h"
+#include "tibercad/module/SimulationInterface.h"
 
 /*!
  * \brief Module to interface to QuantumEspresso

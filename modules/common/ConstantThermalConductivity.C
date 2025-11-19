@@ -1,11 +1,11 @@
 // $Id: ConstantThermalConductivity.C 2457 2011-03-06 23:52:12Z gromano $
 
 
-#include "Material.h"
-#include "Database.h"
+#include "tibercad/physics/Material.h"
+#include "tibercad/io/Database.h"
 #include "ConstantThermalConductivity.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 
 using namespace std;

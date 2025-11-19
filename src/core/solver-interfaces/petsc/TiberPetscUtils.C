@@ -1,7 +1,7 @@
 // $Id$
 
 #include "TiberPetscUtils.h"
-#include "ModelOptions.h"
+#include "tibercad/base/ModelOptions.h"
 
 
 #include <string>

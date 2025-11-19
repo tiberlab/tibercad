@@ -617,7 +617,7 @@ PACKAGE_STRING='TiberCAD 1.0'
 PACKAGE_BUGREPORT='support@tibercad.org'
 PACKAGE_URL=''
 
-ac_unique_file="include/base/common/TiberCad.h"
+ac_unique_file="include/tibercad/base/TiberCad.h"
 # Factoring default headers for most tests.
 ac_includes_default="\
 #include <stddef.h>
@@ -2861,7 +2861,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-ac_config_headers="$ac_config_headers include/base/common/tiber_config.h"
+ac_config_headers="$ac_config_headers include/tibercad/base/tiber_config.h"
 
 
 
@@ -8175,7 +8175,7 @@ cat >>$CONFIG_STATUS <<\_ACEOF || ac_write_fail=1
 for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
-    "include/base/common/tiber_config.h") CONFIG_HEADERS="$CONFIG_HEADERS include/base/common/tiber_config.h" ;;
+    "include/tibercad/base/tiber_config.h") CONFIG_HEADERS="$CONFIG_HEADERS include/tibercad/base/tiber_config.h" ;;
     "stamp-h") CONFIG_FILES="$CONFIG_FILES stamp-h" ;;
     "Make.common") CONFIG_FILES="$CONFIG_FILES Make.common" ;;
     "Make.defs") CONFIG_FILES="$CONFIG_FILES Make.defs" ;;

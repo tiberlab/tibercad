@@ -1,13 +1,13 @@
 // $Id: LinearThermalConductivity.C 2457 2011-03-06 23:52:12Z gromano $
 
 
-#include "Material.h"
+#include "tibercad/physics/Material.h"
 #include "LinearThermalConductivity.h"
-#include "libMeshDefs.h"
-#include "PhysicalModel.h"
-#include "ModelOptions.h"
+#include "tibercad/base/libMeshDefs.h"
+#include "tibercad/physics/PhysicalModel.h"
+#include "tibercad/base/ModelOptions.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 
 

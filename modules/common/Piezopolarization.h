@@ -3,9 +3,9 @@
 #ifndef _PIEZOPOLARIZATION_H_
 #define _PIEZOPOLARIZATION_H_
 
-#include "PolarizationModel.h"
-#include "SolutionProvider.h"
-#include "tiber_dll.h"
+#include "tibercad/model_base/PolarizationModel.h"
+#include "tibercad/module/SolutionProvider.h"
+#include "tibercad/base/tiber_dll.h"
 
 
 // Basic Piezopolarization model

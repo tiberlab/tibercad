@@ -2,7 +2,7 @@
 #define _DEGRADATIONH2O_H_
 
 #include "DegradationModel.h"
-#include "SolutionProvider.h"
+#include "tibercad/module/SolutionProvider.h"
 
 /*!
  * \brief An example for degradation due to relative humidity

@@ -3,7 +3,7 @@
 #ifndef _PETSCRUNTIMEERROR_H_
 #define _PETSCRUNTIMEERROR_H_
 
-#include "SolverException.h"
+#include "tibercad/solver/SolverException.h"
 
 #include <string>
 

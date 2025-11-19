@@ -4,9 +4,9 @@
 #define _ENVELOPFUNCTIONAPPROX_H_
 
 
-#include "FEMEigenvalueProblem.h"
-#include "TemperatureInterface.h"
-#include "StrainInterface.h"
+#include "tibercad/physics/schroedinger/FEMEigenvalueProblem.h"
+#include "tibercad/physics/TemperatureInterface.h"
+#include "tibercad/physics/StrainInterface.h"
 
 
 //! A class that constructs EFA Hamiltonian and S-matrix 

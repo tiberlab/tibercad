@@ -8,7 +8,7 @@
 #ifndef NEGFMODEL_H_
 #define NEGFMODEL_H_
 
-#include "PhysicalModel.h"
+#include "tibercad/physics/PhysicalModel.h"
 #include "models/HamiltonianModel.h"
 
 class TBDLLOCAL NegfModel : public PhysicalModel

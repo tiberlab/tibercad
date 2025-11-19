@@ -1,5 +1,5 @@
-#include "EFAbulkModel.h"
-#include "Material.h"
+#include "tibercad/physics/semiconductormodels/EFAbulkModel.h"
+#include "tibercad/physics/Material.h"
 
 
 EFAbulkModel::EFAbulkModel(const ModelOptions& options) :

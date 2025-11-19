@@ -3,7 +3,7 @@
 #ifndef _TmmDipoleSource_H_
 #define _TmmDipoleSource_H_
 
-#include "PhysicalModel.h"
+#include "tibercad/physics/PhysicalModel.h"
 #include "elem.h"
 // #include "Tmm.h"
 

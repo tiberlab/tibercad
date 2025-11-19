@@ -2,11 +2,11 @@
 
 
 #include "DSSCModel.h"
-#include "Database.h"
-#include "SimulationInterface.h"
-#include "Messages.h"
-#include "Trap.h"
-#include "Particle.h"
+#include "tibercad/io/Database.h"
+#include "tibercad/module/SimulationInterface.h"
+#include "tibercad/io/Messages.h"
+#include "tibercad/model_base/Trap.h"
+#include "tibercad/physics/Particle.h"
 
 
 #include "elem.h"

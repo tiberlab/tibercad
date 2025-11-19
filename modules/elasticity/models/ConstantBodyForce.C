@@ -1,9 +1,9 @@
 // $Id$
 
 #include "ConstantBodyForce.h"
-#include "Material.h"
+#include "tibercad/physics/Material.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 
 using namespace std;

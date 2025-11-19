@@ -3,9 +3,9 @@
 #ifndef _PIEZOPOLARIZATION_H_
 #define _PIEZOPOLARIZATION_H_
 
-#include "PolarizationModel.h"
-#include "StrainInterface.h"
-#include "tiber_dll.h"
+#include "tibercad/model_base/PolarizationModel.h"
+#include "tibercad/physics/StrainInterface.h"
+#include "tibercad/base/tiber_dll.h"
 
 class Elem;
 class Point;

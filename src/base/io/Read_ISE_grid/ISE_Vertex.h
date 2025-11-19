@@ -1,7 +1,7 @@
 #ifndef ISE_VERTEX_H_
 #define ISE_VERTEX_H_
 
-#include "tiber_dll.h"
+#include "tibercad/base/tiber_dll.h"
 
 #include <vector>
 

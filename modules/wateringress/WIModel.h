@@ -3,7 +3,7 @@
 #ifndef _POISSONMODEL_H_
 #define _POISSONMODEL_H_
 
-#include "PhysicalModel.h"
+#include "tibercad/physics/PhysicalModel.h"
 
 
 //! This is the base class for the WI physical model

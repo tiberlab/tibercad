@@ -3,11 +3,11 @@
 #include <boost/filesystem/operations.hpp>
 
 #include "QEInterface.h"
-#include "AtomisticStructure.h"
-#include "TeeStream.h"
-#include "Messages.h"
+#include "tibercad/atomistic/AtomisticStructure.h"
+#include "tibercad/io/TeeStream.h"
+#include "tibercad/io/Messages.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 using namespace std;
 

@@ -1,11 +1,11 @@
 // $Id$
 
-#include "FEMEigenvalueProblem.h"
-#include "Boundary.h"
-#include "SimulationEnvironment.h"
-#include "SimulationOptions.h"
-#include "EigenSolver.h"
-#include "Messages.h"
+#include "tibercad/physics/schroedinger/FEMEigenvalueProblem.h"
+#include "tibercad/geom/Boundary.h"
+#include "tibercad/module/SimulationEnvironment.h"
+#include "tibercad/base/SimulationOptions.h"
+#include "tibercad/solver/slepc/EigenSolver.h"
+#include "tibercad/io/Messages.h"
 
 #include "libmesh/equation_systems.h"
 #include "libmesh/quadrature_gauss.h"

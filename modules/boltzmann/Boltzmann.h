@@ -3,11 +3,11 @@
 #ifndef _BOLTZMANN_H_
 #define _BOLTZMANN_H_
 
-#include "SimulationInterface.h"
-#include "ElementSide.h"
-#include "SimulationEnvironment.h"
-#include "tiber_dll.h"
-#include "libMeshDefs.h"
+#include "tibercad/module/SimulationInterface.h"
+#include "tibercad/geom/ElementSide.h"
+#include "tibercad/module/SimulationEnvironment.h"
+#include "tibercad/base/tiber_dll.h"
+#include "tibercad/base/libMeshDefs.h"
 
 class TiberLinearSystem;
 

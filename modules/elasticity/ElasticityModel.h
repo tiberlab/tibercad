@@ -3,15 +3,15 @@
 #ifndef _ELASTICITYMODEL_H_
 #define _ELASTICITYMODEL_H_
 
-#include "PhysicalModel.h"
+#include "tibercad/physics/PhysicalModel.h"
 
 #include "point.h"
 #include "tensor_value.h"
 #include "vector_value.h"
 #include "StiffnessModel.h"
 #include "BodyForceModel.h"
-#include "tiber_dll.h"
-#include "Messages.h"
+#include "tibercad/base/tiber_dll.h"
+#include "tibercad/io/Messages.h"
 class StiffnessModel;
 //class Elem;
 

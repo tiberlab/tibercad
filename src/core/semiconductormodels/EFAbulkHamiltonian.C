@@ -1,8 +1,8 @@
 // $Id$
 
-#include "EFAbulkHamiltonian.h"
-#include "Material.h" 
-#include "Tensor1.h" 
+#include "tibercad/physics/semiconductormodels/EFAbulkHamiltonian.h"
+#include "tibercad/physics/Material.h" 
+#include "tibercad/math/Tensor1.h" 
 
 using namespace std; 
 

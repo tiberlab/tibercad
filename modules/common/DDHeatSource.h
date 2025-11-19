@@ -3,14 +3,14 @@
 #ifndef _DDHEATSOURCE_H_
 #define _DDHEATSOURCE_H_
 
-#include "HeatSourceModel.h"
+#include "tibercad/model_base/HeatSourceModel.h"
 
 #include "point.h"
 #include "tensor_value.h"
 #include "vector_value.h"
-#include "PhysicalModel.h"
-#include "SimulationInterface.h"
-#include "tiber_dll.h"
+#include "tibercad/physics/PhysicalModel.h"
+#include "tibercad/module/SimulationInterface.h"
+#include "tibercad/base/tiber_dll.h"
 
 class Elem;
 

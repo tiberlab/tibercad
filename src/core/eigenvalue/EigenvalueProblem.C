@@ -1,15 +1,15 @@
 // $Id$
 
-#include "EigenvalueProblem.h"
-#include "SimulationEnvironment.h"
-#include "AtomisticStructure.h"
-#include "EigenSolver.h"
-#include "BulkCrystal.h"
-#include "Constants.h"
-#include "Messages.h"
-#include "DataOutput.h"
+#include "tibercad/physics/schroedinger/EigenvalueProblem.h"
+#include "tibercad/module/SimulationEnvironment.h"
+#include "tibercad/atomistic/AtomisticStructure.h"
+#include "tibercad/solver/slepc/EigenSolver.h"
+#include "tibercad/atomistic/BulkCrystal.h"
+#include "tibercad/physics/Constants.h"
+#include "tibercad/io/Messages.h"
+#include "tibercad/io/DataOutput.h"
 
-#include "SimulationOptions.h"
+#include "tibercad/base/SimulationOptions.h"
 
 
 #include "libmesh/elem.h"

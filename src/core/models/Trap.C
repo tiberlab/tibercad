@@ -1,9 +1,9 @@
 // $Id$
 
-#include "Trap.h"
-#include "Particle.h"
-#include "DensityOfStates.h"
-#include "TiberMath.h"
+#include "tibercad/model_base/Trap.h"
+#include "tibercad/physics/Particle.h"
+#include "tibercad/model_base/DensityOfStates.h"
+#include "tibercad/math/TiberMath.h"
 
 #include "fstream"
 

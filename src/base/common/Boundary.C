@@ -1,8 +1,8 @@
 // $Id$
 
 
-#include "Boundary.h"
-#include "BoundaryProperties.h"
+#include "tibercad/geom/Boundary.h"
+#include "tibercad/physics/BoundaryProperties.h"
 
 #include <cassert>
 

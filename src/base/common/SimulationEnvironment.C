@@ -1,9 +1,9 @@
 // $Id$
 
-#include "SimulationEnvironment.h"
+#include "tibercad/module/SimulationEnvironment.h"
 #include "control/Control.h"
-#include "Device.h"
-#include "Boundary.h"
+#include "tibercad/base/Device.h"
+#include "tibercad/geom/Boundary.h"
 
 #include "mesh.h"
 #include "elem.h"

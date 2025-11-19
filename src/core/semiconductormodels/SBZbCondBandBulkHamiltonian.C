@@ -1,10 +1,10 @@
 // $Id$
 
-#include "SBZbCondBandBulkHamiltonian.h"
-#include "ZbSemiconductor.h"
-#include "Constants.h"
-#include "Messages.h"
-#include "TensorOperators.h"
+#include "tibercad/physics/semiconductormodels/SBZbCondBandBulkHamiltonian.h"
+#include "tibercad/physics/semiconductormodels/ZbSemiconductor.h"
+#include "tibercad/physics/Constants.h"
+#include "tibercad/io/Messages.h"
+#include "tibercad/math/TensorOperators.h"
 
 using namespace std;
 using namespace Constants;

@@ -5,11 +5,11 @@
 //
 
 #include "ReadGMSH.h"
-#include "MeshRegionInfo.h"
-#include "BoundaryRegions.h"
-#include "Utils.h"
-#include "Messages.h"
-#include "InitFailedException.h"
+#include "tibercad/geom/MeshRegionInfo.h"
+#include "tibercad/geom/BoundaryRegions.h"
+#include "tibercad/utils/Utils.h"
+#include "tibercad/io/Messages.h"
+#include "tibercad/base/InitFailedException.h"
 
 
 // C++ includes

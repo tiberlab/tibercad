@@ -2,12 +2,12 @@
 
 #include "ExcitonDissociation.h"
 
-#include "SimulationInterface.h"
+#include "tibercad/module/SimulationInterface.h"
 #include "DriftDiffusionProperties.h"
 
-#include "Material.h"
+#include "tibercad/physics/Material.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 
 

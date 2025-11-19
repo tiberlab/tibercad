@@ -2,11 +2,11 @@
 
 #include "ZbStrainDynamicalMatrix.h"
 #include "getpot.h"
-#include "Material.h"
-#include "Database.h"
+#include "tibercad/physics/Material.h"
+#include "tibercad/io/Database.h"
 #include "RotatedCrystal.h"  
 #include "PhononModel.h"  
-#include "SimulationInterface.h" 
+#include "tibercad/module/SimulationInterface.h" 
 
 //--------------------------------------------------------//
 

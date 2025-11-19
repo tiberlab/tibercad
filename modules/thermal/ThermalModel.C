@@ -1,12 +1,12 @@
 // $Id: ThermalModel.C 2457 2011-03-06 23:52:12Z gromano $
 
 #include "ThermalModel.h"
-#include "SimulationOptions.h"
-#include "Material.h"
-#include "Database.h"
-#include "Messages.h"
-#include "HeatSourceModel.h"
-#include "ThermalConductivityModel.h"
+#include "tibercad/base/SimulationOptions.h"
+#include "tibercad/physics/Material.h"
+#include "tibercad/io/Database.h"
+#include "tibercad/io/Messages.h"
+#include "tibercad/model_base/HeatSourceModel.h"
+#include "tibercad/model_base/ThermalConductivityModel.h"
 
 
 using namespace std;

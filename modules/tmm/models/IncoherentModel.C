@@ -1,6 +1,6 @@
 
 #include "IncoherentModel.h"
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 
 inline

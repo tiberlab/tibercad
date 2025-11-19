@@ -3,7 +3,7 @@
 #include "boost/tokenizer.hpp"
 
 #include "VTKIO.h"
-#include "RuntimeException.h"
+#include "tibercad/base/RuntimeException.h"
 
 #include "libmesh/elem.h"
 #include "libmesh/mesh_base.h"

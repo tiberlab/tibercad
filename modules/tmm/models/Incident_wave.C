@@ -6,7 +6,7 @@
  */
 
 #include "Incident_wave.h"
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 void Incident_wave::do_init(void)
 {

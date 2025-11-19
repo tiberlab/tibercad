@@ -1,10 +1,10 @@
 // $Id$
 
-#include "Alloy.h"
-#include "Database.h"
-#include "PhysicalModel.h"
-#include "Messages.h"
-#include "CrystalDefs.h"
+#include "tibercad/physics/Alloy.h"
+#include "tibercad/io/Database.h"
+#include "tibercad/physics/PhysicalModel.h"
+#include "tibercad/io/Messages.h"
+#include "tibercad/atomistic/CrystalDefs.h"
 
 
 Alloy::Alloy(const std::string& name, const ModelOptions& options)

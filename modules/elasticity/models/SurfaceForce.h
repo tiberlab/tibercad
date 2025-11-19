@@ -8,8 +8,8 @@
 #include "point.h"
 #include "tensor_value.h"
 #include "vector_value.h"
-#include "TensorOperators.h"
-#include "tiber_dll.h"
+#include "tibercad/math/TensorOperators.h"
+#include "tibercad/base/tiber_dll.h"
 
 
 

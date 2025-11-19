@@ -1,4 +1,4 @@
-#include "Tensor2.h"
+#include "tibercad/math/Tensor2.h"
 
 #include <algorithm>
 #include <cassert>

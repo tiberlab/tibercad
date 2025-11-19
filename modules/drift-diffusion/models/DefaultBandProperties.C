@@ -1,9 +1,9 @@
 // $Id$
 
 #include "DefaultBandProperties.h"
-#include "ModelOptions.h"
+#include "tibercad/base/ModelOptions.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 
 using namespace std;

@@ -1,10 +1,10 @@
 // $Id$
 
-#include "OpticsTB.h"
-#include "EigenvalueProblem.h"
-#include "DataOutput.h"
-#include "SimulationOptions.h"
-#include "Messages.h"
+#include "tibercad/physics/tightbinding/OpticsTB.h"
+#include "tibercad/physics/schroedinger/EigenvalueProblem.h"
+#include "tibercad/io/DataOutput.h"
+#include "tibercad/base/SimulationOptions.h"
+#include "tibercad/io/Messages.h"
 
 #include "mesh.h"
 #include "elem.h"

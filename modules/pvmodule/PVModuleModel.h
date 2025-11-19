@@ -3,7 +3,7 @@
 #ifndef _PVMODULEMODEL_H_
 #define _PVMODULEMODEL_H_
 
-#include "PhysicalModel.h"
+#include "tibercad/physics/PhysicalModel.h"
 
 
 

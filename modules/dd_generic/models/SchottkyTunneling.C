@@ -2,11 +2,11 @@
 
 #include "SchottkyTunneling.h"
 #include "DriftDiffusionProperties.h"
-#include "Database.h"
-#include "SimulationInterface.h"
-#include "SimulationEnvironment.h"
-#include "Messages.h"
-#include "MeshUtils.h"
+#include "tibercad/io/Database.h"
+#include "tibercad/module/SimulationInterface.h"
+#include "tibercad/module/SimulationEnvironment.h"
+#include "tibercad/io/Messages.h"
+#include "tibercad/geom/MeshUtils.h"
 
 #include "mesh_base.h"
 #include "fe.h"
@@ -15,7 +15,7 @@
 
 #include <limits>
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 //TIBER_MODULE(SchottkyTunneling, recombination, schottky_tunneling)
 

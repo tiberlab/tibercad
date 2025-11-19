@@ -3,7 +3,7 @@
 #ifndef _DYNAMICALMATRIX_H_
 #define _DYNAMICALMATRIX_H_
 
-#include "PhysicalModel.h"
+#include "tibercad/physics/PhysicalModel.h"
 #include "PhononModel.h"
 
 class PhononModel;

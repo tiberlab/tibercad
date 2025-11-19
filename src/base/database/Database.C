@@ -1,8 +1,8 @@
 // $Id$
 
-#include "Database.h"
-#include "Utils.h"
-#include "Messages.h"
+#include "tibercad/io/Database.h"
+#include "tibercad/utils/Utils.h"
+#include "tibercad/io/Messages.h"
 #include "DatabaseException.h"
 
 #include "getpot.h"

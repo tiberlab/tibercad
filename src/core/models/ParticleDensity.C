@@ -1,13 +1,13 @@
 // $Id$
 
-#include "ParticleDensity.h"
-#include "SimulationInterface.h"
-#include "SimulationEnvironment.h"
-#include "Device.h"
-#include "TiberMath.h"
-#include "Embracing.h"
-#include "Messages.h"
-#include "Constants.h"
+#include "tibercad/model_base/ParticleDensity.h"
+#include "tibercad/module/SimulationInterface.h"
+#include "tibercad/module/SimulationEnvironment.h"
+#include "tibercad/base/Device.h"
+#include "tibercad/math/TiberMath.h"
+#include "tibercad/embracing/Embracing.h"
+#include "tibercad/io/Messages.h"
+#include "tibercad/physics/Constants.h"
 
 
 using namespace std;

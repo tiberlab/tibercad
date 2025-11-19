@@ -1,9 +1,9 @@
 // $Id$
 
-#include "TemperatureInterface.h"
-#include "SimulationInterface.h"
-#include "SimulationOptions.h"
-#include "InitFailedException.h"
+#include "tibercad/physics/TemperatureInterface.h"
+#include "tibercad/module/SimulationInterface.h"
+#include "tibercad/base/SimulationOptions.h"
+#include "tibercad/base/InitFailedException.h"
 
 #include "elem.h"
 

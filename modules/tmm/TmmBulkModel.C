@@ -1,8 +1,8 @@
 // $Id: TmmBulkModel.C 4391 2017-04-07 11:16:58Z pecchia $
 
 #include "TmmBulkModel.h"
-#include "Database.h"
-#include "Messages.h"
+#include "tibercad/io/Database.h"
+#include "tibercad/io/Messages.h"
 
 #include <boost/filesystem/operations.hpp>
 

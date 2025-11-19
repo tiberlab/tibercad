@@ -1,12 +1,12 @@
 // $Id$
 
 #include "DSSCGeneration.h"
-#include "TiberLinearSystem.h"
-#include "SimulationEnvironment.h"
-#include "Material.h"
-#include "Database.h"
+#include "tibercad/solver/TiberLinearSystem.h"
+#include "tibercad/module/SimulationEnvironment.h"
+#include "tibercad/physics/Material.h"
+#include "tibercad/io/Database.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 #include "mesh_base.h"
 #include "dof_map.h"

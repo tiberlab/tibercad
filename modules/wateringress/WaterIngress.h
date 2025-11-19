@@ -3,8 +3,8 @@
 #ifndef _WATERINGRESS_H_
 #define _WATERINGRESS_H_
 
-#include "SimulationInterface.h"
-#include "TiberLinearSystem.h"
+#include "tibercad/module/SimulationInterface.h"
+#include "tibercad/solver/TiberLinearSystem.h"
 
 
 /*!

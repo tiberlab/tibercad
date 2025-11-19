@@ -1,8 +1,8 @@
 // $Id$
 
-#include "ModelOptions.h"
-#include "Messages.h"
-#include "InitFailedException.h"
+#include "tibercad/base/ModelOptions.h"
+#include "tibercad/io/Messages.h"
+#include "tibercad/base/InitFailedException.h"
 
 #include "vector_value.h"
 #include "point.h"

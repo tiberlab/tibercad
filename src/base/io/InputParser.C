@@ -1,9 +1,9 @@
 // $Id$
 
 #include "InputParser.h"
-#include "Messages.h"
-#include "Utils.h"
-#include "InitFailedException.h"
+#include "tibercad/io/Messages.h"
+#include "tibercad/utils/Utils.h"
+#include "tibercad/base/InitFailedException.h"
 
 
 #include <iostream>

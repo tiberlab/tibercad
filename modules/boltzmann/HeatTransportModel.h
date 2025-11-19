@@ -3,7 +3,7 @@
 #ifndef _HEATTRANSPORTMODEL_H_
 #define _HEATTRANSPORTMODEL_H_
 
-#include "PhysicalModel.h"
+#include "tibercad/physics/PhysicalModel.h"
 
 
 

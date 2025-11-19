@@ -1,4 +1,4 @@
-#include "Tensor1.h"
+#include "tibercad/math/Tensor1.h"
 
 #include "libmesh/point.h"
 

@@ -1,12 +1,12 @@
 // $Id: ThermalStress.C 2451 2011-03-05 14:45:46Z maufder $
 
 #include "ThermalStress.h"
-#include "Material.h"
-#include "Database.h"
-#include "SimulationOptions.h"
-#include "TensorOperators.h"
+#include "tibercad/physics/Material.h"
+#include "tibercad/io/Database.h"
+#include "tibercad/base/SimulationOptions.h"
+#include "tibercad/math/TensorOperators.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 
 using namespace std;

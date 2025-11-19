@@ -4,7 +4,7 @@
 #ifndef _DATABASEEXCEPTION_H_
 #define _DATABASEEXCEPTION_H_
 
-#include "ExceptionTracer.h"
+#include "tibercad/base/ExceptionTracer.h"
 
 #include <stdexcept>
 #include <string>

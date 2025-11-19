@@ -1,6 +1,6 @@
 // $Id$
 
-#include "TensorGrid.h"
+#include "tibercad/geom/TensorGrid.h"
 
 
 

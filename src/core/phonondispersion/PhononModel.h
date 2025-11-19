@@ -3,8 +3,8 @@
 
 #include "DynamicalMatrix.h"
 #include "RamanTensor.h"
-#include "PhysicalModel.h"
-#include "libMeshDefs.h"
+#include "tibercad/physics/PhysicalModel.h"
+#include "tibercad/base/libMeshDefs.h"
 
 class RamanTensor;
        

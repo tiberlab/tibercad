@@ -3,15 +3,15 @@
 #ifndef _NEGF_H_
 #define _NEGF_H_
 
-#include "SimulationInterface.h"
-#include "EigenvalueProblem.h"
-#include "AtomisticStructure.h"
-#include "ModelOptions.h"
-#include "QuantumContact.h"
-#include "TiberLinearSystem.h"
-#include "Boundary.h"
-#include "KspaceIntegration.h"
-#include "Kspace.h"
+#include "tibercad/module/SimulationInterface.h"
+#include "tibercad/physics/schroedinger/EigenvalueProblem.h"
+#include "tibercad/atomistic/AtomisticStructure.h"
+#include "tibercad/base/ModelOptions.h"
+#include "tibercad/geom/QuantumContact.h"
+#include "tibercad/solver/TiberLinearSystem.h"
+#include "tibercad/geom/Boundary.h"
+#include "tibercad/kintegration/KspaceIntegration.h"
+#include "tibercad/kintegration/Kspace.h"
 
 #include "libmesh/mesh_base.h"
 #include "libmesh/parallel.h"

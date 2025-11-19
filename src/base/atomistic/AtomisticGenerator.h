@@ -5,13 +5,13 @@
 
 //--------------------------------------------------------------------------------------------
 
-#include "Atom.h"
-#include "ModelOptions.h"
-#include "TypeDefs.h"
-#include "Material.h"
-#include "Database.h"
-#include "Alloy.h"
-#include "Tensor2.h"
+#include "tibercad/atomistic/Atom.h"
+#include "tibercad/base/ModelOptions.h"
+#include "tibercad/base/TypeDefs.h"
+#include "tibercad/physics/Material.h"
+#include "tibercad/io/Database.h"
+#include "tibercad/physics/Alloy.h"
+#include "tibercad/math/Tensor2.h"
 
 #include "libmesh/mesh.h"
 

@@ -1,8 +1,8 @@
 // $Id$
 
-#include "WzDDsemiconductor.h"
-#include "WzSemiconductor.h"
-#include "Constants.h"
+#include "tibercad/physics/semiconductormodels/WzDDsemiconductor.h"
+#include "tibercad/physics/semiconductormodels/WzSemiconductor.h"
+#include "tibercad/physics/Constants.h"
 
 using namespace std;
 using namespace Constants;

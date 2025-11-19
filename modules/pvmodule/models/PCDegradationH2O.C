@@ -1,7 +1,7 @@
 #include "PCDegradationH2O.h"
-#include "SimulationInterface.h"
+#include "tibercad/module/SimulationInterface.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 PCDegradationH2O::PCDegradationH2O(const ModelOptions& options)
   : Photocurrent(options)

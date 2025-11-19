@@ -1,7 +1,7 @@
 // $Id$
 
 #include "MobilityModelInterface.h"
-#include "Material.h"
+#include "tibercad/physics/Material.h"
 
 
 MobilityModelInterface*

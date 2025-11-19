@@ -1,6 +1,6 @@
 // $Id$
 
-#include "BoundaryElementMap.h"
+#include "tibercad/geom/BoundaryElementMap.h"
 
 
 using namespace std;

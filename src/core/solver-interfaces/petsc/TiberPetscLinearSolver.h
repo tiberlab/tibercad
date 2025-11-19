@@ -9,9 +9,9 @@
 #include "KSPDivergedError.h"
 
 // Libmesh includes
-#include "petsc_vector.h"
-#include "petsc_matrix.h"
-#include "petsc_macro.h"
+#include "libmesh/petsc_vector.h"
+#include "libmesh/petsc_matrix.h"
+#include "libmesh/petsc_macro.h"
 
 
 EXTERN_C_FOR_PETSC_BEGIN

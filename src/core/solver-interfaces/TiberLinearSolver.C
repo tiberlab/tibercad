@@ -1,17 +1,17 @@
 // $Id$
 
-#include "tiber_config.h"
+#include "tibercad/base/tiber_config.h"
 #include "TiberLinearSolver.h"
 #include "petsc/TiberPetscLinearSolver.h"
 
-#include "TiberCad.h"
+#include "tibercad/base/TiberCad.h"
 
 #ifdef ENABLE_PARDISO
 # include "PardisoLinearSolver.h"
 #endif
-#include "InitFailedException.h"
-#include "ModelOptions.h"
-#include "Messages.h"
+#include "tibercad/base/InitFailedException.h"
+#include "tibercad/base/ModelOptions.h"
+#include "tibercad/io/Messages.h"
 
 
 namespace

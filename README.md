@@ -14,7 +14,7 @@ License
 The tibercad core is distributed as is, under the conditions of the Lesser GNU General Public
 License (LGPL) version 3.0.
 
-Modules are released under the same GNU General Public License (GPL), unless otherwise noted
+Modules are released under the GNU General Public License (GPL), unless otherwise noted
 
 
 Compilation

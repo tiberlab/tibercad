@@ -3,7 +3,7 @@
 #ifndef __READCOMSOL_H_
 #define __READCOMSOL_H_
 
-#include "tiber_dll.h"
+#include "tibercad/base/tiber_dll.h"
 
 // libMesh includes
 #include "libmesh_common.h"

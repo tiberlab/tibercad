@@ -2,9 +2,9 @@
 
 #include "AugerRecombination.h"
 #include "DriftDiffusionProperties.h"
-#include "Database.h"
+#include "tibercad/io/Database.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 
 void

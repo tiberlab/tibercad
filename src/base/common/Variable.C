@@ -1,10 +1,10 @@
 // $Id$
 
-#include "Variable.h"
-#include "TypedVariable.h"
-#include "Utils.h"
-#include "InitFailedException.h"
-#include "RuntimeException.h"
+#include "tibercad/base/Variable.h"
+#include "tibercad/base/TypedVariable.h"
+#include "tibercad/utils/Utils.h"
+#include "tibercad/base/InitFailedException.h"
+#include "tibercad/base/RuntimeException.h"
 
 
 #include "boost/regex.hpp"

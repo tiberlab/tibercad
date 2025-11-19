@@ -4,7 +4,7 @@
 #ifndef _PARDISOSOLVEREXCEPTION_H_
 #define _PARDISOSOLVEREXCEPTION_H_
 
-#include "SolverException.h"
+#include "tibercad/solver/SolverException.h"
 
 #include <stdexcept>
 #include <string>

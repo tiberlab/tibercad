@@ -4,7 +4,7 @@
 #define _TIBERNONLINBR_H_
 
 
-#include "TiberLineSearch.h"
+#include "tibercad/solver/TiberLineSearch.h"
 
 
 class TiberLinearSolver;

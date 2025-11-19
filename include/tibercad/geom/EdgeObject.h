@@ -1,0 +1,54 @@
+// $Id$
+
+#ifndef _EDGEOBJECT_H_
+#define _EDGEOBJECT_H_
+
+
+#include "tibercad/physics/PhysicalObject.h"
+
+class Material;
+
+
+//! Description of an edge, i.e. (n-2)-D object.
+class EdgeObject : public PhysicalObject
+{
+
+  public:
+
+    //! Destructor
+    /*!
+     * Deletes all \c PhysicalProperties objects
+     */
+    ~EdgeObject(void) {};
+
+
+    //! Create an edge object
+    /*!
+     * \param options options for this boundary
+     */
+    static EdgeObject* create(const ModelOptions& options) TBDLLOCAL;
+
+
+  protected:
+
+    //! Construct an edge object
+    EdgeObject(const ModelOptions& options) : PhysicalObject(EDGE, options) {};
+
+
+    // \copydoc PhysicalObject::do_init()
+    //void do_init(void);
+
+
+  private:
+
+};
+
+
+
+//--------------------------------------------------------------
+// Inline member functions
+//--------------------------------------------------------------
+
+
+
+#endif /* _EDGEOBJECT_H_ */

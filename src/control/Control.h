@@ -3,9 +3,9 @@
 #ifndef _CONTROL_H_
 #define _CONTROL_H_
 
-#include "TypeDefs.h"
-#include "IDSet.h"
-#include "tiber_dll.h"
+#include "tibercad/base/TypeDefs.h"
+#include "tibercad/base/IDSet.h"
+#include "tibercad/base/tiber_dll.h"
 
 #include <map>
 #include <list>

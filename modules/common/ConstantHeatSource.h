@@ -3,12 +3,12 @@
 #ifndef _CONSTANTHEATSOURCE_H_
 #define _CONSTANTHEATSOURCE_H_
 
-#include "HeatSourceModel.h"
+#include "tibercad/model_base/HeatSourceModel.h"
 
 #include "point.h"
 #include "tensor_value.h"
 #include "vector_value.h"
-#include "tiber_dll.h"
+#include "tibercad/base/tiber_dll.h"
 
 class Elem;
 

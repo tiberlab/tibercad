@@ -4,7 +4,7 @@
 #define _BAND2BAND_H_
 
 #include "RecombinationModelInterface.h"
-#include "TypeDefs.h"
+#include "tibercad/base/TypeDefs.h"
 
 
 //! Implementation of band-to-band tunneling

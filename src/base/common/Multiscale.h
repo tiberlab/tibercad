@@ -4,8 +4,8 @@
 #define _MULTISCALE_H_
 
 
-#include "ModelOptions.h"
-#include "TypeDefs.h"
+#include "tibercad/base/ModelOptions.h"
+#include "tibercad/base/TypeDefs.h"
 
 #include <set>
 

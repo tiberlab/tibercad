@@ -1,7 +1,7 @@
 #ifndef _USERKEATING_H_
 #define _USERKEATING_H_
 
-#include "tiber_dll.h"
+#include "tibercad/base/tiber_dll.h"
 #include "Keating.h"
 
 //! User defined Keating model parameters

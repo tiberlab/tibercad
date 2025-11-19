@@ -2,7 +2,7 @@
 #ifndef _ELEMENTARYCELL_H_
 #define _ELEMENTARYCELL_H_
 
-#include "PhysicalModel.h"
+#include "tibercad/physics/PhysicalModel.h"
 
 #include <ostream>
 

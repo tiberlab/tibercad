@@ -1,9 +1,9 @@
 // $Id$
 
-#include "SBuserHamiltonian.h"
-#include "Database.h"
-#include "Constants.h"
-#include "TensorOperators.h"
+#include "tibercad/physics/semiconductormodels/SBuserHamiltonian.h"
+#include "tibercad/io/Database.h"
+#include "tibercad/physics/Constants.h"
+#include "tibercad/math/TensorOperators.h"
 
 
 using namespace std;

@@ -3,7 +3,7 @@
 #ifndef _DLLOADER_H_
 #define _DLLOADER_H_
 
-#include "tiber_dll.h"
+#include "tibercad/base/tiber_dll.h"
 
 #include <list>
 #include <string>

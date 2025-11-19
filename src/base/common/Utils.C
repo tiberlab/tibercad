@@ -7,12 +7,12 @@
 #include "boost/algorithm/string/trim.hpp"
 #include "boost/filesystem/operations.hpp"
 
-#include "Utils.h"
-#include "Tensor1.h"
-#include "Tensor2.h"
-#include "TensorOperators.h"
-#include "Messages.h"
-#include "RuntimeException.h"
+#include "tibercad/utils/Utils.h"
+#include "tibercad/math/Tensor1.h"
+#include "tibercad/math/Tensor2.h"
+#include "tibercad/math/TensorOperators.h"
+#include "tibercad/io/Messages.h"
+#include "tibercad/base/RuntimeException.h"
 
 #include "libmesh/type_vector.h"
 #include "libmesh/tensor_value.h"

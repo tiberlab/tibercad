@@ -1,7 +1,7 @@
 // $Id$
 
 #include "ElasticityBoundaryModel.h"
-#include "MaterialBoundary.h"
+#include "tibercad/physics/MaterialBoundary.h"
 
 using namespace std;
 

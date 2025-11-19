@@ -1,6 +1,6 @@
 // $Id$
 
-#include "TensorOperators.h"
+#include "tibercad/math/TensorOperators.h"
 
 #include <iomanip>
 

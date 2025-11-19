@@ -4,9 +4,9 @@
 #define _OPTICALGENERATION_H_
 
 #include "RecombinationModelInterface.h"
-#include "TypeDefs.h"
+#include "tibercad/base/TypeDefs.h"
 #include "vector_value.h"
-#include "SimulationInterface.h"
+#include "tibercad/module/SimulationInterface.h"
 #include "point.h"
 
 // forward declarations

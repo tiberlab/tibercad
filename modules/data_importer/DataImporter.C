@@ -3,11 +3,11 @@
 #include "DataImporter.h"
 
 // TiberCAD imports
-#include "TiberLinearSystem.h"
-#include "Messages.h"
-#include "SimulationEnvironment.h"
-#include "TensorGrid.h"
-#include "MeshUtils.h"
+#include "tibercad/solver/TiberLinearSystem.h"
+#include "tibercad/io/Messages.h"
+#include "tibercad/module/SimulationEnvironment.h"
+#include "tibercad/geom/TensorGrid.h"
+#include "tibercad/geom/MeshUtils.h"
 
 #include "libmesh/equation_systems.h"
 #include "libmesh/dof_map.h"
@@ -37,7 +37,7 @@
 #include <boost/algorithm/string.hpp>
 
 // Do this for shared lib
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 using namespace std;
 using namespace libMesh;

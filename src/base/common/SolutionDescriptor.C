@@ -1,7 +1,7 @@
 // $Id$
 
-#include "SolutionDescriptor.h"
-#include "Utils.h"
+#include "tibercad/module/SolutionDescriptor.h"
+#include "tibercad/utils/Utils.h"
 
 #define CASE(key, str) case SolutionDescriptor::key: os << #str; break;
 #define DEFAULT default: os << "unknown"; break;

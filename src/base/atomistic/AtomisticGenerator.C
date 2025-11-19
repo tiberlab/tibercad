@@ -1,16 +1,17 @@
 // $Id$
 
 #include "AtomisticGenerator.h"
-#include "AtomisticStructure.h"
-#include "BondMap.h"
-#include "Device.h"
-#include "Messages.h"
-#include "MeshUtils.h"
-#include "Specie.h"
-#include "Utils.h"
-#include "Atom.h"
-#include "BulkCrystal.h"
-#include "TensorOperators.h"
+#include "tibercad/atomistic/AtomisticStructure.h"
+#include "tibercad/atomistic/BondMap.h"
+#include "tibercad/atomistic/Specie.h"
+#include "tibercad/atomistic/Atom.h"
+#include "tibercad/atomistic/BulkCrystal.h"
+#include "tibercad/base/Device.h"
+#include "tibercad/base/InitFailedException.h"
+#include "tibercad/io/Messages.h"
+#include "tibercad/geom/MeshUtils.h"
+#include "tibercad/utils/Utils.h"
+#include "tibercad/math/TensorOperators.h"
 
 #include <libmesh/point.h>
 #include <libmesh/plane.h>

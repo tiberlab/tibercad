@@ -5,7 +5,7 @@
 
 
 #include "DDInterfaceModel.h"
-#include "ModelOptions.h"
+#include "tibercad/base/ModelOptions.h"
 
 // C++ includes
 #include <string>

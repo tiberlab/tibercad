@@ -3,12 +3,12 @@
 #ifndef _THERMAL_H_
 #define _THERMAL_H_
 
-#include "SimulationInterface.h"
-#include "ElementSide.h"
-#include "SimulationEnvironment.h"
-#include "tiber_dll.h"
+#include "tibercad/module/SimulationInterface.h"
+#include "tibercad/geom/ElementSide.h"
+#include "tibercad/module/SimulationEnvironment.h"
+#include "tibercad/base/tiber_dll.h"
 
-#include "TiberLinearSystem.h"
+#include "tibercad/solver/TiberLinearSystem.h"
 
 /*!
  *

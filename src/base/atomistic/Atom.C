@@ -1,4 +1,4 @@
-#include "Atom.h"
+#include "tibercad/atomistic/Atom.h"
 #include "elem.h"
 
 

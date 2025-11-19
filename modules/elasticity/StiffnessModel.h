@@ -3,10 +3,10 @@
 #ifndef _STIFFNESSMODEL_H_
 #define _STIFFNESSMODEL_H_
 
-#include "PhysicalModel.h"
+#include "tibercad/physics/PhysicalModel.h"
 
-#include "Material.h"
-#include "TensorOperators.h"
+#include "tibercad/physics/Material.h"
+#include "tibercad/math/TensorOperators.h"
 
 #include "libmesh/elem.h"
 #include "libmesh/tensor_value.h"

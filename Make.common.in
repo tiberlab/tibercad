@@ -29,9 +29,7 @@ export TIBERLIBNAME
 
 
 # TIBERCAD includes
-include_dirs := $(shell find $(topdir)/include -type d -a ! -path "*.git*")
-#TIBER_INCLUDES := $(foreach dir,$(include_dirs),-I$(dir)) -I$(topdir)/src -I$(topdir)/third-party/Tensor
-TIBER_INCLUDES := $(foreach dir,$(include_dirs),-I$(dir)) -I$(topdir)/src
+TIBER_INCLUDES := -I$(topdir)/include -I$(topdir)/src
 
 
 

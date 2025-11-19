@@ -3,13 +3,13 @@
 #ifndef _ELASTICITYBOUNDARYMODEL_H_tens_
 #define _ELASTICITYBOUNDARYMODEL_H_tens_
 
-#include "PhysicalModel.h"
+#include "tibercad/physics/PhysicalModel.h"
 
 #include "point.h"
 #include "tensor_value.h"
 #include "vector_value.h"
-#include "tiber_dll.h"
-#include "libMeshDefs.h"
+#include "tibercad/base/tiber_dll.h"
+#include "tibercad/base/libMeshDefs.h"
 
 //class Elem;
 //class Point;

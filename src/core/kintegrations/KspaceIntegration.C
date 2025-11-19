@@ -12,10 +12,10 @@
 #include "libmesh/mesh_refinement.h"
 #include "libmesh/kelly_error_estimator.h"
 
-#include "KspaceIntegration.h"
+#include "tibercad/kintegration/KspaceIntegration.h"
 
-#include "SimulationOptions.h"
-#include "Messages.h"
+#include "tibercad/base/SimulationOptions.h"
+#include "tibercad/io/Messages.h"
 
 using namespace std;
 

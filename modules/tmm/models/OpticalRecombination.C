@@ -1,8 +1,8 @@
 
 #include "OpticalRecombination.h"
-#include "TiberModule.h"
-#include "SimulationInterface.h"
-#include "Messages.h"
+#include "tibercad/module/TiberModule.h"
+#include "tibercad/module/SimulationInterface.h"
+#include "tibercad/io/Messages.h"
 #include <string>
 
 

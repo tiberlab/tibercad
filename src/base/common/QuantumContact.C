@@ -3,13 +3,13 @@
  *  Created on: Nov 3, 2011
  *      Author: fpalomba
  */
-#include "QuantumContact.h"
-#include "Device.h"
-#include "BoundaryRegions.h"
-#include "DataOutput.h"
-#include "Messages.h"
-#include "MeshRegionInfo.h"
-#include "Material.h"
+#include "tibercad/geom/QuantumContact.h"
+#include "tibercad/base/Device.h"
+#include "tibercad/geom/BoundaryRegions.h"
+#include "tibercad/io/DataOutput.h"
+#include "tibercad/io/Messages.h"
+#include "tibercad/geom/MeshRegionInfo.h"
+#include "tibercad/physics/Material.h"
 
 #include "mesh.h"
 #include "fe.h"
@@ -23,7 +23,7 @@
 #include "gmsh_io.h"
 #include "dof_map.h"
 
-#include "libMeshDefs.h"
+#include "tibercad/base/libMeshDefs.h"
 
 #include <fstream>
 #include <set>

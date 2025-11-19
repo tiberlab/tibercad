@@ -1,12 +1,12 @@
 // $Id$
 
 #include "NonlinearPolarization.h"
-#include "SimulationInterface.h"
-#include "Database.h"
-#include "Material.h"
-#include "TensorOperators.h"
+#include "tibercad/module/SimulationInterface.h"
+#include "tibercad/io/Database.h"
+#include "tibercad/physics/Material.h"
+#include "tibercad/math/TensorOperators.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 
 using namespace std;

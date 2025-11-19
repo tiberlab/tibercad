@@ -1,10 +1,10 @@
 // $Id: ReadComsol.C 2176 2010-11-29 11:28:27Z maufder $
 
 #include "ReadComsol.h"
-#include "MeshRegionInfo.h"
-#include "BoundaryRegions.h"
-#include "Utils.h"
-#include "InitFailedException.h"
+#include "tibercad/geom/MeshRegionInfo.h"
+#include "tibercad/geom/BoundaryRegions.h"
+#include "tibercad/utils/Utils.h"
+#include "tibercad/base/InitFailedException.h"
 
 
 // C++ includes

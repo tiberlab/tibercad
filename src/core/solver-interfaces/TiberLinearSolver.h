@@ -4,8 +4,8 @@
 #ifndef _TIBERLINEARSOLVER_H_
 #define _TIBERLINEARSOLVER_H_
 
-#include "libMeshDefs.h"
-#include "TiberModelObject.h"
+#include "tibercad/base/libMeshDefs.h"
+#include "tibercad/module/TiberModelObject.h"
 
 // Libmesh includes
 #include "linear_solver.h"

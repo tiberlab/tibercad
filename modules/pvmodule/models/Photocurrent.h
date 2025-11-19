@@ -1,7 +1,7 @@
 #ifndef _PHOTOCURRENT_H_
 #define _PHOTOCURRENT_H_
 
-#include "PhysicalModel.h"
+#include "tibercad/physics/PhysicalModel.h"
 
 /*!
  * \brief Base class for photocurrent models

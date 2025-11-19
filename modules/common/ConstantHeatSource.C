@@ -1,9 +1,9 @@
 // $Id: ConstantHeatSource.C 2457 2011-03-06 23:52:12Z gromano $
 
 #include "ConstantHeatSource.h"
-#include "Material.h"
+#include "tibercad/physics/Material.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 
 

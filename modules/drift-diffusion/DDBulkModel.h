@@ -7,13 +7,13 @@
 
 #include "DriftDiffusionProperties.h"
 
-//#include "TemperatureInterface.h"
-#include "StrainInterface.h"
-#include "SimulationOptions.h"
+//#include "tibercad/physics/TemperatureInterface.h"
+#include "tibercad/physics/StrainInterface.h"
+#include "tibercad/base/SimulationOptions.h"
 #include "DriftDiffusionDefs.h"
-#include "TiberCad.h"
-#include "Constants.h"
-#include "TypeDefs.h"
+#include "tibercad/base/TiberCad.h"
+#include "tibercad/physics/Constants.h"
+#include "tibercad/base/TypeDefs.h"
 
 
 #include "libmesh/tensor_value.h"

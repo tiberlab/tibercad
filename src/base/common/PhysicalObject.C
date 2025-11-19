@@ -1,8 +1,8 @@
 // $Id$
 
-#include "PhysicalObject.h"
-#include "PhysicalModel.h"
-#include "Database.h"
+#include "tibercad/physics/PhysicalObject.h"
+#include "tibercad/physics/PhysicalModel.h"
+#include "tibercad/io/Database.h"
 
 #include <cassert>
 

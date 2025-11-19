@@ -1,8 +1,8 @@
 // $Id$
 
 #include "DSSCContact.h"
-#include "SimulationOptions.h"
-#include "Constants.h"
+#include "tibercad/base/SimulationOptions.h"
+#include "tibercad/physics/Constants.h"
 
 using namespace std;
 

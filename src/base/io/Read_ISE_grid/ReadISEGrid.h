@@ -1,6 +1,13 @@
 #ifndef _READISEGRID_H_
 #define _READISEGRID_H_
 
+#include "tibercad/base/InitFailedException.h"
+#include "tibercad/base/TypeDefs.h"
+#include "tibercad/base/libMeshDefs.h"
+#include "tibercad/base/tiber_dll.h"
+
+//  LibMesh  include files
+#include "libmesh/mesh_input.h"
 
 #include <iomanip>
 #include <set>
@@ -9,14 +16,6 @@
 
 #include <iostream> //for I/O interaction
 #include <fstream>  //for file streaming
-#include <InitFailedException.h>
-
-#include "TypeDefs.h"
-#include "libMeshDefs.h"
-#include "tiber_dll.h"
-
-//  LibMesh  include files
-#include "mesh_input.h"
 
 class MeshRegionInfo;
 class BoundaryRegions;

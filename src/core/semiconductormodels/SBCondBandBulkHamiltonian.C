@@ -1,9 +1,9 @@
 // $Id$
 
-#include "SBCondBandBulkHamiltonian.h"
-#include "Semiconductor.h"
-#include "Material.h"
-#include "Messages.h"
+#include "tibercad/physics/semiconductormodels/SBCondBandBulkHamiltonian.h"
+#include "tibercad/physics/semiconductormodels/Semiconductor.h"
+#include "tibercad/physics/Material.h"
+#include "tibercad/io/Messages.h"
 
 using namespace std;
 

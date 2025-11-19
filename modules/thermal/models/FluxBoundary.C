@@ -2,7 +2,7 @@
 
 #include "FluxBoundary.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 
 void

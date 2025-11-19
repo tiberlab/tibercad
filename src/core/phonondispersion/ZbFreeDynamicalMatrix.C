@@ -1,7 +1,7 @@
 #include "ZbFreeDynamicalMatrix.h"
 #include "getpot.h"
-#include "Material.h"
-#include "Database.h"
+#include "tibercad/physics/Material.h"
+#include "tibercad/io/Database.h"
 #include "RotatedCrystal.h"  
 //--------------------------------------------------------//
 void  ZbFreeDynamicalMatrix::read_database(void)

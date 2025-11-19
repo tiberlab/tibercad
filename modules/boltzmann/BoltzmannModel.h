@@ -3,15 +3,15 @@
 #ifndef _THERMALMODEL_H_
 #define _THERMALMODEL_H_
 
-#include "PhysicalModel.h"
+#include "tibercad/physics/PhysicalModel.h"
 
 #include "point.h"
 #include "tensor_value.h"
 #include "vector_value.h"
 #include "HeatTransportModel.h"
-#include "tiber_dll.h"
-#include "ThermalConductivityModel.h"
-//#include "libMeshDefs.h"
+#include "tibercad/base/tiber_dll.h"
+#include "tibercad/model_base/ThermalConductivityModel.h"
+//#include "tibercad/base/libMeshDefs.h"
 
 
 

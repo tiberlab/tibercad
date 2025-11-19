@@ -1,7 +1,7 @@
 // $Id$
 
 #include "DynamicalMatrix.h"
-#include "Material.h"
+#include "tibercad/physics/Material.h"
 #include "RotatedCrystal.h" 
 #include "tensor.h"
 

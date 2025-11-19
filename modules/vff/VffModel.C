@@ -1,10 +1,10 @@
 #include "VffModel.h"
 
-#include "SimulationOptions.h"
-#include "Material.h"
-#include "Database.h"
-#include "Messages.h"
-#include "RuntimeException.h"
+#include "tibercad/base/SimulationOptions.h"
+#include "tibercad/physics/Material.h"
+#include "tibercad/io/Database.h"
+#include "tibercad/io/Messages.h"
+#include "tibercad/base/RuntimeException.h"
 
 
 

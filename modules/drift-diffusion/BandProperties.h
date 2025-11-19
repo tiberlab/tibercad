@@ -4,9 +4,9 @@
 #define _BANDPROPERTIES_H_
 
 #include "DriftDiffusionModelInterface.h"
-#include "TemperatureInterface.h"
-#include "DensityOfStates.h"
-#include "Constants.h"
+#include "tibercad/physics/TemperatureInterface.h"
+#include "tibercad/model_base/DensityOfStates.h"
+#include "tibercad/physics/Constants.h"
 
 class ModelOptions;
 //class DensityOfStates;

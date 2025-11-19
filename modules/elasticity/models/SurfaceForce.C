@@ -2,7 +2,7 @@
 
 #include "SurfaceForce.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 
 

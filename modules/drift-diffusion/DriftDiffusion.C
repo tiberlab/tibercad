@@ -2,21 +2,21 @@
 
 // module includes
 #include "DriftDiffusion.h"
-#include "SimulationEnvironment.h"
-#include "Scaling.h"
-#include "Material.h"
-#include "MaterialBoundary.h"
-#include "Boundary.h"
+#include "tibercad/module/SimulationEnvironment.h"
+#include "tibercad/math/Scaling.h"
+#include "tibercad/physics/Material.h"
+#include "tibercad/physics/MaterialBoundary.h"
+#include "tibercad/geom/Boundary.h"
 #include "ElectricalContact.h"
 #include "DriftDiffusionProperties.h"
 #include "DDBulkModel.h"
 #include "DDInterfaceModel.h"
-#include "Constants.h"
+#include "tibercad/physics/Constants.h"
 #include "RecombinationModelInterface.h"
 #include "MobilityModelInterface.h"
-#include "TiberLinearSystem.h"
-#include "SolveFailedException.h"
-#include "FowlerNordheim.h"
+#include "tibercad/solver/TiberLinearSystem.h"
+#include "tibercad/base/SolveFailedException.h"
+#include "tibercad/model_base/FowlerNordheim.h"
 
 
 // libmesh includes
@@ -35,15 +35,15 @@
 #include "dense_subvector.h"
 #include "libmesh_logging.h"
 #include "perf_log.h"
-//#include "libMeshDefs.h"
+//#include "tibercad/base/libMeshDefs.h"
 
-#include "DataOutput.h"
-#include "Messages.h"
+#include "tibercad/io/DataOutput.h"
+#include "tibercad/io/Messages.h"
 
 // C++ includes
 #include <fstream>
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 //
 // Module interface

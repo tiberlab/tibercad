@@ -1,13 +1,13 @@
 // $Id$
 
-#include "ExternalProfile.h"
-#include "ExtProfile1D.h"
-#include "UniformRandomAlloy.h"
-#include "LinearProfile.h"
-#include "ExponentialProfile.h"
-#include "GaussianProfile.h"
-#include "CompositeProfile.h"
-#include "SimulationInterface.h"
+#include "tibercad/physics/ExternalProfile.h"
+#include "tibercad/profiles/ExtProfile1D.h"
+#include "tibercad/profiles/UniformRandomAlloy.h"
+#include "tibercad/profiles/LinearProfile.h"
+#include "tibercad/profiles/ExponentialProfile.h"
+#include "tibercad/profiles/GaussianProfile.h"
+#include "tibercad/profiles/CompositeProfile.h"
+#include "tibercad/module/SimulationInterface.h"
 
 using namespace std;
 

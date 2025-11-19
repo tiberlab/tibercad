@@ -3,8 +3,8 @@
 #ifndef _PVMODULE_H_
 #define _PVMODULE_H_
 
-#include "SimulationInterface.h"
-#include "TiberLinearSystem.h"
+#include "tibercad/module/SimulationInterface.h"
+#include "tibercad/solver/TiberLinearSystem.h"
 
 
 

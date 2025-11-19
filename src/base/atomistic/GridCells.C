@@ -1,6 +1,6 @@
 
-#include "GridCells.h"
-#include "TensorOperators.h"
+#include "tibercad/atomistic/GridCells.h"
+#include "tibercad/math/TensorOperators.h"
 
 #include "libmesh/vector_value.h"
 #include "libmesh/tensor_value.h"

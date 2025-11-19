@@ -1,6 +1,6 @@
 // $Id$
 
-#include "SignalGenerator.h"
+#include "tibercad/math/SignalGenerator.h"
 
 /*!
  * \brief Triangle wave

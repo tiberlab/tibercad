@@ -1,7 +1,7 @@
 #include "UserKeating.h"
-#include "PhysicalObject.h"
+#include "tibercad/physics/PhysicalObject.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 
 UserKeating::UserKeating(const ModelOptions& options):

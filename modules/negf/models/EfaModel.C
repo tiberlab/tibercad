@@ -1,9 +1,9 @@
 // $Id$
 
 #include "EfaModel.h"
-#include "Messages.h"
+#include "tibercad/io/Messages.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 EfaModel::EfaModel(const ModelOptions& options)
    : HamiltonianModel(options)

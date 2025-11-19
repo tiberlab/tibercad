@@ -1,6 +1,6 @@
-#include "CrystalDefs.h"
-#include "Messages.h"
-#include "ModelErrorException.h"
+#include "tibercad/atomistic/CrystalDefs.h"
+#include "tibercad/io/Messages.h"
+#include "tibercad/base/ModelErrorException.h"
 
 #include "boost/assign/list_of.hpp"
 #include "boost/lexical_cast.hpp"

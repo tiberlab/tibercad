@@ -4,8 +4,8 @@
 #define _DRIFTDIFFUSIONMODELINTERFACE_H_
 
 
-#include "TypeDefs.h"
-#include "PhysicalModel.h"
+#include "tibercad/base/TypeDefs.h"
+#include "tibercad/physics/PhysicalModel.h"
 
 #include <cassert>
 

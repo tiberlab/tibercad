@@ -1,7 +1,7 @@
 // $Id$
 
-#include "GaussianProfile.h"
-#include "InitFailedException.h"
+#include "tibercad/profiles/GaussianProfile.h"
+#include "tibercad/base/InitFailedException.h"
 
 #include <limits>
 

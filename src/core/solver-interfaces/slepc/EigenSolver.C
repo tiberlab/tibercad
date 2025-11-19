@@ -4,10 +4,11 @@
 #include <cassert>
 #include <string>
 
-#include "EigenSolver.h"
-#include "Messages.h"
-#include "RuntimeException.h"
+#include "tibercad/solver/slepc/EigenSolver.h"
+#include "tibercad/io/Messages.h"
+#include "tibercad/base/RuntimeException.h"
 #include "core/solver-interfaces/petsc/TiberPetscUtils.h"
+
 #include "slepceps.h"
 
 

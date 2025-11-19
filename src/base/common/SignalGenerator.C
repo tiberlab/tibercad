@@ -1,8 +1,8 @@
 // $Id$
 
-#include "SignalGenerator.h"
-#include "Variable.h"
-#include "InitFailedException.h"
+#include "tibercad/math/SignalGenerator.h"
+#include "tibercad/base/Variable.h"
+#include "tibercad/base/InitFailedException.h"
 
 using namespace std;
 

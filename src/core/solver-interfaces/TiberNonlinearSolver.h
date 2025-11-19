@@ -4,7 +4,7 @@
 #ifndef _TIBERNONLINEARSOLVER_H_
 #define _TIBERNONLINEARSOLVER_H_
 
-#include "libMeshDefs.h"
+#include "tibercad/base/libMeshDefs.h"
 
 // Libmesh includes
 #include "nonlinear_solver.h"

@@ -1,7 +1,7 @@
 #include "DegradationH2O.h"
-#include "SimulationInterface.h"
+#include "tibercad/module/SimulationInterface.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 
 DegradationH2O::DegradationH2O(const ModelOptions& options)

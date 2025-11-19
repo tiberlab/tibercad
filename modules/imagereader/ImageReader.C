@@ -1,9 +1,9 @@
 // $Id$
 
 #include "ImageReader.h"
-#include "TiberLinearSystem.h"
-#include "TensorGrid.h"
-#include "Messages.h"
+#include "tibercad/solver/TiberLinearSystem.h"
+#include "tibercad/geom/TensorGrid.h"
+#include "tibercad/io/Messages.h"
 
 #include "mesh.h"
 #include "dof_map.h"
@@ -15,7 +15,7 @@
 #include "planybmp.h"
 #include "Filter/plhsvconvert.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 using namespace std;
 using namespace libMesh;

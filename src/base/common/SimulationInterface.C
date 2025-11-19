@@ -3,35 +3,35 @@
 
 #include <boost/filesystem/operations.hpp>
 
-#include "SimulationEnvironment.h"
-#include "SimulationInterface.h"
-#include "TiberEqSystem.h"
-#include "TiberLinearSystem.h"
-#include "Material.h"
-#include "Atom.h"
-#include "Boundary.h"
-#include "MaterialBoundary.h"
-#include "PhysicalModel.h"
-#include "EdgeObject.h"
-#include "NodeObject.h"
-#include "Alloy.h"
-#include "Embracing.h"
-#include "RuntimeException.h"
+#include "tibercad/module/SimulationEnvironment.h"
+#include "tibercad/module/SimulationInterface.h"
+#include "tibercad/solver/TiberEqSystem.h"
+#include "tibercad/solver/TiberLinearSystem.h"
+#include "tibercad/physics/Material.h"
+#include "tibercad/atomistic/Atom.h"
+#include "tibercad/geom/Boundary.h"
+#include "tibercad/physics/MaterialBoundary.h"
+#include "tibercad/physics/PhysicalModel.h"
+#include "tibercad/geom/EdgeObject.h"
+#include "tibercad/geom/NodeObject.h"
+#include "tibercad/physics/Alloy.h"
+#include "tibercad/embracing/Embracing.h"
+#include "tibercad/base/RuntimeException.h"
 
-#include "Variable.h"
+#include "tibercad/base/Variable.h"
 
-#include "OpticsTB.h"
+#include "tibercad/physics/tightbinding/OpticsTB.h"
 
 #include "base/simulations/Sweep.h"
 #include "base/simulations/RelaxationMethod.h"
-#include "Utils.h"
-#include "DataOutput.h"
-#include "Messages.h"
-#include "AtomisticStructure.h"
-#include "GridCells.h"
-#include "MeshUtils.h"
+#include "tibercad/utils/Utils.h"
+#include "tibercad/io/DataOutput.h"
+#include "tibercad/io/Messages.h"
+#include "tibercad/atomistic/AtomisticStructure.h"
+#include "tibercad/atomistic/GridCells.h"
+#include "tibercad/geom/MeshUtils.h"
 
-#include "libMeshDefs.h"
+#include "tibercad/base/libMeshDefs.h"
 
 
 // LibMesh includes

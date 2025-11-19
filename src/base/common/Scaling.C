@@ -1,6 +1,6 @@
 // $Id$
 
-#include "Scaling.h"
+#include "tibercad/math/Scaling.h"
 
 Scaling::Scaling(void)
   : _type(NONE),

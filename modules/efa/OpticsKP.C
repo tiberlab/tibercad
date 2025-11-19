@@ -1,16 +1,16 @@
 // $Id$
 
 #include "OpticsKP.h"
-#include "SimulationInterface.h"
-#include "KPbulkHamiltonian.h"
-#include "EigenvalueProblem.h"
+#include "tibercad/module/SimulationInterface.h"
+#include "tibercad/physics/semiconductormodels/KPbulkHamiltonian.h"
+#include "tibercad/physics/schroedinger/EigenvalueProblem.h"
 #include "EnvelopFunctionApprox.h"
-#include "EFAbulkModel.h"
-#include "SimulationEnvironment.h"
-#include "Material.h"
-#include "Messages.h"
-#include "SimulationOptions.h"
-#include "ModelOptions.h"
+#include "tibercad/physics/semiconductormodels/EFAbulkModel.h"
+#include "tibercad/module/SimulationEnvironment.h"
+#include "tibercad/physics/Material.h"
+#include "tibercad/io/Messages.h"
+#include "tibercad/base/SimulationOptions.h"
+#include "tibercad/base/ModelOptions.h"
 
 #include "libmesh/libmesh_common.h"
 #include "libmesh/equation_systems.h"
@@ -25,7 +25,7 @@
 
 #include <cstdlib>
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 using namespace std;
 using namespace Constants;

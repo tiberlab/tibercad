@@ -1,10 +1,10 @@
 // $Id$
 
-#include "PotentialInterface.h"
-#include "SimulationInterface.h"
-#include "SimulationOptions.h"
-#include "Atom.h"
-#include "InitFailedException.h"
+#include "tibercad/physics/PotentialInterface.h"
+#include "tibercad/module/SimulationInterface.h"
+#include "tibercad/base/SimulationOptions.h"
+#include "tibercad/atomistic/Atom.h"
+#include "tibercad/base/InitFailedException.h"
 
 #include "elem.h"
 #include "mesh_base.h"

@@ -1,7 +1,7 @@
 // $Id$
 
-#include "EdgeObject.h"
-#include "Database.h"
+#include "tibercad/geom/EdgeObject.h"
+#include "tibercad/io/Database.h"
 
 #include <cassert>
 

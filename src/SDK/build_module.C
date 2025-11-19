@@ -5,12 +5,12 @@
 #include "boost/filesystem.hpp"
 #include "boost/filesystem/operations.hpp"
 
-#include "TiberCad.h"
-#include "Utils.h"
+#include "tibercad/base/TiberCad.h"
+#include "tibercad/utils/Utils.h"
 #include "base/io/InputParser.h"
-#include "ModelOptions.h"
+#include "tibercad/base/ModelOptions.h"
 
-#include "tiber_config.h"
+#include "tibercad/base/tiber_config.h"
 
 
 #include <iostream>

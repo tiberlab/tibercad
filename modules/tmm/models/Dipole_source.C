@@ -6,7 +6,7 @@
  */
 
 #include "Dipole_source.h"
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 void Dipole_source::do_init(void)
 {

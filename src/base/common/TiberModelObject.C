@@ -1,11 +1,11 @@
 // $Id$
 
-#include "TiberModelObject.h"
-#include "libMeshDefs.h"
-#include "Variable.h"
+#include "tibercad/module/TiberModelObject.h"
+#include "tibercad/base/libMeshDefs.h"
+#include "tibercad/base/Variable.h"
 #include "base/io/DLLoader.h"
-#include "Messages.h"
-#include "ModelErrorException.h"
+#include "tibercad/io/Messages.h"
+#include "tibercad/base/ModelErrorException.h"
 
 #include <vector_value.h>
 #include <point.h>

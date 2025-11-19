@@ -3,7 +3,7 @@
 #ifndef _BOLTZMANNBOUNDARYMODEL_H_
 #define _BOLTZMANNBOUNDARYMODEL_H_
 
-#include "PhysicalModel.h"
+#include "tibercad/physics/PhysicalModel.h"
 #include "vector_value.h"
 
 namespace libMesh

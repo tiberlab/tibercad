@@ -4,7 +4,7 @@
 #define _TIBERNONLINPETSC_H_
 
 
-#include "TiberNonlinearSystem.h"
+#include "tibercad/solver/TiberNonlinearSystem.h"
 
 
 class TiberPetscNonlinearSolver;

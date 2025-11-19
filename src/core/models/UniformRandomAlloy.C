@@ -1,8 +1,8 @@
 // $Id$
 
-#include "UniformRandomAlloy.h"
-#include "InitFailedException.h"
-#include "Messages.h"
+#include "tibercad/profiles/UniformRandomAlloy.h"
+#include "tibercad/base/InitFailedException.h"
+#include "tibercad/io/Messages.h"
 
 #include "elem.h"
 

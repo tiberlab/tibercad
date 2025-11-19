@@ -1,13 +1,13 @@
 // $Id$
 
-#include "MeshReader.h"
+#include "tibercad/io/MeshReader.h"
 #include "Read_ISE_grid/ReadISEGrid.h"
 #include "ReadGMSH.h"
 #include "ReadComsol.h"
-#include "BoundaryRegions.h"
-#include "InitFailedException.h"
-#include "Utils.h"
-#include "Messages.h"
+#include "tibercad/geom/BoundaryRegions.h"
+#include "tibercad/base/InitFailedException.h"
+#include "tibercad/utils/Utils.h"
+#include "tibercad/io/Messages.h"
 
 #include "mesh_base.h"
 #include "mesh_communication.h"

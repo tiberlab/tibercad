@@ -5,16 +5,16 @@
 
 
 
-#include "PhysicalModel.h"
+#include "tibercad/physics/PhysicalModel.h"
 
-#include "TemperatureInterface.h"
+#include "tibercad/physics/TemperatureInterface.h"
 #include "BandProperties.h"
-#include "SimulationOptions.h"
+#include "tibercad/base/SimulationOptions.h"
 #include "DriftDiffusionDefs.h"
-#include "TiberCad.h"
-#include "Constants.h"
-#include "TypeDefs.h"
-#include "Tensor2.h"
+#include "tibercad/base/TiberCad.h"
+#include "tibercad/physics/Constants.h"
+#include "tibercad/base/TypeDefs.h"
+#include "tibercad/math/Tensor2.h"
 
 
 #include "libmesh/tensor_value.h"

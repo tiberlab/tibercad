@@ -2,12 +2,12 @@
 #define _VFFMODEL_H_
 
 
-#include "PhysicalModel.h"
-#include "tiber_dll.h"
-#include "Messages.h"
-#include "Database.h"
+#include "tibercad/physics/PhysicalModel.h"
+#include "tibercad/base/tiber_dll.h"
+#include "tibercad/io/Messages.h"
+#include "tibercad/io/Database.h"
 #include "Keating.h"
-#include "Atom.h"
+#include "tibercad/atomistic/Atom.h"
 
 class Keating;
 

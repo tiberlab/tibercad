@@ -1,7 +1,7 @@
 // $Id$
 
-#include "SpaceTransformation.h"
-#include "CrystalDefs.h"
+#include "tibercad/math/SpaceTransformation.h"
+#include "tibercad/atomistic/CrystalDefs.h"
 
 #include "libmesh/point.h"
 #include "libmesh/tensor_value.h"

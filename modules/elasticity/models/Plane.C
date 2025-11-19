@@ -2,7 +2,7 @@
 
 #include "Plane.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 
 

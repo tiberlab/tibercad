@@ -1,6 +1,6 @@
 // $Id$
 
-#include "PhysicalModel.h"
+#include "tibercad/physics/PhysicalModel.h"
 #include "HamiltonianModel.h"
 #include "tensor_value.h"
 #include "vector_value.h"

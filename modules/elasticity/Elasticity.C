@@ -3,15 +3,15 @@
 #include "Elasticity.h"
 #include "ElasticityModel.h"
 #include "ElasticityBoundaryModel.h"
-#include "TiberLinearSystem.h"
-#include "Messages.h"
-#include "Database.h"
-#include "SimulationOptions.h"
-#include "SimulationEnvironment.h"
-#include "AtomisticStructure.h"
-#include "BondMap.h"
-#include "QuantumContact.h"
-#include "DataOutput.h"
+#include "tibercad/solver/TiberLinearSystem.h"
+#include "tibercad/io/Messages.h"
+#include "tibercad/io/Database.h"
+#include "tibercad/base/SimulationOptions.h"
+#include "tibercad/module/SimulationEnvironment.h"
+#include "tibercad/atomistic/AtomisticStructure.h"
+#include "tibercad/atomistic/BondMap.h"
+#include "tibercad/geom/QuantumContact.h"
+#include "tibercad/io/DataOutput.h"
 
 #include "libmesh/equation_systems.h"
 #include "libmesh/dof_map.h"
@@ -24,7 +24,7 @@
 #include "libmesh/dense_subvector.h"
 #include "libmesh/fe_interface.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 
 using namespace std;

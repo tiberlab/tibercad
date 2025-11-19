@@ -2,13 +2,13 @@
 
 
 #include "OpticalGeneration.h"
-#include "Material.h"
-#include "SimulationInterface.h"
+#include "tibercad/physics/Material.h"
+#include "tibercad/module/SimulationInterface.h"
 #include "DriftDiffusionProperties.h"
-#include "Messages.h"
-#include "ExternalProfile.h"
+#include "tibercad/io/Messages.h"
+#include "tibercad/physics/ExternalProfile.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 #include <string>
 #include "elem.h"

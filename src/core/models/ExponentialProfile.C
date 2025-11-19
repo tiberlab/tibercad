@@ -1,7 +1,7 @@
 // $Id$
 
-#include "ExponentialProfile.h"
-#include "InitFailedException.h"
+#include "tibercad/profiles/ExponentialProfile.h"
+#include "tibercad/base/InitFailedException.h"
 
 #include <limits>
 

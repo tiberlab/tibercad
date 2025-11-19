@@ -1,12 +1,12 @@
 // $Id$
 
-#include "StrainInterface.h"
-#include "SimulationInterface.h"
-#include "SimulationOptions.h"
-#include "InitFailedException.h"
-#include "RuntimeException.h"
-#include "Messages.h"
-#include "Tensor2.h"
+#include "tibercad/physics/StrainInterface.h"
+#include "tibercad/module/SimulationInterface.h"
+#include "tibercad/base/SimulationOptions.h"
+#include "tibercad/base/InitFailedException.h"
+#include "tibercad/base/RuntimeException.h"
+#include "tibercad/io/Messages.h"
+#include "tibercad/math/Tensor2.h"
 
 #include "libmesh/elem.h"
 

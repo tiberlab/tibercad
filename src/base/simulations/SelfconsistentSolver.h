@@ -3,7 +3,7 @@
 #ifndef _SELFCONSISTENTSOLVER_H_
 #define _SELFCONSISTENTSOLVER_H_
 
-#include "SimulationInterface.h"
+#include "tibercad/module/SimulationInterface.h"
 
 
 class Multiscale;

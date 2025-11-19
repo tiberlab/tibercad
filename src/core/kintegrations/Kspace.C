@@ -1,12 +1,12 @@
 // $Id$
 
-#include "Kspace.h"
-#include "SimulationEnvironment.h"
-#include "Constants.h"
-#include "Messages.h"
-#include "Utils.h"
-#include "SpaceTransformation.h"
-#include "TensorOperators.h"
+#include "tibercad/kintegration/Kspace.h"
+#include "tibercad/module/SimulationEnvironment.h"
+#include "tibercad/physics/Constants.h"
+#include "tibercad/io/Messages.h"
+#include "tibercad/utils/Utils.h"
+#include "tibercad/math/SpaceTransformation.h"
+#include "tibercad/math/TensorOperators.h"
 
 #include "libmesh/replicated_mesh.h"
 #include "libmesh/mesh_modification.h"

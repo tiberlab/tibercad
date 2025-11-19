@@ -2,9 +2,9 @@
 
 #include "EPQuenching.h"
 #include "DriftDiffusionProperties.h"
-#include "Messages.h"
+#include "tibercad/io/Messages.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 
 using namespace std;

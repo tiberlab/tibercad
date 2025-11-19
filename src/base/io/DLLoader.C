@@ -1,10 +1,10 @@
 // $Id$
 
-#include "tiber_config.h"
+#include "tibercad/base/tiber_config.h"
 #include "DLLoader.h"
-#include "Messages.h"
-#include "tiber_dll.h"
-#include "RuntimeException.h"
+#include "tibercad/io/Messages.h"
+#include "tibercad/base/tiber_dll.h"
+#include "tibercad/base/RuntimeException.h"
 
 #include <boost/filesystem/operations.hpp>
 

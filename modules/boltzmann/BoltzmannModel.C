@@ -1,10 +1,10 @@
 // $Id: BoltzmannModel.C 2457 2011-03-06 23:52:12Z gromano $
 
 #include "BoltzmannModel.h"
-#include "SimulationOptions.h"
-#include "Material.h"
-#include "Database.h"
-#include "HeatSourceModel.h"
+#include "tibercad/base/SimulationOptions.h"
+#include "tibercad/physics/Material.h"
+#include "tibercad/io/Database.h"
+#include "tibercad/model_base/HeatSourceModel.h"
 
 
 //class Elem;

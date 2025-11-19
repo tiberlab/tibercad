@@ -1,9 +1,9 @@
 // $Id$
 
-#include "WzSemiconductor.h"
-#include "Database.h"
-#include "Material.h"
-#include "Constants.h"
+#include "tibercad/physics/semiconductormodels/WzSemiconductor.h"
+#include "tibercad/io/Database.h"
+#include "tibercad/physics/Material.h"
+#include "tibercad/physics/Constants.h"
 #include "tensor_value.h"
 
 using namespace std;

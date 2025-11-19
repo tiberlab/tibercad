@@ -3,7 +3,7 @@
 #ifndef _THERMALBOUNDARYMODEL_H_
 #define _THERMALBOUNDARYMODEL_H_
 
-#include "PhysicalModel.h"
+#include "tibercad/physics/PhysicalModel.h"
 
 
 namespace libMesh

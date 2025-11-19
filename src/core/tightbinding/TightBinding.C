@@ -2,18 +2,18 @@
 
 
 //modules includes
-#include "TightBinding.h"
-#include "BoundaryProperties.h"
-#include "PhysicalModel.h"
-#include "SimulationOptions.h"
-#include "TightBindingModelInterface.h"
-#include "SimulationOptions.h"
-#include "SimulationEnvironment.h"
-#include "AtomisticStructure.h"
-#include "BondMap.h"
-#include "Constants.h"
-#include "PotentialInterface.h"
-#include "QuantumContact.h"
+#include "tibercad/physics/tightbinding/TightBinding.h"
+#include "tibercad/physics/BoundaryProperties.h"
+#include "tibercad/physics/PhysicalModel.h"
+#include "tibercad/base/SimulationOptions.h"
+#include "tibercad/physics/tightbinding/TightBindingModelInterface.h"
+#include "tibercad/base/SimulationOptions.h"
+#include "tibercad/module/SimulationEnvironment.h"
+#include "tibercad/atomistic/AtomisticStructure.h"
+#include "tibercad/atomistic/BondMap.h"
+#include "tibercad/physics/Constants.h"
+#include "tibercad/physics/PotentialInterface.h"
+#include "tibercad/geom/QuantumContact.h"
 
 
 //libmesh includes

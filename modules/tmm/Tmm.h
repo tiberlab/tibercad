@@ -3,7 +3,7 @@
 #ifndef _TMM_H_
 #define _TMM_H_
 
-#include "SimulationInterface.h"
+#include "tibercad/module/SimulationInterface.h"
 #include "matrix2by2.h"
 using namespace std;
 

@@ -4,8 +4,8 @@
 #define _SCHOTTKYTUNNELING_H_
 
 #include "RecombinationModelInterface.h"
-#include "HashMap.h"
-#include "TypeDefs.h"
+#include "tibercad/base/HashMap.h"
+#include "tibercad/base/TypeDefs.h"
 
 #include "point.h"
 

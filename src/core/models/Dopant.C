@@ -1,8 +1,8 @@
 // $Id$
 
-#include "Dopant.h"
+#include "tibercad/model_base/Dopant.h"
 
-#include "SimulationOptions.h"
+#include "tibercad/base/SimulationOptions.h"
 
 #include <cmath>
 

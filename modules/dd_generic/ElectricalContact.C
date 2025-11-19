@@ -2,8 +2,8 @@
 
 #include "ElectricalContact.h"
 #include "DriftDiffusionProperties.h"
-#include "ParticleDensity.h"
-#include "Initializer.h"
+#include "tibercad/model_base/ParticleDensity.h"
+#include "tibercad/base/Initializer.h"
 
 
 ElectricalContact::ElectricalContact(const ModelOptions& options)

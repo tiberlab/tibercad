@@ -1,17 +1,17 @@
 // $Id$
 
-#include "SimulationEnvironment.h"
+#include "tibercad/module/SimulationEnvironment.h"
 #include "EnvelopFunctionApprox.h"
-#include "ModelOptions.h"
-#include "EFAbulkModel.h"
-#include "Material.h"
-#include "Boundary.h"
-#include "TiberMath.h"
-#include "TiberLinearSystem.h"
-#include "SimulationOptions.h"
-#include "TensorOperators.h"
-#include "EigenSolver.h"
-#include "Utils.h"
+#include "tibercad/base/ModelOptions.h"
+#include "tibercad/physics/semiconductormodels/EFAbulkModel.h"
+#include "tibercad/physics/Material.h"
+#include "tibercad/geom/Boundary.h"
+#include "tibercad/math/TiberMath.h"
+#include "tibercad/solver/TiberLinearSystem.h"
+#include "tibercad/base/SimulationOptions.h"
+#include "tibercad/math/TensorOperators.h"
+#include "tibercad/solver/slepc/EigenSolver.h"
+#include "tibercad/utils/Utils.h"
 
 
 #include "libmesh/edge_edge2.h"
@@ -20,9 +20,9 @@
 #include "libmesh/quadrature_gauss.h"
 
 
-#include "Messages.h"
+#include "tibercad/io/Messages.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 
 extern "C"

@@ -3,7 +3,7 @@
 #ifndef _IMAGEREADER_H_
 #define _IMAGEREADER_H_
 
-#include "SimulationInterface.h"
+#include "tibercad/module/SimulationInterface.h"
 
 class TensorGrid;
 

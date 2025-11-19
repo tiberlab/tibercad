@@ -2,7 +2,7 @@
 #include "Photocurrent.h"
 #include "DegradationModel.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 
 Elementary1Diode::Elementary1Diode(const ModelOptions& options) :

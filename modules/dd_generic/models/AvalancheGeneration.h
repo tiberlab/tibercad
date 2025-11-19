@@ -4,7 +4,7 @@
 #define _AVALANCHEGENERATION_H_
 
 #include "RecombinationModelInterface.h"
-#include "TypeDefs.h"
+#include "tibercad/base/TypeDefs.h"
 
 
 //! Implementation of Impact Ionization model

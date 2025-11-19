@@ -1,13 +1,13 @@
 // $Id$
 
 #include "CarrierProperties.h"
-#include "ParticleDensity.h"
-#include "DensityOfStates.h"
+#include "tibercad/model_base/ParticleDensity.h"
+#include "tibercad/model_base/DensityOfStates.h"
 #include "MobilityModelInterface.h"
 #include "DriftDiffusionProperties.h"
-#include "ModelOptions.h"
-#include "Messages.h"
-#include "Database.h"
+#include "tibercad/base/ModelOptions.h"
+#include "tibercad/io/Messages.h"
+#include "tibercad/io/Database.h"
 
 
 #include <sstream>

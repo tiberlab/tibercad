@@ -1,7 +1,7 @@
 // $Id$
 
-#include "BoundaryRegions.h"
-#include "TiberCad.h"
+#include "tibercad/geom/BoundaryRegions.h"
+#include "tibercad/base/TiberCad.h"
 
 #include "libmesh/elem.h"
 #include "libmesh/mesh_base.h"

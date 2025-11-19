@@ -2,7 +2,7 @@
 #define _PCDEGRADATIONH2O_H_
 
 #include "Photocurrent.h"
-#include "SolutionProvider.h"
+#include "tibercad/module/SolutionProvider.h"
 
 /*!
  * \brief An example for photocurrent dependency on H20 concentration

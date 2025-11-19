@@ -5,9 +5,9 @@
 
 #include "BodyForceModel.h"
 
-#include "TemperatureInterface.h"
+#include "tibercad/physics/TemperatureInterface.h"
 #include "vector_value.h"
-#include "tiber_dll.h"
+#include "tibercad/base/tiber_dll.h"
 
 class Elem;
 

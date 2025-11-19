@@ -1,7 +1,7 @@
 // $Id$
 
 #include "RamanTensor.h"
-#include "Material.h"
+#include "tibercad/physics/Material.h"
 #include "RotatedCrystal.h" 
 #include "tensor.h"
 

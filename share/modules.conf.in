@@ -24,27 +24,7 @@ Compiler
 Library tibercad
 {
   path = @ROOT
-  includes = (
-    base/common,
-    base/atomistic,
-    base/common,
-    base/database,
-    base/io,
-    base/math,
-    base/simulations,
-    pmi,
-    core/models,
-    core/tightbinding,
-    core/semiconductormodels,
-    core/macrostrain,
-    core/embracing,
-    core/solver-interfaces,
-    core/solver-interfaces/petsc,
-    core/solver-interfaces/slepc,
-    core/quantumEFAmodels,
-    core/optics,
-    core/kintegrations,
-    core/eigenvalue,
+  includes = (@ROOT/tibercad-core/include,
     @ROOT/third-party/FADBAD++
   )
   libpath = @ARCH/lib

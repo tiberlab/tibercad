@@ -7,9 +7,9 @@
 //#include "libmesh_common.h"
 //#include "mesh_output.h"
 #include "tecplot_io.h"
-#include "tiber_dll.h"
+#include "tibercad/base/tiber_dll.h"
 
-#include "libMeshDefs.h"
+#include "tibercad/base/libMeshDefs.h"
 
 
 

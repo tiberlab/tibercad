@@ -1,5 +1,5 @@
-#include "Tensor4DSym.h"
-#include "Tensor2.h"
+#include "tibercad/math/Tensor4DSym.h"
+#include "tibercad/math/Tensor2.h"
 
 Tensor4DSym::Tensor4DSym(double x)
 {

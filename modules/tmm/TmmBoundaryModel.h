@@ -3,7 +3,7 @@
 #ifndef _TMMBOUNDARYMODEL_H_
 #define _TMMBOUNDARYMODEL_H_
 
-#include "PhysicalModel.h"
+#include "tibercad/physics/PhysicalModel.h"
 #include "Tmm.h"
 
 

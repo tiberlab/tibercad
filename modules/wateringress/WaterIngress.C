@@ -4,9 +4,9 @@
 #include "WIModel.h"
 #include "WIBoundaryModel.h"
 #include "WIUtils.h"
-#include "SimulationOptions.h"
-#include "TiberTransientSystem.h"
-#include "Messages.h"
+#include "tibercad/base/SimulationOptions.h"
+#include "tibercad/solver/TiberTransientSystem.h"
+#include "tibercad/io/Messages.h"
 
 #include "libmesh/equation_systems.h"
 #include "libmesh/dof_map.h"
@@ -17,7 +17,7 @@
 #include "libmesh/dense_vector.h"
 
 // This is needed in order to create the shared module library
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 
 using namespace std;

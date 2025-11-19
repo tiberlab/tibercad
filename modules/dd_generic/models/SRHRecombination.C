@@ -2,15 +2,15 @@
 
 #include "SRHRecombination.h"
 #include "DriftDiffusionProperties.h"
-#include "DensityOfStates.h"
-#include "ExternalProfile.h"
-#include "TiberMath.h"
+#include "tibercad/model_base/DensityOfStates.h"
+#include "tibercad/physics/ExternalProfile.h"
+#include "tibercad/math/TiberMath.h"
 
-#include "Material.h"
-#include "Database.h"
+#include "tibercad/physics/Material.h"
+#include "tibercad/io/Database.h"
 
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 
 using namespace std;

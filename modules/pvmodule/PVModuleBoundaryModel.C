@@ -1,7 +1,7 @@
 // $Id$
 
 #include "PVModuleBoundaryModel.h"
-#include "Messages.h"
+#include "tibercad/io/Messages.h"
 
 using namespace std;
 

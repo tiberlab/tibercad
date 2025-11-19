@@ -1,10 +1,10 @@
 // $Id$
 
-#include "PolarizationModel.h"
-#include "BulkCrystal.h"
-#include "SimulationInterface.h"
-#include "InitFailedException.h"
-#include "Messages.h"
+#include "tibercad/model_base/PolarizationModel.h"
+#include "tibercad/atomistic/BulkCrystal.h"
+#include "tibercad/module/SimulationInterface.h"
+#include "tibercad/base/InitFailedException.h"
+#include "tibercad/io/Messages.h"
 
 
 using namespace std;

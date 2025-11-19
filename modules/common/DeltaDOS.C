@@ -2,7 +2,7 @@
 
 #include "DeltaDOS.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 using namespace std;
 

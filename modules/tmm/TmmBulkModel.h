@@ -3,7 +3,7 @@
 #ifndef _TMMBULKMODEL_H_
 #define _TMMBULKMODEL_H_
 
-#include "PhysicalModel.h"
+#include "tibercad/physics/PhysicalModel.h"
 #include "TmmDipoleSource.h"
 // #include "Tmm.h"
 

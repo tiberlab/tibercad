@@ -1,10 +1,10 @@
 // $Id$
 
-#include "TiberLinearSystem.h"
+#include "tibercad/solver/TiberLinearSystem.h"
 #include "core/solver-interfaces/TiberLinearSolver.h"
-#include "InitFailedException.h"
+#include "tibercad/base/InitFailedException.h"
 
-#include "TiberCad.h"
+#include "tibercad/base/TiberCad.h"
 
 
 #include "libmesh/equation_systems.h"

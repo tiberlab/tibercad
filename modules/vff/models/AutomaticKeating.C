@@ -1,9 +1,9 @@
 #include "AutomaticKeating.h"
-#include "Database.h"
-#include "Messages.h"
-#include "RuntimeException.h"
+#include "tibercad/io/Database.h"
+#include "tibercad/io/Messages.h"
+#include "tibercad/base/RuntimeException.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 #include "dense_matrix.h"
 #include "dense_vector.h"

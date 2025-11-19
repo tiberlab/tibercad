@@ -7,10 +7,10 @@
 #include "tensor_value.h"
 #include "vector_value.h"
 
-#include "tiber_dll.h"
+#include "tibercad/base/tiber_dll.h"
 
 #include "elem.h"
-#include "ThermalConductivityModel.h"
+#include "tibercad/model_base/ThermalConductivityModel.h"
 
 
 

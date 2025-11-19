@@ -3,12 +3,12 @@
 #ifndef _DRIFTDIFFUSION_H_
 #define _DRIFTDIFFUSION_H_
 
-#include "SimulationInterface.h"
-#include "SimulationOptions.h"
+#include "tibercad/module/SimulationInterface.h"
+#include "tibercad/base/SimulationOptions.h"
 #include "DriftDiffusionDefs.h"
-#include "Device.h"
-#include "SolverException.h"
-#include "TiberNonlinearSystem.h"
+#include "tibercad/base/Device.h"
+#include "tibercad/solver/SolverException.h"
+#include "tibercad/solver/TiberNonlinearSystem.h"
 
 // Libmesh includes
 #include "libmesh_common.h"

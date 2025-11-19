@@ -1,9 +1,9 @@
 #include "ZbRamanTensor.h"
 #include "getpot.h"
-#include "Material.h"
-#include "Database.h"
+#include "tibercad/physics/Material.h"
+#include "tibercad/io/Database.h"
 #include "RotatedCrystal.h"  
-#include "SimulationEnvironment.h" 
+#include "tibercad/module/SimulationEnvironment.h" 
 //--------------------------------------------------------//
 
 ZbRamanTensor::ZbRamanTensor(const ModelOptions& options)

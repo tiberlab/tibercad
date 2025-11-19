@@ -2,8 +2,8 @@
 #ifndef _VFF_H_
 #define _VFF_H_
 
-#include "SimulationInterface.h"
-#include "StrainLattice.h"
+#include "tibercad/module/SimulationInterface.h"
+#include "tibercad/atomistic/StrainLattice.h"
 
 class VffModel;
 

@@ -1,33 +1,33 @@
 // $Id$
 
-#include "tiber_config.h"
-#include "PhysicalModel.h"
-#include "SimulationInterface.h"
-#include "MaterialBoundary.h"
-#include "Material.h"
-#include "Database.h"
-#include "TensorOperators.h"
+#include "tibercad/base/tiber_config.h"
+#include "tibercad/physics/PhysicalModel.h"
+#include "tibercad/module/SimulationInterface.h"
+#include "tibercad/physics/MaterialBoundary.h"
+#include "tibercad/physics/Material.h"
+#include "tibercad/io/Database.h"
+#include "tibercad/math/TensorOperators.h"
 
-#include "Utils.h"
-#include "Trap.h"
-#include "ParticleDensity.h"
-#include "PolarizationModel.h"
+#include "tibercad/utils/Utils.h"
+#include "tibercad/model_base/Trap.h"
+#include "tibercad/model_base/ParticleDensity.h"
+#include "tibercad/model_base/PolarizationModel.h"
 
-#include "ZbSemiconductor.h"
-#include "WzSemiconductor.h"
-#include "ZbDDsemiconductor.h"
-#include "WzDDsemiconductor.h"
+#include "tibercad/physics/semiconductormodels/ZbSemiconductor.h"
+#include "tibercad/physics/semiconductormodels/WzSemiconductor.h"
+#include "tibercad/physics/semiconductormodels/ZbDDsemiconductor.h"
+#include "tibercad/physics/semiconductormodels/WzDDsemiconductor.h"
 
-#include "SBZbCondBandBulkHamiltonian.h"
-#include "SBWzCondBandBulkHamiltonian.h"
-#include "SBuserHamiltonian.h"
-#include "KPbulkHamiltonian.h"
-#include "EFAbulkModel.h"
-
-
+#include "tibercad/physics/semiconductormodels/SBZbCondBandBulkHamiltonian.h"
+#include "tibercad/physics/semiconductormodels/SBWzCondBandBulkHamiltonian.h"
+#include "tibercad/physics/semiconductormodels/SBuserHamiltonian.h"
+#include "tibercad/physics/semiconductormodels/KPbulkHamiltonian.h"
+#include "tibercad/physics/semiconductormodels/EFAbulkModel.h"
 
 
-#include "Messages.h"
+
+
+#include "tibercad/io/Messages.h"
 
 #include <string>
 

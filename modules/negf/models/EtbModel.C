@@ -1,9 +1,9 @@
 // $Id$
 
 #include "EtbModel.h"
-#include "Messages.h"
+#include "tibercad/io/Messages.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 EtbModel::EtbModel(const ModelOptions& options)
    : HamiltonianModel(options)

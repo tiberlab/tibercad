@@ -1,18 +1,18 @@
 // $Id$
 
 #include "PhononDispersion.h"
-#include "BoundaryProperties.h"
-#include "PhysicalModel.h"
+#include "tibercad/physics/BoundaryProperties.h"
+#include "tibercad/physics/PhysicalModel.h"
 #include "mesh.h"
 #include "elem.h"
 #include "PhononModel.h"
  
 
 
-#include "Material.h"
-#include "Boundary.h"
-#include "SimulationOptions.h"
-#include "SimulationEnvironment.h"
+#include "tibercad/physics/Material.h"
+#include "tibercad/geom/Boundary.h"
+#include "tibercad/base/SimulationOptions.h"
+#include "tibercad/module/SimulationEnvironment.h"
 
 
 

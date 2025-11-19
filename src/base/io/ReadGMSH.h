@@ -3,7 +3,7 @@
 #ifndef __READGMSH_H__
 #define __READGMSH_H__
 
-#include "tiber_dll.h"
+#include "tibercad/base/tiber_dll.h"
 
 // libMesh includes
 #include "libmesh_common.h"

@@ -1,11 +1,11 @@
-#include "BulkCrystal.h"
-#include "CrystalDefs.h"
-#include "TensorOperators.h"
-#include "Database.h"
-#include "Alloy.h"
-#include "Messages.h"
-#include "RuntimeException.h"
-#include "InitFailedException.h"
+#include "tibercad/atomistic/BulkCrystal.h"
+#include "tibercad/atomistic/CrystalDefs.h"
+#include "tibercad/math/TensorOperators.h"
+#include "tibercad/io/Database.h"
+#include "tibercad/physics/Alloy.h"
+#include "tibercad/io/Messages.h"
+#include "tibercad/base/RuntimeException.h"
+#include "tibercad/base/InitFailedException.h"
 
 #include <boost/algorithm/string/replace.hpp>
 

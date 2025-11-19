@@ -2,11 +2,11 @@
 #define _OpticsKP_H_
 
 
-#include "Optics.h"
+#include "tibercad/physics/optics/Optics.h"
 
 #include "EnvelopFunctionApprox.h"
-#include "KspaceIntegration.h"
-#include "KspaceIntegrationTemplate.h"
+#include "tibercad/kintegration/KspaceIntegration.h"
+#include "tibercad/kintegration/KspaceIntegrationTemplate.h"
 
 
 

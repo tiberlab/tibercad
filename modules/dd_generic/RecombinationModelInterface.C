@@ -1,7 +1,7 @@
 // $Id$
 #include "DriftDiffusionProperties.h"
 #include "RecombinationModelInterface.h"
-#include "Material.h"
+#include "tibercad/physics/Material.h"
 
 using namespace std;
 

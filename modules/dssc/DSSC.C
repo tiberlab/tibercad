@@ -1,22 +1,22 @@
 // $Id$
 
 // module includes
-#include "SimulationInterface.h"
+#include "tibercad/module/SimulationInterface.h"
 #include "DSSC.h"
-#include "SimulationEnvironment.h"
-#include "Scaling.h"
-#include "Material.h"
-#include "Boundary.h"
-#include "Constants.h"
+#include "tibercad/module/SimulationEnvironment.h"
+#include "tibercad/math/Scaling.h"
+#include "tibercad/physics/Material.h"
+#include "tibercad/geom/Boundary.h"
+#include "tibercad/physics/Constants.h"
 #include "DSSCModel.h"
 #include "DSSCContact.h"
 #include "AugmentSparsityForMassConservation.h"
 
-#include "TiberLinearSystem.h"
-#include "SolveFailedException.h"
-#include "Messages.h"
+#include "tibercad/solver/TiberLinearSystem.h"
+#include "tibercad/base/SolveFailedException.h"
+#include "tibercad/io/Messages.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 
 // libmesh includes
@@ -35,7 +35,7 @@
 #include "libmesh/dense_subvector.h"
 #include "libmesh/libmesh_logging.h"
 
-#include "libMeshDefs.h"
+#include "tibercad/base/libMeshDefs.h"
 
 #include <fstream>
 

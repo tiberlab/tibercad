@@ -1,5 +1,5 @@
 #include "PhononModel.h"
-#include "Material.h"
+#include "tibercad/physics/Material.h"
 #include "RamanTensor.h"
 void PhononModel::fake(void)
 {

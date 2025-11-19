@@ -1,7 +1,7 @@
 // $Id$
 
-#include "NodeObject.h"
-#include "Database.h"
+#include "tibercad/geom/NodeObject.h"
+#include "tibercad/io/Database.h"
 
 #include <cassert>
 

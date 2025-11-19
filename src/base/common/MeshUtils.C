@@ -1,14 +1,14 @@
 // $Id$
 
 
-#include "MeshUtils.h"
-#include "Utils.h"
-#include "Messages.h"
-#include "HashMap.h"
-#include "HashSet.h"
-#include "RuntimeException.h"
-#include "InitFailedException.h"
-#include "TiberCad.h"
+#include "tibercad/geom/MeshUtils.h"
+#include "tibercad/utils/Utils.h"
+#include "tibercad/io/Messages.h"
+#include "tibercad/base/HashMap.h"
+#include "tibercad/base/HashSet.h"
+#include "tibercad/base/RuntimeException.h"
+#include "tibercad/base/InitFailedException.h"
+#include "tibercad/base/TiberCad.h"
 
 #include "libmesh/mesh.h"
 #include "libmesh/replicated_mesh.h"
@@ -23,7 +23,7 @@
 #include <algorithm>
 #include <numeric>
 
-#include "libMeshDefs.h"
+#include "tibercad/base/libMeshDefs.h"
 
 using namespace std;
 using namespace libMesh;

@@ -2,7 +2,7 @@
 
 #include "TiberNonlinearSolver.h"
 #include "petsc/TiberPetscNonlinearSolver.h"
-#include "ModelOptions.h"
+#include "tibercad/base/ModelOptions.h"
 #include "XMonitor.h"
 
 // default values

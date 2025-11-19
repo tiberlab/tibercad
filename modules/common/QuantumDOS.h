@@ -4,8 +4,8 @@
 #define _QUANTUMDOS_H_
 
 
-#include "DensityOfStates.h"
-#include "IDSet.h"
+#include "tibercad/model_base/DensityOfStates.h"
+#include "tibercad/base/IDSet.h"
 
 class SimulationInterface;
 class Embracing;

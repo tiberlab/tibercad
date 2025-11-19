@@ -5,11 +5,11 @@
 
 #include "BodyForceModel.h"
 
-#include "SimulationInterface.h"
+#include "tibercad/module/SimulationInterface.h"
 #include "point.h"
 #include "tensor_value.h"
 #include "vector_value.h"
-#include "tiber_dll.h"
+#include "tibercad/base/tiber_dll.h"
 
 class Elem;
 

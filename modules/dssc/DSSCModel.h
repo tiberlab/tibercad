@@ -9,14 +9,14 @@
 #endif
 
 
-#include "PhysicalModel.h"
+#include "tibercad/physics/PhysicalModel.h"
 
-#include "ParticleDensity.h"
-#include "TemperatureInterface.h"
-#include "SimulationOptions.h"
-#include "TiberCad.h"
-#include "Constants.h"
-#include "TypeDefs.h"
+#include "tibercad/model_base/ParticleDensity.h"
+#include "tibercad/physics/TemperatureInterface.h"
+#include "tibercad/base/SimulationOptions.h"
+#include "tibercad/base/TiberCad.h"
+#include "tibercad/physics/Constants.h"
+#include "tibercad/base/TypeDefs.h"
 #include "DSSC.h"
 
 #include "vector_value.h"

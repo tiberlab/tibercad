@@ -6,7 +6,7 @@
  */
 
 #include "NegfModel.h"
-#include "Material.h"
+#include "tibercad/physics/Material.h"
 
 NegfModel::NegfModel(const ModelOptions& options)
    : PhysicalModel(options)

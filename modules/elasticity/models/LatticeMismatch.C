@@ -1,13 +1,13 @@
 // $Id$
 
 #include "LatticeMismatch.h"
-#include "BulkCrystal.h"
-#include "Material.h"
-#include "SimulationInterface.h"
-#include "SimulationEnvironment.h"
-#include "Messages.h"
+#include "tibercad/atomistic/BulkCrystal.h"
+#include "tibercad/physics/Material.h"
+#include "tibercad/module/SimulationInterface.h"
+#include "tibercad/module/SimulationEnvironment.h"
+#include "tibercad/io/Messages.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 #include "libmesh/tensor_value.h"
 

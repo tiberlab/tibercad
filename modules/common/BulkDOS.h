@@ -4,7 +4,7 @@
 #define _BULKDOS_H_
 
 
-#include "DensityOfStates.h"
+#include "tibercad/model_base/DensityOfStates.h"
 
 
 /*!

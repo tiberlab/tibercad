@@ -2,8 +2,8 @@
 
 #include "TiberPetscNonlinearSolver.h"
 #include "TiberPetscUtils.h"
-#include "TiberCad.h"
-#include "ModelOptions.h"
+#include "tibercad/base/TiberCad.h"
+#include "tibercad/base/ModelOptions.h"
 #include "KSPDivergedError.h"
 #include "SNESDivergedError.h"
 
@@ -13,7 +13,7 @@
 #include "petsc_matrix.h"
 #include "nonlinear_implicit_system.h"
 
-#include "Messages.h"
+#include "tibercad/io/Messages.h"
 
 #include <cstring>
 #include <sstream>

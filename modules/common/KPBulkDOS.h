@@ -4,9 +4,9 @@
 #define _KPBULKDOS_H_
 
 
-#include "DensityOfStates.h"
-#include "SolutionProvider.h"
-#include "HashMap.h"
+#include "tibercad/model_base/DensityOfStates.h"
+#include "tibercad/module/SolutionProvider.h"
+#include "tibercad/base/HashMap.h"
 
 class DDsemiconductor;
 

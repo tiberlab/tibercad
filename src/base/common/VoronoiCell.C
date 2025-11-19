@@ -1,7 +1,7 @@
 // $Id$
 
-#include "VoronoiCell.h"
-#include "InitFailedException.h"
+#include "tibercad/math/VoronoiCell.h"
+#include "tibercad/base/InitFailedException.h"
 
 #include "libmesh/elem.h"
 

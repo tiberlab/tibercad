@@ -1,7 +1,7 @@
 #ifndef _DEGRADATIONMODEL_H_
 #define _DEGRADATIONMODEL_H_
 
-#include "PhysicalModel.h"
+#include "tibercad/physics/PhysicalModel.h"
 
 /*!
  * \brief Base class for degradation models

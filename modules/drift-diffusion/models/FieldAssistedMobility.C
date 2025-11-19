@@ -3,10 +3,10 @@
 #include "FieldAssistedMobility.h"
 #include "DriftDiffusionProperties.h"
 
-#include "Database.h"
-#include "Material.h"
+#include "tibercad/io/Database.h"
+#include "tibercad/physics/Material.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 
 

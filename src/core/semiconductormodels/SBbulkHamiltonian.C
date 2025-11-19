@@ -1,8 +1,8 @@
 // $Id$
 
-#include "SBbulkHamiltonian.h"
-#include "Constants.h"
-#include "Messages.h"
+#include "tibercad/physics/semiconductormodels/SBbulkHamiltonian.h"
+#include "tibercad/physics/Constants.h"
+#include "tibercad/io/Messages.h"
 
 using namespace std;
 using namespace Constants;

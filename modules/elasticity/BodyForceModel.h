@@ -3,8 +3,8 @@
 #ifndef _BODYFORCEMODEL_H_
 #define _BODYFORCEMODEL_H_
 
-#include "PhysicalModel.h"
-//#include "libMeshDefs.h"
+#include "tibercad/physics/PhysicalModel.h"
+//#include "tibercad/base/libMeshDefs.h"
 
 #include "tensor_value.h"
 #include "vector_value.h"

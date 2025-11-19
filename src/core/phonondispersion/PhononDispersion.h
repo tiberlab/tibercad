@@ -3,15 +3,15 @@
 #ifndef _PHONONDISPERSION_H_
 #define _PHONONDISPERSION_H_
 
-#include "BoundaryProperties.h"
-#include "PhysicalModel.h"
+#include "tibercad/physics/BoundaryProperties.h"
+#include "tibercad/physics/PhysicalModel.h"
 #include "mesh.h"
 #include "elem.h"
 
 //------------------------------------------------------------------------------
  
 
-#include "SimulationInterface.h"
+#include "tibercad/module/SimulationInterface.h"
 
 //#include "complex.h"
 

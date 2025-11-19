@@ -4,13 +4,13 @@
 #define _DDINTERFACEMODEL_H_
 
 #include "DriftDiffusionProperties.h"
-#include "SolutionProvider.h"
+#include "tibercad/module/SolutionProvider.h"
 
 #include "point.h"
 
 #include <cassert>
 #include <set>
-#include "libMeshDefs.h"
+#include "tibercad/base/libMeshDefs.h"
 
 class DDBulkModel;
 class MaterialBoundary;

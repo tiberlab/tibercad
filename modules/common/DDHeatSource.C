@@ -1,9 +1,9 @@
 // $Id: DDHeatSource.C 2418 2011-02-28 03:40:59Z gromano $
 
 #include "DDHeatSource.h"
-#include "Material.h"
+#include "tibercad/physics/Material.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 
 

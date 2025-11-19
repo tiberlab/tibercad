@@ -2,14 +2,14 @@
 
 #include "DDInterfaceModel.h"
 #include "DDBulkModel.h"
-#include "Material.h"
-#include "Alloy.h"
-#include "MaterialBoundary.h"
-#include "Trap.h"
-#include "FowlerNordheim.h"
+#include "tibercad/physics/Material.h"
+#include "tibercad/physics/Alloy.h"
+#include "tibercad/physics/MaterialBoundary.h"
+#include "tibercad/model_base/Trap.h"
+#include "tibercad/model_base/FowlerNordheim.h"
 #include "RecombinationModelInterface.h"
-#include "ModelErrorException.h"
-#include "Variable.h"
+#include "tibercad/base/ModelErrorException.h"
+#include "tibercad/base/Variable.h"
 #include "elem.h"
 
 using namespace std;

@@ -2,9 +2,9 @@
 
 #include "DriftDiffusionModelInterface.h"
 #include "DriftDiffusionProperties.h"
-#include "Material.h"
-#include "Constants.h"
-#include "RuntimeException.h"
+#include "tibercad/physics/Material.h"
+#include "tibercad/physics/Constants.h"
+#include "tibercad/base/RuntimeException.h"
 
 const double
 DriftDiffusionModelInterface::T0 = Constants::k_B * 300.0;

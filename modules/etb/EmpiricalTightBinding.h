@@ -1,8 +1,8 @@
 #ifndef _EMPIRICALTIGHTBINDING_H_
 #define _EMPIRICALTIGHTBINIDNG_H_
 
-#include "TightBinding.h"
-#include "StrainInterface.h"
+#include "tibercad/physics/tightbinding/TightBinding.h"
+#include "tibercad/physics/StrainInterface.h"
 
 class ETB : public TightBinding
 {

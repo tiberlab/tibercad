@@ -2,9 +2,9 @@
 // $Id: ThermalSurfaceResistance.C 2362 2011-02-21 01:02:31Z gromano $
 
 #include "ThermalSurfaceResistance.h"
-#include "SimulationOptions.h"
+#include "tibercad/base/SimulationOptions.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 void
 ThermalSurfaceResistance::do_init(void)

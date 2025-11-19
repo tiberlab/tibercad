@@ -3,10 +3,10 @@
 #ifndef _ELASTICITY_H_
 #define _ELASTICITY_H_
 
-#include "SimulationInterface.h"
-#include "TiberLinearSystem.h"
-#include "tiber_dll.h"
-#include "Device.h"
+#include "tibercad/module/SimulationInterface.h"
+#include "tibercad/solver/TiberLinearSystem.h"
+#include "tibercad/base/tiber_dll.h"
+#include "tibercad/base/Device.h"
 
 #include "libmesh/tensor_value.h"
 

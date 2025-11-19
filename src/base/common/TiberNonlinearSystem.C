@@ -1,7 +1,7 @@
 // $Id$
 
 
-#include "TiberNonlinearSystem.h"
+#include "tibercad/solver/TiberNonlinearSystem.h"
 
 // the implemented systems/solvers
 #include "TiberNonlinLS.h"
@@ -10,7 +10,7 @@
 #include "TiberNonlinPetsc.h"
 
 #include "core/solver-interfaces/XMonitor.h"
-#include "InitFailedException.h"
+#include "tibercad/base/InitFailedException.h"
 
 
 #include "equation_systems.h"

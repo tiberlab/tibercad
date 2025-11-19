@@ -9,8 +9,8 @@
 
 #include <string>
 
-#include "TypeDefs.h"
-#include "ModelOptions.h"
+#include "tibercad/base/TypeDefs.h"
+#include "tibercad/base/ModelOptions.h"
 
 
 

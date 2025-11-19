@@ -4,7 +4,7 @@
 #define _EXCITONENERGYTRANSFER_H_
 
 #include "RecombinationModelInterface.h"
-#include "TypeDefs.h"
+#include "tibercad/base/TypeDefs.h"
 
 
 //! Implementation of direct recombination

@@ -3,10 +3,10 @@
 
 #include "TiberPetscLinearSolver.h"
 #include "TiberPetscUtils.h"
-#include "ModelOptions.h"
-#include "Messages.h"
+#include "tibercad/base/ModelOptions.h"
+#include "tibercad/io/Messages.h"
 
-#include "TiberCad.h"
+#include "tibercad/base/TiberCad.h"
 
 #include "libmesh_common.h"
 

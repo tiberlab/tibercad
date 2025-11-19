@@ -2,7 +2,7 @@
 
 #include "BuiltInStrain.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 
 

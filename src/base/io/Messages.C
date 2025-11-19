@@ -3,12 +3,12 @@
 #include <boost/version.hpp>
 #include <boost/filesystem/operations.hpp>
 
-#include "Messages.h"
-#include "TeeStream.h"
-#include "TypeDefs.h"
-#include "InitFailedException.h"
-#include "Utils.h"
-#include "tiber_config.h"
+#include "tibercad/io/Messages.h"
+#include "tibercad/io/TeeStream.h"
+#include "tibercad/base/TypeDefs.h"
+#include "tibercad/base/InitFailedException.h"
+#include "tibercad/utils/Utils.h"
+#include "tibercad/base/tiber_config.h"
 
 #include "libmesh/parallel.h"
 

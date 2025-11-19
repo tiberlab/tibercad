@@ -3,9 +3,9 @@
 #ifndef _PYROPOLARIZATION_H_
 #define _PYROPOLARIZATION_H_
 
-#include "PolarizationModel.h"
-#include "SimulationInterface.h"
-#include "tiber_dll.h"
+#include "tibercad/model_base/PolarizationModel.h"
+#include "tibercad/module/SimulationInterface.h"
+#include "tibercad/base/tiber_dll.h"
 
 // Base class for charge density models
 class  TBDLLOCAL Pyropolarization: public PolarizationModel

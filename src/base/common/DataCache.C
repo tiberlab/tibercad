@@ -1,6 +1,6 @@
 // $Id$
 
-#include "DataCache.h"
+#include "tibercad/module/DataCache.h"
 
 #include "libmesh/point.h"
 

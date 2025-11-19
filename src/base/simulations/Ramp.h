@@ -3,8 +3,8 @@
 #ifndef _RAMP_H_
 #define _RAMP_H_
 
-#include "tiber_dll.h"
-#include "TypeDefs.h"
+#include "tibercad/base/tiber_dll.h"
+#include "tibercad/base/TypeDefs.h"
 
 #include <vector>
 #include <string>

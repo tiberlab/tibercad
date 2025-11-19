@@ -1,7 +1,7 @@
 // $Id$
 
-#include "ExtProfile1D.h"
-#include "InitFailedException.h"
+#include "tibercad/profiles/ExtProfile1D.h"
+#include "tibercad/base/InitFailedException.h"
 
 #include <limits>
 #include <fstream>

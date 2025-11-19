@@ -4,9 +4,9 @@
 #include "PVModuleModel.h"
 #include "PVModuleBoundaryModel.h"
 #include "ElementaryCell.h"
-#include "TiberLinearSystem.h"
-#include "Messages.h"
-#include "Database.h"
+#include "tibercad/solver/TiberLinearSystem.h"
+#include "tibercad/io/Messages.h"
+#include "tibercad/io/Database.h"
 
 #include "libmesh/equation_systems.h"
 #include "libmesh/dof_map.h"
@@ -16,7 +16,7 @@
 #include "libmesh/dense_matrix.h"
 
 // This is needed in order to create the shared module library
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 #include <fstream> 
 #include <sstream>

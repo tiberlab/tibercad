@@ -3,10 +3,10 @@
 
 #include "SemiconductorModel.h"
 
-#include "Material.h"
-#include "Messages.h"
+#include "tibercad/physics/Material.h"
+#include "tibercad/io/Messages.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 
 

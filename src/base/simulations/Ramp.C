@@ -1,9 +1,9 @@
 // $Id$
 
 #include "Ramp.h"
-#include "SimulationInterface.h"
-#include "Variable.h"
-#include "Messages.h"
+#include "tibercad/module/SimulationInterface.h"
+#include "tibercad/base/Variable.h"
+#include "tibercad/io/Messages.h"
 
 #include <limits>
 

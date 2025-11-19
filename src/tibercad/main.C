@@ -2,11 +2,11 @@
 
 #include "boost/algorithm/string/trim.hpp"
 
-#include "TiberCad.h"
-#include "Utils.h"
-#include "Messages.h"
+#include "tibercad/base/TiberCad.h"
+#include "tibercad/utils/Utils.h"
+#include "tibercad/io/Messages.h"
 
-#include "tiber_config.h"
+#include "tibercad/base/tiber_config.h"
 
 #include "auto_ptr.h"
 

@@ -4,7 +4,7 @@
 #define _SISTRAINEDMOBILITY_H_
 
 #include "MobilityModelInterface.h"
-#include "StrainInterface.h"
+#include "tibercad/physics/StrainInterface.h"
 
 
 //! SiStrained mobility model

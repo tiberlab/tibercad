@@ -3,10 +3,10 @@
 #ifndef _CONSTANTPERMITTIVITY_H_
 #define _CONSTANTPERMITTIVITY_H_
 
-#include "PermittivityModel.h"
-#include "SimulationInterface.h"
-#include "tiber_dll.h"
-#include "Database.h"
+#include "tibercad/model_base/PermittivityModel.h"
+#include "tibercad/module/SimulationInterface.h"
+#include "tibercad/base/tiber_dll.h"
+#include "tibercad/io/Database.h"
 
 
 // Base class for charge density models

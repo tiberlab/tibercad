@@ -1,7 +1,7 @@
 // $Id$
 
 #include "TmmBoundaryModel.h"
-#include "MaterialBoundary.h"
+#include "tibercad/physics/MaterialBoundary.h"
 #include "Tmm.h"
 
 using namespace std;

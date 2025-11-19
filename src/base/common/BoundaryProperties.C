@@ -1,8 +1,8 @@
 // $Id$
 
-#include "BoundaryProperties.h"
-#include "Boundary.h"
-#include "Messages.h"
+#include "tibercad/physics/BoundaryProperties.h"
+#include "tibercad/geom/Boundary.h"
+#include "tibercad/io/Messages.h"
 
 using namespace std;
 

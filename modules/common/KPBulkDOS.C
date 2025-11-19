@@ -1,21 +1,21 @@
 // $Id: KPBulkDOS.C 3347 2012-06-15 15:00:26Z maufder $
 
 #include "KPBulkDOS.h"
-#include "Constants.h"
-#include "Material.h"
-#include "TiberMath.h"
-#include "Database.h"
-#include "InitFailedException.h"
-#include "DDsemiconductor.h"
-#include "SimulationOptions.h"
-#include "SimulationInterface.h"
-#include "TensorOperators.h"
-#include "Messages.h"
+#include "tibercad/physics/Constants.h"
+#include "tibercad/physics/Material.h"
+#include "tibercad/math/TiberMath.h"
+#include "tibercad/io/Database.h"
+#include "tibercad/base/InitFailedException.h"
+#include "tibercad/physics/semiconductormodels/DDsemiconductor.h"
+#include "tibercad/base/SimulationOptions.h"
+#include "tibercad/module/SimulationInterface.h"
+#include "tibercad/math/TensorOperators.h"
+#include "tibercad/io/Messages.h"
 
 #include "libmesh/elem.h"
 #include "libmesh/tensor_value.h"
 
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 
 using namespace std;

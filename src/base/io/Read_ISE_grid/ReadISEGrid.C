@@ -1,8 +1,8 @@
 // $Id$
 
 #include "ReadISEGrid.h"
-#include "MeshRegionInfo.h"
-#include "BoundaryRegions.h"
+#include "tibercad/geom/MeshRegionInfo.h"
+#include "tibercad/geom/BoundaryRegions.h"
 #include "ISE_Vertex.h"
 #include "ISE_Edge.h"
 #include "ISE_Face.h"

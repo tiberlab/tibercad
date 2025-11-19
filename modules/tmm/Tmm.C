@@ -1,13 +1,13 @@
 // $Id$
 
 #include "Tmm.h"
-#include "TiberLinearSystem.h"
+#include "tibercad/solver/TiberLinearSystem.h"
 #include "TmmBulkModel.h"
 #include "TmmBoundaryModel.h"
-#include "SimulationEnvironment.h"
-#include "Device.h"
-#include "Messages.h"
-#include "Database.h"
+#include "tibercad/module/SimulationEnvironment.h"
+#include "tibercad/base/Device.h"
+#include "tibercad/io/Messages.h"
+#include "tibercad/io/Database.h"
 #include <filesystem>
 #include <cctype>
 #include <cmath>
@@ -19,7 +19,7 @@
 
 
 // This is needed in order to create the shared module library
-#include "TiberModule.h"
+#include "tibercad/module/TiberModule.h"
 
 
 using namespace libMesh;
