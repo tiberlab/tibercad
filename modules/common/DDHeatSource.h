@@ -3,7 +3,7 @@
 #ifndef _DDHEATSOURCE_H_
 #define _DDHEATSOURCE_H_
 
-#include "tibercad/model_base/HeatSourceModel.h"
+#include "tibercad/physics/misc/HeatSourceModel.h"
 
 #include "point.h"
 #include "tensor_value.h"

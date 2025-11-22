@@ -1,8 +1,8 @@
 // $Id$
 
 #include "BandProperties.h"
-#include "tibercad/model_base/ParticleDensity.h"
-#include "tibercad/model_base/DensityOfStates.h"
+#include "tibercad/physics/misc/ParticleDensity.h"
+#include "tibercad/physics/misc/DensityOfStates.h"
 #include "DriftDiffusionProperties.h"
 #include "tibercad/base/ModelOptions.h"
 #include "tibercad/io/Messages.h"

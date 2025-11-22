@@ -10,7 +10,7 @@
 #include "vector_value.h"
 #include "HeatTransportModel.h"
 #include "tibercad/base/tiber_dll.h"
-#include "tibercad/model_base/ThermalConductivityModel.h"
+#include "tibercad/physics/misc/ThermalConductivityModel.h"
 //#include "tibercad/base/libMeshDefs.h"
 
 

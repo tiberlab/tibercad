@@ -3,7 +3,7 @@
 #ifndef _CONSTANTPERMITTIVITY_H_
 #define _CONSTANTPERMITTIVITY_H_
 
-#include "tibercad/model_base/PermittivityModel.h"
+#include "tibercad/physics/misc/PermittivityModel.h"
 #include "tibercad/module/SimulationInterface.h"
 #include "tibercad/base/tiber_dll.h"
 #include "tibercad/io/Database.h"

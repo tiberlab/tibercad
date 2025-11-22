@@ -19,7 +19,7 @@
 #include "tibercad/solver/TiberLinearSystem.h"
 #include "tibercad/base/SolveFailedException.h"
 #include "tibercad/base/Variable.h"
-#include "tibercad/model_base/FowlerNordheim.h"
+#include "tibercad/physics/misc/FowlerNordheim.h"
 
 
 // libmesh includes

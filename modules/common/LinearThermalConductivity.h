@@ -10,7 +10,7 @@
 #include "tibercad/base/tiber_dll.h"
 
 #include "elem.h"
-#include "tibercad/model_base/ThermalConductivityModel.h"
+#include "tibercad/physics/misc/ThermalConductivityModel.h"
 
 
 

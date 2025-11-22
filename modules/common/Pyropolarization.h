@@ -3,7 +3,7 @@
 #ifndef _PYROPOLARIZATION_H_
 #define _PYROPOLARIZATION_H_
 
-#include "tibercad/model_base/PolarizationModel.h"
+#include "tibercad/physics/misc/PolarizationModel.h"
 #include "tibercad/module/SimulationInterface.h"
 #include "tibercad/base/tiber_dll.h"
 

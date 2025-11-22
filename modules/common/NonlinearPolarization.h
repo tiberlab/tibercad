@@ -3,7 +3,7 @@
 #ifndef _PIEZOPOLARIZATION_H_
 #define _PIEZOPOLARIZATION_H_
 
-#include "tibercad/model_base/PolarizationModel.h"
+#include "tibercad/physics/misc/PolarizationModel.h"
 #include "tibercad/physics/StrainInterface.h"
 #include "tibercad/base/tiber_dll.h"
 

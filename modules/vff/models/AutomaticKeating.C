@@ -8,7 +8,7 @@
 #include "dense_matrix.h"
 #include "dense_vector.h"
 
-#include "fadiff.h"
+#include "FADBAD++/fadiff.h"
 
 using namespace std;
 using namespace fadbad;

@@ -4,7 +4,7 @@
 #define _KPBULKDOS_H_
 
 
-#include "tibercad/model_base/DensityOfStates.h"
+#include "tibercad/physics/misc/DensityOfStates.h"
 #include "tibercad/module/SolutionProvider.h"
 #include "tibercad/base/HashMap.h"
 

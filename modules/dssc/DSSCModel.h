@@ -11,7 +11,7 @@
 
 #include "tibercad/physics/PhysicalModel.h"
 
-#include "tibercad/model_base/ParticleDensity.h"
+#include "tibercad/physics/misc/ParticleDensity.h"
 #include "tibercad/physics/TemperatureInterface.h"
 #include "tibercad/base/SimulationOptions.h"
 #include "tibercad/base/TiberCad.h"

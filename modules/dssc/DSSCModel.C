@@ -5,7 +5,7 @@
 #include "tibercad/io/Database.h"
 #include "tibercad/module/SimulationInterface.h"
 #include "tibercad/io/Messages.h"
-#include "tibercad/model_base/Trap.h"
+#include "tibercad/physics/misc/Trap.h"
 #include "tibercad/physics/Particle.h"
 
 

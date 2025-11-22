@@ -1,14 +1,14 @@
 // $Id$
 
 #include "DriftDiffusionProperties.h"
-#include "tibercad/model_base/ParticleDensity.h"
+#include "tibercad/physics/misc/ParticleDensity.h"
 #include "RecombinationModelInterface.h"
 #include "MobilityModelInterface.h"
 #include "tibercad/module/SimulationInterface.h"
 #include "tibercad/physics/Material.h"
 #include "tibercad/io/Database.h"
-#include "tibercad/model_base/Dopant.h"
-#include "tibercad/model_base/Trap.h"
+#include "tibercad/physics/misc/Dopant.h"
+#include "tibercad/physics/misc/Trap.h"
 #include "tibercad/physics/Particle.h"
 #include "tibercad/physics/Constants.h"
 #include "tibercad/base/InitFailedException.h"

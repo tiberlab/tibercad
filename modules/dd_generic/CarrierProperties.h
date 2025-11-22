@@ -5,7 +5,7 @@
 
 #include "DriftDiffusionModelInterface.h"
 #include "tibercad/physics/TemperatureInterface.h"
-#include "tibercad/model_base/DensityOfStates.h"
+#include "tibercad/physics/misc/DensityOfStates.h"
 #include "tibercad/physics/Constants.h"
 
 #include "libmesh/vector_value.h"

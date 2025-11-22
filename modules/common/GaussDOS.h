@@ -4,7 +4,7 @@
 #define _GAUSSDOS_H_
 
 
-#include "tibercad/model_base/DensityOfStates.h"
+#include "tibercad/physics/misc/DensityOfStates.h"
 
 
 /*!

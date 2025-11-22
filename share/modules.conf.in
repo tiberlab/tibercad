@@ -24,9 +24,7 @@ Compiler
 Library tibercad
 {
   path = @ROOT
-  includes = (@ROOT/include,
-    @ROOT/third-party/FADBAD++
-  )
+  includes = (@ROOT/include)
   libpath = @ARCH/lib
   linker_flags = -ltibercad
 }
