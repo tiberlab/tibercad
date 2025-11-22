@@ -5,9 +5,10 @@
 
 #include "tibercad/base/ModelOptions.h"
 #include "tibercad/base/tiber_dll.h"
-#include "tibercad/physics/ExternalProfile.h"
 
 #include <string>
+
+class ExternalProfile;
 
 namespace libMesh
 {
@@ -169,17 +170,6 @@ Dopant::get_doping_density(void) const
 {
   return _density;
 }
-
-
-
-inline
-void
-Dopant::calculate_doping_density(const libMesh::Elem* elem, const libMesh::Point& p)
-{
-  if (_profile != nullptr)
-    _density = _profile->get_data(elem, p);
-}
-
 
 
 

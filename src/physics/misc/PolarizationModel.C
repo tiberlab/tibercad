@@ -1,6 +1,6 @@
 // $Id$
 
-#include "tibercad/model_base/PolarizationModel.h"
+#include "tibercad/physics/misc/PolarizationModel.h"
 #include "tibercad/atomistic/BulkCrystal.h"
 #include "tibercad/module/SimulationInterface.h"
 #include "tibercad/base/InitFailedException.h"

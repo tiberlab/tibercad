@@ -4,7 +4,7 @@
 #define _UNIFORMRANDOMALLOY_H_
 
 
-#include "tibercad/physics/ExternalProfile.h"
+#include "tibercad/profiles/ExternalProfile.h"
 
 #include <random>
 

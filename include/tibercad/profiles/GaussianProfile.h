@@ -4,7 +4,7 @@
 #define _GAUSSIANPROFILE_H_
 
 
-#include "tibercad/physics/ExternalProfile.h"
+#include "tibercad/profiles/ExternalProfile.h"
 
 #include "point.h"
 #include "elem.h"

@@ -6,10 +6,10 @@
 
 #include "tibercad/physics/PhysicalModel.h"
 #include "tibercad/module/SimulationInterface.h"
-#include "tibercad/physics/ExternalProfile.h"
 
 class DensityOfStates;
 class Particle;
+class ExternalProfile;
 
 /*!
  * \brief Base class for traps in semiconductors

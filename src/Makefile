@@ -4,7 +4,7 @@
 topdir := ../
 
 # we have to compile each module
-subdirs := base control core math io atomistic embracing kintegration solver
+subdirs := atomistic base control embracing geom io kintegration math module physics profiles utils solver SDK 
 
 include $(topdir)/Make.common
 

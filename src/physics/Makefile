@@ -8,8 +8,8 @@ topdir := ../..
 subdirs := semiconductormodels
 subdirs += tightbinding
 subdirs += optics 
-subdirs += eigenvalue
-subdirs += models
+subdirs += schroedinger
+subdirs += misc
 #subdirs += phonondispersion
 
 include $(topdir)/Make.common

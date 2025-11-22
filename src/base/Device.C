@@ -7,7 +7,7 @@
 #include "tibercad/physics/Material.h"
 #include "tibercad/physics/Alloy.h"
 #include "tibercad/physics/MaterialBoundary.h"
-#include "tibercad/physics/ExternalProfile.h"
+#include "tibercad/profiles/ExternalProfile.h"
 #include "tibercad/io/Messages.h"
 #include "tibercad/io/Database.h"
 #include "tibercad/io/MeshReader.h"

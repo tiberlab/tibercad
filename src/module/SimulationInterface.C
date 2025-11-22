@@ -22,8 +22,8 @@
 
 #include "tibercad/physics/tightbinding/OpticsTB.h"
 
-#include "base/simulations/Sweep.h"
-#include "base/simulations/RelaxationMethod.h"
+#include "solver/Sweep.h"
+#include "solver/RelaxationMethod.h"
 #include "tibercad/utils/Utils.h"
 #include "tibercad/io/DataOutput.h"
 #include "tibercad/io/Messages.h"

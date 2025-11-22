@@ -15,14 +15,14 @@ endif
 
 srcfiles := build_module.C
 objects	:= $(patsubst %.C, .$(ARCH)/%$(obj-suffix), $(srcfiles))
-objects += $(topdir)/src/base/common/.$(ARCH)/Utils.$(METHOD).o
-objects += $(topdir)/src/base/common/.$(ARCH)/ModelOptions.$(METHOD).o
+objects += $(topdir)/src/utils/.$(ARCH)/Utils.$(METHOD).o
+objects += $(topdir)/src/base/.$(ARCH)/ModelOptions.$(METHOD).o
 objects += $(topdir)/src/io/.$(ARCH)/InputParser.$(METHOD).o
 objects += $(topdir)/src/io/.$(ARCH)/Messages.$(METHOD).o
 
 cross_srcfiles := $(srcfiles)
-cross_srcfiles += $(topdir)/src/base/common/Utils.C
-cross_srcfiles += $(topdir)/src/base/common/ModelOptions.C
+cross_srcfiles += $(topdir)/src/utils/Utils.C
+cross_srcfiles += $(topdir)/src/base/ModelOptions.C
 cross_srcfiles += $(topdir)/src/io/InputParser.C
 cross_srcfiles += $(topdir)/src/io/Messages.C
 BUILD_CPPFLAGS := -DBUILD=\"$(BUILD)\" $(CPPFLAGS)

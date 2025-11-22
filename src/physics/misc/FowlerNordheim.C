@@ -1,7 +1,7 @@
 // $Id$
 
 
-#include "tibercad/model_base/FowlerNordheim.h"
+#include "tibercad/physics/misc/FowlerNordheim.h"
 
 #include <cmath>
 #include <iostream>

@@ -1,6 +1,6 @@
 // $Id$
 
-#include "tibercad/model_base/ParticleDensity.h"
+#include "tibercad/physics/misc/ParticleDensity.h"
 #include "tibercad/module/SimulationInterface.h"
 #include "tibercad/module/SimulationEnvironment.h"
 #include "tibercad/base/Device.h"

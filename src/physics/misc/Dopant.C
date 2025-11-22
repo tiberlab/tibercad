@@ -1,8 +1,8 @@
 // $Id$
 
-#include "tibercad/model_base/Dopant.h"
-
+#include "tibercad/physics/misc/Dopant.h"
 #include "tibercad/base/SimulationOptions.h"
+#include "tibercad/profiles/ExternalProfile.h"
 
 #include <cmath>
 
@@ -40,6 +40,16 @@ Dopant::create(const std::string& profile, const ModelOptions& options)
 
   return dop;
 }
+
+
+void
+Dopant::calculate_doping_density(const libMesh::Elem* elem, const libMesh::Point& p)
+{
+  if (_profile != nullptr)
+    _density = _profile->get_data(elem, p);
+}
+
+
 
 
 double

@@ -5,7 +5,7 @@
 #include "tibercad/physics/Alloy.h"
 #include "tibercad/io/Database.h"
 #include "tibercad/atomistic/BulkCrystal.h"
-#include "tibercad/model_base/Dopant.h"
+#include "tibercad/physics/misc/Dopant.h"
 #include "tibercad/io/Messages.h"
 #include "tibercad/atomistic/CrystalDefs.h"
 

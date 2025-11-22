@@ -1,8 +1,8 @@
 // $Id$
 
-#include "tibercad/model_base/DensityOfStates.h"
+#include "tibercad/physics/misc/DensityOfStates.h"
 #include "tibercad/base/ModelErrorException.h"
-#include "tibercad/physics/ExternalProfile.h"
+#include "tibercad/profiles/ExternalProfile.h"
 
 #include <string>
 

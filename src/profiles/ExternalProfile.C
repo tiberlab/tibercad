@@ -1,6 +1,6 @@
 // $Id$
 
-#include "tibercad/physics/ExternalProfile.h"
+#include "tibercad/profiles/ExternalProfile.h"
 #include "tibercad/profiles/ExtProfile1D.h"
 #include "tibercad/profiles/UniformRandomAlloy.h"
 #include "tibercad/profiles/LinearProfile.h"

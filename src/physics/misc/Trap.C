@@ -1,11 +1,12 @@
 // $Id$
 
-#include "tibercad/model_base/Trap.h"
+#include "tibercad/physics/misc/Trap.h"
 #include "tibercad/physics/Particle.h"
-#include "tibercad/model_base/DensityOfStates.h"
+#include "tibercad/physics/misc/DensityOfStates.h"
 #include "tibercad/math/TiberMath.h"
+#include "tibercad/profiles/ExternalProfile.h"
 
-#include "fstream"
+#include <fstream>
 
 using namespace std;
 

@@ -9,9 +9,9 @@
 #include "tibercad/math/TensorOperators.h"
 
 #include "tibercad/utils/Utils.h"
-#include "tibercad/model_base/Trap.h"
-#include "tibercad/model_base/ParticleDensity.h"
-#include "tibercad/model_base/PolarizationModel.h"
+#include "tibercad/physics/misc/Trap.h"
+#include "tibercad/physics/misc/ParticleDensity.h"
+#include "tibercad/physics/misc/PolarizationModel.h"
 
 #include "tibercad/physics/semiconductormodels/ZbSemiconductor.h"
 #include "tibercad/physics/semiconductormodels/WzSemiconductor.h"
