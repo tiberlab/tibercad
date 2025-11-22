@@ -272,7 +272,7 @@ AC_CONFIG_FILES([Make.common
                  doc/Doxyfile
                  Makefile
                  doc/Makefile
-                 src/tibercad/Makefile
+                 src/apps/Makefile
                  src/solver/slepc/Makefile
                  modules/etb/libuptight/Makefile
                  modules/negf/libnegf/config.cmake

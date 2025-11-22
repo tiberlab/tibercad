@@ -50,7 +50,7 @@ LDFLAGS += $(BOOST_LIBS)
 
 LDFLAGS += @LDFLAGS@
 
-TIBER_OBJECTS = $(shell find $(topdir)/src -name "*$(obj-suffix)" -a -path "*.${ARCH}/*" -a ! -path "*/src/tibercad/*"  -a ! -path "*/src/solver/slepc/*"  -a ! -path "*/src/SDK/*")
+TIBER_OBJECTS = $(shell find $(topdir)/src -name "*$(obj-suffix)" -a -path "*.${ARCH}/*" -a ! -path "*/src/apps/*"  -a ! -path "*/src/solver/slepc/*" )
 
 
 INCLUDE  := $(shell export METHOD=$(LIBMESHMETHOD) && $(libmesh_config) --include) -I@LIBMESH_PREFIX@/include/libmesh -I@LIBMESH_PREFIX@/include  -I@LIBMESH_PREFIX@/contrib/eigen/eigen  -I@LIBMESH_PREFIX@/contrib/timpi/src/parallel/include  -I@LIBMESH_PREFIX@/contrib/timpi/src/utilities/include  -I@LIBMESH_PREFIX@/contrib/timpi/src/algorithms/include 

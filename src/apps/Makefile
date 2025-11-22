@@ -1,0 +1,103 @@
+# $Id$
+
+topdir := ../..
+
+include $(topdir)/Make.common
+
+tib_src := main.C
+tib_objects := $(patsubst %.C, .$(ARCH)/%$(obj-suffix), $(tib_src))
+
+
+bm_src := build_module.C
+bm_objects := $(patsubst %.C, .$(ARCH)/%$(obj-suffix), $(bm_src))
+bm_objects += $(topdir)/src/utils/.$(ARCH)/Utils.$(METHOD).o
+bm_objects += $(topdir)/src/base/.$(ARCH)/ModelOptions.$(METHOD).o
+bm_objects += $(topdir)/src/io/.$(ARCH)/InputParser.$(METHOD).o
+bm_objects += $(topdir)/src/io/.$(ARCH)/Messages.$(METHOD).o
+
+cross_srcfiles := $(bm_src)
+cross_srcfiles += $(topdir)/src/utils/Utils.C
+cross_srcfiles += $(topdir)/src/base/ModelOptions.C
+cross_srcfiles += $(topdir)/src/io/InputParser.C
+cross_srcfiles += $(topdir)/src/io/Messages.C
+BUILD_CPPFLAGS := -DBUILD=\"$(BUILD)\" $(CPPFLAGS)
+BUILD_CXXFLAGS := $(CXXFLAGS)
+BUILD_LDFLAGS := -Wl,-rpath,'$$ORIGIN/../external/$(BUILD)/lib' -L../../external/$(BUILD)/lib -lboost_regex -lboost_filesystem -lboost_system
+BUILD_CXX := g++
+
+
+
+ADDITIONAL_LIBS = -lreadline 
+
+ifeq ($(target_os), linux)
+ PACKAGEFLAGS := -Wl,-rpath,'$$ORIGIN/../$(relative_libdir)' -Wl,-rpath-link,$(libdir)
+endif
+ifeq ($(target_os), darwin)
+ PACKAGEFLAGS := -Wl,-rpath,@loader_path/.. -Wl,-rpath,@loader_path/../external 
+endif
+
+SUFF := 
+ifeq ($(target_os),win32)
+  SUFF := ".exe"
+  tib_objects += tibercad_res.o
+  WINDRES := $(subst gcc,windres,$(CC))
+  ADDITIONAL_LIBS += -lcomdlg32
+endif
+
+ifeq ($(METHOD),dbg)
+  SUFF := _dbg$(SUFF)
+endif
+
+ifeq ($(target_os),darwin)
+  ASNEEDED := 
+else
+  ASNEEDED := -Wl,--as-needed
+endif
+
+
+
+bm_target :=  $(topdir)/$(ARCH)/bin/build_module$(SUFF)
+
+ifeq ($(cross_compiling), yes)
+bm_target +=  $(topdir)/bin/build_module-$(BUILD)
+endif
+
+
+all: tibercad $(bm_target)
+
+
+tibercad: $(tib_objects) 
+	@echo "Compiling tibercad executable ..."
+	@mkdir -p $(topdir)/$(ARCH)/bin
+	@$(CXX) $(tib_objects) -o $(topdir)/$(ARCH)/bin/tibercad$(SUFF) \
+		-L$(libdir) \
+		-l$(TIBERLIBNAME) $(ADDITIONAL_LIBS) $(LDFLAGS)  $(PACKAGEFLAGS)
+
+
+
+
+tibercad_res.o : $(topdir)/share/tibercad.rc $(topdir)/share/tibercad.ico $(topdir)/include/base/common/tiber_config.h
+	$(WINDRES) -I $(topdir)/share -I $(topdir)/include/base/common \
+	  -O coff -D SVNREVISION=$(SVNREVISION) $< -o $@
+
+
+$(topdir)/$(ARCH)/bin/build_module$(SUFF): $(bm_objects) 
+	@echo "Compiling build_module executable ..."
+	@mkdir -p $(topdir)/$(ARCH)/bin
+	@$(CXX) $(CXXFLAGS) $(bm_objects) $(ASNEEDED) $(LDFLAGS) -o $(topdir)/$(ARCH)/bin/build_module$(SUFF) $(BOOST_LIBS)
+	@mkdir -p $(topdir)/SDK/$(ARCH)/bin
+	@cp $(topdir)/$(ARCH)/bin/build_module$(SUFF) $(topdir)/SDK/$(ARCH)/bin
+	
+	
+#	@$(CXX) $(CXXFLAGS) $(objects) -Wl,--as-needed $(LDFLAGS) -o $(topdir)/$(ARCH)/bin/build_module$(SUFF) $(BOOST_LIBS)
+#	@$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/$(ARCH)/bin/build_module$(SUFF) $(BOOST_LIBS) $(PACKAGEFLAGS) $(LDFLAGS)
+
+$(topdir)/bin/build_module-$(BUILD): $(cross_srcfiles)
+	@echo "compiling build_module for cross compilation ..."
+	@$(BUILD_CXX) $(BUILD_CPPFLAGS) $(BUILD_CXXFLAGS) $(BUILD_LDFLAGS) \
+		-o $@ $(BUILD_LDFLAGS) $(cross_srcfiles)
+
+
+
+
+include $(topdir)/Make.rules
