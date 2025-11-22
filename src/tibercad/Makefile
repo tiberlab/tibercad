@@ -1,0 +1,48 @@
+# $Id$
+
+topdir := ../..
+
+include $(topdir)/Make.common
+
+ADDITIONAL_LIBS = -lreadline 
+
+ifeq ($(target_os), linux)
+ PACKAGEFLAGS := -Wl,-rpath,'$$ORIGIN/../$(relative_libdir)' -Wl,-rpath-link,$(libdir)
+endif
+ifeq ($(target_os), darwin)
+ PACKAGEFLAGS := -Wl,-rpath,@loader_path/.. -Wl,-rpath,@loader_path/../extern 
+endif
+
+SUFF := 
+ifeq ($(target_os),win32)
+  SUFF := ".exe"
+  objects += tibercad_res.o
+  WINDRES := $(subst gcc,windres,$(CC))
+  ADDITIONAL_LIBS += -lcomdlg32
+endif
+
+ifeq ($(METHOD),dbg)
+  SUFF := _dbg$(SUFF)
+endif
+
+
+
+
+all: tibercad
+
+tibercad: $(objects) 
+	@echo "Compiling tibercad executable ..."
+	@mkdir -p $(topdir)/$(ARCH)/bin
+	@$(CXX) $(objects) -o $(topdir)/$(ARCH)/bin/tibercad$(SUFF) \
+		-L$(libdir) \
+		-l$(TIBERLIBNAME) $(ADDITIONAL_LIBS) $(LDFLAGS)  $(PACKAGEFLAGS)
+
+
+
+
+tibercad_res.o : $(topdir)/share/tibercad.rc $(topdir)/share/tibercad.ico $(topdir)/include/base/common/tiber_config.h
+	$(WINDRES) -I $(topdir)/share -I $(topdir)/include/base/common \
+	  -O coff -D SVNREVISION=$(SVNREVISION) $< -o $@
+
+
+include $(topdir)/Make.rules
