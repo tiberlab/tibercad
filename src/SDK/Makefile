@@ -17,14 +17,14 @@ srcfiles := build_module.C
 objects	:= $(patsubst %.C, .$(ARCH)/%$(obj-suffix), $(srcfiles))
 objects += $(topdir)/src/base/common/.$(ARCH)/Utils.$(METHOD).o
 objects += $(topdir)/src/base/common/.$(ARCH)/ModelOptions.$(METHOD).o
-objects += $(topdir)/src/base/io/.$(ARCH)/InputParser.$(METHOD).o
-objects += $(topdir)/src/base/io/.$(ARCH)/Messages.$(METHOD).o
+objects += $(topdir)/src/io/.$(ARCH)/InputParser.$(METHOD).o
+objects += $(topdir)/src/io/.$(ARCH)/Messages.$(METHOD).o
 
 cross_srcfiles := $(srcfiles)
 cross_srcfiles += $(topdir)/src/base/common/Utils.C
 cross_srcfiles += $(topdir)/src/base/common/ModelOptions.C
-cross_srcfiles += $(topdir)/src/base/io/InputParser.C
-cross_srcfiles += $(topdir)/src/base/io/Messages.C
+cross_srcfiles += $(topdir)/src/io/InputParser.C
+cross_srcfiles += $(topdir)/src/io/Messages.C
 BUILD_CPPFLAGS := -DBUILD=\"$(BUILD)\" $(CPPFLAGS)
 BUILD_CXXFLAGS := $(CXXFLAGS)
 BUILD_LDFLAGS := -Wl,-rpath,'$$ORIGIN/../extern/$(BUILD)/lib' -L../../extern/$(BUILD)/lib -lboost_regex -lboost_filesystem -lboost_system

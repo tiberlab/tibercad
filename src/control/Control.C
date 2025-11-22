@@ -5,10 +5,8 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
 
-#include "base/io/InputParser.h"
 #include "Control.h"
 #include "tibercad/io/Database.h"
-#include "base/io/DLLoader.h"
 #include "tibercad/utils/Utils.h"
 #include "tibercad/base/Variable.h"
 #include "tibercad/math/SignalGenerator.h"
@@ -27,6 +25,9 @@
 #include "tibercad/base/SolveFailedException.h"
 #include "tibercad/base/ModelErrorException.h"
 #include "tibercad/base/InitFailedException.h"
+
+#include "io/InputParser.h"
+#include "io/DLLoader.h"
 
 #include <sstream>
 #include <vector>

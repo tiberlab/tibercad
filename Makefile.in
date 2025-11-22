@@ -30,7 +30,7 @@ $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext): src
 	@echo "Linking $(dll_prefix)$(TIBERLIBNAME)$(shared_libext) ..."
 	@$(CXX) -shared $(TIBER_OBJECTS) \
 		-o $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext) \
-		$(MODULE_LIBS) $(DLLNAME) $(TENSORLIB) $(LDFLAGS)
+		$(MODULE_LIBS) $(DLLNAME) $(LDFLAGS)
 		
 #	@$(MAKE) --no-print-directory -C src all
 #	@$(CXX) -shared $(CXXFLAGS) $(TIBER_OBJECTS) \

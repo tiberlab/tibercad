@@ -273,7 +273,7 @@ AC_CONFIG_FILES([Make.common
                  Makefile
                  doc/Makefile
                  src/tibercad/Makefile
-                 src/core/solver-interfaces/slepc/Makefile
+                 src/solver/slepc/Makefile
                  modules/etb/libuptight/Makefile
                  modules/negf/libnegf/config.cmake
                  installer/Makefile

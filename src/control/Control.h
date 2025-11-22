@@ -31,9 +31,6 @@ class TBDLLOCAL Control
 
 
     //! The constructor
-    /*!
-     * \param inputfile the input file to be used
-     */
     Control(void);
 
 

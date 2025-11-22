@@ -20,7 +20,7 @@
 #include "tibercad/geom/QuantumContact.h"
 #include "tibercad/atomistic/AtomisticStructure.h"
 
-#include "base/io/InputParser.h"
+#include "io/InputParser.h"
 
 #include "libmesh/gmsh_io.h"
 #include "libmesh/equation_systems.h"

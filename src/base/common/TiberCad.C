@@ -5,10 +5,11 @@
 #include "control/Control.h"
 #include "tibercad/solver/slepc/EigenSolver.h"
 #include "tibercad/io/Database.h"
-#include "base/io/DLLoader.h"
 #include "tibercad/utils/Utils.h"
 #include "tibercad/io/Messages.h"
 #include "tibercad/base/InitFailedException.h"
+
+#include "io/DLLoader.h"
 
 #include "libmesh/libmesh.h"
 #include "petscsys.h"

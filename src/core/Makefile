@@ -6,12 +6,9 @@ topdir := ../..
 # we have to compile each module
 
 subdirs := semiconductormodels
-subdirs += solver-interfaces
-subdirs += kintegrations
 subdirs += tightbinding
 subdirs += optics 
 subdirs += eigenvalue
-subdirs += embracing
 subdirs += models
 #subdirs += phonondispersion
 

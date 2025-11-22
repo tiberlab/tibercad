@@ -1,13 +1,8 @@
-# $Id$
-#
+# $Id: Makefile 131 2006-11-29 12:04:01Z maufder $
 
 topdir := ../..
-
-# we have to compile each module
-subdirs := common simulations 
 
 include $(topdir)/Make.common
 
 
 include $(topdir)/Make.rules
-

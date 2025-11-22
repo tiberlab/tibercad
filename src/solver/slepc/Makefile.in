@@ -1,0 +1,51 @@
+# $Id$
+
+topdir := @abs_top_builddir@
+include $(topdir)/Make.common
+
+# reset all flags
+CFLAGS	   = 
+CXXLAGS	   = 
+FFLAGS     =
+CPPFLAGS   = 
+FPPFLAGS   =
+
+PETSC_DIR  = @PETSC_DIR@
+PETSC_ARCH = @COMPLEX_PETSC_ARCH@
+
+SLEPC_DIR  = @SLEPC_DIR@
+
+include $(SLEPC_DIR)/lib/slepc/conf/slepc_variables
+CXXFLAGS += $(SLEPC_HAVE_ARPACK) -fPIC  $(SLEPC_INCLUDE) $(PETSC_CC_INCLUDES)  $(TIBER_INCLUDES) -fvisibility=hidden
+
+
+
+
+ifeq ($(METHOD), dbg)
+PETSC_ARCH := $(PETSC_ARCH)-dbg
+CXXFLAGS += -g -DDEBUG -O0
+endif
+
+target := $(libdir)/$(dll_prefix)eigen_solver$(shared_libext)
+
+
+$(libdir)/$(dll_prefix)eigen_solver$(shared_libext):  .$(ARCH)/EigenSolver$(obj-suffix)
+	@echo "Linking $(dll_prefix)eigen_solver$(shared_libext) ..."
+	@mkdir -p $(libdir)
+ifneq ($(target_os),darwin)
+	@$(CXX) -shared -o $@ $<  \
+		-Wl,--exclude-libs,ALL \
+		$(SLEPC_LIB_DIR)/libslepc.a $(PETSC_LIB_DIR)/libpetsc.a
+
+
+#$(PETSC_EXTERNAL_LIB_BASIC)
+else
+	@$(CXX) -shared -o $@ $< -Wl,-install_name,@rpath/lib/$(dll_prefix)eigen_solver$(shared_libext) \
+		-L$(topdir)/extern/$(ARCH)/lib -lslepc_complex -lpetsc_complex
+endif
+
+
+
+
+#include $(SLEPC_DIR)/bmake/slepc_common_variables
+include $(topdir)/Make.rules
