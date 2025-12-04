@@ -1,4 +1,29 @@
-// $Id: DirectRecombination.h 3414 2012-09-10 20:40:28Z maufder $
+/*  
+ * This file is part of the tiberCAD module dd_generic.
+ *
+ * tiberCAD modules are licensed under the GNU General Public License v3.
+ *
+ * tiberCAD is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
+ *
+ * tiberCAD is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with tiberCAD. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/*!
+ * \file DirectRecombination.h
+ * \brief tiberCAD dd_generic module header.
+ *
+ * \note This file is part of module dd_generic.
+ */
+
 
 #ifndef _DIRECTRECOMBINATION_H_
 #define _DIRECTRECOMBINATION_H_

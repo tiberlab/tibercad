@@ -1,3 +1,10 @@
+/*!
+ * \file OptGpl.h
+ * \brief tiberCAD vff module header.
+ *
+ * \note This file is part of module vff.
+ */
+
 #ifndef _OPTGPL_H_
 #define _OPTGPL_H_
 
@@ -32,7 +39,32 @@ extern "C"
       |                                                                |
       |          http://www.math.ufl.edu/~hager/papers/CG              |
       |________________________________________________________________|
- *
+       ________________________________________________________________
+      |This program is free software; you can redistribute it and/or   |
+      |modify it under the terms of the GNU General Public License as  |
+      |published by the Free Software Foundation; either version 2 of  |
+      |the License, or (at your option) any later version.             |
+      |This program is distributed in the hope that it will be useful, |
+      |but WITHOUT ANY WARRANTY; without even the implied warranty of  |
+      |MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the   |
+      |GNU General Public License for more details.                    |
+      |                                                                |
+      |You should have received a copy of the GNU General Public       |
+      |License along with this program; if not, write to the Free      |
+      |Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, |
+      |MA  02110-1301  USA                                             |
+      |________________________________________________________________|
+
+      References:
+      1. W. W. Hager and H. Zhang, A new conjugate gradient method
+         with guaranteed descent and an efficient line search,
+         SIAM Journal on Optimization, 16 (2005), 170-192.
+      2. W. W. Hager and H. Zhang, Algorithm 851: CG_DESCENT,
+         A conjugate gradient method with guaranteed descent,
+         ACM Transactions on Mathematical Software, 32 (2006), 113-137.
+      3. W. W. Hager and H. Zhang, A survey of nonlinear conjugate gradient
+         methods, Pacific Journal of Optimization, 2 (2006), pp. 35-58. 
+
  *  and has been adapted to be compatible with ANSI C++ compiler
  *  IMPORTANT: the library IS NOT thread safe
  */

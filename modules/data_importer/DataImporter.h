@@ -1,4 +1,39 @@
-// $Id$
+/*  
+ * This file is part of the tiberCAD module data_import.
+ *
+ * tiberCAD modules are licensed under the GNU General Public License v3.
+ *
+ * tiberCAD is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
+ *
+ * tiberCAD is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with tiberCAD. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/*!
+ * \file DataImporter.h
+ * \brief tiberCAD data_import module header.
+ *
+ * \note This file is part of module data_import.
+ */
+
+
+
+/*!
+ * \file DataImporter.h
+ * \brief Public tiberCAD API header.
+ *
+ * \note This header is part of the public tiberCAD API.
+ *       API version: 3.5
+ */
+
 
 #ifndef _DATAIMPORTER_H_
 #define _DATAIMPORTER_H_

@@ -1,4 +1,29 @@
-// $Id: DriftDiffusionProperties.C 4238 2016-04-22 19:39:02Z maufder $
+/*  
+ * This file is part of the tiberCAD module dd_generic.
+ *
+ * tiberCAD modules are licensed under the GNU General Public License v3.
+ *
+ * tiberCAD is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
+ *
+ * tiberCAD is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with tiberCAD. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/*!
+ * \file DriftDiffusionProperties.C
+ * \brief tiberCAD dd_generic module implementation.
+ *
+ * \note This file is part of module dd_generic.
+ */
+
 
 #include "DriftDiffusionProperties.h"
 #include "RecombinationModelInterface.h"
