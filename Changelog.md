@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to tibercad should be reported here.
+All notable changes to tiberCAD should be reported here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Modules can have their own changelog file.
 
@@ -9,7 +9,7 @@ Modules can have their own changelog file.
 
 ### Added
 
-- implmenented reordering of states when calculating dispersions based on projection on nearby k-points
+- implemented reordering of states when calculating dispersions based on projection on nearby k-points
 - added new module pvmodule  
 - added new module wateringress  
 

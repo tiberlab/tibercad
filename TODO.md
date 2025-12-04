@@ -1,14 +1,15 @@
-# tibercad TODO list
+# tiberCAD TODO list
 
-This is the TODO list for tibercad software project. Format is following
+This is the TODO list for tiberCAD software project. Format is following
 https://github.com/todomd/todo.md
-Here we put everything to be done in the tibercad core, while each module can have its
+Here we put everything to be done in the tiberCAD core, while each module can have its
 own TODO list. For historical reason, some module-specific TODO's are left in this list, however.
 
 ### Todo
 
+- [ ] reorganize Makefiles and add out-of-src build
 - [ ] reorganize and unpack stuff in Utils.h
-- [ ] eliminate tibercad.in in bin, transfer to TiberCAD.sh.in and link  
+- [ ] eliminate tiberCAD.in in bin, transfer to TiberCAD.sh.in and link  
 - [ ] eliminate interlayer for libMesh system and solver classes (and solver re-implementations)
 - [ ] add more useful common API for projecting quantum states on bases/orbitals
 - [ ] change input parser so that it reads first into a string (with all includes) and then parses 
