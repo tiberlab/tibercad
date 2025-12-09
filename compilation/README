@@ -7,6 +7,8 @@ To build TiberCAD from scratch:
 
 The default behavior is to download PETSc, SLEPc, libmesh, maybe openmpi, to extern/, compile everything and install into SDK/ directory inside the tibercad top directory.
 
-The first step is needed when cross-compiling win32 version on linux, and
-maybe on darwin to get a gcc with all needed features.
-For win32, use --host=i686-w64-mingw32 (x86_64 currently does not work), and to make the installer you need wine with Inno Setup Compiler installed.
+!!!Currently unsupported!!!
+!! The first step is needed when cross-compiling win32 version on linux, and
+!! maybe on darwin to get a gcc with all needed features.
+!! For win32, use --host=i686-w64-mingw32 (x86_64 currently does not work), and to make the installer you need wine with Inno Setup Compiler installed.
+!!!Currently unsupported!!!
