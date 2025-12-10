@@ -266,7 +266,6 @@ then
 fi
 
 
-AC_CONFIG_FILES([stamp-h], [echo timestamp > stamp-h])
 AC_CONFIG_FILES([Make.common
                  Make.defs
                  doc/Doxyfile

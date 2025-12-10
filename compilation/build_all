@@ -33,14 +33,31 @@ then
   echo "MPI not yet present, I will now compile MPI"
   echo "Re-run build_all after this has finished"
   #./build_mpich
-  ./build_mpi
+#  ./build_mpi
 
   echo "Finished installing MPI. Now re-run build_all."
 else
+  if test ! -e "${SDKDIR}/x86_64-linux/lib/libpetsc_real.so"
+  then
+    echo "Build PETSc"
 #  ./build_petsc
+  fi
+  if test ! -e "${SDKDIR}/x86_64-linux/lib/libslepc_complex.so"
+  then
+    echo "Build SLEPc"
 #  ./build_slepc
+  fi
+  if test ! -e "${SDKDIR}/x86_64-linux/lib/libboost_system-mt-x64.so"
+  then
+    echo "Build BOOST"
 #  ./build_boost
-  ./build_libmesh
+  fi
+  if test ! -e "${SDKDIR}/x86_64-linux/lib/libmesh_devel.so"
+  then
+    echo "Build BOOST"
+#  ./build_libmesh
+  fi
+
   ./build_tibercad
 fi
 

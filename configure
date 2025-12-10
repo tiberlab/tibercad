@@ -7480,8 +7480,6 @@ printf "%s\n" "$as_me: WARNING: " >&2;}
 fi
 
 
-ac_config_files="$ac_config_files stamp-h"
-
 ac_config_files="$ac_config_files Make.common Make.defs doc/Doxyfile Makefile doc/Makefile src/apps/Makefile src/solver/slepc/Makefile modules/etb/libuptight/Makefile modules/negf/libnegf/config.cmake installer/Makefile installer/windows/tibercad.bim installer/linux/deb/control installer/linux/tar/install share/modules.conf share/Doxyfile_SDK"
 
 ac_config_files="$ac_config_files installer/prepare_files.sh"
@@ -8176,7 +8174,6 @@ for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
     "include/tibercad/base/tiber_config.h") CONFIG_HEADERS="$CONFIG_HEADERS include/tibercad/base/tiber_config.h" ;;
-    "stamp-h") CONFIG_FILES="$CONFIG_FILES stamp-h" ;;
     "Make.common") CONFIG_FILES="$CONFIG_FILES Make.common" ;;
     "Make.defs") CONFIG_FILES="$CONFIG_FILES Make.defs" ;;
     "doc/Doxyfile") CONFIG_FILES="$CONFIG_FILES doc/Doxyfile" ;;
@@ -8742,7 +8739,6 @@ printf "%s\n" "$as_me: $ac_file is unchanged" >&6;}
 
 
   case $ac_file$ac_mode in
-    "stamp-h":F) echo timestamp > stamp-h ;;
     "installer/prepare_files.sh":F) chmod +x installer/prepare_files.sh ;;
     "bin/tibercad":F) chmod +x bin/tibercad ;;
     "bin/tiberCAD.sh":F) chmod +x bin/tiberCAD.sh ;;

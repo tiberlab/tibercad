@@ -1,7 +1,7 @@
 # site configuration for University of Rome Tor Vergata, OLAB
 
 # these are the defaults
-PETSCVERSION="3.23.4"
+PETSCVERSION="3.23.3"
 SLEPCVERSION="3.23.1"
 LIBMESHVERSION="1.8.1"
 GMSHVERSION="4.10.5"

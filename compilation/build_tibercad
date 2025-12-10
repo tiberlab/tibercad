@@ -8,11 +8,16 @@ fi
 
 . common.sh
 
-TIBEROPTS=${TIBEROPTS:-"--enable-uptight --disable-hetero"}
-
+MKLOPTS=
 if [ "$MKL" = y ]; then
-TIBEROPTS="${TIBEROPTS} --with-mkl=${MKLDIR}"
+  MKLOPTS="--with-mkl=${MKLDIR}"
 fi
+
+CUDAOPTS=
+if [ "${CUDADIR}x" != "x" ]; then
+  CUDAOPTS="--with-cuda=${CUDADIR}"
+fi
+
 
 echo "Compiling TiberCAD ..."
 
@@ -50,15 +55,13 @@ export LDFLAGS="$LDFLAGS -fopenmp"
   --with-mpiexec=${MPIEXEC} \
   --with-thread-library=${threadlib} \
   --with-slepc-prefix=${BUILDDIR}/slepc-${SLEPCVERSION}${SLEPCPATCHLEVEL} \
-  $TIBEROPTS \
+  $MKLOPTS $CUDAOPTS \
+  --enable-uptight \
   --with-libmesh-prefix=${BUILDDIR}/libmesh-${LIBMESHVERSION}-${TCHOST} \
   --with-libmesh-petsc-libdir=${SDKDIR}/${TCHOST}/lib \
   --with-boost-prefix=${SDKDIR} --with-boost-libdir=${TOPDIR}/${TCHOST}/lib \
   --host=$HOST --build=$BUILD
 
-#  --with-cuda=${CUDADIR} \
-#  --with-mkl=${MKLDIR} \
-#  --with-boost-prefix=${SDKDIR} --with-boost-libdir=${SDKDIR}/${TCHOST}/lib \
 
 make -j 4 METHOD=opt
 

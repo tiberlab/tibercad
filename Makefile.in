@@ -32,17 +32,11 @@ $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext): src
 		-o $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext) \
 		$(MODULE_LIBS) $(DLLNAME) $(LDFLAGS)
 		
-#	@$(MAKE) --no-print-directory -C src all
-#	@$(CXX) -shared $(CXXFLAGS) $(TIBER_OBJECTS) \
-		-Wl,-soname,libtibercad.so.0 -o lib/libtibercad.so.0.0 \
-		$(MODULE_LIBS) -lmkl_lapack $(LDFLAGS)
-#	@cd lib && ln -f -s libtibercad.so.0.0 libtibercad.so.0 \
-		&& ln -f -s libtibercad.so.0 libtibercad.so && cd ..
 
 
 .PHONY: modules
 
-modules: $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext)
+modules: core
 	@mkdir -p SDK/etc
 	@cp share/modules.conf SDK/etc
 	@$(MAKE) --no-print-directory -C modules
@@ -69,11 +63,6 @@ distclean: clean-src clean-doc
 	@$(MAKE) --no-print-directory -C modules $(MAKECMDGOALS)
 	@rm -rf $(ARCH)
 
-
-
-.PHONY: src
-src:
-	@$(MAKE) --no-print-directory -C src all
 
 clean-src:
 	@$(MAKE) --no-print-directory -C src $(MAKECMDGOALS)
@@ -139,17 +128,6 @@ tags:
 $(srcdir)/configure: configure.ac aclocal.m4
 	cd '$(srcdir)' && autoconf
 
-
-# autoheader might not change config.h.in, so touch a stamp file.
-#$(srcdir)/config.h.in: stamp-h.in
-$(srcdir)/stamp-h.in: configure.ac aclocal.m4
-	echo timestamp > '$(srcdir)/stamp-h.in'
-#	cd '$(srcdir)' && autoheader
-
-
-config.h: stamp-h
-stamp-h: config.h.in config.status
-	./config.status
 
 Makefile: Makefile.in Make.common.in config.status
 	./config.status

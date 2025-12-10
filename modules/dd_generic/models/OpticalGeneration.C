@@ -38,7 +38,7 @@
 #include <string>
 #include "elem.h"
 
-#include "tibercad/physics/ExternalProfile.h"
+#include "tibercad/profiles/ExternalProfile.h"
 
 
 using namespace std;

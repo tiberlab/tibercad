@@ -31,7 +31,7 @@
 #include "tibercad/module/SimulationInterface.h"
 #include "DriftDiffusionProperties.h"
 #include "tibercad/io/Messages.h"
-#include "tibercad/physics/ExternalProfile.h"
+#include "tibercad/profiles/ExternalProfile.h"
 
 #include "tibercad/module/TiberModule.h"
 

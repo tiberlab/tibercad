@@ -28,7 +28,7 @@
 #include "SRHRecombination.h"
 #include "DriftDiffusionProperties.h"
 #include "tibercad/physics/misc/DensityOfStates.h"
-#include "tibercad/physics/ExternalProfile.h"
+#include "tibercad/profiles/ExternalProfile.h"
 #include "tibercad/math/TiberMath.h"
 
 #include "tibercad/physics/Material.h"
