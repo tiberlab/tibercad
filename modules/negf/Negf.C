@@ -37,6 +37,7 @@
 #include "tibercad/physics/PotentialInterface.h"
 #include "tibercad/kintegration/KspaceIntegration.h"
 #include "tibercad/kintegration/Kspace.h"
+#include "tibercad/math/TensorOperators.h"
 #include <mpi.h>
 
 
