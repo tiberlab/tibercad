@@ -19,23 +19,27 @@ ifeq ($(target_os),darwin)
 endif
 
 
-all: core modules
+all: apps modules
 
-. PHONY: core
-core: $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext)
+apps: core
 	@$(MAKE) --no-print-directory -C src/apps all
 
 
-$(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext): src
+core: $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext)
+
+
+$(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext): core_obj
 	@echo "Linking $(dll_prefix)$(TIBERLIBNAME)$(shared_libext) ..."
 	@$(CXX) -shared $(TIBER_OBJECTS) \
 		-o $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext) \
 		$(MODULE_LIBS) $(DLLNAME) $(LDFLAGS)
-		
+
+core_obj:
+	@echo "Compiling tiberCAD core ..."
+	@$(MAKE) --no-print-directory -C src
 
 
 .PHONY: modules
-
 modules: core
 	@mkdir -p SDK/etc
 	@cp share/modules.conf SDK/etc
