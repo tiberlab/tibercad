@@ -1,18 +1,16 @@
-# site configuration for University of Rome Tor Vergata, OLAB
+# site configuration for package building, University of Rome Tor Vergata, OLAB
 
 # these are the defaults
-PETSCVERSION="3.23.3"
+PETSCVERSION="3.23.4"
 SLEPCVERSION="3.23.1"
 LIBMESHVERSION="1.8.4"
 GMSHVERSION="4.10.5"
 BOOSTVERSION="1_88_0"
 
-# for system-wide installation
-BUILDDIR=/usr/pack/tibercad_dev-3.5-ma/build
-SDKDIR=/usr/pack/tibercad_dev-3.5-ma/SDK
-
-MPIEXEC=${SDKDIR}/x86_64-linux/bin/mpiexec
+# NOTE: TOPDIR, SDKDIR and BUILDDIR are defined before sourcing site configurations
 MPIDIR=${SDKDIR}
+MPIEXEC=${SDKDIR}/x86_64-linux/bin/mpiexec
+
 
 # Intel MKL, if available
 MKLDIR=/usr/pack/intel_oneapi-2021-ma/mkl/latest

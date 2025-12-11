@@ -1,10 +1,9 @@
 #!/bin/bash
 
-if test -e site_config.sh
+if test -e variables.sh
 then
-  . site_config.sh
+  . variables.sh
 fi
-
 
 
 
@@ -24,7 +23,7 @@ fi
 export CC CXX FC F77 MPIEXEC
 export FFLAGS FCFLAGS CXXFLAGS CFLAGS
 
-#export LINKONLY=1
+
 
 ./configure
 
@@ -33,29 +32,29 @@ then
   echo "MPI not yet present, I will now compile MPI"
   echo "Re-run build_all after this has finished"
   #./build_mpich
-#  ./build_mpi
+  ./build_mpi
 
   echo "Finished installing MPI. Now re-run build_all."
 else
   if test ! -e "${SDKDIR}/x86_64-linux/lib/libpetsc_real.so"
   then
     echo "Build PETSc"
-#  ./build_petsc
+  ./build_petsc
   fi
   if test ! -e "${SDKDIR}/x86_64-linux/lib/libslepc_complex.so"
   then
     echo "Build SLEPc"
-#  ./build_slepc
+  ./build_slepc
   fi
   if test ! -e "${SDKDIR}/x86_64-linux/lib/libboost_system-mt-x64.so"
   then
     echo "Build BOOST"
-#  ./build_boost
+  ./build_boost
   fi
   if test ! -e "${SDKDIR}/x86_64-linux/lib/libmesh_devel.so"
   then
     echo "Build BOOST"
-#  ./build_libmesh
+  ./build_libmesh
   fi
 
   ./build_tibercad
