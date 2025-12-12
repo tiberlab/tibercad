@@ -42,7 +42,10 @@ fi
 #export F90
 
 export LD_RUN_PATH="\$ORIGIN:\$ORIGIN/../lib:\$ORIGIN/../${TCHOST}/lib64"
-#export FFLAGS="-fallow-argument-mismatch"
+if test "$($FC -v 2>&1 | grep fortran)x" != "x"
+then
+ export FFLAGS="-fallow-argument-mismatch"
+fi
 
 cd mpich-${VERSION}
 

@@ -62,4 +62,4 @@ then
 else
   MPIEXEC=${MPIEXEC:-${MPIDIR}/bin/mpiexec}
 fi
-
+MPIFLAVOR=${MPIFLAVOR:-ompi}

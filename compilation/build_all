@@ -31,8 +31,12 @@ if test "${MAKE_MPI}x" != "x"
 then 
   echo "MPI not yet present, I will now compile MPI"
   echo "Re-run build_all after this has finished"
-  #./build_mpich
-  ./build_mpi
+  if ${MPIFLAVOR} = "ompi"
+  then
+    ./build_mpi
+  else
+    ./build_mpich
+  fi
 
   echo "Finished installing MPI. Now re-run build_all."
 else
