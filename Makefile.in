@@ -66,13 +66,14 @@ distclean: clean-src clean-doc
 	@$(MAKE) --no-print-directory -C src/apps $(MAKECMDGOALS)
 	@$(MAKE) --no-print-directory -C modules $(MAKECMDGOALS)
 	@rm -rf $(ARCH)
+	@rm -rf SDK
 
 
 clean-src:
 	@$(MAKE) --no-print-directory -C src $(MAKECMDGOALS)
 
 clean-doc:
-	@$(MAKE) --no-print-directory -C src $(MAKECMDGOALS)
+	@$(MAKE) --no-print-directory -C doc $(MAKECMDGOALS)
 
 
 .PHONY: doc
@@ -136,17 +137,9 @@ $(srcdir)/configure: configure.ac aclocal.m4
 Makefile: Makefile.in Make.common.in config.status
 	./config.status
 
-config.status: configure 
-	./config.status --recheck
-
-
 aclocal.m4: acinclude.m4
 	aclocal -I /usr/share/aclocal
     
-.PHONY: echo_cuda
-
-echo_cuda:
-	@echo $(have_cuda)
 
 
 include Make.rules

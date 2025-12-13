@@ -1,6 +1,25 @@
+/* include/tibercad/base/tiber_config.h.in.  Generated from configure.ac by autoheader.  */
+
+/* Define to 1 if models should be built as modules */
+#undef BUILD_TIBER_MODULES
+
+/* Define to 1 if DFTB+ is enabled */
+#undef ENABLE_DFTB
+
+/* Define to 1 if HETERO is enabled */
+#undef ENABLE_HETERO
+
+/* Define to 1 if pardiso is enabled */
+#undef ENABLE_PARDISO
+
+/* Define to 1 if UPTIGHT is enabled */
+#undef ENABLE_UPTIGHT
 
 /* define if boost is available. */
 #undef HAVE_BOOST
+
+/* define if Boost::filesystem is available */
+#undef HAVE_BOOST_FILESYSTEM
 
 /* define if Boost::regex is available */
 #undef HAVE_BOOST_REGEX
@@ -8,59 +27,14 @@
 /* Define to 1 if you have the <cassert> header file. */
 #undef HAVE_CASSERT
 
-/* Define to 1 if you have the GSL library. */
-#undef HAVE_GSL
-
-/* Define the TiberCAD install prefix */
-#undef TIBERCAD_INSTALL_PREFIX
-
-/* Define to 1 if models should be built as modules */
-#undef BUILD_TIBER_MODULES
-
-/* Define to 1 if you have the isnan function */
-#undef HAVE_ISNAN
-
-/* Define to 1 if you have the isinf function */
-#undef HAVE_ISINF
-
-/* Define to 1 if pardiso is enabled */
-#undef ENABLE_PARDISO
-
-/* Define to 1 if DFTB+ is enabled */
-#undef ENABLE_DFTB
-
-/* Define to 1 if UPTIGHT is enabled */
-#undef ENABLE_UPTIGHT
-
-/* Define to 1 if HETERO is enabled */
-#undef ENABLE_HETERO
-
 /* Define to 1 if complex SLEPc is available */
 #undef HAVE_COMPLEX_SLEPC
 
-/* Define to 1 if TAO is available */
-#undef HAVE_TAO
+/* Define to 1 if compiler knows about constexpr */
+#undef HAVE_CONSTEXPR
 
-/* Define if you have a readline compatible library */
-#undef HAVE_LIBREADLINE
-
-/* Define to 1 if you have the <readline.h> header file. */
-#undef HAVE_READLINE_H
-
-/* Define to 1 if you have the <readline/readline.h> header file. */
-#undef HAVE_READLINE_READLINE_H
-
-/* Define if your readline library has \`add_history' */
-#undef HAVE_READLINE_HISTORY
-
-/* Define to 1 if you have the <history.h> header file. */
-#undef HAVE_HISTORY_H
-
-/* Define to 1 if license check is enabled */
-#undef LICENSE_CHECK
-
-/* Define to 1 if gcc has the -fvisibility flag is enabled */
-#define GCC_HASVISIBILITY 1
+/* Define to 1 if you have the <dlfcn.h> header file. */
+#undef HAVE_DLFCN_H
 
 /* define if the compiler supports __gnu_cxx::hash_map */
 #undef HAVE_EXT_HASH_MAP
@@ -68,11 +42,83 @@
 /* define if the compiler supports __gnu_cxx::hash_set */
 #undef HAVE_EXT_HASH_SET
 
+/* Define to 1 if you have the <float.h> header file. */
+#undef HAVE_FLOAT_H
+
 /* define if the compiler supports std::hash_map */
 #undef HAVE_HASH_MAP
 
 /* define if the compiler supports std::hash_set */
 #undef HAVE_HASH_SET
+
+/* Define to 1 if you have the <history.h> header file. */
+#undef HAVE_HISTORY_H
+
+/* Define to 1 if you have the <inttypes.h> header file. */
+#undef HAVE_INTTYPES_H
+
+/* Define to 1 if you have the `isinf' function. */
+#undef HAVE_ISINF
+
+/* Define to 1 if you have the `isnan' function. */
+#undef HAVE_ISNAN
+
+/* Define if you have a readline compatible library */
+#undef HAVE_LIBREADLINE
+
+/* define if the compiler implements namespaces */
+#undef HAVE_NAMESPACES
+
+/* Define to 1 if you have the `pow' function. */
+#undef HAVE_POW
+
+/* Define to 1 if you have the `putenv' function. */
+#undef HAVE_PUTENV
+
+/* Define to 1 if you have the <readline.h> header file. */
+#undef HAVE_READLINE_H
+
+/* Define if your readline library has \`add_history' */
+#undef HAVE_READLINE_HISTORY
+
+/* Define to 1 if you have the <readline/history.h> header file. */
+#undef HAVE_READLINE_HISTORY_H
+
+/* Define to 1 if you have the <readline/readline.h> header file. */
+#undef HAVE_READLINE_READLINE_H
+
+/* Define to 1 if you have the `setenv' function. */
+#undef HAVE_SETENV
+
+/* Define to 1 if you have the `sqrt' function. */
+#undef HAVE_SQRT
+
+/* Define to 1 if stdbool.h conforms to C99. */
+#undef HAVE_STDBOOL_H
+
+/* Define to 1 if you have the <stdint.h> header file. */
+#undef HAVE_STDINT_H
+
+/* Define to 1 if you have the <stdio.h> header file. */
+#undef HAVE_STDIO_H
+
+/* Define to 1 if you have the <stdlib.h> header file. */
+#undef HAVE_STDLIB_H
+
+/* Define to 1 if you have the <strings.h> header file. */
+#undef HAVE_STRINGS_H
+
+/* Define to 1 if you have the <string.h> header file. */
+#undef HAVE_STRING_H
+
+/* Define to 1 if you have the <sys/stat.h> header file. */
+#undef HAVE_SYS_STAT_H
+
+/* Define to 1 if you have the <sys/types.h> header file. */
+#undef HAVE_SYS_TYPES_H
+
+/* Define to 1 if tao is available */
+#undef HAVE_TAO
 
 /* define if the compiler supports std::tr1::unordered_map */
 #undef HAVE_TR1_UNORDERED_MAP
@@ -80,17 +126,49 @@
 /* define if the compiler supports std::tr1::unordered_set */
 #undef HAVE_TR1_UNORDERED_SET
 
+/* Define to 1 if you have the <unistd.h> header file. */
+#undef HAVE_UNISTD_H
+
 /* define if the compiler supports std::unordered_map */
 #undef HAVE_UNORDERED_MAP
 
 /* define if the compiler supports std::unordered_set */
 #undef HAVE_UNORDERED_SET
 
-/* define if the setenv function is present */
-#undef HAVE_SETENV
+/* Define to 1 if the system has the type `_Bool'. */
+#undef HAVE__BOOL
 
-/* define if the putenv function is present */
-#undef HAVE_PUTENV
+/* Define to the address where bug reports for this package should be sent. */
+#undef PACKAGE_BUGREPORT
 
-/* Define to 1 if compiler knows about constexpr */
-#undef HAVE_CONSTEXPR
+/* Define to the full name of this package. */
+#undef PACKAGE_NAME
+
+/* Define to the full name and version of this package. */
+#undef PACKAGE_STRING
+
+/* Define to the one symbol short name of this package. */
+#undef PACKAGE_TARNAME
+
+/* Define to the home page for this package. */
+#undef PACKAGE_URL
+
+/* Define to the version of this package. */
+#undef PACKAGE_VERSION
+
+/* Define to 1 if all of the C90 standard headers exist (not just the ones
+   required in a freestanding environment). This macro is provided for
+   backward compatibility; new code need not use it. */
+#undef STDC_HEADERS
+
+/* Define to empty if `const' does not conform to ANSI C. */
+#undef const
+
+/* Define to `__inline__' or `__inline' if that's what the C compiler
+   calls it, or to nothing if 'inline' is not supported under any name.  */
+#ifndef __cplusplus
+#undef inline
+#endif
+
+/* Define to `unsigned int' if <sys/types.h> does not define. */
+#undef size_t

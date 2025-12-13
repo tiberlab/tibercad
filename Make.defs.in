@@ -75,9 +75,6 @@ endif
 # We keep this for historical reasons. It is the revision where transfer to git happened
 SVNREVISION = "5777" 
 
-# the full TiberCAD version number
-TIBERVERSION = $(shell echo "`cat $(topdir)/VERSION`.$(SVNREVISION)")
-
 
 # the default method is developer
 ifeq (x$(METHOD),x)

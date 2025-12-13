@@ -1,31 +1,28 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_INIT([TiberCAD],[1.0],[support@tibercad.org])
+dnl create verison number from git
+m4_define([TCVERSION],
+  [m4_esyscmd_s([ \
+    (test -f VERSION && head -n 1 VERSION) || \
+    (git describe --tags --dirty --always 2>/dev/null | sed 's:releases/::' | tr -d '[:space:]') || \
+    echo -n "0.0.0" \
+  ])]dnl
+)
+
+AC_INIT([tiberCAD],[TCVERSION()],[support@tibercad.org])
 AC_PREREQ([2.71])
+
+#TIBERVERSION=TCVERSION
+#AC_SUBST([TIBERVERSION])
 
 AC_CONFIG_SRCDIR([include/tibercad/base/TiberCad.h])
 AC_CONFIG_HEADERS([include/tibercad/base/tiber_config.h])
 
-AC_REVISION([$Revision: 1.0$])
-
-tc_fullversion=`cat VERSION | sed 's/\./ /g'`
-tc_version_major=`echo $tc_fullversion | awk '{print $1}'`
-tc_version_minor=`echo $tc_fullversion | awk '{print $2}'`
-tc_version_subminor=`echo $tc_fullversion | awk '{print $3}'`
-AC_DEFINE_UNQUOTED([TIBERMAJORVERSION],[$tc_version_major],
-  [TiberCAD version major])
-AC_DEFINE_UNQUOTED([TIBERMINORVERSION],[$tc_version_minor],
-  [TiberCAD version minor])
-AC_DEFINE_UNQUOTED([TIBERSUBMINORVERSION],[$tc_version_subminor],
-  [TiberCAD version subminor])
-
-[TIBERVERSION]="$tc_version_major.$tc_version_minor.$tc_version_subminor"
-AC_SUBST([TIBERVERSION])
+AC_REVISION([$Revision: 2.0$])
 
 # Make compilation tests using C++
 AC_LANG([C++])
-
 
 # The host
 AC_CANONICAL_HOST
@@ -178,7 +175,7 @@ TC_BOOST
 if test "$tc_cv_boost" == no
 then
   AC_MSG_NOTICE([])
-  AC_MSG_ERROR([Boost is not available, but it is needed for TiberCAD!])
+  AC_MSG_ERROR([Boost is not available, but it is needed for tiberCAD!])
 fi
 
 TC_BOOST_LIBDIR
@@ -187,14 +184,14 @@ TC_BOOST_LIBDIR
 TC_BOOST_REGEX
 if test "${tc_cv_boost_regex_lib-no}" == "no"; then
   AC_MSG_NOTICE([])
-  AC_MSG_ERROR([Boost:regex is not available, but it is needed for TiberCAD!])
+  AC_MSG_ERROR([Boost:regex is not available, but it is needed for tiberCAD!])
 fi
 
 # boost filesystem
 TC_BOOST_FILESYSTEM
 if test "${tc_cv_boost_filesystem_lib-no}" == "no"; then
   AC_MSG_NOTICE([])
-  AC_MSG_ERROR([Boost:filesystem is not available, but it is needed for TiberCAD!])
+  AC_MSG_ERROR([Boost:filesystem is not available, but it is needed for tiberCAD!])
 fi
 
 AC_MSG_NOTICE([])
