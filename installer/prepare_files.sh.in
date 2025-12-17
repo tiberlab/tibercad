@@ -56,7 +56,7 @@ make_windows_package () {
   $unix2dos Readme.txt
   $unix2dos Changelog.txt
 
-  cd ${topdir}/contrib
+  cd ${topdir}/external
   if [ ! -d gmsh-${GMSHVER} ]
   then
     mkdir gmsh-${GMSHVER}
@@ -71,10 +71,10 @@ make_windows_package () {
   cd ${files}
   mkdir -p tools/gmsh
   cd tools/gmsh
-  unzip ${topdir}/contrib/gmsh-${GMSHVER}/gmsh-${GMSHVER}-Windows.zip
+  unzip ${topdir}/external/gmsh-${GMSHVER}/gmsh-${GMSHVER}-Windows.zip
   mv gmsh-${GMSHVER}-Windows/* .
   rmdir gmsh-${GMSHVER}-Windows
-  cp ${topdir}/contrib/gmsh.pdf .
+  cp ${topdir}/external/gmsh.pdf .
 
   cd $curdir
 
@@ -173,8 +173,6 @@ prepare_linux_package () {
 
   sed -e "s/@GMSHVER@/${GMSHVER}/" ${topdir}/installer/linux/tar/install > ${files}/install
   chmod a+x ${files}/install
-  #cp ${topdir}/installer/linux/tar/tibercad.sh ${files}/bin
-  #chmod a+x ${files}/bin/tibercad.sh
 
   export LD_LIBRARY_PATH=${topdir}/${ARCH}/lib:${topdir}/SDK/${ARCH}/lib:${topdir}/SDK/${ARCH}/lib64:${topdir}/SDK/lib
   # get some of the libraries
@@ -199,18 +197,20 @@ prepare_linux_package () {
   libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep libz | awk '{print $3}'`"
   libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep libnetcdf | awk '{print $3}'`"
   libs="$libs `ldd ${topdir}/SDK/${ARCH}/bin/mpiexec.hydra | grep libnuma | awk '{print $3}'`"
-  #cp /usr/pack/intel_mkl-11.2-ma/mkl/lib/intel64/libmkl_def.so ${files}/${ARCH}/lib
-  cp /usr/pack/intel_oneapi-2021-ma/mkl/latest/lib/intel64/libmkl_def.so.1 ${files}/${ARCH}/lib
+
+  mklroot=@MKL_DIR@
+  if test "x$mklroot" != "x"
+  then
+    cp ${mklroot}/lib/intel64/libmkl_def.so.1 ${files}/${ARCH}/lib
+  fi
+
   cp $libs ${files}/${ARCH}/lib
-  cp ${topdir}/SDK/${ARCH}/bin/hydra_pmi_proxy ${files}/${ARCH}/bin
-  cp ${topdir}/SDK/${ARCH}/bin/mpiexec.hydra ${files}/${ARCH}/bin
-  cp ${topdir}/SDK/bin/hydra_pmi_proxy ${files}/${ARCH}/bin
-  cp ${topdir}/SDK/bin/mpiexec.hydra ${files}/${ARCH}/bin
   cp ${topdir}/${ARCH}/bin/tibercad ${files}/${ARCH}/bin/tibercad
   cp ${topdir}/${ARCH}/lib/lib*.so* ${files}/${ARCH}/lib
 
-  cp /usr/pack/tibercad_dev-3.3-ma/SDK/${ARCH}/bin/mpiexec.hydra ${files}/${ARCH}/bin
-  cp /usr/pack/tibercad_dev-3.3-ma/SDK/${ARCH}/bin/hydra_pmi_proxy ${files}/${ARCH}/bin
+  mpiexec=@MPIEXEC@
+  cp $mpiexec ${files}/${ARCH}/bin
+  cp $(dirname $mpiexec)/hydra_pmi_proxy ${files}/${ARCH}/bin
 
   #
   # adjust rpath and strip
@@ -229,15 +229,6 @@ prepare_linux_package () {
   chmod a+x ${files}/${ARCH}/bin/tibercad
 
   cp -r ${topdir}/${ARCH}/modules ${files}/${ARCH}
-  #
-  # for now, delete some modules
-  #
-  rm -rf ${files}/${ARCH}/modules/boltzmann
-  #rm -rf ${files}/${ARCH}/modules/empirical_tb
-  #rm -rf ${files}/${ARCH}/modules/vff
-  #rm -rf ${files}/${ARCH}/modules/negf
-  #rm -rf ${files}/${ARCH}/modules/dd_generic
-  rm -rf ${files}/${ARCH}/modules/polarizationgrid
 
   # strip all module libraries
   find ${files}/${ARCH}/modules -name "*.so" -exec strip {} \;
@@ -272,20 +263,20 @@ prepare_linux_package () {
   cp -r ${topdir}/materials/ETB ${files}/materials
   cp -r ${topdir}/materials/optics ${files}/materials
 
-  if [ ! -d ${topdir}/contrib/gmsh-${GMSHVER}-Linux64 ]
+  if [ ! -d ${topdir}/external/gmsh-${GMSHVER}-Linux64 ]
   then
     wget http://www.geuz.org/gmsh/bin/Linux/gmsh-${GMSHVER}-Linux64.tgz
-    tar -C ${topdir}/contrib/ -zxf gmsh-${GMSHVER}-Linux64.tgz
+    tar -C ${topdir}/external/ -zxf gmsh-${GMSHVER}-Linux64.tgz
     rm -f gmsh-${GMSHVER}-Linux64.tgz
   fi
-  if [ -d ${topdir}/contrib/gmsh-${GMSHVER}-Linux64 ]
+  if [ -d ${topdir}/external/gmsh-${GMSHVER}-Linux64 ]
   then
-    if [ ! -f ${topdir}/contrib/gmsh-${GMSHVER}-Linux64/gmsh.pdf ]
+    if [ ! -f ${topdir}/external/gmsh-${GMSHVER}-Linux64/gmsh.pdf ]
     then
       wget http://www.geuz.org/gmsh/doc/texinfo/gmsh.pdf
-      mv gmsh.pdf ${topdir}/contrib/gmsh-${GMSHVER}-Linux64
+      mv gmsh.pdf ${topdir}/external/gmsh-${GMSHVER}-Linux64
     fi
-    cp -r  ${topdir}/contrib/gmsh-${GMSHVER}-Linux64 ${files}/tools/gmsh
+    cp -r  ${topdir}/external/gmsh-${GMSHVER}-Linux64 ${files}/tools/gmsh
     rm -rf ${files}/tools/gmsh/include
     chmod a+x ${files}/tools/gmsh/bin/gmsh
   fi
@@ -375,20 +366,20 @@ prepare_darwin_package () {
   cp ${topdir}/materials/*.txt ${files}/materials
   cp ${topdir}/materials/*.dat ${files}/materials
 
-  if [ ! -d ${topdir}/contrib/gmsh-${GMSHVER}-Linux ]
+  if [ ! -d ${topdir}/external/gmsh-${GMSHVER}-Linux ]
   then
     wget http://www.geuz.org/gmsh/bin/Linux/gmsh-${GMSHVER}-Linux.tgz
-    tar -C ${topdir}/contrib/ -zxf gmsh-${GMSHVER}-Linux.tgz
+    tar -C ${topdir}/external/ -zxf gmsh-${GMSHVER}-Linux.tgz
     rm -f gmsh-${GMSHVER}-Linux.tgz
   fi
-  if [ -d ${topdir}/contrib/gmsh-${GMSHVER}-Linux ]
+  if [ -d ${topdir}/external/gmsh-${GMSHVER}-Linux ]
   then
-    if [ ! -f ${topdir}/contrib/gmsh-${GMSHVER}-Linux/gmsh.pdf ]
+    if [ ! -f ${topdir}/external/gmsh-${GMSHVER}-Linux/gmsh.pdf ]
     then
       wget http://www.geuz.org/gmsh/doc/texinfo/gmsh.pdf
-      mv gmsh.pdf ${topdir}/contrib/gmsh-${GMSHVER}-Linux
+      mv gmsh.pdf ${topdir}/external/gmsh-${GMSHVER}-Linux
     fi
-    cp -r  ${topdir}/contrib/gmsh-${GMSHVER}-Linux ${files}/tools/gmsh
+    cp -r  ${topdir}/external/gmsh-${GMSHVER}-Linux ${files}/tools/gmsh
     chmod a+x ${files}/tools/gmsh/bin/gmsh
   fi
 
@@ -437,14 +428,14 @@ make_deb () {
   find ${files}/examples -type d -name "reference" -exec rm -rf {} \;
   cp ${topdir}/materials/[^.]* ${files}/materials
 
-  if [ -d ${topdir}/contrib/gmsh-${GMSHVER} ]
+  if [ -d ${topdir}/external/gmsh-${GMSHVER} ]
   then
-    if [ ! -f ${topdir}/contrib/gmsh-${GMSHVER}/gmsh.pdf ]
+    if [ ! -f ${topdir}/external/gmsh-${GMSHVER}/gmsh.pdf ]
     then
       wget http://www.geuz.org/gmsh/doc/texinfo/gmsh.pdf
-      mv gmsh.pdf ${topdir}/contrib/gmsh-${GMSHVER}
+      mv gmsh.pdf ${topdir}/external/gmsh-${GMSHVER}
     fi
-    cp -r  ${topdir}/contrib/gmsh-${GMSHVER} ${files}/tools
+    cp -r  ${topdir}/external/gmsh-${GMSHVER} ${files}/tools
     chmod a+x ${files}/tools/gmsh-${GMSHVER}/gmsh
   fi
 
@@ -544,7 +535,7 @@ EOF
 ################### main ####################################
 
 topdir=@abs_top_builddir@
-version=`cat $topdir/VERSION`
+version=$(test -f ${topdir}/VERSION && head -n 1 ${topdir}/VERSION || git describe --always --tags --dirty | sed 's:releases/::')
 installerdir=$topdir/installer
 ARCH=`${topdir}/share/arch.sh`
 
