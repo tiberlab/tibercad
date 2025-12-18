@@ -258,15 +258,6 @@ case \$prog in
     args=(-n \${n_mpi_procs} "\${TIBERCADROOT}/\${ARCH}/bin/\$progname")
     ;;
 
-  gmsh*)
-    progname="gmsh"
-    executable="\${TIBERCADROOT}/tools/gmsh/bin/\$progname"
-    if [ ! -x \$executable ]
-    then
-      echo "You do not appear to have GMSH installed with tiberCAD."
-      exit 1
-    fi
-    ;;
 
   build_module*)
     progname="build_module"
@@ -283,15 +274,13 @@ case \$prog in
 
   *)
     echo "\${prog}: Unknown TiberCAD tool"
-    echo "Known programs are: tibercad, gmsh"
+    echo "Known programs are: tibercad, build_module"
     ;;
 
 esac
 
 
 export TIBERCADROOT
-export LMX_LICENSE_PATH="\${LMX_LICENSE_PATH}:\${TIBERCADROOT}/license"
-
 
 # stack size limit / VM may be too small
 if [ ! \`echo "\$ARCH" | grep "darwin"\` ]
