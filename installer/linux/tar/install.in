@@ -7,7 +7,7 @@ ARCH=`uname -m`-linux
 GMSHVER=@GMSHVER@
 
 
-
+# This is now unused
 install_gmsh ()
 {
 
@@ -476,13 +476,15 @@ fi
 
 
 echo ""
-echo -n "Do you want to install GMSH version $GMSHVER [Y/n]? "
-read answer
-[ -z $answer ] && answer='y'
-case $answer in
-  y|yes|Y|Yes|YES) install_gmsh ;;
-  *) ;;
-esac
+#echo -n "Do you want to install GMSH version $GMSHVER [Y/n]? "
+#read answer
+#[ -z $answer ] && answer='y'
+#case $answer in
+#  y|yes|Y|Yes|YES) install_gmsh ;;
+#  *) ;;
+#esac
+echo "Please install a recent GMSH version from https://gmsh.info/"
+echo ""
 
 echo ""
 echo "Thank you for having installed TiberCAD."

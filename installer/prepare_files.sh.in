@@ -1,7 +1,8 @@
 #!/bin/bash
 
-GMSHVER=4.8.3
+#GMSHVER=4.8.3
 
+# unmaintained and unused in recent years
 make_windows_package () {
 
   mkdir -m 0755 ${files}
@@ -56,27 +57,26 @@ make_windows_package () {
   $unix2dos Readme.txt
   $unix2dos Changelog.txt
 
-  cd ${topdir}/external
-  if [ ! -d gmsh-${GMSHVER} ]
-  then
-    mkdir gmsh-${GMSHVER}
-    cd gmsh-${GMSHVER}
-    wget http://www.geuz.org/gmsh/bin/Windows/gmsh-${GMSHVER}-Windows.zip
-  fi
-  if [ ! -f gmsh.pdf ]
-  then
-    wget http://www.geuz.org/gmsh/doc/texinfo/gmsh.pdf
-  fi
-  cd ${curdir}
-  cd ${files}
-  mkdir -p tools/gmsh
-  cd tools/gmsh
-  unzip ${topdir}/external/gmsh-${GMSHVER}/gmsh-${GMSHVER}-Windows.zip
-  mv gmsh-${GMSHVER}-Windows/* .
-  rmdir gmsh-${GMSHVER}-Windows
-  cp ${topdir}/external/gmsh.pdf .
-
-  cd $curdir
+  #cd ${topdir}/external
+  #if [ ! -d gmsh-${GMSHVER} ]
+  #then
+  #  mkdir gmsh-${GMSHVER}
+  #  cd gmsh-${GMSHVER}
+  #  wget http://www.geuz.org/gmsh/bin/Windows/gmsh-${GMSHVER}-Windows.zip
+  #fi
+  #if [ ! -f gmsh.pdf ]
+  #then
+  #  wget http://www.geuz.org/gmsh/doc/texinfo/gmsh.pdf
+  #fi
+  #cd ${curdir}
+  #cd ${files}
+  #mkdir -p tools/gmsh
+  #cd tools/gmsh
+  #unzip ${topdir}/external/gmsh-${GMSHVER}/gmsh-${GMSHVER}-Windows.zip
+  #mv gmsh-${GMSHVER}-Windows/* .
+  #rmdir gmsh-${GMSHVER}-Windows
+  #cp ${topdir}/external/gmsh.pdf .
+  #cd $curdir
 
   return
 }
@@ -251,37 +251,36 @@ prepare_linux_package () {
   fi
 
   if test ! -d ${topdir}/examples/Example_0
-    git clone --recurse-submodules --shallow-submodules
+  then
+    git submodule update --init --depth 1
   fi
   
-  cp ${topdir}/examples/* ${files}/examples/
+  cp -r ${topdir}/examples/* ${files}/examples/
 
   find ${files} -type d -name ".svn*" -exec rm -rf {} \;
   find ${files} -type d -name ".git*" -exec rm -rf {} \;
   #find ${files}/examples -type d -name "reference" -exec rm -rf {} \;
-  find ${files}/examples -name "test.conf" -exec rm -f {} \;
-  cp ${topdir}/materials/*.txt ${files}/materials
-  cp ${topdir}/materials/*.dat ${files}/materials
-  cp -r ${topdir}/materials/ETB ${files}/materials
-  cp -r ${topdir}/materials/optics ${files}/materials
+  #find ${files}/examples -name "test.conf" -exec rm -f {} \;
+  cp -r ${topdir}/materials/* ${files}/materials
 
-  if [ ! -d ${topdir}/external/gmsh-${GMSHVER}-Linux64 ]
-  then
-    wget http://www.geuz.org/gmsh/bin/Linux/gmsh-${GMSHVER}-Linux64.tgz
-    tar -C ${topdir}/external/ -zxf gmsh-${GMSHVER}-Linux64.tgz
-    rm -f gmsh-${GMSHVER}-Linux64.tgz
-  fi
-  if [ -d ${topdir}/external/gmsh-${GMSHVER}-Linux64 ]
-  then
-    if [ ! -f ${topdir}/external/gmsh-${GMSHVER}-Linux64/gmsh.pdf ]
-    then
-      wget http://www.geuz.org/gmsh/doc/texinfo/gmsh.pdf
-      mv gmsh.pdf ${topdir}/external/gmsh-${GMSHVER}-Linux64
-    fi
-    cp -r  ${topdir}/external/gmsh-${GMSHVER}-Linux64 ${files}/tools/gmsh
-    rm -rf ${files}/tools/gmsh/include
-    chmod a+x ${files}/tools/gmsh/bin/gmsh
-  fi
+  # we do not do this anymore, the user should install GMSH on his own
+  #if [ ! -d ${topdir}/external/gmsh-${GMSHVER}-Linux64 ]
+  #then
+  #  wget http://www.geuz.org/gmsh/bin/Linux/gmsh-${GMSHVER}-Linux64.tgz
+  #  tar -C ${topdir}/external/ -zxf gmsh-${GMSHVER}-Linux64.tgz
+  #  rm -f gmsh-${GMSHVER}-Linux64.tgz
+  #fi
+  #if [ -d ${topdir}/external/gmsh-${GMSHVER}-Linux64 ]
+  #then
+  #  if [ ! -f ${topdir}/external/gmsh-${GMSHVER}-Linux64/gmsh.pdf ]
+  #  then
+  #    wget http://www.geuz.org/gmsh/doc/texinfo/gmsh.pdf
+  #    mv gmsh.pdf ${topdir}/external/gmsh-${GMSHVER}-Linux64
+  #  fi
+  #  cp -r  ${topdir}/external/gmsh-${GMSHVER}-Linux64 ${files}/tools/gmsh
+  #  rm -rf ${files}/tools/gmsh/include
+  #  chmod a+x ${files}/tools/gmsh/bin/gmsh
+  #fi
 
 
   chmod -R a+r ${files}
@@ -298,6 +297,7 @@ prepare_linux_package () {
 
 
 
+# unmaintained and unused in recent years
 prepare_darwin_package () {
 
 
@@ -360,22 +360,22 @@ prepare_darwin_package () {
   cp ${topdir}/materials/*.txt ${files}/materials
   cp ${topdir}/materials/*.dat ${files}/materials
 
-  if [ ! -d ${topdir}/external/gmsh-${GMSHVER}-Linux ]
-  then
-    wget http://www.geuz.org/gmsh/bin/Linux/gmsh-${GMSHVER}-Linux.tgz
-    tar -C ${topdir}/external/ -zxf gmsh-${GMSHVER}-Linux.tgz
-    rm -f gmsh-${GMSHVER}-Linux.tgz
-  fi
-  if [ -d ${topdir}/external/gmsh-${GMSHVER}-Linux ]
-  then
-    if [ ! -f ${topdir}/external/gmsh-${GMSHVER}-Linux/gmsh.pdf ]
-    then
-      wget http://www.geuz.org/gmsh/doc/texinfo/gmsh.pdf
-      mv gmsh.pdf ${topdir}/external/gmsh-${GMSHVER}-Linux
-    fi
-    cp -r  ${topdir}/external/gmsh-${GMSHVER}-Linux ${files}/tools/gmsh
-    chmod a+x ${files}/tools/gmsh/bin/gmsh
-  fi
+  #if [ ! -d ${topdir}/external/gmsh-${GMSHVER}-Linux ]
+  #then
+  #  wget http://www.geuz.org/gmsh/bin/Linux/gmsh-${GMSHVER}-Linux.tgz
+  #  tar -C ${topdir}/external/ -zxf gmsh-${GMSHVER}-Linux.tgz
+  #  rm -f gmsh-${GMSHVER}-Linux.tgz
+  #fi
+  #if [ -d ${topdir}/external/gmsh-${GMSHVER}-Linux ]
+  #then
+  #  if [ ! -f ${topdir}/external/gmsh-${GMSHVER}-Linux/gmsh.pdf ]
+  #  then
+  #    wget http://www.geuz.org/gmsh/doc/texinfo/gmsh.pdf
+  #    mv gmsh.pdf ${topdir}/external/gmsh-${GMSHVER}-Linux
+  #  fi
+  #  cp -r  ${topdir}/external/gmsh-${GMSHVER}-Linux ${files}/tools/gmsh
+  #  chmod a+x ${files}/tools/gmsh/bin/gmsh
+  #fi
 
 
   chmod -R a+r ${files}
@@ -391,7 +391,7 @@ prepare_darwin_package () {
 }
 
 
-
+# unmaintained and unused in recent years
 make_deb () {
 
   bindir=debfiles/usr/bin
@@ -422,16 +422,16 @@ make_deb () {
   find ${files}/examples -type d -name "reference" -exec rm -rf {} \;
   cp ${topdir}/materials/[^.]* ${files}/materials
 
-  if [ -d ${topdir}/external/gmsh-${GMSHVER} ]
-  then
-    if [ ! -f ${topdir}/external/gmsh-${GMSHVER}/gmsh.pdf ]
-    then
-      wget http://www.geuz.org/gmsh/doc/texinfo/gmsh.pdf
-      mv gmsh.pdf ${topdir}/external/gmsh-${GMSHVER}
-    fi
-    cp -r  ${topdir}/external/gmsh-${GMSHVER} ${files}/tools
-    chmod a+x ${files}/tools/gmsh-${GMSHVER}/gmsh
-  fi
+  #if [ -d ${topdir}/external/gmsh-${GMSHVER} ]
+  #then
+  #  if [ ! -f ${topdir}/external/gmsh-${GMSHVER}/gmsh.pdf ]
+  #  then
+  #    wget http://www.geuz.org/gmsh/doc/texinfo/gmsh.pdf
+  #    mv gmsh.pdf ${topdir}/external/gmsh-${GMSHVER}
+  #  fi
+  #  cp -r  ${topdir}/external/gmsh-${GMSHVER} ${files}/tools
+  #  chmod a+x ${files}/tools/gmsh-${GMSHVER}/gmsh
+  #fi
 
 
   #sed -e "s/<INSTALLDIR>/\/usr\/share\/tibercad/g" ${topdir}/installer/linux/tar/tibercad.sh > ${files}/bin/tibercad.sh
