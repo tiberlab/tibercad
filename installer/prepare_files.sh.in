@@ -41,8 +41,8 @@ make_windows_package () {
   find ${files}/examples -name "test.conf" -exec rm -f {} \;
   cp ${topdir}/materials/*.txt ${files}/materials
   cp ${topdir}/materials/*.dat ${files}/materials
-  cp -r ${topdir}/materials/ETB ${files}/materials
-  cp -r ${topdir}/materials/optics ${files}/materials
+  cp -r -L ${topdir}/materials/ETB ${files}/materials
+  cp -r -L ${topdir}/materials/optics ${files}/materials
 
   unix2dos=`which unix2dos`
   [ "x$unix2dos" == "x" ] && unix2dos=`which todos` ;
@@ -191,6 +191,9 @@ prepare_linux_package () {
   libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep slepc | awk '{print $3}'`"
   libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep libz | awk '{print $3}'`"
   libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep libnetcdf | awk '{print $3}'`"
+  libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep libreadline | awk '{print $3}'`"
+  libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep libnglib | awk '{print $3}'`"
+  libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep libngcore | awk '{print $3}'`"
   libs="$libs `ldd ${topdir}/SDK/${ARCH}/bin/mpiexec.hydra | grep libnuma | awk '{print $3}'`"
 
   mklroot=@MKL_DIR@
@@ -255,7 +258,7 @@ prepare_linux_package () {
   find ${files} -type d -name ".git*" -exec rm -rf {} \;
   #find ${files}/examples -type d -name "reference" -exec rm -rf {} \;
   #find ${files}/examples -name "test.conf" -exec rm -f {} \;
-  cp -r ${topdir}/materials/* ${files}/materials
+  cp -r -L ${topdir}/materials/* ${files}/materials
 
   # we do not do this anymore, the user should install GMSH on his own
   #if [ ! -d ${topdir}/external/gmsh-${GMSHVER}-Linux64 ]

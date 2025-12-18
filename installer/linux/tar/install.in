@@ -113,7 +113,7 @@ install_files ()
 #
 
 echo "###################################################"
-echo "#      TiberCAD ver. $TIBERVER  installation      "
+echo "#      tiberCAD ver. $TIBERVER  installation      "
 echo "###################################################"
 
 echo ""
@@ -180,7 +180,7 @@ if [ ! -z "$content" ]
 then
   if [ -x $instpath/bin/tibercad ]
   then
-    echo "You seem to have TiberCAD already installed in this directory."
+    echo "You seem to have tiberCAD already installed in this directory."
     echo "A backup copy will be made of each file that will be modified."
   else
     echo "Installation directory is not empty."
@@ -202,7 +202,6 @@ then
   backup_files ${srcpath}/bin $instpath
   backup_files ${srcpath}/materials $instpath
   backup_files ${srcpath}/examples $instpath
-  backup_files ${srcpath}/license $instpath
   backup_files ${srcpath}/$ARCH $instpath
   backup_files ${srcpath}/doc $instpath
   backup_files ${srcpath}/share $instpath
@@ -212,7 +211,6 @@ fi
 install_files ${srcpath}/bin $instpath
 install_files ${srcpath}/materials $instpath
 install_files ${srcpath}/examples $instpath
-install_files ${srcpath}/license $instpath
 install_files ${srcpath}/$ARCH $instpath
 install_files ${srcpath}/doc $instpath
 install_files ${srcpath}/share $instpath
@@ -273,7 +271,7 @@ case \$prog in
 
 
   *)
-    echo "\${prog}: Unknown TiberCAD tool"
+    echo "\${prog}: Unknown tiberCAD tool"
     echo "Known programs are: tibercad, build_module"
     ;;
 
@@ -315,7 +313,7 @@ cat > ${instpath}/bin/uninstall <<EOF
 
 instpath=${instpath}
 
-echo -n "Do you really want to uninstall TiberCAD ver. $TIBERVER and all of its components [y/N]? "
+echo -n "Do you really want to uninstall tiberCAD ver. $TIBERVER and all of its components [y/N]? "
 read answer
 [ -z \$answer ] && answer='n'
 case \$answer in
@@ -365,7 +363,7 @@ case \$answer in
       echo ""
     fi
 
-    echo "TiberCAD version ${TIBERVER} has been removed from your system."
+    echo "tiberCAD version ${TIBERVER} has been removed from your system."
     ;;
 
   *) ;;
@@ -396,7 +394,7 @@ then
     target=`ls -l tibercad | awk -F '>' '{print $2}' | grep "${instpath}"`
     if [ -z $target ]
     then
-      echo "You have already a link to another TiberCAD installation. I will delete the other link!"
+      echo "You have already a link to another tiberCAD installation. I will delete the other link!"
       echo ""
     fi
     rm -f tibercad
@@ -476,6 +474,6 @@ echo "Please install a recent GMSH version from https://gmsh.info/"
 echo ""
 
 echo ""
-echo "Thank you for having installed TiberCAD."
+echo "Thank you for having installed tiberCAD."
 echo "Please report bugs to support@tiberlab.com"
 echo ""
