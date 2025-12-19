@@ -392,13 +392,11 @@ Messages::unindent(void)
 }
 
 void
-Messages::debug(const string& msg)
+Messages::debug([[maybe_unused]] const string& msg)
 {
 #ifdef DEBUG
   TeeStream ts(cerr, _log);
   ts << "DEBUG: " << msg <<  endl << flush;
-#else
-  ignore_unused_variable(msg);
 #endif
 }
 

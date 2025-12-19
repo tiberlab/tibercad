@@ -43,15 +43,4 @@ typedef libMesh::subdomain_id_type ID;
 
 
 
-//! To ignore unused variables
-/*!
- * If you have a variable \a which is unused you can call
- * \c ignore_unused_variable(a) so that the compiler gives no warning
- */
-template <typename T>
-inline
-void ignore_unused_variable(T)
-{
-}
-
 #endif // _TYPEDEFS_H_

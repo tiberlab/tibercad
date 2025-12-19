@@ -29,6 +29,7 @@
 
 using namespace std;
 
+#define TB_MAX_SIM 1000
 
 SelfconsistentSolver::~SelfconsistentSolver(void)
 {

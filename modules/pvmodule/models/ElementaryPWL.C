@@ -28,6 +28,8 @@
 
 #include "tibercad/module/TiberModule.h"
 
+#include <fstream>
+
 inline
 ElementaryPWL::ElementaryPWL(const ModelOptions& options) :
   ElementaryCell(options)

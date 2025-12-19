@@ -34,9 +34,13 @@ $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext): core_obj
 		-o $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext) \
 		$(MODULE_LIBS) $(DLLNAME) $(LDFLAGS)
 
-core_obj:
+core_obj: include/tibercad/base/tiber_config.h
 	@echo "Compiling tiberCAD core ..."
 	@$(MAKE) --no-print-directory -C src
+
+
+include/tibercad/base/tiber_config.h: config.h
+	./tools/gen_tiber_config.sh
 
 
 .PHONY: modules
@@ -140,6 +144,11 @@ Makefile: Makefile.in Make.common.in config.status
 aclocal.m4: acinclude.m4
 	aclocal -I /usr/share/aclocal
     
+config.h: config.h.in config.status
+	./config.status
+
+config.h.in:
+	autoheader
 
 
 include Make.rules

@@ -13,11 +13,10 @@ m4_define([TCVERSION],
 AC_INIT([tiberCAD],[TCVERSION()],[support@tibercad.org])
 AC_PREREQ([2.71])
 
-#TIBERVERSION=TCVERSION
-#AC_SUBST([TIBERVERSION])
+AC_CONFIG_MACRO_DIR([m4])
 
-AC_CONFIG_SRCDIR([include/tibercad/base/TiberCad.h])
-AC_CONFIG_HEADERS([include/tibercad/base/tiber_config.h])
+#AC_CONFIG_SRCDIR([include/tibercad/base/TiberCad.h])
+AC_CONFIG_HEADERS([config.h])
 
 AC_REVISION([$Revision: 2.0$])
 
@@ -94,6 +93,7 @@ then
 fi
 
 # check for gmsh
+# NOTE: in principle, we do not need this anymore
 AC_PATH_PROG([GMSH], [gmsh])
 AC_SUBST([GMSH])
 
@@ -134,6 +134,7 @@ TC_DFTB
 TC_UPTIGHT
 
 # HETERO
+# NOTE: Obsolete
 TC_HETERO
 
 
@@ -219,6 +220,7 @@ ACX_EXT_HASH_MAP
 ACX_EXT_HASH_SET
 ACX_HASH_MAP
 ACX_HASH_SET
+AX_GCC_FUNC_ATTRIBUTE(visibility)
 
 
 #

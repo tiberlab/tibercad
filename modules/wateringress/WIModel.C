@@ -27,6 +27,8 @@
 
 #include "WIModel.h"
 
+#include "tibercad/physics/Material.h"
+
 using namespace std;
 
 

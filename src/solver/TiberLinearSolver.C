@@ -29,7 +29,7 @@
 
 #include "tibercad/base/TiberCad.h"
 
-#ifdef ENABLE_PARDISO
+#ifdef TC_ENABLE_PARDISO
 # include "PardisoLinearSolver.h"
 #endif
 #include "tibercad/base/InitFailedException.h"
@@ -71,7 +71,7 @@ TiberLinearSolver::create(const libMesh::Parallel::Communicator &comm_in, const 
 
   if (type == "petsc")
     solver = new TiberPetscLinearSolver(comm_in, options); 
-#ifdef ENABLE_PARDISO
+#ifdef TC_ENABLE_PARDISO
   else if (type == "pardiso")
     solver = new PardisoLinearSolver(options);
 #endif

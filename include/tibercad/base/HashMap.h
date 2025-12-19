@@ -29,13 +29,13 @@
     
 #include "tibercad/base/tiber_config.h"
 
-#if defined(HAVE_UNORDERED_MAP)
+#if defined(TC_HAVE_UNORDERED_MAP)
 # include <unordered_map>
-#elif defined(HAVE_TR1_UNORDERED_MAP)
+#elif defined(TC_HAVE_TR1_UNORDERED_MAP)
 # include <tr1/unordered_map>
-#elif defined(HAVE_HASH_MAP)
+#elif defined(TC_HAVE_HASH_MAP)
 # include <hash_map>
-#elif defined(HAVE_EXT_HASH_MAP)
+#elif defined(TC_HAVE_EXT_HASH_MAP)
 # include <ext/hash_map>
 #else
 # include <map>
@@ -43,13 +43,13 @@
 
 
 
-#if   defined(HAVE_UNORDERED_MAP)
+#if   defined(TC_HAVE_UNORDERED_MAP)
   template <typename Key, typename Value, typename Hash = std::hash<Key> >
-#elif defined(HAVE_TR1_UNORDERED_MAP)
+#elif defined(TC_HAVE_TR1_UNORDERED_MAP)
   template <typename Key, typename Value, typename Hash = std::tr1::hash<Key> >
-#elif defined(HAVE_HASH_MAP)
+#elif defined(TC_HAVE_HASH_MAP)
   template <typename Key, typename Value, typename Hash = std::hash<Key> >
-#elif defined(HAVE_EXT_HASH_MAP)
+#elif defined(TC_HAVE_EXT_HASH_MAP)
 # if   (__GNUC__ == 3) && (__GNUC_MINOR__ == 0) // gcc 3.0
   template <typename Key, typename Value, typename Hash = std::hash<Key> >
 # elif (__GNUC__ >= 3)                          // gcc 3.1 & newer
@@ -62,13 +62,13 @@
 #endif
   struct HashMap
   {
-#if   defined(HAVE_UNORDERED_MAP)
+#if   defined(TC_HAVE_UNORDERED_MAP)
     typedef std::unordered_map<Key, Value, Hash> Type;
-#elif defined(HAVE_TR1_UNORDERED_MAP)
+#elif defined(TC_HAVE_TR1_UNORDERED_MAP)
     typedef std::tr1::unordered_map<Key, Value, Hash> Type;
-#elif defined(HAVE_HASH_MAP)
+#elif defined(TC_HAVE_HASH_MAP)
     typedef std::hash_map<Key, Value, Hash> Type;
-#elif defined(HAVE_EXT_HASH_MAP)
+#elif defined(TC_HAVE_EXT_HASH_MAP)
 # if   (__GNUC__ == 3) && (__GNUC_MINOR__ == 0) // gcc 3.0
     typedef std::hash_map<Key, Value, Hash> Type;
 # elif (__GNUC__ >= 3)                          // gcc 3.1 & newer
@@ -83,13 +83,13 @@
 
 
 
-#if   defined(HAVE_UNORDERED_MAP)
+#if   defined(TC_HAVE_UNORDERED_MAP)
   template <typename Key, typename Value, typename Hash = std::hash<Key> >
-#elif defined(HAVE_TR1_UNORDERED_MAP)
+#elif defined(TC_HAVE_TR1_UNORDERED_MAP)
   template <typename Key, typename Value, typename Hash = std::tr1::hash<Key> >
-#elif defined(HAVE_HASH_MAP)
+#elif defined(TC_HAVE_HASH_MAP)
   template <typename Key, typename Value, typename Hash = std::hash<Key> >
-#elif defined(HAVE_EXT_HASH_MAP)
+#elif defined(TC_HAVE_EXT_HASH_MAP)
 # if   (__GNUC__ == 3) && (__GNUC_MINOR__ == 0) // gcc 3.0
   template <typename Key, typename Value, typename Hash = std::hash<Key> >
 # elif (__GNUC__ >= 3)                          // gcc 3.1 & newer
@@ -102,13 +102,13 @@
 #endif
   struct HashMultiMap
   {
-#if   defined(HAVE_UNORDERED_MAP)
+#if   defined(TC_HAVE_UNORDERED_MAP)
     typedef std::unordered_multimap<Key, Value, Hash> Type;
-#elif defined(HAVE_TR1_UNORDERED_MAP)
+#elif defined(TC_HAVE_TR1_UNORDERED_MAP)
     typedef std::tr1::unordered_multimap<Key, Value, Hash> Type;
-#elif defined(HAVE_HASH_MAP)
+#elif defined(TC_HAVE_HASH_MAP)
     typedef std::hash_multimap<Key, Value, Hash> Type;
-#elif defined(HAVE_EXT_HASH_MAP)
+#elif defined(TC_HAVE_EXT_HASH_MAP)
 # if   (__GNUC__ == 3) && (__GNUC_MINOR__ == 0) // gcc 3.0
     typedef std::hash_multimap<Key, Value, Hash> Type;
 # elif (__GNUC__ >= 3)                          // gcc 3.1 & newer

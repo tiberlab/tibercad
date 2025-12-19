@@ -28,6 +28,7 @@
 #include "TmmBulkModel.h"
 #include "tibercad/io/Database.h"
 #include "tibercad/io/Messages.h"
+#include "tibercad/physics/Material.h"
 
 #include <boost/filesystem/operations.hpp>
 

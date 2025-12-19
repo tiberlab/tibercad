@@ -30,12 +30,10 @@
 #include "tibercad/base/tiber_config.h"
 
 #if defined(_WIN32)
-#  define TBDLEXPORT __declspec(dllexport)
-#  define TBDLLOCAL __declspec(dllimport)
-# define TBDLEXPORT
-# define TBDLLOCAL
+# define TBDLEXPORT __declspec(dllexport)
+# define TBDLLOCAL __declspec(dllimport)
 #else
-# ifdef GCC_HASVISIBILITY
+# ifdef TC_HAVE_FUNC_ATTRIBUTE_VISIBILITY
 #   define TBDLEXPORT __attribute__ ((visibility("default")))
 #   define TBDLLOCAL __attribute__ ((visibility("hidden")))
 # else

@@ -161,4 +161,5 @@ AC_DEFUN([AX_LIB_READLINE], [
   fi
 ])dnl
 
+m4_include([m4/ax_gcc_func_attribute.m4])
 m4_include([acinclude.m4])

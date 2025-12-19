@@ -446,7 +446,7 @@ T*
 TiberModelObject::create_from_library(const std::string& name,
     const ModelOptions& options, const void* handle)
 {
-#ifdef BUILD_TIBER_MODULES
+#ifdef TC_BUILD_TIBER_MODULES
   return dynamic_cast<T*>(_create_from_library(name, options, handle));
 #else
   return NULL;
@@ -458,7 +458,7 @@ inline
 T*
 TiberModelObject::create_from_object(const T* other, const void* handle)
 {
-#ifdef BUILD_TIBER_MODULES
+#ifdef TC_BUILD_TIBER_MODULES
   return dynamic_cast<T*>(_create_from_object(other, handle));
 #else
   return NULL;

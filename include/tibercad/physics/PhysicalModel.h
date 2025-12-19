@@ -27,13 +27,11 @@
 #ifndef _PHYSICALMODELINTERFACE_H_
 #define _PHYSICALMODELINTERFACE_H_
 
-#include "tibercad/base/tiber_config.h"
 #include "tibercad/module/TiberModelObject.h"
 #include "tibercad/base/TypeDefs.h"
 #include "tibercad/base/ModelOptions.h"
 #include "tibercad/base/InitFailedException.h"
 #include "tibercad/base/ModelErrorException.h"
-#include "tibercad/physics/Material.h"
 
 #include <map>
 #include <string>
@@ -968,9 +966,8 @@ PhysicalModel::get_id_from_name(const std::string& name)
 
 inline
 void
-PhysicalModel::copy_from(const PhysicalModel* rhs)
+PhysicalModel::copy_from(const PhysicalModel* /* rhs */)
 {
-  ignore_unused_variable(rhs);
 }
 
 

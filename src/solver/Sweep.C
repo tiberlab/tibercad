@@ -37,6 +37,9 @@
 
 using namespace std;
 
+// this is used for defining internal solution ids
+// It would be better to have some internal counter, I think.
+#define TB_MAX_SIM 1000
 
 Sweep::Sweep(const ModelOptions& options)
   : SimulationInterface(options)
@@ -662,11 +665,10 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
 
 
 ID
-Sweep::do_remember_current_solution(ID id)
+Sweep::do_remember_current_solution([[maybe_unused]] ID id)
 {
   // we only remember the first solution!
   //return remember_solution();
-  ignore_unused_variable(id);
 
   return 1;
 }

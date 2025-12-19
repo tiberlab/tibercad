@@ -1,4 +1,4 @@
-/* include/tibercad/base/tiber_config.h.in.  Generated from configure.ac by autoheader.  */
+/* config.h.in.  Generated from configure.ac by autoheader.  */
 
 /* Define to 1 if models should be built as modules */
 #undef BUILD_TIBER_MODULES
@@ -44,6 +44,9 @@
 
 /* Define to 1 if you have the <float.h> header file. */
 #undef HAVE_FLOAT_H
+
+/* Define to 1 if the system has the `visibility' function attribute */
+#undef HAVE_FUNC_ATTRIBUTE_VISIBILITY
 
 /* define if the compiler supports std::hash_map */
 #undef HAVE_HASH_MAP

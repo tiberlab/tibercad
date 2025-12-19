@@ -34,8 +34,8 @@
 #include "auto_ptr.h"
 
 #include <iostream>
-#ifdef HAVE_LIBREADLINE
-# ifdef HAVE_READLINE_READLINE_H
+#ifdef TC_HAVE_LIBREADLINE
+# ifdef TC_HAVE_READLINE_READLINE_H
 #  include <readline/readline.h>
 # else
 #  include <readline.h>
@@ -184,7 +184,7 @@ int main (int argc, char** argv)
   string inputfile;
   if (optind < argc)
     inputfile = string(argv[optind]);
-#ifdef HAVE_LIBREADLINE
+#ifdef TC_HAVE_LIBREADLINE
   else
   {
     char *line = readline ("Enter input file: ");

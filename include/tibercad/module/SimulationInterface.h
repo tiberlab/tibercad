@@ -60,10 +60,6 @@
 #include <string>
 
 
-#ifndef TB_MAX_SIM
-#define TB_MAX_SIM 100
-#endif
-
 class SimulationEnvironment;
 class Embracing;
 class Device;

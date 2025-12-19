@@ -40,8 +40,8 @@
 #include <sstream>
 #include <fstream>
 
-#ifdef HAVE_LIBREADLINE
-# ifdef HAVE_READLINE_READLINE_H
+#ifdef TC_HAVE_LIBREADLINE
+# ifdef TC_HAVE_READLINE_READLINE_H
 #  include <readline/readline.h>
 # else
 #  include <readline.h>
