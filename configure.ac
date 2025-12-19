@@ -5,7 +5,7 @@ dnl create verison number from git
 m4_define([TCVERSION],
   [m4_esyscmd_s([ \
     (test -f VERSION && head -n 1 VERSION) || \
-    (git describe --tags --dirty --always 2>/dev/null | sed 's:releases/::' | tr -d '[:space:]') || \
+    (git describe --tags --dirty --always 2>/dev/null | tr -d '[:space:]') || \
     echo -n "0.0.0" \
   ])]dnl
 )

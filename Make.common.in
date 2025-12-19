@@ -78,7 +78,7 @@ CPPFLAGS += -DMPICH_IGNORE_CXX_SEEK -DLIBMESH_REQUIRE_SEPARATE_NAMESPACE
 CPPFLAGS += $(TIBER_INCLUDES)
 CPPFLAGS += $(NON_TIBER_INCLUDES)
 
-TC_GITREVISION='"$(shell test -f $(topdir)/VERSION && head -n 1 $(topdir)/VERSION || git describe --always --tags --dirty | sed 's:releases/::' )"'
+TC_GITREVISION='"$(shell test -f $(topdir)/VERSION && head -n 1 $(topdir)/VERSION || git describe --always --tags --dirty )"'
 TC_GITMODIFIED='"$(shell test -f $(topdir)/VERSION && sed -n 2p $(topdir)/VERSION || git log -n 1 | grep Date | awk '{print $$3, $$4, $$5, $$6}' )"'
 TC_COMPDATE='"$(shell date +'%F')"'
 TC_COMPSYS='"$(shell uname -r -n -m  -o -v)"'
