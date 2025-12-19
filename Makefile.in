@@ -87,6 +87,7 @@ doc:
 
 
 run_tests:
+	@git submodule update --init --depth 1
 	@if test -d testsuite; then \
 	 cd testsuite && ./run_tests -t all -v -i ; \
 	fi
@@ -121,17 +122,6 @@ endif
 
 clean-dep:
 	@find . -name "*.d" -exec rm -f {} \;
-
-
-tags:
-	@echo $(tibermodules)
-	@rm h.tags C.tags
-	@touch h.tags C.tags
-	@for i in $(tibermodules); \
-	do \
-	  etags -a --members src/$$i/*.C -o C.tags ; \
-	  etags -a --members include/$$i/*.h -o h.tags ; \
-	done 
 
 
 $(srcdir)/configure: configure.ac aclocal.m4
