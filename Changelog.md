@@ -7,6 +7,8 @@ Modules can have their own changelog file.
 
 ## [Unreleased]
 
+## [v3.5.0] - 2024-12-22
+
 ### Added
 
 - implemented reordering of states when calculating dispersions based on projection on nearby k-points

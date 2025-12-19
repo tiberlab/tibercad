@@ -9,7 +9,7 @@ own TODO list. For historical reason, some module-specific TODO's are left in th
 
 - [ ] reorganize Makefiles and add out-of-src build
 - [ ] reorganize and unpack stuff in Utils.h
-- [ ] eliminate tiberCAD.in in bin, transfer to TiberCAD.sh.in and link  
+- [ ] eliminate tiberCAD.in in bin, transfer to tiberCAD.sh.in and link  
 - [ ] eliminate interlayer for libMesh system and solver classes (and solver re-implementations)
 - [ ] add more useful common API for projecting quantum states on bases/orbitals
 - [ ] change input parser so that it reads first into a string (with all includes) and then parses 
