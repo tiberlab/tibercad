@@ -9,17 +9,6 @@ include $(topdir)/Make.defs
 #libmesh_dir := @LIBMESH_PREFIX@
 libmesh_config := @LIBMESH_CONFIG@
 
-# gmsh
-GMSH := @GMSH@
-
-
-# TAO
-TAO_DIR := @TAO_DIR@
-
-# some handy defaults
-#DIM := 2
-#ORDER := 1
-
 
 # the main TiberCAD library
 TIBERLIBNAME := tibercad
@@ -54,7 +43,7 @@ TIBER_OBJECTS = $(shell find $(topdir)/src -name "*$(obj-suffix)" -a -path "*.${
 
 INCLUDE  := $(shell export METHOD=$(LIBMESHMETHOD) && $(libmesh_config) --include) -I@LIBMESH_PREFIX@/include/libmesh -I@LIBMESH_PREFIX@/include  -I@LIBMESH_PREFIX@/contrib/eigen/eigen  -I@LIBMESH_PREFIX@/contrib/timpi/src/parallel/include  -I@LIBMESH_PREFIX@/contrib/timpi/src/utilities/include  -I@LIBMESH_PREFIX@/contrib/timpi/src/algorithms/include 
 
-NON_TIBER_INCLUDES := @BOOST_CPPFLAGS@ @TAO_INCLUDES@ $(INCLUDE) 
+NON_TIBER_INCLUDES := @BOOST_CPPFLAGS@ $(INCLUDE) 
 
 ifeq ($(have_mkl),yes)
  MKLROOT = @MKL_DIR@

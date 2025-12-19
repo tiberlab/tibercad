@@ -536,11 +536,15 @@ dnl 			        [tc_cv_have_tao="yes"])
  dnl AC_LANG_POP()
  dnl CXXFLAGS=$CXXFLAGS_save
  dnl LDFLAGS=$LDFLAGS_save
- AC_SUBST([TAO_DIR], "$tc_tao_prefix")
- AC_SUBST([TAO_INCLUDES], "-I${tc_tao_prefix} -I${tc_tao_prefix}/include")
+ dnl AC_SUBST([TAO_DIR], "$tc_tao_prefix")
+ dnl AC_SUBST([TAO_INCLUDES], "-I${tc_tao_prefix} -I${tc_tao_prefix}/include")
  if test "$tc_cv_have_tao" == "yes"; then
    AC_DEFINE([HAVE_TAO], [1], [Define to 1 if tao is available])
+   TAO_DIR="$tc_tao_prefix"
+   TAO_INCLUDES="-I${tc_tao_prefix} -I${tc_tao_prefix}/include"
  fi
+ AC_SUBST([TAO_DIR])
+ AC_SUBST([TAO_INCLUDES])
 ])dnl
 
 

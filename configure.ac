@@ -165,7 +165,7 @@ TC_SLEPC
 #AC_MSG_NOTICE([* Checking for tao])
 #AC_MSG_NOTICE([****************************************])
 
-TC_TAO
+#TC_TAO
 
 #AC_MSG_NOTICE([])
 

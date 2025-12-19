@@ -80,10 +80,6 @@ $(subdirs):
 	 rm -f $@.$$$$
 
 
-%.msh: %.geo
-	@$(GMSH) -order $(ORDER) -$(DIM) -o $@ $<
-
-
 
 %.s: %.C %.d
 	@$(CXX) $(CPPFLAGS) -S $<
