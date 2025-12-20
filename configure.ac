@@ -1,13 +1,9 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-dnl create verison number from git
+dnl create version number from VERSION file
 m4_define([TCVERSION],
-  [m4_esyscmd_s([ \
-    (test -f VERSION && head -n 1 VERSION) || \
-    (git describe --tags --dirty --always 2>/dev/null | tr -d '[:space:]') || \
-    echo -n "0.0.0" \
-  ])]dnl
+  [m4_esyscmd_s([head -n 1 VERSION 2>/dev/null || echo 0.0.0])])
 )
 
 AC_INIT([tiberCAD],[TCVERSION()],[support@tibercad.org])
