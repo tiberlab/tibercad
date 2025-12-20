@@ -14,8 +14,6 @@ AC_CONFIG_MACRO_DIR([m4])
 #AC_CONFIG_SRCDIR([include/tibercad/base/TiberCad.h])
 AC_CONFIG_HEADERS([config.h])
 
-AC_REVISION([$Revision: 2.0$])
-
 # Make compilation tests using C++
 AC_LANG([C++])
 
