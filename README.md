@@ -21,4 +21,5 @@ Modules are released under the GNU General Public License (GPL) version 3.0, unl
 Compilation
 -----------
 
-tiberCAD can be compiled by defining a site configuration in compilation/ and running build_all. This will download necessary libraries and configure and compile all code.
+tiberCAD can be compiled by defining a site configuration in compilation/site_config.sh and running build_all. This will download necessary libraries and configure and compile all code. Example site configurations are in the site_configuration subdirectory.
+Note that currently standard installations of PETSc and SLEPc, and therefore libmesh, cannot yet be used. In future, the compilation scripts might be changed to make this possible.
