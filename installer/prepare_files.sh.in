@@ -287,7 +287,7 @@ prepare_linux_package () {
   cd ${files}
   tar --group 0 --owner 0 $MODE $ARCHIVE * 
   cd $CWDIR
-  #rm -rf $files
+  rm -rf $files
 
   return
 }
