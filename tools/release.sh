@@ -33,7 +33,6 @@ require_clean_tree() {
 
 # Must be in top-level repo
 git rev-parse --show-toplevel >/dev/null
-git log -n 1 | grep Date | awk '{print $3, $4, $5, $6}' >> "$VERSION_FILE"
 
 # Ensure clean main repo
 require_clean_tree
