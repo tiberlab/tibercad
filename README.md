@@ -22,7 +22,15 @@ Compilation
 -----------
 
 tiberCAD can be compiled by defining a site configuration in compilation/site_config.sh and running build_all. This will download necessary libraries and configure and compile all code. Example site configurations are in the site_configuration subdirectory.
-Note that currently standard installations of PETSc and SLEPc, and therefore libmesh, cannot yet be used. In future, the compilation scripts might be changed to make this possible.
+For example, in a Debian 12 or compatible system, you might do
+
+```bash
+cd compilation/
+ln -s site_configuration/debian_12.sh site_config.sh
+./build_all
+```
+
+This will donwload and compile PETSc, SLEPc, Boost libraries and libmesh.
 
 Tagging and releases
 --------------------
@@ -30,14 +38,14 @@ Tagging and releases
 The script tools/release.sh can be used to create release versions consistent with tags. Release tags are of the form v3.5.1, the script takes the version numer without the leading "v" as input.
 
 Citation
------------
+--------
 
 If you use TiberCAD for a publication, we kindly ask to cite the following papers
 
 ```bibtex
-@article{der2011multiscale,
+@article{2011multiscale,
   title={The multiscale paradigm in electronic device simulation},
-  author={Der Maur, Matthias Auf and Penazzi, Gabriele and Romano, Giuseppe and Sacconi, Fabio and Pecchia, Alessandro and Di Carlo, Aldo},
+  author={Auf der Maur, Matthias and Penazzi, Gabriele and Romano, Giuseppe and Sacconi, Fabio and Pecchia, Alessandro and Di Carlo, Aldo},
   journal={IEEE Trans. Electron Devices},
   volume={58},
   pages={1425},
@@ -48,7 +56,7 @@ If you use TiberCAD for a publication, we kindly ask to cite the following paper
 
 
 ```bibtex
-@article{auf2008tibercad,
+@article{2008tibercad,
   title={TiberCAD: towards multiscale simulation of optoelectronic devices},
   author={Auf der Maur, Matthias and Povolotskyi, Michael and Sacconi, Fabio and Pecchia, Alessandro and Romano, Giuseppe and Penazzi, Gabriele and Di Carlo, Aldo},
   journal={Opt. Quantum Electron.},
