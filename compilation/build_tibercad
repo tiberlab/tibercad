@@ -59,7 +59,7 @@ export LDFLAGS="$LDFLAGS -fopenmp"
   --enable-uptight \
   --with-libmesh-prefix=${BUILDDIR}/libmesh-${LIBMESHVERSION}-${TCHOST} \
   --with-libmesh-petsc-libdir=${SDKDIR}/${TCHOST}/lib \
-  --with-boost-prefix=${SDKDIR} --with-boost-libdir=${TOPDIR}/${TCHOST}/lib \
+  --with-boost-prefix=${SDKDIR} --with-boost-libdir=${SDKDIR}/${TCHOST}/lib \
   --host=$HOST --build=$BUILD
 
 
