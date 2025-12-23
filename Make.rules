@@ -46,7 +46,7 @@ $(subdirs):
 	@$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
 
 
-%.s : %.C
+%.s : %.cpp
 	@echo "Compiling C++ (in "$(mode)" mode) "$<" ..."
 	@$(CXX) $(CXXFLAGS) $(CPPFLAGS) -S -c $<
 
@@ -71,7 +71,7 @@ $(subdirs):
 	@mkdir -p .$(ARCH)
 	
 
-.$(ARCH)/%.d: %.C 
+.$(ARCH)/%.d: %.cpp
 	@mkdir -p .$(ARCH)
 	@$(CC) -MG -MT .$(ARCH)/$(basename $<)$(obj-suffix) -MM $(CPPFLAGS) $(CXXFLAGS) $< > $@.$$$$ ; \
 	 sed -e 's,\($*\)\$(obj-suffix)[ :]*,\1.\*\.o : $@ ,g' < $@.$$$$ > $@ ; \
@@ -81,14 +81,14 @@ $(subdirs):
 
 
 
-%.s: %.C %.d
+%.s: %.cpp %.d
 	@$(CXX) $(CPPFLAGS) -S $<
 
 
 ifeq (x$(findstring clean,$(MAKECMDGOALS)),x)
 ifneq (x$(srcfiles),x)
-srcfiltered=$(filter %.C, $(srcfiles))
-include $(addprefix .$(ARCH)/,$(srcfiltered:.C=.d))
+srcfiltered=$(filter %.cpp, $(srcfiles))
+include $(addprefix .$(ARCH)/,$(srcfiltered:.cpp=.d))
 endif
 endif
 

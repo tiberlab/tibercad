@@ -4,22 +4,22 @@ topdir := ../..
 
 include $(topdir)/Make.common
 
-tib_src := main.C
-tib_objects := $(patsubst %.C, .$(ARCH)/%$(obj-suffix), $(tib_src))
+tib_src := main.cpp
+tib_objects := $(patsubst %.cpp, .$(ARCH)/%$(obj-suffix), $(tib_src))
 
 
-bm_src := build_module.C
-bm_objects := $(patsubst %.C, .$(ARCH)/%$(obj-suffix), $(bm_src))
+bm_src := build_module.cpp
+bm_objects := $(patsubst %.cpp, .$(ARCH)/%$(obj-suffix), $(bm_src))
 bm_objects += $(topdir)/src/utils/.$(ARCH)/Utils.$(METHOD).o
 bm_objects += $(topdir)/src/base/.$(ARCH)/ModelOptions.$(METHOD).o
 bm_objects += $(topdir)/src/io/.$(ARCH)/InputParser.$(METHOD).o
 bm_objects += $(topdir)/src/io/.$(ARCH)/Messages.$(METHOD).o
 
 cross_srcfiles := $(bm_src)
-cross_srcfiles += $(topdir)/src/utils/Utils.C
-cross_srcfiles += $(topdir)/src/base/ModelOptions.C
-cross_srcfiles += $(topdir)/src/io/InputParser.C
-cross_srcfiles += $(topdir)/src/io/Messages.C
+cross_srcfiles += $(topdir)/src/utils/Utils.cpp
+cross_srcfiles += $(topdir)/src/base/ModelOptions.cpp
+cross_srcfiles += $(topdir)/src/io/InputParser.cpp
+cross_srcfiles += $(topdir)/src/io/Messages.cpp
 BUILD_CPPFLAGS := -DBUILD=\"$(BUILD)\" $(CPPFLAGS)
 BUILD_CXXFLAGS := $(CXXFLAGS)
 BUILD_LDFLAGS := -Wl,-rpath,'$$ORIGIN/../external/$(BUILD)/lib' -L../../external/$(BUILD)/lib -lboost_regex -lboost_filesystem -lboost_system

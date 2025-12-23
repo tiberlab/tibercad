@@ -8,12 +8,12 @@ include $(topdir)/Make.common
 #
 # source files
 fsrcfiles := $(wildcard *.f)
-csrcfiles := $(wildcard *.C)
+csrcfiles := $(wildcard *.cpp)
 
 #
 # object files
 target	:= $(patsubst %.f, .$(ARCH)/%$(obj-suffix), $(fsrcfiles))
-target	+= $(patsubst %.C, .$(ARCH)/%$(obj-suffix), $(csrcfiles))
+target	+= $(patsubst %.cpp, .$(ARCH)/%$(obj-suffix), $(csrcfiles))
 
 
 

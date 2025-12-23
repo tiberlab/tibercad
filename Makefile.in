@@ -10,8 +10,6 @@ doxygen := @DOXYGEN@
 
 MODULE_LIBS := -leigen_solver
 
-
-
 export MODULE_LIBS
 
 ifeq ($(target_os),darwin)
@@ -44,7 +42,7 @@ include/tibercad/base/tiber_config.h: config.h
 
 
 .PHONY: modules
-modules: core
+modules: apps
 	@mkdir -p SDK/etc
 	@cp share/modules.conf SDK/etc
 	@$(MAKE) --no-print-directory -C modules
@@ -134,9 +132,6 @@ Makefile: Makefile.in Make.common.in config.status
 aclocal.m4: acinclude.m4
 	aclocal -I /usr/share/aclocal
     
-config.h: config.h.in config.status
-	./config.status
-
 config.h.in:
 	autoheader
 

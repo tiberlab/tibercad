@@ -109,11 +109,11 @@ vpath %.h $(include_dirs)
 
 #
 # source files
-srcfiles := $(wildcard *.C)
+srcfiles := $(wildcard *.cpp)
 
 #
 # object files
-objects	:= $(patsubst %.C, .$(ARCH)/%$(obj-suffix), $(srcfiles))
+objects	:= $(patsubst %.cpp, .$(ARCH)/%$(obj-suffix), $(srcfiles))
 target := $(objects)
 
 
