@@ -1,3 +1,6 @@
 [submodule "examples"]
 	path = examples
 	url = https://github.com/tiberlab/tibercad_tutorials.git
+[submodule "testsuite"]
+	path = testsuite
+	url = https://github.com/tiberlab/tibercad_testsuite.git
