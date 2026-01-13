@@ -146,7 +146,7 @@ else
   LAPACK_LIBS=$LAPACKLIBS
 fi
 
-export LAPACKLIBS LDFLAGS LAPACK_LIBS
+export LAPACKLIBS LAPACK_LIBS
 
 dll_libext=.so
 dll_prefix=lib

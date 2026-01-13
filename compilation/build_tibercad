@@ -46,10 +46,10 @@ fi
 
 echo ${BUILDDIR}/libmesh-${LIBMESHVERSION}-${TCHOST}
 
-export CXXFLAGS="$CXXFLAGS -fopenmp"
-export LDFLAGS="$LDFLAGS -fopenmp"
+#export CXXFLAGS="$CXXFLAGS -fopenmp"
+#export LDFLAGS="$LDFLAGS -fopenmp"
 
-./configure \
+LDFLAGS="$LDFLAGS -fopenmp" CXXFLAGS="$CXXFLAGS -fopenmp" ./configure \
   --with-petsc-prefix=${BUILDDIR}/petsc-${PETSCVERSION}${PETSCPATCHLEVEL} \
   --with-petsc-arch=${TCHOST} \
   --with-mpiexec=${MPIEXEC} \
