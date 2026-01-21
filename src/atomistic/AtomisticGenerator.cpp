@@ -195,9 +195,9 @@ AtomisticGenerator::build(void)
   }
 
 
-  double l1 = (fabs(max_x - min_x)) * scale;
-  double l2 = (fabs(max_y - min_y)) * scale;
-  double l3 = (fabs(max_z - min_z)) * scale;
+  double l1 = (std::abs(max_x - min_x)) * scale;
+  double l2 = (std::abs(max_y - min_y)) * scale;
+  double l3 = (std::abs(max_z - min_z)) * scale;
 
   // Minimum periodic direction is considered along y and z axis, but eventually other lengths can be
   // specified by user in input (conventional cells along these direction are assured also in this case!!)
@@ -263,9 +263,9 @@ AtomisticGenerator::init_commons()
    _cell_translation(1) = translation[0]; 
    _cell_translation(2) = translation[1]; 
    _cell_translation(3) = translation[2];
-   if (abs(_cell_translation(1)) > 1.0 || 
-       abs(_cell_translation(2)) > 1.0 || 
-       abs(_cell_translation(3)) > 1.0 )
+   if (std::abs(_cell_translation(1)) > 1.0 || 
+       std::abs(_cell_translation(2)) > 1.0 || 
+       std::abs(_cell_translation(3)) > 1.0 )
       throw InitFailedException("cell_translation in relative coordinates must be < 1.0");
   }
 
@@ -894,9 +894,9 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3)
 
   if (!_as->is_periodic(0))
   {
-    if (((_dim == 1) && (fabs(_conv_vect(1,1)) > 1e-9)) ||
-        ((_dim == 2) && (fabs(_conv_vect(1,1)) > 1e-9) &&
-                        (fabs(_conv_vect(2,1)) > 1e-9)) ||
+    if (((_dim == 1) && (std::abs(_conv_vect(1,1)) > 1e-9)) ||
+        ((_dim == 2) && (std::abs(_conv_vect(1,1)) > 1e-9) &&
+                        (std::abs(_conv_vect(2,1)) > 1e-9)) ||
          (_dim == 3))
     {
       start_i = -2;
@@ -906,9 +906,9 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3)
   }
   if (!_as->is_periodic(1))
   {
-    if (((_dim == 1) && (fabs(_conv_vect(1,2)) > 1e-9)) ||
-        ((_dim == 2) && (fabs(_conv_vect(1,2)) > 1e-9) &&
-                        (fabs(_conv_vect(2,2)) > 1e-9)) ||
+    if (((_dim == 1) && (std::abs(_conv_vect(1,2)) > 1e-9)) ||
+        ((_dim == 2) && (std::abs(_conv_vect(1,2)) > 1e-9) &&
+                        (std::abs(_conv_vect(2,2)) > 1e-9)) ||
          (_dim == 3))
     {
       start_j = -2;
@@ -918,9 +918,9 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3)
   }
   if (!_as->is_periodic(2))
   {
-    if (((_dim == 1) && (fabs(_conv_vect(1,3)) > 1e-9)) ||
-        ((_dim == 2) && (fabs(_conv_vect(1,3)) > 1e-9) &&
-                        (fabs(_conv_vect(2,3)) > 1e-9)) ||
+    if (((_dim == 1) && (std::abs(_conv_vect(1,3)) > 1e-9)) ||
+        ((_dim == 2) && (std::abs(_conv_vect(1,3)) > 1e-9) &&
+                        (std::abs(_conv_vect(2,3)) > 1e-9)) ||
          (_dim == 3))
     {
       start_l = -2;
@@ -1029,7 +1029,7 @@ void AtomisticGenerator::make_conv_cell()
   for (int i = 1; i <=3; i++)
   {
     for (int j = 1; j <= 3; j++)
-      if (abs(_conv_vect(i,j)) < 1e-6) _conv_vect(i,j) = 0.0; 
+      if (std::abs(_conv_vect(i,j)) < 1e-6) _conv_vect(i,j) = 0.0; 
 
     if (_conv_vect(i, i) < 0)
     {
@@ -1107,7 +1107,7 @@ void AtomisticGenerator::minimal_conv_cell()
   double maxval = 1e-6;
   for (i = 1; i <= 3; ++i)
   {
-    if (fabs(rotated_prim_vec(1, i)) > maxval)
+    if (std::abs(rotated_prim_vec(1, i)) > maxval)
     {
       id1 = i;
       id2 = (i % 3) + 1;
@@ -1128,7 +1128,7 @@ void AtomisticGenerator::minimal_conv_cell()
   maxval = 1e-6;
   for (i = 2; i <= 3; ++i)
   {
-    if (fabs(rotated_prim_vec(3, i)) > maxval)
+    if (std::abs(rotated_prim_vec(3, i)) > maxval)
     {
       id1 = i;
     }
@@ -1213,7 +1213,7 @@ void AtomisticGenerator::minimal_conv_cell()
       v1 = rotated_prim_vec * prim_pos1;
       F1 = norm(v1);
 
-      if (abs(F1) < 1e-6)
+      if (std::abs(F1) < 1e-6)
           continue;
 
       for (int k = lower_2 ; k <= upper_2  ; k++)
@@ -1227,7 +1227,7 @@ void AtomisticGenerator::minimal_conv_cell()
           v2 = rotated_prim_vec * prim_pos2;
           F2 = norm(v2);
           
-          if (abs(F2) < 1e-6)
+          if (std::abs(F2) < 1e-6)
             continue;
 
           vF = v1^v2;
@@ -1622,7 +1622,7 @@ void AtomisticGenerator::check_periodic(void)
             {
               if (!_as->is_periodic(d))
               {
-                if ((fabs(_period(d+1) * shift) > 1e-6) && !added[d].count(bond_map[i][j]))
+                if ((std::abs(_period(d+1) * shift) > 1e-6) && !added[d].count(bond_map[i][j]))
                 {
                   Atom tmp(*bonded_atom);
                   _belong_to_structure[bond_map[i][j]] = false;

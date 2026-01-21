@@ -338,12 +338,12 @@ Kspace::equivalent_points(const libMesh::Point& p,
         double x = prod / vec1.norm();
         double y = sqrt(np_norm * np_norm - x*x);
 
-        if ((fabs(x) > 0.5 * vec1.norm()) && (y < fabs(x) / sqrt(3)))
+        if ((std::abs(x) > 0.5 * vec1.norm()) && (y < std::abs(x) / sqrt(3)))
         {
           c(b1) -= (x > 0) ? 1 : -1;
         }
-        else if ((y > fabs(x) / sqrt(3)) &&
-                 (y > (vec1.norm() - fabs(x)) / sqrt(3)))
+        else if ((y > std::abs(x) / sqrt(3)) &&
+                 (y > (vec1.norm() - std::abs(x)) / sqrt(3)))
         {
           c(b2) -= (x > 0) ? 1 : -1;
         }
@@ -1291,19 +1291,19 @@ void Kspace::find_k_space_symmetry()
         << angle12 << ", " << angle13 << " and " << angle23 << std::endl;
 
     }
-    else if (Utils::almost_equal::compare(fabs(sp12), 0.5, 1e-6) &&
+    else if (Utils::almost_equal::compare(std::abs(sp12), 0.5, 1e-6) &&
         Utils::almost_equal::compare(angle13, 90, 1e-5))
     {
       k_space_symmetry = HEXAGONAL;
     }
-    else if (Utils::almost_equal::compare(fabs(sp13), 0.5, 1e-6) &&
+    else if (Utils::almost_equal::compare(std::abs(sp13), 0.5, 1e-6) &&
         Utils::almost_equal::compare(angle12, 90, 1e-5))
     {
       b2 = 2;
       b3 = 1;
       k_space_symmetry = HEXAGONAL;
     }
-    else if (Utils::almost_equal::compare(fabs(sp23), 0.5, 1e-6) &&
+    else if (Utils::almost_equal::compare(std::abs(sp23), 0.5, 1e-6) &&
         Utils::almost_equal::compare(angle13, 90, 1e-5))
     {
       b1 = 1;

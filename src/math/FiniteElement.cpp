@@ -26,11 +26,9 @@
 
 
 
-#include "elem.h"
-#include "quadrature.h"
-#include "fe_map.h"
-//#include "fe_abstract.h"
-//#include "fe_base.h"
+#include "libmesh/elem.h"
+#include "libmesh/quadrature.h"
+#include "libmesh/fe_map.h"
 #include "tibercad/base/libMeshDefs.h"
 
 using namespace std;
@@ -73,7 +71,7 @@ FiniteElement<Dim, T>::reinit(const libMesh::Elem* elem, const unsigned int side
   {
     case TiberCad::CYLINDRICAL:
       for (unsigned int i = 0; i < n_points; i++){
-        double r = abs(this->_fe_map->get_xyz()[i](0));
+        double r = std::abs(this->_fe_map->get_xyz()[i](0));
         this->_fe_map->get_JxW()[i] *= 2 * M_PI * r * x0_inv * J;
       }
       break;
@@ -124,9 +122,9 @@ FiniteElement<Dim, T>::reinit(const libMesh::Elem* elem, const vector<libMesh::P
   {
     case TiberCad::CYLINDRICAL:
       for (unsigned int i = 0; i < n_points; i++){
-        double r = abs(this->_fe_map->get_xyz()[i](0));
+        double r = std::abs(this->_fe_map->get_xyz()[i](0));
         this->_fe_map->get_JxW()[i] *= 2 * M_PI * r * x0_inv * J;
-        //libMesh::FEBase::JxW[i] *= 2 * M_PI * abs(libMesh::FEBase::xyz[i](0)) * x0_inv * J;
+        //libMesh::FEBase::JxW[i] *= 2 * M_PI * std::abs(libMesh::FEBase::xyz[i](0)) * x0_inv * J;
       }
       break;
     default:

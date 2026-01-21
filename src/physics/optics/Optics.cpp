@@ -551,7 +551,7 @@ void Optics::calculate_for_k_point(const Point& k_point,
   integrated_quantity = 0.0;
 
   for (unsigned int k=0; k < _energy_mesh->n_nodes(); k++)
-    integrated_quantity += abs(spectrum[k]);
+    integrated_quantity += std::abs(spectrum[k]);
 
 
 }

@@ -575,9 +575,9 @@ AtomisticBasis::neighbor_iterator::operator++(void)
           }
           else
           {
-            double dx  = fabs(dist(0));
-            double dy  = fabs(dist(1));
-            double dz  = fabs(dist(2));
+            double dx  = std::abs(dist(0));
+            double dy  = std::abs(dist(1));
+            double dz  = std::abs(dist(2));
 
             if (dx < (_length/2 + _min_bond) &&
                 dy < (_height/2 + _min_bond) &&
@@ -601,11 +601,11 @@ AtomisticBasis::neighbor_iterator::operator++(void)
       }
       else
       {
-        double dx  = fabs(_structure.get_structure_atom(_start).get_position(0)
+        double dx  = std::abs(_structure.get_structure_atom(_start).get_position(0)
             - _structure.get_structure_atom(_current).get_position(0) - _image(0));
-        double dy  = fabs(_structure.get_structure_atom(_start).get_position(1)
+        double dy  = std::abs(_structure.get_structure_atom(_start).get_position(1)
             - _structure.get_structure_atom(_current).get_position(1) - _image(1));
-        double dz  = fabs(_structure.get_structure_atom(_start).get_position(2)
+        double dz  = std::abs(_structure.get_structure_atom(_start).get_position(2)
             - _structure.get_structure_atom(_current).get_position(2) - _image(2));
 
         advance = (dx > (_length/2)) || (dy > (_height/2)) || (dz > (_width/2));

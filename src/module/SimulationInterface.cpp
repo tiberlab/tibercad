@@ -2546,7 +2546,7 @@ SimulationInterface::do_maximum_norm_of_difference(ID id)
     unsigned int n = old.size();
     for (unsigned int i = 0; i < n; i++)
     {
-      double d = fabs(current(i) - old(i));
+      double d = std::abs(current(i) - old(i));
       norm = (d > norm) ? d : norm;
     }
   }

@@ -317,7 +317,7 @@ void  ISE_Element_3D::check_orientation_3D()
   //|a_1 a_2 a_3; b_1 b_2 b_3; c_1 c_2 c_3| ==
   // a_1b_2c_3-a_1b_3c_2-a_2b_1c_3+a_2b_3c_1+a_3b_1c_2-a_3b_2c_1
 
-  assert(abs(det)> 1e-12);
+  assert(std::abs(det) > 1e-12);
 
   if  (det > 0.0)
   {swap = false;}

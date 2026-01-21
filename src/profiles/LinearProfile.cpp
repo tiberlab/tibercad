@@ -81,7 +81,7 @@ LinearProfile::get_data(const libMesh::Elem*, const libMesh::Point& p) const
   // project onto _direction
   double xcoord = point * _direction;
 
-  if (fabs(xcoord) < _distance)
+  if (std::abs(xcoord) < _distance)
     data = _max - xcoord / _distance * (_max - _min);
   else
     data = _min;

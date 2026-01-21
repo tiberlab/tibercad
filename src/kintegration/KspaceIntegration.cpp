@@ -675,7 +675,7 @@ void KspaceIntegration::estimate_error_for_refinement(libMesh::ErrorVector& erro
     const KElem* el = *elem_it1;
     const unsigned int el_id = el->id();
 
-    error[el_id] = abs(error_estimator[el]); //test
+    error[el_id] = std::abs(error_estimator[el]); //test
   }
 
 }

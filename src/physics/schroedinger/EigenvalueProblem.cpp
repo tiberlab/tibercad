@@ -409,7 +409,7 @@ void EigenvalueProblem::compute_dispersion(const ModelOptions& opts)
     T = T * RealTensor(a, b, c).inverse();
     invT = T.inverse();
 
-    if (abs(1.0 - T.det()) > 1e-5)
+    if (std::abs(1.0 - T.det()) > 1e-5)
       os << " (rounded to " << Tdet*T.det() << " for unfolding procedure)";
 
     Messages::info(os.str());
@@ -1185,7 +1185,7 @@ EigenvalueProblem::process_element(const Elem* elem, unsigned int entryside,
           if (!ids.count(j))
           {
             double proj =
-                abs(scalar_product(ordered_solutions[ref_node][k], _solution[j]));
+                std::abs(scalar_product(ordered_solutions[ref_node][k], _solution[j]));
             //cerr << j << " - " << proj << " ";
             if (proj > max_sp)
             {

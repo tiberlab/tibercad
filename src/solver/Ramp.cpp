@@ -247,7 +247,7 @@ Ramp::ramp(void)
       //  _simulations[i]->solve();
     }
   }
-  while (abs(_goal - value) > 1e9 * (abs(_goal) * numeric_limits<double>::epsilon()
+  while (std::abs(_goal - value) > 1e9 * (std::abs(_goal) * numeric_limits<double>::epsilon()
       + numeric_limits<double>::min()));
   // the epsilon() here prevents from resolving two times the same sweep value
   // due to fixed point numerics

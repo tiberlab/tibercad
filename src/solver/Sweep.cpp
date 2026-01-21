@@ -171,7 +171,7 @@ Sweep::parse_options(void)
 
     start = log10(start);
     stop = log10(stop);
-    steps = static_cast<unsigned int>(abs(stop - start));
+    steps = static_cast<unsigned int>(std::abs(stop - start));
   }
 
   steps = get_option("steps", steps);

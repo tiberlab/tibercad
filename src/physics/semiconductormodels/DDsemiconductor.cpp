@@ -554,7 +554,7 @@ void DDsemiconductor::calculate_inverse_mass(
       {
         if (!identified_bands.count(i))
         {
-          comp[i] = abs(vec(i));
+          comp[i] = std::abs(vec(i));
           band = (comp[i] > comp[band]) ? i : band;
         }
       }

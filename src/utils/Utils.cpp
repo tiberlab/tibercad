@@ -384,9 +384,9 @@ Utils::scale_to_int(Tensor1& a, double tol)
   //If input is a zero vector, a zero vector is returned
 
   //Check if a is already almost integer
-  if ((fabs(a(1) - round(a(1))) < tol) &&
-      (fabs(a(2) - round(a(2))) < tol) &&
-      (fabs(a(3) - round(a(3))) < tol))
+  if ((std::abs(a(1) - round(a(1))) < tol) &&
+      (std::abs(a(2) - round(a(2))) < tol) &&
+      (std::abs(a(3) - round(a(3))) < tol))
   {
     a(1) = round(a(1));
     a(2) = round(a(2));
@@ -402,11 +402,11 @@ Utils::scale_to_int(Tensor1& a, double tol)
     // relaxation solves the issue related to non-ideal periodicity.
 
     // first scale smallest element to 1
-    double v1 = abs(a(1));
+    double v1 = std::abs(a(1));
     if (v1 < 1e-6) v1 = 1.0;
-    double v2 = abs(a(2));
+    double v2 = std::abs(a(2));
     if (v2 < 1e-6) v2 = 1.0;
-    double v3 = abs(a(3));
+    double v3 = std::abs(a(3));
     if (v3 < 1e-6) v3 = 1.0;
     double minval = min(v1, min(v2, v3));
     a /= minval;
@@ -419,9 +419,9 @@ Utils::scale_to_int(Tensor1& a, double tol)
     do{
       i = i + 1;
       a_tmp = a * i;
-    } while ((fabs(a_tmp(1) - round(a_tmp(1))) >= tol) ||
-             (fabs(a_tmp(2) - round(a_tmp(2))) >= tol) ||
-             (fabs(a_tmp(3) - round(a_tmp(3))) >= tol));
+    } while ((std::abs(a_tmp(1) - round(a_tmp(1))) >= tol) ||
+             (std::abs(a_tmp(2) - round(a_tmp(2))) >= tol) ||
+             (std::abs(a_tmp(3) - round(a_tmp(3))) >= tol));
 
     a(1) = a_tmp(1); a(2) = a_tmp(2); a(3) = a_tmp(3);
 
@@ -429,7 +429,7 @@ Utils::scale_to_int(Tensor1& a, double tol)
 
   int gcd_tmp = std::gcd(std::lround(a(1)), std::lround(a(2)));
   int gcd_value = std::gcd(gcd_tmp, std::lround(a(3)));
-  a = a / double(fabs(gcd_value));
+  a = a / double(std::abs(gcd_value));
   a(1) = round(a(1));
   a(2) = round(a(2));
   a(3) = round(a(3));

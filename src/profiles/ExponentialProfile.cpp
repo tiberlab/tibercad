@@ -85,7 +85,7 @@ ExponentialProfile::get_data(const Elem* , const Point& p) const
   double xcoord = point * _direction;
 
   if ((_type == symmetric) || (xcoord >= 0))
-    data = _max * exp(-fabs(xcoord) * _lambda);
+    data = _max * exp(-std::abs(xcoord) * _lambda);
 
   if ((_type == continued) && (xcoord < 0))
     data = _max;

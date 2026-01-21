@@ -43,7 +43,7 @@ Tensor2::invert(void)
    double sub3 = _data[3]*_data[7] - _data[6]*_data[4];
    double detA = _data[0]*sub1 - _data[1]*sub2 + _data[2]*sub3;
    
-   assert(std::fabs(detA) > 1.e-15);
+   assert(std::abs(detA) > 1.e-15);
 
    Tensor2 r;
 

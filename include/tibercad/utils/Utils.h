@@ -427,8 +427,8 @@ inline
 bool
 Utils::almost_equal::operator()(double a, double b) const
 {
-  double diff = std::fabs(a - b);
-  bool result = std::isless(diff, _eps * (1.0 + std::fabs(a)));
+  double diff = std::abs(a - b);
+  bool result = std::isless(diff, _eps * (1.0 + std::abs(a)));
   return result;
 }
 
@@ -437,8 +437,8 @@ inline
 bool
 Utils::almost_equal::operator()(double a, double b, double eps) const
 {
-  double diff = std::fabs(a - b);
-  bool result = std::isless(diff, eps * (1.0 + std::fabs(a)));
+  double diff = std::abs(a - b);
+  bool result = std::isless(diff, eps * (1.0 + std::abs(a)));
   return result;
 }
 
@@ -447,8 +447,8 @@ inline
 bool
 Utils::almost_equal::compare(double a, double b, double eps)
 {
-  double diff = std::fabs(a - b);
-  bool result = std::isless(diff, eps * (1.0 + std::fabs(a)));
+  double diff = std::abs(a - b);
+  bool result = std::isless(diff, eps * (1.0 + std::abs(a)));
   return result;
 }
 

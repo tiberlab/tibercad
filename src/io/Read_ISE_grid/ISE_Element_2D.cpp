@@ -307,9 +307,9 @@ void  ISE_Element_2D::check_orientation_2D()
 
   det = a11 * a22  - (a21*a12) ;
 
-  //cout << fabs(det) ;
+  //cout << std::abs(det) ;
 
-  assert(fabs(det)> 1e-12);
+  assert(std::abs(det)> 1e-12);
 
   if  (det > 0.0)
   {swap = false;}
