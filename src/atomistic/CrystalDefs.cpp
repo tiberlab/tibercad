@@ -30,6 +30,16 @@
 #include <fstream>
 
 
+const std::vector<std::string>
+CrystalDefs::_bravais_lattices =
+{
+  "aP",
+  "mP", "mS",
+  "oP", "oS", "oI", "oF",
+  "tP", "tI",
+  "hP", "hR",
+  "cP", "cI", "cF"
+};
 
 const std::vector<unsigned int>
 CrystalDefs::_class_to_system = 
@@ -178,6 +188,116 @@ CrystalDefs::_space_groups =
    "E(3)"
 };
 
+const std::vector<unsigned int>
+CrystalDefs::_spacegroup_to_bravais =
+{
+  // 1–2 triclinic
+  0,  // P1
+  0,  // P-1
+
+  // 3–15 monoclinic
+  1,1,2,
+  1,1,2,2,
+  1,1,2,1,1,2,
+
+  // 16–24 orthorhombic (222)
+  3,3,3,3,4,
+  4,6,5,5,
+
+  // 25–46 orthorhombic (mm2)
+  3,3,3,3,3,3,3,
+  3,3,3,4,4,4,4,
+  4,4,4,4,6,6,5,5,5,
+
+  // 47–74 orthorhombic (mmm)
+  3,3,3,3,3,3,3,3,
+  3,3,3,3,3,3,3,3,
+  4,4,4,4,4,4,6,6,
+  5,5,5,5,
+
+  // 75–80 tetragonal
+  7,7,7,7,8,8,
+
+  // 81–82
+  7,8,
+
+  // 83–88
+  7,7,7,7,8,8,
+
+  // 89–98
+  7,7,7,7,7,7,
+  7,7,8,8,
+
+  // 99–110
+  7,7,7,7,7,7,7,7,
+  8,8,8,8,
+
+  // 111–122
+  7,7,7,7,7,7,7,7,
+  8,8,8,8,
+
+  // 123–142
+  7,7,7,7,7,7,7,7,
+  7,7,7,7,7,7,7,7,
+  8,8,8,8,
+
+  // 143–146 trigonal
+  9,9,9,10,
+
+  // 147–148
+  9,10,
+
+  // 149–155
+  9,9,9,9,9,9,10,
+
+  // 156–161
+  9,9,9,9,10,10,
+
+  // 162–167
+  9,9,9,9,10,10,
+
+  // 168–173 hexagonal
+  9,9,9,9,9,9,
+
+  // 174
+  9,
+
+  // 175–176
+  9,9,
+
+  // 177–182
+  9,9,9,9,9,9,
+
+  // 183–186
+  9,9,9,9,
+
+  // 187–190
+  9,9,9,9,
+
+  // 191–194
+  9,9,9,9,
+
+  // 195–199 cubic
+  11,13,12,11,12,
+
+  // 200–206
+  11,11,13,13,12,11,12,
+
+  // 207–214
+  11,11,13,13,12,11,11,12,
+
+  // 215–220
+  11,13,12,11,13,12,
+
+  // 221–230
+  11,11,11,11,13,13,
+  13,13,12,12,
+
+  // E(3)
+  14
+};
+
+
 
 std::string
 CrystalDefs::convert_to_international_symbol(const std::string& symmetry)
@@ -277,7 +397,29 @@ CrystalDefs::get_bravais_lattice(const std::string& name)
       (name == "cF"))
       return "cF";
 
-  return "";
+  // try with space group
+
+  unsigned int id = 0;
+  // name might be a number
+  try
+  {
+    id = boost::lexical_cast<unsigned int>(name);
+  }
+  catch (boost::bad_lexical_cast &)
+  {
+    auto it = find(_space_groups.begin(), _space_groups.end(), name);
+    id = std::distance(_space_groups.begin(), it);
+    
+    id++;
+  }
+
+  unsigned int bravais_id = _spacegroup_to_bravais[id];
+
+  std::string bravais = "";
+  if (bravais_id < 14)
+    bravais = _bravais_lattices[bravais_id];
+  
+  return bravais;
 }
 
 
@@ -328,6 +470,10 @@ CrystalDefs::bravais_short_to_long_name(const std::string& in)
         name = "rhombohedral";
       else
         name = "hexagonal";
+      break;
+
+    case 't':
+      name += "tetragonal";
       break;
 
     case 'c':

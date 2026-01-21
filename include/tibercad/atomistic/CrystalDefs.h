@@ -90,5 +90,11 @@ class CrystalDefs {
     //! The space groups
     static const std::vector<std::string> _space_groups;
 
+    //! The 14 Bravais lattices
+    static const std::vector<std::string> _bravais_lattices;
+
+    //! Space group to Bravais lattice conversion table
+    static const std::vector<unsigned int> _spacegroup_to_bravais;
+
 };
 

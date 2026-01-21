@@ -69,6 +69,9 @@ public:
   //! Return string specifying lattice type (ex: 'fcc', 'hexagonal')
   const std::string get_lattice_type(void) const;
 
+  //! Return string specifying Bravais lattice
+  const std::string get_bravais_lattice(void) const;
+
   //! Return the lattice constants for an orthogonal cell as a vector
   const std::vector<double>& get_ortho_lattice_constants(void) const;
 
@@ -272,6 +275,15 @@ BulkCrystal::get_lattice_type(void) const
 {
   return _lattice_type;
 }
+
+
+inline
+const std::string
+BulkCrystal::get_bravais_lattice(void) const
+{
+  return _bravais_lattice;
+}
+
 
 
 inline

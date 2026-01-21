@@ -626,6 +626,7 @@ BulkCrystal::print_info(void) const
                          << " beta = " << _euler_angles[1] / M_PI * 180 << ","
                          << " gamma = " << _euler_angles[2] / M_PI * 180;
   Messages::info(os.str());
+  //print_xyz(_mat->get_name() + ".xyz");
 }
 
 void
@@ -739,10 +740,9 @@ BulkCrystal::read_database(void)
     
     _lattice_type = db.get("structure", "none");
 
+    // TODO need to check somewhere if lattice constants are valid
     db.set_section("lattice");
     _lattice_constant[0] = db.get("a", 0.0) * 10.0;
-    //if (_lattice_constant[0] == 0.0) Messages::error("At least "
-    //    "lattice constant a must be defined !!!!");
     _lattice_constant[1] = db.get("b", 0.0) * 10.0;
     if (_lattice_constant[1] == 0.0) _lattice_constant[1] = _lattice_constant[0];
     _lattice_constant[2] = db.get("c", 0.0) * 10.0;
@@ -955,8 +955,15 @@ BulkCrystal::set_cell_vectors(void)
   _prim_vec = 0.0;
   _conv_vec = 0.0;
 
-  if (_bravais_lattice.at(0) == 'a')
+  if (_bravais_lattice.empty())
   {
+    // no lattice at all, we should not arrive here
+    throw InitFailedException("BulkCrystal created but no Bravais lattice given.");
+  }
+
+  else if (_bravais_lattice.at(0) == 'a')
+  {
+    // TODO
   }
 
   else if (_bravais_lattice.at(0) == 'm')
