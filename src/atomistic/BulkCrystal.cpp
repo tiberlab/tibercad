@@ -113,7 +113,7 @@ BulkCrystal::extract_crystal_direction(const std::string& dir, Tensor1& vec) con
 
   if (!miller_str.empty())
   {
-    // the Miller (or Miller-Bravais) indices, can be for directions or planes,
+    // the Miller (or Miller-Bravais) indices can be for directions or planes,
     // depending on type of parentheses
     std::vector<int> miller;
     Utils::extract_vector(miller_str, miller);
@@ -164,19 +164,19 @@ BulkCrystal::get_orthogonal_vector(const Tensor1& dir, Tensor1& ortho) const
 {
   ortho = Tensor1(1.0);
 
-  if (abs(dir(1)) > 1e-3)
+  if (std::abs(dir(1)) > 1e-3)
   {
     ortho(1) = -(dir(2) + dir(3)) / dir(1);
     return;
   }
 
-  if (abs(dir(2)) > 1e-3)
+  if (std::abs(dir(2)) > 1e-3)
   {
     ortho(2) = -(dir(1) + dir(3)) / dir(2);
     return;
   }
 
-  if (abs(dir(3)) > 1e-3)
+  if (std::abs(dir(3)) > 1e-3)
   {
     ortho(3) = -(dir(1) + dir(2)) / dir(3);
     return;
@@ -511,18 +511,18 @@ BulkCrystal::find_least_common_lattice(const BulkCrystal &substrate,
         residualStrain = trace(strain);
 
         // If residual strain is within tolerance, update the best deformation
-        if (abs(residualStrain) < minResidualStrain)
+        if (std::abs(residualStrain) < minResidualStrain)
         {
-          minResidualStrain = abs(residualStrain);
+          minResidualStrain = std::abs(residualStrain);
 
-          if (abs(residualStrain) < max_strain)
+          if (std::abs(residualStrain) < max_strain)
             break;
         }
       }
-      if (abs(residualStrain) < max_strain)
+      if (std::abs(residualStrain) < max_strain)
         break;
     }
-    if (abs(residualStrain) < max_strain)
+    if (std::abs(residualStrain) < max_strain)
       break;
   }
 /*
@@ -638,11 +638,11 @@ BulkCrystal::get_miller_indices(const Tensor1& vec, std::vector<int>& miller) co
   double k = vec * _conv_vec(2);
   double l = vec * _conv_vec(3);
 
-  double hh = abs(h);
+  double hh = std::abs(h);
   hh = (hh < 1e-3) ? 1.0 : hh;
-  double kk = abs(k);
+  double kk = std::abs(k);
   kk = (kk < 1e-3) ? 1.0 : kk;
-  double ll = abs(l);
+  double ll = std::abs(l);
   ll = (ll < 1e-3) ? 1.0 : ll;
   double minval = std::min(hh, std::min(kk, ll)); 
 
@@ -681,14 +681,14 @@ BulkCrystal::calculate_euler_angles(void)
   double beta = acos(_rotation(3, 3));
   double gamma = 0;
 
-  if (abs(_rotation(3,3)) < (1.0 - 1e-6))
+  if (std::abs(_rotation(3,3)) < (1.0 - 1e-6))
   {
 
     double sb1 = sin(beta);
     alpha = atan2(-_rotation(3,2)/sb1, -_rotation(3,1)/sb1);
 
 
-    if (abs(alpha) > M_PI_2)
+    if (std::abs(alpha) > M_PI_2)
     {
       double sb2 = -sb1;
       alpha = atan2(-_rotation(3,2)/sb2, -_rotation(3,1)/sb2);
