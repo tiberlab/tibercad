@@ -262,7 +262,8 @@ BondMap::process_atoms(const std::vector<Atom>& basis,
       put_here = (*this)[i].size();
       
       // check if it is already there
-      for (unsigned int n = 0; n < (*this)[i].size(); n++){
+      for (unsigned int n = 0; n < (*this)[i].size(); n++)
+      {
 
         if ((*this)[i][n] == j && libMesh::Point(get_translation(i, n) - shift).norm() < 1e-6)
         {
@@ -327,16 +328,16 @@ BondMap::fix_bondmap(const std::vector<Atom>& basis)
       _translation[i][k] = tmp_p;
 
     }
-    /*
+    ///*
     std::cerr << i << "  : ";
     for(int j = 0; j < (*this)[i].size(); ++j)
     {
         libMesh::Point normal = basis[(*this)[i][j]].get_position() +
-            _translation[i][j] - basis[i].get_position();
+            get_translation(i,j) - basis[i].get_position();
       std::cerr <<  normal.norm() << " ";
     }
     std::cerr << "\n";
-    */
+    //*/
 
 
     // use greater so that erasing happens starting from highest index
@@ -350,7 +351,6 @@ BondMap::fix_bondmap(const std::vector<Atom>& basis)
         libMesh::Point normal = basis[(*this)[i][j]].get_position() +
             get_translation(i, j) - basis[i].get_position();
 
-        //std::cerr << "norm = " << normal.norm() << "\n";
         libMesh::Plane p(basis[i].get_position() + 0.5*normal, normal);
 
         for(int k = 0; k < (*this)[i].size(); ++k)
@@ -360,12 +360,32 @@ BondMap::fix_bondmap(const std::vector<Atom>& basis)
             libMesh::Point vector = basis[(*this)[i][k]].get_position() +
                 get_translation(i, k) - basis[i].get_position();
 
-            if (vector.norm() > 1.1 * normal.norm())
+            //if (vector.norm() > 1.1 * normal.norm())
             {
-              libMesh::Point testpoint = basis[i].get_position() + scale * vector;
+              libMesh::Point testpoint = basis[i].get_position() + 0.5 * vector;
 
               if (p.above_surface(testpoint))
                 flag.insert(k);
+            }
+          }
+        }
+
+        for(int k = 0; k < j; ++k)
+        {
+          if ((k != j) && (flag.count(k) == 0))
+          {
+            libMesh::Point vector = basis[(*this)[i][k]].get_position() +
+                get_translation(i, k) - basis[i].get_position();
+
+            // get angle between r_ij and r_ik
+            double dotp = normal * vector;
+            const double costheta = 0.866;
+            double rij = normal.norm();
+            double rik = vector.norm();
+            if ((rij > 1.5*rik) || (dotp > rij*rik*costheta))
+            {
+              flag.insert(j);
+              break;
             }
           }
         }
@@ -388,7 +408,7 @@ BondMap::fix_bondmap(const std::vector<Atom>& basis)
       for (auto it = flag.begin(); it != flag.end(); ++it)
       {
         unsigned int id = *it;
-        unsigned int neighbour = (*this)[i][id];
+        //unsigned int neighbour = (*this)[i][id];
 
         (*this)[i].erase((*this)[i].begin() + id);
         _translation[i].erase(_translation[i].begin() + id);
