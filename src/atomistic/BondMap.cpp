@@ -233,9 +233,6 @@ BondMap::process_atoms(const std::vector<Atom>& basis,
                        const Tensor1& period)
 {
 
-  unsigned int put_here = 0;
-  bool not_already_signed;
-  double cutofftmp;
   const libMesh::Point per(period(1), period(2), period(3));
   libMesh::Point shift;
   shift(0) = per(0) * _period(1, 1) + per(1) * _period(1, 2) + per(2) * _period(1, 3);
@@ -246,10 +243,21 @@ BondMap::process_atoms(const std::vector<Atom>& basis,
   // here we use the fixed cutoffs to decide whether a given couple of atoms
   // is a potential bond. For this to work, the cutoffs need to be sufficiently
   // large, but not too large.
+  // 2026-01-26: We now use the covalent radii to decide possible bonding
   if ((i != j) || (per.norm() > 1e-5))
   {
    
-    cutofftmp = _cutoff[basis[i].get_specie()] + _cutoff[basis[j].get_specie()];
+    //double cutofftmp = _cutoff[basis[i].get_specie()] + _cutoff[basis[j].get_specie()];
+    double cutofftmp = basis[i].get_specie().get_covalent_radius() +
+                       basis[j].get_specie().get_covalent_radius();
+
+    // tighten cutoff if the two atoms are the same
+    double f = 1.5;
+    if (basis[i].get_specie() == basis[j].get_specie())
+      f = 1.2; // or even 1.15 for heavy cations
+
+    cutofftmp *= f;
+
     const libMesh::Point& position1 = basis[i].get_position();
     libMesh::Point position2 = basis[j].get_position() + shift;
     libMesh::Point vector = position2 - position1;
@@ -259,7 +267,6 @@ BondMap::process_atoms(const std::vector<Atom>& basis,
     {
 
       bool add_bond = true;
-      put_here = (*this)[i].size();
       
       // check if it is already there
       for (unsigned int n = 0; n < (*this)[i].size(); n++)
@@ -280,22 +287,17 @@ BondMap::process_atoms(const std::vector<Atom>& basis,
       }
       
     }
-
   }
-
 }
 
 
 void
 BondMap::fix_bondmap(const std::vector<Atom>& basis)
 {
-  // we decide whether a bond needs to be kept by checking
-  // if the midpoint lies inside the Voronoi box around the
-  // center atom. But this seems to work only if we check for
-  // something longer than midpoint. Otherwise, some 2nd NN
-  // bondings appear as 1st NN. Maybe one could take the the
-  // shortest bonds up to the valence of the atom?
-  double scale = 1.0;
+  // we decide whether a bond should be kept by checking
+  // - if the midpoint lies inside the Voronoi box around the
+  //   center atom defined by the other atoms
+  // - the opening angle of the cone defined by other neighbors 
 
   // loop over all atoms
   for (size_t i = 0; i < this->size(); ++i)
@@ -328,7 +330,7 @@ BondMap::fix_bondmap(const std::vector<Atom>& basis)
       _translation[i][k] = tmp_p;
 
     }
-    ///*
+    /*
     std::cerr << i << "  : ";
     for(int j = 0; j < (*this)[i].size(); ++j)
     {
@@ -337,11 +339,15 @@ BondMap::fix_bondmap(const std::vector<Atom>& basis)
       std::cerr <<  normal.norm() << " ";
     }
     std::cerr << "\n";
-    //*/
+    */
 
 
     // use greater so that erasing happens starting from highest index
     std::set<size_t, std::greater<size_t>> flag;
+
+    // factor for the testpoint for Voronoi box testing
+    // (slightly outside of midpoint).
+    double alpha = 0.55;
 
     // loop over all neighbors
     for (int j = 0; j < (*this)[i].size(); ++j)
@@ -351,57 +357,71 @@ BondMap::fix_bondmap(const std::vector<Atom>& basis)
         libMesh::Point normal = basis[(*this)[i][j]].get_position() +
             get_translation(i, j) - basis[i].get_position();
 
+        // the mid-perpendicular plane
         libMesh::Plane p(basis[i].get_position() + 0.5*normal, normal);
 
-        for(int k = 0; k < (*this)[i].size(); ++k)
+        // the shorter bonds cannot be masked by longer ones
+        for(int k = j + 1; k < (*this)[i].size(); ++k)
         {
           if ((k != j) && (flag.count(k) == 0))
           {
             libMesh::Point vector = basis[(*this)[i][k]].get_position() +
                 get_translation(i, k) - basis[i].get_position();
 
-            //if (vector.norm() > 1.1 * normal.norm())
-            {
-              libMesh::Point testpoint = basis[i].get_position() + 0.5 * vector;
+            libMesh::Point testpoint = basis[i].get_position() + alpha * vector;
 
-              if (p.above_surface(testpoint))
-                flag.insert(k);
-            }
-          }
-        }
-
-        for(int k = 0; k < j; ++k)
-        {
-          if ((k != j) && (flag.count(k) == 0))
-          {
-            libMesh::Point vector = basis[(*this)[i][k]].get_position() +
-                get_translation(i, k) - basis[i].get_position();
-
-            // get angle between r_ij and r_ik
-            double dotp = normal * vector;
-            const double costheta = 0.866;
-            double rij = normal.norm();
-            double rik = vector.norm();
-            if ((rij > 1.5*rik) || (dotp > rij*rik*costheta))
-            {
-              flag.insert(j);
-              break;
-            }
+            if (p.above_surface(testpoint))
+              flag.insert(k);
           }
         }
       }
     }
 
+    // eliminate flagged bonds
+    if (!flag.empty())
+    {
+      for (auto it = flag.begin(); it != flag.end(); ++it)
+      {
+        unsigned int id = *it;
+        //unsigned int neighbour = (*this)[i][id];
 
-    /*
-    std::cerr << "\n" << i << ": ";
-    for (auto&& n : (*this)[i])
-      std::cerr << n << " ";
-    std::cerr << std::endl << "delete: ";
-    for(std::set<size_t>::iterator it = flag.begin(); it != flag.end(); it++)
-        std::cerr << *it << " ";
-    std::cerr << std::endl;
-    */
+        (*this)[i].erase((*this)[i].begin() + id);
+        _translation[i].erase(_translation[i].begin() + id);
+
+      }
+    }
+
+    flag.clear();
+
+    for (int j = 0; j < (*this)[i].size(); ++j)
+    {
+      if (flag.count(j) == 0)
+      {
+        libMesh::Point normal = basis[(*this)[i][j]].get_position() +
+            get_translation(i, j) - basis[i].get_position();
+        double rij = normal.norm();
+
+        double cos_max = -1.0;
+
+        for (int k = 0; k < (*this)[i].size(); ++k)
+        {
+          if (k == j || flag.count(k))
+            continue;
+
+          libMesh::Point v = basis[(*this)[i][k]].get_position() +
+              get_translation(i, k) - basis[i].get_position();
+
+          double c = (normal * v) / (rij * v.norm());
+          cos_max = std::max(cos_max, c);
+        }
+
+        if (cos_max > 0.866) // θ_min < 30°
+          flag.insert(j);
+
+        
+      }
+    }
+
 
     if (!flag.empty())
     {

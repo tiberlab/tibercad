@@ -22,6 +22,7 @@
 
 #include "tibercad/atomistic/BulkCrystal.h"
 #include "tibercad/atomistic/CrystalDefs.h"
+#include "tibercad/atomistic/BondMap.h"
 #include "tibercad/math/TensorOperators.h"
 #include "tibercad/io/Database.h"
 #include "tibercad/physics/Alloy.h"
@@ -95,6 +96,7 @@ BulkCrystal::init(void)
    
 
   build_bond_map();
+  get_bond_map().print();
   refresh();
   
 }
@@ -901,6 +903,9 @@ BulkCrystal::read_database(void)
 
       record = "specie_" + s;
       std::string specie = dbA->get(record.c_str(), "H");
+      std::string specieB = dbB->get(record.c_str(), "H");
+       if (specie.compare(specieB))
+         specie = specie + specieB;
       
       for (unsigned int j = 1; j <= n_x; j++)
       {

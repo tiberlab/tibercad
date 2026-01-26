@@ -69,6 +69,13 @@ D4 = -1.74
 D5 = -2.07
 D6 = -5.5  # from Vurgaftman [7]
 
+# Keito Mori-Tamamura et al., IWN 2024
+#D3 = 3.0
+#D4 = -10.7
+#D5 = -0.4
+#D6 = -12.7
+
+
 
 [permittivity]
 # static dielectric constant

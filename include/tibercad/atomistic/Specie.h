@@ -30,6 +30,7 @@
 //C++ and boost includes
 #include <string>
 #include <map>
+#include <vector>
 #include <iostream>
 #include <fstream>
 #include "boost/assign/list_of.hpp"
@@ -37,7 +38,7 @@
 
 
 //! A class for elemental specie enumeration
-/*
+/*!
  * Methods to overload << >> and = operators are provided
  * to make I/O and comparison operations compatible with
  * strings
@@ -50,25 +51,13 @@ class Specie
                 H ,                                                He,
                 Li,Be,                              B ,C ,N ,O ,F ,Ne,
                 Na,Mg,                              Al,Si,P ,S ,Cl,Ar,
-	        K ,Ca,Sc,Ti,V ,Cr,Mn,Fe,Co,Ni,Cu,Zn,Ga,Ge,As,Se,Br,Kr,
+	              K ,Ca,Sc,Ti,V ,Cr,Mn,Fe,Co,Ni,Cu,Zn,Ga,Ge,As,Se,Br,Kr,
                 Rb,Sr,Y ,Zr,Nb,Mo,Tc,Ru,Rh,Pd,Ag,Cd,In,Sn,Sb,Te,I ,Xe,
                 Cs,Ba,La,Ce,Pr,Nd,Pm,Sm,Eu,Gd,Tb,Dy,Ho,Er,Tm,Yb,
                       Lu,Hf,Ta,W ,Re,Os,Ir,Pt,Au,Hg,Tl,Pb,Bi,Po,At,Rn,
                 Fr,Ra,Ac,Th,Pa,U ,Np,Pu,Am,Cm,Bk,Cf,Es,Fm,Md,No,
                       Lr,Rf,Db,Sg,Bh,Hs,Mt,Ds,
                 VIRT};
-
-
-    static
-      std::map<Type, std::string> specie_to_string;
-
-
-    static
-      std::map<Type, double> specie_to_mass;
-
-
-    static
-      std::map<std::string, Type> string_to_specie;
 
     //! Default constructor
     Specie(void);
@@ -82,10 +71,13 @@ class Specie
     //! Constructor with enumerator specification
     Specie(const Type& type);
 
-    //!Get mass
+    //! Get mass
     double get_mass(void) const;
+    
+    //! Get the covalent radius
+    double get_covalent_radius(void) const;
 
-    //!Get specie string
+    //! Get specie string
     const std::string& get_string(void) const;
 
     //! Set specie type as Type enumerator
@@ -127,6 +119,17 @@ class Specie
 
     Type _type;
 
+    static std::map<Type, std::string> _specie_to_string;
+
+
+    static std::map<Type, double> _specie_to_mass;
+
+
+    static std::map<std::string, Type> _string_to_specie;
+
+    //! The covalent radii in Angstrom
+    static std::vector<double> _covalent_radius;
+
 };
 
 
@@ -134,15 +137,23 @@ class Specie
 inline
 const std::string& Specie::get_string(void) const
 {
-  return Specie::specie_to_string[_type];
+  return _specie_to_string[_type];
 }
 
 
 inline
 double Specie::get_mass(void) const
 {
-  return Specie::specie_to_mass[_type];
+  return _specie_to_mass[_type];
 }
+
+
+inline
+double Specie::get_covalent_radius(void) const
+{
+  return _covalent_radius[_type];
+}
+
 
 inline
 void Specie::set_type(const Type& type)
@@ -153,7 +164,7 @@ void Specie::set_type(const Type& type)
 inline
 void Specie::set_type(const std::string& type)
 {
-  _type = Specie::string_to_specie[type];
+  _type = _string_to_specie[type];
 }
 
 
@@ -177,8 +188,7 @@ Specie::operator!=(const Specie& specie) const
 inline
 bool operator== (const Specie& specie, const std::string& type_string)
 {
-  if (Specie::string_to_specie[type_string] == specie._type) return true;
-  else return false;
+  return (Specie::_string_to_specie[type_string] == specie._type);
 }
 
 //Override comparison operator, allows:
@@ -186,8 +196,7 @@ bool operator== (const Specie& specie, const std::string& type_string)
 inline
 bool operator== (const std::string& type_string, const Specie& specie)
 {
-  if (Specie::string_to_specie[type_string] == specie._type) return true;
-  else return false;
+  return(Specie::_string_to_specie[type_string] == specie._type);
 }
 
 //Override comparison, allow comparison between Specie and Type avoiding
