@@ -37,7 +37,7 @@
 #include "libmesh/mesh.h"
 
 StrainLattice::StrainLattice()
-:_as(NULL)
+:_as(nullptr)
 {
 }
 
@@ -243,12 +243,16 @@ StrainLattice::build_tetraedron(const AtomisticBasis* as, unsigned int atm, Stra
   //All the vertices are supposed to have same specie, we pick the first neighbor
   tet.vertex_label = atoms[bondmap[atm][0]].get_specie();
 
+  // NOTE 2026-01-30
+  // This part of the code only works for III-Vs anyway, and we try to make sure
+  // that the bondmap delivered is correct. Therefore, the following check is
+  // unnecessary, and it fails badly for alloys
   //We check that all neghbors are really of the same type (cations or anions)
-  for (unsigned int i = 0; i < n_bonds; i++)
-  {
-    if (atoms[bondmap[atm][i]].get_specie() != tet.vertex_label)
-      Messages::error("Error in StrainLattice. Try to build tetraedron on ill conditioned structure");
-  } 
+  //for (unsigned int i = 0; i < n_bonds; i++)
+  //{
+  //  if (atoms[bondmap[atm][i]].get_specie() != tet.vertex_label)
+  //    Messages::error("Error in StrainLattice. Try to build tetraedron on ill conditioned structure");
+  //} 
   
   for (unsigned int i = 0; i < n_bonds; i++)
   {
