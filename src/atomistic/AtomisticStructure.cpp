@@ -217,52 +217,51 @@ AtomisticStructure::init(const std::string& name,
     Messages::info("Atomistic structure build time: "+tt.elapsed_string());
 
   }
-      
-   //Calculate the number of atoms excluding hydrogens 
-   //(Useful for passivated semiconductors)
-   compute_N_without_H();
 
-   m.newline();
-   ostringstream os;
-   os << "Atomistic Structure containing " << get_N_atoms() <<
-         " atoms has been built. " <<std::endl;
-   os << "Size not counting passivation hydrogens: "<< get_N_without_H()<<std::endl;
-   m.info(os.str());
-   os.str(std::string());
- 
-   m.info("Supercell structure");
-   m.info("Lattice vectors (A):");
-   m.indent();
- 
-   libMesh::RealVectorValue a, b, c;
-   get_lattice_vectors(a, b, c);
-   os << "a1 = (";
-   a.write_unformatted(os, false);
-   os << ")\na2 = (";
-   b.write_unformatted(os, false);
-   os << ")\na3 = (";
-   c.write_unformatted(os, false);
-   os << ")\n";
-   m.info(os.str());
-   os.str(std::string());
+  // Calculate the number of atoms excluding hydrogens
+  //(Useful for passivated semiconductors)
+  compute_N_without_H();
 
+  m.newline();
+  ostringstream os;
+  os << "Atomistic Structure containing " << get_N_atoms() << " atoms has been built. " << std::endl;
+  os << "Size not counting passivation hydrogens: " << get_N_without_H() << std::endl;
+  m.info(os.str());
+  os.str(std::string());
 
-   Messages::info("Output structure(s)");
-   print_driver();
+  m.info("Supercell structure");
+  m.info("Lattice vectors (A):");
+  m.indent();
 
+  libMesh::RealVectorValue a, b, c;
+  get_lattice_vectors(a, b, c);
+  os << "a1 = (";
+  a.write_unformatted(os, false);
+  os << ")\na2 = (";
+  b.write_unformatted(os, false);
+  os << ")\na3 = (";
+  c.write_unformatted(os, false);
+  os << ")\n";
+  m.info(os.str());
+  os.str(std::string());
 
-   // Device call_back function 
-   map<string, list<boost::function<void(void)>>>::iterator mit =
-       _callback_functions.find(get_name());
- 
-   if (mit != _callback_functions.end())
-   {
-     list<boost::function<void(void)>>::iterator it((mit->second).begin());
-     for ( ; it != (mit->second).end(); ++it)
-     {
-       (*it)();
-     }
-   }
+  Messages::info("Output structure(s)");
+  print_driver();
+
+  //_bondmap->print(_atoms);
+
+  // Device call_back function
+  map<string, list<boost::function<void(void)>>>::iterator mit =
+      _callback_functions.find(get_name());
+
+  if (mit != _callback_functions.end())
+  {
+    list<boost::function<void(void)>>::iterator it((mit->second).begin());
+    for (; it != (mit->second).end(); ++it)
+    {
+      (*it)();
+    }
+  }
 }
 
     
@@ -571,14 +570,6 @@ AtomisticStructure::init_mesh_structure()
   AtomisticGenerator* generator 
     = AtomisticGenerator::create(this, _device->get_mesh().mesh_dimension());
 
-  //build();
-  //associate_elements(_as->get_IDset());
-  //cut the structure (only flags atoms)
-  //iterates on _super_basis and assign species
-  //check_periodic(); Eventually enlarge along dummy supercell directions
-  //passivate();
-  //remove_atoms();
-  //build_random_alloy();  
   generator->do_init();
 
 

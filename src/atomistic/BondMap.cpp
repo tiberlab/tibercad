@@ -66,12 +66,6 @@ BondMap::~BondMap(void)
 
 
 void
-BondMap::clean()
-{
-  //_grid_cell.clear();
-}
-
-void
 BondMap::set_cutoff()
 {
   std::ifstream file;
@@ -169,6 +163,13 @@ BondMap::solve(const std::vector<Atom>& basis,
   if (basis.empty())
     return;
 
+  clear();
+  _translation.clear();
+
+  size_t na = basis.size();
+  resize(na);
+  _translation.resize(na);
+
   Tensor1 edge_min, edge_max;
 
   //set cutoff distancies
@@ -189,6 +190,7 @@ BondMap::solve(const std::vector<Atom>& basis,
   //define the minimum spacing of the grid. the smaller it is, the faster is bonds calculations
   //cannot be smaller than the largest bond length (in Angstrom)
   GridCells cells(basis, period, origin, 8.0);
+  //cells.print_statistics();
 
   // Loop on all cells
   Utils::Progress* prog = nullptr;
@@ -244,17 +246,18 @@ BondMap::process_atoms(const std::vector<Atom>& basis,
   // is a potential bond. For this to work, the cutoffs need to be sufficiently
   // large, but not too large.
   // 2026-01-26: We now use the covalent radii to decide possible bonding
-  if ((i != j) || (per.norm() > 1e-5))
+  if ((i != j) || (per.norm() > 0.1))
   {
-   
+
     //double cutofftmp = _cutoff[basis[i].get_specie()] + _cutoff[basis[j].get_specie()];
     double cutofftmp = basis[i].get_specie().get_covalent_radius() +
                        basis[j].get_specie().get_covalent_radius();
-
+    double f = 2.0;
+    
     // tighten cutoff if the two atoms are the same
-    double f = 1.5;
-    if (basis[i].get_specie() == basis[j].get_specie())
-      f = 1.2; // or even 1.15 for heavy cations
+    // TODO check whether to look also at the label
+    //if (basis[i].get_specie() == basis[j].get_specie())
+    //  f = 1.2; // or even 1.15 for heavy cations
 
     cutofftmp *= f;
 
@@ -262,7 +265,6 @@ BondMap::process_atoms(const std::vector<Atom>& basis,
     libMesh::Point position2 = basis[j].get_position() + shift;
     libMesh::Point vector = position2 - position1;
     
-
     if (vector.norm() < cutofftmp)
     {
 
@@ -271,8 +273,7 @@ BondMap::process_atoms(const std::vector<Atom>& basis,
       // check if it is already there
       for (unsigned int n = 0; n < (*this)[i].size(); n++)
       {
-
-        if ((*this)[i][n] == j && libMesh::Point(get_translation(i, n) - shift).norm() < 1e-6)
+        if (((*this)[i][n] == j) && (libMesh::Point(get_translation(i, n) - shift).norm() < 1e-6))
         {
           add_bond = false;
           break;
@@ -284,6 +285,9 @@ BondMap::process_atoms(const std::vector<Atom>& basis,
       {
         (*this)[i].push_back(j);
         _translation[i].push_back(per);
+
+        (*this)[j].push_back(i);
+        _translation[j].push_back(-per);
       }
       
     }
@@ -296,16 +300,17 @@ BondMap::fix_bondmap(const std::vector<Atom>& basis)
 {
   // we decide whether a bond should be kept by checking
   // - if the midpoint lies inside the Voronoi box around the
-  //   center atom defined by the other atoms
+  //   center atom defined by the other atoms with shorter bonds
   // - the opening angle of the cone defined by other neighbors 
 
+  
   // loop over all atoms
   for (size_t i = 0; i < this->size(); ++i)
   {
-
+ 
     // first we reorder the bonds in increasing length
     // (using insertion sort algorithm)
-    for (int j = 1; j < (*this)[i].size(); ++j)
+    for (unsigned int j = 1; j < (*this)[i].size(); ++j)
     {
       unsigned int tmp = (*this)[i][j];
       libMesh::Point tmp_p = _translation[i][j];
@@ -313,14 +318,15 @@ BondMap::fix_bondmap(const std::vector<Atom>& basis)
       double dist = libMesh::Point(basis[(*this)[i][j]].get_position() +
           get_translation(i, j) - basis[i].get_position()).norm();
 
-      int k;
+      unsigned int k;
 
       for (k = j; k > 0; --k)
       {
         double dist2 = libMesh::Point(basis[(*this)[i][k-1]].get_position() +
           get_translation(i, k-1) - basis[i].get_position()).norm();
 
-        if (dist2 <= dist)
+        // strict inequality is necessary for stable sorting
+        if (dist2 < dist)
           break;
 
         (*this)[i][k] = (*this)[i][k-1];
@@ -330,27 +336,27 @@ BondMap::fix_bondmap(const std::vector<Atom>& basis)
       _translation[i][k] = tmp_p;
 
     }
-    /*
+    ///*
     std::cerr << i << "  : ";
-    for(int j = 0; j < (*this)[i].size(); ++j)
+    for(int j = 0; j < std::min((*this)[i].size(), (size_t)7); ++j)
     {
         libMesh::Point normal = basis[(*this)[i][j]].get_position() +
             get_translation(i,j) - basis[i].get_position();
-      std::cerr <<  normal.norm() << " ";
+      std::cerr <<  "(" << (*this)[i][j] << ", " << normal.norm() << ") ";
     }
     std::cerr << "\n";
-    */
+    //*/
 
 
     // use greater so that erasing happens starting from highest index
     std::set<size_t, std::greater<size_t>> flag;
 
     // factor for the testpoint for Voronoi box testing
-    // (slightly outside of midpoint).
-    double alpha = 0.55;
+    // (slightly outside of midpoint to prevent false neighbors).
+    double alpha = 0.5 + 1e-3;
 
     // loop over all neighbors
-    for (int j = 0; j < (*this)[i].size(); ++j)
+    for (unsigned int j = 0; j < (*this)[i].size(); ++j)
     {
       if (flag.count(j) == 0)
       {
@@ -361,39 +367,32 @@ BondMap::fix_bondmap(const std::vector<Atom>& basis)
         libMesh::Plane p(basis[i].get_position() + 0.5*normal, normal);
 
         // the shorter bonds cannot be masked by longer ones
-        for(int k = j + 1; k < (*this)[i].size(); ++k)
+        for(unsigned int k = j + 1; k < (*this)[i].size(); ++k)
         {
-          if ((k != j) && (flag.count(k) == 0))
-          {
-            libMesh::Point vector = basis[(*this)[i][k]].get_position() +
-                get_translation(i, k) - basis[i].get_position();
+          if (flag.count(k))
+            continue;
 
-            libMesh::Point testpoint = basis[i].get_position() + alpha * vector;
+          libMesh::Point vector = basis[(*this)[i][k]].get_position() +
+                                  get_translation(i, k) - basis[i].get_position();
 
-            if (p.above_surface(testpoint))
-              flag.insert(k);
-          }
+          libMesh::Point testpoint = basis[i].get_position() + alpha * vector;
+
+          if (p.above_surface(testpoint))
+            flag.insert(k);
         }
       }
     }
 
-    // eliminate flagged bonds
-    if (!flag.empty())
-    {
-      for (auto it = flag.begin(); it != flag.end(); ++it)
-      {
-        unsigned int id = *it;
-        //unsigned int neighbour = (*this)[i][id];
+    // Get Voronoi coordination number
+    unsigned int Z = (*this)[i].size() - flag.size();
 
-        (*this)[i].erase((*this)[i].begin() + id);
-        _translation[i].erase(_translation[i].begin() + id);
+    // create cutoff angle for cone pruning, depending weakly on guessed coordination
+    double cos_cut = 1.0 - 2.0 / Z;
+    cos_cut = std::min(cos_cut, 0.97);
+    cos_cut = std::max(cos_cut, 0.7);
 
-      }
-    }
 
-    flag.clear();
-
-    for (int j = 0; j < (*this)[i].size(); ++j)
+    for (unsigned int j = 0; j < (*this)[i].size(); ++j)
     {
       if (flag.count(j) == 0)
       {
@@ -403,9 +402,10 @@ BondMap::fix_bondmap(const std::vector<Atom>& basis)
 
         double cos_max = -1.0;
 
-        for (int k = 0; k < (*this)[i].size(); ++k)
+        // the shorter bonds cannot be masked by longer ones
+        for(unsigned int k = j + 1; k < (*this)[i].size(); ++k)
         {
-          if (k == j || flag.count(k))
+          if (flag.count(k))
             continue;
 
           libMesh::Point v = basis[(*this)[i][k]].get_position() +
@@ -415,25 +415,38 @@ BondMap::fix_bondmap(const std::vector<Atom>& basis)
           cos_max = std::max(cos_max, c);
         }
 
-        if (cos_max > 0.866) // θ_min < 30°
+        if (cos_max > cos_cut)
           flag.insert(j);
 
-        
       }
     }
 
-
-    if (!flag.empty())
+    for (auto it = flag.begin(); it != flag.end(); ++it)
     {
-      for (auto it = flag.begin(); it != flag.end(); ++it)
+      unsigned int id = *it;
+
+      // symmetrize, i.e. eliminate i as neighbor from j, iff translation vector
+      // has opposite direction but equal size, and only if i != neigh
+
+      size_t neigh = (*this)[i][id];
+      
+      if (neigh != i)
       {
-        unsigned int id = *it;
-        //unsigned int neighbour = (*this)[i][id];
-
-        (*this)[i].erase((*this)[i].begin() + id);
-        _translation[i].erase(_translation[i].begin() + id);
-
+        for (unsigned int j = 0; j < (*this)[neigh].size(); ++j)
+        {
+          if (((*this)[neigh][j] == i) &&
+              ((get_translation(i, id) + get_translation(neigh, j)).norm() < 1e-6))
+          {
+            (*this)[neigh].erase((*this)[neigh].begin() + j);
+            _translation[neigh].erase(_translation[neigh].begin() + j);
+            break;
+          }
+        }
       }
+
+      (*this)[i].erase((*this)[i].begin() + id);
+      _translation[i].erase(_translation[i].begin() + id);
+      
     }
   }
 
@@ -515,7 +528,7 @@ BondMap::print(void) const
   std::cout << std::endl;
   for (unsigned int i = 0; i < this->size(); i++)
   {
-    std::cout<<"BondMap["<<i<<"]= ";
+    std::cout << i << " : ";
     for (unsigned int j = 0; j < (*this)[i].size(); j++)
     {
       std::cout<<(*this)[i][j];
@@ -536,7 +549,7 @@ BondMap::print(const std::vector<Atom>& basis) const
   std::cout << std::endl;
   for (unsigned int i = 0; i < this->size(); i++)
   {
-    std::cout<<"BondMap["<<i<<"]= ";
+    std::cout << i << " (" << basis[i].get_specie() << ") ";
     for (unsigned int j = 0; j < (*this)[i].size(); j++)
     {
       std::cout<<(*this)[i][j];

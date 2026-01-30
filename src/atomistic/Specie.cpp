@@ -34,10 +34,7 @@ Specie::~Specie(void)
 
 Specie::Specie(const std::string& type)
 {
-  if (_string_to_specie.find(type) != _string_to_specie.end())
-    _type = _string_to_specie[type];
-  else
-    _type = VIRT;
+  (*this) = type;
 }
 
 Specie::Specie(const Specie::Type& type)
@@ -83,8 +80,9 @@ Specie::_specie_to_mass = boost::assign::map_list_of
        (N,14.00674)(H,1.00794)(Pb,207.2)(Cl, 35.4527)(Mn,54.938049)
        (In,114.818)(P,30.973761)(Sb,121.76);
 
+
 std::vector<double>
-Specie::_covalent_radius = { 0,
+Specie::_covalent_radius = { 0.0,
   0.31, 0.28,
   1.28, 0.96, 0.85, 0.76, 0.71, 0.66, 0.57, 0.58,
   1.66, 1.41, 1.21, 1.11, 1.07, 1.05, 1.02, 1.06,
@@ -92,16 +90,22 @@ Specie::_covalent_radius = { 0,
   2.2, 1.95, 1.9, 1.75, 1.64, 1.54, 1.47, 1.46, 1.42, 1.39, 1.45, 1.44, 1.42, 1.39, 1.39, 1.38, 1.39, 1.4,
   2.44, 2.15, 2.07, 2.04, 2.03, 2.01, 1.99, 1.98, 1.98, 1.96, 1.94, 1.92, 1.92, 1.89, 1.9, 1.87,
   1.87, 1.75, 1.7, 1.62, 1.51, 1.44, 1.41, 1.36, 1.36, 1.32, 1.45, 1.46, 1.48, 1.4, 1.5, 1.5,
-  2.6, 2.21, 2.15, 2.06, 2.0, 1.96, 1.9, 1.87, 1.8, 1.69, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0,
-  0
+  2.6, 2.21, 2.15, 2.06, 2.0, 1.96, 1.9, 1.87, 1.8, 1.69, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0,
+  2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0,
+  2.0
 };
 
 //!Override assignement operator (string input, allows:
 //!Specie s = 'H')
 Specie& Specie::operator= (const std::string& type)
 {
-  _type = _string_to_specie[type];
+  //_type = _string_to_specie[type];
+
+  if (_string_to_specie.find(type) != _string_to_specie.end())
+    _type = _string_to_specie[type];
+  else
+    _type = VIRT;
+
   return *this;
 }
 

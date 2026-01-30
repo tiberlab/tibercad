@@ -512,6 +512,14 @@ AtomisticGenerator::assign_species(void)
   {
 
     const Material* mat = _as->get_device()->get_material( (*reg) );
+    const BulkCrystal* bc = mat->get_bulk_crystal();
+
+    auto& basis = bc->get_basis();
+    for (unsigned int i = 0; i < basis.size(); ++i)
+    {
+      std::cerr << basis[i].get_label() << " " << basis[i].get_specie() << "\n";
+      assign[*reg][basis[i].get_label()] = basis[i].get_specie();
+    }
 
     const Database& db = mat->get_database();
 
@@ -537,14 +545,14 @@ AtomisticGenerator::assign_species(void)
       {
         // combine strings from components
       }
-      std::string db_record = db.get(record.c_str(), "none");
+      std::string db_record = db.get(record.c_str(), "Virt");
 
       record = "n_" + s;
       unsigned int n = db.get(record.c_str(), 0);
 
       for (unsigned int j = 1; j <= n; ++j)
       {
-        assign[*reg][++label] = Specie(db_record);
+        //assign[*reg][++label] = Specie(db_record);
       }
 
     }

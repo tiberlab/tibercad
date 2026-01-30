@@ -147,7 +147,6 @@ double Specie::get_mass(void) const
   return _specie_to_mass[_type];
 }
 
-
 inline
 double Specie::get_covalent_radius(void) const
 {

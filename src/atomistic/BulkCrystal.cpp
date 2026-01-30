@@ -96,7 +96,7 @@ BulkCrystal::init(void)
    
 
   build_bond_map();
-  get_bond_map().print();
+  get_bond_map().print(_atoms);
   refresh();
   
 }
@@ -904,8 +904,8 @@ BulkCrystal::read_database(void)
       record = "specie_" + s;
       std::string specie = dbA->get(record.c_str(), "H");
       std::string specieB = dbB->get(record.c_str(), "H");
-       if (specie.compare(specieB))
-         specie = specie + specieB;
+      if (specie.compare(specieB))
+        specie = specie + specieB;
       
       for (unsigned int j = 1; j <= n_x; j++)
       {

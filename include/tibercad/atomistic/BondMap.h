@@ -27,7 +27,6 @@
 #ifndef _BONDMAP_H_
 #define _BONDMAP_H_
 
-//-------------------------------------------
 
 #include "tibercad/atomistic/Atom.h"
 #include "tibercad/atomistic/Specie.h"
@@ -45,20 +44,25 @@
 /*!
  * When BondMap is created, it can calculate
  * the bond map of the system with a O(N) algorithm.
- * single atom cutoff distancies (harcoded) are used.
- * Two atoms are neighbours if condition
- * $|p_{1} - p_{2}| \leq  |c_{1} + c{2}|$
- * where p_{i} and c_{i} are position and cutoff parameter
- * of atom i, but only if 2 cannot be reached via another
- * more close first neighbor.
- * Periodical structure bond maps are also calculated.
- * Bond Map are stored in a vector.
+ * In a first pass, possible neighbors are found by comparing
+ * inter-atomic distances with a cutoff proportional to the
+ * sums of the covalent radii, i.e. two atoms are potentially
+ * neighbours if 
+ * \f$|r_{1} - r_{2}| \leq \alpha(c_{1} + c_{2})\f$
+ * where \f$r_{i}\f$ and \f$c_{i}\f$ are position and covalent radius
+ * of atom i, and \f$\alpha\f \sim 1.5$.
+ * Then, all neighbors not contributing the Voronoi cell of each atom
+ * are eliminated, leading to the geometric bond map. Last, a cone
+ * criterion is used to filter out spurious bonds with small but existing
+ * Voronoi faces, using a variable angle cutoff based on the coordination
+ * number guessed from the Voronoi neighbors.
  */
 class BondMap : public std::vector<std::vector<unsigned int>> 
 {
 
 public:
   
+  //! A typedef for the map of translation vectors
   typedef std::vector<std::vector<libMesh::Point>> Translation;
 
 
@@ -115,12 +119,22 @@ private:
 
 
   //! Process two atoms
+  /*!
+   * This method checks the distance of a pair of atoms,
+   * considering also possible periodic copies.
+   */
   void process_atoms(const std::vector<Atom>& basis, 
                      const unsigned int i,
                      const unsigned int j, 
                      const Tensor1& period);
   
-  //! Fix Bondmap by eliminating 2nd NN
+  //! Fix Bondmap
+  /*!
+   * This method eliminates neighbors not contributing to
+   * the Voronoi cell, or having too small cone angles (i.e.
+   * small Voronoi faces). This should provide a good guess of
+   * the actual chemical bonding in most cases.
+   */
   void fix_bondmap(const std::vector<Atom>& basis);
 
 
@@ -130,13 +144,6 @@ private:
   //! Map for cutoff parameters
   std::map<Specie, double> _cutoff;
   
-  
-  
-
-  //! Clean informations no more useful after bond map calculation
-  void clean();
-
-
   //! Translation vector for periodic images
   /*!
    * tells for each neighbour the translation
