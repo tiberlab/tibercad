@@ -120,6 +120,9 @@ class AtomisticBasis
    */
   BondMap* build_bond_map(bool periodicity[3]) const;
 
+  //! Get the effective coordination number of atom i
+  double get_effective_coordination(size_t i) const;
+
   //! get the number of atoms in the structure
   unsigned int get_N_atoms() const {return _atoms.size();}
 

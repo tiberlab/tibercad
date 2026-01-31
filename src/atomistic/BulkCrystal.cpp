@@ -96,7 +96,7 @@ BulkCrystal::init(void)
    
 
   build_bond_map();
-  get_bond_map().print(_atoms);
+  //get_bond_map().print(_atoms);
   refresh();
   
 }

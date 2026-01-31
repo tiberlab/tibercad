@@ -301,7 +301,7 @@ BondMap::fix_bondmap(const std::vector<Atom>& basis)
   // we decide whether a bond should be kept by checking
   // - if the midpoint lies inside the Voronoi box around the
   //   center atom defined by the other atoms with shorter bonds
-  // - the opening angle of the cone defined by other neighbors 
+  // - check bond weight based on ECN
 
   
   // loop over all atoms
@@ -336,7 +336,7 @@ BondMap::fix_bondmap(const std::vector<Atom>& basis)
       _translation[i][k] = tmp_p;
 
     }
-    ///*
+    /*
     std::cerr << i << "  : ";
     for(int j = 0; j < std::min((*this)[i].size(), (size_t)7); ++j)
     {
@@ -345,7 +345,7 @@ BondMap::fix_bondmap(const std::vector<Atom>& basis)
       std::cerr <<  "(" << (*this)[i][j] << ", " << normal.norm() << ") ";
     }
     std::cerr << "\n";
-    //*/
+    */
 
 
     // use greater so that erasing happens starting from highest index
@@ -383,6 +383,61 @@ BondMap::fix_bondmap(const std::vector<Atom>& basis)
       }
     }
 
+    // Next step: calculate effective coordination number (ECN) and get a weight
+    // to eliminate chemically improbable neighbors
+    // see: Hoppe, Z. Kristallogr. 150, 23–52 (1979)
+
+    double rmin = (basis[(*this)[i][0]].get_position() +
+            get_translation(i, 0) - basis[i].get_position()).norm();
+    // reference distance, start with smallest bond
+    double r0 = rmin;
+    int n = 6;
+    for (unsigned int it = 0; it < 2; ++it)
+    {
+      rmin = 0; // we use it in the following loop
+      double den = 0;
+      for (unsigned int j = 0; j < (*this)[i].size(); ++j)
+      {
+        if (flag.count(j))
+          continue;
+
+        libMesh::Point vec = basis[(*this)[i][j]].get_position() +
+                             get_translation(i, j) - basis[i].get_position();
+        double rij = vec.norm();
+
+        double weight = std::exp(-std::pow(rij / r0, n));
+        rmin += rij * weight;
+        den += weight;
+      }
+
+      r0 = rmin / den;
+    }
+
+    // the effective coordination number
+    double ECN = 0.0;
+    double wmin = 0.4;
+
+    for (unsigned int j = 0; j < (*this)[i].size(); ++j)
+    {
+      if (flag.count(j))
+        continue;
+
+      libMesh::Point normal = basis[(*this)[i][j]].get_position() +
+          get_translation(i, j) - basis[i].get_position();
+      double rij = normal.norm();
+
+      double wij = std::exp(1 - std::pow(rij / r0, n));
+
+      ECN += wij;
+
+      if (wij < wmin)
+        flag.insert(j);
+    }
+    //std::cerr << i << " ECN = " << ECN << "\n";
+      
+
+    /* This was the cone pruning code I tried, but became obsolete with ECN
+    
     // Get Voronoi coordination number
     unsigned int Z = (*this)[i].size() - flag.size();
 
@@ -399,6 +454,10 @@ BondMap::fix_bondmap(const std::vector<Atom>& basis)
         libMesh::Point normal = basis[(*this)[i][j]].get_position() +
             get_translation(i, j) - basis[i].get_position();
         double rij = normal.norm();
+
+        double wij = std::exp(1 - std::pow(rij/r0, n));
+        std::cerr << j << " wij = " << wij << "\n";
+        ECN += wij;
 
         double cos_max = -1.0;
 
@@ -420,36 +479,51 @@ BondMap::fix_bondmap(const std::vector<Atom>& basis)
 
       }
     }
+    */
 
+    // now we delete the flagged bonds
+    // this leads to an asymmetric bond map we have to adjust afterwards
     for (auto it = flag.begin(); it != flag.end(); ++it)
     {
       unsigned int id = *it;
 
-      // symmetrize, i.e. eliminate i as neighbor from j, iff translation vector
-      // has opposite direction but equal size, and only if i != neigh
-
-      size_t neigh = (*this)[i][id];
-      
-      if (neigh != i)
-      {
-        for (unsigned int j = 0; j < (*this)[neigh].size(); ++j)
-        {
-          if (((*this)[neigh][j] == i) &&
-              ((get_translation(i, id) + get_translation(neigh, j)).norm() < 1e-6))
-          {
-            (*this)[neigh].erase((*this)[neigh].begin() + j);
-            _translation[neigh].erase(_translation[neigh].begin() + j);
-            break;
-          }
-        }
-      }
-
       (*this)[i].erase((*this)[i].begin() + id);
       _translation[i].erase(_translation[i].begin() + id);
-      
     }
   }
 
+  // Now we have a potentially asymmetric bond map
+  // we have to check that a bond seen by one atom also exists for the other
+
+  for (size_t i = 0; i < this->size(); ++i)
+  {
+    for (unsigned int j = 0; j < (*this)[i].size(); ++j)
+    {
+      size_t neigh = (*this)[i][j];
+
+      if (neigh == i)
+        continue;
+
+      bool found = false;
+
+      for (unsigned k = 0; k < (*this)[neigh].size(); ++k)
+      {
+        if (((*this)[neigh][k] == i) &&
+            ((get_translation(i, j) + get_translation(neigh, k)).norm() < 1e-6))
+        {
+          found = true;
+          break;
+        }
+      }
+
+      if (!found)
+      {
+        // we need to add it
+        (*this)[neigh].push_back(i);
+        _translation[neigh].push_back(-_translation[i][j]);
+      }
+    }
+  }
 }   
 
 void

@@ -249,6 +249,14 @@ AtomisticBasis::refresh(void)
   //build_bond_map();
 }
 
+double
+AtomisticBasis::get_effective_coordination(size_t i) const
+{
+  double ecn = 0;
+
+  return(ecn);
+}
+
 //-------------------------------------------------------------------
 //Print utilities
 //-------------------------------------------------------------------

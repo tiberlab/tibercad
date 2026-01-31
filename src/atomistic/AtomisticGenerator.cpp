@@ -517,7 +517,6 @@ AtomisticGenerator::assign_species(void)
     auto& basis = bc->get_basis();
     for (unsigned int i = 0; i < basis.size(); ++i)
     {
-      std::cerr << basis[i].get_label() << " " << basis[i].get_specie() << "\n";
       assign[*reg][basis[i].get_label()] = basis[i].get_specie();
     }
 
