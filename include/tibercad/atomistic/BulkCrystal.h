@@ -66,6 +66,13 @@ public:
    */
   const std::vector<Atom>& get_lattice_basis(void) const;
 
+  /*!
+   * \brief Get the effective coordination number of basis atom with label \c i
+   *
+   * \param \c i the atom label
+   */
+  double get_effective_coordination(Atom::label_t i) const;
+
   //! Return string specifying lattice type (ex: 'fcc', 'hexagonal')
   const std::string get_lattice_type(void) const;
 
@@ -134,7 +141,6 @@ public:
   void print_info(void) const;
 
 
-protected:
 private:
   /*! Constructor accepts a material and additional options
    * Option from material and additional optional are merged 
@@ -210,6 +216,9 @@ private:
 
   //! Atomic basis in primitive vectors units
   std::vector<Atom> _lattice_basis;
+
+  //! The effective coordination numbers (ECN)
+  std::vector<double> _eff_coord_num;
 
   //! Name of lattice type, as in input file
   std::string _lattice_type;

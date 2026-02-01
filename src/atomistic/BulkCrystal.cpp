@@ -52,6 +52,22 @@ BulkCrystal::BulkCrystal(const Material* mat, const ModelOptions& options)
   _mat = mat;
 }
 
+
+double
+BulkCrystal::get_effective_coordination(Atom::label_t i) const
+{
+  double ecn = 0;
+
+  unsigned int ii = (unsigned int)i;
+  if (ii < _eff_coord_num.size())
+    ecn = _eff_coord_num[ii];
+  else
+    throw RuntimeException("Looking for unknown atom label in BulkCrystal.");
+
+  return ecn;
+}
+
+
 void
 BulkCrystal::init(void)
 {
