@@ -58,7 +58,7 @@ BulkCrystal::get_effective_coordination(Atom::label_t i) const
 {
   double ecn = 0;
 
-  unsigned int ii = (unsigned int)i;
+  unsigned int ii = ((unsigned int)i) - 1;
   if (ii < _eff_coord_num.size())
     ecn = _eff_coord_num[ii];
   else
@@ -112,7 +112,18 @@ BulkCrystal::init(void)
    
 
   build_bond_map();
-  //get_bond_map().print(_atoms);
+
+  // get and store the effective coordination numbers
+  _eff_coord_num.resize(_basis.size());
+  for (unsigned int i = 0; i < _basis.size(); ++i)
+  {
+    std::vector<double> weight;
+    double ecn = get_bond_map().get_effective_coordination_number(i, weight);
+
+    _eff_coord_num[i] = ecn;
+  }
+
+  //get_bond_map().print();
   refresh();
   
 }

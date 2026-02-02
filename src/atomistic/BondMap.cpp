@@ -65,43 +65,6 @@ BondMap::~BondMap(void)
 }
 
 
-void
-BondMap::set_cutoff()
-{
-  std::ifstream file;
-  std::string database_path = Database::get_default_search_path();
-  std::string filename = "cutoff.dat";
-  std::string line, record;
-  std::stringstream line_stream;
-  Specie s;
-
-  filename = database_path + "/" + filename;
-
-    
-  file.open(filename.c_str());
-  if (!file)
-  {
-    Messages::error("Exception opening/reading file cutoff.dat");
-    exit(1);
-  }
-  
-  while (!file.eof())
-  {
-    getline(file, line);
-    line_stream.str(std::string());
-    line_stream.clear(std::stringstream::goodbit);
-    line_stream << line;
-    line_stream >> record;
-    s = record;
-    line_stream >> record;
-    
-    _cutoff[s] = atof(record.c_str());
-    
-  }
-  
-  file.close();
-}
-
 
 const BondMap::Translation&
 BondMap::get_translation(void) const
@@ -163,6 +126,8 @@ BondMap::solve(const std::vector<Atom>& basis,
   if (basis.empty())
     return;
 
+  _basis = &basis;
+
   clear();
   _translation.clear();
 
@@ -172,19 +137,6 @@ BondMap::solve(const std::vector<Atom>& basis,
 
   Tensor1 edge_min, edge_max;
 
-  //set cutoff distancies
-  set_cutoff();
-  
-  for (unsigned int i=0; i< basis.size(); i++)
-  {
-    if (_cutoff[basis[i].get_specie()] == 0.0)
-    {
-      Messages::error("Cutoff distance for specie "
-                      + basis[i].get_specie().get_string()
-                      +" is not defined. Add to materials/cutoff.dat");
-    }
-  }
- 
   _period = period;
   
   //define the minimum spacing of the grid. the smaller it is, the faster is bonds calculations
@@ -216,24 +168,27 @@ BondMap::solve(const std::vector<Atom>& basis,
       {     
         for (unsigned int j = 0; j < cells[c2].size(); j++)
         {
-          process_atoms(basis, cells[c1][i], cells[c2][j], shift);
+          process_atoms(cells[c1][i], cells[c2][j], shift);
         }  
       }
     }
   }
 
-  fix_bondmap(basis);
+  fix_bondmap();
 
   delete prog;
 }
 
 
 void
-BondMap::process_atoms(const std::vector<Atom>& basis, 
-                       const unsigned int i,
+BondMap::process_atoms(const unsigned int i,
                        const unsigned int j, 
                        const Tensor1& period)
 {
+  if (_basis == nullptr)
+    return;
+  
+  const std::vector<Atom>& basis = *_basis;
 
   const libMesh::Point per(period(1), period(2), period(3));
   libMesh::Point shift;
@@ -242,16 +197,13 @@ BondMap::process_atoms(const std::vector<Atom>& basis,
   shift(2) = per(0) * _period(3, 1) + per(1) * _period(3, 2) + per(2) * _period(3, 3);
   
 
-  // here we use the fixed cutoffs to decide whether a given couple of atoms
-  // is a potential bond. For this to work, the cutoffs need to be sufficiently
-  // large, but not too large.
   // 2026-01-26: We now use the covalent radii to decide possible bonding
   if ((i != j) || (per.norm() > 0.1))
   {
 
-    //double cutofftmp = _cutoff[basis[i].get_specie()] + _cutoff[basis[j].get_specie()];
     double cutofftmp = basis[i].get_specie().get_covalent_radius() +
                        basis[j].get_specie().get_covalent_radius();
+    // we are generous to not miss real bonds
     double f = 2.0;
     
     // tighten cutoff if the two atoms are the same
@@ -296,13 +248,17 @@ BondMap::process_atoms(const std::vector<Atom>& basis,
 
 
 void
-BondMap::fix_bondmap(const std::vector<Atom>& basis)
+BondMap::fix_bondmap(void)
 {
   // we decide whether a bond should be kept by checking
   // - if the midpoint lies inside the Voronoi box around the
   //   center atom defined by the other atoms with shorter bonds
   // - check bond weight based on ECN
 
+  if (_basis == nullptr)
+    return;
+  
+  const std::vector<Atom>& basis = *_basis;
   
   // loop over all atoms
   for (size_t i = 0; i < this->size(); ++i)
@@ -383,105 +339,33 @@ BondMap::fix_bondmap(const std::vector<Atom>& basis)
       }
     }
 
+    // now we delete the flagged bonds
+    for (auto it = flag.begin(); it != flag.end(); ++it)
+    {
+      unsigned int id = *it;
+
+      (*this)[i].erase((*this)[i].begin() + id);
+      _translation[i].erase(_translation[i].begin() + id);
+    }
+
+    flag.clear();
+
     // Next step: calculate effective coordination number (ECN) and get a weight
     // to eliminate chemically improbable neighbors
     // see: Hoppe, Z. Kristallogr. 150, 23–52 (1979)
 
-    double rmin = (basis[(*this)[i][0]].get_position() +
-            get_translation(i, 0) - basis[i].get_position()).norm();
-    // reference distance, start with smallest bond
-    double r0 = rmin;
-    int n = 6;
-    for (unsigned int it = 0; it < 2; ++it)
-    {
-      rmin = 0; // we use it in the following loop
-      double den = 0;
-      for (unsigned int j = 0; j < (*this)[i].size(); ++j)
-      {
-        if (flag.count(j))
-          continue;
+    std::vector<double> weights;
+    double ecn = get_effective_coordination_number(i, weights);
 
-        libMesh::Point vec = basis[(*this)[i][j]].get_position() +
-                             get_translation(i, j) - basis[i].get_position();
-        double rij = vec.norm();
-
-        double weight = std::exp(-std::pow(rij / r0, n));
-        rmin += rij * weight;
-        den += weight;
-      }
-
-      r0 = rmin / den;
-    }
-
-    // the effective coordination number
-    double ECN = 0.0;
     double wmin = 0.4;
-
     for (unsigned int j = 0; j < (*this)[i].size(); ++j)
     {
-      if (flag.count(j))
-        continue;
-
-      libMesh::Point normal = basis[(*this)[i][j]].get_position() +
-          get_translation(i, j) - basis[i].get_position();
-      double rij = normal.norm();
-
-      double wij = std::exp(1 - std::pow(rij / r0, n));
-
-      ECN += wij;
-
-      if (wij < wmin)
+      if (weights[j] < wmin)
         flag.insert(j);
     }
-    //std::cerr << i << " ECN = " << ECN << "\n";
-      
 
-    /* This was the cone pruning code I tried, but became obsolete with ECN
-    
-    // Get Voronoi coordination number
-    unsigned int Z = (*this)[i].size() - flag.size();
-
-    // create cutoff angle for cone pruning, depending weakly on guessed coordination
-    double cos_cut = 1.0 - 2.0 / Z;
-    cos_cut = std::min(cos_cut, 0.97);
-    cos_cut = std::max(cos_cut, 0.7);
-
-
-    for (unsigned int j = 0; j < (*this)[i].size(); ++j)
-    {
-      if (flag.count(j) == 0)
-      {
-        libMesh::Point normal = basis[(*this)[i][j]].get_position() +
-            get_translation(i, j) - basis[i].get_position();
-        double rij = normal.norm();
-
-        double wij = std::exp(1 - std::pow(rij/r0, n));
-        std::cerr << j << " wij = " << wij << "\n";
-        ECN += wij;
-
-        double cos_max = -1.0;
-
-        // the shorter bonds cannot be masked by longer ones
-        for(unsigned int k = j + 1; k < (*this)[i].size(); ++k)
-        {
-          if (flag.count(k))
-            continue;
-
-          libMesh::Point v = basis[(*this)[i][k]].get_position() +
-              get_translation(i, k) - basis[i].get_position();
-
-          double c = (normal * v) / (rij * v.norm());
-          cos_max = std::max(cos_max, c);
-        }
-
-        if (cos_max > cos_cut)
-          flag.insert(j);
-
-      }
-    }
-    */
-
-    // now we delete the flagged bonds
+  
+    // now we delete once again the flagged bonds
     // this leads to an asymmetric bond map we have to adjust afterwards
     for (auto it = flag.begin(); it != flag.end(); ++it)
     {
@@ -525,6 +409,60 @@ BondMap::fix_bondmap(const std::vector<Atom>& basis)
     }
   }
 }   
+
+
+double
+BondMap::get_effective_coordination_number(size_t atom, std::vector<double>& weights) const
+{
+  if (_basis == nullptr)
+    return(0);
+
+  const std::vector<Atom>& basis = *_basis;
+
+  weights.resize((*this)[atom].size());
+
+  double rmin = (basis[(*this)[atom][0]].get_position() +
+            get_translation(atom, 0) - basis[atom].get_position()).norm();
+  // reference distance, start with smallest bond
+  double r0 = rmin;
+  int n = 6;
+  for (unsigned int it = 0; it < 2; ++it)
+  {
+    rmin = 0; // we use it in the following loop
+    double den = 0;
+    for (unsigned int j = 0; j < (*this)[atom].size(); ++j)
+    {
+      libMesh::Point vec = basis[(*this)[atom][j]].get_position() +
+                           get_translation(atom, j) - basis[atom].get_position();
+      double rij = vec.norm();
+
+      double weight = std::exp(-std::pow(rij / r0, n));
+      rmin += rij * weight;
+      den += weight;
+    }
+
+    r0 = rmin / den;
+  }
+
+  // the effective coordination number
+  double ECN = 0.0;
+  double wmin = 0.4;
+
+  for (unsigned int j = 0; j < (*this)[atom].size(); ++j)
+  {
+    libMesh::Point normal = basis[(*this)[atom][j]].get_position() +
+                            get_translation(atom, j) - basis[atom].get_position();
+    double rij = normal.norm();
+
+    double wij = std::exp(1 - std::pow(rij / r0, n));
+    weights[j] = wij;
+
+    ECN += wij;
+  }
+   
+  return(ECN);
+}
+
 
 void
 BondMap::remove_atoms(const std::set<unsigned int> ids)
@@ -596,30 +534,15 @@ BondMap::remove_atoms(const std::set<unsigned int> ids)
 
 
 
-void
-BondMap::print(void) const
-{
-  std::cout << std::endl;
-  for (unsigned int i = 0; i < this->size(); i++)
-  {
-    std::cout << i << " : ";
-    for (unsigned int j = 0; j < (*this)[i].size(); j++)
-    {
-      std::cout<<(*this)[i][j];
-      if (_translation[i][j].norm() > 1e-6)
-        std::cout << "'";
-      std::cout<<" ";
-    }
-
-
-    std::cout<<std::endl;
-  }
-}
-
 
 void
-BondMap::print(const std::vector<Atom>& basis) const
+BondMap::print() const
 {
+  if (_basis == nullptr)
+    return;
+
+  const std::vector<Atom>& basis = *_basis;
+
   std::cout << std::endl;
   for (unsigned int i = 0; i < this->size(); i++)
   {

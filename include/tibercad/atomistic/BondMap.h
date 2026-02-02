@@ -50,12 +50,11 @@
  * neighbours if 
  * \f$|r_{1} - r_{2}| \leq \alpha(c_{1} + c_{2})\f$
  * where \f$r_{i}\f$ and \f$c_{i}\f$ are position and covalent radius
- * of atom i, and \f$\alpha\f \sim 1.5$.
+ * of atom i, and \f$\alpha\f \sim 2$.
  * Then, all neighbors not contributing the Voronoi cell of each atom
- * are eliminated, leading to the geometric bond map. Last, a cone
- * criterion is used to filter out spurious bonds with small but existing
- * Voronoi faces, using a variable angle cutoff based on the coordination
- * number guessed from the Voronoi neighbors.
+ * are eliminated, leading to the geometric bond map. Last, the weights
+ * from the effective coordination number (ECN) are calculated and used
+ * to obtain the final bond map.
  */
 class BondMap : public std::vector<std::vector<unsigned int>> 
 {
@@ -86,11 +85,8 @@ public:
                        const libMesh::RealVectorValue& b,
                        const libMesh::RealVectorValue& c);
 
-  //! Define edges of atomic basis
-  static
-  void define_edges(const std::vector<Atom>& basis, Tensor1& edge_min, Tensor1& edge_max);
 
-  //! Gives translation vector for periodical images
+  //! Gives translation vector for periodic images
   const Translation& get_translation(void) const;
 
   //! Gives translation vector for periodical images
@@ -103,9 +99,17 @@ public:
    */
   libMesh::Point get_translation(unsigned int atom, unsigned int neighbor) const;
 
+  //! Get the effective coordination number and bond weights
+  /*!
+   * Uses method by Hoppe, Z. Kristallogr. 150, 23–52 (1979) to get a measure for the
+   * atomic coordination of atom \c atom. The bond weights will be returned in \c weights
+   * if it 
+   */
+  double get_effective_coordination_number(size_t atom, std::vector<double>& weights) const;
+
+
   //! print
   void print(void) const;
-  void print(const std::vector<Atom>& basis) const;
   
   //! Remove a set of atoms from the bond map
   void remove_atoms(const std::set<unsigned int> ids);
@@ -123,8 +127,7 @@ private:
    * This method checks the distance of a pair of atoms,
    * considering also possible periodic copies.
    */
-  void process_atoms(const std::vector<Atom>& basis, 
-                     const unsigned int i,
+  void process_atoms(const unsigned int i,
                      const unsigned int j, 
                      const Tensor1& period);
   
@@ -135,15 +138,9 @@ private:
    * small Voronoi faces). This should provide a good guess of
    * the actual chemical bonding in most cases.
    */
-  void fix_bondmap(const std::vector<Atom>& basis);
+  void fix_bondmap(void);
 
 
-  //! Build cutoff distancies map
-  void set_cutoff();
-
-  //! Map for cutoff parameters
-  std::map<Specie, double> _cutoff;
-  
   //! Translation vector for periodic images
   /*!
    * tells for each neighbour the translation
@@ -153,6 +150,9 @@ private:
 
   //! Structure periodicity
   Tensor2 _period;
+
+  //! The atomic structure this bond map is valid for
+  const std::vector<Atom>* _basis = nullptr;
 
 };
 
