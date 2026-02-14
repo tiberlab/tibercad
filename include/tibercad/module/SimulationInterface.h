@@ -445,15 +445,6 @@ class SimulationInterface : public TiberModelObject
     /*!
      * \param name the name to look for
      * \return a pointer to the simulation if found, \c NULL otherwise
-     *
-     * \c name can be one of the following:
-     * \li the user defined name of a simulation
-     * \li the identifier of the simulation as used for creation
-     * \li the empty string
-     *
-     * In the second case, the first simulation of this type will be
-     * returned. In the third case, the first simulation will be returned.
-     *
      */
     static SimulationInterface* find_simulation(const std::string& name);
 
