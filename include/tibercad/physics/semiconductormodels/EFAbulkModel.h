@@ -36,7 +36,7 @@ class EFAbulkModel: public PhysicalModel
  public: 
 
   //!Destructor
-  ~EFAbulkModel();
+  ~EFAbulkModel() = default;
 
   //!creates a new object
   static EFAbulkModel* create(const ModelOptions& options);
@@ -64,7 +64,7 @@ class EFAbulkModel: public PhysicalModel
  private:
 
   //! a pointer to the bulk Hamiltonian
-  EFAbulkHamiltonian*  _bulkHamiltonian;
+  EFAbulkHamiltonian*  _bulkHamiltonian = nullptr;
 
 
 };
