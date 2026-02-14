@@ -95,12 +95,6 @@ SimulationInterface::SimulationInterface(const ModelOptions& options)
     _mesh(0),
     _atomistic_structure(0)
 {
-  ID new_id = _simulation_map.size() + 1;
-  _id = new_id;
-
-  // register in the map of simulations
-  _simulation_map[new_id] = this;
-
   // dummy read
   get_options().get_option("regions", "");
 }
@@ -182,8 +176,22 @@ SimulationInterface::create(const string& type,
     // set the name
     // we use the type name as found in the input file as default name
     string defaultname(type);
-    sim->set_name(sim->get_options().get_option("name", defaultname));
+    defaultname = sim->get_options().get_option("name", defaultname);
+
+    if (find_simulation(defaultname) != nullptr)
+    {
+      throw InitFailedException("Module instance with name \""
+        + defaultname + "\" already exists.");
+    }
+
+    sim->set_name(defaultname);
     sim->get_options().delete_option("name");
+
+    ID new_id = _simulation_map.size() + 1;
+    sim->_id = new_id;
+
+    // register in the map of simulations
+    _simulation_map[new_id] = sim;
 
 
 
@@ -1369,30 +1377,14 @@ SimulationInterface::find_simulation(const string& name)
   SimulationMap::iterator it(_simulation_map.begin());
   SimulationMap::iterator end(_simulation_map.end());
 
-  if (it != end)
+  // look for user defined names
+  for (; (it != end) && ((it->second)->get_name() != name); ++it)
   {
-    // this is actually a bad idea
-    //if (name == "") // we just take the first we can find ...
-    //  sim = it->second;
-    //else
-    {
-      // look for user defined names
-      for ( ; (it != end) && ((it->second)->get_name() != name); ++it) {}
-
-      if (it != end)
-        sim = it->second;
-
-      if (it == end)
-      {
-        // name could be model identifier
-        it = _simulation_map.begin();
-        for ( ; (it != end) && ((it->second)->get_type() != name); ++it) {}
-
-        if (it != end)
-          sim = it->second;
-      }
-    }
   }
+
+  if (it != end)
+    sim = it->second;
+
 
   return sim;
 }
