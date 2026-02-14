@@ -27,15 +27,8 @@
 EFAbulkModel::EFAbulkModel(const ModelOptions& options) :
   PhysicalModel(options)
 {
-  _bulkHamiltonian = NULL;
 }
 
-//===================================//
-
-EFAbulkModel::~EFAbulkModel()
-{
-  destroy(_bulkHamiltonian);
-}
 
 //===================================//
 
@@ -50,7 +43,7 @@ void EFAbulkModel::do_print_info()
 
 void EFAbulkModel::prepare_submodels(void)
 {
-  if (_bulkHamiltonian == NULL)
+  if (_bulkHamiltonian == nullptr)
   {
     const ModelOptions& opt =  get_options ();
 
@@ -85,7 +78,7 @@ void EFAbulkModel::do_init_alloy (const PhysicalModel *comp_A, const PhysicalMod
 
   //destroy(_bulkHamiltonian);
   //_bulkHamiltonian = static_cast<EFAbulkHamiltonian*>(matA->_bulkHamiltonian->copy());
-  //assert(_bulkHamiltonian != NULL);
+  //assert(_bulkHamiltonian != nullptr);
   //_bulkHamiltonian->set_owner(get_owner());
   //_bulkHamiltonian->init_alloy(matA->_bulkHamiltonian, matB->_bulkHamiltonian,xa);
 }

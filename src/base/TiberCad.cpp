@@ -256,7 +256,7 @@ TiberCad::cleanup(void)
   // close EigenSolver
   EigenSolver::slepc_done();
 
-  //delete _control;
+  delete _control;
 
   // close libMesh and return
   delete _libmeshinit;
