@@ -23,8 +23,8 @@
  */
 
 
-#include "tibercad/base/tiber_config.h"
 #include "DLLoader.h"
+#include "tibercad/base/tiber_config.h"
 #include "tibercad/io/Messages.h"
 #include "tibercad/base/tiber_dll.h"
 #include "tibercad/base/RuntimeException.h"
@@ -40,9 +40,9 @@
 #endif
 
 #ifdef DEBUG
-#define DLOPENFLAGS RTLD_NOW | RTLD_LOCAL | RTLD_NODELETE
+#define DLOPENFLAGS RTLD_NOW | RTLD_LOCAL
 #else
-#define DLOPENFLAGS RTLD_LAZY | RTLD_LOCAL | RTLD_NODELETE
+#define DLOPENFLAGS RTLD_LAZY | RTLD_LOCAL
 #endif
 
 
@@ -140,31 +140,22 @@ DLLoader::open_library(const string& name, DLLoader::LibraryInterface& iface)
 
   if (file_exists)
   {
-    //Messages::info("Trying to open " + libfile + "... ", false);
+    iface.handle = dlopen(libfile.c_str(), DLOPENFLAGS);
 
-    // check if it is already resident
-    iface.handle = dlopen(libfile.c_str(), RTLD_NOLOAD | DLOPENFLAGS);
-
-    if (iface.handle == NULL)
-    {
-      iface.handle = dlopen(libfile.c_str(), DLOPENFLAGS);
-
-      if (iface.handle != NULL)
-        Messages::info("(using " + libfile + ")");
-    }
-
-    if (iface.handle != NULL)
+    if (iface.handle != nullptr)
     {
       iface.create_fnc = dlsym(iface.handle, TBCREATEFUNCSYM);
       iface.destroy_fnc = dlsym(iface.handle, TBDESTROYFUNCSYM);
 
-      if ((iface.create_fnc == NULL) || (iface.destroy_fnc == NULL))
+      if ((iface.create_fnc == nullptr) || (iface.destroy_fnc == nullptr))
       {
         ostringstream os;
         os << "Cannot use dynamic library " << libfile
             << " (missing creation/destruction methods)";
         throw RuntimeException(os.str());
       }
+
+      Messages::info("(using " + libfile + ")");
     }
     else
     {
@@ -182,6 +173,6 @@ DLLoader::open_library(const string& name, DLLoader::LibraryInterface& iface)
 void
 DLLoader::close_library(void* handle)
 {
-  if (handle != NULL)
+  if (handle != nullptr)
     dlclose(handle);
 }

@@ -45,15 +45,15 @@ class TBDLLOCAL DLLoader
     struct LibraryInterface
     {
       //! The library handle
-      void* handle;
+      void* handle = nullptr;
 
       //! The creation method
-      void* create_fnc;
+      void* create_fnc = nullptr;
 
       //! The destroy method
-      void* destroy_fnc;
+      void* destroy_fnc = nullptr;
 
-      LibraryInterface(void);
+      LibraryInterface(void) = default;
     };
 
     
@@ -95,19 +95,6 @@ class TBDLLOCAL DLLoader
 
 };
 
-
-
-//
-// inline members
-// 
-
-inline
-DLLoader::LibraryInterface::LibraryInterface(void)
-  : handle(NULL),
-    create_fnc(NULL),
-    destroy_fnc(NULL)
-{
-}
 
 
 #endif // _DLLOADER_H_

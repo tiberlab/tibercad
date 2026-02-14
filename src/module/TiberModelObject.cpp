@@ -351,8 +351,11 @@ TiberModelObject::destroy(TiberModelObject* p)
     else
       delete p;
 
-    if (libhandle != NULL)
-      DLLoader::close_library(libhandle);
+    // 2026/02/14 we do not do this anymore, since it would be
+    // safe - if at all - only together with instance counting
+    // of all objects living in the shared library
+    //if (libhandle != NULL)
+    //  DLLoader::close_library(libhandle);
   }
 }
 
