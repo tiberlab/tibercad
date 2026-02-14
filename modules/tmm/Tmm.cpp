@@ -380,8 +380,7 @@ vector<double> Tmm::linear_interpolation1(vector<double> xData, vector<double> y
 Tmm::~Tmm(void)
 {
   string outdir = get_output_directory();
-  std::cout << "\033[33m deletting  green_matrix data file \033[0m " << endl;
-  std::filesystem::remove("./" + outdir + "/green_matrix.dat");
+  std::filesystem::remove(outdir + "/green_matrix.dat");
 }
 
 
