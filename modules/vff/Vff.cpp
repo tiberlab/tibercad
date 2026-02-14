@@ -159,27 +159,26 @@ Vff::set_coords(void)
   _initial_coords.resize(n_all_atoms * 3, 0.0);
   //Put all coords in a temporary 1D array
   for (unsigned int i = 0; i < n_atoms; i ++)
-    {
-      unsigned int i_start = i * 3;
-      coords[i_start] =
-          get_atomistic_structure()->get_structure_atoms()[i].get_position(0);
-      coords[i_start + 1] =
-          get_atomistic_structure()->get_structure_atoms()[i].get_position(1);
-      coords[i_start + 2] =
-          get_atomistic_structure()->get_structure_atoms()[i].get_position(2);
-    }
+  {
+    unsigned int i_start = i * 3;
+    coords[i_start] =
+        get_atomistic_structure()->get_structure_atoms()[i].get_position(0);
+    coords[i_start + 1] =
+        get_atomistic_structure()->get_structure_atoms()[i].get_position(1);
+    coords[i_start + 2] =
+        get_atomistic_structure()->get_structure_atoms()[i].get_position(2);
+  }
 
   for (unsigned int i = 0; i < n_all_atoms; i ++)
-    {
-      unsigned int i_start = i * 3;
-      _initial_coords[i_start] =
-          get_atomistic_structure()->get_structure_atoms()[i].get_position(0);
-      _initial_coords[i_start + 1] =
-          get_atomistic_structure()->get_structure_atoms()[i].get_position(1);
-      _initial_coords[i_start + 2] =
-          get_atomistic_structure()->get_structure_atoms()[i].get_position(2);
-    }
-
+  {
+    unsigned int i_start = i * 3;
+    _initial_coords[i_start] =
+        get_atomistic_structure()->get_structure_atoms()[i].get_position(0);
+    _initial_coords[i_start + 1] =
+        get_atomistic_structure()->get_structure_atoms()[i].get_position(1);
+    _initial_coords[i_start + 2] =
+        get_atomistic_structure()->get_structure_atoms()[i].get_position(2);
+  }
 }
 
 
@@ -198,28 +197,28 @@ Vff::displace_atoms(void)
 
   //Displace other atoms
   for (unsigned int i = 0; i < _n_free_atoms; i++)
-    {
-      unsigned int j = free_atoms[i];
-      atoms[j].set_position(0, _dof[i * 3 + 0]);
-      atoms[j].set_position(1, _dof[i * 3 + 1]);
-      atoms[j].set_position(2, _dof[i * 3 + 2]);
-    }
+  {
+    unsigned int j = free_atoms[i];
+    atoms[j].set_position(0, _dof[i * 3 + 0]);
+    atoms[j].set_position(1, _dof[i * 3 + 1]);
+    atoms[j].set_position(2, _dof[i * 3 + 2]);
+  }
 
   for (unsigned int i = n_atoms + 1; i < n_all_atoms; i++)
-      {
-      unsigned int n_bonds = bondmap[i].size();
-      if (n_bonds != 1)
-        throw RuntimeException("Structure is badly defined. Passivation atom has multiple bonds");
-      unsigned int j = bondmap[i][0];
-      //Calculate translation
-      x_t = _initial_coords[j * 3 + 0] - atoms[j].get_position(0);
-      y_t = _initial_coords[j * 3 + 1] - atoms[j].get_position(1);
-      z_t = _initial_coords[j * 3 + 2] - atoms[j].get_position(2);
-      //Translate hydrogen accordingly
-      atoms[i].set_position(0, _initial_coords[i * 3 + 0] + x_t);
-      atoms[i].set_position(1, _initial_coords[i * 3 + 1] + y_t);
-      atoms[i].set_position(2, _initial_coords[i * 3 + 2] + z_t);
-      }
+  {
+    unsigned int n_bonds = bondmap[i].size();
+    if (n_bonds != 1)
+      throw RuntimeException("Structure is badly defined. Passivation atom has multiple bonds");
+    unsigned int j = bondmap[i][0];
+    // Calculate translation
+    x_t = _initial_coords[j * 3 + 0] - atoms[j].get_position(0);
+    y_t = _initial_coords[j * 3 + 1] - atoms[j].get_position(1);
+    z_t = _initial_coords[j * 3 + 2] - atoms[j].get_position(2);
+    // Translate hydrogen accordingly
+    atoms[i].set_position(0, _initial_coords[i * 3 + 0] + x_t);
+    atoms[i].set_position(1, _initial_coords[i * 3 + 1] + y_t);
+    atoms[i].set_position(2, _initial_coords[i * 3 + 2] + z_t);
+  }
 
   _initial_coords.resize(0);
   get_coords().resize(0);
@@ -269,57 +268,55 @@ Vff::set_boundary(void)
     }
 
   if  (get_my_options().boundary_conditions == "all_around_1atom")
+  {
+    _n_free_atoms = 0;
+    for (unsigned int i = 0; i < n_atoms; i++)
     {
-      _n_free_atoms = 0;
-      for (unsigned int i = 0; i < n_atoms; i++)
-        {
-          //If bonded to 4 non-hydrogen atoms, then it's a free atom
-          if ((bondmap[i].size() == 4) &&
-              (get_atomistic_structure()->get_specie(bondmap[i][0]) != Specie::H ) &&
-              (get_atomistic_structure()->get_specie(bondmap[i][1]) != Specie::H ) &&
-              (get_atomistic_structure()->get_specie(bondmap[i][2]) != Specie::H ) &&
-              (get_atomistic_structure()->get_specie(bondmap[i][3]) != Specie::H ))
-            {
-              free_atoms.push_back(i);
-              _n_free_atoms += 1;
-            }
-        }
+      // If bonded to 4 non-hydrogen atoms, then it's a free atom
+      if ((bondmap[i].size() == 4) &&
+          (get_atomistic_structure()->get_specie(bondmap[i][0]) != Specie::H) &&
+          (get_atomistic_structure()->get_specie(bondmap[i][1]) != Specie::H) &&
+          (get_atomistic_structure()->get_specie(bondmap[i][2]) != Specie::H) &&
+          (get_atomistic_structure()->get_specie(bondmap[i][3]) != Specie::H))
+      {
+        free_atoms.push_back(i);
+        _n_free_atoms += 1;
+      }
     }
-
-
+  }
 
   if  (get_my_options().boundary_conditions == "all_around")
+  {
+
+    _n_free_atoms = 0;
+    for (unsigned int i = 0; i < n_atoms; i++)
     {
-
-      _n_free_atoms = 0;
-      for (unsigned int i = 0; i < n_atoms; i++)
+      bool free = true;
+      for (unsigned int counter_j = 0; counter_j < bondmap[i].size(); counter_j++)
+      {
+        unsigned int j = bondmap[i][counter_j];
+        for (unsigned int counter_k = 0; counter_k < bondmap[j].size(); counter_k++)
         {
-          bool free = true;
-          for (unsigned int counter_j = 0; counter_j < bondmap[i].size(); counter_j++)
-            {
-              unsigned int j = bondmap[i][counter_j];
-              for (unsigned int counter_k = 0; counter_k < bondmap[j].size(); counter_k++)
-                {
-                  unsigned int k = bondmap[j][counter_k];
-                  if ((bondmap[k].size() != 4) ||
-                      (get_atomistic_structure()->get_specie(bondmap[k][0]) == Specie::H ) ||
-                      (get_atomistic_structure()->get_specie(bondmap[k][1]) == Specie::H ) ||
-                      (get_atomistic_structure()->get_specie(bondmap[k][2]) == Specie::H ) ||
-                      (get_atomistic_structure()->get_specie(bondmap[k][3]) == Specie::H ))
-                    {
-                      free = false;
-                    }
-                }
-            }
-
-          //If bonded to 4 non-hydrogen atoms, then it's a free atom
-          if (free)
-            {
-              free_atoms.push_back(i);
-              _n_free_atoms += 1;
-            }
+          unsigned int k = bondmap[j][counter_k];
+          if ((bondmap[k].size() != 4) ||
+              (get_atomistic_structure()->get_specie(bondmap[k][0]) == Specie::H) ||
+              (get_atomistic_structure()->get_specie(bondmap[k][1]) == Specie::H) ||
+              (get_atomistic_structure()->get_specie(bondmap[k][2]) == Specie::H) ||
+              (get_atomistic_structure()->get_specie(bondmap[k][3]) == Specie::H))
+          {
+            free = false;
+          }
         }
+      }
+
+      // If bonded to 4 non-hydrogen atoms, then it's a free atom
+      if (free)
+      {
+        free_atoms.push_back(i);
+        _n_free_atoms += 1;
+      }
     }
+  }
   if (get_my_options().boundary_conditions == "substrate")
    {
      double tol = get_my_options().substrate_tol;
@@ -345,18 +342,18 @@ Vff::set_boundary(void)
          max_coord = coord;
      }
      for (unsigned int i = 0; i < n_atoms; i++)
-          {
-            double coord =
-                get_atomistic_structure()->get_structure_atoms()[i].get_position(plane);
-            if (!get_my_options().substrate_updown)
-              condition = (coord > min_coord + tol);
-            if (get_my_options().substrate_updown)
-              condition = (coord > min_coord + tol) && (coord < max_coord - tol);
-            if (condition)
-            {
-              free_atoms.push_back(i);
-            }
-          }
+     {
+       double coord =
+           get_atomistic_structure()->get_structure_atoms()[i].get_position(plane);
+       if (!get_my_options().substrate_updown)
+         condition = (coord > min_coord + tol);
+       if (get_my_options().substrate_updown)
+         condition = (coord > min_coord + tol) && (coord < max_coord - tol);
+       if (condition)
+       {
+         free_atoms.push_back(i);
+       }
+     }
    }
 
   _n_free_atoms = free_atoms.size();
@@ -365,12 +362,12 @@ Vff::set_boundary(void)
   _n_dof = _n_free_atoms * 3;
   _dof.resize(_n_dof, 0.0);
   for (unsigned int i = 0; i < _n_free_atoms; i++)
-    {
-      unsigned int j = free_atoms[i];
-      _dof[i * 3 + 0] = atoms[j].get_position(0);
-      _dof[i * 3 + 1] = atoms[j].get_position(1);
-      _dof[i * 3 + 2] = atoms[j].get_position(2);
-    }
+  {
+    unsigned int j = free_atoms[i];
+    _dof[i * 3 + 0] = atoms[j].get_position(0);
+    _dof[i * 3 + 1] = atoms[j].get_position(1);
+    _dof[i * 3 + 2] = atoms[j].get_position(2);
+  }
 
   //Write some informations
   Messages::info("VFF boundary conditions set up");
@@ -388,10 +385,10 @@ Vff::check_structure(void)
 
   //Check that no hydrogen is here
   for (unsigned int i = 0; i < get_atomistic_structure()->get_N_without_H(); i++)
-    {
-      if (get_atomistic_structure()->get_specie(i) == Specie::H)
-        throw InitFailedException("VFF: hydrogens with wrong array index the structure");
-    }
+  {
+    if (get_atomistic_structure()->get_specie(i) == Specie::H)
+      throw InitFailedException("VFF: hydrogens with wrong array index the structure");
+  }
 }
 
 void
@@ -411,15 +408,15 @@ Vff::resize_parameters(void)
   _beta.resize(n_atoms);
   _teta.resize(n_atoms);
   for (unsigned int i = 0; i < n_atoms; i++)
+  {
+    _beta[i].resize(n_max_neighbors);
+    _teta[i].resize(n_max_neighbors);
+    for (unsigned j = 0; j < n_max_neighbors; j++)
     {
-      _beta[i].resize(n_max_neighbors);
-      _teta[i].resize(n_max_neighbors);
-      for (unsigned j = 0; j < n_max_neighbors; j++)
-        {
-          _beta[i][j].resize(n_max_neighbors, 0.0);
-          _teta[i][j].resize(n_max_neighbors, 0.0);
-        }
+      _beta[i][j].resize(n_max_neighbors, 0.0);
+      _teta[i][j].resize(n_max_neighbors, 0.0);
     }
+  }
 }
 
 void
@@ -629,9 +626,9 @@ Vff::keating_potential(double* x, int n)
     throw InitFailedException("Cannot calculate keating potential. Number of coordinates and degree of freedoms mismatch");
 
   for (unsigned int i = 0; i < n; i++)
-    {
-      _dof[i] = x[i];
-    }
+  {
+    _dof[i] = x[i];
+  }
 
   return keating_potential();
 
