@@ -125,12 +125,12 @@ PhysicalModel::_create(const string& name,
   if (mod == nullptr)
   {
     // first try without module directory
-    if ((mod = create_from_library<PhysicalModel>(name, options, owner)) == 0)
+    if ((mod = create_from_library<PhysicalModel>(name, options)) == 0)
     {
       if (module.size() >  0)
       {
         mod = create_from_library<PhysicalModel>(
-            module + "/" + name, options, owner);
+            module + "/" + name, options);
       }
     }
   }
@@ -172,7 +172,7 @@ PhysicalModel::_create(create_t create_fnc, destroy_t destroy_fnc,
     const string& module)
 {
   PhysicalModel* mod = dynamic_cast<PhysicalModel*>(
-      create_from_function(create_fnc, destroy_fnc, options, owner));
+      create_from_function(create_fnc, destroy_fnc, options));
 
   if (mod != nullptr)
   {

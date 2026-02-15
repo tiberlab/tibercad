@@ -44,9 +44,9 @@
 
 
 // these are the symbol names for the dll entry points
-#define TBCREATEFUNC __create
-#define TBDESTROYFUNC __destroy
-#define TBCREATEFUNCSYM "__create"
-#define TBDESTROYFUNCSYM "__destroy"
+#define TBCREATEFUNC tc_model_create
+#define TBDESTROYFUNC tc_model_destroy
+#define TBCREATEFUNCSYM "tc_model_create"
+#define TBDESTROYFUNCSYM "tc_model_destroy"
 
 #endif // _TIBER_DLL_H_

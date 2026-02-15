@@ -44,7 +44,7 @@ class TBDLLOCAL FieldAssistedMobility : public MobilityModelInterface
   public:
 
     //! Destructor
-    virtual ~FieldAssistedMobility(void) {};
+    virtual ~FieldAssistedMobility(void) = default;
 
     //! Create a FieldAssistedMobility object
     static FieldAssistedMobility* create(const ModelOptions& options);

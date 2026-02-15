@@ -65,7 +65,7 @@ extern "C" {
   }
 
   TBDLEXPORT TiberModelObject*
-  TBCREATEFUNC(const ModelOptions& options, const void* handle) {
+  TBCREATEFUNC(const ModelOptions& options) {
     TiberModelObject* obj = NULL;
 #ifdef CREATORCODE
 #include xstr(CREATORCODE)
@@ -73,7 +73,6 @@ extern "C" {
     obj = CREATABLE::create(options);
     //obj = new CREATABLE(options); maybe should change to this
 #endif
-    static_cast<const void*>(handle);
     return obj;
   }
 }
