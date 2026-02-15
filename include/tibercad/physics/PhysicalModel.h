@@ -40,8 +40,8 @@
 
 
 
-#ifndef MODULE_NAME
-#define MODULE_NAME
+#ifndef TC_MODULE_NAME
+#define TC_MODULE_NAME
 #endif
 
 class PhysicalObject;
@@ -112,7 +112,7 @@ class PhysicalModel : public TiberModelObject
     static T* create(const std::string& name,
         const PhysicalObject* owner,
         const ModelOptions& options = ModelOptions(),
-        const std::string& module = xstr(MODULE_NAME));
+        const std::string& module = xstr(TC_MODULE_NAME));
 
 
     //! Creates a new model from a given creator function
@@ -124,7 +124,7 @@ class PhysicalModel : public TiberModelObject
     static T* create(create_t create_fnc, destroy_t destroy_fnc,
         const PhysicalObject* owner,
         const ModelOptions& options = ModelOptions(),
-        const std::string& module = xstr(MODULE_NAME));
+        const std::string& module = xstr(TC_MODULE_NAME));
 
 
 

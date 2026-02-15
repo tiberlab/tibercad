@@ -36,8 +36,8 @@
 
 
 
-#ifndef MODULE_NAME
-#define MODULE_NAME
+#ifndef TC_MODULE_NAME
+#define TC_MODULE_NAME
 #endif
 
 /*!
@@ -49,7 +49,7 @@
  * For each module it may be included only once!
  *
  */
-#ifdef CREATABLE
+#ifdef TC_CREATABLE
 
 #ifndef xstr
 #define xstr(a) stringify(a)
@@ -67,10 +67,10 @@ extern "C" {
   TBDLEXPORT TiberModelObject*
   TBCREATEFUNC(const ModelOptions& options) {
     TiberModelObject* obj = NULL;
-#ifdef CREATORCODE
-#include xstr(CREATORCODE)
+#ifdef TC_FACTORYCODE
+#include xstr(TC_FACTORYCODE)
 #else
-    obj = CREATABLE::create(options);
+    obj = TC_CREATABLE::create(options);
     //obj = new CREATABLE(options); maybe should change to this
 #endif
     return obj;
