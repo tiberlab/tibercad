@@ -103,12 +103,6 @@ CarrierProperties::CarrierProperties(const ModelOptions& options) :
 
 }
 
-CarrierProperties::~CarrierProperties(void)
-{
-  destroy(_dos_model);
-  destroy(_mobility_model);
-}
-
 
 void
 CarrierProperties::do_init(void)

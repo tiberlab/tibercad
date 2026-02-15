@@ -41,10 +41,6 @@ DefaultBandProperties::DefaultBandProperties(const ModelOptions& options) :
 }
 
 
-DefaultBandProperties::~DefaultBandProperties(void)
-{
-}
-
 
 
 DefaultBandProperties*

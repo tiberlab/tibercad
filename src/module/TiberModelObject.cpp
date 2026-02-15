@@ -44,9 +44,9 @@ USELIBMESHTYPE(RealVectorValue);
 TiberModelObject::TiberModelObject(const ModelOptions& options)
   : libMesh::ReferenceCountedObject<TiberModelObject>(),
     _options(options),
-    _libhandle(NULL),
-    _create(NULL),
-    _destroy(NULL),
+    _libhandle(nullptr),
+    _create(nullptr),
+    _destroy(nullptr),
     _name("")
 {
   _name = _options.get_option("name", _name);
@@ -260,7 +260,7 @@ TiberModelObject*
 TiberModelObject::_create_from_library(const std::string& name,
     const ModelOptions& options, const void* handle)
 {
-  TiberModelObject* obj = NULL;
+  TiberModelObject* obj = nullptr;
 
   DLLoader::LibraryInterface iface;
 
@@ -268,13 +268,13 @@ TiberModelObject::_create_from_library(const std::string& name,
 
   create_t create = (create_t) iface.create_fnc;
 
-  if (create != NULL)
+  if (create != nullptr)
     obj = create(options, handle);
 
-  if (obj != NULL)
+  if (obj != nullptr)
   {
-    assert(iface.destroy_fnc != NULL);
-    assert(iface.handle != NULL);
+    assert(iface.destroy_fnc != nullptr);
+    assert(iface.handle != nullptr);
 
     obj->_create = create;
     obj->_destroy = (destroy_t) iface.destroy_fnc;
@@ -289,13 +289,13 @@ TiberModelObject::_create_from_library(const std::string& name,
 TiberModelObject*
 TiberModelObject::_create_from_object(const TiberModelObject* other, const void* handle)
 {
-  TiberModelObject* obj = NULL;
+  TiberModelObject* obj = nullptr;
 
-  if (other != NULL)
+  if (other != nullptr)
   {
-    if (other->_create != NULL)
+    if (other->_create != nullptr)
     obj = other->_create(other->_options, handle);
-    if (obj != NULL)
+    if (obj != nullptr)
     {
       obj->_create = other->_create;
       obj->_destroy = other->_destroy;
@@ -312,12 +312,12 @@ TiberModelObject*
 TiberModelObject::create_from_function(create_t create, destroy_t destroy,
     const ModelOptions& options, const void* handle)
 {
-  assert(create != NULL);
-  assert(destroy != NULL);
+  assert(create != nullptr);
+  assert(destroy != nullptr);
 
   TiberModelObject* obj = create(options, handle);
 
-  if (obj != NULL)
+  if (obj != nullptr)
   {
     obj->_create = create;
     obj->_destroy = destroy;
@@ -346,7 +346,7 @@ TiberModelObject::destroy(TiberModelObject* p)
     libhandle_t libhandle = p->_libhandle;
     destroy_t destroy_fnc = p->_destroy;
 
-    if (destroy_fnc != NULL)
+    if (destroy_fnc != nullptr)
       destroy_fnc(p);
     else
       delete p;
@@ -354,7 +354,7 @@ TiberModelObject::destroy(TiberModelObject* p)
     // 2026/02/14 we do not do this anymore, since it would be
     // safe - if at all - only together with instance counting
     // of all objects living in the shared library
-    //if (libhandle != NULL)
+    //if (libhandle != nullptr)
     //  DLLoader::close_library(libhandle);
   }
 }

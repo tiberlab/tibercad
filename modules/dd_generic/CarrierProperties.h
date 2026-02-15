@@ -46,7 +46,7 @@ class CarrierProperties : public DriftDiffusionModelInterface
   public:
 
     //! Destructor
-    virtual ~CarrierProperties(void);
+    virtual ~CarrierProperties(void) = default;
 
     //! Creator method
     static CarrierProperties* create(const ModelOptions& options);
