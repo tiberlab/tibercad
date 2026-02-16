@@ -88,7 +88,6 @@ Trap::Trap(const ModelOptions& options) :
 
 Trap::~Trap(void)
 {
-  destroy(_dos);
   delete _profile;
 }
 
