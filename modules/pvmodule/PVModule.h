@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _PVMODULE_H_
-#define _PVMODULE_H_
+#ifndef TC_PVMODULE_H
+#define TC_PVMODULE_H
 
 #include "tibercad/module/SimulationInterface.h"
 #include "tibercad/solver/TiberLinearSystem.h"
@@ -184,4 +184,4 @@ class TBDLLOCAL PVModule : public SimulationInterface
 
 
 
-#endif // _PVMODULE_H_
+#endif // TC_PVMODULE_H

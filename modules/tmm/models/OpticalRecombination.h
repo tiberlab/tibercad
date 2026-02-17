@@ -85,4 +85,4 @@ OpticalRecombination::create(const ModelOptions& options)
 
 
 
-#endif // _POLARIZATIONMODEL_H_
+#endif // TC_POLARIZATIONMODEL_H

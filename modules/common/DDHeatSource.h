@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _DDHEATSOURCE_H_
-#define _DDHEATSOURCE_H_
+#ifndef TC_DDHEATSOURCE_H
+#define TC_DDHEATSOURCE_H
 
 #include "tibercad/physics/misc/HeatSourceModel.h"
 
@@ -116,4 +116,4 @@ DDHeatSource::create(const ModelOptions& options)
 
 
 
-#endif // _GRAYMODEL_H_
+#endif // TC_GRAYMODEL_H

@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _DIRECTRECOMBINATION_H_
-#define _DIRECTRECOMBINATION_H_
+#ifndef TC_DIRECTRECOMBINATION_H
+#define TC_DIRECTRECOMBINATION_H
 
 #include "RecombinationModelInterface.h"
 #include "tibercad/base/TypeDefs.h"
@@ -121,4 +121,4 @@ DirectRecombination::create(const ModelOptions& options)
 
 
 
-#endif // _DIRECTRECOMBINATION_H__
+#endif // TC_DIRECTRECOMBINATION_H

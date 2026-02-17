@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _DOPANT_H_
-#define _DOPANT_H_
+#ifndef TC_DOPANT_H
+#define TC_DOPANT_H
 
 #include "tibercad/base/ModelOptions.h"
 #include "tibercad/base/tiber_dll.h"

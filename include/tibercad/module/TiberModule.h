@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _TIBERMODULE_H_
-#define _TIBERMODULE_H_
+#ifndef TC_TIBERMODULE_H
+#define TC_TIBERMODULE_H
 
 #include "tibercad/base/tiber_dll.h"
 
@@ -51,34 +51,42 @@
  */
 #ifdef TC_CREATABLE
 
-#ifndef xstr
-#define xstr(a) stringify(a)
-#endif
-#ifndef stringify
-#define stringify(a) #a
+template <class T>
+class TC_ModelEnabler : public T
+{
+public:
+    template <class... Args>
+    TC_ModelEnabler(Args&&... args)
+        : T(std::forward<Args>(args)...)
+    {}
+};
+
+#ifndef TC_STRINGIFY
+#define TC_STRINGIFY(a) TC_STRINGIFY1(a)
+#define TC_STRINGIFY1(a) #a
 #endif
 
 extern "C" {
   TBDLEXPORT void
-  TBDESTROYFUNC(TiberModelObject* p) {
+  TC_DESTROYFUNC(TiberModelObject* p) {
     delete p;
   }
 
   TBDLEXPORT TiberModelObject*
-  TBCREATEFUNC(const ModelOptions& options) {
+  TC_CREATEFUNC(const ModelOptions& options) {
     TiberModelObject* obj = NULL;
 #ifdef TC_FACTORYCODE
-#include xstr(TC_FACTORYCODE)
+#include TC_STRINGIFY(TC_FACTORYCODE)
 #else
-    obj = TC_CREATABLE::create(options);
-    //obj = new CREATABLE(options); maybe should change to this
+    obj = new TC_ModelEnabler<TC_CREATABLE>(options); 
 #endif
     return obj;
   }
 }
-#endif
+
+#endif // TC_CREATABLE
 
 
 
 
-#endif // _TIBERMODULE_H_
+#endif // TC_TIBERMODULE_H

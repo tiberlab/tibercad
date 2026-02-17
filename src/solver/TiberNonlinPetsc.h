@@ -23,8 +23,8 @@
  */
 
 
-#ifndef _TIBERNONLINPETSC_H_
-#define _TIBERNONLINPETSC_H_
+#ifndef TC_TIBERNONLINPETSC_H
+#define TC_TIBERNONLINPETSC_H
 
 
 #include "tibercad/solver/TiberNonlinearSystem.h"
@@ -106,4 +106,4 @@ TiberNonlinPetsc::get_solution_vector(void)
 
 
 
-#endif // _TIBERNONLINPETSC_H_
+#endif // TC_TIBERNONLINPETSC_H

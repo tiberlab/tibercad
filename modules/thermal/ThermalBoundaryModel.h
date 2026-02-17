@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _THERMALBOUNDARYMODEL_H_
-#define _THERMALBOUNDARYMODEL_H_
+#ifndef TC_THERMALBOUNDARYMODEL_H
+#define TC_THERMALBOUNDARYMODEL_H
 
 #include "tibercad/physics/PhysicalModel.h"
 
@@ -104,4 +104,4 @@ ThermalBoundaryModel::set_coefficients(double a, double b, double c)
 }
 
 
-#endif // _THERMALBOUNDARYMODEL_H_
+#endif // TC_THERMALBOUNDARYMODEL_H

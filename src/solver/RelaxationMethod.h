@@ -23,8 +23,8 @@
  */
 
 
-#ifndef _RELAXATIONMETHOD_H_
-#define _RELAXATIONMETHOD_H_
+#ifndef TC_RELAXATIONMETHOD_H
+#define TC_RELAXATIONMETHOD_H
 
 #include "SelfconsistentSolver.h"
 
@@ -91,4 +91,4 @@ RelaxationMethod::create(const ModelOptions& options)
 
 
 
-#endif // _RELAXATIONMETHOD_H_
+#endif // TC_RELAXATIONMETHOD_H

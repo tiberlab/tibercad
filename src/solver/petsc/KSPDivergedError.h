@@ -23,8 +23,8 @@
  */
 
 
-#ifndef _KSPDIVERGEDERROR_H_
-#define _KSPDIVERGEDERROR_H_
+#ifndef TC_KSPDIVERGEDERROR_H
+#define TC_KSPDIVERGEDERROR_H
 
 #include "PetscDivergedError.h"
 
@@ -46,4 +46,4 @@ class KSPDivergedError : public PetscDivergedError
 
 };
 
-#endif // _KSPDIVERGEDERROR_H_
+#endif // TC_KSPDIVERGEDERROR_H

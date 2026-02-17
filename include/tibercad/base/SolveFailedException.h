@@ -25,8 +25,8 @@
 
 
 
-#ifndef _SOLVEFAILEDEXCEPTION_H_
-#define _SOLVEFAILEDEXCEPTION_H_
+#ifndef TC_SOLVEFAILEDEXCEPTION_H
+#define TC_SOLVEFAILEDEXCEPTION_H
 
 #include "tibercad/base/ExceptionTracer.h"
 
@@ -51,4 +51,4 @@ class SolveFailedException : public std::runtime_error, ExceptionTracer
 
 
 
-#endif // _SOLVEFAILEDEXCEPTION_H_
+#endif // TC_SOLVEFAILEDEXCEPTION_H

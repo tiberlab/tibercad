@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _AVALANCHEGENERATION_H_
-#define _AVALANCHEGENERATION_H_
+#ifndef TC_AVALANCHEGENERATION_H
+#define TC_AVALANCHEGENERATION_H
 
 #include "RecombinationModelInterface.h"
 #include "tibercad/base/TypeDefs.h"
@@ -102,4 +102,4 @@ AvalancheGeneration::create(const ModelOptions& options)
 
 
 
-#endif // _AVALANCHEGENERATION_H_
+#endif // TC_AVALANCHEGENERATION_H

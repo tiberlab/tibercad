@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _EDGEOBJECT_H_
-#define _EDGEOBJECT_H_
+#ifndef TC_EDGEOBJECT_H
+#define TC_EDGEOBJECT_H
 
 
 #include "tibercad/physics/PhysicalObject.h"

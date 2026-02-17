@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _LATTICEMISMATCH_H_
-#define _LATTICEMISMATCH_H_
+#ifndef TC_LATTICEMISMATCH_H
+#define TC_LATTICEMISMATCH_H
 
 #include "BodyForceModel.h"
 
@@ -93,4 +93,4 @@ LatticeMismatch::create(const ModelOptions& options)
 
 
 
-#endif // _GRAYMODEL_H_
+#endif // TC_GRAYMODEL_H

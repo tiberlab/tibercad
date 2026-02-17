@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _IMAGEREADER_H_
-#define _IMAGEREADER_H_
+#ifndef TC_IMAGEREADER_H
+#define TC_IMAGEREADER_H
 
 #include "tibercad/module/SimulationInterface.h"
 
@@ -129,4 +129,4 @@ class TBDLLOCAL ImageReader : public SimulationInterface
 
 
 
-#endif // _IMAGEREADER_H_
+#endif // TC_IMAGEREADER_H

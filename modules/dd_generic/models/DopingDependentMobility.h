@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _DOPINGDEPENDENTMOBILITY_H_
-#define _DOPINGDEPENDENTMOBILITY_H_
+#ifndef TC_DOPINGDEPENDENTMOBILITY_H
+#define TC_DOPINGDEPENDENTMOBILITY_H
 
 #include "MobilityModelInterface.h"
 
@@ -203,4 +203,4 @@ DopingDependentMobility::~DopingDependentMobility(void)
 {
 }
 
-#endif // _DOPINGDEPENDENTMOBILITY_H_
+#endif // TC_DOPINGDEPENDENTMOBILITY_H

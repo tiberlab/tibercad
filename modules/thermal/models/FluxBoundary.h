@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _FLUXBOUNDARY_H_
-#define _FLUXBOUNDARY_H_
+#ifndef TC_FLUXBOUNDARY_H
+#define TC_FLUXBOUNDARY_H
 
 #include "ThermalBoundaryModel.h"
 
@@ -104,4 +104,4 @@ FluxBoundary::create(const ModelOptions& options)
 
 
 
-#endif // _POISSONDIRICHLET_H_
+#endif // TC_POISSONDIRICHLET_H

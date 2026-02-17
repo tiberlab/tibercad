@@ -23,8 +23,8 @@
  */
 
 
-#ifndef _RAMANTENSOR_H_
-#define _RAMANTENSOR_H_
+#ifndef TC_RAMANTENSOR_H
+#define TC_RAMANTENSOR_H
 
 #include "tibercad/physics/PhysicalModel.h"
 #include "PhononModel.h"

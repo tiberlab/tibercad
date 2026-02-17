@@ -79,4 +79,4 @@ private:
 
 
 
-#endif // _TMMBULKMODEL_H_
+#endif // TC_TMMBULKMODEL_H

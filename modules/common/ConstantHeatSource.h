@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _CONSTANTHEATSOURCE_H_
-#define _CONSTANTHEATSOURCE_H_
+#ifndef TC_CONSTANTHEATSOURCE_H
+#define TC_CONSTANTHEATSOURCE_H
 
 #include "tibercad/physics/misc/HeatSourceModel.h"
 
@@ -96,4 +96,4 @@ ConstantHeatSource::create(const ModelOptions& options)
 
 
 
-#endif // _GRAYMODEL_H_
+#endif // TC_GRAYMODEL_H

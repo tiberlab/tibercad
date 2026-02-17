@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _DRIFTDIFFUSIONMODELINTERFACE_H_
-#define _DRIFTDIFFUSIONMODELINTERFACE_H_
+#ifndef TC_DRIFTDIFFUSIONMODELINTERFACE_H
+#define TC_DRIFTDIFFUSIONMODELINTERFACE_H
 
 
 #include "tibercad/base/TypeDefs.h"
@@ -98,4 +98,4 @@ DriftDiffusionModelInterface::DriftDiffusionModelInterface(const ModelOptions& o
 
 
 
-#endif // _DRIFTDIFFUSIONMODELINTERFACE_H_
+#endif // TC_DRIFTDIFFUSIONMODELINTERFACE_H

@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _HEATRESERVOIR_H_
-#define _HEATRESERVOIR_H_
+#ifndef TC_HEATRESERVOIR_H
+#define TC_HEATRESERVOIR_H
 
 #include "ThermalBoundaryModel.h"
 
@@ -104,4 +104,4 @@ HeatReservoir::create(const ModelOptions& options)
 
 
 
-#endif // _POISSONDIRICHLET_H_
+#endif // TC_POISSONDIRICHLET_H

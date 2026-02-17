@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _BUILTINSTRAIN_H_
-#define _BUILTINSTRAIN_H_
+#ifndef TC_BUILTINSTRAIN_H
+#define TC_BUILTINSTRAIN_H
 
 #include "BodyForceModel.h"
 
@@ -95,4 +95,4 @@ BuiltInStrain::create(const ModelOptions& options)
 
 
 
-#endif // _POISSONDIRICHLET_H_
+#endif // TC_POISSONDIRICHLET_H

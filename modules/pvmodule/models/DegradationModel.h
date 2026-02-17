@@ -24,8 +24,8 @@
  * \note This file is part of module pvmodule.
  */
 
-#ifndef _DEGRADATIONMODEL_H_
-#define _DEGRADATIONMODEL_H_
+#ifndef TC_DEGRADATIONMODEL_H
+#define TC_DEGRADATIONMODEL_H
 
 #include "tibercad/physics/PhysicalModel.h"
 
@@ -79,4 +79,4 @@ class DegradationModel : public PhysicalModel
 };
 
 
-#endif // _DEGRADATIONMODEL_H_
+#endif // TC_DEGRADATIONMODEL_H

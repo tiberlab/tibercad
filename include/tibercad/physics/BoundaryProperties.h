@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _BOUNDARYPROPERTIES_H_
-#define _BOUNDARYPROPERTIES_H_
+#ifndef TC_BOUNDARYPROPERTIES_H
+#define TC_BOUNDARYPROPERTIES_H
 
 
 #include "tibercad/module/TiberModelObject.h"
@@ -157,4 +157,4 @@ BoundaryProperties::get_simulation_id(void) const
 }
 
 
-#endif // _BOUNDARYPROPERTIES_H_
+#endif // TC_BOUNDARYPROPERTIES_H

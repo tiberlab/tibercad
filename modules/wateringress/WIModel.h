@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _POISSONMODEL_H_
-#define _POISSONMODEL_H_
+#ifndef TC_POISSONMODEL_H
+#define TC_POISSONMODEL_H
 
 #include "tibercad/physics/PhysicalModel.h"
 
@@ -105,4 +105,4 @@ WIModel::get_diffusivity(void) const
 }
 
 
-#endif // _POISSONMODEL_H_
+#endif // TC_POISSONMODEL_H

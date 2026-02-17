@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _THERMALBOUNDARYRESISTANCE_H_
-#define _THERMALBOUNDARYRESISTANCE_H_
+#ifndef TC_THERMALBOUNDARYRESISTANCE_H
+#define TC_THERMALBOUNDARYRESISTANCE_H
 
 #include "BoltzmannBoundaryModel.h"
 
@@ -112,4 +112,4 @@ ThermalBoundaryResistance::create_new(void) const
   return new ThermalBoundaryResistance(get_options());
 }
 
-#endif // _POISSONDIRICHLET_H_
+#endif // TC_POISSONDIRICHLET_H

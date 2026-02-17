@@ -31,8 +31,8 @@
  *      Author: miesu
  */
 
-#ifndef _VARIABLERANGEHOPPING_H_
-#define _VARIABLERANGEHOPPING_H_
+#ifndef TC_VARIABLERANGEHOPPING_H
+#define TC_VARIABLERANGEHOPPING_H
 
 #include "MobilityModelInterface.h"
 

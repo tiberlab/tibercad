@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _PYROPOLARIZATION_H_
-#define _PYROPOLARIZATION_H_
+#ifndef TC_PYROPOLARIZATION_H
+#define TC_PYROPOLARIZATION_H
 
 #include "tibercad/physics/misc/PolarizationModel.h"
 #include "tibercad/module/SimulationInterface.h"
@@ -78,4 +78,4 @@ Pyropolarization::create(const ModelOptions& options)
 }
 
 
-#endif // _PIEZOPOLARIZATION_H_
+#endif // TC_PIEZOPOLARIZATION_H

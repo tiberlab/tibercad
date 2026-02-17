@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _EMBRACING_H_
-#define _EMBRACING_H_
+#ifndef TC_EMBRACING_H
+#define TC_EMBRACING_H
 
 #include "tibercad/geom/ElementSide.h"
 
@@ -335,4 +335,4 @@ Embracing::need_mixing_coeff(bool need_mixing)
 }
 
 
-#endif // _EMBRACING_H_
+#endif // TC_EMBRACING_H

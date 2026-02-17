@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _IDSET_H_
-#define _IDSET_H_
+#ifndef TC_IDSET_H
+#define TC_IDSET_H
 
 #include "tibercad/base/TypeDefs.h"
 #include "tibercad/base/HashSet.h"
@@ -38,4 +38,4 @@ typedef std::set<ID> IDSet;
 typedef HashSet<ID>::Type IDHashSet;
 
 
-#endif // _IDSET_H_
+#endif // TC_IDSET_H

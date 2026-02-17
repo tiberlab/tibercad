@@ -26,8 +26,8 @@
 
 
 
-#ifndef _EXCITONENERGYTRANSFER_H_
-#define _EXCITONENERGYTRANSFER_H_
+#ifndef TC_EXCITONENERGYTRANSFER_H
+#define TC_EXCITONENERGYTRANSFER_H
 
 #include "RecombinationModelInterface.h"
 #include "tibercad/base/TypeDefs.h"
@@ -135,4 +135,4 @@ ExcitonEnergyTransfer::create(const ModelOptions& options)
 
 
 
-#endif // _EXCITONENERGYTRANSFER_H__
+#endif // TC_EXCITONENERGYTRANSFER_H

@@ -23,8 +23,8 @@
  */
 
 
-#ifndef _TIBERNONLINLS_H_
-#define _TIBERNONLINLS_H_
+#ifndef TC_TIBERNONLINLS_H
+#define TC_TIBERNONLINLS_H
 
 
 #include "tibercad/solver/TiberLineSearch.h"
@@ -82,4 +82,4 @@ TiberNonlinLS::system_type(void) const
 }
 
 
-#endif // _TIBERNONLINLS_H_
+#endif // TC_TIBERNONLINLS_H

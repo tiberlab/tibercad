@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _NODEOBJECT_H_
-#define _NODEOBJECT_H_
+#ifndef TC_NODEOBJECT_H
+#define TC_NODEOBJECT_H
 
 
 #include "tibercad/physics/PhysicalObject.h"

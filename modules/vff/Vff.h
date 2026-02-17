@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _VFF_H_
-#define _VFF_H_
+#ifndef TC_VFF_H
+#define TC_VFF_H
 
 #include "tibercad/module/SimulationInterface.h"
 #include "tibercad/atomistic/StrainLattice.h"

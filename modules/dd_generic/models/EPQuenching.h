@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _EPQUENCHING_H_
-#define _EPQUENCHING_H_
+#ifndef TC_EPQUENCHING_H
+#define TC_EPQUENCHING_H
 
 #include "RecombinationModelInterface.h"
 #include "tibercad/base/TypeDefs.h"
@@ -101,4 +101,4 @@ EPQuenching::create(const ModelOptions& options)
 
 
 
-#endif // _EPQUENCHING_H__
+#endif // TC_EPQUENCHING_H

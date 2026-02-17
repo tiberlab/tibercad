@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _EXCITONISC_H_
-#define _EXCITONISC_H_
+#ifndef TC_EXCITONISC_H
+#define TC_EXCITONISC_H
 
 #include "RecombinationModelInterface.h"
 #include "tibercad/base/TypeDefs.h"
@@ -116,4 +116,4 @@ ExcitonISC::create(const ModelOptions& options)
 
 
 
-#endif // _EXCITONISC_H__
+#endif // TC_EXCITONISC_H

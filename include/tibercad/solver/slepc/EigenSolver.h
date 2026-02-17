@@ -23,8 +23,8 @@
  *       API version: 3.5
  */
 
-#ifndef _EIGENSOLVER_H_
-#define _EIGENSOLVER_H_
+#ifndef TC_EIGENSOLVER_H
+#define TC_EIGENSOLVER_H
 
 #include "tibercad/base/tiber_dll.h"
 

@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _TENSOROPERATORS_H_
-#define _TENSOROPERATORS_H_
+#ifndef TC_TENSOROPERATORS_H
+#define TC_TENSOROPERATORS_H
 
 
 #include "tibercad/math/Tensor1.h"
@@ -366,4 +366,4 @@ std::ostream& operator<<(std::ostream &s, const Tensor2 &T);
 std::ostream& operator<<(std::ostream &s, const Tensor4DSym &T);
 
 
-#endif // _TENSOROPERATORS_H_
+#endif // TC_TENSOROPERATORS_H

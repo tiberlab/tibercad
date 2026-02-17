@@ -23,8 +23,8 @@
  *       API version: 3.5
  */
 
-#ifndef _TIGHTBINDING_H_
-#define _TIGHTBINDING_H_
+#ifndef TC_TIGHTBINDING_H
+#define TC_TIGHTBINDING_H
 
 //-----------------------------------------------------------------------------------------
 

@@ -24,8 +24,8 @@
  * \note This file is part of module vff.
  */
 
-#ifndef _AUTOMATICKEATING_H_
-#define _AUTOMATICKEATING_H_
+#ifndef TC_AUTOMATICKEATING_H
+#define TC_AUTOMATICKEATING_H
 
 #include "Keating.h"
 

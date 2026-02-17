@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _CONVERSEPIEZO_H_
-#define _CONVERSEPIEZO_H_
+#ifndef TC_CONVERSEPIEZO_H
+#define TC_CONVERSEPIEZO_H
 
 #include "BodyForceModel.h"
 
@@ -102,4 +102,4 @@ ConversePiezo::create(const ModelOptions& options)
 
 
 
-#endif // _GRAYMODEL_H_
+#endif // TC_GRAYMODEL_H

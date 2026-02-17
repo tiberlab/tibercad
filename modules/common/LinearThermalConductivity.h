@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _LINEARTHERMALCONDUCTIVITY_H_
-#define _LINEARTHERMALCONDUCTIVITY_H_
+#ifndef TC_LINEARTHERMALCONDUCTIVITY_H
+#define TC_LINEARTHERMALCONDUCTIVITY_H
 
 #include "point.h"
 #include "tensor_value.h"
@@ -104,4 +104,4 @@ LinearThermalConductivity::create(const ModelOptions& options)
 
 
 
-#endif // _GRAYMODEL_H_
+#endif // TC_GRAYMODEL_H

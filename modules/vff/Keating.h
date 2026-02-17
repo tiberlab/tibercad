@@ -24,8 +24,8 @@
  * \note This file is part of module vff.
  */
 
-#ifndef _KEATING_H_
-#define _KEATING_H_
+#ifndef TC_KEATING_H
+#define TC_KEATING_H
 
 #include "tibercad/physics/PhysicalModel.h"
 #include "tibercad/physics/Material.h"

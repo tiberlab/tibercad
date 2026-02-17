@@ -24,8 +24,8 @@
  * \note This file is part of module pvmodule.
  */
 
-#ifndef _ELEMENTARYPWL_H_
-#define _ELEMENTARYPWL_H_
+#ifndef TC_ELEMENTARYPWL_H
+#define TC_ELEMENTARYPWL_H
 
 #include "ElementaryCell.h"
 
@@ -65,4 +65,4 @@ class ElementaryPWL : public ElementaryCell
 };
 
 
-#endif // _ELEMENTARYPWL_H_
+#endif // TC_ELEMENTARYPWL_H

@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _EXTERNALPROFILE_H_
-#define _EXTERNALPROFILE_H_
+#ifndef TC_EXTERNALPROFILE_H
+#define TC_EXTERNALPROFILE_H
 
 #include "tibercad/module/SolutionProvider.h"
 

@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _PVMODULEBOUNDARYMODEL_H_
-#define _PVMODULEBOUNDARYMODEL_H_
+#ifndef TC_PVMODULEBOUNDARYMODEL_H
+#define TC_PVMODULEBOUNDARYMODEL_H
 
 #include "tibercad/physics/PhysicalModel.h"
 #include "tibercad/physics/MaterialBoundary.h"
@@ -114,4 +114,4 @@ PVModuleBoundaryModel::get_contact_layer(void) const
 }
 
 
-#endif // _PVMODULEBOUNDARYMODEL_H_
+#endif // TC_PVMODULEBOUNDARYMODEL_H

@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _OHMICCONTACT_H_
-#define _OHMICCONTACT_H_
+#ifndef TC_OHMICCONTACT_H
+#define TC_OHMICCONTACT_H
 
 #include "ElectricalContact.h"
 
@@ -69,4 +69,4 @@ OhmicContact::create(const ModelOptions& options)
 
 
 
-#endif // _OHMICCONTACT_H_
+#endif // TC_OHMICCONTACT_H

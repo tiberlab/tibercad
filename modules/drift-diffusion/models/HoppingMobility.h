@@ -26,8 +26,8 @@
 
 
 
-#ifndef _HOPPINGMOBILITY_H_
-#define _HOPPINGMOBILITY_H_
+#ifndef TC_HOPPINGMOBILITY_H
+#define TC_HOPPINGMOBILITY_H
 
 #include "MobilityModelInterface.h"
 
@@ -126,4 +126,4 @@ HoppingMobility::~HoppingMobility(void)
 {
 }
 
-#endif // _HOPPINGMOBILITY_H_
+#endif // TC_HOPPINGMOBILITY_H

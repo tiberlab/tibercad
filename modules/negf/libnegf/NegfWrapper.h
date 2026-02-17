@@ -24,8 +24,8 @@
  * \note This file is part of module negf.
  */
 
-#ifndef _NEGFWRAPPER_H_
-#define _NEGFWRAPPER_H_
+#ifndef TC_NEGFWRAPPER_H
+#define TC_NEGFWRAPPER_H
 
 #include "libnegf.hpp"
 #include "lnParams.h"

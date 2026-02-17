@@ -24,8 +24,8 @@
 
 
 
-#ifndef _GRACEIO_H_
-#define _GRACEIO_H_
+#ifndef TC_GRACEIO_H
+#define TC_GRACEIO_H
 
 #include "tibercad/io/DataOutput.h"
 #include "tibercad/base/tiber_dll.h"

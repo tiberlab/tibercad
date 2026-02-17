@@ -35,8 +35,8 @@
  */
 
 
-#ifndef _DATAIMPORTER_H_
-#define _DATAIMPORTER_H_
+#ifndef TC_DATAIMPORTER_H
+#define TC_DATAIMPORTER_H
 
 #include <string>
 

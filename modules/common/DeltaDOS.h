@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _DELTADOS_H_
-#define _DELTADOS_H_
+#ifndef TC_DELTADOS_H
+#define TC_DELTADOS_H
 
 
 #include "tibercad/physics/misc/DensityOfStates.h"
@@ -82,4 +82,4 @@ DeltaDOS::create(const ModelOptions& options)
 }
 
 
-#endif // _DELTADOS_H_
+#endif // TC_DELTADOS_H

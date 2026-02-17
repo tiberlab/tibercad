@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _ELASTICITY_H_
-#define _ELASTICITY_H_
+#ifndef TC_ELASTICITY_H
+#define TC_ELASTICITY_H
 
 #include "tibercad/module/SimulationInterface.h"
 #include "tibercad/solver/TiberLinearSystem.h"
@@ -247,4 +247,4 @@ class TBDLLOCAL Elasticity : public SimulationInterface
 
 
 
-#endif // _ELASTICITY_H_
+#endif // TC_ELASTICITY_H

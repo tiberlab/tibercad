@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _WATERINGRESS_H_
-#define _WATERINGRESS_H_
+#ifndef TC_WATERINGRESS_H
+#define TC_WATERINGRESS_H
 
 #include "tibercad/module/SimulationInterface.h"
 #include "tibercad/solver/TiberLinearSystem.h"
@@ -145,4 +145,4 @@ class TBDLLOCAL WaterIngress : public SimulationInterface
 
 
 
-#endif // _WATERINGRESS_H_
+#endif // TC_WATERINGRESS_H

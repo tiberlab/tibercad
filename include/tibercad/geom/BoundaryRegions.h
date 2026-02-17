@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _BOUNDARYREGIONS_H_
-#define _BOUNDARYREGIONS_H_
+#ifndef TC_BOUNDARYREGIONS_H
+#define TC_BOUNDARYREGIONS_H
 
 #include "tibercad/geom/MeshRegionInfo.h"
 #include "tibercad/geom/ElementSide.h"
@@ -381,4 +381,4 @@ BoundaryRegions::sides_end(const std::set<ID>& ids = std::set<ID>())
 }
 
 
-#endif // _BOUNDARYREGIONS_H_
+#endif // TC_BOUNDARYREGIONS_H

@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _SCHOTTKYCONTACT_H_
-#define _SCHOTTKYCONTACT_H_
+#ifndef TC_SCHOTTKYCONTACT_H
+#define TC_SCHOTTKYCONTACT_H
 
 #include "ElectricalContact.h"
 
@@ -96,4 +96,4 @@ SchottkyContact::create(const ModelOptions& options)
 
 
 
-#endif // _SCHOTTKYCONTACT_H_
+#endif // TC_SCHOTTKYCONTACT_H

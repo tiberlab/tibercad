@@ -24,8 +24,8 @@
  * \note This file is part of module pvmodule.
  */
 
-#ifndef _DEGRADATIONH2O_H_
-#define _DEGRADATIONH2O_H_
+#ifndef TC_DEGRADATIONH2O_H
+#define TC_DEGRADATIONH2O_H
 
 #include "DegradationModel.h"
 #include "tibercad/module/SolutionProvider.h"
@@ -94,4 +94,4 @@ class DegradationH2O : public DegradationModel
 };
 
 
-#endif // _DEGRADATIONH2O_H_
+#endif // TC_DEGRADATIONH2O_H

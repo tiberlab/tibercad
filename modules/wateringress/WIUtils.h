@@ -24,8 +24,8 @@
  * \note This file is part of module wateringress.
  */
 
-#ifndef _WIUTILS_H_
-#define _WIUTILS_H_
+#ifndef TC_WIUTILS_H
+#define TC_WIUTILS_H
 
 //! A namespace with some utility functions
 namespace WIUtils
@@ -36,4 +36,4 @@ namespace WIUtils
 
 };
 
-#endif // _WIUTILS_H_
+#endif // TC_WIUTILS_H

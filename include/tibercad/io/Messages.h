@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _MESSAGES_H_
-#define _MESSAGES_H_
+#ifndef TC_MESSAGES_H
+#define TC_MESSAGES_H
 
 #include <string>
 #include <iostream>
@@ -216,4 +216,4 @@ Messages::stop_on_warning(void)
 }
 
 
-#endif // _MESSAGES_H_
+#endif // TC_MESSAGES_H

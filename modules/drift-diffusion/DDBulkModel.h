@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _DDBULKMODEL_H_
-#define _DDBULKMODEL_H_
+#ifndef TC_DDBULKMODEL_H
+#define TC_DDBULKMODEL_H
 
 
 

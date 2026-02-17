@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _INITIALIZER_H_
-#define _INITIALIZER_H_
+#ifndef TC_INITIALIZER_H
+#define TC_INITIALIZER_H
 
 #include "tibercad/base/InitializerBase.h"
 

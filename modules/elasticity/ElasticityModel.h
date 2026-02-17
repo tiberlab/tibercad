@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _ELASTICITYMODEL_H_
-#define _ELASTICITYMODEL_H_
+#ifndef TC_ELASTICITYMODEL_H
+#define TC_ELASTICITYMODEL_H
 
 #include "tibercad/physics/PhysicalModel.h"
 
@@ -159,4 +159,4 @@ void  ElasticityModel::_destroy( TiberModelObject* p)
 
 
 
-#endif // _MYPOISSONMODEL_H_
+#endif // TC_MYPOISSONMODEL_H

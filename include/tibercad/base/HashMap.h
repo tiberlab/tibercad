@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _HASHMAP_H_
-#define _HASHMAP_H_
+#ifndef TC_HASHMAP_H
+#define TC_HASHMAP_H
     
 #include "tibercad/base/tiber_config.h"
 
@@ -122,4 +122,4 @@
   };
 
 
-#endif // _HASHMAP_H_
+#endif // TC_HASHMAP_H

@@ -23,8 +23,8 @@
  */
 
 
-#ifndef _SELFCONSISTENTSOLVER_H_
-#define _SELFCONSISTENTSOLVER_H_
+#ifndef TC_SELFCONSISTENTSOLVER_H
+#define TC_SELFCONSISTENTSOLVER_H
 
 #include "tibercad/module/SimulationInterface.h"
 
@@ -320,4 +320,4 @@ SelfconsistentSolver::get_last_simulation(void)
 
 
 
-#endif // _SELFCONSISTENTSOLVER_H_
+#endif // TC_SELFCONSISTENTSOLVER_H

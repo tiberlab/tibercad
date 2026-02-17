@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _LINEARPROFILE_H_
-#define _LINEARPROFILE_H_
+#ifndef TC_LINEARPROFILE_H
+#define TC_LINEARPROFILE_H
 
 
 #include "tibercad/profiles/ExternalProfile.h"

@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _CONSTANTMOBILITY_H_
-#define _CONSTANTMOBILITY_H_
+#ifndef TC_CONSTANTMOBILITY_H
+#define TC_CONSTANTMOBILITY_H
 
 #include "MobilityModelInterface.h"
 
@@ -124,4 +124,4 @@ ConstantMobility::~ConstantMobility(void)
 {
 }
 
-#endif // _CONSTANTMOBILITY_H_
+#endif // TC_CONSTANTMOBILITY_H

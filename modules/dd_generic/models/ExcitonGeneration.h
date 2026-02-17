@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _EXCITONGENERATION_H_
-#define _EXCITONGENERATION_H_
+#ifndef TC_EXCITONGENERATION_H
+#define TC_EXCITONGENERATION_H
 
 #include "RecombinationModelInterface.h"
 #include "tibercad/base/TypeDefs.h"
@@ -103,4 +103,4 @@ ExcitonGeneration::create(const ModelOptions& options)
 
 
 
-#endif // _EXCITONGENERATION_H__
+#endif // TC_EXCITONGENERATION_H

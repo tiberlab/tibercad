@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _OPTICALGENERATION_H_
-#define _OPTICALGENERATION_H_
+#ifndef TC_OPTICALGENERATION_H
+#define TC_OPTICALGENERATION_H
 
 #include "RecombinationModelInterface.h"
 #include "tibercad/base/TypeDefs.h"
@@ -126,4 +126,4 @@ OpticalGeneration::create(const ModelOptions& options)
 
 
 
-#endif // _OPTICALGENERATION_H_
+#endif // TC_OPTICALGENERATION_H

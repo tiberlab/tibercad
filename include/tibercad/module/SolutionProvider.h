@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _SOLUTIONPROVIDER_H_
-#define _SOLUTIONPROVIDER_H_
+#ifndef TC_SOLUTIONPROVIDER_H
+#define TC_SOLUTIONPROVIDER_H
 
 #include "tibercad/base/TypeDefs.h"
 
@@ -76,4 +76,4 @@ class SolutionProvider : public std::pair<SimulationInterface*, ID>
 };
 
 
-#endif // _SOLUTIONPROVIDER_H_
+#endif // TC_SOLUTIONPROVIDER_H

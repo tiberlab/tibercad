@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _TEESTREAM_H_
-#define _TEESTREAM_H_
+#ifndef TC_TEESTREAM_H
+#define TC_TEESTREAM_H
 
 #include <iostream>
 #include <fstream>
@@ -61,4 +61,4 @@ private:
 
 typedef basic_TeeStream<char> TeeStream;
 
-#endif // _TEESTREAM_H_
+#endif // TC_TEESTREAM_H

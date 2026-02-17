@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _CARRIERPROPERTIES_H_
-#define _CARRIERPROPERTIES_H_
+#ifndef TC_CARRIERPROPERTIES_H
+#define TC_CARRIERPROPERTIES_H
 
 #include "DriftDiffusionModelInterface.h"
 #include "tibercad/physics/TemperatureInterface.h"

@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _DDINTERFACEMODEL_H_
-#define _DDINTERFACEMODEL_H_
+#ifndef TC_DDINTERFACEMODEL_H
+#define TC_DDINTERFACEMODEL_H
 
 #include "DriftDiffusionProperties.h"
 
@@ -511,4 +511,4 @@ DDInterfaceModel::get_eflux_simulation(void) const
 }
 
 
-#endif // _DDINTERFACEMODEL_H_
+#endif // TC_DDINTERFACEMODEL_H

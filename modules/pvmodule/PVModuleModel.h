@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _PVMODULEMODEL_H_
-#define _PVMODULEMODEL_H_
+#ifndef TC_PVMODULEMODEL_H
+#define TC_PVMODULEMODEL_H
 
 #include "tibercad/physics/PhysicalModel.h"
 
@@ -140,4 +140,4 @@ PVModuleModel::get_elementary_cell(void) const
   return _elementary_cell;
 }
 
-#endif // _PVMODULEMODEL_H_
+#endif // TC_PVMODULEMODEL_H

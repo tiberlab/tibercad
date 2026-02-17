@@ -25,8 +25,8 @@
 
 
 
-#ifndef _FINITEELEMENT_H_
-#define _FINITEELEMENT_H_
+#ifndef TC_FINITEELEMENT_H
+#define TC_FINITEELEMENT_H
 
 
 #include "tibercad/base/TiberCad.h"
@@ -123,4 +123,4 @@ FiniteElement<Dim, T>::set_scaling(double length_scaling, double mesh_units)
 }
 
 
-#endif // _FINITEELEMENT_H_
+#endif // TC_FINITEELEMENT_H

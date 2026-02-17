@@ -22,8 +22,8 @@
  * \internal
  */
 
-#ifndef _READISEGRID_H_
-#define _READISEGRID_H_
+#ifndef TC_READISEGRID_H
+#define TC_READISEGRID_H
 
 #include "tibercad/base/InitFailedException.h"
 #include "tibercad/base/TypeDefs.h"

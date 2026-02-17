@@ -24,8 +24,8 @@
  * \note This file is part of module empirical_tb.
  */
 
-#ifndef _EMPIRICALTIGHTBINDING_H_
-#define _EMPIRICALTIGHTBINIDNG_H_
+#ifndef TC_EMPIRICALTIGHTBINDING_H
+#define TC_EMPIRICALTIGHTBINIDNG_H
 
 #include "tibercad/physics/tightbinding/TightBinding.h"
 #include "tibercad/physics/StrainInterface.h"

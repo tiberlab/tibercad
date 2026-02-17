@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _TRAP_H_
-#define _TRAP_H_
+#ifndef TC_TRAP_H
+#define TC_TRAP_H
 
 
 #include "tibercad/physics/PhysicalModel.h"
@@ -239,4 +239,4 @@ Trap::set_type(Type type)
   _type = type;
 }
 
-#endif // _TRAP_H_
+#endif // TC_TRAP_H

@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _DEFAULTBANDPROPERTIES_H_
-#define _DEFAULTBANDPROPERTIES_H_
+#ifndef TC_DEFAULTBANDPROPERTIES_H
+#define TC_DEFAULTBANDPROPERTIES_H
 
 #include "CarrierProperties.h"
 
@@ -54,4 +54,4 @@ class DefaultBandProperties : public CarrierProperties
 };
 
 
-#endif // _DEFAULTBANDPROPERTIES_H_
+#endif // TC_DEFAULTBANDPROPERTIES_H

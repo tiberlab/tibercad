@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _EXTENDED_H_
-#define _EXTENDED_H_
+#ifndef TC_EXTENDED_H
+#define TC_EXTENDED_H
 
 #include "ElasticityBoundaryModel.h"
 
@@ -81,4 +81,4 @@ Extended::create(const ModelOptions& options)
 }
 
 
-#endif // _POISSONDIRICHLET_H_
+#endif // TC_POISSONDIRICHLET_H

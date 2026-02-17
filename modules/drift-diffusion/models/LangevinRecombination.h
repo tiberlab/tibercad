@@ -24,8 +24,8 @@
  * \note This file is part of module driftdiffusion.
  */
 
-#ifndef _LANGEVINRECOMBINATION_H_
-#define _LANGEVINRECOMBINATION_H_
+#ifndef TC_LANGEVINRECOMBINATION_H
+#define TC_LANGEVINRECOMBINATION_H
 
 #include "RecombinationModelInterface.h"
 #include "tibercad/base/TypeDefs.h"
@@ -107,4 +107,4 @@ LangevinRecombination::create(const ModelOptions& options)
   return new LangevinRecombination(options);
 }
 
-#endif // _LANGEVINRECOMBINATION_H__
+#endif // TC_LANGEVINRECOMBINATION_H

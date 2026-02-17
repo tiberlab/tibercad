@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _GENERICRECOMBINATION_H_
-#define _GENERICRECOMBINATION_H_
+#ifndef TC_GENERICRECOMBINATION_H
+#define TC_GENERICRECOMBINATION_H
 
 #include "RecombinationModelInterface.h"
 #include "tibercad/base/TypeDefs.h"
@@ -97,4 +97,4 @@ GenericRecombination::create(const ModelOptions& options)
 
 
 
-#endif // _GENERICRECOMBINATION_H__
+#endif // TC_GENERICRECOMBINATION_H

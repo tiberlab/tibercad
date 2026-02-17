@@ -23,8 +23,8 @@
  *       API version: 3.5
  */
 
-#ifndef _TIGHTBINDINGMODELINTERFACE_H_
-#define _TIGHTBINDINGMODELINTERFACE_H_
+#ifndef TC_TIGHTBINDINGMODELINTERFACE_H
+#define TC_TIGHTBINDINGMODELINTERFACE_H
 
 #include "tibercad/physics/PhysicalModel.h"
 #include "tibercad/physics/PhysicalModel.h"

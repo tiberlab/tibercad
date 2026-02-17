@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _FIELDDEPENDENTMOBILITY_H_
-#define _FIELDDEPENDENTMOBILITY_H_
+#ifndef TC_FIELDDEPENDENTMOBILITY_H
+#define TC_FIELDDEPENDENTMOBILITY_H
 
 #include "MobilityModelInterface.h"
 
@@ -160,4 +160,4 @@ FieldDependentMobility::~FieldDependentMobility(void)
 {
 }
 
-#endif // _FIELDDEPENDENTMOBILITY_H_
+#endif // TC_FIELDDEPENDENTMOBILITY_H

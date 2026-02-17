@@ -26,7 +26,7 @@
 
 
 #ifndef _ENVELOPFUNCTIONAPPROX_H_ 
-#define _ENVELOPFUNCTIONAPPROX_H_
+#define TC_ENVELOPFUNCTIONAPPROX_H
 
 
 #include "tibercad/physics/schroedinger/FEMEigenvalueProblem.h"

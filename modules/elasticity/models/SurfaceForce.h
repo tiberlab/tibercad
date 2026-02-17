@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _SURFACEFORCE_H_
-#define _SURFACEFORCE_H_
+#ifndef TC_SURFACEFORCE_H
+#define TC_SURFACEFORCE_H
 
 #include "ElasticityBoundaryModel.h"
 
@@ -103,4 +103,4 @@ SurfaceForce::create(const ModelOptions& options)
 }
 
 
-#endif // _POISSONDIRICHLET_H_
+#endif // TC_POISSONDIRICHLET_H

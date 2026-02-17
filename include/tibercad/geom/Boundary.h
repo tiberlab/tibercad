@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _BOUNDARY_H_
-#define _BOUNDARY_H_
+#ifndef TC_BOUNDARY_H
+#define TC_BOUNDARY_H
 
 #include "tibercad/base/TypeDefs.h"
 #include "tibercad/base/ModelOptions.h"
@@ -276,4 +276,4 @@ Boundary::get_options(void) const
   return _options;
 }
 
-#endif // _BOUNDARY_H_
+#endif // TC_BOUNDARY_H

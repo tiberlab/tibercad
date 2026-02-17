@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _SISTRAINEDMOBILITY_H_
-#define _SISTRAINEDMOBILITY_H_
+#ifndef TC_SISTRAINEDMOBILITY_H
+#define TC_SISTRAINEDMOBILITY_H
 
 #include "MobilityModelInterface.h"
 #include "tibercad/physics/StrainInterface.h"
@@ -134,4 +134,4 @@ SiStrainedMobility::~SiStrainedMobility(void)
 {
 }
 
-#endif // _CONSTANTMOBILITY_H_
+#endif // TC_CONSTANTMOBILITY_H

@@ -24,8 +24,8 @@
  * \note This file is part of module pvmodule.
  */
 
-#ifndef _PCDEGRADATIONH2O_H_
-#define _PCDEGRADATIONH2O_H_
+#ifndef TC_PCDEGRADATIONH2O_H
+#define TC_PCDEGRADATIONH2O_H
 
 #include "Photocurrent.h"
 #include "tibercad/module/SolutionProvider.h"
@@ -82,4 +82,4 @@ class PCDegradationH2O : public Photocurrent
 };
 
 
-#endif // _PCDEGRADATIONH2O_H_
+#endif // TC_PCDEGRADATIONH2O_H

@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _THERMALMODEL_H_
-#define _THERMALMODEL_H_
+#ifndef TC_THERMALMODEL_H
+#define TC_THERMALMODEL_H
 
 #include "tibercad/physics/PhysicalModel.h"
 
@@ -129,4 +129,4 @@ ThermalModel::get_total_thermal_conductivity(void) const
 
 
 
-#endif // _DEFAULTMODEL_H_
+#endif // TC_DEFAULTMODEL_H

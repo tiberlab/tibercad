@@ -24,8 +24,8 @@
  * \note This file is part of module pvmodule.
  */
 
-#ifndef _ELEMENTARY1DIODE_H_
-#define _ELEMENTARY1DIODE_H_
+#ifndef TC_ELEMENTARY1DIODE_H
+#define TC_ELEMENTARY1DIODE_H
 
 #include "ElementaryCell.h"
 
@@ -88,4 +88,4 @@ class Elementary1Diode : public ElementaryCell
 };
 
 
-#endif // _ELEMENTARY1DIODE_H_
+#endif // TC_ELEMENTARY1DIODE_H

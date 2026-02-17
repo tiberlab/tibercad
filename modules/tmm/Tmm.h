@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _TMM_H_
-#define _TMM_H_
+#ifndef TC_TMM_H
+#define TC_TMM_H
 
 #include "tibercad/module/SimulationInterface.h"
 #include "matrix2by2.h"
@@ -291,4 +291,4 @@ private:
 };
 
 
-#endif // _TMM_H_
+#endif // TC_TMM_H

@@ -24,8 +24,8 @@
  * \note This file is part of module polarizationgrid.
  */
 
-#ifndef _POLAGRID_H_
-#define _POLAGRID_H_
+#ifndef TC_POLAGRID_H
+#define TC_POLAGRID_H
 
 #include "tibercad/module/SimulationInterface.h"
 #include "tibercad/geom/TensorGrid.h"

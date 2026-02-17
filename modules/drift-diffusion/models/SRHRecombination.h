@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _SRHRECOMBINATION_H_
-#define _SRHRECOMBINATION_H_
+#ifndef TC_SRHRECOMBINATION_H
+#define TC_SRHRECOMBINATION_H
 
 #include "RecombinationModelInterface.h"
 #include "tibercad/base/TypeDefs.h"
@@ -197,4 +197,4 @@ SRHRecombination::create(const ModelOptions& options)
 
 
 
-#endif // _SRHRECOMBINATION_H_
+#endif // TC_SRHRECOMBINATION_H

@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _BULKDOS_H_
-#define _BULKDOS_H_
+#ifndef TC_BULKDOS_H
+#define TC_BULKDOS_H
 
 
 #include "tibercad/physics/misc/DensityOfStates.h"
@@ -121,4 +121,4 @@ BulkDOS::create(const ModelOptions& options)
 }
 
 
-#endif // _BULKDOS_H_
+#endif // TC_BULKDOS_H

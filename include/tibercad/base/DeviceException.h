@@ -25,8 +25,8 @@
 
 
 
-#ifndef _DEVICEEXCEPTION_H_
-#define _DEVICEEXCEPTION_H_
+#ifndef TC_DEVICEEXCEPTION_H
+#define TC_DEVICEEXCEPTION_H
 
 #include "tibercad/base/ExceptionTracer.h"
 
@@ -51,4 +51,4 @@ class DeviceException : public std::runtime_error, ExceptionTracer
 
 
 
-#endif // _DEVICEEXCEPTION_H_
+#endif // TC_DEVICEEXCEPTION_H

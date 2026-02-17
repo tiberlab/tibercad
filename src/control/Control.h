@@ -23,8 +23,8 @@
  */
 
 
-#ifndef _CONTROL_H_
-#define _CONTROL_H_
+#ifndef TC_CONTROL_H
+#define TC_CONTROL_H
 
 #include "tibercad/base/TypeDefs.h"
 #include "tibercad/base/IDSet.h"
@@ -227,4 +227,4 @@ Control::get_output_format(void) const
 
 
 
-#endif // _CONTROL_H_
+#endif // TC_CONTROL_H

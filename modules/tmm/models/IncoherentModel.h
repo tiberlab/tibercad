@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _INCOHERENCE_H_
-#define _INCOHERENCE_H_
+#ifndef TC_INCOHERENCE_H
+#define TC_INCOHERENCE_H
 
 #include "Tmm.h"
 #include "TmmBulkModel.h"
@@ -66,4 +66,4 @@ protected:
 
 
 
-#endif // _POLARIZATIONMODEL_H_
+#endif // TC_POLARIZATIONMODEL_H

@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _BOLTZMANNBOUNDARYMODEL_H_
-#define _BOLTZMANNBOUNDARYMODEL_H_
+#ifndef TC_BOLTZMANNBOUNDARYMODEL_H
+#define TC_BOLTZMANNBOUNDARYMODEL_H
 
 #include "tibercad/physics/PhysicalModel.h"
 #include "vector_value.h"
@@ -152,4 +152,4 @@ _deltaT = deltaT;
 
 
 
-#endif // _THERMALBOUNDARYMODEL_H_
+#endif // TC_THERMALBOUNDARYMODEL_H

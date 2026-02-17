@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _EXPONENTIALDOS_H_
-#define _EXPONENTIALDOS_H_
+#ifndef TC_EXPONENTIALDOS_H
+#define TC_EXPONENTIALDOS_H
 
 
 #include "tibercad/physics/misc/DensityOfStates.h"
@@ -41,18 +41,15 @@ class TBDLEXPORT ExponentialDOS : public DensityOfStates
   public:
 
     //! Destructor
-    virtual ~ExponentialDOS(void) {};
-
-
-    //! Creator function
-    static ExponentialDOS* create(const ModelOptions& options);
+    virtual ~ExponentialDOS(void) = default;
 
 
 
   protected:
 
     //! Constructor
-    ExponentialDOS(const ModelOptions& options);
+    explicit ExponentialDOS(const ModelOptions& options);
+
 
     virtual void do_init(void);
 
@@ -75,16 +72,5 @@ class TBDLEXPORT ExponentialDOS : public DensityOfStates
 
 };
 
-//
-// inline methods
-//
 
-inline
-ExponentialDOS*
-ExponentialDOS::create(const ModelOptions& options)
-{
-  return new ExponentialDOS(options);
-}
-
-
-#endif // _EXPONENTIALDOS_H_
+#endif // TC_EXPONENTIALDOS_H

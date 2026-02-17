@@ -24,8 +24,8 @@
  */
 
 
-#ifndef __DEVICE_H__
-#define __DEVICE_H__
+#ifndef TC_DEVICE_H
+#define TC_DEVICE_H
 
 
 #include "tibercad/base/TiberCad.h"
@@ -782,4 +782,4 @@ Device::get_quantum_contact(const Elem* elem)
 
 
 
-#endif //  __DEVICE_H__
+#endif //  TC_DEVICE_H

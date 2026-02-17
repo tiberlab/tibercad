@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _WIBOUNDARYMODEL_H_
-#define _WIBOUNDARYMODEL_H_
+#ifndef TC_WIBOUNDARYMODEL_H
+#define TC_WIBOUNDARYMODEL_H
 
 #include "tibercad/physics/PhysicalModel.h"
 
@@ -105,4 +105,4 @@ WIBoundaryModel::set_coefficients(double a, double b, double c)
 }
 
 
-#endif // _WIBOUNDARYMODEL_H_
+#endif // TC_WIBOUNDARYMODEL_H

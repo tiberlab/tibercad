@@ -25,8 +25,8 @@
 
 
 
-#ifndef _POTENTIALINTERFACE_H_
-#define _POTENTIALINTERFACE_H_
+#ifndef TC_POTENTIALINTERFACE_H
+#define TC_POTENTIALINTERFACE_H
 
 #include "tibercad/base/TypeDefs.h"
 
@@ -129,4 +129,4 @@ PotentialInterface::get_simulation(void)
 }
 
 
-#endif // _POTENTIALINTERFACE_H_
+#endif // TC_POTENTIALINTERFACE_H

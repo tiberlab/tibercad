@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _BOLTZMANN_H_
-#define _BOLTZMANN_H_
+#ifndef TC_BOLTZMANN_H
+#define TC_BOLTZMANN_H
 
 #include "tibercad/module/SimulationInterface.h"
 #include "tibercad/geom/ElementSide.h"
@@ -449,4 +449,4 @@ Boltzmann::assemble_global(libMesh::EquationSystems& es, const std::string& syst
 {
   _this->do_assemble_global(es, system_name);
 }
-#endif // _MYPOISSON_H_
+#endif // TC_MYPOISSON_H

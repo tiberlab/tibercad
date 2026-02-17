@@ -23,8 +23,8 @@
  *       API version: 3.5
  */
 
-#ifndef _SBBULKHAMILTONIAN_H_
-#define _SBBULKHAMILTONIAN_H_
+#ifndef TC_SBBULKHAMILTONIAN_H
+#define TC_SBBULKHAMILTONIAN_H
 
 #include "tibercad/physics/semiconductormodels/EFAbulkHamiltonian.h"
 #include "tibercad/math/Tensor2.h"

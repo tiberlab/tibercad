@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _ELECTRICALCONTACT_H_
-#define _ELECTRICALCONTACT_H_
+#ifndef TC_ELECTRICALCONTACT_H
+#define TC_ELECTRICALCONTACT_H
 
 
 #include "DDInterfaceModel.h"
@@ -237,4 +237,4 @@ ElectricalContact::get_recombination_velocities(double& vn, double& vp)
 
 
 
-#endif // _ELECTRICALCONTACT_H_
+#endif // TC_ELECTRICALCONTACT_H

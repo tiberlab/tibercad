@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _SEMICONDUCTORMODEL_H_
-#define _SEMICONDUCTORMODEL_H_
+#ifndef TC_SEMICONDUCTORMODEL_H
+#define TC_SEMICONDUCTORMODEL_H
 
 #include "tibercad/base/SimulationOptions.h"
 #include "DDBulkModel.h"

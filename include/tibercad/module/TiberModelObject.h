@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _TIBERMODELOBJECT_H_
-#define _TIBERMODELOBJECT_H_
+#ifndef TC_TIBERMODELOBJECT_H
+#define TC_TIBERMODELOBJECT_H
 
 #include "tibercad/base/ModelOptions.h"
 #include "tibercad/base/Initializer.h"

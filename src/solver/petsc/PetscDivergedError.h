@@ -23,8 +23,8 @@
  */
 
 
-#ifndef _PETSCDIVERGEDERROR_H_
-#define _PETSCDIVERGEDERROR_H_
+#ifndef TC_PETSCDIVERGEDERROR_H
+#define TC_PETSCDIVERGEDERROR_H
 
 #include "PetscRuntimeError.h"
 
@@ -66,4 +66,4 @@ class PetscDivergedError : public PetscRuntimeError
     PETScSolverType _type;
 };
 
-#endif // _PETSCDIVERGEDERROR_H_
+#endif // TC_PETSCDIVERGEDERROR_H

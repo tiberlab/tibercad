@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _AUGERRECOMBINATION_H_
-#define _AUGERRECOMBINATION_H_
+#ifndef TC_AUGERRECOMBINATION_H
+#define TC_AUGERRECOMBINATION_H
 
 #include "RecombinationModelInterface.h"
 #include "tibercad/base/TypeDefs.h"
@@ -162,4 +162,4 @@ AugerRecombination::create(const ModelOptions& options)
 
 
 
-#endif // _AUGERRECOMBINATION_H_
+#endif // TC_AUGERRECOMBINATION_H

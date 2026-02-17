@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _BCPRESSURE_H_
-#define _BCPRESSURE_H_
+#ifndef TC_BCPRESSURE_H
+#define TC_BCPRESSURE_H
 
 #include "WIBoundaryModel.h"
 
@@ -98,4 +98,4 @@ BCPressure::create(const ModelOptions& options)
 
 
 
-#endif // _BCPRESSURE_H_
+#endif // TC_BCPRESSURE_H

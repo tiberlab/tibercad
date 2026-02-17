@@ -23,8 +23,8 @@
  *       API version: 3.5
  */
 
-#ifndef _STRAINLATTICE_H_
-#define _STRAINLATTICE_H_
+#ifndef TC_STRAINLATTICE_H
+#define TC_STRAINLATTICE_H
 
 #include "tibercad/module/TiberModelObject.h"
 #include "tibercad/atomistic/Specie.h"
@@ -148,4 +148,4 @@ StrainLattice::get_solution(void) const
   return _solution;
 }
 
-#endif // _STRAINLATTICE_H_
+#endif // TC_STRAINLATTICE_H

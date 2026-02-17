@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _NEGF_H_
-#define _NEGF_H_
+#ifndef TC_NEGF_H
+#define TC_NEGF_H
 
 #include "tibercad/module/SimulationInterface.h"
 #include "tibercad/physics/schroedinger/EigenvalueProblem.h"

@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _TIBER_DLL_H_
-#define _TIBER_DLL_H_
+#ifndef TC_TIBER_DLL_H
+#define TC_TIBER_DLL_H
 
 #include "tibercad/base/tiber_config.h"
 
@@ -44,9 +44,9 @@
 
 
 // these are the symbol names for the dll entry points
-#define TBCREATEFUNC tc_model_create
-#define TBDESTROYFUNC tc_model_destroy
-#define TBCREATEFUNCSYM "tc_model_create"
-#define TBDESTROYFUNCSYM "tc_model_destroy"
+#define TC_CREATEFUNC tc_model_create
+#define TC_DESTROYFUNC tc_model_destroy
+#define TC_CREATEFUNCSYM "tc_model_create"
+#define TC_DESTROYFUNCSYM "tc_model_destroy"
 
-#endif // _TIBER_DLL_H_
+#endif // TC_TIBER_DLL_H

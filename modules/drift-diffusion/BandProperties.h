@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _BANDPROPERTIES_H_
-#define _BANDPROPERTIES_H_
+#ifndef TC_BANDPROPERTIES_H
+#define TC_BANDPROPERTIES_H
 
 #include "DriftDiffusionModelInterface.h"
 #include "tibercad/physics/TemperatureInterface.h"
@@ -240,4 +240,4 @@ BandProperties::set_band_edge(double )
 }
 
 
-#endif // _BANDPROPERTIES_H_
+#endif // TC_BANDPROPERTIES_H

@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _ANISOTROPICSTIFFNESS_H_
-#define _ANISOTROPICSTIFFNESS_H_
+#ifndef TC_ANISOTROPICSTIFFNESS_H
+#define TC_ANISOTROPICSTIFFNESS_H
 
 #include "StiffnessModel.h"
 
@@ -102,4 +102,4 @@ AnisotropicStiffness::create(const ModelOptions& options)
 
 
 
-#endif // _GRAYMODEL_H_
+#endif // TC_GRAYMODEL_H

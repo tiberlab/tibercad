@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _TTARECOMBINATION_H_
-#define _TTARECOMBINATION_H_
+#ifndef TC_TTARECOMBINATION_H
+#define TC_TTARECOMBINATION_H
 
 #include "RecombinationModelInterface.h"
 #include "tibercad/base/TypeDefs.h"
@@ -97,4 +97,4 @@ TTARecombination::create(const ModelOptions& options)
 
 
 
-#endif // _TTARECOMBINATION_H__
+#endif // TC_TTARECOMBINATION_H

@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _THERMALSURFACERESISTANCE_H_
-#define _THERMALSURFACERESISTANCE_H_
+#ifndef TC_THERMALSURFACERESISTANCE_H
+#define TC_THERMALSURFACERESISTANCE_H
 
 #include "ThermalBoundaryModel.h"
 
@@ -108,4 +108,4 @@ ThermalSurfaceResistance::create(const ModelOptions& options)
 
 
 
-#endif // _POISSONDIRICHLET_H_
+#endif // TC_POISSONDIRICHLET_H

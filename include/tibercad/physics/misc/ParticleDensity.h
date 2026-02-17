@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _PARTICLEDENSITY_H_
-#define _PARTICLEDENSITY_H_
+#ifndef TC_PARTICLEDENSITY_H
+#define TC_PARTICLEDENSITY_H
 
 #include "tibercad/physics/PhysicalModel.h"
 #include "tibercad/base/TiberCad.h"
@@ -530,4 +530,4 @@ ParticleDensity::get_quantum_simulation(void)
 
 
 
-#endif // _PARTICLEDENSITY_H_
+#endif // TC_PARTICLEDENSITY_H

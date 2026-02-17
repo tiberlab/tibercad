@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _AUGERBARE_H_
-#define _AUGERBARE_H_
+#ifndef TC_AUGERBARE_H
+#define TC_AUGERBARE_H
 
 #include "RecombinationModelInterface.h"
 #include "tibercad/base/TypeDefs.h"
@@ -97,4 +97,4 @@ AugerBare::create(const ModelOptions& options)
 
 
 
-#endif // _AUGERBARE_H_
+#endif // TC_AUGERBARE_H

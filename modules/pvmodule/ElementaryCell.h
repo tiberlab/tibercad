@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _ELEMENTARYCELL_H_
-#define _ELEMENTARYCELL_H_
+#ifndef TC_ELEMENTARYCELL_H
+#define TC_ELEMENTARYCELL_H
 
 #include "tibercad/physics/PhysicalModel.h"
 
@@ -106,4 +106,4 @@ ElementaryCell::ElementaryCell(const ModelOptions& options) :
 
 
 
-#endif // _ELEMENTARYCELL_H_
+#endif // TC_ELEMENTARYCELL_H

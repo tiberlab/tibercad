@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _EXCITONDISSOCIATION_H_
-#define _EXCITONDISSOCIATION_H_
+#ifndef TC_EXCITONDISSOCIATION_H
+#define TC_EXCITONDISSOCIATION_H
 
 #include "RecombinationModelInterface.h"
 #include "tibercad/base/TypeDefs.h"
@@ -116,4 +116,4 @@ ExcitonDissociation::create_new(void) const
 }
 
 
-#endif // _EXCITONDISSOCIATION_H_
+#endif // TC_EXCITONDISSOCIATION_H

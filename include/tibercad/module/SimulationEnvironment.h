@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _SIMULATIONENVIRONMENT_H_
-#define _SIMULATIONENVIRONMENT_H_
+#ifndef TC_SIMULATIONENVIRONMENT_H
+#define TC_SIMULATIONENVIRONMENT_H
 
 #include "tibercad/base/TypeDefs.h"
 #include "tibercad/base/HashSet.h"
@@ -842,4 +842,4 @@ class SimulationEnvironment::BoundarySideIterator
     ElemSideMap::const_iterator _mapend;
 };
 
-#endif // _SIMULATIONENVIRONMENT_H_
+#endif // TC_SIMULATIONENVIRONMENT_H

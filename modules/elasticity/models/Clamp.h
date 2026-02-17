@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _CLAMP_H_
-#define _CLAMP_H_
+#ifndef TC_CLAMP_H
+#define TC_CLAMP_H
 
 #include "ElasticityBoundaryModel.h"
 
@@ -80,4 +80,4 @@ Clamp::create(const ModelOptions& options)
 }
 
 
-#endif // _POISSONDIRICHLET_H_
+#endif // TC_POISSONDIRICHLET_H

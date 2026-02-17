@@ -23,8 +23,8 @@
  *       API version: 3.5
  */
 
-#ifndef _DDSEMICONDUCTOR_H_
-#define _DDSEMICONDUCTOR_H_
+#ifndef TC_DDSEMICONDUCTOR_H
+#define TC_DDSEMICONDUCTOR_H
 
 
 #include "tibercad/physics/PhysicalModel.h"

@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _BAND2BAND_H_
-#define _BAND2BAND_H_
+#ifndef TC_BAND2BAND_H
+#define TC_BAND2BAND_H
 
 #include "RecombinationModelInterface.h"
 #include "tibercad/base/TypeDefs.h"
@@ -118,4 +118,4 @@ Band2Band::create(const ModelOptions& options)
 
 
 
-#endif // _DIRECTRECOMBINATION_H__
+#endif // TC_DIRECTRECOMBINATION_H

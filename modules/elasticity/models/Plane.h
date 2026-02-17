@@ -103,4 +103,4 @@ Plane::create(const ModelOptions& options)
 
 
 
-#endif // _POISSONDIRICHLET_H_
+#endif // TC_POISSONDIRICHLET_H

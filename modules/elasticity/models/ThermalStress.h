@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _THERMALSTRESS_H_
-#define _THERMALSTRESS_H_
+#ifndef TC_THERMALSTRESS_H
+#define TC_THERMALSTRESS_H
 
 #include "BodyForceModel.h"
 
@@ -94,4 +94,4 @@ ThermalStress::create(const ModelOptions& options)
 
 
 
-#endif // _THERMALSTRESS_H_
+#endif // TC_THERMALSTRESS_H

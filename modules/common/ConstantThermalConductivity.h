@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _CONSTANTTHERMALCONDUCTIVITY_H_
-#define _CONSTANTTHERMALCONDUCTIVITY_H_
+#ifndef TC_CONSTANTTHERMALCONDUCTIVITY_H
+#define TC_CONSTANTTHERMALCONDUCTIVITY_H
 
 #include "tensor_value.h"
 #include "vector_value.h"
@@ -110,6 +110,6 @@ ConstantThermalConductivity::create(const ModelOptions& options)
 
 
 
-#endif // _GRAYMODEL_H_
+#endif // TC_GRAYMODEL_H
 
   

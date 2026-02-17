@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _DSSC_H_
-#define _DSSC_H_
+#ifndef TC_DSSC_H
+#define TC_DSSC_H
 
 #include "tibercad/module/SimulationInterface.h"
 #include "tibercad/base/SimulationOptions.h"
@@ -621,4 +621,4 @@ DSSC::is_internal_boundary_node(const Node* node) const
 }
 
 
-#endif // _DSSC_H_
+#endif // TC_DSSC_H

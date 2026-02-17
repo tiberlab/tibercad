@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _FOURIERMODEL_H_
-#define _FOURIERMODEL_H_
+#ifndef TC_FOURIERMODEL_H
+#define TC_FOURIERMODEL_H
 
 #include "HeatTransportModel.h"
 
@@ -94,4 +94,4 @@ FourierModel::create(const ModelOptions& options)
 {
   return new  FourierModel(options);
 }
-#endif // _GRAYMODEL_H_
+#endif // TC_GRAYMODEL_H

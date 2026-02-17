@@ -23,8 +23,8 @@
  *       API version: 3.5
  */
 
-#ifndef _GRIDCELLS_H_
-#define _GRIDCELLS_H_
+#ifndef TC_GRIDCELLS_H
+#define TC_GRIDCELLS_H
 
 
 #include "tibercad/atomistic/Atom.h"
@@ -287,4 +287,4 @@ GridCells::end(unsigned int x, unsigned int y, unsigned int z)
 }
 
 
-#endif // _GRIDCELLS_H_
+#endif // TC_GRIDCELLS_H

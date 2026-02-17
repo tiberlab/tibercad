@@ -23,8 +23,8 @@
  */
 
 
-#ifndef __READCOMSOL_H_
-#define __READCOMSOL_H_
+#ifndef TC_READCOMSOL_H
+#define TC_READCOMSOL_H
 
 #include "tibercad/base/tiber_dll.h"
 
@@ -94,4 +94,4 @@ ReadComsol::ReadComsol(libMesh::MeshBase& mesh, MeshRegionInfo& reg_info,
 {}
 
 
-#endif // __READCOMSOL_H_
+#endif // TC_READCOMSOL_H

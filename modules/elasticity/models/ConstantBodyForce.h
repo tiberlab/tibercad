@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _CONSTANTBODYFORCE_H_
-#define _CONSTANTBODYFORCE_H_
+#ifndef TC_CONSTANTBODYFORCE_H
+#define TC_CONSTANTBODYFORCE_H
 
 #include "BodyForceModel.h"
 
@@ -93,4 +93,4 @@ ConstantBodyForce::create(const ModelOptions& options)
 
 
 
-#endif // _GRAYMODEL_H_
+#endif // TC_GRAYMODEL_H

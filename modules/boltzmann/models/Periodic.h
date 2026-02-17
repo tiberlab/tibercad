@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _PERIODC_H_
-#define _PERIODC_H_
+#ifndef TC_PERIODC_H
+#define TC_PERIODC_H
 
 #include "BoltzmannBoundaryModel.h"
 
@@ -117,4 +117,4 @@ Periodic::create_new(void) const
   return new Periodic(get_options());
 }
 
-#endif // _POISSONDIRICHLET_H_
+#endif // TC_POISSONDIRICHLET_H

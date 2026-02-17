@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _EXCITONDECAY_H_
-#define _EXCITONDECAY_H_
+#ifndef TC_EXCITONDECAY_H
+#define TC_EXCITONDECAY_H
 
 #include "RecombinationModelInterface.h"
 #include "tibercad/base/TypeDefs.h"
@@ -99,4 +99,4 @@ ExcitonDecay::create(const ModelOptions& options)
 
 
 
-#endif // _EXCITONDECAY_H__
+#endif // TC_EXCITONDECAY_H

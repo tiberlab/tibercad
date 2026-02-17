@@ -23,8 +23,8 @@
  */
 
 
-#ifndef __READGMSH_H__
-#define __READGMSH_H__
+#ifndef TC_READGMSH_H
+#define TC_READGMSH_H
 
 #include "tibercad/base/tiber_dll.h"
 
@@ -113,4 +113,4 @@ ReadGMSH::ReadGMSH(libMesh::MeshBase& mesh, MeshRegionInfo& reg_info,
 {}
 
 
-#endif // __READGMSH_H__
+#endif // TC_READGMSH_H

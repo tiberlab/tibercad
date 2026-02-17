@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _FIELDASSISTEDMOBILITY_H_
-#define _FIELDASSISTEDMOBILITY_H_
+#ifndef TC_FIELDASSISTEDMOBILITY_H
+#define TC_FIELDASSISTEDMOBILITY_H
 
 #include "MobilityModelInterface.h"
 
@@ -127,4 +127,4 @@ FieldAssistedMobility::create_new(void) const
 }
 
 
-#endif // _FIELDASSISTEDMOBILITY_H_
+#endif // TC_FIELDASSISTEDMOBILITY_H

@@ -24,8 +24,8 @@
  * \note This file is part of module vff.
  */
 
-#ifndef _USERKEATING_H_
-#define _USERKEATING_H_
+#ifndef TC_USERKEATING_H
+#define TC_USERKEATING_H
 
 #include "tibercad/base/tiber_dll.h"
 #include "Keating.h"

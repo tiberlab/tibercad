@@ -26,8 +26,8 @@
 
 /*! \file SimulationInterface.h */
 
-#ifndef _SIMULATIONINTERFACE_H_
-#define _SIMULATIONINTERFACE_H_
+#ifndef TC_SIMULATIONINTERFACE_H
+#define TC_SIMULATIONINTERFACE_H
 
 #include "tibercad/base/tiber_config.h"
 #include "tibercad/module/TiberModelObject.h"
@@ -2256,4 +2256,4 @@ SimulationInterface::simulations_end(void)
 
 
 
-#endif // _SIMULATIONINTERFACE_H_
+#endif // TC_SIMULATIONINTERFACE_H

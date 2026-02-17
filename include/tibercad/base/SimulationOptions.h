@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _SIMULATIONOPTIONS_H_
-#define _SIMULATIONOPTIONS_H_
+#ifndef TC_SIMULATIONOPTIONS_H
+#define TC_SIMULATIONOPTIONS_H
 
 #include "tibercad/base/tiber_dll.h"
 #include <string>

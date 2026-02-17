@@ -23,8 +23,8 @@
  */
 
 
-#ifndef _TIBERPETSCNONLINEARSOLVER_H_
-#define _TIBERPETSCNONLINEARSOLVER_H_
+#ifndef TC_TIBERPETSCNONLINEARSOLVER_H
+#define TC_TIBERPETSCNONLINEARSOLVER_H
 
 #include "solver/TiberNonlinearSolver.h"
 #include "PetscRuntimeError.h"

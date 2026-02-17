@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _THERMAL_H_
-#define _THERMAL_H_
+#ifndef TC_THERMAL_H
+#define TC_THERMAL_H
 
 #include "tibercad/module/SimulationInterface.h"
 #include "tibercad/geom/ElementSide.h"
@@ -156,4 +156,4 @@ class TBDLLOCAL Thermal : public SimulationInterface
 
 
 
-#endif // _MYPOISSON_H_
+#endif // TC_MYPOISSON_H

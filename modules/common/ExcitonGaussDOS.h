@@ -24,8 +24,8 @@
  * \note This file is part of module common.
  */
 
-#ifndef _EXCITONGAUSSDOS_H_
-#define _EXCITONGAUSSDOS_H_
+#ifndef TC_EXCITONGAUSSDOS_H
+#define TC_EXCITONGAUSSDOS_H
 
 
 #include "tibercad/physics/misc/DensityOfStates.h"
@@ -107,4 +107,4 @@ ExcitonGaussDOS::create(const ModelOptions& options)
 }
 
 
-#endif // _BULKDOS_H_
+#endif // TC_BULKDOS_H

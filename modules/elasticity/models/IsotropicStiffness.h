@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _ISOTROPICSTIFFNESS_H_
-#define _ISOTROPICSTIFFNESS_H_
+#ifndef TC_ISOTROPICSTIFFNESS_H
+#define TC_ISOTROPICSTIFFNESS_H
 
 #include "StiffnessModel.h"
 
@@ -96,4 +96,4 @@ IsotropicStiffness::create(const ModelOptions& options)
 
 
 
-#endif // _GRAYMODEL_H_
+#endif // TC_GRAYMODEL_H

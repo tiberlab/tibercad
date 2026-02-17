@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _CONSTANTPERMITTIVITY_H_
-#define _CONSTANTPERMITTIVITY_H_
+#ifndef TC_CONSTANTPERMITTIVITY_H
+#define TC_CONSTANTPERMITTIVITY_H
 
 #include "tibercad/physics/misc/PermittivityModel.h"
 #include "tibercad/module/SimulationInterface.h"
@@ -78,4 +78,4 @@ ConstantPermittivity::create(const ModelOptions& options)
 }
 
 
-#endif // _PIEZOPOLARIZATION_H_
+#endif // TC_PIEZOPOLARIZATION_H

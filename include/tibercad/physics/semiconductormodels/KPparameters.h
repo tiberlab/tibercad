@@ -23,8 +23,8 @@
  *       API version: 3.5
  */
 
-#ifndef _KPPARAMETERS_H_
-#define _KPPARAMETERS_H_
+#ifndef TC_KPPARAMETERS_H
+#define TC_KPPARAMETERS_H
 struct  KPparams
   {
 

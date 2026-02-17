@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _MOBILITYMODELINTERFACE_H_
-#define _MOBILITYMODELINTERFACE_H_
+#ifndef TC_MOBILITYMODELINTERFACE_H
+#define TC_MOBILITYMODELINTERFACE_H
 
 
 
@@ -184,4 +184,4 @@ MobilityModelInterface::get_derivative_grad_fermi(libMesh::RealGradient& dm)
 
 
 
-#endif // _MOBILITYMODELINTERFACE_H_
+#endif // TC_MOBILITYMODELINTERFACE_H

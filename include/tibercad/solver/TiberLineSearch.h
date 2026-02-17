@@ -25,8 +25,8 @@
 
 
 
-#ifndef _TIBERLINESEARCH_H_
-#define _TIBERLINESEARCH_H_
+#ifndef TC_TIBERLINESEARCH_H
+#define TC_TIBERLINESEARCH_H
 
 
 #include "tibercad/solver/TiberNonlinearSystem.h"
@@ -221,4 +221,4 @@ TiberLineSearch::get_divergence_tol(void) const
 
 
 
-#endif // _TIBERLINESEARCH_H_
+#endif // TC_TIBERLINESEARCH_H

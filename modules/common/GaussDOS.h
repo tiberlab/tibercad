@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _GAUSSDOS_H_
-#define _GAUSSDOS_H_
+#ifndef TC_GAUSSDOS_H
+#define TC_GAUSSDOS_H
 
 
 #include "tibercad/physics/misc/DensityOfStates.h"
@@ -137,4 +137,4 @@ GaussDOS::create(const ModelOptions& options)
 }
 
 
-#endif // _GAUSSDOS_H_
+#endif // TC_GAUSSDOS_H

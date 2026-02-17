@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _DATABASE_H_
-#define _DATABASE_H_
+#ifndef TC_DATABASE_H
+#define TC_DATABASE_H
 
 #include "tibercad/base/ModelOptions.h"
 #include "tibercad/base/tiber_dll.h"
@@ -420,4 +420,4 @@ Database::get_component_database(size_t i)
 
 
 
-#endif // _DATABASE_H_
+#endif // TC_DATABASE_H

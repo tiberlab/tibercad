@@ -23,8 +23,8 @@
  */
 
 
-#ifndef _DLLOADER_H_
-#define _DLLOADER_H_
+#ifndef TC_DLLOADER_H
+#define TC_DLLOADER_H
 
 #include "tibercad/base/tiber_dll.h"
 
@@ -97,4 +97,4 @@ class TBDLLOCAL DLLoader
 
 
 
-#endif // _DLLOADER_H_
+#endif // TC_DLLOADER_H

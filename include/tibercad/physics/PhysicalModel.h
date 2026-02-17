@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _PHYSICALMODELINTERFACE_H_
-#define _PHYSICALMODELINTERFACE_H_
+#ifndef TC_PHYSICALMODELINTERFACE_H
+#define TC_PHYSICALMODELINTERFACE_H
 
 #include "tibercad/module/TiberModelObject.h"
 #include "tibercad/base/TypeDefs.h"
@@ -1039,4 +1039,4 @@ PhysicalModel::submodels_end(const std::string& name) const
 
 
 
-#endif // _PHYSICALMODELINTERFACE_H_
+#endif // TC_PHYSICALMODELINTERFACE_H

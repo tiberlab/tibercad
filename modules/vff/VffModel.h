@@ -24,8 +24,8 @@
  * \note This file is part of module vff.
  */
 
-#ifndef _VFFMODEL_H_
-#define _VFFMODEL_H_
+#ifndef TC_VFFMODEL_H
+#define TC_VFFMODEL_H
 
 
 #include "tibercad/physics/PhysicalModel.h"
@@ -149,4 +149,4 @@ double VffModel::get_d(void) const
   return _keating->get_d_0();
 }
 
-#endif // _VFFMODEL_H_
+#endif // TC_VFFMODEL_H

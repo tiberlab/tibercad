@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _HEATTRANSPORTMODEL_H_
-#define _HEATTRANSPORTMODEL_H_
+#ifndef TC_HEATTRANSPORTMODEL_H
+#define TC_HEATTRANSPORTMODEL_H
 
 #include "tibercad/physics/PhysicalModel.h"
 
@@ -120,4 +120,4 @@ HeatTransportModel::HeatTransportModel(const ModelOptions& options) :
 
 
 
-#endif // _HEATTRANSPORTMODEL_H_
+#endif // TC_HEATTRANSPORTMODEL_H

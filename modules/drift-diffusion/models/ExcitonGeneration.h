@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _EXCITONGENERATION_H_
-#define _EXCITONGENERATION_H_
+#ifndef TC_EXCITONGENERATION_H
+#define TC_EXCITONGENERATION_H
 
 #include "RecombinationModelInterface.h"
 #include "tibercad/base/TypeDefs.h"
@@ -111,4 +111,4 @@ ExcitonGeneration::set_parameters(double C)
 
 
 
-#endif // _EXCITONGENERATION_H_
+#endif // TC_EXCITONGENERATION_H

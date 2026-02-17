@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _TYPEDVARIABLE_H_
-#define _TYPEDVARIABLE_H_
+#ifndef TC_TYPEDVARIABLE_H
+#define TC_TYPEDVARIABLE_H
 
 #include "tibercad/base/Variable.h"
 #include "tibercad/base/InitializerBase.h"
