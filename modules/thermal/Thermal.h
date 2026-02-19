@@ -42,7 +42,7 @@
  *
  * Illustrates the basic usage of the SimulationInterface API.
  */
-class TBDLLOCAL Thermal : public SimulationInterface
+class TC_DLLOCAL Thermal : public SimulationInterface
 {
 
   public:
@@ -52,7 +52,7 @@ class TBDLLOCAL Thermal : public SimulationInterface
      * We do not declare it virtual here, as we will not allow
      * to derive from this class anyway.
      */
-    ~Thermal(void);
+    virtual ~Thermal(void);
 
     //! We need a public static creator function
     static Thermal* create(const ModelOptions& options);
@@ -64,37 +64,40 @@ class TBDLLOCAL Thermal : public SimulationInterface
 
   protected:
 
+    //! The constructor
+    Thermal(const ModelOptions& options);
+
     //! The initialization
-    virtual void do_init(void);
+    virtual void do_init(void) override;
 
     //! Parse the options from the input file
-    virtual void parse_options(void){};
+    void parse_options(void) {};
 
     //! Setup the available variables
-    virtual void do_setup_solution_variables(void);
+    virtual void do_setup_solution_variables(void) override ;
 
     //! Solve the MyPoisson equation
-    virtual void do_solve(void);
+    virtual void do_solve(void) override ;
 
     //! Print some useful information
-    virtual void do_print_info(void);
+    virtual void do_print_info(void) override ;
 
     //! We need to create a physical model
     virtual PhysicalModel* create_bulk_model(const ModelOptions& options,
-					   const Material* mat) const;
+					   const Material* mat) const override ;
 
 
     //! We need to create boundary condition model
     virtual PhysicalModel* create_boundary_model(const ModelOptions& options,
-        const MaterialBoundary* boundary) const;
+        const MaterialBoundary* boundary) const override ;
 
     //! We have to provide somehow our solution variables
     virtual void get_solution_secure(const Elem* elem,
         std::map<ID, std::vector<double> >& values,
-        const std::vector<Point>& p);
+        const std::vector<Point>& p) override ;
 
     //! Get a mesh independent solution variable
-    virtual void get_solution_secure(std::map<ID, std::vector<double> >& values);
+    virtual void get_solution_secure(std::map<ID, std::vector<double> >& values) override ;
 
 
   private:
@@ -141,12 +144,6 @@ class TBDLLOCAL Thermal : public SimulationInterface
       ThermCond,                /*!< Thermal conductivity */
       MaxTemp                   /*!< MaxTemp */
     };
-
-    //! The constructor
-    /*!
-     * Being private disables further inheritance.
-     */
-    Thermal(const ModelOptions& options);
 
     //! The maximum temperature calculated
     double _max_temperature;

@@ -34,7 +34,7 @@ class TiberPetscNonlinearSolver;
 
 
 //! An implementation of line search to solve nonlinear systems
-class TBDLLOCAL TiberNonlinPetsc : public TiberNonlinearSystem
+class TC_DLLOCAL TiberNonlinPetsc : public TiberNonlinearSystem
 {
 
   public:

@@ -43,7 +43,7 @@ class TensorGrid;
  * make it accessible to other modules
  *
  */
-class TBDLLOCAL ImageReader : public SimulationInterface
+class TC_DLLOCAL ImageReader : public SimulationInterface
 {
 
   public:
@@ -57,6 +57,8 @@ class TBDLLOCAL ImageReader : public SimulationInterface
 
 
   protected:
+    
+    ImageReader(const ModelOptions& options);
 
     //! The initialization
     virtual void do_init(void);
@@ -101,8 +103,6 @@ class TBDLLOCAL ImageReader : public SimulationInterface
       Data        /*!< the imported data */
     };
 
-    
-    ImageReader(const ModelOptions& options);
 
 
     //! Do the actual read

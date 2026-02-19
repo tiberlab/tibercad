@@ -56,7 +56,7 @@
  *  \f$  \alpha = \frac{T}{\mu_p} \frac {\partial \mu_p}{\partial T}\f$
  *
  */
-class TBDLLOCAL ThermoelectricPower : public DriftDiffusionModelInterface
+class TC_DLLOCAL ThermoelectricPower : public DriftDiffusionModelInterface
 {
 
   public:

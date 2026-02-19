@@ -40,7 +40,7 @@ class Elem;
 
 
 //! The base class for Poisson boundary conditions
-class TBDLLOCAL AnisotropicStiffness : public StiffnessModel
+class TC_DLLOCAL AnisotropicStiffness : public StiffnessModel
 {
 
   public:
@@ -55,6 +55,9 @@ class TBDLLOCAL AnisotropicStiffness : public StiffnessModel
 
   protected:
 
+    //! Constructor
+    AnisotropicStiffness(const ModelOptions& options);
+
     //! Initialize
     virtual void do_init(void);
 
@@ -64,9 +67,9 @@ class TBDLLOCAL AnisotropicStiffness : public StiffnessModel
 
 
     /* This is not used here: */
-  virtual void read_database(void);
+    virtual void read_database(void);
 
-  virtual void do_print_info(void);
+    virtual void do_print_info(void);
 
 
     /* We do not use this here: */
@@ -83,9 +86,6 @@ class TBDLLOCAL AnisotropicStiffness : public StiffnessModel
   double _c33;
   double _c44;
   
-
-  //! Constructor
-    AnisotropicStiffness(const ModelOptions& options);
   
 };
 

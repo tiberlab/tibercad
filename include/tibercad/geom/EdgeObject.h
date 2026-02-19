@@ -50,7 +50,7 @@ class EdgeObject : public PhysicalObject
     /*!
      * \param options options for this boundary
      */
-    static EdgeObject* create(const ModelOptions& options) TBDLLOCAL;
+    static EdgeObject* create(const ModelOptions& options) TC_DLLOCAL;
 
 
   protected:

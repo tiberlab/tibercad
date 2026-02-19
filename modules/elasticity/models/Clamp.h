@@ -34,7 +34,7 @@
 
 
 //! The base class for Poisson boundary conditions
-class TBDLLOCAL Clamp : public ElasticityBoundaryModel
+class TC_DLLOCAL Clamp : public ElasticityBoundaryModel
 {
 
   public:
@@ -52,14 +52,14 @@ class TBDLLOCAL Clamp : public ElasticityBoundaryModel
 
   protected:
 
+    //! Constructor
+    Clamp(const ModelOptions& options);
+
     //! Initialize
   virtual void do_init(void);
 
 
   private:
-
-    //! Constructor
-    Clamp(const ModelOptions& options);
 
 };
 

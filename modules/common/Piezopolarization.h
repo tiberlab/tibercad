@@ -34,7 +34,7 @@
 
 
 // Basic Piezopolarization model
-class TBDLLOCAL Piezopolarization: public PolarizationModel
+class TC_DLLOCAL Piezopolarization: public PolarizationModel
 {
 
   public:

@@ -90,7 +90,7 @@ class PVModuleBoundaryModel : public PhysicalModel
 
 
     //! The constructor method
-    static TiberModelObject* _create(const ModelOptions& options, const void*);
+    static TiberModelObject* _create(const ModelOptions& options);
 
     //! The destructor method
     static void _destroy(TiberModelObject* p);

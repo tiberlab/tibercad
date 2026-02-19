@@ -43,7 +43,7 @@ class TiberLinearSystem;
  *
  * Illustrates the basic usage of the SimulationInterface API.
  */
-class TBDLLOCAL Boltzmann : public SimulationInterface
+class TC_DLLOCAL Boltzmann : public SimulationInterface
 {
 
   public:

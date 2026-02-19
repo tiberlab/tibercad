@@ -53,14 +53,14 @@ class SimulationOptions
 
 
     //! Initialize the simulation options
-    static void initialize(const ModelOptions& opts) TBDLLOCAL;
+    static void initialize(const ModelOptions& opts) TC_DLLOCAL;
 
     //! A path for temporary data
     static std::string scratch_path;
 
   private:
 
-    SimulationOptions(void) TBDLLOCAL {};
+    SimulationOptions(void) TC_DLLOCAL {};
     
     //! Level of verbosity
     static int _verbose;

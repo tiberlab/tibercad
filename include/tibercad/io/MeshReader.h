@@ -44,7 +44,7 @@ class MeshBase;
 /*!
  *  Calls the  appropriate mesh reading class.  
  */
-class TBDLLOCAL MeshReader
+class TC_DLLOCAL MeshReader
 {
 
 

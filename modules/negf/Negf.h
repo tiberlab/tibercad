@@ -52,7 +52,7 @@ class NegfWrapper;
  *
  * Illustrates the basic usage of the SimulationInterface API.
  */
-class TBDLLOCAL Negf : public SimulationInterface
+class TC_DLLOCAL Negf : public SimulationInterface
 {
 
   public:

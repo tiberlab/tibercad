@@ -37,7 +37,7 @@ class SimulationInterface;
 
 
 //! Ramp a variable in quasistationary mode
-class TBDLLOCAL Ramp
+class TC_DLLOCAL Ramp
 {
 
   public:

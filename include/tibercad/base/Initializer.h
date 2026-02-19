@@ -32,7 +32,7 @@
 
 //! The real initializer class aware of type
 template <class Class, typename T>
-class TBDLLOCAL Initializer : public InitializerBase<T>
+class TC_DLLOCAL Initializer : public InitializerBase<T>
 {
 
   public:

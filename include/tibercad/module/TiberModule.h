@@ -51,6 +51,9 @@
  */
 #ifdef TC_CREATABLE
 
+/*!
+ * Helper class to create model objects having protected ctor
+ */
 template <class T>
 class TC_ModelEnabler : public T
 {
@@ -67,12 +70,12 @@ public:
 #endif
 
 extern "C" {
-  TBDLEXPORT void
+  TC_DLEXPORT void
   TC_DESTROYFUNC(TiberModelObject* p) {
     delete p;
   }
 
-  TBDLEXPORT TiberModelObject*
+  TC_DLEXPORT TiberModelObject*
   TC_CREATEFUNC(const ModelOptions& options) {
     TiberModelObject* obj = NULL;
 #ifdef TC_FACTORYCODE

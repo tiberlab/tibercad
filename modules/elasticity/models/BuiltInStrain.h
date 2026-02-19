@@ -36,7 +36,7 @@
 
 
 //! The base class for Poisson boundary conditions
-class TBDLLOCAL BuiltInStrain : public BodyForceModel
+class TC_DLLOCAL BuiltInStrain : public BodyForceModel
 {
 
   public:
@@ -49,6 +49,9 @@ class TBDLLOCAL BuiltInStrain : public BodyForceModel
 
 
   protected:
+
+    //! Constructor
+    BuiltInStrain(const ModelOptions& options);
 
     //! Initialize
   virtual void do_init(void);
@@ -68,9 +71,6 @@ class TBDLLOCAL BuiltInStrain : public BodyForceModel
 
 
   private:
-
-    //! Constructor
-    BuiltInStrain(const ModelOptions& options);
 
    
 };

@@ -35,7 +35,7 @@
 using namespace std;
 
 //! The base class for Poisson boundary conditions
-//class TBDLEXPORT HeatTransportModel : public PhysicalModel
+//class TC_DLEXPORT HeatTransportModel : public PhysicalModel
 class HeatTransportModel : public PhysicalModel
 {
 

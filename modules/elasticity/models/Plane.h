@@ -40,7 +40,7 @@ class Elem;
 
 
 //! The base class for Poisson boundary conditions
-class TBDLLOCAL Plane : public ElasticityBoundaryModel
+class TC_DLLOCAL Plane : public ElasticityBoundaryModel
 {
 
   public:
@@ -59,8 +59,11 @@ class TBDLLOCAL Plane : public ElasticityBoundaryModel
 
   protected:
 
+    //! Constructor
+    Plane(const ModelOptions& options);
+
     //! Initialize
-  virtual void do_init(void){};
+    virtual void do_init(void){};
 
     /* In some cases it might be useful to reimplement this: */
     // virtual void do_init_interface(const PhysicalModel* comp_A,
@@ -76,9 +79,6 @@ class TBDLLOCAL Plane : public ElasticityBoundaryModel
 
 
   private:
-
-    //! Constructor
-    Plane(const ModelOptions& options);
 
    
 };

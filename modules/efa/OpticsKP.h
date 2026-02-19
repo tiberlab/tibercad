@@ -24,8 +24,8 @@
  * \note This file is part of module efaschroedinger.
  */
 
-#ifndef _OpticsKP_H_
-#define _OpticsKP_H_
+#ifndef TC_OPTICSKP_H
+#define TC_OPTICSKP_H
 
 
 #include "tibercad/physics/optics/Optics.h"

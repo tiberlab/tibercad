@@ -37,7 +37,7 @@
 #include "tibercad/physics/PhysicalModel.h"
 #include "models/HamiltonianModel.h"
 
-class TBDLLOCAL NegfModel : public PhysicalModel
+class TC_DLLOCAL NegfModel : public PhysicalModel
 {
   public:
 

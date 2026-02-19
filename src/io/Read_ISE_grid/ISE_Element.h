@@ -34,7 +34,7 @@ using  namespace std;
 /*!
   Contains general methods.
 */
-class TBDLLOCAL ISE_Element
+class TC_DLLOCAL ISE_Element
 {
  public:
 

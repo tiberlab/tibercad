@@ -40,7 +40,7 @@
 /*!
  *  The class can read parameters database and convert them into kp parameters
  */
-class TBDLEXPORT Semiconductor : public PhysicalModel
+class Semiconductor : public PhysicalModel
 {
  public:
  

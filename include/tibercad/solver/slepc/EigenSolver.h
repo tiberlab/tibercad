@@ -40,7 +40,7 @@ using libMesh::Complex;
 
 
 //! SLEPc interface class 
-class TBDLEXPORT EigenSolver
+class TC_DLEXPORT EigenSolver
 {
  public:
   //!parameters for solver

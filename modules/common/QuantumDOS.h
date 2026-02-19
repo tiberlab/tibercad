@@ -38,7 +38,7 @@ class Embracing;
 /*!
  * \brief Base class for density of states
  */
-class TBDLEXPORT QuantumDOS : public DensityOfStates
+class TC_DLEXPORT QuantumDOS : public DensityOfStates
 {
 
   public:

@@ -38,7 +38,7 @@ class DDsemiconductor;
 /*!
  * \brief Base class for density of states
  */
-class TBDLEXPORT KPBulkDOS : public DensityOfStates
+class TC_DLEXPORT KPBulkDOS : public DensityOfStates
 {
 
   public:

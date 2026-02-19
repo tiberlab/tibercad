@@ -48,7 +48,7 @@
 // ------------------------------------------------------------
 // TecplotIO_cell class definition
 //class TecplotIO_cell : public MeshOutput<MeshBase>
-class TBDLLOCAL TecplotIO_cell : public libMesh::TecplotIO
+class TC_DLLOCAL TecplotIO_cell : public libMesh::TecplotIO
 
 {
  public:

@@ -34,7 +34,7 @@
 #include "elem.h"
 
 
-class TBDLLOCAL PolarizationGrid : public SimulationInterface
+class TC_DLLOCAL PolarizationGrid : public SimulationInterface
 {
  public:
 

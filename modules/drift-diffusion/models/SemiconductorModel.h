@@ -42,7 +42,7 @@
 
 
 //! The default DD semiconductor model container
-class TBDLLOCAL SemiconductorModel : public DDBulkModel
+class TC_DLLOCAL SemiconductorModel : public DDBulkModel
 {
 
   public:

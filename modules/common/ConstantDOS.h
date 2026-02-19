@@ -31,7 +31,7 @@
 
 #include "tibercad/physics/misc/DensityOfStates.h"
 
-class TBDLEXPORT ConstantDOS : public DensityOfStates
+class TC_DLEXPORT ConstantDOS : public DensityOfStates
 {
 
   public:

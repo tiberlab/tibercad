@@ -41,7 +41,7 @@ class Elem;
 
 
 //! The base class for Poisson boundary conditions
-class TBDLLOCAL DDHeatSource : public HeatSourceModel
+class TC_DLLOCAL DDHeatSource : public HeatSourceModel
 {
 
   public:
@@ -57,21 +57,11 @@ class TBDLLOCAL DDHeatSource : public HeatSourceModel
 
   protected:
 
+    //! Constructor
+    DDHeatSource(const ModelOptions& options);
+
     //! Initialize
     virtual void do_init(void);
-
-    /* In some cases it might be useful to reimplement this: */
-    // virtual void do_init_interface(const PhysicalModel* comp_A,
-    //         const PhysicalModel* comp_B);
-
-
-    /* This is not used here: */
-    // virtual void read_database(void);
-
-
-    /* We do not use this here: */
-    // virtual void read_interface_database(void);
-
 
 
   private:
@@ -97,9 +87,6 @@ class TBDLLOCAL DDHeatSource : public HeatSourceModel
 
   //!Pointer to drift diffusion simulation
   SimulationInterface* _simul;
-
-  //! Constructor
-    DDHeatSource(const ModelOptions& options);
   
 };
 

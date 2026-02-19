@@ -37,7 +37,7 @@
  * This class implements band-to-band tunneling in a local
  * approximation
  */
-class TBDLLOCAL Band2Band : public RecombinationModelInterface
+class TC_DLLOCAL Band2Band : public RecombinationModelInterface
 {
 
   public:

@@ -39,7 +39,7 @@
 
 
 //! The base class for Poisson boundary conditions
-class TBDLLOCAL FluxBoundary : public BoltzmannBoundaryModel
+class TC_DLLOCAL FluxBoundary : public BoltzmannBoundaryModel
 {
 
   public:

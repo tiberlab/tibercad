@@ -48,7 +48,7 @@
  * member of the TiberModelObject class.
  */
 template <typename T>
-class TBDLLOCAL TypedVariable : public VariableValue
+class TC_DLLOCAL TypedVariable : public VariableValue
 {
 
   public:

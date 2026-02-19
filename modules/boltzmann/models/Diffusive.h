@@ -38,7 +38,7 @@
 
 
 //! The base class for Poisson boundary conditions
-class TBDLLOCAL Diffusive : public BoltzmannBoundaryModel
+class TC_DLLOCAL Diffusive : public BoltzmannBoundaryModel
 {
 
   public:

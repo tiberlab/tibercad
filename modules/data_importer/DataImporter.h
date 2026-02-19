@@ -49,7 +49,7 @@ class TensorGrid;
  * \brief Module to read 1d, 2d or 3d data from files
  * 
  */
-class TBDLLOCAL DataImporter : public SimulationInterface
+class TC_DLLOCAL DataImporter : public SimulationInterface
 {
   public:
     //! Destructor

@@ -41,7 +41,7 @@ class SimulationInterface;
  * In the input file, the carriers have to be provided in the order
  * \c electron, \c hole, \c exciton
  */
-class TBDLLOCAL ExcitonGeneration : public RecombinationModelInterface
+class TC_DLLOCAL ExcitonGeneration : public RecombinationModelInterface
 {
 
   public:

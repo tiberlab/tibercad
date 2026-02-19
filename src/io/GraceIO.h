@@ -33,7 +33,7 @@
 
 
 //! Write nodal and elemental data using a grace-compatible format
-class TBDLLOCAL GraceIO : public DataOutput
+class TC_DLLOCAL GraceIO : public DataOutput
 {
 
  public:

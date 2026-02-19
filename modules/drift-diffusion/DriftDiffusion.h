@@ -120,7 +120,7 @@ class Boundary;
  * \li \c recombination.total the total net recombination rate
  *
  */
-class TBDLLOCAL DriftDiffusion : public SimulationInterface
+class TC_DLLOCAL DriftDiffusion : public SimulationInterface
 {
   public:
 

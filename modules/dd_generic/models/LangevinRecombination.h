@@ -38,7 +38,7 @@ class SimulationInterface;
  * This class implements direct recombination processes that can be
  * modeled by \f[R_{Langevin}=\gamma \frac{2}{\varepsilon_r \varepsilon_0}(\mu_e + \mu_h)np\f]
  */
-class TBDLLOCAL LangevinRecombination : public RecombinationModelInterface
+class TC_DLLOCAL LangevinRecombination : public RecombinationModelInterface
 {
 
   public:

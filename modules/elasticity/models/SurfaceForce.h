@@ -39,7 +39,7 @@
 
 
 //! The base class for Poisson boundary conditions
-class TBDLLOCAL SurfaceForce : public ElasticityBoundaryModel
+class TC_DLLOCAL SurfaceForce : public ElasticityBoundaryModel
 {
 
   public:
@@ -58,8 +58,11 @@ class TBDLLOCAL SurfaceForce : public ElasticityBoundaryModel
 
   protected:
 
+    //! Constructor
+    SurfaceForce(const ModelOptions& options);
+
     //! Initialize
-  virtual void do_init(void);
+    virtual void do_init(void);
 
     /* In some cases it might be useful to reimplement this: */
     // virtual void do_init_interface(const PhysicalModel* comp_A,
@@ -76,9 +79,6 @@ class TBDLLOCAL SurfaceForce : public ElasticityBoundaryModel
 
 
   private:
-
-    //! Constructor
-    SurfaceForce(const ModelOptions& options);
 
     //! The boundary potential
     //double _potential;

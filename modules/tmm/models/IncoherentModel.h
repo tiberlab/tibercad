@@ -37,7 +37,7 @@ namespace libMesh
 }
 
 // Base class for InCoherence model
-class TBDLEXPORT IncoherentModel : public TmmBulkModel
+class TC_DLEXPORT IncoherentModel : public TmmBulkModel
 {
 
   public:

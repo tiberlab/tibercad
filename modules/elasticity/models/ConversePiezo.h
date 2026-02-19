@@ -41,7 +41,7 @@ class Elem;
 
 
 //! The base class for Poisson boundary conditions
-class TBDLLOCAL ConversePiezo : public BodyForceModel
+class TC_DLLOCAL ConversePiezo : public BodyForceModel
 {
 
   public:
@@ -55,6 +55,9 @@ class TBDLLOCAL ConversePiezo : public BodyForceModel
   virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point);
 
   protected:
+
+    //! Constructor
+    ConversePiezo(const ModelOptions& options);
 
     //! Initialize
     virtual void do_init(void);
@@ -83,9 +86,6 @@ class TBDLLOCAL ConversePiezo : public BodyForceModel
   
   ID ElFieldID;
 
-
-  //! Constructor
-  ConversePiezo(const ModelOptions& options);
   
 };
 

@@ -33,7 +33,7 @@ class Multiscale;
 class XMonitor;
 
 //! Interface for self-consistent calculations
-class TBDLLOCAL SelfconsistentSolver : public SimulationInterface
+class TC_DLLOCAL SelfconsistentSolver : public SimulationInterface
 {
 
   public:

@@ -35,7 +35,7 @@ class ExternalProfile;
 /*!
  * \brief Base class for density of states
  */
-class TBDLEXPORT DensityOfStates : public PhysicalModel
+class DensityOfStates : public PhysicalModel
 {
 
   public:

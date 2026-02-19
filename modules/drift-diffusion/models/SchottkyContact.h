@@ -34,7 +34,7 @@
 /*!
  * \brief A Schottky contact
  */
-class TBDLLOCAL SchottkyContact : public ElectricalContact
+class TC_DLLOCAL SchottkyContact : public ElectricalContact
 {
   public:
 

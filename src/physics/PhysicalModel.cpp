@@ -289,7 +289,7 @@ PhysicalModel::copy(void) const
 PhysicalModel*
 PhysicalModel::create_new(void) const
 {
-  PhysicalModel* pmi = create_from_object(this, get_owner());
+  PhysicalModel* pmi = create_from_object(this);
   if (pmi == nullptr)
   {
     ostringstream os;
@@ -299,6 +299,7 @@ PhysicalModel::create_new(void) const
         "reimplemented.";
     throw ModelErrorException(os.str());
   }
+  pmi->set_owner(_owner);
 
   return pmi;
 }

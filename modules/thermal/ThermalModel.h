@@ -40,7 +40,7 @@
 class HeatSourceModel;
 class ThermalConductivityModel;
 
-class TBDLLOCAL ThermalModel : public PhysicalModel
+class TC_DLLOCAL ThermalModel : public PhysicalModel
 {
 
   public:
@@ -79,7 +79,7 @@ class TBDLLOCAL ThermalModel : public PhysicalModel
 
   private:
 
-  static TiberModelObject*  _create(const ModelOptions& options, const void*);
+  static TiberModelObject*  _create(const ModelOptions& options);
 
   static void  _destroy( TiberModelObject* p);
 
@@ -97,7 +97,7 @@ class TBDLLOCAL ThermalModel : public PhysicalModel
 };
 
 inline
-TiberModelObject*  ThermalModel::_create(const ModelOptions& options, const void*)
+TiberModelObject*  ThermalModel::_create(const ModelOptions& options)
 {
   return new ThermalModel(options);
 }

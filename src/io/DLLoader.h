@@ -36,7 +36,7 @@
  * The given library is looked for in well defined paths. If it is found,
  * it is opened and well defined symbols are looked for.
  */
-class TBDLLOCAL DLLoader
+class TC_DLLOCAL DLLoader
 {
 
   public:

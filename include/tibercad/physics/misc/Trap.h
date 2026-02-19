@@ -46,7 +46,7 @@ class ExternalProfile;
  *
  * The trap level is referred to midgap as default.
  */
-class TBDLEXPORT Trap : public PhysicalModel
+class Trap : public PhysicalModel
 {
 
   public:
@@ -177,7 +177,7 @@ class TBDLEXPORT Trap : public PhysicalModel
 
 
     //! Calculate the trap level
-    double _trap_level(void) const TBDLLOCAL;
+    double _trap_level(void) const TC_DLLOCAL;
 
     //! The simulation providing external electron and hole densities
     SimulationInterface* _ext_dens_sim;

@@ -38,7 +38,7 @@ PVModuleBoundaryModel::PVModuleBoundaryModel(const ModelOptions& options) :
 
 
 TiberModelObject*
-PVModuleBoundaryModel::_create(const ModelOptions& options, const void*)
+PVModuleBoundaryModel::_create(const ModelOptions& options)
 {
   return new PVModuleBoundaryModel(options);
 }

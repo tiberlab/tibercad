@@ -60,6 +60,9 @@ class DegradationH2O : public DegradationModel
 
   protected:
 
+    //! Protected constructor
+    DegradationH2O(const ModelOptions& options);
+
     virtual void do_init(void) override;
 
     virtual void do_degrade_params(const libMesh::Elem* elem,
@@ -68,13 +71,6 @@ class DegradationH2O : public DegradationModel
 
 
   private:
-
-    //! Private constructor
-    /*!
-     * This is a specific model. Other models should directly
-     * derive from the base class to not create a mess
-     */
-    DegradationH2O(const ModelOptions& options);
 
     //! The reference humidity in the photocurrent degradation fit
     double _RH_ref_ph = 1e9;

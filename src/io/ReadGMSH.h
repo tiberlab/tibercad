@@ -47,7 +47,7 @@ class MeshBase;
  * GMSH software see
  * <a href="http://http://www.geuz.org/gmsh/">the Gmsh home page</a>
  */
-class TBDLLOCAL ReadGMSH : public libMesh::MeshInput<libMesh::MeshBase>
+class TC_DLLOCAL ReadGMSH : public libMesh::MeshInput<libMesh::MeshBase>
 {
   public:
 

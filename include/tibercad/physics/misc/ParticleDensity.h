@@ -328,12 +328,12 @@ class ParticleDensity : public PhysicalModel
     /*!
      * returns \true if the quantum density could be evaluated
      */
-    bool quantum_density(void) TBDLLOCAL;
+    bool quantum_density(void) TC_DLLOCAL;
 
 
     //! Calculate classical particle density
     template <TiberCad::Statistics>
-    void classical_density(void) TBDLLOCAL;
+    void classical_density(void) TC_DLLOCAL;
 
 
     //! Calculate the effective DOS from the DOS mass

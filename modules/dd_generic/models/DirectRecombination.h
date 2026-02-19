@@ -38,7 +38,7 @@ class SimulationInterface;
  * This class implements direct recombination processes that can be
  * modeled by \f[R_{direct}=C(np-n_i^2)\f]
  */
-class TBDLLOCAL DirectRecombination : public RecombinationModelInterface
+class TC_DLLOCAL DirectRecombination : public RecombinationModelInterface
 {
 
   public:

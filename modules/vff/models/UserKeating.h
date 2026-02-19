@@ -31,7 +31,7 @@
 #include "Keating.h"
 
 //! User defined Keating model parameters
-class TBDLLOCAL UserKeating : public Keating
+class TC_DLLOCAL UserKeating : public Keating
 {
 public:
 
@@ -48,9 +48,9 @@ public:
 
 protected:
 
-private:
-
   UserKeating(const ModelOptions& options);
+
+private:
 
   void assign_alpha(void);
 

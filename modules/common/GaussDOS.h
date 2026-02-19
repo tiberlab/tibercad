@@ -52,7 +52,7 @@
 * 	G\left( {\zeta ,s} \right) = \frac{1}{2}\operatorname{erfc} \left( { - \frac{\zeta }{{s\sqrt 2 }}H\left( s \right)} \right)
 * \f
 */
-class TBDLEXPORT GaussDOS : public DensityOfStates
+class TC_DLEXPORT GaussDOS : public DensityOfStates
 {
 
   public:

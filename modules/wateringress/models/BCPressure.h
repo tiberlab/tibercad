@@ -53,6 +53,9 @@ class BCPressure : public WIBoundaryModel
 
   protected:
 
+    //! Constructor
+    BCPressure(const ModelOptions& options);
+
     //! Initialize
     virtual void do_init(void);
 
@@ -70,9 +73,6 @@ class BCPressure : public WIBoundaryModel
 
 
   private:
-
-    //! Constructor
-    BCPressure(const ModelOptions& options);
 
     //! The relative humidity
     double _relative_humidity = 0;

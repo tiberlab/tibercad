@@ -39,7 +39,7 @@ class Elem;
 
 
 //! The base class for Poisson boundary conditions
-class TBDLLOCAL ThermalStress : public BodyForceModel
+class TC_DLLOCAL ThermalStress : public BodyForceModel
 {
 
   public:
@@ -54,6 +54,9 @@ class TBDLLOCAL ThermalStress : public BodyForceModel
 
   protected:
 
+    //! Constructor
+    ThermalStress(const ModelOptions& options);
+
     //! Initialize
     virtual void do_init(void);
 
@@ -64,9 +67,6 @@ class TBDLLOCAL ThermalStress : public BodyForceModel
 
   private:
   
-
-    //! Constructor
-    ThermalStress(const ModelOptions& options);
 
     //! Thermal expansion coefficients for the crystal directions
     libMesh::RealVectorValue _alpha;

@@ -47,7 +47,7 @@ class FowlerNordheim;
  * This class is derived also from Variable to be able to make
  * a voltage sweep.
  */
-class TBDLEXPORT ElectricalContact : public DDInterfaceModel
+class TC_DLEXPORT ElectricalContact : public DDInterfaceModel
 {
   public:
 

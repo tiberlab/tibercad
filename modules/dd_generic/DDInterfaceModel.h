@@ -304,7 +304,7 @@ class DDInterfaceModel : public DriftDiffusionProperties
 
 
     //! The creation method
-    static TiberModelObject* _create(const ModelOptions& options, const void*)
+    static TiberModelObject* _create(const ModelOptions& options)
     {
       return new DDInterfaceModel(options);
     }

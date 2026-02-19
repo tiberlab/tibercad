@@ -35,7 +35,7 @@
 /*!
  * \brief Base class for density of states
  */
-class TBDLEXPORT ExponentialDOS : public DensityOfStates
+class TC_DLEXPORT ExponentialDOS : public DensityOfStates
 {
 
   public:

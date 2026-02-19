@@ -39,7 +39,7 @@ class Elem;
 
 
 //! The base class for Poisson boundary conditions
-class TBDLLOCAL GrayModel : public HeatTransportModel
+class TC_DLLOCAL GrayModel : public HeatTransportModel
 {
 
   public:

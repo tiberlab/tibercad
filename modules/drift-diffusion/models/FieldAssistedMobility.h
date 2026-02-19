@@ -38,7 +38,7 @@
  * \mu = \mu_0 e^{\sqrt{|E|/E_0}}
  * \f]
  */
-class TBDLLOCAL FieldAssistedMobility : public MobilityModelInterface
+class TC_DLLOCAL FieldAssistedMobility : public MobilityModelInterface
 {
 
   public:

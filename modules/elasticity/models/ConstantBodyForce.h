@@ -40,7 +40,7 @@
 
 
 //! The base class for Poisson boundary conditions
-class TBDLLOCAL ConstantBodyForce : public BodyForceModel
+class TC_DLLOCAL ConstantBodyForce : public BodyForceModel
 {
 
   public:
@@ -54,6 +54,9 @@ class TBDLLOCAL ConstantBodyForce : public BodyForceModel
   virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point){};
 
   protected:
+
+    //! Constructor
+    ConstantBodyForce(const ModelOptions& options);
 
     //! Initialize
     virtual void do_init(void);
@@ -74,9 +77,6 @@ class TBDLLOCAL ConstantBodyForce : public BodyForceModel
 
   private:
   
-
-  //! Constructor
-     ConstantBodyForce(const ModelOptions& options);
   
 };
 

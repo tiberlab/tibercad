@@ -35,7 +35,7 @@
 
 
 //! Write data using VTK XML unstructured grid format (.vtu)
-class TBDLLOCAL TiberVTKIO : public DataOutput
+class TC_DLLOCAL TiberVTKIO : public DataOutput
 {
 
  public:

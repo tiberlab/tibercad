@@ -620,7 +620,7 @@ class PhysicalModel : public TiberModelObject
      * This method registers every new model that gets created and assigns
      * it a unique model ID.
      */
-    static void _register_model(PhysicalModel* model) TBDLLOCAL;
+    static void _register_model(PhysicalModel* model) TC_DLLOCAL;
 
 
     //! Set the model type (= identifier)

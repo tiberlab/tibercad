@@ -40,7 +40,7 @@ class Elem;
 
 
 //! The base class for Poisson boundary conditions
-class TBDLLOCAL ConstantHeatSource : public HeatSourceModel
+class TC_DLLOCAL ConstantHeatSource : public HeatSourceModel
 {
 
   public:
@@ -54,6 +54,9 @@ class TBDLLOCAL ConstantHeatSource : public HeatSourceModel
   virtual void calculate(const Elem* elem, const Point& point){};
 
   protected:
+
+    //! Constructor
+    ConstantHeatSource(const ModelOptions& options);
 
     //! Initialize
     virtual void do_init(void);
@@ -77,9 +80,6 @@ class TBDLLOCAL ConstantHeatSource : public HeatSourceModel
   
     double _heat_source;
 
-
-  //! Constructor
-     ConstantHeatSource(const ModelOptions& options);
   
 };
 

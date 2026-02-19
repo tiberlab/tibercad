@@ -40,7 +40,7 @@ class Point;
  *
  * based on Phys. Rev. B 88, 121304(R) (2013)
  */
-class TBDLLOCAL NonlinearPolarization: public PolarizationModel
+class TC_DLLOCAL NonlinearPolarization: public PolarizationModel
 {
 
   public:

@@ -43,7 +43,7 @@ class Tensor4DSym;
  *
  *
  */
-class TBDLLOCAL Elasticity : public SimulationInterface
+class TC_DLLOCAL Elasticity : public SimulationInterface
 {
 
   public:
@@ -63,6 +63,9 @@ class TBDLLOCAL Elasticity : public SimulationInterface
 
 
   protected:
+
+    //! The constructor
+    Elasticity(const ModelOptions &options);
 
     //! The initialization
     virtual void do_init(void);
@@ -223,11 +226,6 @@ class TBDLLOCAL Elasticity : public SimulationInterface
     force_vector internal_force;
 
     std::vector<unsigned int> uvar;
-    //! The constructor
-    /*!
-     * Being private disables further inheritance.
-     */
-    Elasticity(const ModelOptions &options);
 
     //! Apply the deformation
     void apply_shape_deformation();

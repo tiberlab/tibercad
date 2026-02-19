@@ -43,7 +43,7 @@
  * \image latex Sweep_flowchart.eps
  *    "Flow chart for a parameter sweep" width=10cm
  */
-class TBDLLOCAL Sweep : public SimulationInterface
+class TC_DLLOCAL Sweep : public SimulationInterface
 {
 
   public:

@@ -50,7 +50,7 @@ class NodeObject : public PhysicalObject
     /*!
      * \param options options for this boundary
      */
-    static NodeObject* create(const ModelOptions& options) TBDLLOCAL;
+    static NodeObject* create(const ModelOptions& options) TC_DLLOCAL;
 
 
   protected:

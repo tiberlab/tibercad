@@ -38,7 +38,7 @@
 
 
 //! The base class for Poisson boundary conditions
-class TBDLLOCAL HeatReservoir : public BoltzmannBoundaryModel
+class TC_DLLOCAL HeatReservoir : public BoltzmannBoundaryModel
 {
 
   public:

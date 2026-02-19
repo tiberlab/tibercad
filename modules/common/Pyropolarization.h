@@ -33,7 +33,7 @@
 #include "tibercad/base/tiber_dll.h"
 
 // Base class for charge density models
-class  TBDLLOCAL Pyropolarization: public PolarizationModel
+class  TC_DLLOCAL Pyropolarization: public PolarizationModel
 {
 
   public:

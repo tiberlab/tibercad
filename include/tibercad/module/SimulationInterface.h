@@ -1640,7 +1640,7 @@ class SimulationInterface : public TiberModelObject
 
 
     //! create a unique name for the equation system
-    void create_equation_system_name(void) TBDLLOCAL;
+    void create_equation_system_name(void) TC_DLLOCAL;
 
 
     //! Set the simulation type (= identifier)
@@ -1648,18 +1648,18 @@ class SimulationInterface : public TiberModelObject
      * The identifier is used at creation time to know which type of
      * simulation to create.
      */
-    void set_type(const std::string& type) TBDLLOCAL;
+    void set_type(const std::string& type) TC_DLLOCAL;
 
 
     //! Print all registered solution variables
-    void print_known_solution_variables(void) const TBDLLOCAL;
+    void print_known_solution_variables(void) const TC_DLLOCAL;
 
 
     //! Do not allow copy constructor
-    SimulationInterface(const SimulationInterface&) TBDLLOCAL;
+    SimulationInterface(const SimulationInterface&) TC_DLLOCAL;
 
     //! Do not allow assignement operator
-    SimulationInterface& operator=(const SimulationInterface&) TBDLLOCAL;
+    SimulationInterface& operator=(const SimulationInterface&) TC_DLLOCAL;
 
     //! Eliminate unneeded submodels
     void _eliminate_unneeded_submodels(ModelOptions& opts, ID reg_id) const;

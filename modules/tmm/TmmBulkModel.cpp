@@ -37,7 +37,7 @@ using namespace libMesh;
 
 
 TiberModelObject*
-TmmBulkModel::_create(const ModelOptions& options, const void*)
+TmmBulkModel::_create(const ModelOptions& options)
 {
   return new TmmBulkModel(options);
 }

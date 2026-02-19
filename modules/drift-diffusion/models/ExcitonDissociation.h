@@ -38,7 +38,7 @@ class SimulationInterface;
 /*!
  * This class implements Exciton dissociation process
  */
-class TBDLLOCAL ExcitonDissociation : public RecombinationModelInterface
+class TC_DLLOCAL ExcitonDissociation : public RecombinationModelInterface
 {
 
   public:

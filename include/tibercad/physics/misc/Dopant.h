@@ -42,7 +42,7 @@ class Point;
 
 
 //! Describes a dopant with a single energy level
-class TBDLEXPORT Dopant
+class Dopant
 {
 
   public:

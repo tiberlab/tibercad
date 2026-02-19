@@ -40,7 +40,7 @@
  * The implementation uses the partial pressure as primary
  * variable, and assumes the solubility to be piecewise constant.
  */
-class TBDLLOCAL WaterIngress : public SimulationInterface
+class TC_DLLOCAL WaterIngress : public SimulationInterface
 {
 
   public:
@@ -58,6 +58,9 @@ class TBDLLOCAL WaterIngress : public SimulationInterface
 
 
   protected:
+
+    //! The constructor
+    WaterIngress(const ModelOptions& options);
 
     //! The initialization
     virtual void do_init(void);
@@ -107,12 +110,6 @@ class TBDLLOCAL WaterIngress : public SimulationInterface
       Solubility,       /*!< the solubility */
       Diffusivity       /*!< the diffusion constant cm^2/s */
     };
-
-    //! The constructor
-    /*!
-     * Being private disables further inheritance.
-     */
-    WaterIngress(const ModelOptions& options);
 
     //! The assembly function
     void assemble(void);

@@ -46,7 +46,7 @@ namespace libMesh
 /*!
  * This class implements reading of meshes in the Comsol format.
  */
-class TBDLLOCAL ReadComsol : public libMesh::MeshInput<libMesh::MeshBase>
+class TC_DLLOCAL ReadComsol : public libMesh::MeshInput<libMesh::MeshBase>
 
 {
   public:

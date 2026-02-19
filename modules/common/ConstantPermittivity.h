@@ -35,7 +35,7 @@
 
 
 // Base class for charge density models
-class  TBDLLOCAL ConstantPermittivity: public PermittivityModel
+class  TC_DLLOCAL ConstantPermittivity: public PermittivityModel
 {
 
   public:

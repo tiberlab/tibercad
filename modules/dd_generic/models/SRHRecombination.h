@@ -57,7 +57,7 @@ class ExternalProfile;
  *   Recombination Model for Device Simulation Including Tunneling",
  *   IEEE Trans. on Electron Devices, 39, 331-338, 1992
  */
-class TBDLLOCAL SRHRecombination : public RecombinationModelInterface
+class TC_DLLOCAL SRHRecombination : public RecombinationModelInterface
 {
 
   public:

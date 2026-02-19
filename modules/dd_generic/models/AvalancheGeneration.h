@@ -42,7 +42,7 @@
  * \f}
  *
  */
-class TBDLLOCAL AvalancheGeneration : public RecombinationModelInterface
+class TC_DLLOCAL AvalancheGeneration : public RecombinationModelInterface
 {
 
   public:

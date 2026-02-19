@@ -39,7 +39,7 @@ class SimulationInterface;
  * \f[R=C n_i n_T (1-exp^{-\phi_T / kT}\f]
  * where \f$n_i\f$ is the quenching particle density (e.g. electron)
  */
-class TBDLLOCAL EPQuenching : public RecombinationModelInterface
+class TC_DLLOCAL EPQuenching : public RecombinationModelInterface
 {
 
   public:

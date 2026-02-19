@@ -30,7 +30,7 @@
 
 
 //! Interface for self-consistent calculations
-class TBDLLOCAL RelaxationMethod : public SelfconsistentSolver
+class TC_DLLOCAL RelaxationMethod : public SelfconsistentSolver
 {
 
   public:

@@ -41,10 +41,13 @@ namespace libMesh
 {
   class Elem;
 }
-class TBDLLOCAL Dipole_source : public TmmBoundaryModel
+class TC_DLLOCAL Dipole_source : public TmmBoundaryModel
 {
 
   public:
+
+    //! Constructor
+    Dipole_source(const ModelOptions& options);
 
     //! Destructor
     ~Dipole_source(void) {};
@@ -65,8 +68,6 @@ class TBDLLOCAL Dipole_source : public TmmBoundaryModel
   private:
     double _kr;
     double _steps;
-    //! Constructor
-    Dipole_source(const ModelOptions& options);
 
 
 };

@@ -43,7 +43,7 @@
  * and individual elementary cells are interconnected by resistors to
  * neighboring cells, representing the transport and contact layers. 
  */
-class TBDLLOCAL PVModule : public SimulationInterface
+class TC_DLLOCAL PVModule : public SimulationInterface
 {
 
   public:
@@ -57,6 +57,9 @@ class TBDLLOCAL PVModule : public SimulationInterface
 
 
   protected:
+
+    //! The constructor
+    PVModule(const ModelOptions& options);
 
     //! The initialization
     virtual void do_init(void) final;
@@ -117,12 +120,6 @@ class TBDLLOCAL PVModule : public SimulationInterface
       FEM,    /*!< FEM */
       DEC     /*!< DEC with dual grid */
     };
-
-    //! The constructor
-    /*!
-     * Being private disables further inheritance.
-     */
-    PVModule(const ModelOptions& options);
 
     //! The assembly function
     void assemble(void);

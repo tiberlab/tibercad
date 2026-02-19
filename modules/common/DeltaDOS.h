@@ -35,7 +35,7 @@
 /*!
  * \brief Base class for density of states
  */
-class TBDLEXPORT DeltaDOS : public DensityOfStates
+class TC_DLEXPORT DeltaDOS : public DensityOfStates
 {
 
   public:

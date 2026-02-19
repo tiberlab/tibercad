@@ -46,7 +46,7 @@ class ExternalProfile;
  * modeled by \f[G_{x}= G]
  *
  */
-class TBDLLOCAL OpticalGeneration : public RecombinationModelInterface
+class TC_DLLOCAL OpticalGeneration : public RecombinationModelInterface
 {
 
   public:

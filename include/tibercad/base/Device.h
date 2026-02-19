@@ -100,11 +100,11 @@ class Device
      * \li "mesh_units" -> the units of the mesh (cf. get_mesh_units())
      */
     static Device* create(const ModelOptions& options,
-                          const libMesh::Parallel::Communicator& comm) TBDLLOCAL;
+                          const libMesh::Parallel::Communicator& comm) TC_DLLOCAL;
 
 
     //! Destroy a Device object
-    static void destroy(Device* device) TBDLLOCAL;
+    static void destroy(Device* device) TC_DLLOCAL;
 
 
     //! Get a reference to the mesh
@@ -141,7 +141,7 @@ class Device
     /*!
      * This method will call \c init() of all Materials in this device
      */
-    void init(void) TBDLLOCAL;
+    void init(void) TC_DLLOCAL;
 
 
     //! Set a material for a number of geometrical regions
@@ -154,7 +154,7 @@ class Device
      * \param region_name the name to be assigned
      */
     void set_material(Material* material, const std::vector<ID>& region_ids,
-        const std::string& region_name) TBDLLOCAL;
+        const std::string& region_name) TC_DLLOCAL;
 
 
     //! Get the material for a given region ID
@@ -252,7 +252,7 @@ class Device
      * Only active regions are returned (that is regions that have a material
      * associated).
      */
-    const IDSet& get_active_region_ids(void) const TBDLLOCAL;
+    const IDSet& get_active_region_ids(void) const TC_DLLOCAL;
 
 
     //! Get the name of a region
@@ -272,14 +272,14 @@ class Device
      * Only active regions are returned (that is regions that have a material
      * associated).
      */
-    void get_active_region_ids(const std::string& name, std::set<ID>& ids) const TBDLLOCAL;
+    void get_active_region_ids(const std::string& name, std::set<ID>& ids) const TC_DLLOCAL;
 
 
     //! Get the region IDs of the mesh region with name \c name
     /*!
      * This looks only in the list of original mesh region names.
      */
-    void get_mesh_region_ids(const std::string& name, std::vector<ID>& ids) const TBDLLOCAL;
+    void get_mesh_region_ids(const std::string& name, std::vector<ID>& ids) const TC_DLLOCAL;
 
 
     //! Extract physical regions from a string
@@ -307,7 +307,7 @@ class Device
         std::vector<ID>& ids) const;
 
     //! Define a cluster
-    void set_cluster(const std::string& name, const std::vector<ID>& ids) TBDLLOCAL;
+    void set_cluster(const std::string& name, const std::vector<ID>& ids) TC_DLLOCAL;
 
 
     //! Get the type of symmetry
@@ -379,7 +379,7 @@ class Device
      * for which a boundary condition is implied.
      */
     Device(const ModelOptions& options,
-           const libMesh::Parallel::Communicator& comm) TBDLLOCAL;
+           const libMesh::Parallel::Communicator& comm) TC_DLLOCAL;
 
 
     //! Set a material for a physical region
@@ -389,16 +389,16 @@ class Device
      * \throws {InitFailedException if \c region_id is invalid or already
      * used.}
      */
-    void set_material(Material* material, ID region_id) TBDLLOCAL;
+    void set_material(Material* material, ID region_id) TC_DLLOCAL;
 
 
     //! Set the name for a physical region
-    void set_region_name(const std::string& name, const std::vector<ID>& ids) TBDLLOCAL;
+    void set_region_name(const std::string& name, const std::vector<ID>& ids) TC_DLLOCAL;
 
 
 
     //! Get a reference to the model options
-    ModelOptions& get_options(void) TBDLLOCAL;
+    ModelOptions& get_options(void) TC_DLLOCAL;
 
 
     //! Creates the mesh and the equation system
@@ -406,7 +406,7 @@ class Device
      * This method assumes, that \c _options contain the name of the
      * meshfile and the dimension
      */
-    void setup_mesh(void) TBDLLOCAL;
+    void setup_mesh(void) TC_DLLOCAL;
 
 
     //! Setup all regions and materials

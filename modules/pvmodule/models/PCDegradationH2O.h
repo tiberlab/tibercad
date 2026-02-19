@@ -50,6 +50,8 @@ class PCDegradationH2O : public Photocurrent
 
   protected:
 
+    PCDegradationH2O(const ModelOptions& options);
+
     virtual void do_init(void) final;
 
     virtual double do_get_photocurrent(const libMesh::Elem* elem,
@@ -57,8 +59,6 @@ class PCDegradationH2O : public Photocurrent
 
 
   private:
-
-    PCDegradationH2O(const ModelOptions& options);
 
     //! The current degradation factor
     /*!

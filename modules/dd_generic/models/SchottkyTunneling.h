@@ -42,7 +42,7 @@ class Elem;
  * This class implements Schottky tunneling casted into
  * a local recombination model
  */
-class TBDLLOCAL SchottkyTunneling : public RecombinationModelInterface
+class TC_DLLOCAL SchottkyTunneling : public RecombinationModelInterface
 {
 
   public:

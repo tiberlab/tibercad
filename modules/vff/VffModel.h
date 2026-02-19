@@ -39,7 +39,7 @@ class Keating;
 
 
 //! This is the base class for the Poisson physical model
-class TBDLLOCAL VffModel : public PhysicalModel
+class TC_DLLOCAL VffModel : public PhysicalModel
 {
 
 public:
@@ -85,7 +85,7 @@ protected:
 private:
 
 
-  static TiberModelObject* _create(const ModelOptions& options, const void*);
+  static TiberModelObject* _create(const ModelOptions& options);
 
   static void  _destroy( TiberModelObject* p);
 
@@ -110,7 +110,7 @@ VffModel::~VffModel()
 }
 
 inline
-TiberModelObject*  VffModel::_create(const ModelOptions& options, const void*)
+TiberModelObject*  VffModel::_create(const ModelOptions& options)
 {
 
   return new VffModel(options);

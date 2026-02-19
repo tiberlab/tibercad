@@ -38,7 +38,7 @@
  * involving three particles, e.g.
  * \[2n + p \rightleftarrow n^*\]
  */
-class TBDLLOCAL AugerBare : public RecombinationModelInterface
+class TC_DLLOCAL AugerBare : public RecombinationModelInterface
 {
 
   public:

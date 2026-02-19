@@ -54,7 +54,7 @@ class BulkCrystal;
  *to mesh informations. Material parameters (kind of lattice, atomic basis, ecc.)
  *are read from material files
  */
-class TBDLLOCAL AtomisticGenerator
+class TC_DLLOCAL AtomisticGenerator
 {
 
 public:

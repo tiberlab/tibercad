@@ -42,7 +42,7 @@ class StiffnessModel;
 
 
 //! This is the base class for the Poisson physical model
-class TBDLLOCAL ElasticityModel : public PhysicalModel
+class TC_DLLOCAL ElasticityModel : public PhysicalModel
 {
 
   public:
@@ -80,7 +80,7 @@ class TBDLLOCAL ElasticityModel : public PhysicalModel
   private:
 
 
-   static TiberModelObject* _create(const ModelOptions& options, const void*);
+   static TiberModelObject* _create(const ModelOptions& options);
 
   static void  _destroy( TiberModelObject* p);
 
@@ -141,7 +141,7 @@ ElasticityModel::ElasticityModel(const ModelOptions& options) :
 }
 
 inline
-TiberModelObject*  ElasticityModel::_create(const ModelOptions& options, const void*)
+TiberModelObject*  ElasticityModel::_create(const ModelOptions& options)
 {
 
   return new ElasticityModel(options);

@@ -38,7 +38,7 @@ class SimulationInterface;
  * Triplet-triplet annihilation (TTA) is
  * modeled by \f[R=C n_T^{2}(1-exp{-2/kT\phi_T}\f]
  */
-class TBDLLOCAL TTARecombination : public RecombinationModelInterface
+class TC_DLLOCAL TTARecombination : public RecombinationModelInterface
 {
 
   public:

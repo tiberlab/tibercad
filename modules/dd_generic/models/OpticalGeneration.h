@@ -48,7 +48,7 @@ class ExternalProfile;
  * carrier (e.g. exciton).
  *
  */
-class TBDLLOCAL OpticalGeneration : public RecombinationModelInterface
+class TC_DLLOCAL OpticalGeneration : public RecombinationModelInterface
 {
 
   public:

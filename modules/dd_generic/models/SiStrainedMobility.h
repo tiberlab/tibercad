@@ -42,7 +42,7 @@
  * \mu = \mu_{max} \left(\frac{T}{T_0}\right)^{-\gamma}
  * \f]
  */
-class TBDLLOCAL SiStrainedMobility : public MobilityModelInterface
+class TC_DLLOCAL SiStrainedMobility : public MobilityModelInterface
 {
 
   public:

@@ -39,7 +39,7 @@ class Elem;
 
 
 //! The base class for Poisson boundary conditions
-class TBDLLOCAL FourierModel : public HeatTransportModel
+class TC_DLLOCAL FourierModel : public HeatTransportModel
 {
 
   public:

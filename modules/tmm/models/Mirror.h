@@ -41,10 +41,13 @@ namespace libMesh
 {
   class Elem;
 }
-class TBDLLOCAL Mirror : public TmmBoundaryModel
+class TC_DLLOCAL Mirror : public TmmBoundaryModel
 {
 
   public:
+
+    //! Constructor
+    Mirror(const ModelOptions& options);
 
     //! Destructor
     ~Mirror(void) {};
@@ -64,8 +67,6 @@ class TBDLLOCAL Mirror : public TmmBoundaryModel
 
   private:
 
-    //! Constructor
-    Mirror(const ModelOptions& options);
     double _member00;
     double _member01;
     double _member10;

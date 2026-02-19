@@ -34,7 +34,7 @@
 /*!
  * \brief Base class for density of states
  */
-class TBDLEXPORT ExcitonGaussDOS : public DensityOfStates
+class TC_DLEXPORT ExcitonGaussDOS : public DensityOfStates
 {
 
   public:

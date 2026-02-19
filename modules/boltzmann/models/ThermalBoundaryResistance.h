@@ -39,7 +39,7 @@
 
 
 //! The base class for Poisson boundary conditions
-class TBDLLOCAL ThermalBoundaryResistance : public BoltzmannBoundaryModel
+class TC_DLLOCAL ThermalBoundaryResistance : public BoltzmannBoundaryModel
 {
 
   public:

@@ -43,7 +43,7 @@
 
 
 //! The base class for Poisson boundary conditions
-class TBDLLOCAL LinearThermalConductivity : public ThermalConductivityModel
+class TC_DLLOCAL LinearThermalConductivity : public ThermalConductivityModel
 {
   
 public:
@@ -57,6 +57,9 @@ public:
  virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point, double temperature);
   
 protected:
+  
+  //! Constructor
+  LinearThermalConductivity(const ModelOptions& options);
   
   //! Initialize
   virtual void do_init(void);
@@ -85,9 +88,6 @@ private:
    double mx;
    double mz;
    double z0;
-  
-  //! Constructor
-  LinearThermalConductivity(const ModelOptions& options);
   
 };
 

@@ -33,7 +33,7 @@
 
 class VffModel;
 
-class TBDLLOCAL Vff : public SimulationInterface
+class TC_DLLOCAL Vff : public SimulationInterface
 {
 
 public:
@@ -83,6 +83,9 @@ public:
 
 protected:
 
+  //! The constructor
+  Vff(const ModelOptions& options);
+
   //! The initialization
   virtual void do_init(void) final;
 
@@ -124,12 +127,6 @@ protected:
 
 private:
 
-
-  //! The constructor
-  /*!
-   * Being private disables further inheritance.
-   */
-  Vff(const ModelOptions& options);
 
 
   class Options

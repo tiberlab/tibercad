@@ -40,7 +40,7 @@ class Elem;
 
 
 //! The base class for Poisson boundary conditions
-class TBDLLOCAL LatticeMismatch : public BodyForceModel
+class TC_DLLOCAL LatticeMismatch : public BodyForceModel
 {
 
   public:
@@ -54,6 +54,9 @@ class TBDLLOCAL LatticeMismatch : public BodyForceModel
   virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point){};
 
   protected:
+
+    //! Constructor
+    LatticeMismatch(const ModelOptions& options);
 
     //! Initialize
     virtual void do_init(void);
@@ -74,9 +77,6 @@ class TBDLLOCAL LatticeMismatch : public BodyForceModel
 
   private:
   
-
-  //! Constructor
-     LatticeMismatch(const ModelOptions& options);
   
 };
 

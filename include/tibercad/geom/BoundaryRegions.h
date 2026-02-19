@@ -50,7 +50,7 @@ class Node;
  * Boundary IDs are assumed to be unique, even if they refer to boundaries
  * of different spatial dimension.
  */
-class TBDLLOCAL BoundaryRegions : public MeshRegionInfo
+class TC_DLLOCAL BoundaryRegions : public MeshRegionInfo
 {
 
   private:

@@ -45,7 +45,7 @@
  *      \left(1 + H e^{-\{n,p\}/N_0}\right)
  * \f]
  */
-class TBDLLOCAL AugerRecombination : public RecombinationModelInterface
+class TC_DLLOCAL AugerRecombination : public RecombinationModelInterface
 {
 
   public:

@@ -38,7 +38,7 @@ USELIBMESHTYPE(RealTensor);
 
 
 // Base class for charge density models
-class TBDLEXPORT PermittivityModel : public PhysicalModel
+class PermittivityModel : public PhysicalModel
 {
 
   public:

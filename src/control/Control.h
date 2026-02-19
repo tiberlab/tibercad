@@ -47,7 +47,7 @@ class SimulationInterface;
  * This class is responsible for the setup of the device and
  * the flow control of the simulation
  */
-class TBDLLOCAL Control
+class TC_DLLOCAL Control
 {
 
   public:

@@ -51,7 +51,7 @@ class ISE_Face;
 
 
 //! Reads an ISE mesh (*.grd file).
-class TBDLLOCAL ReadISEGrid : public libMesh::MeshInput<MeshBase>
+class TC_DLLOCAL ReadISEGrid : public libMesh::MeshInput<MeshBase>
 {
 
  public:

@@ -40,7 +40,7 @@ class Elem;
 
 
 //! The base class for Poisson boundary conditions
-class TBDLLOCAL IsotropicStiffness : public StiffnessModel
+class TC_DLLOCAL IsotropicStiffness : public StiffnessModel
 {
 
   public:
@@ -54,6 +54,9 @@ class TBDLLOCAL IsotropicStiffness : public StiffnessModel
   virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point){};
 
   protected:
+
+    //! Constructor
+    IsotropicStiffness(const ModelOptions& options);
 
     //! Initialize
     virtual void do_init(void);
@@ -77,9 +80,6 @@ class TBDLLOCAL IsotropicStiffness : public StiffnessModel
   double _young;
   double _poisson;
   
-
-  //! Constructor
-    IsotropicStiffness(const ModelOptions& options);
   
 };
 

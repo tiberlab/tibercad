@@ -38,7 +38,7 @@
 
 
 //! The base class for Poisson boundary conditions
-class TBDLLOCAL Periodic : public BoltzmannBoundaryModel
+class TC_DLLOCAL Periodic : public BoltzmannBoundaryModel
 {
 
   public:

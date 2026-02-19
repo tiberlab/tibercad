@@ -43,7 +43,7 @@
 class HeatSourceModel;
 class ThermalConductivityModel;
 
-class TBDLLOCAL BoltzmannModel : public PhysicalModel
+class TC_DLLOCAL BoltzmannModel : public PhysicalModel
 {
 
   public:

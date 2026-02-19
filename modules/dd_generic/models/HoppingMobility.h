@@ -52,7 +52,7 @@
 *	f \left( s, F \right) = \exp \left\{ 0.44 \left( s^{\frac{3}{2}} - 2.2 \right) \left\[ \sqrt{1 + 0.8 \left(F \frac{e}{\sigma N_0^{\frac{1}{3}}} \right)^2 } - 1 \right\] \right\} 
 * \f
 */
-class TBDLLOCAL HoppingMobility : public MobilityModelInterface
+class TC_DLLOCAL HoppingMobility : public MobilityModelInterface
 {
 
   public:

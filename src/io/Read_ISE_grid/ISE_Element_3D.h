@@ -37,7 +37,7 @@ using namespace  std;
 /*!
   Contains faces data and orientations.
 */
-class TBDLLOCAL ISE_Element_3D : public ISE_Element
+class TC_DLLOCAL ISE_Element_3D : public ISE_Element
 {
  public:
   //!  Constructor

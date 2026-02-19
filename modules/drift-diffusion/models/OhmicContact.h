@@ -31,7 +31,7 @@
 #include "ElectricalContact.h"
 
 
-class TBDLLOCAL OhmicContact : public ElectricalContact
+class TC_DLLOCAL OhmicContact : public ElectricalContact
 {
   public:
 

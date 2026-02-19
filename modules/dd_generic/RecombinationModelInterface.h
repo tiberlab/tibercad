@@ -56,7 +56,7 @@ class Boundary;
  * Fermi level difference.
  *
  */
-class TBDLEXPORT RecombinationModelInterface : public DriftDiffusionModelInterface
+class TC_DLEXPORT RecombinationModelInterface : public DriftDiffusionModelInterface
 {
 
   public:

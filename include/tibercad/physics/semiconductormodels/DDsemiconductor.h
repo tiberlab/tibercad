@@ -42,7 +42,7 @@
      band edge energy, effective mass for the density of states calculation and
      degeneracy 
 */
-class TBDLEXPORT DDsemiconductor : public PhysicalModel
+class DDsemiconductor : public PhysicalModel
 {
   public:
 

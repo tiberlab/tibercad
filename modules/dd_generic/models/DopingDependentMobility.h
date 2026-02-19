@@ -54,7 +54,7 @@
  * \alpha^\ast & = & \alpha\left(\frac{T}{T_0}\right)^{\alpha_a}
  * \f}
  */
-class TBDLLOCAL DopingDependentMobility : public MobilityModelInterface
+class TC_DLLOCAL DopingDependentMobility : public MobilityModelInterface
 {
 
   public:

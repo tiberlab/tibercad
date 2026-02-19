@@ -44,7 +44,7 @@ using namespace std;
  * Contributors:
  */
 
-class TBDLLOCAL Tmm : public SimulationInterface
+class TC_DLLOCAL Tmm : public SimulationInterface
 {
 
 public:
@@ -101,6 +101,11 @@ public:
   vector<double> linear_interpolation1(vector<double> xData, vector<double> yData, vector<double> x_interp);
 
 protected:
+
+  /*!
+   * \brief Constructor
+   */
+  Tmm(const ModelOptions& options);
 
 
   virtual void plot_globaldata(void);
@@ -220,13 +225,6 @@ private:
   std::vector<double> _Poynting_front;
   std::vector<double> _Poynting_back;
 
-
-  /*!
-   * \brief Constructor
-   *
-   * Being private disables further inheritance.
-   */
-  Tmm(const ModelOptions& options);
 
   /*!
    * \brief The wavelengths

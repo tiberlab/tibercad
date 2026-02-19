@@ -120,14 +120,14 @@ class SimulationEnvironment
      * \param boundary the boundary to assign to this
      * simulation
      */
-    void add_boundary(Boundary* boundary) TBDLLOCAL;
+    void add_boundary(Boundary* boundary) TC_DLLOCAL;
 
 
     //! Prepare structures that are needed for other setup
     /*!
      * Creates a list with all elements belonging to this simulation
      */
-    void prepare(void) TBDLLOCAL;
+    void prepare(void) TC_DLLOCAL;
 
 
     //! Initialize the environment
@@ -135,7 +135,7 @@ class SimulationEnvironment
      * Initialization does the following things:
      * \li create data structures to get access to the boundary properties
      */
-    void init(void) TBDLLOCAL;
+    void init(void) TC_DLLOCAL;
 
 
     //! Prepares the environment for a solve
@@ -382,11 +382,11 @@ class SimulationEnvironment
 
 
     //! Create the list of elements
-    void create_element_list(void) TBDLLOCAL;
+    void create_element_list(void) TC_DLLOCAL;
 
 
     //! Creates the boundary element maps
-    void create_bc_maps(void) TBDLLOCAL;
+    void create_bc_maps(void) TC_DLLOCAL;
 
 
     //! Calculate the bounding box

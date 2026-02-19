@@ -36,7 +36,7 @@ namespace libMesh
 }
 
 //! User defined Keating model parameters
-class TBDLLOCAL AutomaticKeating : public Keating
+class TC_DLLOCAL AutomaticKeating : public Keating
 {
 public:
 
@@ -48,6 +48,8 @@ public:
 
 protected:
 
+  AutomaticKeating(const ModelOptions& options);
+
   //! Assign value to parameters
   virtual void do_init(void);
 
@@ -55,8 +57,6 @@ protected:
   virtual void do_print_info(void);
 
 private:
-
-  AutomaticKeating(const ModelOptions& options);
 
   //! Calculate zb alpha from stiffness constants
   void calculate_zb_alpha(void);

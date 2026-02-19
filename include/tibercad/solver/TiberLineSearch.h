@@ -35,7 +35,7 @@ class TiberLinearSolver;
 
 
 //! A base class for the TiberCAD line search algorithms
-class TBDLLOCAL TiberLineSearch : public TiberNonlinearSystem
+class TC_DLLOCAL TiberLineSearch : public TiberNonlinearSystem
 {
 
   public:

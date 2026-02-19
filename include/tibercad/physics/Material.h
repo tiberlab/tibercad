@@ -296,7 +296,7 @@ class Material : public PhysicalObject
     std::set<Dopant*> _acceptors;
 
     //! Clear all doping
-    void clear_doping(void) TBDLLOCAL;
+    void clear_doping(void) TC_DLLOCAL;
 };
 
 

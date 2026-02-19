@@ -37,7 +37,7 @@
 #include <vector>
 
 //! The base class for mobility models
-class TBDLEXPORT MobilityModelInterface : public DriftDiffusionModelInterface
+class TC_DLEXPORT MobilityModelInterface : public DriftDiffusionModelInterface
 {
 
   public:
