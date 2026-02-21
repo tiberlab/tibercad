@@ -198,7 +198,7 @@ class PhysicalModel : public TiberModelObject
     //! Get the type of this model
     /*!
      * The type is the identifying string which defines at creation time
-     * which simulation to create. It's the same string one writes in the
+     * which model to create. It's the same string one writes in the
      * input file.
      */
     const std::string& get_type(void) const;
@@ -550,10 +550,6 @@ class PhysicalModel : public TiberModelObject
         const Tensor2& bowing);
 
 
-    /*//! used if a model needs a unique id to set _has_unique_id = true
-    void has_unique_id(bool flag = false)
-    { _has_unique_id = true; };*/
-
     //! Override the associated material
     bool override_material(void);
 
@@ -725,25 +721,7 @@ PhysicalModel::get_id(void) const
   return _id;
 }
 
-/*inline
-ID
-PhysicalModel::get_unique_id(void) const
-{
-  return _unique_id;
-}
 
-inline
-ID
-PhysicalModel::get_unique_id(std::string& name, std::string& material) const
-{
-  unique_model_id_iterator it = _unique_model_ids.find(std::make_pair(name, material));
-
-  if (it != _unique_model_ids.end())
-    return _unique_model_ids[std::make_pair(name, material)];
-
-  return INVALID_ID;
-}
-*/
 
 inline
 ID
@@ -774,14 +752,6 @@ PhysicalModel::get_material(void) const
 
 
 
-/*
-inline
-PhysicalObject*
-PhysicalModel::get_owner(void)
-{
-  return _owner;
-}
-*/
 
 inline
 const PhysicalObject*
@@ -944,25 +914,7 @@ PhysicalModel::print_info(void)
   do_print_info();
 }
 
-/*
-template <typename T>
-ID
-PhysicalModel::get_id_from_name(const std::string& name)
-{
-  ID id = 0;
 
-  PhysicalModel* rec = T::create(name);
-
-  if (rec != NULL)
-    id = rec->get_id();
-
-  // rec is either valid or NULL
-  destroy(rec);
-
-
-  return id;
-}
-*/
 
 inline
 void

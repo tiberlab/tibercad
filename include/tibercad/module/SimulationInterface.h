@@ -173,14 +173,6 @@ class SimulationInterface : public TiberModelObject
     bool is_task(void) const;
 
 
-    //! Get the default name for this simulation
-    /*!
-     * This can be useful to identify a named simulation for which
-     * we dont't know the name neither the type
-     */
-    std::string get_default_name(void) const;
-
-
     //! Create a simulation of type \c type with options
     /*!
      * \param type the simulation type to create

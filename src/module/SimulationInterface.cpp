@@ -1361,12 +1361,6 @@ SimulationInterface::create_equation_system_name(void)
 }
 
 
-string
-SimulationInterface::get_default_name(void) const
-{
-  return Utils::extract_typename(typeid(*this));
-}
-
 
 
 SimulationInterface*
