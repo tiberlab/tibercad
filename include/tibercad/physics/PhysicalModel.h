@@ -191,7 +191,7 @@ class PhysicalModel : public TiberModelObject
 
 
     //! Get a reference to the physical object this model belongs to
-     const PhysicalObject* get_owner(void) const;
+    const PhysicalObject* get_owner(void) const;
 
 
 
