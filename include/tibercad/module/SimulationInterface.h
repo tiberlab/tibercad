@@ -178,8 +178,8 @@ class SimulationInterface : public TiberModelObject
      * \param type the simulation type to create
      * \param options the options for the simulation
      *
-     * \return a pointer to the newly created simulation object or \c NULL
-     * if the \c typr does not exist.
+     * \return a pointer to the newly created simulation object or \c nullptr
+     * if the \c type does not exist.
      */
     static SimulationInterface* create(const std::string& type,
         const ModelOptions& options = ModelOptions());

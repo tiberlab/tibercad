@@ -204,10 +204,6 @@ class PhysicalModel : public TiberModelObject
     const std::string& get_type(void) const;
 
 
-    //! Get the default name for this model
-    std::string get_default_name(void) const;
-
-
     //! Initialize this model
     /*!
      * It calls read_database(), do_init() and create_submodels()

@@ -110,13 +110,6 @@ class TC_DLLOCAL DirectRecombination : public RecombinationModelInterface
 // inline methods
 // 
 
-inline
-DirectRecombination::DirectRecombination(const ModelOptions& options)
-  : RecombinationModelInterface(options),
-    C_(0.0),
-    _quantum_optics(NULL)
-{
-}
 
 
 inline

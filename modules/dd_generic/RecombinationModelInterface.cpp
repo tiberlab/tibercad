@@ -51,17 +51,17 @@ RecombinationModelInterface::do_init(void)
   {
     ID id = get_bulk_driftdiffusionproperties().get_carrier_id(it);
     if (id == DriftDiffusionProperties::unknown_carrier_id)
-      throw InitFailedException("Recombination '" + get_default_name() +
+      throw InitFailedException("Recombination '" + get_name() +
           "': carrier '" + (it) + "' not found in module");
 
     //const CarrierProperties* cp = get_bulk_driftdiffusionproperties().get_carrier_properties(id);
     const CarrierProperties* cp = get_driftdiffusionproperties().get_carrier_properties(id);
     //if ( cp == nullptr)
-    //  throw InitFailedException("Recombination '" + get_default_name() +
+    //  throw InitFailedException("Recombination '" + get_name() +
     //      "': carrier '" + (it) + "' not defined in the same regions as the recombination model");
 
     if (used_ids.count(id))
-      throw InitFailedException("Recombination '" + get_default_name() +
+      throw InitFailedException("Recombination '" + get_name() +
           "': carrier names must be different");
 
     _carrier_ids.push_back(id);
@@ -76,7 +76,7 @@ RecombinationModelInterface::do_init(void)
 
   if (_exponents.size() != _carriers.size())
   {
-    throw InitFailedException("Recombination '" + get_default_name() +
+    throw InitFailedException("Recombination '" + get_name() +
         "': number of exponents inconsistent with number of carriers");
   }
 

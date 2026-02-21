@@ -87,12 +87,17 @@ class TiberModelObject
 
     //! Set the name of a model
     /*!
-     * Use with caution as it could break standard behaviour!
+     * If for some reason the automatically assigned name from 
+     * the input file is usnuitable, this method can be used
+     * to reassign a new name.
      */
     void set_name(const std::string& name);
 
 
     //! Get the user defined name of this model
+    /*!
+     * This is the name of the model/simulations as read from the input file.
+     */
     const std::string& get_name(void) const;
 
 

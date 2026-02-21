@@ -95,14 +95,6 @@ class TC_DLLOCAL Band2Band : public RecombinationModelInterface
 // inline methods
 // 
 
-inline
-Band2Band::Band2Band(const ModelOptions& options)
-  : RecombinationModelInterface(options),
-    _B_param(0.0),
-    _E0(1e7),
-    _sigma(2.5)
-{
-}
 
 
 inline

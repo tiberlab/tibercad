@@ -102,6 +102,7 @@ SRHRecombination::SRHRecombination(const ModelOptions& options) :
   _dos(nullptr),
   _profile(nullptr)
 {
+  set_name("SRH");
 }
 
 
@@ -110,7 +111,6 @@ SRHRecombination::~SRHRecombination(void)
 {
   delete _tat;
   delete _profile;
-  destroy(_dos);
 }
 
 
@@ -203,6 +203,7 @@ SRHRecombination::read_interface_database(void)
 void
 SRHRecombination::do_init(void)
 {
+
   if (get_option("trap", false))
   {
     if (get_options().has_submodel("profile"))

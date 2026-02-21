@@ -91,14 +91,6 @@ class TC_DLLOCAL LangevinRecombination : public RecombinationModelInterface
 // inline methods
 // 
 
-inline
-LangevinRecombination::LangevinRecombination(const ModelOptions& options)
-  : RecombinationModelInterface(options),
-    _er(0.0),
-    _gamma(1.0)
-{
-}
-
 
 inline
 LangevinRecombination*

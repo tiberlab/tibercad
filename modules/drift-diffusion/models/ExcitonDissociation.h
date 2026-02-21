@@ -91,13 +91,6 @@ class TC_DLLOCAL ExcitonDissociation : public RecombinationModelInterface
 // inline methods
 // 
 
-inline
-ExcitonDissociation::ExcitonDissociation(const ModelOptions& options)
-  : RecombinationModelInterface(options),
-    d_(1.0),
-    _exciton_sim(NULL)
-{
-}
 
 inline
 ExcitonDissociation*

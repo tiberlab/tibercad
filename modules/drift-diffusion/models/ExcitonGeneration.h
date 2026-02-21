@@ -86,13 +86,6 @@ class TC_DLLOCAL ExcitonGeneration : public RecombinationModelInterface
 // 
 
 
-inline
-ExcitonGeneration::ExcitonGeneration(const ModelOptions& options)
-  : RecombinationModelInterface(options),
-    C_(1e-10)
-{
-}
-
 
 inline
 ExcitonGeneration*

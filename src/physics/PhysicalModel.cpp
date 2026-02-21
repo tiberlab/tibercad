@@ -190,7 +190,7 @@ PhysicalModel::_create(create_t create_fnc, destroy_t destroy_fnc,
     //string defaultname = mod->get_default_name();
     //string defaultname = "";
     //mod->set_name(mod->get_options().get_option("name", defaultname));
-    mod->get_options().delete_option("name");
+    //mod->get_options().delete_option("name");
 #ifdef DEBUG
     cerr << "Add model (ID = " << mod->get_id() <<
       " name = " << mod->get_name() << " type_id = " <<
@@ -302,14 +302,6 @@ PhysicalModel::create_new(void) const
   pmi->set_owner(_owner);
 
   return pmi;
-}
-
-
-
-string
-PhysicalModel::get_default_name(void) const
-{
-  return Utils::extract_typename(typeid(*this));
 }
 
 
@@ -434,8 +426,7 @@ PhysicalModel::init(void)
 
     // Now we initialize all "official" submodels
     SubmodelIterator smit(submodels_begin());
-    const SubmodelIterator smend(submodels_end());
-    for ( ; smit != smend; ++smit)
+    const SubmodelIterator smend(submodels_end());    for ( ; smit != smend; ++smit)
     {
       PhysicalModel* pm = smit->second;
 

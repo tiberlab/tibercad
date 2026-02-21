@@ -32,6 +32,25 @@
 #include "tibercad/module/TiberModule.h"
 
 
+AugerRecombination::AugerRecombination(const ModelOptions& options)
+  : RecombinationModelInterface(options),
+    _An(6.7000e-32),
+    _Ap(7.2000e-32),
+    _Bn(2.4500e-31),
+    _Bp(4.5000e-33),
+    _Cn(-2.2000e-32),
+    _Cp(2.6300e-32),
+    _Hn(3.46667),
+    _Hp(8.25688),
+    _N0n(1.0000e+18),
+    _N0p(1.0000e+18),
+    _fixed_Cn(false),
+    _fixed_Cp(false)
+{
+  set_name("Auger");
+}
+
+
 void
 AugerRecombination::read_database(void)
 {
@@ -70,7 +89,6 @@ AugerRecombination::read_database(void)
 void
 AugerRecombination::do_init(void)
 {
-
   if (has_parameter("Cn"))
   {
     get_parameter("Cn", _Cn);

@@ -54,9 +54,6 @@ class TC_DLLOCAL OpticalGeneration : public RecombinationModelInterface
     //! Destructor
     virtual ~OpticalGeneration(void) {};
 
-    //! Create a ConstantMobility object
-    static OpticalGeneration* create(const ModelOptions& options);
-
     //! \copydoc RecombinationModelInterface::get_net_recombination_rates()
     void get_net_recombination_rates(double& recomb_e, double& recomb_h);
 
@@ -102,20 +99,6 @@ class TC_DLLOCAL OpticalGeneration : public RecombinationModelInterface
 //
 // inline methods
 //
-
-inline
-OpticalGeneration::OpticalGeneration(const ModelOptions& options)
-  : RecombinationModelInterface(options)
-{
-}
-
-
-inline
-OpticalGeneration*
-OpticalGeneration::create(const ModelOptions& options)
-{
-  return new OpticalGeneration(options);
-}
 
 
 
