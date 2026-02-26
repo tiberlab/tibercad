@@ -38,9 +38,6 @@ class TC_DLLOCAL SchottkyContact : public ElectricalContact
 {
   public:
 
-    //! Create a schottky contact
-    static SchottkyContact* create(const ModelOptions& options);
-
 
   protected:
 
@@ -77,19 +74,6 @@ class TC_DLLOCAL SchottkyContact : public ElectricalContact
     bool _barrier_lowering;
 };
 
-
-
-//
-// inline
-//
-
-
-inline
-SchottkyContact*
-SchottkyContact::create(const ModelOptions& options)
-{
-  return new SchottkyContact(options);
-}
 
 
 

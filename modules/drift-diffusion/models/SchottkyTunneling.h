@@ -51,9 +51,6 @@ class TC_DLLOCAL SchottkyTunneling : public RecombinationModelInterface
     //! Destructor
     virtual ~SchottkyTunneling(void) {};
 
-    //! Create a ConstantMobility object
-    static SchottkyTunneling* create(const ModelOptions& options);
-
     //! \copydoc RecombinationModelInterface::get_net_recombination_rates()
     void get_net_recombination_rates(double& recomb_e, double& recomb_h);
 
@@ -115,20 +112,6 @@ class TC_DLLOCAL SchottkyTunneling : public RecombinationModelInterface
 
 };
 
-
-
-//
-// inline methods
-// 
-
-
-
-inline
-SchottkyTunneling*
-SchottkyTunneling::create(const ModelOptions& options)
-{
-  return new SchottkyTunneling(options);
-}
 
 
 

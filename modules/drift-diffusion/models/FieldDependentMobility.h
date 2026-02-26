@@ -49,9 +49,6 @@ class TC_DLLOCAL FieldDependentMobility : public MobilityModelInterface
     //! Destructor
     virtual ~FieldDependentMobility(void);
 
-    //! Create a FieldDependentMobility object
-    static FieldDependentMobility* create(const ModelOptions& options);
-
     //! \copydoc MobilityModelInterface::get_mobility()
     virtual double get_mobility(void);
 
@@ -143,14 +140,6 @@ FieldDependentMobility::FieldDependentMobility(const ModelOptions& options)
     _force(EFIELD),
     _damping(1e9)
 {
-}
-
-
-inline
-FieldDependentMobility*
-FieldDependentMobility::create(const ModelOptions& options)
-{
-  return new FieldDependentMobility(options);
 }
 
 

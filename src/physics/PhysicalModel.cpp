@@ -31,7 +31,6 @@
 
 #include "tibercad/utils/Utils.h"
 #include "tibercad/physics/misc/Trap.h"
-#include "tibercad/physics/misc/ParticleDensity.h"
 #include "tibercad/physics/misc/PolarizationModel.h"
 
 #include "tibercad/physics/semiconductormodels/ZbSemiconductor.h"
@@ -118,8 +117,6 @@ PhysicalModel::_create(const string& name,
     mod = Trap::create(options);
   else if (name == "polarization")
     mod = PolarizationModel::create(options);
-  else if (name == "particle_density")
-    mod = ParticleDensity::create(options);
 
 
   if (mod == nullptr)
@@ -210,6 +207,9 @@ void
 PhysicalModel::_register_model(
     PhysicalModel* model)
 {
+  // since all models are created through a consistent factory,
+  // mangled type names are guaranteed to be the same for instances
+  // of the same class.
   const string name = typeid(*model).name();
   model_id_iterator it = _model_ids.find(name);
 
@@ -293,7 +293,6 @@ PhysicalModel::create_new(void) const
   if (pmi == nullptr)
   {
     ostringstream os;
-    //os << "Model " << get_name() << " cannot create a new instance of "
     os << "Model cannot create a new instance of "
         "the same type as the method \"create_new()\" is not "
         "reimplemented.";

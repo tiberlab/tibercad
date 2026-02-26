@@ -46,9 +46,6 @@ class TC_DLLOCAL DirectRecombination : public RecombinationModelInterface
     //! Destructor
     virtual ~DirectRecombination(void) {};
 
-    //! Create a ConstantMobility object
-    static DirectRecombination* create(const ModelOptions& options);
-
     //! \copydoc RecombinationModelInterface::get_net_recombination_rates()
     void get_net_recombination_rates(double& recomb_e, double& recomb_h);
 
@@ -111,13 +108,6 @@ class TC_DLLOCAL DirectRecombination : public RecombinationModelInterface
 // 
 
 
-
-inline
-DirectRecombination*
-DirectRecombination::create(const ModelOptions& options)
-{
-  return new DirectRecombination(options);
-}
 
 
 inline

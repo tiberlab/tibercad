@@ -50,9 +50,6 @@ class TC_DLLOCAL SiStrainedMobility : public MobilityModelInterface
     //! Destructor
     virtual ~SiStrainedMobility(void);
 
-    //! Create a SiStrainedMobility object
-    static SiStrainedMobility* create(const ModelOptions& options);
-
     //! \copydoc MobilityModelInterface::get_mobility()
     virtual double get_mobility(void);
 
@@ -70,9 +67,6 @@ class TC_DLLOCAL SiStrainedMobility : public MobilityModelInterface
 
     //! \copydoc MobilityModelInterface::do_init()
     virtual void do_init(void);
-
-    //! \copydoc MobilityModelInterface::create_new()
-    virtual PhysicalModel* create_new(void) const;
 
 
   private:
@@ -111,22 +105,6 @@ class TC_DLLOCAL SiStrainedMobility : public MobilityModelInterface
 // 
 
 
-
-
-inline
-SiStrainedMobility*
-SiStrainedMobility::create(const ModelOptions& options)
-{
-  return new SiStrainedMobility(options);
-}
-
-
-inline
-PhysicalModel*
-SiStrainedMobility::create_new(void) const
-{
-  return new SiStrainedMobility(get_options());
-}
 
 
 inline

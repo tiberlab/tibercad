@@ -60,10 +60,7 @@ class TC_DLLOCAL DopingDependentMobility : public MobilityModelInterface
   public:
 
     //! Destructor
-    virtual ~DopingDependentMobility(void);
-
-    //! Create a DopingDependentMobility object
-    static DopingDependentMobility* create(const ModelOptions& options);
+    virtual ~DopingDependentMobility(void) = default;
 
     //! \copydoc MobilityModelInterface::get_mobility()
     virtual double get_mobility(void);
@@ -90,9 +87,6 @@ class TC_DLLOCAL DopingDependentMobility : public MobilityModelInterface
 
     //! Create submodels
     virtual void prepare_submodels(void);
-
-    //! \copydoc MobilityModelInterface::create_new()
-    virtual PhysicalModel* create_new(void) const;
 
 
   private:
@@ -182,25 +176,6 @@ DopingDependentMobility::DopingDependentMobility(const ModelOptions& options)
 }
 
 
-inline
-DopingDependentMobility*
-DopingDependentMobility::create(const ModelOptions& options)
-{
-  return new DopingDependentMobility(options);
-}
 
-
-inline
-PhysicalModel*
-DopingDependentMobility::create_new(void) const
-{
-  return new DopingDependentMobility(get_options());
-}
-
-
-inline
-DopingDependentMobility::~DopingDependentMobility(void)
-{
-}
 
 #endif // TC_DOPINGDEPENDENTMOBILITY_H

@@ -35,9 +35,6 @@ class TC_DLLOCAL OhmicContact : public ElectricalContact
 {
   public:
 
-    //! Create an ohmic contact
-    static OhmicContact* create(const ModelOptions& options);
-
   protected:
 
     //! The constructor
@@ -49,18 +46,6 @@ class TC_DLLOCAL OhmicContact : public ElectricalContact
 
 
 };
-
-
-//
-// inline
-//
-
-inline
-OhmicContact*
-OhmicContact::create(const ModelOptions& options)
-{
-  return new OhmicContact(options);
-}
 
 
 

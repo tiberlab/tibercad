@@ -34,8 +34,6 @@
 #include "tibercad/physics/Constants.h"
 
 class ModelOptions;
-//class DensityOfStates;
-class ParticleDensity;
 class Elem;
 class Point;
 
@@ -48,9 +46,6 @@ class BandProperties : public DriftDiffusionModelInterface
 
     //! Destructor
     virtual ~BandProperties(void);
-
-    //! Creator method
-    static BandProperties* create(const ModelOptions& options);
 
     /*
     // ! Set the temperature interface
@@ -94,9 +89,6 @@ class BandProperties : public DriftDiffusionModelInterface
 
     //! Get the particle density and its derivative
     std::pair<double, double> get_density_and_derivative(double Ef, double Epot) const;
-
-    //! Get the \f$\gamma\f$ factor
-    double get_gamma(void) const;
 
     //! Set the band edge
     void set_band_edge(double band_edge);
@@ -189,18 +181,9 @@ class BandProperties : public DriftDiffusionModelInterface
     //! The DOS model
     DensityOfStates* _dos_model;
 
-    //! The particle density
-    ParticleDensity* _density;
-
 };
 
 
-inline
-BandProperties*
-BandProperties::create(const ModelOptions& options)
-{
-  return new BandProperties(options);
-}
 
 
 /*

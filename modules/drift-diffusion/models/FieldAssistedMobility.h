@@ -46,9 +46,6 @@ class TC_DLLOCAL FieldAssistedMobility : public MobilityModelInterface
     //! Destructor
     virtual ~FieldAssistedMobility(void) {};
 
-    //! Create a FieldAssistedMobility object
-    static FieldAssistedMobility* create(const ModelOptions& options);
-
     //! \copydoc MobilityModelInterface::get_mobility()
     virtual double get_mobility(void);
 
@@ -69,9 +66,6 @@ class TC_DLLOCAL FieldAssistedMobility : public MobilityModelInterface
 
     //! \copydoc MobilityModelInterface::do_init()
     virtual void do_init(void);
-
-    //! \copydoc MobilityModelInterface::create_new()
-    virtual PhysicalModel* create_new(void) const;
 
 
   private:
@@ -110,21 +104,6 @@ FieldAssistedMobility::FieldAssistedMobility(const ModelOptions& options)
 {
 }
 
-
-inline
-FieldAssistedMobility*
-FieldAssistedMobility::create(const ModelOptions& options)
-{
-  return new FieldAssistedMobility(options);
-}
-
-
-inline
-PhysicalModel*
-FieldAssistedMobility::create_new(void) const
-{
-  return new FieldAssistedMobility(get_options());
-}
 
 
 #endif // TC_FIELDASSISTEDMOBILITY_H

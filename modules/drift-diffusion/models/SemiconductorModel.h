@@ -53,9 +53,6 @@ class TC_DLLOCAL SemiconductorModel : public DDBulkModel
     //! The destructor
     virtual ~SemiconductorModel(void);
 
-    //! This method creates a SimpleSemiconductorModel object
-    static SemiconductorModel* create(const ModelOptions& options);
-
 
     //! Clean the internal cache of element data
     /*!
@@ -131,18 +128,6 @@ libMesh::RealVectorValue polarization;
 
 };
 
-
-//
-// inline member functions
-//
-
-
-inline
-SemiconductorModel*
-SemiconductorModel::create(const ModelOptions& options)
-{
-  return new SemiconductorModel(options);
-}
 
 
 inline

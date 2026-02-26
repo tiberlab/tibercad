@@ -47,9 +47,6 @@ class TC_DLLOCAL ExcitonGeneration : public RecombinationModelInterface
     //! Destructor
     virtual ~ExcitonGeneration(void) {};
 
-    //! Create a ConstantMobility object
-    static ExcitonGeneration* create(const ModelOptions& options);
-
     //! \copydoc RecombinationModelInterface::get_net_recombination_rates()
     void get_net_recombination_rates(double& recomb_e, double& recomb_h);
 
@@ -85,14 +82,6 @@ class TC_DLLOCAL ExcitonGeneration : public RecombinationModelInterface
 // inline methods
 // 
 
-
-
-inline
-ExcitonGeneration*
-ExcitonGeneration::create(const ModelOptions& options)
-{
-  return new ExcitonGeneration(options);
-}
 
 
 inline

@@ -49,9 +49,6 @@ class TC_DLLOCAL ConstantMobility : public MobilityModelInterface
     //! Destructor
     virtual ~ConstantMobility(void);
 
-    //! Create a ConstantMobility object
-    static ConstantMobility* create(const ModelOptions& options);
-
     //! \copydoc MobilityModelInterface::get_mobility()
     virtual double get_mobility(void);
 
@@ -102,13 +99,6 @@ ConstantMobility::ConstantMobility(const ModelOptions& options)
 {
 }
 
-
-inline
-ConstantMobility*
-ConstantMobility::create(const ModelOptions& options)
-{
-  return new ConstantMobility(options);
-}
 
 
 inline

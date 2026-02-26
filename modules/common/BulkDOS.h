@@ -44,11 +44,6 @@ class TC_DLEXPORT BulkDOS : public DensityOfStates
     virtual ~BulkDOS(void) {};
 
 
-    //! Creator function
-    static BulkDOS* create(const ModelOptions& options);
-
-
-
   protected:
 
     //! Constructor
@@ -109,16 +104,6 @@ class TC_DLEXPORT BulkDOS : public DensityOfStates
 
 };
 
-//
-// inline methods
-//
-
-inline
-BulkDOS*
-BulkDOS::create(const ModelOptions& options)
-{
-  return new BulkDOS(options);
-}
 
 
 #endif // TC_BULKDOS_H

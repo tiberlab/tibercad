@@ -45,9 +45,6 @@ class TC_DLLOCAL Band2Band : public RecombinationModelInterface
     //! Destructor
     virtual ~Band2Band(void) {};
 
-    //! Create a ConstantMobility object
-    static Band2Band* create(const ModelOptions& options);
-
     //! \copydoc RecombinationModelInterface::get_net_recombination_rates()
     void get_net_recombination_rates(double& recomb_e, double& recomb_h);
 
@@ -88,21 +85,6 @@ class TC_DLLOCAL Band2Band : public RecombinationModelInterface
 
 
 };
-
-
-
-//
-// inline methods
-// 
-
-
-
-inline
-Band2Band*
-Band2Band::create(const ModelOptions& options)
-{
-  return new Band2Band(options);
-}
 
 
 

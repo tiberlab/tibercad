@@ -46,9 +46,6 @@ class TC_DLLOCAL ExcitonDissociation : public RecombinationModelInterface
     //! Destructor
     virtual ~ExcitonDissociation(void) {};
 
-    //! Create a ConstantMobility object
-    static ExcitonDissociation* create(const ModelOptions& options);
-
     //! \copydoc RecombinationModelInterface::get_net_recombination_rates()
     virtual void get_net_recombination_rates(double& recomb_e, double& recomb_h);
 
@@ -68,9 +65,6 @@ class TC_DLLOCAL ExcitonDissociation : public RecombinationModelInterface
     //! \copydoc RecombinationModelInterface::do_init()
     virtual void do_init(void);
 
-    //! \copydoc RecombinationModelInterface::create_new()
-    virtual PhysicalModel* create_new(void) const;
-
 
   private:
 
@@ -86,27 +80,6 @@ class TC_DLLOCAL ExcitonDissociation : public RecombinationModelInterface
 };
 
 
-
-//
-// inline methods
-// 
-
-
-inline
-ExcitonDissociation*
-ExcitonDissociation::create(const ModelOptions& options)
-{
-  return new ExcitonDissociation(options);
-}
-
-
-
-inline
-PhysicalModel*
-ExcitonDissociation::create_new(void) const
-{
-  return new ExcitonDissociation(get_options());
-}
 
 
 #endif // TC_EXCITONDISSOCIATION_H

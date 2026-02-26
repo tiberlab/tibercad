@@ -26,7 +26,6 @@
 
 
 #include "CarrierProperties.h"
-#include "tibercad/physics/misc/ParticleDensity.h"
 #include "tibercad/physics/misc/DensityOfStates.h"
 #include "MobilityModelInterface.h"
 #include "DriftDiffusionProperties.h"

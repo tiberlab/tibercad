@@ -53,9 +53,6 @@ class TC_DLLOCAL AugerRecombination : public RecombinationModelInterface
     //! Destructor
     virtual ~AugerRecombination(void) {};
 
-    //! Create a ConstantMobility object
-    static AugerRecombination* create(const ModelOptions& options);
-
     /*! \copydoc RecombinationModelInterface::get_net_recombination_rates() */
     void get_net_recombination_rates(double& recomb_e, double& recomb_h);
 
@@ -126,19 +123,6 @@ class TC_DLLOCAL AugerRecombination : public RecombinationModelInterface
 
 };
 
-
-//
-// inline methods
-// 
-
-
-
-inline
-AugerRecombination*
-AugerRecombination::create(const ModelOptions& options)
-{
-  return new AugerRecombination(options);
-}
 
 
 

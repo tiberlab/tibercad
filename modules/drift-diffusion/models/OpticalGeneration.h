@@ -30,13 +30,11 @@
 
 #include "RecombinationModelInterface.h"
 #include "tibercad/base/TypeDefs.h"
-#include "vector_value.h"
-#include "tibercad/module/SimulationInterface.h"
-#include "point.h"
 
 // forward declarations
 class Elem;
 class ExternalProfile;
+class SimulationInterface;
 
 
 
@@ -94,11 +92,6 @@ class TC_DLLOCAL OpticalGeneration : public RecombinationModelInterface
 
 };
 
-
-
-//
-// inline methods
-//
 
 
 

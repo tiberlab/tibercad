@@ -40,9 +40,6 @@ class DefaultBandProperties : public BandProperties
     //! Destructor
     virtual ~DefaultBandProperties(void); 
 
-    //! Creator method
-    static DefaultBandProperties* create(const ModelOptions& options);
-
 
   protected:
 
