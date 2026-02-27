@@ -53,9 +53,6 @@ class TC_DLLOCAL AugerRecombination : public RecombinationModelInterface
     //! Destructor
     virtual ~AugerRecombination(void) {};
 
-    //! Create a ConstantMobility object
-    static AugerRecombination* create(const ModelOptions& options);
-
     
   protected:
 
@@ -145,13 +142,6 @@ AugerRecombination::AugerRecombination(const ModelOptions& options)
 {
 }
 
-
-inline
-AugerRecombination*
-AugerRecombination::create(const ModelOptions& options)
-{
-  return new AugerRecombination(options);
-}
 
 
 

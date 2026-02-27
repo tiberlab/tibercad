@@ -38,9 +38,6 @@ class TC_DLLOCAL SchottkyContact : public ElectricalContact
 {
   public:
 
-    //! Create a schottky contact
-    static SchottkyContact* create(const ModelOptions& options);
-
 
   protected:
 
@@ -48,11 +45,11 @@ class TC_DLLOCAL SchottkyContact : public ElectricalContact
     SchottkyContact(const ModelOptions& options);
 
     /*! \copydoc ElectricalContact::do_init() */
-    virtual void do_init(void);
+    virtual void do_init(void) override;
 
 
     //! Calculate all coefficients
-    virtual void do_compute(void);
+    virtual void do_compute(void) override;
 
 
   private:
@@ -90,18 +87,6 @@ class TC_DLLOCAL SchottkyContact : public ElectricalContact
 };
 
 
-
-//
-// inline
-//
-
-
-inline
-SchottkyContact*
-SchottkyContact::create(const ModelOptions& options)
-{
-  return new SchottkyContact(options);
-}
 
 
 

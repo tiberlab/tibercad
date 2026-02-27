@@ -50,9 +50,6 @@ class TC_DLLOCAL AvalancheGeneration : public RecombinationModelInterface
     //! Destructor
     virtual ~AvalancheGeneration(void);
 
-    //! Create a ConstantMobility object
-    static AvalancheGeneration* create(const ModelOptions& options);
-
 
   protected:
 
@@ -83,21 +80,6 @@ class TC_DLLOCAL AvalancheGeneration : public RecombinationModelInterface
 
 };
 
-
-//
-// inline methods
-//
-
-
-
-
-
-inline
-AvalancheGeneration*
-AvalancheGeneration::create(const ModelOptions& options)
-{
-  return new AvalancheGeneration(options);
-}
 
 
 

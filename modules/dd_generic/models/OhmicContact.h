@@ -35,34 +35,19 @@ class TC_DLLOCAL OhmicContact : public ElectricalContact
 {
   public:
 
-    //! Create an ohmic contact
-    static OhmicContact* create(const ModelOptions& options);
-
   protected:
 
     //! The constructor
     OhmicContact(const ModelOptions& options);
 
     /*! \copydoc ElectricalContact::do_init() */
-    virtual void do_init(void);
+    virtual void do_init(void) override;
 
     //! Calculate all coefficients
-    virtual void do_compute(void);
+    virtual void do_compute(void) override;
 
 
 };
-
-
-//
-// inline
-//
-
-inline
-OhmicContact*
-OhmicContact::create(const ModelOptions& options)
-{
-  return new OhmicContact(options);
-}
 
 
 

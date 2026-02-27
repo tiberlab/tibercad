@@ -46,9 +46,6 @@ class TC_DLLOCAL AugerBare : public RecombinationModelInterface
     //! Destructor
     virtual ~AugerBare(void) {};
 
-    //! Create a ConstantMobility object
-    static AugerBare* create(const ModelOptions& options);
-
     
   protected:
 
@@ -83,14 +80,6 @@ AugerBare::AugerBare(const ModelOptions& options)
   : RecombinationModelInterface(options),
     _rate_constant(1e-30)
 {
-}
-
-
-inline
-AugerBare*
-AugerBare::create(const ModelOptions& options)
-{
-  return new AugerBare(options);
 }
 
 

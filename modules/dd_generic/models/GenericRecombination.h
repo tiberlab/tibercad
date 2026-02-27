@@ -46,9 +46,6 @@ class TC_DLLOCAL GenericRecombination : public RecombinationModelInterface
     //! Destructor
     virtual ~GenericRecombination(void) {};
 
-    //! Create a ConstantMobility object
-    static GenericRecombination* create(const ModelOptions& options);
-
     
   protected:
 
@@ -82,14 +79,6 @@ GenericRecombination::GenericRecombination(const ModelOptions& options)
   : RecombinationModelInterface(options),
     C_(0.0)
 {
-}
-
-
-inline
-GenericRecombination*
-GenericRecombination::create(const ModelOptions& options)
-{
-  return new GenericRecombination(options);
 }
 
 

@@ -65,9 +65,6 @@ class TC_DLLOCAL SRHRecombination : public RecombinationModelInterface
     //! Destructor
     virtual ~SRHRecombination(void);
 
-    //! Create a ConstantMobility object
-    static SRHRecombination* create(const ModelOptions& options);
-
 
   protected:
 
@@ -171,21 +168,6 @@ class TC_DLLOCAL SRHRecombination : public RecombinationModelInterface
     double get_trap_level(void);
 };
 
-
-//
-// inline methods
-//
-
-
-
-
-
-inline
-SRHRecombination*
-SRHRecombination::create(const ModelOptions& options)
-{
-  return new SRHRecombination(options);
-}
 
 
 

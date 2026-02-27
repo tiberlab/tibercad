@@ -59,7 +59,6 @@ class Trap;
 class SimulationInterface;
 class DriftDiffusion;
 class RecombinationModelInterface;
-class ParticleDensity;
 
 
 //! The base class for all drift-diffusion related semiconductor models

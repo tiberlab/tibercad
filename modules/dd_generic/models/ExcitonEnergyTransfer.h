@@ -46,9 +46,6 @@ class TC_DLLOCAL ExcitonEnergyTransfer : public RecombinationModelInterface
     //! Destructor
     virtual ~ExcitonEnergyTransfer(void) {};
 
-    //! Create a ConstantMobility object
-    static ExcitonEnergyTransfer* create(const ModelOptions& options);
-
 
   protected:
 
@@ -121,15 +118,6 @@ ExcitonEnergyTransfer::ExcitonEnergyTransfer(const ModelOptions& options)
     _tau_rad(1e-9)
 {
 }
-
-
-inline
-ExcitonEnergyTransfer*
-ExcitonEnergyTransfer::create(const ModelOptions& options)
-{
-  return new ExcitonEnergyTransfer(options);
-}
-
 
 
 

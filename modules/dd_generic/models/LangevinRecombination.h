@@ -46,9 +46,6 @@ class TC_DLLOCAL LangevinRecombination : public RecombinationModelInterface
     //! Destructor
     virtual ~LangevinRecombination(void) {};
 
-    //! Create a LangevinRecombination object
-    static LangevinRecombination* create(const ModelOptions& options);
-
 
   protected:
 
@@ -92,11 +89,5 @@ LangevinRecombination::LangevinRecombination(const ModelOptions& options)
 }
 
 
-inline
-LangevinRecombination*
-LangevinRecombination::create(const ModelOptions& options)
-{
-  return new LangevinRecombination(options);
-}
 
 #endif // TC_LANGEVINRECOMBINATION_H

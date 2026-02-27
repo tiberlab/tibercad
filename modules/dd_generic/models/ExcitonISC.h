@@ -46,9 +46,6 @@ class TC_DLLOCAL ExcitonISC : public RecombinationModelInterface
     //! Destructor
     virtual ~ExcitonISC(void) {};
 
-    //! Create a ConstantMobility object
-    static ExcitonISC* create(const ModelOptions& options);
-
 
   protected:
 
@@ -101,14 +98,6 @@ ExcitonISC::ExcitonISC(const ModelOptions& options)
   : RecombinationModelInterface(options),
     _quantum_optics(NULL)
 {
-}
-
-
-inline
-ExcitonISC*
-ExcitonISC::create(const ModelOptions& options)
-{
-  return new ExcitonISC(options);
 }
 
 

@@ -49,13 +49,6 @@ VariableRangeHopping::VariableRangeHopping(const ModelOptions& options)
 
 
 
-VariableRangeHopping*
-VariableRangeHopping::create (const ModelOptions& options)
-{
-  return new VariableRangeHopping(options);
-}
-
-
 
 
 VariableRangeHopping::~VariableRangeHopping(void)

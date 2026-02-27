@@ -46,9 +46,6 @@ class TC_DLLOCAL ExcitonDecay : public RecombinationModelInterface
     //! Destructor
     virtual ~ExcitonDecay(void) {};
 
-    //! Create a ConstantMobility object
-    static ExcitonDecay* create(const ModelOptions& options);
-
     
   protected:
 
@@ -86,13 +83,6 @@ ExcitonDecay::ExcitonDecay(const ModelOptions& options)
 {
 }
 
-
-inline
-ExcitonDecay*
-ExcitonDecay::create(const ModelOptions& options)
-{
-  return new ExcitonDecay(options);
-}
 
 
 

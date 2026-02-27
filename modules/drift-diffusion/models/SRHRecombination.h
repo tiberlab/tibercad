@@ -66,13 +66,13 @@ class TC_DLLOCAL SRHRecombination : public RecombinationModelInterface
     virtual ~SRHRecombination(void);
 
     /*! \copydoc RecombinationModelInterface::get_net_recombination_rates() */
-    void get_net_recombination_rates(double& recomb_e, double& recomb_h);
+    virtual void get_net_recombination_rates(double& recomb_e, double& recomb_h) override;
 
     /*! \copydoc
      * RecombinationModelInterface::get_net_recombination_rate_derivatives()
      */
-    void get_net_recombination_rate_derivatives(
-        std::vector<double>& recomb_e, std::vector<double>& recomb_h);
+    virtual void get_net_recombination_rate_derivatives(
+        std::vector<double>& recomb_e, std::vector<double>& recomb_h) override;
 
 
 
@@ -82,24 +82,24 @@ class TC_DLLOCAL SRHRecombination : public RecombinationModelInterface
     SRHRecombination(const ModelOptions& options);
 
     //! \copydoc RecombinationModelInterface::read_database()
-    virtual void read_database(void);
+    virtual void read_database(void) override;
 
     //! \copydoc RecombinationModelInterface::read_interface_database()
-    virtual void read_interface_database(void);
+    virtual void read_interface_database(void) override;
 
     //! \copydoc RecombinationModelInterface::prepare_submodels()
-    virtual void prepare_submodels(void);
+    virtual void prepare_submodels(void) override;
 
     //! \copydoc RecombinationModelInterface::do_init()
-    virtual void do_init(void);
+    virtual void do_init(void) override;
 
     //! \copydoc RecombinationModelInterface::do_init_interface()
     virtual void do_init_interface(const Material* comp_A,
-            const Material* comp_B);
+            const Material* comp_B) override;
 
     //! We do the VCA on the recombination times and not on the parameters
     virtual void do_init_alloy(const PhysicalModel* comp_A,
-        const PhysicalModel* comp_B, double xa);
+        const PhysicalModel* comp_B, double xa) override;
 
 
   private:

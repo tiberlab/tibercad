@@ -53,14 +53,14 @@ class TC_DLLOCAL OpticalGeneration : public RecombinationModelInterface
     virtual ~OpticalGeneration(void) {};
 
     //! \copydoc RecombinationModelInterface::get_net_recombination_rates()
-    void get_net_recombination_rates(double& recomb_e, double& recomb_h);
+    virtual void get_net_recombination_rates(double& recomb_e, double& recomb_h) override;
 
     /*!
      * \copydoc
      * RecombinationModelInterface::get_net_recombination_rate_derivatives()
      */
-    void get_net_recombination_rate_derivatives(
-        std::vector<double>& recomb_e, std::vector<double>& recomb_h);
+    virtual void get_net_recombination_rate_derivatives(
+        std::vector<double>& recomb_e, std::vector<double>& recomb_h) override;
 
 
   protected:

@@ -49,17 +49,14 @@ class TC_DLLOCAL FieldDependentMobility : public MobilityModelInterface
     //! Destructor
     virtual ~FieldDependentMobility(void);
 
-    //! Create a FieldDependentMobility object
-    static FieldDependentMobility* create(const ModelOptions& options);
-
     //! \copydoc MobilityModelInterface::get_mobility()
-    virtual double get_mobility(void);
+    virtual double get_mobility(void) override;
 
     //! \copydoc MobilityModelInterface::get_derivative_grad_potential()
-    virtual void get_derivative_grad_potential(libMesh::RealGradient& dm);
+    virtual void get_derivative_grad_potential(libMesh::RealGradient& dm) override;
 
     //! \copydoc MobilityModelInterface::get_derivative_grad_fermi()
-    virtual void get_derivative_grad_fermi(libMesh::RealGradient& dm);
+    virtual void get_derivative_grad_fermi(libMesh::RealGradient& dm) override;
 
 
   protected:
@@ -68,13 +65,13 @@ class TC_DLLOCAL FieldDependentMobility : public MobilityModelInterface
     FieldDependentMobility(const ModelOptions& options);
 
     //! \copydoc MobilityModelInterface::read_database()
-    virtual void read_database(void);
+    virtual void read_database(void) override;
 
     //! \copydoc MobilityModelInterface::do_init()
-    virtual void do_init(void);
+    virtual void do_init(void) override;
 
     //! Create low field mobility model
-    virtual void prepare_submodels(void);
+    virtual void prepare_submodels(void) override;
 
 
 
@@ -145,13 +142,6 @@ FieldDependentMobility::FieldDependentMobility(const ModelOptions& options)
 {
 }
 
-
-inline
-FieldDependentMobility*
-FieldDependentMobility::create(const ModelOptions& options)
-{
-  return new FieldDependentMobility(options);
-}
 
 
 

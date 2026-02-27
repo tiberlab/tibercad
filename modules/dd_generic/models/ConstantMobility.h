@@ -49,20 +49,14 @@ class TC_DLLOCAL ConstantMobility : public MobilityModelInterface
     //! Destructor
     virtual ~ConstantMobility(void);
 
-    //! Create a ConstantMobility object
-    static ConstantMobility* create(const ModelOptions& options);
-
     //! \copydoc MobilityModelInterface::get_mobility()
-    virtual double get_mobility(void);
-
-    //! \copydoc MobilityModelInterface::get_mobility_derivatives()
-    virtual void get_mobility_derivatives(std::vector<double>& dm);
+    virtual double get_mobility(void) override;
 
     //! \copydoc MobilityModelInterface::get_derivative_grad_potential()
-    virtual void get_derivative_grad_potential(libMesh::RealGradient& dm);
+    virtual void get_derivative_grad_potential(libMesh::RealGradient& dm) override;
 
     //! \copydoc MobilityModelInterface::get_derivative_grad_fermi()
-    virtual void get_derivative_grad_fermi(libMesh::RealGradient& dm);
+    virtual void get_derivative_grad_fermi(libMesh::RealGradient& dm) override;
 
 
   protected:
@@ -71,13 +65,10 @@ class TC_DLLOCAL ConstantMobility : public MobilityModelInterface
     ConstantMobility(const ModelOptions& options);
 
     //! \copydoc MobilityModelInterface::read_database()
-    virtual void read_database(void);
+    virtual void read_database(void) override;
 
     //! \copydoc MobilityModelInterface::do_init()
-    virtual void do_init(void);
-
-    //! \copydoc MobilityModelInterface::create_new()
-    virtual PhysicalModel* create_new(void) const;
+    virtual void do_init(void) override;
 
 
   private:
@@ -103,20 +94,6 @@ ConstantMobility::ConstantMobility(const ModelOptions& options)
 }
 
 
-inline
-ConstantMobility*
-ConstantMobility::create(const ModelOptions& options)
-{
-  return new ConstantMobility(options);
-}
-
-
-inline
-PhysicalModel*
-ConstantMobility::create_new(void) const
-{
-  return new ConstantMobility(get_options());
-}
 
 
 inline

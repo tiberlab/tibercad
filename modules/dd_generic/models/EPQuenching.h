@@ -47,9 +47,6 @@ class TC_DLLOCAL EPQuenching : public RecombinationModelInterface
     //! Destructor
     virtual ~EPQuenching(void) {};
 
-    //! Create a ConstantMobility object
-    static EPQuenching* create(const ModelOptions& options);
-
     
   protected:
 
@@ -88,13 +85,6 @@ EPQuenching::EPQuenching(const ModelOptions& options)
 {
 }
 
-
-inline
-EPQuenching*
-EPQuenching::create(const ModelOptions& options)
-{
-  return new EPQuenching(options);
-}
 
 
 

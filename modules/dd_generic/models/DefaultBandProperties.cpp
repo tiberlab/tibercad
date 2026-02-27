@@ -42,12 +42,3 @@ DefaultBandProperties::DefaultBandProperties(const ModelOptions& options) :
 
 
 
-
-DefaultBandProperties*
-DefaultBandProperties::create(const ModelOptions& options)
-{
-  return new DefaultBandProperties(options);
-}
-
-
-

@@ -45,9 +45,6 @@ class TC_DLLOCAL Band2Band : public RecombinationModelInterface
     //! Destructor
     virtual ~Band2Band(void) {};
 
-    //! Create a ConstantMobility object
-    static Band2Band* create(const ModelOptions& options);
-
     //! \copydoc RecombinationModelInterface::calculate_rate_and_derivatives()
     virtual void calculate_rate_and_derivatives(std::vector<double>& R,
         std::vector<std::vector<double>>& dPotentials) override;
@@ -59,10 +56,10 @@ class TC_DLLOCAL Band2Band : public RecombinationModelInterface
     Band2Band(const ModelOptions& options);
 
     //! \copydoc RecombinationModelInterface::read_database()
-    virtual void read_database(void);
+    virtual void read_database(void) override;
 
     //! \copydoc RecombinationModelInterface::do_init()
-    virtual void do_init(void);
+    virtual void do_init(void) override;
 
 
   private:
@@ -95,14 +92,6 @@ Band2Band::Band2Band(const ModelOptions& options)
     _E0(1e7),
     _sigma(2.5)
 {
-}
-
-
-inline
-Band2Band*
-Band2Band::create(const ModelOptions& options)
-{
-  return new Band2Band(options);
 }
 
 

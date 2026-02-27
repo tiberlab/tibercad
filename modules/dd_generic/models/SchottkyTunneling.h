@@ -50,9 +50,6 @@ class TC_DLLOCAL SchottkyTunneling : public RecombinationModelInterface
     //! Destructor
     virtual ~SchottkyTunneling(void) {};
 
-    //! Create a ConstantMobility object
-    static SchottkyTunneling* create(const ModelOptions& options);
-
     
   protected:
 
@@ -103,21 +100,6 @@ class TC_DLLOCAL SchottkyTunneling : public RecombinationModelInterface
 
 
 };
-
-
-
-//
-// inline methods
-// 
-
-
-
-inline
-SchottkyTunneling*
-SchottkyTunneling::create(const ModelOptions& options)
-{
-  return new SchottkyTunneling(options);
-}
 
 
 

@@ -60,20 +60,17 @@ class TC_DLLOCAL HoppingMobility : public MobilityModelInterface
     //! Destructor
     virtual ~HoppingMobility(void);
 
-    //! Create a HoppingMobility object
-    static HoppingMobility* create(const ModelOptions& options);
-
     //! \copydoc MobilityModelInterface::get_mobility()
-    virtual double get_mobility(void);
+    virtual double get_mobility(void) override;
 
     //! \copydoc MobilityModelInterface::get_derivative_potential()
-    virtual double get_derivative_potential(void);
+    virtual double get_derivative_potential(void) override;
 
     //! \copydoc MobilityModelInterface::get_derivative_grad_potential()
-    virtual void get_derivative_grad_potential(libMesh::RealGradient& dm);
+    virtual void get_derivative_grad_potential(libMesh::RealGradient& dm) override;
 
     //! \copydoc MobilityModelInterface::get_derivative_grad_fermi()
-    virtual void get_derivative_grad_fermi(libMesh::RealGradient& dm);
+    virtual void get_derivative_grad_fermi(libMesh::RealGradient& dm) override;
 
   protected:
 
@@ -81,7 +78,7 @@ class TC_DLLOCAL HoppingMobility : public MobilityModelInterface
     HoppingMobility(const ModelOptions& options);
 
     //! \copydoc MobilityModelInterface::do_init()
-    virtual void do_init(void);
+    virtual void do_init(void) override;
 
   private:
 
@@ -108,14 +105,6 @@ HoppingMobility::HoppingMobility(const ModelOptions& options)
     _sigma(0.1)
 {
 }
-
-inline
-HoppingMobility*
-HoppingMobility::create(const ModelOptions& options)
-{
-  return new HoppingMobility(options);
-}
-
 
 
 inline

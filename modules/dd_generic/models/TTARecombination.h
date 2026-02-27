@@ -46,9 +46,6 @@ class TC_DLLOCAL TTARecombination : public RecombinationModelInterface
     //! Destructor
     virtual ~TTARecombination(void) {};
 
-    //! Create a ConstantMobility object
-    static TTARecombination* create(const ModelOptions& options);
-
     
   protected:
 
@@ -84,13 +81,6 @@ TTARecombination::TTARecombination(const ModelOptions& options)
 {
 }
 
-
-inline
-TTARecombination*
-TTARecombination::create(const ModelOptions& options)
-{
-  return new TTARecombination(options);
-}
 
 
 

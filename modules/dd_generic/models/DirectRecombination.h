@@ -46,9 +46,6 @@ class TC_DLLOCAL DirectRecombination : public RecombinationModelInterface
     //! Destructor
     virtual ~DirectRecombination(void) {};
 
-    //! Create a ConstantMobility object
-    static DirectRecombination* create(const ModelOptions& options);
-
     
   protected:
 
@@ -106,14 +103,6 @@ DirectRecombination::DirectRecombination(const ModelOptions& options)
     _extraction_barrier(0.0),
     _quantum_optics(NULL)
 {
-}
-
-
-inline
-DirectRecombination*
-DirectRecombination::create(const ModelOptions& options)
-{
-  return new DirectRecombination(options);
 }
 
 
