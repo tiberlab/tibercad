@@ -46,21 +46,17 @@ class TC_DLLOCAL Mirror : public TmmBoundaryModel
 
   public:
 
-    //! Constructor
-    Mirror(const ModelOptions& options);
-
     //! Destructor
-    ~Mirror(void) {};
+    virtual ~Mirror(void) {};
 
-    //! Creator function
-    static Mirror* create(const ModelOptions& options);
-
-
-    void Calculate_M_Matrix(void);
+    virtual void Calculate_M_Matrix(void) override;
 
   protected:
 
-    virtual void do_init(void);
+    //! Constructor
+    explicit Mirror(const ModelOptions& options);
+
+    virtual void do_init(void) override;
 
 
 
@@ -84,13 +80,6 @@ Mirror::Mirror(const ModelOptions& options) :
 }
 
 
-
-inline
-Mirror*
-Mirror::create(const ModelOptions& options)
-{
-  return new Mirror(options);
-}
 
 
 #endif /* SRC_CORE_MODULES_TMM_MODELS_MIRROR_H_ */

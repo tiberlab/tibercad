@@ -45,12 +45,11 @@ class TC_DLEXPORT IncoherentModel : public TmmBulkModel
   virtual ~IncoherentModel(void) {};
   
   const double& get_Incoherent_Index(void) const;
-  static IncoherentModel* create(const ModelOptions& options);
 
   
 protected:
   
-    IncoherentModel(const ModelOptions& options);
+    explicit IncoherentModel(const ModelOptions& options);
 
     void set_Incoherent_Index(const double& Incoheret_Index);
 

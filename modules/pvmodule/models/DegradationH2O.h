@@ -55,8 +55,6 @@ class DegradationH2O : public DegradationModel
 
     virtual ~DegradationH2O(void) = default;
 
-    static DegradationH2O* create(const ModelOptions& options);
-
 
   protected:
 

@@ -50,51 +50,48 @@ class TC_DLLOCAL WaterIngress : public SimulationInterface
      * We do not declare it virtual here, as we will not allow
      * to derive from this class anyway.
      */
-    ~WaterIngress(void);
-
-    //! We need a public static creator function
-    static WaterIngress* create(const ModelOptions& options);
+    virtual ~WaterIngress(void);
 
 
 
   protected:
 
     //! The constructor
-    WaterIngress(const ModelOptions& options);
+    explicit WaterIngress(const ModelOptions& options);
 
     //! The initialization
-    virtual void do_init(void);
+    virtual void do_init(void) override;
 
 
     //! Parse the options from the input file
-    virtual void parse_options(void);
+    void parse_options(void);
 
 
     //! Setup the available variables
-    virtual void do_setup_solution_variables(void);
+    virtual void do_setup_solution_variables(void) override;
 
 
     //! Solve the WaterIngress equation
-    virtual void do_solve(void);
+    virtual void do_solve(void) override;
 
 
     //! Print some useful information
-    virtual void do_print_info(void);
+    virtual void do_print_info(void) override;
 
 
     //! We need to create a physical model
     virtual PhysicalModel* create_bulk_model(const ModelOptions& options,
-        const Material* mat) const;
+        const Material* mat) const override;
 
     //! We need to create boundary condition model
     virtual PhysicalModel* create_boundary_model(const ModelOptions& options,
-        const MaterialBoundary* boundary) const;
+        const MaterialBoundary* boundary) const override;
 
 
     //! We have to provide somehow our solution variables
     virtual void get_solution_secure(const Elem* elem,
         std::map<ID, std::vector<double> >& values,
-        const std::vector<Point>& p);
+        const std::vector<Point>& p) override;
 
 
 

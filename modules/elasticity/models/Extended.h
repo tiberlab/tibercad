@@ -43,13 +43,10 @@ class TC_DLLOCAL Extended : public ElasticityBoundaryModel
     //! Destructor
     ~Extended(void) {};
 
-    //! Creator function
-    static Extended* create(const ModelOptions& options);
-
 
     //! Calculate for a point on the given side
     virtual void calculate(const libMesh::Elem* elem, unsigned int side,
-			   const libMesh::Point& point);
+			   const libMesh::Point& point) override;
 
   protected:
 
@@ -57,7 +54,7 @@ class TC_DLLOCAL Extended : public ElasticityBoundaryModel
     Extended(const ModelOptions& options);
 
     //! Initialize
-  virtual void do_init(void);
+  virtual void do_init(void) override;
 
 
   private:
@@ -72,13 +69,6 @@ Extended::Extended(const ModelOptions& options) :
 {
 }
 
-
-inline
-Extended*
-Extended::create(const ModelOptions& options)
-{
-  return new Extended(options);
-}
 
 
 #endif // TC_POISSONDIRICHLET_H

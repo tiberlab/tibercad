@@ -44,10 +44,6 @@ public:
   //! Destructor
   virtual ~TmmDipoleSource(void) {};
 
-  //! Creator function
-  static TmmDipoleSource* create(const ModelOptions& options);
-
-
   const double& get_emission_power(void) const;
 
 

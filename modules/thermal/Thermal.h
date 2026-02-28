@@ -54,9 +54,6 @@ class TC_DLLOCAL Thermal : public SimulationInterface
      */
     virtual ~Thermal(void);
 
-    //! We need a public static creator function
-    static Thermal* create(const ModelOptions& options);
-
 
     //! The assembly function
     void assemble(void);

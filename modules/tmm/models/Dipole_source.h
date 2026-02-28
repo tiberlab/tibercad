@@ -46,21 +46,19 @@ class TC_DLLOCAL Dipole_source : public TmmBoundaryModel
 
   public:
 
-    //! Constructor
-    Dipole_source(const ModelOptions& options);
-
     //! Destructor
     ~Dipole_source(void) {};
 
-    //! Creator function
-
-    static Dipole_source* create(const ModelOptions& options);
-    virtual void Calculate_M_Matrix(void);
+    virtual void Calculate_M_Matrix(void) override;
 
 
   protected:
 
-    virtual void do_init(void);
+    //! Constructor
+    explicit Dipole_source(const ModelOptions& options);
+
+
+    virtual void do_init(void) override;
 
 
 
@@ -80,13 +78,5 @@ Dipole_source::Dipole_source(const ModelOptions& options) :
 {
 }
 
-
-
-inline
-Dipole_source*
-Dipole_source::create(const ModelOptions& options)
-{
-  return new Dipole_source(options);
-}
 
 #endif /* SRC_CORE_MODULES_TMM_MODELS_INCIDENTWAVE_H_ */

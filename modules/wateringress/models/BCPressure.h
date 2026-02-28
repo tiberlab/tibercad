@@ -42,34 +42,19 @@ class BCPressure : public WIBoundaryModel
     //! Destructor
     ~BCPressure(void) {};
 
-    //! Creator function
-    static BCPressure* create(const ModelOptions& options);
-
 
     //! Calculate for a point on the given side
     virtual void calculate(const Elem* elem, unsigned int side,
-        const Point& point);
+        const Point& point) override;
 
 
   protected:
 
     //! Constructor
-    BCPressure(const ModelOptions& options);
+    explicit BCPressure(const ModelOptions& options);
 
     //! Initialize
-    virtual void do_init(void);
-
-    /* In some cases it might be useful to reimplement this: */
-    // virtual void do_init_interface(const PhysicalModel* comp_A,
-    //         const PhysicalModel* comp_B);
-
-
-    /* This is not used here: */
-    // virtual void read_database(void);
-
-
-    /* We do not use this here: */
-    // virtual void read_interface_database(void);
+    virtual void do_init(void) override;
 
 
   private:
@@ -85,15 +70,6 @@ inline
 BCPressure::BCPressure(const ModelOptions& options) :
   WIBoundaryModel(options)
 {
-}
-
-
-
-inline
-BCPressure*
-BCPressure::create(const ModelOptions& options)
-{
-  return new BCPressure(options);
 }
 
 

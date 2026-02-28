@@ -48,10 +48,7 @@ class TC_DLLOCAL AnisotropicStiffness : public StiffnessModel
   //! Destructor
   ~AnisotropicStiffness(void) {};
   
-  //! Creator function
-  static AnisotropicStiffness* create(const ModelOptions& options);
-  
-  virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point){};
+  virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point) override {};
 
   protected:
 
@@ -59,7 +56,7 @@ class TC_DLLOCAL AnisotropicStiffness : public StiffnessModel
     AnisotropicStiffness(const ModelOptions& options);
 
     //! Initialize
-    virtual void do_init(void);
+    virtual void do_init(void) override;
 
     /* In some cases it might be useful to reimplement this: */
     // virtual void do_init_interface(const PhysicalModel* comp_A,
@@ -67,9 +64,9 @@ class TC_DLLOCAL AnisotropicStiffness : public StiffnessModel
 
 
     /* This is not used here: */
-    virtual void read_database(void);
+    virtual void read_database(void) override;
 
-    virtual void do_print_info(void);
+    virtual void do_print_info(void) override;
 
 
     /* We do not use this here: */
@@ -90,14 +87,6 @@ class TC_DLLOCAL AnisotropicStiffness : public StiffnessModel
 };
 
 
-
-
-inline
-AnisotropicStiffness*
-AnisotropicStiffness::create(const ModelOptions& options)
-{ 
-  return new  AnisotropicStiffness(options);
-}
 
 
 

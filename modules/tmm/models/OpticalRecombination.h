@@ -43,15 +43,15 @@ class TC_DLEXPORT OpticalRecombination : public TmmDipoleSource
   public:
 
   virtual ~OpticalRecombination(void) {};
-  static OpticalRecombination* create(const ModelOptions& options);
-  virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point, double lambda);
+
+  virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point, double lambda) override;
 
   
 protected:
   
-    OpticalRecombination(const ModelOptions& options);
+  explicit OpticalRecombination(const ModelOptions& options);
 	
-	virtual void do_init(void){};
+	virtual void do_init(void) override {};
 
 
 
@@ -74,13 +74,6 @@ OpticalRecombination::OpticalRecombination(const ModelOptions& options) :
   TmmDipoleSource(options),
   _recombination_rate(0.0)
 {
-}
-
-inline
-OpticalRecombination*
-OpticalRecombination::create(const ModelOptions& options)
-{
-  return new OpticalRecombination(options);
 }
 
 

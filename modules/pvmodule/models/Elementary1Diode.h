@@ -39,8 +39,6 @@ class Elementary1Diode : public ElementaryCell
 
     virtual ~Elementary1Diode(void) override {};
 
-    static Elementary1Diode* create(const ModelOptions& options);
-
 
   protected:
 

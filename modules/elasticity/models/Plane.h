@@ -48,13 +48,9 @@ class TC_DLLOCAL Plane : public ElasticityBoundaryModel
     //! Destructor
     ~Plane(void) {};
 
-    //! Creator function
-    static Plane* create(const ModelOptions& options);
-
-
     //! Calculate for a point on the given side
     virtual void calculate(const libMesh::Elem* elem, unsigned int side,
-			   const libMesh::Point& point);
+			   const libMesh::Point& point) override;
 
 
   protected:
@@ -63,19 +59,8 @@ class TC_DLLOCAL Plane : public ElasticityBoundaryModel
     Plane(const ModelOptions& options);
 
     //! Initialize
-    virtual void do_init(void){};
+    virtual void do_init(void) override {};
 
-    /* In some cases it might be useful to reimplement this: */
-    // virtual void do_init_interface(const PhysicalModel* comp_A,
-    //         const PhysicalModel* comp_B);
-
-
-    /* This is not used here: */
-    // virtual void read_database(void);
-
-
-    /* We do not use this here: */
-    // virtual void read_interface_database(void);
 
 
   private:
@@ -91,14 +76,6 @@ Plane::Plane(const ModelOptions& options) :
 {
 }
 
-
-
-inline
-Plane*
-Plane::create(const ModelOptions& options)
-{
-  return new Plane(options);
-}
 
 
 

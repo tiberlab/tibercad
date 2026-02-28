@@ -48,10 +48,7 @@ class TC_DLLOCAL LatticeMismatch : public BodyForceModel
   //! Destructor
   ~LatticeMismatch(void);
   
-  //! Creator function
-  static LatticeMismatch* create(const ModelOptions& options);
-  
-  virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point){};
+  virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point) override {};
 
   protected:
 
@@ -59,20 +56,9 @@ class TC_DLLOCAL LatticeMismatch : public BodyForceModel
     LatticeMismatch(const ModelOptions& options);
 
     //! Initialize
-    virtual void do_init(void);
+    virtual void do_init(void) override;
 
-    /* In some cases it might be useful to reimplement this: */
-    // virtual void do_init_interface(const PhysicalModel* comp_A,
-    //         const PhysicalModel* comp_B);
-
-
-    /* This is not used here: */
-    // virtual void read_database(void);
-
-
-    /* We do not use this here: */
-    // virtual void read_interface_database(void);
-
+  
 
 
   private:
@@ -82,13 +68,6 @@ class TC_DLLOCAL LatticeMismatch : public BodyForceModel
 
 
 
-
-inline
-LatticeMismatch*
-LatticeMismatch::create(const ModelOptions& options)
-{ 
-  return new  LatticeMismatch(options);
-}
 
 
 

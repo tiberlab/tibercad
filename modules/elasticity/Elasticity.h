@@ -55,9 +55,6 @@ class TC_DLLOCAL Elasticity : public SimulationInterface
      */
     ~Elasticity(void);
 
-    //! We need a public static creator function
-    static Elasticity* create(const ModelOptions& options);
-
     //! The assembly function
     void assemble(void);
 

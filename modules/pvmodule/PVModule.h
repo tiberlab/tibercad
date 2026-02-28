@@ -51,15 +51,12 @@ class TC_DLLOCAL PVModule : public SimulationInterface
     //! Destructor
     ~PVModule(void);
 
-    //! We need a public static creator function
-    static PVModule* create(const ModelOptions& options);
-
 
 
   protected:
 
     //! The constructor
-    PVModule(const ModelOptions& options);
+    explicit PVModule(const ModelOptions& options);
 
     //! The initialization
     virtual void do_init(void) final;

@@ -38,13 +38,9 @@ public:
   //! Destructor
   ~UserKeating(void) {};
 
-  //! Creator function
-  static UserKeating* create(const ModelOptions& options);
-
-  double get_alpha();
 
   //! Assign value to parameters
-  void do_init(void);
+  virtual void do_init(void) override;
 
 protected:
 
@@ -63,13 +59,6 @@ private:
 
 
 };
-
-inline
-UserKeating*
-UserKeating::create(const ModelOptions& options)
-{
-  return new UserKeating(options);
-}
 
 
 

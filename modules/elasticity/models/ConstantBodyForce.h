@@ -48,10 +48,7 @@ class TC_DLLOCAL ConstantBodyForce : public BodyForceModel
   //! Destructor
   ~ConstantBodyForce(void) {};
   
-  //! Creator function
-  static ConstantBodyForce* create(const ModelOptions& options);
-  
-  virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point){};
+  virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point) override {};
 
   protected:
 
@@ -59,19 +56,7 @@ class TC_DLLOCAL ConstantBodyForce : public BodyForceModel
     ConstantBodyForce(const ModelOptions& options);
 
     //! Initialize
-    virtual void do_init(void);
-
-    /* In some cases it might be useful to reimplement this: */
-    // virtual void do_init_interface(const PhysicalModel* comp_A,
-    //         const PhysicalModel* comp_B);
-
-
-    /* This is not used here: */
-    // virtual void read_database(void);
-
-
-    /* We do not use this here: */
-    // virtual void read_interface_database(void);
+    virtual void do_init(void) override;
 
 
 
@@ -82,13 +67,6 @@ class TC_DLLOCAL ConstantBodyForce : public BodyForceModel
 
 
 
-
-inline
-ConstantBodyForce*
-ConstantBodyForce::create(const ModelOptions& options)
-{ 
-  return new  ConstantBodyForce(options);
-}
 
 
 

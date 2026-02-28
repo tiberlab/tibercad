@@ -43,8 +43,6 @@ class TC_DLLOCAL PolarizationGrid : public SimulationInterface
     Polarization //
   };
 
-  static PolarizationGrid* create(const ModelOptions& options); 
-   
   virtual ~PolarizationGrid(void){};
 
   //! set number of monte Carlo steps
@@ -88,31 +86,31 @@ class TC_DLLOCAL PolarizationGrid : public SimulationInterface
 
  protected:
   
-  PolarizationGrid(const ModelOptions& opt);
+  explicit PolarizationGrid(const ModelOptions& opt);
 
-  void do_setup_solution_variables(void);
+  virtual void do_setup_solution_variables(void) override;
 
-  void do_init(void); 
+  virtual void do_init(void) override; 
   
-  void do_reinit(void); 
+  virtual void do_reinit(void) override; 
 
-  void do_solve(void);
+  virtual void do_solve(void) override;
 
-  void parse_options(void);
+  void parse_options(void) override;
 
-  void get_solution_secure(const Elem* elem,
+  virtual void get_solution_secure(const Elem* elem,
                            std::map<ID, std::vector<double> >& values,
-                           const std::vector<Point>& p);
+                           const std::vector<Point>& p) override;
   
   //NumericVector<double>& do_get_solution_vector(void);
     
-  void setup_mesh(void);
+  virtual void setup_mesh(void) override;
  
   void dot_product(unsigned int i, std::vector<double>& bins, double dr);
 
   void autocorrelation(int dir, unsigned int l1, unsigned int l2, std::vector<double>& c);
 
-  void plot_globaldata(void);
+  virtual void plot_globaldata(void) override;
 
  private:  
   

@@ -42,7 +42,7 @@ class WIBoundaryModel : public PhysicalModel
   public:
 
     //! Destructor
-    ~WIBoundaryModel(void) {};
+    virtual ~WIBoundaryModel(void) {};
 
     //! Creator function
     static WIBoundaryModel* create(const MaterialBoundary* boundary,

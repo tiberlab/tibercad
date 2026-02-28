@@ -61,10 +61,7 @@ public:
    * We do not declare it virtual here, as we will not allow
    * to derive from this class anyway.
    */
-  ~Vff(void);
-
-  //! We need a public static creator function
-  static Vff* create(const ModelOptions& options);
+  virtual ~Vff(void);
 
   void keating_gradient(double* grad, double* x, int n);
 
@@ -84,7 +81,7 @@ public:
 protected:
 
   //! The constructor
-  Vff(const ModelOptions& options);
+  explicit Vff(const ModelOptions& options);
 
   //! The initialization
   virtual void do_init(void) final;

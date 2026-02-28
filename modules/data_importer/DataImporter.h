@@ -55,9 +55,6 @@ class TC_DLLOCAL DataImporter : public SimulationInterface
     //! Destructor
     virtual ~DataImporter(void);
 
-    //! Creator function as in exmaple Poisson module
-    static DataImporter* create(const ModelOptions& options);
-
     //! Constructor
     DataImporter(const ModelOptions& options);
 

@@ -78,9 +78,6 @@ class TC_DLLOCAL Negf : public SimulationInterface
     //! Destructor
     virtual ~Negf(void);
 
-    //! We need a public static creator function
-    static Negf* create(const ModelOptions& options);
-
     void reorder(void);
 
     //! call-back method that KspaceIntegration invokes

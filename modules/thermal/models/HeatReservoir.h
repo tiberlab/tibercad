@@ -50,17 +50,14 @@ class TC_DLLOCAL HeatReservoir : public ThermalBoundaryModel
     //! Destructor
     ~HeatReservoir(void) {};
 
-    //! Creator function
-    static HeatReservoir* create(const ModelOptions& options);
-
     //! Calculate for a point on the given side
     virtual void calculate(const Elem* elem, unsigned int side,
-        const Point& point);
+        const Point& point) override;
 
   protected:
 
     //! Constructor
-    HeatReservoir(const ModelOptions& options);
+    explicit HeatReservoir(const ModelOptions& options);
 
     //! Initialize
     virtual void do_init(void) override;
@@ -82,14 +79,6 @@ HeatReservoir::HeatReservoir(const ModelOptions& options) :
 {
 }
 
-
-
-inline
-HeatReservoir*
-HeatReservoir::create(const ModelOptions& options)
-{
-  return new HeatReservoir(options);
-}
 
 
 

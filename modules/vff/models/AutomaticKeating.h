@@ -43,18 +43,15 @@ public:
   //! Destructor
   virtual ~AutomaticKeating(void) {};
 
-  //! Creator function
-  static AutomaticKeating* create(const ModelOptions& options);
-
 protected:
 
-  AutomaticKeating(const ModelOptions& options);
+  explicit AutomaticKeating(const ModelOptions& options);
 
   //! Assign value to parameters
-  virtual void do_init(void);
+  virtual void do_init(void) override;
 
   //! Print some info
-  virtual void do_print_info(void);
+  virtual void do_print_info(void) override;
 
 private:
 
@@ -111,14 +108,6 @@ private:
 
 };
 
-inline
-AutomaticKeating*
-AutomaticKeating::create(const ModelOptions& options)
-{
-
-     return new AutomaticKeating(options);
-
-}
 
 
 

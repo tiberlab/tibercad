@@ -56,9 +56,6 @@ public:
    */
   ~Tmm(void);
 
-  //! We need a public static creator function
-  static Tmm* create(const ModelOptions& options);
-
 
 
   //! defining a function to return M matrix
@@ -105,45 +102,45 @@ protected:
   /*!
    * \brief Constructor
    */
-  Tmm(const ModelOptions& options);
+  explicit Tmm(const ModelOptions& options);
 
 
-  virtual void plot_globaldata(void);
+  virtual void plot_globaldata(void) override;
 
 
   //! The initialization
-  virtual void do_init(void);
+  virtual void do_init(void) override;
 
 
   //! Parse the options from the input file
-  virtual void parse_options(void);
+  void parse_options(void);
 
 
   //! Setup the available variables
-  virtual void do_setup_solution_variables(void);
+  virtual void do_setup_solution_variables(void) override;
 
 
   //! Solve the Poisson equation
-  virtual void do_solve(void);
+  virtual void do_solve(void) override;
 
 
   //! Print some useful information
-  virtual void do_print_info(void);
+  virtual void do_print_info(void) override;
 
 
   //! We need to create a physical model
   virtual PhysicalModel* create_bulk_model(const ModelOptions& options,
-    const Material* mat) const;
+    const Material* mat) const override;
 
   //! We need to create boundary condition model
   virtual PhysicalModel* create_boundary_model(const ModelOptions& options,
-    const MaterialBoundary* boundary) const;
+    const MaterialBoundary* boundary) const override;
 
 
   //! We have to provide somehow our solution variables
   virtual void get_solution_secure(const Elem* elem,
     std::map<ID, std::vector<double> >& values,
-    const std::vector<Point>& p);
+    const std::vector<Point>& p) override;
 
   //! Get a mesh independent solution variable
 //  virtual void get_solution_secure(std::map<ID, std::vector<double> >& values);

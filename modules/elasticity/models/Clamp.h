@@ -42,13 +42,10 @@ class TC_DLLOCAL Clamp : public ElasticityBoundaryModel
     //! Destructor
     ~Clamp(void) {};
 
-    //! Creator function
-    static Clamp* create(const ModelOptions& options);
-
 
     //! Calculate for a point on the given side
     virtual void calculate(const libMesh::Elem* elem, unsigned int side,
-			   const libMesh::Point& point){};
+			   const libMesh::Point& point) override {};
 
   protected:
 
@@ -56,7 +53,7 @@ class TC_DLLOCAL Clamp : public ElasticityBoundaryModel
     Clamp(const ModelOptions& options);
 
     //! Initialize
-  virtual void do_init(void);
+  virtual void do_init(void) override;
 
 
   private:
@@ -72,12 +69,6 @@ Clamp::Clamp(const ModelOptions& options) :
 }
 
 
-inline
-Clamp*
-Clamp::create(const ModelOptions& options)
-{
-  return new Clamp(options);
-}
 
 
 #endif // TC_POISSONDIRICHLET_H

@@ -37,8 +37,6 @@ class ElementaryPWL : public ElementaryCell
 
     virtual ~ElementaryPWL(void) override {};
 
-    static ElementaryPWL* create(const ModelOptions& options);
-
 
   protected:
 

@@ -49,10 +49,7 @@ class TC_DLLOCAL ConversePiezo : public BodyForceModel
   //! Destructor
   ~ConversePiezo(void){};
   
-  //! Creator function
-  static ConversePiezo* create(const ModelOptions& options);
-  
-  virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point);
+  virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point) override;
 
   protected:
 
@@ -60,19 +57,13 @@ class TC_DLLOCAL ConversePiezo : public BodyForceModel
     ConversePiezo(const ModelOptions& options);
 
     //! Initialize
-    virtual void do_init(void);
-
-    /* In some cases it might be useful to reimplement this: */
-    // virtual void do_init_interface(const PhysicalModel* comp_A,
-    //         const PhysicalModel* comp_B);
+    virtual void do_init(void) override;
 
 
     /* This is not used here: */
-     virtual void read_database(void);
+     virtual void read_database(void) override;
 
 
-    /* We do not use this here: */
-    // virtual void read_interface_database(void);
 
 
 
@@ -89,15 +80,6 @@ class TC_DLLOCAL ConversePiezo : public BodyForceModel
   
 };
 
-
-
-
-inline
-ConversePiezo*
-ConversePiezo::create(const ModelOptions& options)
-{ 
-  return new  ConversePiezo(options);
-}
 
 
 

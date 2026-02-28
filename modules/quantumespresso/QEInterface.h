@@ -45,9 +45,6 @@ class QEInterface : public SimulationInterface
     //! Destructor
     ~QEInterface(void);
 
-    //! Create an instance of QEInterface
-    static QEInterface* create(const ModelOptions& options);
-
 
   protected:
 

@@ -48,22 +48,19 @@ class TC_DLLOCAL FluxBoundary : public ThermalBoundaryModel
   public:
 
     //! Destructor
-    ~FluxBoundary(void) {};
-
-    //! Creator function
-    static FluxBoundary* create(const ModelOptions& options);
+    virtual ~FluxBoundary(void) {};
 
     //! Calculate for a point on the given side
     virtual void calculate(const Elem* elem, unsigned int side,
-        const Point& point);
+        const Point& point) override;
 
   protected:
 
     //! Constructor
-    FluxBoundary(const ModelOptions& options);
+    explicit FluxBoundary(const ModelOptions& options);
 
     //! Initialize
-    virtual void do_init(void);
+    virtual void do_init(void) override;
 
 
   private:
@@ -81,13 +78,6 @@ FluxBoundary::FluxBoundary(const ModelOptions& options) :
 }
 
 
-
-inline
-FluxBoundary*
-FluxBoundary::create(const ModelOptions& options)
-{
-  return new FluxBoundary(options);
-}
 
 
 

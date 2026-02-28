@@ -138,11 +138,7 @@ Negf::~Negf(void)
   delete _libnegf;
 }
 
-Negf*
-Negf::create(const ModelOptions& options)
-{
-  return(new Negf(options));
-}
+
 
 PhysicalModel*
 Negf::create_bulk_model(const ModelOptions& options,

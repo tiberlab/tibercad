@@ -47,10 +47,7 @@ class TC_DLLOCAL ThermalStress : public BodyForceModel
   //! Destructor
   ~ThermalStress(void);
   
-  //! Creator function
-  static ThermalStress* create(const ModelOptions& options);
-  
-  virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point);
+  virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point) override;
 
   protected:
 
@@ -58,11 +55,11 @@ class TC_DLLOCAL ThermalStress : public BodyForceModel
     ThermalStress(const ModelOptions& options);
 
     //! Initialize
-    virtual void do_init(void);
+    virtual void do_init(void) override;
 
 
     //! Read expansion coefficients
-    virtual void read_database(void);
+    virtual void read_database(void) override;
 
 
   private:
@@ -80,16 +77,6 @@ class TC_DLLOCAL ThermalStress : public BodyForceModel
 
   
 };
-
-
-
-
-inline
-ThermalStress*
-ThermalStress::create(const ModelOptions& options)
-{ 
-  return new  ThermalStress(options);
-}
 
 
 

@@ -45,8 +45,6 @@ class PCDegradationH2O : public Photocurrent
 
     ~PCDegradationH2O(void) {};
 
-    static PCDegradationH2O* create(const ModelOptions& options);
-
 
   protected:
 

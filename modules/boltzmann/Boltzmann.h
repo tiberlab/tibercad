@@ -55,12 +55,12 @@ class TC_DLLOCAL Boltzmann : public SimulationInterface
      */
     ~Boltzmann(void);
 
-    //! We need a public static creator function
-    static Boltzmann* create(const ModelOptions& options);
-
 
 
   protected:
+
+    //! The constructor
+    Boltzmann(const ModelOptions& options);
 
     //! The initialization
     virtual void do_init(void);
@@ -348,12 +348,6 @@ class TC_DLLOCAL Boltzmann : public SimulationInterface
       GRAY,
       MaxTemp
     };
-
-  //! The constructor
-    /*!
-     * Being private disables further inheritance.
-     */
-    Boltzmann(const ModelOptions& options);
 
     //! The assembly function
     static void assemble_fourier(libMesh::EquationSystems& es, const std::string& system_name);

@@ -56,12 +56,6 @@ PolarizationGrid::PolarizationGrid(const ModelOptions& options) :
    has_solution_vector(false);
 }
 
-PolarizationGrid*
-PolarizationGrid::create(const ModelOptions& opt)
-{
-  return new PolarizationGrid(opt);
-}
-
 
 void
 PolarizationGrid::do_setup_solution_variables(void)

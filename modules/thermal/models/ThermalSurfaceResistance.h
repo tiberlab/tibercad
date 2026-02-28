@@ -52,16 +52,15 @@ class TC_DLLOCAL ThermalSurfaceResistance : public ThermalBoundaryModel
     //! Destructor
     ~ThermalSurfaceResistance(void) {};
 
-    //! Creator function
-    static ThermalSurfaceResistance* create(const ModelOptions& options);
-
     //! Calculate for a point on the given side
     virtual void calculate(const Elem* elem, unsigned int side,
-        const Point& point);
+        const Point& point) override;
+
+
   protected:
 
     //! Constructor
-    ThermalSurfaceResistance(const ModelOptions& options);
+    explicit ThermalSurfaceResistance(const ModelOptions& options);
 
     //! Initialize
     virtual void do_init(void);
@@ -81,15 +80,6 @@ ThermalSurfaceResistance::ThermalSurfaceResistance(const ModelOptions& options) 
   _temperature(0),
   _resistance(0)
 {
-}
-
-
-
-inline
-ThermalSurfaceResistance*
-ThermalSurfaceResistance::create(const ModelOptions& options)
-{
-  return new ThermalSurfaceResistance(options);
 }
 
 
