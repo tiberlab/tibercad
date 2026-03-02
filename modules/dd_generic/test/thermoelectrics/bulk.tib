@@ -18,7 +18,6 @@ Device
 Module dd_generic
 { 
 
-  name = driftdiffusion
   plot = (ElPotential, QFermi, Density, RefEnergy, Mobility, Conductivity, CurrentDensity, Flux, NetRecombination, ContactCurrents, ThermoelectricPower)
 
   Physics
