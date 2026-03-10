@@ -40,6 +40,8 @@
 using namespace std;
 
 
+CarrierProperties::~CarrierProperties(void) = default;
+
 
 CarrierProperties::CarrierProperties(const ModelOptions& options) :
     DriftDiffusionModelInterface(options),

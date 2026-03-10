@@ -42,7 +42,7 @@ class StiffnessModel;
 
 
 //! This is the base class for the Poisson physical model
-class TC_DLLOCAL ElasticityModel : public PhysicalModel
+class TC_DLEXPORT ElasticityModel : public PhysicalModel
 {
 
   public:

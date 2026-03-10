@@ -33,13 +33,16 @@
 #include <ostream>
 
 
-// Base class for elementary cell models
-class ElementaryCell : public PhysicalModel
+/*!
+ * \brief Base class for elementary cell models
+ *
+ */
+class TC_DLEXPORT ElementaryCell : public PhysicalModel
 {
 
   public:
 
-    virtual ~ElementaryCell(void) {};
+    virtual ~ElementaryCell(void);
 
     //! Write the netlist
     /*!

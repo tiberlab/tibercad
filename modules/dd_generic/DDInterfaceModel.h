@@ -55,7 +55,7 @@ class SimulationInterface;
  * to allow for Dirichlet boundary conditions. For \f$\beta = 1\f$, the boundary
  * condition is of Robin type, for \f$\beta = 0\f$, it is of Dirichlet type.
  */
-class DDInterfaceModel : public DriftDiffusionProperties
+class TC_DLEXPORT DDInterfaceModel : public DriftDiffusionProperties
 {
 
   public:

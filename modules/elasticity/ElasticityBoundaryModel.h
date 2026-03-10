@@ -40,7 +40,7 @@
 //class Point;
 
 //! This is the base class for the Poisson physical model
-class ElasticityBoundaryModel : public PhysicalModel
+class TC_DLEXPORT ElasticityBoundaryModel : public PhysicalModel
 {
 
   public:

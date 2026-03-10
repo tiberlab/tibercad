@@ -62,7 +62,7 @@ class RecombinationModelInterface;
 
 
 //! The base class for all drift-diffusion related semiconductor models
-class DriftDiffusionProperties : public PhysicalModel
+class TC_DLEXPORT DriftDiffusionProperties : public PhysicalModel
 {
 
   private:

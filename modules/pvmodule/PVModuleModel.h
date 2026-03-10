@@ -37,7 +37,7 @@ class ElementaryCell;
 
 
 //! This is the basic physical modle of PVModule
-class PVModuleModel : public PhysicalModel
+class TC_DLEXPORT PVModuleModel : public PhysicalModel
 {
 
   public:
@@ -52,7 +52,7 @@ class PVModuleModel : public PhysicalModel
     };
 
     //! Destructor
-    ~PVModuleModel(void) {};
+    virtual ~PVModuleModel(void);
 
     //! Creator function
     static PVModuleModel* create(const Material* mat, const ModelOptions& options);

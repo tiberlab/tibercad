@@ -39,7 +39,7 @@ class Point;
 
 
 //! Base class for band parameter models
-class BandProperties : public DriftDiffusionModelInterface
+class TC_DLEXPORT BandProperties : public DriftDiffusionModelInterface
 {
 
   public:

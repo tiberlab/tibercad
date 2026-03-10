@@ -36,6 +36,8 @@ PVModuleBoundaryModel::PVModuleBoundaryModel(const ModelOptions& options) :
 {
 }
 
+PVModuleBoundaryModel::~PVModuleBoundaryModel(void) = default;
+
 
 TiberModelObject*
 PVModuleBoundaryModel::_create(const ModelOptions& options)

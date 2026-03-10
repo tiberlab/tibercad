@@ -37,7 +37,7 @@ class Elem;
 
 
 //! This is the basic physical modle of PVModule
-class PVModuleBoundaryModel : public PhysicalModel
+class TC_DLEXPORT PVModuleBoundaryModel : public PhysicalModel
 {
 
   public:
@@ -58,7 +58,7 @@ class PVModuleBoundaryModel : public PhysicalModel
     };
 
     //! Destructor
-    ~PVModuleBoundaryModel(void) {};
+    virtual ~PVModuleBoundaryModel(void);
 
     //! Creator function
     static PVModuleBoundaryModel* create(const MaterialBoundary* boundary,
