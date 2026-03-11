@@ -32,13 +32,13 @@
 
 
 //! This is the base class for the WI physical model
-class WIModel : public PhysicalModel
+class TC_DLEXPORT WIModel : public PhysicalModel
 {
 
   public:
 
     //! Destructor
-    virtual ~WIModel(void) {};
+    virtual ~WIModel(void);
 
     //! Creator function
     static WIModel* create(const Material* mat, const ModelOptions& options);

@@ -36,13 +36,13 @@ class Point;
 
 
 //! The base class for WI boundary conditions
-class WIBoundaryModel : public PhysicalModel
+class TC_DLEXPORT WIBoundaryModel : public PhysicalModel
 {
 
   public:
 
     //! Destructor
-    virtual ~WIBoundaryModel(void) {};
+    virtual ~WIBoundaryModel(void);
 
     //! Creator function
     static WIBoundaryModel* create(const MaterialBoundary* boundary,
