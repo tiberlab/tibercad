@@ -37,7 +37,7 @@ namespace libMesh
 }
 
 // Base class for InCoherence model
-class TC_DLEXPORT OpticalRecombination : public TmmDipoleSource
+class TC_DLLOCAL OpticalRecombination : public TmmDipoleSource
 {
 
   public:

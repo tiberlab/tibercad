@@ -38,7 +38,11 @@
 class Keating;
 
 
-//! This is the base class for the Poisson physical model
+//! This is the base class for VFF models
+/*!
+ * Right now there are no derived classes from this, so it is declared local,
+ * but in future there might be a need to specialize this class.
+ */
 class TC_DLLOCAL VffModel : public PhysicalModel
 {
 

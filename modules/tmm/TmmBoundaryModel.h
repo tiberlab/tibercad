@@ -39,7 +39,7 @@ namespace libMesh
 }
 
 //! The base class for thermal balance boundary conditions
-class TmmBoundaryModel : public  PhysicalModel
+class TC_DLEXPORT TmmBoundaryModel : public  PhysicalModel
 {
 
 public:

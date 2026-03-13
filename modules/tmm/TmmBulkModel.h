@@ -30,12 +30,10 @@
 
 #include "tibercad/physics/PhysicalModel.h"
 #include "TmmDipoleSource.h"
-// #include "Tmm.h"
 
-// class TmmDipoleSource
 
 //! This is the base class for the TMM bulk physical model
-class TmmBulkModel : public PhysicalModel
+class TC_DLEXPORT TmmBulkModel : public PhysicalModel
 {
 
 public:

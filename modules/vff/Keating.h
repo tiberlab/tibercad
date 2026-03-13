@@ -32,7 +32,7 @@
 #include "tibercad/io/Messages.h"
 
 //! The base class for Keating model parameters
-class Keating : public PhysicalModel
+class TC_DLEXPORT Keating : public PhysicalModel
 {
   public:
 
