@@ -140,7 +140,17 @@ DLLoader::open_library(const string& name, DLLoader::LibraryInterface& iface)
 
   if (file_exists)
   {
-    iface.handle = dlopen(libfile.c_str(), TC_DLOPENFLAGS);
+    // check if it is already resident
+    iface.handle = dlopen(libfile.c_str(), RTLD_NOLOAD | TC_DLOPENFLAGS);
+
+    if (iface.handle == nullptr)
+    {
+      iface.handle = dlopen(libfile.c_str(), TC_DLOPENFLAGS);
+
+      if (iface.handle != nullptr)
+        Messages::info("(using " + libfile + ")");
+    }
+
 
     if (iface.handle != nullptr)
     {
@@ -154,8 +164,6 @@ DLLoader::open_library(const string& name, DLLoader::LibraryInterface& iface)
             << " (missing creation/destruction methods)";
         throw RuntimeException(os.str());
       }
-
-      Messages::info("(using " + libfile + ")");
     }
     else
     {
