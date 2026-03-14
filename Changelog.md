@@ -7,6 +7,19 @@ Modules can have their own changelog file.
 
 ## [Unreleased]
 
+### Added
+
+
+### Fixed
+
+- fixed some cases of double deleting of submodels
+
+### Changed
+
+- changed factory approach for model plugins: no need anymore for explicit create() functions  
+
+
+
 ## [v3.5.0] - 2024-12-22
 
 ### Added
