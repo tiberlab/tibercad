@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _PERMITTIVITYMODEL_H_
-#define _PERMITTIVITYMODEL_H_
+#ifndef TC_PERMITTIVITYMODEL_H
+#define TC_PERMITTIVITYMODEL_H
 
 #include "tibercad/physics/PhysicalModel.h"
 #include "tibercad/physics/Material.h"
@@ -38,7 +38,7 @@ USELIBMESHTYPE(RealTensor);
 
 
 // Base class for charge density models
-class TBDLEXPORT PermittivityModel : public PhysicalModel
+class PermittivityModel : public PhysicalModel
 {
 
   public:
@@ -119,4 +119,4 @@ PermittivityModel::rotate(void)
 
 }
 
-#endif // _POLARIZATIONMODEL_H_
+#endif // TC_POLARIZATIONMODEL_H

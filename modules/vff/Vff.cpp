@@ -68,11 +68,6 @@ Vff::~Vff(void)
   // there's nothing to be done
 }
 
-Vff*
-Vff::create(const ModelOptions& options)
-{
-  return new Vff(options);
-}
 
 PhysicalModel*
 Vff::create_bulk_model(const ModelOptions& options,

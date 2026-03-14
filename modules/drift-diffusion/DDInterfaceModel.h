@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _DDINTERFACEMODEL_H_
-#define _DDINTERFACEMODEL_H_
+#ifndef TC_DDINTERFACEMODEL_H
+#define TC_DDINTERFACEMODEL_H
 
 #include "DriftDiffusionProperties.h"
 #include "tibercad/module/SolutionProvider.h"
@@ -56,7 +56,7 @@ class FowlerNordheim;
  * to allow for Dirichlet boundary conditions. For \f$\beta = 1\f$, the boundary
  * condition is of Robin type, for \f$\beta = 0\f$, it is of Dirichlet type.
  */
-class DDInterfaceModel : public DriftDiffusionProperties
+class TC_DLEXPORT DDInterfaceModel : public DriftDiffusionProperties
 {
 
   public:
@@ -297,7 +297,7 @@ class DDInterfaceModel : public DriftDiffusionProperties
 
 
     //! The creation method
-    static TiberModelObject* _create(const ModelOptions& options, const void*)
+    static TiberModelObject* _create(const ModelOptions& options)
     {
       return new DDInterfaceModel(options);
     }
@@ -526,4 +526,4 @@ DDInterfaceModel::get_hflux_simulation(void) const
 }
 
 
-#endif // _DDINTERFACEMODEL_H_
+#endif // TC_DDINTERFACEMODEL_H

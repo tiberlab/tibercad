@@ -24,29 +24,29 @@
  */
 
 
-#ifndef _TIBER_DLL_H_
-#define _TIBER_DLL_H_
+#ifndef TC_TIBER_DLL_H
+#define TC_TIBER_DLL_H
 
 #include "tibercad/base/tiber_config.h"
 
 #if defined(_WIN32)
-# define TBDLEXPORT __declspec(dllexport)
-# define TBDLLOCAL __declspec(dllimport)
+# define TC_DLEXPORT __declspec(dllexport)
+# define TC_DLLOCAL __declspec(dllimport)
 #else
 # ifdef TC_HAVE_FUNC_ATTRIBUTE_VISIBILITY
-#   define TBDLEXPORT __attribute__ ((visibility("default")))
-#   define TBDLLOCAL __attribute__ ((visibility("hidden")))
+#   define TC_DLEXPORT __attribute__ ((visibility("default")))
+#   define TC_DLLOCAL __attribute__ ((visibility("hidden")))
 # else
-#   define TBDLEXPORT
-#   define TBDLLOCAL
+#   define TC_DLEXPORT
+#   define TC_DLLOCAL
 # endif
 #endif
 
 
 // these are the symbol names for the dll entry points
-#define TBCREATEFUNC __create
-#define TBDESTROYFUNC __destroy
-#define TBCREATEFUNCSYM "__create"
-#define TBDESTROYFUNCSYM "__destroy"
+#define TC_CREATEFUNC tc_model_create
+#define TC_DESTROYFUNC tc_model_destroy
+#define TC_CREATEFUNCSYM "tc_model_create"
+#define TC_DESTROYFUNCSYM "tc_model_destroy"
 
-#endif // _TIBER_DLL_H_
+#endif // TC_TIBER_DLL_H

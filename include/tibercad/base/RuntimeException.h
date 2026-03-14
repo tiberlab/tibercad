@@ -25,8 +25,8 @@
 
 
 
-#ifndef _RUNTIMEEXCEPTION_H_
-#define _RUNTIMEEXCEPTION_H_
+#ifndef TC_RUNTIMEEXCEPTION_H
+#define TC_RUNTIMEEXCEPTION_H
 
 #include "tibercad/base/ExceptionTracer.h"
 
@@ -51,4 +51,4 @@ class RuntimeException : public std::runtime_error, ExceptionTracer
 
 
 
-#endif // _RUNTIMEEXCEPTION_H_
+#endif // TC_RUNTIMEEXCEPTION_H

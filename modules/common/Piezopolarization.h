@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _PIEZOPOLARIZATION_H_
-#define _PIEZOPOLARIZATION_H_
+#ifndef TC_PIEZOPOLARIZATION_H
+#define TC_PIEZOPOLARIZATION_H
 
 #include "tibercad/physics/misc/PolarizationModel.h"
 #include "tibercad/module/SolutionProvider.h"
@@ -34,7 +34,7 @@
 
 
 // Basic Piezopolarization model
-class TBDLLOCAL Piezopolarization: public PolarizationModel
+class TC_DLLOCAL Piezopolarization: public PolarizationModel
 {
 
   public:
@@ -92,4 +92,4 @@ Piezopolarization::create(const ModelOptions& options)
 }
 
 
-#endif // _PIEZOPOLARIZATION_H_
+#endif // TC_PIEZOPOLARIZATION_H

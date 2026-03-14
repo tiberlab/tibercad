@@ -384,13 +384,6 @@ Tmm::~Tmm(void)
 }
 
 
-Tmm*
-Tmm::create(const ModelOptions& options)
-{
-  return new Tmm(options);
-}
-
-
 
 void
 Tmm::do_init(void)

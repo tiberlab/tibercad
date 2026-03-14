@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _DRIFTDIFFUSIONMODELINTERFACE_H_
-#define _DRIFTDIFFUSIONMODELINTERFACE_H_
+#ifndef TC_DRIFTDIFFUSIONMODELINTERFACE_H
+#define TC_DRIFTDIFFUSIONMODELINTERFACE_H
 
 
 #include "tibercad/base/TypeDefs.h"
@@ -42,7 +42,7 @@ class DriftDiffusionProperties;
  * recombination models etc. which will be used in conjunction with
  * a semiconductor model derived from DriftDiffusionProperties
  */
-class TBDLEXPORT DriftDiffusionModelInterface : public PhysicalModel
+class TC_DLEXPORT DriftDiffusionModelInterface : public PhysicalModel
 {
 
   public:
@@ -90,4 +90,4 @@ DriftDiffusionModelInterface::DriftDiffusionModelInterface(const ModelOptions& o
 
 
 
-#endif // _DRIFTDIFFUSIONMODELINTERFACE_H_
+#endif // TC_DRIFTDIFFUSIONMODELINTERFACE_H

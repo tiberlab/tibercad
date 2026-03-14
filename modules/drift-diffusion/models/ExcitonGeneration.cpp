@@ -32,6 +32,13 @@
 #include "tibercad/module/TiberModule.h"
 
 
+ExcitonGeneration::ExcitonGeneration(const ModelOptions& options)
+  : RecombinationModelInterface(options),
+    C_(1e-10)
+{
+  set_name("ExcitonGeneration");
+}
+
 
 void
 ExcitonGeneration::do_init(void)

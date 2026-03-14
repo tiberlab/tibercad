@@ -35,8 +35,8 @@
  */
 
 
-#ifndef _DATAIMPORTER_H_
-#define _DATAIMPORTER_H_
+#ifndef TC_DATAIMPORTER_H
+#define TC_DATAIMPORTER_H
 
 #include <string>
 
@@ -49,14 +49,11 @@ class TensorGrid;
  * \brief Module to read 1d, 2d or 3d data from files
  * 
  */
-class TBDLLOCAL DataImporter : public SimulationInterface
+class TC_DLLOCAL DataImporter : public SimulationInterface
 {
   public:
     //! Destructor
     virtual ~DataImporter(void);
-
-    //! Creator function as in exmaple Poisson module
-    static DataImporter* create(const ModelOptions& options);
 
     //! Constructor
     DataImporter(const ModelOptions& options);

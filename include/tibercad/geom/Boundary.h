@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _BOUNDARY_H_
-#define _BOUNDARY_H_
+#ifndef TC_BOUNDARY_H
+#define TC_BOUNDARY_H
 
 #include "tibercad/base/TypeDefs.h"
 #include "tibercad/base/ModelOptions.h"
@@ -68,7 +68,7 @@ class Boundary
     /*!
      * \param name a user defined name to identify this boundary
      */
-    Boundary(const std::string& names, const ModelOptions& options) TBDLLOCAL;
+    Boundary(const std::string& names, const ModelOptions& options) TC_DLLOCAL;
 
     //! Destructor
     ~Boundary(void);
@@ -76,7 +76,7 @@ class Boundary
     //! Add a boundary property for simulation with ID \c simulator_id
     /*! \deprecated BoundaryProperties are deprecated */
     void add_boundary_properties(BoundaryProperties* properties,
-        ID simulator_id) TBDLLOCAL;
+        ID simulator_id) TC_DLLOCAL;
 
     //! Get the boundary property for simulation with ID \c simulator_id
     /*! \deprecated BoundaryProperties are deprecated */
@@ -276,4 +276,4 @@ Boundary::get_options(void) const
   return _options;
 }
 
-#endif // _BOUNDARY_H_
+#endif // TC_BOUNDARY_H

@@ -32,7 +32,7 @@ using  namespace  std ;
 /*!
   Contains two Vertex pointers.
 */
-class TBDLLOCAL ISE_Edge
+class TC_DLLOCAL ISE_Edge
 {
  public:
   //!  Constructor 

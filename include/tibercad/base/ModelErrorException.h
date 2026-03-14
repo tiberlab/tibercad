@@ -25,8 +25,8 @@
 
 
 
-#ifndef _MODELERROREXCEPTION_H_
-#define _MODELERROREXCEPTION_H_
+#ifndef TC_MODELERROREXCEPTION_H
+#define TC_MODELERROREXCEPTION_H
 
 #include "tibercad/base/ExceptionTracer.h"
 
@@ -51,4 +51,4 @@ class ModelErrorException : public std::runtime_error, ExceptionTracer
 
 
 
-#endif // _MODELERROREXCEPTION_H_
+#endif // TC_MODELERROREXCEPTION_H

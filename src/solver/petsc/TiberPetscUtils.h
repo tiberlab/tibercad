@@ -24,8 +24,8 @@
 
 
 
-#ifndef _TIBERPETSCUTILS_H_
-#define _TIBERPETSCUTILS_H_
+#ifndef TC_TIBERPETSCUTILS_H
+#define TC_TIBERPETSCUTILS_H
 
 #include "PetscRuntimeError.h"
 
@@ -81,4 +81,4 @@ class TiberPetscUtils
 
 
 
-#endif // _TIBERPETSCUTILS_H_
+#endif // TC_TIBERPETSCUTILS_H

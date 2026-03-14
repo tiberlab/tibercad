@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _DOPANT_H_
-#define _DOPANT_H_
+#ifndef TC_DOPANT_H
+#define TC_DOPANT_H
 
 #include "tibercad/base/ModelOptions.h"
 #include "tibercad/base/tiber_dll.h"
@@ -42,7 +42,7 @@ class Point;
 
 
 //! Describes a dopant with a single energy level
-class TBDLEXPORT Dopant
+class Dopant
 {
 
   public:

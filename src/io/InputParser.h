@@ -24,8 +24,8 @@
 
 
 
-#ifndef _INPUTPARSER_H_
-#define _INPUTPARSER_H_
+#ifndef TC_INPUTPARSER_H
+#define TC_INPUTPARSER_H
 
 #include <iostream>
 #include <fstream>
@@ -120,4 +120,4 @@ class InputParser
 
 
 
-#endif // endif define   _INPUTPARSER_H_
+#endif // endif define   TC_INPUTPARSER_H

@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _ELECTRICALCONTACT_H_
-#define _ELECTRICALCONTACT_H_
+#ifndef TC_ELECTRICALCONTACT_H
+#define TC_ELECTRICALCONTACT_H
 
 
 #include "DDInterfaceModel.h"
@@ -47,7 +47,7 @@ class FowlerNordheim;
  * This class is derived also from Variable to be able to make
  * a voltage sweep.
  */
-class TBDLEXPORT ElectricalContact : public DDInterfaceModel
+class TC_DLEXPORT ElectricalContact : public DDInterfaceModel
 {
   public:
 
@@ -220,4 +220,4 @@ ElectricalContact::get_recombination_velocities(std::vector<double>& vrec) const
 
 
 
-#endif // _ELECTRICALCONTACT_H_
+#endif // TC_ELECTRICALCONTACT_H

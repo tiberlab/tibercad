@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _GENERICRECOMBINATION_H_
-#define _GENERICRECOMBINATION_H_
+#ifndef TC_GENERICRECOMBINATION_H
+#define TC_GENERICRECOMBINATION_H
 
 #include "RecombinationModelInterface.h"
 #include "tibercad/base/TypeDefs.h"
@@ -38,16 +38,13 @@ class SimulationInterface;
  * This class implements recombination processes that can be
  * modeled by \f[R=C\prod_i n_i^{\alpha_i}(1-\exp{1/kT\sum_i\pm\alpha_i\phi_i}\f]
  */
-class TBDLLOCAL GenericRecombination : public RecombinationModelInterface
+class TC_DLLOCAL GenericRecombination : public RecombinationModelInterface
 {
 
   public:
 
     //! Destructor
     virtual ~GenericRecombination(void) {};
-
-    //! Create a ConstantMobility object
-    static GenericRecombination* create(const ModelOptions& options);
 
     
   protected:
@@ -85,16 +82,8 @@ GenericRecombination::GenericRecombination(const ModelOptions& options)
 }
 
 
-inline
-GenericRecombination*
-GenericRecombination::create(const ModelOptions& options)
-{
-  return new GenericRecombination(options);
-}
 
 
 
 
-
-
-#endif // _GENERICRECOMBINATION_H__
+#endif // TC_GENERICRECOMBINATION_H

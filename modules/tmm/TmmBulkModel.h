@@ -25,17 +25,15 @@
  */
 
 
-#ifndef _TMMBULKMODEL_H_
-#define _TMMBULKMODEL_H_
+#ifndef TC_TMMBULKMODEL_H
+#define TC_TMMBULKMODEL_H
 
 #include "tibercad/physics/PhysicalModel.h"
 #include "TmmDipoleSource.h"
-// #include "Tmm.h"
 
-// class TmmDipoleSource
 
 //! This is the base class for the TMM bulk physical model
-class TmmBulkModel : public PhysicalModel
+class TC_DLEXPORT TmmBulkModel : public PhysicalModel
 {
 
 public:
@@ -105,7 +103,7 @@ protected:
 private:
 
   //! The constructor method
-  static TiberModelObject* _create(const ModelOptions& options, const void*);
+  static TiberModelObject* _create(const ModelOptions& options);
 
   //! The destructor method
   static void _destroy(TiberModelObject* p);
@@ -138,4 +136,4 @@ private:
 
 
 
-#endif // _TMMBULKMODEL_H_
+#endif // TC_TMMBULKMODEL_H

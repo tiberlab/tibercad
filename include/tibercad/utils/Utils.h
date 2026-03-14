@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _UTILS_H_
-#define _UTILS_H_
+#ifndef TC_UTILS_H
+#define TC_UTILS_H
 
 //#include "tibercad/base/InitFailedException.h"
 
@@ -483,4 +483,4 @@ Utils::bernoulli_inv(double x)
 
 
 
-#endif // _UTILS_H_
+#endif // TC_UTILS_H

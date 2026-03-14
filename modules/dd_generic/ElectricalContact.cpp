@@ -27,7 +27,6 @@
 
 #include "ElectricalContact.h"
 #include "DriftDiffusionProperties.h"
-#include "tibercad/physics/misc/ParticleDensity.h"
 #include "tibercad/base/Initializer.h"
 
 

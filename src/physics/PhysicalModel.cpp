@@ -31,7 +31,6 @@
 
 #include "tibercad/utils/Utils.h"
 #include "tibercad/physics/misc/Trap.h"
-#include "tibercad/physics/misc/ParticleDensity.h"
 #include "tibercad/physics/misc/PolarizationModel.h"
 
 #include "tibercad/physics/semiconductormodels/ZbSemiconductor.h"
@@ -118,19 +117,17 @@ PhysicalModel::_create(const string& name,
     mod = Trap::create(options);
   else if (name == "polarization")
     mod = PolarizationModel::create(options);
-  else if (name == "particle_density")
-    mod = ParticleDensity::create(options);
 
 
   if (mod == nullptr)
   {
     // first try without module directory
-    if ((mod = create_from_library<PhysicalModel>(name, options, owner)) == 0)
+    if ((mod = create_from_library<PhysicalModel>(name, options)) == 0)
     {
       if (module.size() >  0)
       {
         mod = create_from_library<PhysicalModel>(
-            module + "/" + name, options, owner);
+            module + "/" + name, options);
       }
     }
   }
@@ -172,7 +169,7 @@ PhysicalModel::_create(create_t create_fnc, destroy_t destroy_fnc,
     const string& module)
 {
   PhysicalModel* mod = dynamic_cast<PhysicalModel*>(
-      create_from_function(create_fnc, destroy_fnc, options, owner));
+      create_from_function(create_fnc, destroy_fnc, options));
 
   if (mod != nullptr)
   {
@@ -190,7 +187,7 @@ PhysicalModel::_create(create_t create_fnc, destroy_t destroy_fnc,
     //string defaultname = mod->get_default_name();
     //string defaultname = "";
     //mod->set_name(mod->get_options().get_option("name", defaultname));
-    mod->get_options().delete_option("name");
+    //mod->get_options().delete_option("name");
 #ifdef DEBUG
     cerr << "Add model (ID = " << mod->get_id() <<
       " name = " << mod->get_name() << " type_id = " <<
@@ -210,6 +207,9 @@ void
 PhysicalModel::_register_model(
     PhysicalModel* model)
 {
+  // since all models are created through a consistent factory,
+  // mangled type names are guaranteed to be the same for instances
+  // of the same class.
   const string name = typeid(*model).name();
   model_id_iterator it = _model_ids.find(name);
 
@@ -289,26 +289,18 @@ PhysicalModel::copy(void) const
 PhysicalModel*
 PhysicalModel::create_new(void) const
 {
-  PhysicalModel* pmi = create_from_object(this, get_owner());
+  PhysicalModel* pmi = create_from_object(this);
   if (pmi == nullptr)
   {
     ostringstream os;
-    //os << "Model " << get_name() << " cannot create a new instance of "
     os << "Model cannot create a new instance of "
         "the same type as the method \"create_new()\" is not "
         "reimplemented.";
     throw ModelErrorException(os.str());
   }
+  pmi->set_owner(_owner);
 
   return pmi;
-}
-
-
-
-string
-PhysicalModel::get_default_name(void) const
-{
-  return Utils::extract_typename(typeid(*this));
 }
 
 
@@ -433,8 +425,7 @@ PhysicalModel::init(void)
 
     // Now we initialize all "official" submodels
     SubmodelIterator smit(submodels_begin());
-    const SubmodelIterator smend(submodels_end());
-    for ( ; smit != smend; ++smit)
+    const SubmodelIterator smend(submodels_end());    for ( ; smit != smend; ++smit)
     {
       PhysicalModel* pm = smit->second;
 

@@ -3047,7 +3047,7 @@ DSSC::do_setup_solution_variables(void)
       {
         ID id = static_cast<ID>(NetRecombination) + ids[i];
         const std::string& name =
-            sc->get_recombination_model(ids[i])->get_default_name();
+            sc->get_recombination_model(ids[i])->get_name();
         // if recombination should be plotted, add it also to the plot variables
         if (plot_rec) add_plot_variable(name);
         declare_solution_ext(name, id, SolutionDescriptor::REAL,

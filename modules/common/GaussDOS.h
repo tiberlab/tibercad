@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _GAUSSDOS_H_
-#define _GAUSSDOS_H_
+#ifndef TC_GAUSSDOS_H
+#define TC_GAUSSDOS_H
 
 
 #include "tibercad/physics/misc/DensityOfStates.h"
@@ -52,7 +52,7 @@
 * 	G\left( {\zeta ,s} \right) = \frac{1}{2}\operatorname{erfc} \left( { - \frac{\zeta }{{s\sqrt 2 }}H\left( s \right)} \right)
 * \f
 */
-class TBDLEXPORT GaussDOS : public DensityOfStates
+class TC_DLEXPORT GaussDOS : public DensityOfStates
 {
 
   public:
@@ -137,4 +137,4 @@ GaussDOS::create(const ModelOptions& options)
 }
 
 
-#endif // _GAUSSDOS_H_
+#endif // TC_GAUSSDOS_H

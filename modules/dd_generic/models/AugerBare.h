@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _AUGERBARE_H_
-#define _AUGERBARE_H_
+#ifndef TC_AUGERBARE_H
+#define TC_AUGERBARE_H
 
 #include "RecombinationModelInterface.h"
 #include "tibercad/base/TypeDefs.h"
@@ -38,16 +38,13 @@
  * involving three particles, e.g.
  * \[2n + p \rightleftarrow n^*\]
  */
-class TBDLLOCAL AugerBare : public RecombinationModelInterface
+class TC_DLLOCAL AugerBare : public RecombinationModelInterface
 {
 
   public:
 
     //! Destructor
     virtual ~AugerBare(void) {};
-
-    //! Create a ConstantMobility object
-    static AugerBare* create(const ModelOptions& options);
 
     
   protected:
@@ -86,15 +83,7 @@ AugerBare::AugerBare(const ModelOptions& options)
 }
 
 
-inline
-AugerBare*
-AugerBare::create(const ModelOptions& options)
-{
-  return new AugerBare(options);
-}
 
 
 
-
-
-#endif // _AUGERBARE_H_
+#endif // TC_AUGERBARE_H

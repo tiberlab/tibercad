@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _LIBMESHDEFS_H_
-#define _LIBMESHDEFS_H_
+#ifndef TC_LIBMESHDEFS_H
+#define TC_LIBMESHDEFS_H
 
 
 //! Definitions for easier use of libMesh stuff
@@ -49,4 +49,4 @@ typedef Real Number;
 USELIBMESHTYPE(Real);
 USELIBMESHTYPE(Number);
 
-#endif // _LIBMESHDEFS_H_
+#endif // TC_LIBMESHDEFS_H

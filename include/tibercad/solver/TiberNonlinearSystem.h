@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _TIBERNONLINEARSYSTEM_H_
-#define _TIBERNONLINEARSYSTEM_H_
+#ifndef TC_TIBERNONLINEARSYSTEM_H
+#define TC_TIBERNONLINEARSYSTEM_H
 
 #include "tibercad/solver/TiberEqSystem.h"
 #include "tibercad/base/libMeshDefs.h"
@@ -249,4 +249,4 @@ TiberNonlinearSystem::get_xmonitor(void)
 }
 
 
-#endif // _TIBERNONLINEARSYSTEM_H_
+#endif // TC_TIBERNONLINEARSYSTEM_H

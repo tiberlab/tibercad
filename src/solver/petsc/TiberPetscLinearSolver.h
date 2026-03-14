@@ -24,8 +24,8 @@
 
 
 
-#ifndef _TIBERPETSCLINEARSOLVER_H_
-#define _TIBERPETSCLINEARSOLVER_H_
+#ifndef TC_TIBERPETSCLINEARSOLVER_H
+#define TC_TIBERPETSCLINEARSOLVER_H
 
 #include "solver/TiberLinearSolver.h"
 #include "PetscRuntimeError.h"
@@ -176,4 +176,4 @@ KSP TiberPetscLinearSolver::get_ksp(void)
 
 
 
-#endif // _TIBERPETSCLINEARSOLVER_H_
+#endif // TC_TIBERPETSCLINEARSOLVER_H

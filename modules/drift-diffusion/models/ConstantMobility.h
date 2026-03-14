@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _CONSTANTMOBILITY_H_
-#define _CONSTANTMOBILITY_H_
+#ifndef TC_CONSTANTMOBILITY_H
+#define TC_CONSTANTMOBILITY_H
 
 #include "MobilityModelInterface.h"
 
@@ -41,16 +41,13 @@
  * \mu = \mu_{max} \left(\frac{T}{T_0}\right)^{-\gamma}
  * \f]
  */
-class TBDLLOCAL ConstantMobility : public MobilityModelInterface
+class TC_DLLOCAL ConstantMobility : public MobilityModelInterface
 {
 
   public:
 
     //! Destructor
     virtual ~ConstantMobility(void);
-
-    //! Create a ConstantMobility object
-    static ConstantMobility* create(const ModelOptions& options);
 
     //! \copydoc MobilityModelInterface::get_mobility()
     virtual double get_mobility(void);
@@ -103,13 +100,6 @@ ConstantMobility::ConstantMobility(const ModelOptions& options)
 }
 
 
-inline
-ConstantMobility*
-ConstantMobility::create(const ModelOptions& options)
-{
-  return new ConstantMobility(options);
-}
-
 
 inline
 PhysicalModel*
@@ -124,4 +114,4 @@ ConstantMobility::~ConstantMobility(void)
 {
 }
 
-#endif // _CONSTANTMOBILITY_H_
+#endif // TC_CONSTANTMOBILITY_H

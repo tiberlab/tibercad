@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _FOWLERNORDHEIM_H_
-#define _FOWLERNORDHEIM_H_
+#ifndef TC_FOWLERNORDHEIM_H
+#define TC_FOWLERNORDHEIM_H
 
 
 //! Implements the Fowler-Nordheim field emission model
@@ -104,4 +104,4 @@ FowlerNordheim::set_velocity(double velocity)
   _velocity = velocity;
 }
 
-#endif // _FOWLERNORDHEIM_H_
+#endif // TC_FOWLERNORDHEIM_H

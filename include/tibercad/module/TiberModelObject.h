@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _TIBERMODELOBJECT_H_
-#define _TIBERMODELOBJECT_H_
+#ifndef TC_TIBERMODELOBJECT_H
+#define TC_TIBERMODELOBJECT_H
 
 #include "tibercad/base/ModelOptions.h"
 #include "tibercad/base/Initializer.h"
@@ -87,12 +87,17 @@ class TiberModelObject
 
     //! Set the name of a model
     /*!
-     * Use with caution as it could break standard behaviour!
+     * If for some reason the automatically assigned name from 
+     * the input file is usnuitable, this method can be used
+     * to reassign a new name.
      */
     void set_name(const std::string& name);
 
 
     //! Get the user defined name of this model
+    /*!
+     * This is the name of the model/simulations as read from the input file.
+     */
     const std::string& get_name(void) const;
 
 
@@ -107,7 +112,7 @@ class TiberModelObject
 
 
     //! The creation method signature
-    typedef TiberModelObject* (*create_t)(const ModelOptions&, const void*);
+    typedef TiberModelObject* (*create_t)(const ModelOptions&);
 
 
     //! The destruction method signature
@@ -118,7 +123,7 @@ class TiberModelObject
     /*!
      * \param options the options to be assigned to this object
      */
-    TiberModelObject(const ModelOptions& options);
+    explicit TiberModelObject(const ModelOptions& options);
 
 
     //! Try to create an object from a dynamic link library
@@ -126,20 +131,18 @@ class TiberModelObject
      * \param name the name of the library <c>lib</c><it>name</it><c>.so</c>
      * \param options the options to pass to the object (which could be used to
      *   create different objects depending on the options)
-     * \param handle a pointer to hold any object needed in the class implementation
-     *   of the creation method.
      *
-     * \return \c NULL if it could not find the library
+     * \return \c nullptr if it could not find the library
      *
      */
     template <typename T>
     static T* create_from_library(const std::string& name,
-        const ModelOptions& options = ModelOptions(), const void* handle = NULL);
+        const ModelOptions& options = ModelOptions());
 
 
     //! Create an object from a given creator function
     static TiberModelObject* create_from_function(create_t create, destroy_t destroy,
-        const ModelOptions& options = ModelOptions(), const void* handle = NULL);
+        const ModelOptions& options = ModelOptions());
 
 
     //! Create as a clone from a given object
@@ -147,7 +150,7 @@ class TiberModelObject
      *   of the creation method.
      */
     template <typename T>
-    static T* create_from_object(const T* other, const void* handle = NULL);
+    static T* create_from_object(const T* other);
 
 
     //! Tells if a parameter has been specified in the input file
@@ -181,11 +184,11 @@ class TiberModelObject
      *   implemented)
      *
      * \par Example:
-     *  Assume you have a class \c Pippo inherited from TiberModelObject
+     *  Assume you have a class \c MyClass inherited from TiberModelObject
      *  which has a member \c _var that you want to be able to use as
      *  variable and which needs initialization each time you set its value.
      *  \code
-     *  class Pippo : public TiberModelObject
+     *  class MyClass : public TiberModelObject
      *  {
      *    public:
      *      void init(void);
@@ -196,15 +199,15 @@ class TiberModelObject
      *      int _var;
      *  };
      *
-     *  void Pippo::prepare(void)
+     *  void MyClass::prepare(void)
      *  {
-     *    get_parameter("myParameter", _var, true, initializer(&Pippo::init));
+     *    get_parameter("myParameter", _var, true, initializer(&MyClass::init));
      *  }
      *  \endcode
      */
     template <typename T>
     void get_parameter(const std::string& name, T& variable,
-        bool override = true, InitializerBase<T>* initfunc = NULL);
+        bool override = true, InitializerBase<T>* initfunc = nullptr);
 
 
     //! Get a parameter which is a vector of values (of the same type)
@@ -294,15 +297,15 @@ class TiberModelObject
 
 
     //! Don't allow default constructor
-    TiberModelObject(void) TBDLLOCAL;
+    TiberModelObject(void) = delete;
 
 
     //! Don't allow copy construction
-    TiberModelObject(const TiberModelObject& other) TBDLLOCAL;
+    TiberModelObject(const TiberModelObject& other) = delete;
 
 
     //! Don't allow assignment operator
-    TiberModelObject& operator=(const TiberModelObject& rhs) TBDLLOCAL;
+    TiberModelObject& operator=(const TiberModelObject& rhs) = delete;
 
 
     //! Try to create an object from a dynamic link library
@@ -312,15 +315,14 @@ class TiberModelObject
      * \return \c NULL if library cannot be opened
      */
     static TiberModelObject* _create_from_library(const std::string& name,
-        const ModelOptions& options, const void* handle) TBDLLOCAL;
+        const ModelOptions& options) TC_DLLOCAL;
 
 
     //! Try to create as a clone from an existing object
     /*! \param handle a pointer to hold any object needed in the class implementation
      *   of the creation method.
      */
-    static TiberModelObject* _create_from_object(const TiberModelObject* other,
-        const void* handle);
+    static TiberModelObject* _create_from_object(const TiberModelObject* other) TC_DLLOCAL;
 
 
     //! The options for this model as read from the input file
@@ -444,24 +446,24 @@ template <typename T>
 inline
 T*
 TiberModelObject::create_from_library(const std::string& name,
-    const ModelOptions& options, const void* handle)
+    const ModelOptions& options)
 {
 #ifdef TC_BUILD_TIBER_MODULES
-  return dynamic_cast<T*>(_create_from_library(name, options, handle));
+  return dynamic_cast<T*>(_create_from_library(name, options));
 #else
-  return NULL;
+  return nullptr;
 #endif
 }
 
 template <typename T>
 inline
 T*
-TiberModelObject::create_from_object(const T* other, const void* handle)
+TiberModelObject::create_from_object(const T* other)
 {
 #ifdef TC_BUILD_TIBER_MODULES
-  return dynamic_cast<T*>(_create_from_object(other, handle));
+  return dynamic_cast<T*>(_create_from_object(other));
 #else
-  return NULL;
+  return nullptr;
 #endif
 }
 

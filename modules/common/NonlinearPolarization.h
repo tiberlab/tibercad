@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _PIEZOPOLARIZATION_H_
-#define _PIEZOPOLARIZATION_H_
+#ifndef TC_PIEZOPOLARIZATION_H
+#define TC_PIEZOPOLARIZATION_H
 
 #include "tibercad/physics/misc/PolarizationModel.h"
 #include "tibercad/physics/StrainInterface.h"
@@ -40,7 +40,7 @@ class Point;
  *
  * based on Phys. Rev. B 88, 121304(R) (2013)
  */
-class TBDLLOCAL NonlinearPolarization: public PolarizationModel
+class TC_DLLOCAL NonlinearPolarization: public PolarizationModel
 {
 
   public:
@@ -111,4 +111,4 @@ NonlinearPolarization::create(const ModelOptions& options)
 }
 
 
-#endif // _PIEZOPOLARIZATION_H_
+#endif // TC_PIEZOPOLARIZATION_H

@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _IMAGEREADER_H_
-#define _IMAGEREADER_H_
+#ifndef TC_IMAGEREADER_H
+#define TC_IMAGEREADER_H
 
 #include "tibercad/module/SimulationInterface.h"
 
@@ -43,7 +43,7 @@ class TensorGrid;
  * make it accessible to other modules
  *
  */
-class TBDLLOCAL ImageReader : public SimulationInterface
+class TC_DLLOCAL ImageReader : public SimulationInterface
 {
 
   public:
@@ -51,45 +51,36 @@ class TBDLLOCAL ImageReader : public SimulationInterface
     //! Destructor
     ~ImageReader(void);
 
-    //! We need a public static creator function
-    static ImageReader* create(const ModelOptions& options);
-
 
 
   protected:
+    
+    ImageReader(const ModelOptions& options);
 
     //! The initialization
-    virtual void do_init(void);
+    virtual void do_init(void) override;
 
 
     //! Parse the options from the input file
-    virtual void parse_options(void);
+    void parse_options(void);
 
 
     //! Setup the available variables
-    virtual void do_setup_solution_variables(void);
+    virtual void do_setup_solution_variables(void) override;
 
 
     //! Solve the MyPoisson equation
-    virtual void do_solve(void);
+    virtual void do_solve(void) override;
 
 
     //! Print some useful information
     //virtual void do_print_info(void);
 
 
-    //! We need to create a physical model
-    //virtual PhysicalModel* create_bulk_model(const ModelOptions& options,
-    //    const Material* mat) const;
-
-    //! We need to create boundary condition model
-    //PhysicalModel* create_boundary_model(const ModelOptions& options,
-    //    const MaterialBoundary* boundary) const;
-
     //! We have to provide somehow our solution variables
     virtual void get_solution_secure(const Elem* elem,
         std::map<ID, std::vector<double> >& values,
-        const std::vector<Point>& p);
+        const std::vector<Point>& p) override;
 
 
 
@@ -101,8 +92,6 @@ class TBDLLOCAL ImageReader : public SimulationInterface
       Data        /*!< the imported data */
     };
 
-    
-    ImageReader(const ModelOptions& options);
 
 
     //! Do the actual read
@@ -129,4 +118,4 @@ class TBDLLOCAL ImageReader : public SimulationInterface
 
 
 
-#endif // _IMAGEREADER_H_
+#endif // TC_IMAGEREADER_H

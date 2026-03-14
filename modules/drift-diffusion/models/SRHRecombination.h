@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _SRHRECOMBINATION_H_
-#define _SRHRECOMBINATION_H_
+#ifndef TC_SRHRECOMBINATION_H
+#define TC_SRHRECOMBINATION_H
 
 #include "RecombinationModelInterface.h"
 #include "tibercad/base/TypeDefs.h"
@@ -57,7 +57,7 @@ class ExternalProfile;
  *   Recombination Model for Device Simulation Including Tunneling",
  *   IEEE Trans. on Electron Devices, 39, 331-338, 1992
  */
-class TBDLLOCAL SRHRecombination : public RecombinationModelInterface
+class TC_DLLOCAL SRHRecombination : public RecombinationModelInterface
 {
 
   public:
@@ -65,17 +65,14 @@ class TBDLLOCAL SRHRecombination : public RecombinationModelInterface
     //! Destructor
     virtual ~SRHRecombination(void);
 
-    //! Create a ConstantMobility object
-    static SRHRecombination* create(const ModelOptions& options);
-
     /*! \copydoc RecombinationModelInterface::get_net_recombination_rates() */
-    void get_net_recombination_rates(double& recomb_e, double& recomb_h);
+    virtual void get_net_recombination_rates(double& recomb_e, double& recomb_h) override;
 
     /*! \copydoc
      * RecombinationModelInterface::get_net_recombination_rate_derivatives()
      */
-    void get_net_recombination_rate_derivatives(
-        std::vector<double>& recomb_e, std::vector<double>& recomb_h);
+    virtual void get_net_recombination_rate_derivatives(
+        std::vector<double>& recomb_e, std::vector<double>& recomb_h) override;
 
 
 
@@ -85,24 +82,24 @@ class TBDLLOCAL SRHRecombination : public RecombinationModelInterface
     SRHRecombination(const ModelOptions& options);
 
     //! \copydoc RecombinationModelInterface::read_database()
-    virtual void read_database(void);
+    virtual void read_database(void) override;
 
     //! \copydoc RecombinationModelInterface::read_interface_database()
-    virtual void read_interface_database(void);
+    virtual void read_interface_database(void) override;
 
     //! \copydoc RecombinationModelInterface::prepare_submodels()
-    virtual void prepare_submodels(void);
+    virtual void prepare_submodels(void) override;
 
     //! \copydoc RecombinationModelInterface::do_init()
-    virtual void do_init(void);
+    virtual void do_init(void) override;
 
     //! \copydoc RecombinationModelInterface::do_init_interface()
     virtual void do_init_interface(const Material* comp_A,
-            const Material* comp_B);
+            const Material* comp_B) override;
 
     //! We do the VCA on the recombination times and not on the parameters
     virtual void do_init_alloy(const PhysicalModel* comp_A,
-        const PhysicalModel* comp_B, double xa);
+        const PhysicalModel* comp_B, double xa) override;
 
 
   private:
@@ -179,22 +176,7 @@ class TBDLLOCAL SRHRecombination : public RecombinationModelInterface
 };
 
 
-//
-// inline methods
-//
 
 
 
-
-
-inline
-SRHRecombination*
-SRHRecombination::create(const ModelOptions& options)
-{
-  return new SRHRecombination(options);
-}
-
-
-
-
-#endif // _SRHRECOMBINATION_H_
+#endif // TC_SRHRECOMBINATION_H

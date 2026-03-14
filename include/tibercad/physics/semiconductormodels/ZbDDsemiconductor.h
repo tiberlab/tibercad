@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _ZBDDSEMICONDUCTOR_H_
-#define _ZBDDSEMICONDUCTOR_H_
+#ifndef TC_ZBDDSEMICONDUCTOR_H
+#define TC_ZBDDSEMICONDUCTOR_H
  
  
 #include "tibercad/physics/semiconductormodels/DDsemiconductor.h"

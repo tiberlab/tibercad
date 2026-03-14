@@ -23,8 +23,8 @@
  */
 
 
-#ifndef _PHONONDISPERSION_H_
-#define _PHONONDISPERSION_H_
+#ifndef TC_PHONONDISPERSION_H
+#define TC_PHONONDISPERSION_H
 
 #include "tibercad/physics/BoundaryProperties.h"
 #include "tibercad/physics/PhysicalModel.h"

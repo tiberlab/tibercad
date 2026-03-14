@@ -25,8 +25,8 @@
 
 
 
-#ifndef _TIBERLINESEARCH_H_
-#define _TIBERLINESEARCH_H_
+#ifndef TC_TIBERLINESEARCH_H
+#define TC_TIBERLINESEARCH_H
 
 
 #include "tibercad/solver/TiberNonlinearSystem.h"
@@ -35,7 +35,7 @@ class TiberLinearSolver;
 
 
 //! A base class for the TiberCAD line search algorithms
-class TBDLLOCAL TiberLineSearch : public TiberNonlinearSystem
+class TC_DLLOCAL TiberLineSearch : public TiberNonlinearSystem
 {
 
   public:
@@ -221,4 +221,4 @@ TiberLineSearch::get_divergence_tol(void) const
 
 
 
-#endif // _TIBERLINESEARCH_H_
+#endif // TC_TIBERLINESEARCH_H

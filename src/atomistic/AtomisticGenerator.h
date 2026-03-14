@@ -23,8 +23,8 @@
  */
 
 
-#ifndef _ATOMISTICGENERATOR_H_
-#define _ATOMISTICGENERATOR_H_
+#ifndef TC_ATOMISTICGENERATOR_H
+#define TC_ATOMISTICGENERATOR_H
 
 //--------------------------------------------------------------------------------------------
 
@@ -54,7 +54,7 @@ class BulkCrystal;
  *to mesh informations. Material parameters (kind of lattice, atomic basis, ecc.)
  *are read from material files
  */
-class TBDLLOCAL AtomisticGenerator
+class TC_DLLOCAL AtomisticGenerator
 {
 
 public:
@@ -282,7 +282,7 @@ private:
 
 
 
-#endif // _ATOMISTICGENERATOR_H_
+#endif // TC_ATOMISTICGENERATOR_H
 
 
 

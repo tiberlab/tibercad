@@ -23,8 +23,8 @@
  *       API version: 3.5
  */
 
-#ifndef _SEMICONDUCTOR_H_
-#define _SEMICONDUCTOR_H_
+#ifndef TC_SEMICONDUCTOR_H
+#define TC_SEMICONDUCTOR_H
 
 
 #include "tibercad/physics/PhysicalModel.h"
@@ -40,7 +40,7 @@
 /*!
  *  The class can read parameters database and convert them into kp parameters
  */
-class TBDLEXPORT Semiconductor : public PhysicalModel
+class Semiconductor : public PhysicalModel
 {
  public:
  

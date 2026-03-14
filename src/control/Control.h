@@ -23,8 +23,8 @@
  */
 
 
-#ifndef _CONTROL_H_
-#define _CONTROL_H_
+#ifndef TC_CONTROL_H
+#define TC_CONTROL_H
 
 #include "tibercad/base/TypeDefs.h"
 #include "tibercad/base/IDSet.h"
@@ -47,7 +47,7 @@ class SimulationInterface;
  * This class is responsible for the setup of the device and
  * the flow control of the simulation
  */
-class TBDLLOCAL Control
+class TC_DLLOCAL Control
 {
 
   public:
@@ -227,4 +227,4 @@ Control::get_output_format(void) const
 
 
 
-#endif // _CONTROL_H_
+#endif // TC_CONTROL_H

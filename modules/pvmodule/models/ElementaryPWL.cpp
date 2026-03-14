@@ -37,16 +37,6 @@ ElementaryPWL::ElementaryPWL(const ModelOptions& options) :
 }
 
 
-inline
-ElementaryPWL*
-ElementaryPWL::create(const ModelOptions& options)
-{
-  ElementaryPWL* cd = new ElementaryPWL(options);
-
-  return cd;
-}
-
-
 
 void
 ElementaryPWL::do_init(void)

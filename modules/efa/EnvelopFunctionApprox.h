@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _ENVELOPFUNCTIONAPPROX_H_ 
-#define _ENVELOPFUNCTIONAPPROX_H_
+#ifndef TC_ENVELOPFUNCTIONAPPROX_H 
+#define TC_ENVELOPFUNCTIONAPPROX_H
 
 
 #include "tibercad/physics/schroedinger/FEMEigenvalueProblem.h"
@@ -80,9 +80,6 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
 
 
 
- 
-  //!constructor
-  EnvelopFunctionApprox(const ModelOptions& options);
 
 
   //!destructor
@@ -121,9 +118,6 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
 
   //! returns number of active cells
   unsigned int get_number_of_active_cells();
-
-
-  static  EnvelopFunctionApprox* create(const ModelOptions& options);
 
 
   virtual PhysicalModel*
@@ -341,6 +335,9 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   void redeclare_solutions(void);
 
  protected:
+ 
+  //!constructor
+  EnvelopFunctionApprox(const ModelOptions& options);
 
 
   virtual void get_solution_secure(const Elem* elem,
@@ -433,13 +430,6 @@ inline void EnvelopFunctionApprox::set_initial_eigenstates_number(unsigned int n
   opt.initial_eigenstates_number = n;
 }
 
-
-//---------------------------------------------------------
-
-inline EnvelopFunctionApprox*  EnvelopFunctionApprox::create(const ModelOptions& options)
-{
-  return (new EnvelopFunctionApprox(options) );
-}
 
 
 //---------------------------------------------------------

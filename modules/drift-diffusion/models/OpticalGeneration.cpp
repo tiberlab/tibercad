@@ -42,6 +42,16 @@
 
 using namespace std;
 
+
+
+OpticalGeneration::OpticalGeneration(const ModelOptions& options)
+  : RecombinationModelInterface(options)
+{
+  set_name("OpticalGeneration");
+}
+
+
+
 void
 OpticalGeneration::do_init(void)
 {

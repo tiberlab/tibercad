@@ -23,8 +23,8 @@
  *       API version: 3.5
  */
 
-#ifndef _BULKCRYSTAL_H_
-#define _BULKCRYSTAL_H_
+#ifndef TC_BULKCRYSTAL_H
+#define TC_BULKCRYSTAL_H
 
 #include "tibercad/atomistic/AtomisticBasis.h"
 #include "tibercad/base/ModelOptions.h"
@@ -331,4 +331,4 @@ BulkCrystal::get_rotation(void) const
   return _rotation;
 }
 
-#endif // _BULKCRYSTAL_H_
+#endif // TC_BULKCRYSTAL_H

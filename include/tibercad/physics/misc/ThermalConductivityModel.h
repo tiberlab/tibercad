@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _THERMALCONDUCTIVITYMODEL_H_
-#define _THERMALCONDUCTIVITYMODEL_H_
+#ifndef TC_THERMALCONDUCTIVITYMODEL_H
+#define TC_THERMALCONDUCTIVITYMODEL_H
 
 #include "tibercad/physics/PhysicalModel.h"
 #include "tibercad/math/TensorOperators.h"
@@ -138,4 +138,4 @@ ThermalConductivityModel::rotate(void)
 
 // }
 
-#endif // _THERMALCONDUCTIVITYMODEL_H_
+#endif // TC_THERMALCONDUCTIVITYMODEL_H

@@ -24,8 +24,8 @@
 
 
 
-#ifndef _TIBERNONLINEARSOLVER_H_
-#define _TIBERNONLINEARSOLVER_H_
+#ifndef TC_TIBERNONLINEARSOLVER_H
+#define TC_TIBERNONLINEARSOLVER_H
 
 #include "tibercad/base/libMeshDefs.h"
 
@@ -274,4 +274,4 @@ TiberNonlinearSolver::set_xmonitor(XMonitor* xmonitor)
 }
 
 
-#endif // _TIBERNONLINEARSOLVER_H_
+#endif // TC_TIBERNONLINEARSOLVER_H

@@ -31,8 +31,8 @@
  *      Author: miesu
  */
 
-#ifndef _VARIABLERANGEHOPPING_H_
-#define _VARIABLERANGEHOPPING_H_
+#ifndef TC_VARIABLERANGEHOPPING_H
+#define TC_VARIABLERANGEHOPPING_H
 
 #include "MobilityModelInterface.h"
 
@@ -59,14 +59,8 @@ class VariableRangeHopping : public MobilityModelInterface
     virtual ~VariableRangeHopping(void);
 
 
-
-    //! Create a VariableRangeHopping object
-    static VariableRangeHopping* create(const ModelOptions& options);
-
-
-
     //! \copydoc MobilityModelInterface::get_mobility()
-    virtual double get_mobility(void);
+    virtual double get_mobility(void) override;
 
 
 
@@ -101,7 +95,7 @@ class VariableRangeHopping : public MobilityModelInterface
 
 
     //! \copydoc MobilityModelInterface::do_init()
-    virtual void do_init(void);
+    virtual void do_init(void) override;
 
 
 

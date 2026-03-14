@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _FIELDDEPENDENTMOBILITY_H_
-#define _FIELDDEPENDENTMOBILITY_H_
+#ifndef TC_FIELDDEPENDENTMOBILITY_H
+#define TC_FIELDDEPENDENTMOBILITY_H
 
 #include "MobilityModelInterface.h"
 
@@ -41,7 +41,7 @@
  * \mu = \mu_{max} \left(\frac{T}{T_0}\right)^{-\gamma}
  * \f]
  */
-class TBDLLOCAL FieldDependentMobility : public MobilityModelInterface
+class TC_DLLOCAL FieldDependentMobility : public MobilityModelInterface
 {
 
   public:
@@ -49,17 +49,14 @@ class TBDLLOCAL FieldDependentMobility : public MobilityModelInterface
     //! Destructor
     virtual ~FieldDependentMobility(void);
 
-    //! Create a FieldDependentMobility object
-    static FieldDependentMobility* create(const ModelOptions& options);
-
     //! \copydoc MobilityModelInterface::get_mobility()
-    virtual double get_mobility(void);
+    virtual double get_mobility(void) override;
 
     //! \copydoc MobilityModelInterface::get_derivative_grad_potential()
-    virtual void get_derivative_grad_potential(libMesh::RealGradient& dm);
+    virtual void get_derivative_grad_potential(libMesh::RealGradient& dm) override;
 
     //! \copydoc MobilityModelInterface::get_derivative_grad_fermi()
-    virtual void get_derivative_grad_fermi(libMesh::RealGradient& dm);
+    virtual void get_derivative_grad_fermi(libMesh::RealGradient& dm) override;
 
 
   protected:
@@ -68,13 +65,13 @@ class TBDLLOCAL FieldDependentMobility : public MobilityModelInterface
     FieldDependentMobility(const ModelOptions& options);
 
     //! \copydoc MobilityModelInterface::read_database()
-    virtual void read_database(void);
+    virtual void read_database(void) override;
 
     //! \copydoc MobilityModelInterface::do_init()
-    virtual void do_init(void);
+    virtual void do_init(void) override;
 
     //! Create low field mobility model
-    virtual void prepare_submodels(void);
+    virtual void prepare_submodels(void) override;
 
 
 
@@ -146,13 +143,6 @@ FieldDependentMobility::FieldDependentMobility(const ModelOptions& options)
 }
 
 
-inline
-FieldDependentMobility*
-FieldDependentMobility::create(const ModelOptions& options)
-{
-  return new FieldDependentMobility(options);
-}
-
 
 
 inline
@@ -160,4 +150,4 @@ FieldDependentMobility::~FieldDependentMobility(void)
 {
 }
 
-#endif // _FIELDDEPENDENTMOBILITY_H_
+#endif // TC_FIELDDEPENDENTMOBILITY_H

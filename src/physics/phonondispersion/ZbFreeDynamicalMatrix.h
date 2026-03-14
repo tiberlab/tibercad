@@ -22,8 +22,8 @@
  * \internal
  */
 
-#ifndef _ZB_FREEDYNAMICALMATRIX_H_
-#define _ZB_FREEDYNAMICALMATRIX_H_
+#ifndef TC_ZB_FREEDYNAMICALMATRIX_H
+#define TC_ZB_FREEDYNAMICALMATRIX_H
 
 
 #include "PhononModel.h"

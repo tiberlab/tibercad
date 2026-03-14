@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _BOUNDARYELEMENTMAP_H_
-#define _BOUNDARYELEMENTMAP_H_
+#ifndef TC_BOUNDARYELEMENTMAP_H
+#define TC_BOUNDARYELEMENTMAP_H
 
 #include "tibercad/base/TypeDefs.h"
 #include "tibercad/base/libMeshDefs.h"
@@ -256,4 +256,4 @@ BoundaryElementMap::elements_end(const Boundary* bd) const
 }
 
 
-#endif // _BOUNDARYELEMENTMAP_H_
+#endif // TC_BOUNDARYELEMENTMAP_H

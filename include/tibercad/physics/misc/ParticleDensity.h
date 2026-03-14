@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _PARTICLEDENSITY_H_
-#define _PARTICLEDENSITY_H_
+#ifndef TC_PARTICLEDENSITY_H
+#define TC_PARTICLEDENSITY_H
 
 #include "tibercad/physics/PhysicalModel.h"
 #include "tibercad/base/TiberCad.h"
@@ -328,12 +328,12 @@ class ParticleDensity : public PhysicalModel
     /*!
      * returns \true if the quantum density could be evaluated
      */
-    bool quantum_density(void) TBDLLOCAL;
+    bool quantum_density(void) TC_DLLOCAL;
 
 
     //! Calculate classical particle density
     template <TiberCad::Statistics>
-    void classical_density(void) TBDLLOCAL;
+    void classical_density(void) TC_DLLOCAL;
 
 
     //! Calculate the effective DOS from the DOS mass
@@ -530,4 +530,4 @@ ParticleDensity::get_quantum_simulation(void)
 
 
 
-#endif // _PARTICLEDENSITY_H_
+#endif // TC_PARTICLEDENSITY_H

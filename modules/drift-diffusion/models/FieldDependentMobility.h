@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _FIELDDEPENDENTMOBILITY_H_
-#define _FIELDDEPENDENTMOBILITY_H_
+#ifndef TC_FIELDDEPENDENTMOBILITY_H
+#define TC_FIELDDEPENDENTMOBILITY_H
 
 #include "MobilityModelInterface.h"
 
@@ -41,16 +41,13 @@
  * \mu = \mu_{max} \left(\frac{T}{T_0}\right)^{-\gamma}
  * \f]
  */
-class TBDLLOCAL FieldDependentMobility : public MobilityModelInterface
+class TC_DLLOCAL FieldDependentMobility : public MobilityModelInterface
 {
 
   public:
 
     //! Destructor
     virtual ~FieldDependentMobility(void);
-
-    //! Create a FieldDependentMobility object
-    static FieldDependentMobility* create(const ModelOptions& options);
 
     //! \copydoc MobilityModelInterface::get_mobility()
     virtual double get_mobility(void);
@@ -146,18 +143,10 @@ FieldDependentMobility::FieldDependentMobility(const ModelOptions& options)
 }
 
 
-inline
-FieldDependentMobility*
-FieldDependentMobility::create(const ModelOptions& options)
-{
-  return new FieldDependentMobility(options);
-}
-
-
 
 inline
 FieldDependentMobility::~FieldDependentMobility(void)
 {
 }
 
-#endif // _FIELDDEPENDENTMOBILITY_H_
+#endif // TC_FIELDDEPENDENTMOBILITY_H

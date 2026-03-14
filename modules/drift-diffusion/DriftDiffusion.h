@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _DRIFTDIFFUSION_H_
-#define _DRIFTDIFFUSION_H_
+#ifndef TC_DRIFTDIFFUSION_H
+#define TC_DRIFTDIFFUSION_H
 
 #include "tibercad/module/SimulationInterface.h"
 #include "tibercad/base/SimulationOptions.h"
@@ -120,7 +120,7 @@ class Boundary;
  * \li \c recombination.total the total net recombination rate
  *
  */
-class TBDLLOCAL DriftDiffusion : public SimulationInterface
+class TC_DLLOCAL DriftDiffusion : public SimulationInterface
 {
   public:
 

@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _NEGF_H_
-#define _NEGF_H_
+#ifndef TC_NEGF_H
+#define TC_NEGF_H
 
 #include "tibercad/module/SimulationInterface.h"
 #include "tibercad/physics/schroedinger/EigenvalueProblem.h"
@@ -52,7 +52,7 @@ class NegfWrapper;
  *
  * Illustrates the basic usage of the SimulationInterface API.
  */
-class TBDLLOCAL Negf : public SimulationInterface
+class TC_DLLOCAL Negf : public SimulationInterface
 {
 
   public:
@@ -74,15 +74,9 @@ class TBDLLOCAL Negf : public SimulationInterface
        INTDENSITYHL, 
        INTCURRENT
     };
-    //! Destructor
-    /*!
-     * We do not declare it virtual here, as we will not allow
-     * to derive from this class anyway.
-     */
-    ~Negf(void);
 
-    //! We need a public static creator function
-    static Negf* create(const ModelOptions& options);
+    //! Destructor
+    virtual ~Negf(void);
 
     void reorder(void);
 
@@ -91,40 +85,43 @@ class TBDLLOCAL Negf : public SimulationInterface
 
   protected:
 
+    //! Constructor
+    explicit Negf(const ModelOptions& option);
+
     //! The initialization
-    virtual void do_init(void);
+    virtual void do_init(void) override;
 
     //! Re-initialization for sweep, etc...
-    virtual void do_reinit(void);
+    virtual void do_reinit(void) override;
 
     //! Parse the options from the input file
-    virtual void parse_options(void);
+    void parse_options(void);
 
 
     //! Solve the MyPoisson equation
-    virtual void do_solve(void);
+    virtual void do_solve(void) override;
 
 
     //! Reimplement the MPI communicators setup (TEMPORARILY COMMENTED UNTIL API IS FINISHED)
-    virtual void setup_mpi_comm(void);
+    virtual void setup_mpi_comm(void) override;
 
 
     //! We need to create a physical model
     virtual PhysicalModel* create_bulk_model(const ModelOptions& options,
-                                                  const Material* mat) const;
+                                                  const Material* mat) const override;
 
 
-    virtual void do_setup_solution_variables(void);
+    virtual void do_setup_solution_variables(void) override;
 
     //! Used to plot global data such as current
-    virtual void plot_globaldata (void);
+    virtual void plot_globaldata (void) override;
 
     //! We have to provide somehow our solution variables
     virtual void get_solution_secure(const Elem* elem,
         std::map<ID, std::vector<double> >& values,
-        const std::vector<Point>& p);
+        const std::vector<Point>& p) override;
 
-    virtual void get_solution_secure(std::map<ID, std::vector<double> >& values);
+    virtual void get_solution_secure(std::map<ID, std::vector<double> >& values) override;
 
     void init_hamil(void);
 
@@ -395,8 +392,6 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     //! Map quantumContact ID to pointers
     std::map<ID, QuantumContact*> _quantum_contacts;
-
-    Negf(const ModelOptions& option);
 
     //! This system is used for calculating DOF ordering
     TiberLinearSystem* _sys;

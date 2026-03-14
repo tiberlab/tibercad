@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _DDBULKMODEL_H_
-#define _DDBULKMODEL_H_
+#ifndef TC_DDBULKMODEL_H
+#define TC_DDBULKMODEL_H
 
 
 
@@ -67,7 +67,7 @@ class PolarizationModel;
  * Trying to add to identical models will result in a memory leak. This will
  * be corrected in future. }
  */
-class DDBulkModel : public DriftDiffusionProperties
+class TC_DLEXPORT DDBulkModel : public DriftDiffusionProperties
 {
 
   public:
@@ -198,7 +198,7 @@ class DDBulkModel : public DriftDiffusionProperties
 
 
     /*! \copydoc PhysicalModel::read_database() */
-    virtual void read_database(void);
+    virtual void read_database(void) override;
 
 
     //! Initialize this model
@@ -207,7 +207,7 @@ class DDBulkModel : public DriftDiffusionProperties
      * A derived class which reimplements this method has to call
      * explicitly the one of this class!
      */
-    virtual void do_init(void);
+    virtual void do_init(void) override;
 
 
     //! Create some of the submodels
@@ -224,7 +224,7 @@ class DDBulkModel : public DriftDiffusionProperties
 
 
     //! \copydoc PhysicalModel::do_print_info(void)
-    virtual void do_print_info(void);
+    virtual void do_print_info(void) override;
 
 
     //! Get the temperature interface

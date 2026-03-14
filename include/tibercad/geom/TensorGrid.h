@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _TENSORGRID_H_
-#define _TENSORGRID_H_
+#ifndef TC_TENSORGRID_H
+#define TC_TENSORGRID_H
 
 
 #include "point.h"
@@ -265,4 +265,4 @@ TensorGrid::distance(int k1, int l1, int m1,
 
 
 
-#endif // _TENSORGRID_H_
+#endif // TC_TENSORGRID_H

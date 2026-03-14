@@ -25,13 +25,13 @@
  */
 
 
-#ifndef _CONSTANTDOS_H_
-#define _CONSTANTDOS_H_
+#ifndef TC_CONSTANTDOS_H
+#define TC_CONSTANTDOS_H
 
 
 #include "tibercad/physics/misc/DensityOfStates.h"
 
-class TBDLEXPORT ConstantDOS : public DensityOfStates
+class TC_DLEXPORT ConstantDOS : public DensityOfStates
 {
 
   public:
@@ -77,4 +77,4 @@ ConstantDOS::create(const ModelOptions& options)
 }
 
 
-#endif // _CONSTANTDOS_H_
+#endif // TC_CONSTANTDOS_H

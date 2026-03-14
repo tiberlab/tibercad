@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _PVMODULEBOUNDARYMODEL_H_
-#define _PVMODULEBOUNDARYMODEL_H_
+#ifndef TC_PVMODULEBOUNDARYMODEL_H
+#define TC_PVMODULEBOUNDARYMODEL_H
 
 #include "tibercad/physics/PhysicalModel.h"
 #include "tibercad/physics/MaterialBoundary.h"
@@ -37,7 +37,7 @@ class Elem;
 
 
 //! This is the basic physical modle of PVModule
-class PVModuleBoundaryModel : public PhysicalModel
+class TC_DLEXPORT PVModuleBoundaryModel : public PhysicalModel
 {
 
   public:
@@ -58,7 +58,7 @@ class PVModuleBoundaryModel : public PhysicalModel
     };
 
     //! Destructor
-    ~PVModuleBoundaryModel(void) {};
+    virtual ~PVModuleBoundaryModel(void);
 
     //! Creator function
     static PVModuleBoundaryModel* create(const MaterialBoundary* boundary,
@@ -90,7 +90,7 @@ class PVModuleBoundaryModel : public PhysicalModel
 
 
     //! The constructor method
-    static TiberModelObject* _create(const ModelOptions& options, const void*);
+    static TiberModelObject* _create(const ModelOptions& options);
 
     //! The destructor method
     static void _destroy(TiberModelObject* p);
@@ -114,4 +114,4 @@ PVModuleBoundaryModel::get_contact_layer(void) const
 }
 
 
-#endif // _PVMODULEBOUNDARYMODEL_H_
+#endif // TC_PVMODULEBOUNDARYMODEL_H

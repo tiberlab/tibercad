@@ -5,8 +5,8 @@
  * \note This file is part of module vff.
  */
 
-#ifndef _OPTGPL_H_
-#define _OPTGPL_H_
+#ifndef TC_OPTGPL_H
+#define TC_OPTGPL_H
 
 #include "Vff.h"
 

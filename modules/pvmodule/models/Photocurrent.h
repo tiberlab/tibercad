@@ -24,8 +24,8 @@
  * \note This file is part of module pvmodule.
  */
 
-#ifndef _PHOTOCURRENT_H_
-#define _PHOTOCURRENT_H_
+#ifndef TC_PHOTOCURRENT_H
+#define TC_PHOTOCURRENT_H
 
 #include "tibercad/physics/PhysicalModel.h"
 
@@ -65,4 +65,4 @@ class Photocurrent : public PhysicalModel
 };
 
 
-#endif // _PHOTOCURRENT_H_
+#endif // TC_PHOTOCURRENT_H

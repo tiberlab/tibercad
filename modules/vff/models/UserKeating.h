@@ -24,33 +24,29 @@
  * \note This file is part of module vff.
  */
 
-#ifndef _USERKEATING_H_
-#define _USERKEATING_H_
+#ifndef TC_USERKEATING_H
+#define TC_USERKEATING_H
 
 #include "tibercad/base/tiber_dll.h"
 #include "Keating.h"
 
 //! User defined Keating model parameters
-class TBDLLOCAL UserKeating : public Keating
+class TC_DLLOCAL UserKeating : public Keating
 {
 public:
 
   //! Destructor
   ~UserKeating(void) {};
 
-  //! Creator function
-  static UserKeating* create(const ModelOptions& options);
-
-  double get_alpha();
 
   //! Assign value to parameters
-  void do_init(void);
+  virtual void do_init(void) override;
 
 protected:
 
-private:
-
   UserKeating(const ModelOptions& options);
+
+private:
 
   void assign_alpha(void);
 
@@ -63,13 +59,6 @@ private:
 
 
 };
-
-inline
-UserKeating*
-UserKeating::create(const ModelOptions& options)
-{
-  return new UserKeating(options);
-}
 
 
 

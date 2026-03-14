@@ -34,8 +34,6 @@ class EfaModel : public HamiltonianModel
 
     virtual ~EfaModel(void){};
 
-    static EfaModel* create(const ModelOptions& options);
-
   protected:
 
     EfaModel(const ModelOptions& options);
@@ -44,11 +42,5 @@ class EfaModel : public HamiltonianModel
 
 };
 
-inline
-EfaModel*
-EfaModel::create(const ModelOptions& options)
-{
-  return new EfaModel(options);
-}
 
 

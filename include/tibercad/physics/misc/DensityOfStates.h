@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _DENSITYOFSTATES_H_
-#define _DENSITYOFSTATES_H_
+#ifndef TC_DENSITYOFSTATES_H
+#define TC_DENSITYOFSTATES_H
 
 
 #include "tibercad/physics/PhysicalModel.h"
@@ -35,7 +35,7 @@ class ExternalProfile;
 /*!
  * \brief Base class for density of states
  */
-class TBDLEXPORT DensityOfStates : public PhysicalModel
+class DensityOfStates : public PhysicalModel
 {
 
   public:
@@ -365,4 +365,4 @@ DensityOfStates::thermoelectric_power(void)
 }
 
 
-#endif // _DENSITYOFSTATES_H_
+#endif // TC_DENSITYOFSTATES_H

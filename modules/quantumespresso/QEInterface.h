@@ -24,6 +24,8 @@
  * \note This file is part of module quantumespresso.
  */
 
+#ifndef TC_QEINTERFACE_H
+#define TC_QEINTERFACE_H
 
 #include "tibercad/module/SimulationInterface.h"
 
@@ -43,11 +45,17 @@ class QEInterface : public SimulationInterface
     //! Destructor
     ~QEInterface(void);
 
-    //! Create an instance of QEInterface
-    static QEInterface* create(const ModelOptions& options);
-
 
   protected:
+
+    /*! 
+     * \brief Constructor
+     * 
+     * There is no sense in deriving from this module, presumably.
+     */
+    QEInterface(const ModelOptions& options);
+
+
 
     /*!
      * \brief Initialize the module
@@ -66,14 +74,6 @@ class QEInterface : public SimulationInterface
 
 
   private:
-
-    /*! 
-     * \brief Constructor
-     * 
-     * There is no sense in deriving from this module, presumably.
-     */
-    QEInterface(const ModelOptions& options);
-
 
     //! The directory with the pseudopotentials
     std::string _qe_pseudo_dir;
@@ -150,3 +150,4 @@ class QEInterface : public SimulationInterface
 };
 
 
+#endif // TC_QEINTERFACE_H

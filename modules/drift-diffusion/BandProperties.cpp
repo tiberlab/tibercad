@@ -26,7 +26,6 @@
 
 
 #include "BandProperties.h"
-#include "tibercad/physics/misc/ParticleDensity.h"
 #include "tibercad/physics/misc/DensityOfStates.h"
 #include "DriftDiffusionProperties.h"
 #include "tibercad/base/ModelOptions.h"
@@ -68,16 +67,6 @@ BandProperties::~BandProperties(void)
 void
 BandProperties::prepare_submodels(void)
 {
-  //if (!get_options().has_submodel("particle_density"))
-  //  get_options().add_submodel("particle_density", ModelOptions());
-
-  //ModelOptions::submodel_iterator
-  //      it(get_options().submodels_begin("particle_density"));
-  //ModelOptions& opts = it->second;
-  //opts["particle"] = get_option("particle","-");
-
-  //create_submodel(_density, "particle_density", opts);
-
 
   if (!get_options().has_submodel("density_of_states"))
   {
@@ -283,70 +272,6 @@ BandProperties::get_density_and_derivative(double Ef, double Epot) const
   }
 
   return dens_der;
-
-
-
-  /*
-
-  const DriftDiffusionProperties& ddp = get_driftdiffusionproperties();
-  _density->set_element_and_point(ddp.get_element(), ddp.get_coordinates());
-
-  double edge = get_band_edge();
-  double kT = _temperature;
-  double sign = (_particle == 'h') ? -1 : 1;
-
-  double dens = 0;
-  double dens_der = 0;
-
-  if (_density->is_quantum_density() && ddp.has_solution()) // && use_predictor())
-  {
-    double Ef_old = (_particle == 'h') ? ddp.get_old_fermih() : -ddp.get_old_fermie();
-
-    // set the OLD potentials
-    _density->set_classical_parameters(get_effective_mass(),
-        sign * (edge - ddp.get_old_phi()), Ef_old, kT);
-
-    double qdens = _density->get_particle_density();
-
-    // now get the old classical density
-    _density->use_quantum_density(false);
-    double old_dens = _density->get_particle_density();
-
-    // now get the new classical density and derivative
-    _density->set_classical_parameters(get_effective_mass(),
-        sign * edge + Epot, Ef, kT);
-    dens = _density->get_particle_density();
-    dens_der = sign * _density->get_particle_density_derivative();
-
-    double fac = qdens / old_dens;
-    dens *= fac;
-    dens_der *= fac;
-
-    _density->use_quantum_density(true);
-  }
-  else
-  {
-    / *
-    _density->set_classical_parameters(get_effective_mass(),
-    sign * edge + Epot, Ef, kT);
-    dens = _density->get_particle_density();
-    dens_der = sign * _density->get_particle_density_derivative();
-    * /
-
-
-    pair<double, double> dens_der(_dos_model->get_occupied_density_and_derivative(
-    Ef, Epot, kT, ddp.get_element(), ddp.get_coordinates(), ddp.get_lattice_temperature() ) );
-    dens_der.second *= sign;
-    return dens_der;
-
-  }
-
-  return std::make_pair(dens, dens_der);
-  */
 }
 
-double
-BandProperties::get_gamma(void) const
-{
-  return 1; //_density->get_gamma();
-}
+

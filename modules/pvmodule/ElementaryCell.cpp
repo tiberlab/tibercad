@@ -1,5 +1,5 @@
 /*  
- * This file is part of the tiberCAD module dd_generic.
+ * This file is part of the tiberCAD module pvmodule.
  *
  * tiberCAD modules are licensed under the GNU General Public License v3.
  *
@@ -18,27 +18,14 @@
  */
 
 /*!
- * \file DefaultBandProperties.C
- * \brief tiberCAD dd_generic module implementation.
+ * \file ElementaryCell.C
+ * \brief tiberCAD pvmodule module implementation.
  *
- * \note This file is part of module dd_generic.
+ * \note This file is part of module pvmodule.
  */
 
 
-#include "DefaultBandProperties.h"
-#include "tibercad/base/ModelOptions.h"
-
-#include "tibercad/module/TiberModule.h"
+#include "ElementaryCell.h"
 
 
-using namespace std;
-
-
-
-DefaultBandProperties::DefaultBandProperties(const ModelOptions& options) :
-    CarrierProperties(options)
-{
-}
-
-
-
+ElementaryCell::~ElementaryCell(void) = default;

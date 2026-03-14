@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _GRAYMODEL_H_
-#define _GRAYMODEL_H_
+#ifndef TC_GRAYMODEL_H
+#define TC_GRAYMODEL_H
 
 #include "HeatTransportModel.h"
 
@@ -39,7 +39,7 @@ class Elem;
 
 
 //! The base class for Poisson boundary conditions
-class TBDLLOCAL GrayModel : public HeatTransportModel
+class TC_DLLOCAL GrayModel : public HeatTransportModel
 {
 
   public:
@@ -118,4 +118,4 @@ GrayModel::create(const ModelOptions& options)
 
 
 
-#endif // _GRAYMODEL_H_
+#endif // TC_GRAYMODEL_H

@@ -25,8 +25,8 @@
 
 
 
-#ifndef _TEMPERATUREINTERFACE_H_
-#define _TEMPERATUREINTERFACE_H_
+#ifndef TC_TEMPERATUREINTERFACE_H
+#define TC_TEMPERATUREINTERFACE_H
 
 #include "tibercad/base/TypeDefs.h"
 #include "tibercad/base/tiber_dll.h"
@@ -138,4 +138,4 @@ TemperatureInterface::get_simulation(void)
   return _simulation;
 }
 
-#endif // _TEMPERATUREINTERFACE_H_
+#endif // TC_TEMPERATUREINTERFACE_H

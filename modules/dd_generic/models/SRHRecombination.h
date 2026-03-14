@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _SRHRECOMBINATION_H_
-#define _SRHRECOMBINATION_H_
+#ifndef TC_SRHRECOMBINATION_H
+#define TC_SRHRECOMBINATION_H
 
 #include "RecombinationModelInterface.h"
 #include "tibercad/base/TypeDefs.h"
@@ -57,16 +57,13 @@ class ExternalProfile;
  *   Recombination Model for Device Simulation Including Tunneling",
  *   IEEE Trans. on Electron Devices, 39, 331-338, 1992
  */
-class TBDLLOCAL SRHRecombination : public RecombinationModelInterface
+class TC_DLLOCAL SRHRecombination : public RecombinationModelInterface
 {
 
   public:
 
     //! Destructor
     virtual ~SRHRecombination(void);
-
-    //! Create a ConstantMobility object
-    static SRHRecombination* create(const ModelOptions& options);
 
 
   protected:
@@ -172,22 +169,7 @@ class TBDLLOCAL SRHRecombination : public RecombinationModelInterface
 };
 
 
-//
-// inline methods
-//
 
 
 
-
-
-inline
-SRHRecombination*
-SRHRecombination::create(const ModelOptions& options)
-{
-  return new SRHRecombination(options);
-}
-
-
-
-
-#endif // _SRHRECOMBINATION_H_
+#endif // TC_SRHRECOMBINATION_H

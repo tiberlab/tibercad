@@ -24,8 +24,8 @@
 
 
 
-#ifndef _TIBERLINEARSOLVER_H_
-#define _TIBERLINEARSOLVER_H_
+#ifndef TC_TIBERLINEARSOLVER_H
+#define TC_TIBERLINEARSOLVER_H
 
 #include "tibercad/base/libMeshDefs.h"
 #include "tibercad/module/TiberModelObject.h"
@@ -277,4 +277,4 @@ TiberLinearSolver::do_parse_options(void)
 }
 
 
-#endif // _TIBERLINEARSOLVER_H_
+#endif // TC_TIBERLINEARSOLVER_H

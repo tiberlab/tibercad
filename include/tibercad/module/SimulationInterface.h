@@ -26,8 +26,8 @@
 
 /*! \file SimulationInterface.h */
 
-#ifndef _SIMULATIONINTERFACE_H_
-#define _SIMULATIONINTERFACE_H_
+#ifndef TC_SIMULATIONINTERFACE_H
+#define TC_SIMULATIONINTERFACE_H
 
 #include "tibercad/base/tiber_config.h"
 #include "tibercad/module/TiberModelObject.h"
@@ -173,21 +173,13 @@ class SimulationInterface : public TiberModelObject
     bool is_task(void) const;
 
 
-    //! Get the default name for this simulation
-    /*!
-     * This can be useful to identify a named simulation for which
-     * we dont't know the name neither the type
-     */
-    std::string get_default_name(void) const;
-
-
     //! Create a simulation of type \c type with options
     /*!
      * \param type the simulation type to create
      * \param options the options for the simulation
      *
-     * \return a pointer to the newly created simulation object or \c NULL
-     * if the \c typr does not exist.
+     * \return a pointer to the newly created simulation object or \c nullptr
+     * if the \c type does not exist.
      */
     static SimulationInterface* create(const std::string& type,
         const ModelOptions& options = ModelOptions());
@@ -1640,7 +1632,7 @@ class SimulationInterface : public TiberModelObject
 
 
     //! create a unique name for the equation system
-    void create_equation_system_name(void) TBDLLOCAL;
+    void create_equation_system_name(void) TC_DLLOCAL;
 
 
     //! Set the simulation type (= identifier)
@@ -1648,18 +1640,18 @@ class SimulationInterface : public TiberModelObject
      * The identifier is used at creation time to know which type of
      * simulation to create.
      */
-    void set_type(const std::string& type) TBDLLOCAL;
+    void set_type(const std::string& type) TC_DLLOCAL;
 
 
     //! Print all registered solution variables
-    void print_known_solution_variables(void) const TBDLLOCAL;
+    void print_known_solution_variables(void) const TC_DLLOCAL;
 
 
     //! Do not allow copy constructor
-    SimulationInterface(const SimulationInterface&) TBDLLOCAL;
+    SimulationInterface(const SimulationInterface&) TC_DLLOCAL;
 
     //! Do not allow assignement operator
-    SimulationInterface& operator=(const SimulationInterface&) TBDLLOCAL;
+    SimulationInterface& operator=(const SimulationInterface&) TC_DLLOCAL;
 
     //! Eliminate unneeded submodels
     void _eliminate_unneeded_submodels(ModelOptions& opts, ID reg_id) const;
@@ -2256,4 +2248,4 @@ SimulationInterface::simulations_end(void)
 
 
 
-#endif // _SIMULATIONINTERFACE_H_
+#endif // TC_SIMULATIONINTERFACE_H

@@ -25,20 +25,20 @@
  */
 
 
-#ifndef _POISSONMODEL_H_
-#define _POISSONMODEL_H_
+#ifndef TC_POISSONMODEL_H
+#define TC_POISSONMODEL_H
 
 #include "tibercad/physics/PhysicalModel.h"
 
 
 //! This is the base class for the WI physical model
-class WIModel : public PhysicalModel
+class TC_DLEXPORT WIModel : public PhysicalModel
 {
 
   public:
 
     //! Destructor
-    virtual ~WIModel(void) {};
+    virtual ~WIModel(void);
 
     //! Creator function
     static WIModel* create(const Material* mat, const ModelOptions& options);
@@ -73,7 +73,7 @@ class WIModel : public PhysicalModel
     double _diffusivity = 3.43e-11;
 
     //! The constructor method
-    static TiberModelObject* _create(const ModelOptions& options, const void*);
+    static TiberModelObject* _create(const ModelOptions& options);
 
     //! The destructor method
     static void _destroy(TiberModelObject* p);
@@ -105,4 +105,4 @@ WIModel::get_diffusivity(void) const
 }
 
 
-#endif // _POISSONMODEL_H_
+#endif // TC_POISSONMODEL_H

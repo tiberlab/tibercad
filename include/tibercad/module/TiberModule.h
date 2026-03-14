@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _TIBERMODULE_H_
-#define _TIBERMODULE_H_
+#ifndef TC_TIBERMODULE_H
+#define TC_TIBERMODULE_H
 
 #include "tibercad/base/tiber_dll.h"
 
@@ -36,8 +36,8 @@
 
 
 
-#ifndef MODULE_NAME
-#define MODULE_NAME
+#ifndef TC_MODULE_NAME
+#define TC_MODULE_NAME
 #endif
 
 /*!
@@ -49,37 +49,47 @@
  * For each module it may be included only once!
  *
  */
-#ifdef CREATABLE
+#ifdef TC_CREATABLE
 
-#ifndef xstr
-#define xstr(a) stringify(a)
-#endif
-#ifndef stringify
-#define stringify(a) #a
+/*!
+ * Helper class to create model objects having protected ctor
+ */
+template <class T>
+class TC_ModelEnabler : public T
+{
+public:
+    template <class... Args>
+    TC_ModelEnabler(Args&&... args)
+        : T(std::forward<Args>(args)...)
+    {}
+};
+
+#ifndef TC_STRINGIFY
+#define TC_STRINGIFY(a) TC_STRINGIFY1(a)
+#define TC_STRINGIFY1(a) #a
 #endif
 
 extern "C" {
-  TBDLEXPORT void
-  TBDESTROYFUNC(TiberModelObject* p) {
+  TC_DLEXPORT void
+  TC_DESTROYFUNC(TiberModelObject* p) {
     delete p;
   }
 
-  TBDLEXPORT TiberModelObject*
-  TBCREATEFUNC(const ModelOptions& options, const void* handle) {
+  TC_DLEXPORT TiberModelObject*
+  TC_CREATEFUNC(const ModelOptions& options) {
     TiberModelObject* obj = NULL;
-#ifdef CREATORCODE
-#include xstr(CREATORCODE)
+#ifdef TC_FACTORYCODE
+#include TC_STRINGIFY(TC_FACTORYCODE)
 #else
-    obj = CREATABLE::create(options);
-    //obj = new CREATABLE(options); maybe should change to this
+    obj = new TC_ModelEnabler<TC_CREATABLE>(options); 
 #endif
-    static_cast<const void*>(handle);
     return obj;
   }
 }
-#endif
+
+#endif // TC_CREATABLE
 
 
 
 
-#endif // _TIBERMODULE_H_
+#endif // TC_TIBERMODULE_H

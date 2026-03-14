@@ -194,12 +194,6 @@ DopingDependentMobility::get_mobility(void)
 
 
 void
-DopingDependentMobility::get_mobility_derivatives(std::vector<double>& dm)
-{
-  dm[0] = dm[1] = dm[2] = 0.0;
-}
-
-void
 DopingDependentMobility::get_derivative_grad_potential(libMesh::RealGradient& dm)
 {
   dm.zero();

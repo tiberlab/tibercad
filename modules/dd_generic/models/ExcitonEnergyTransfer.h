@@ -26,8 +26,8 @@
 
 
 
-#ifndef _EXCITONENERGYTRANSFER_H_
-#define _EXCITONENERGYTRANSFER_H_
+#ifndef TC_EXCITONENERGYTRANSFER_H
+#define TC_EXCITONENERGYTRANSFER_H
 
 #include "RecombinationModelInterface.h"
 #include "tibercad/base/TypeDefs.h"
@@ -38,16 +38,13 @@
  * This class implements direct recombination processes that can be
  * modeled by \f[R_{direct}=C(np-n_i^2)\f]
  */
-class TBDLLOCAL ExcitonEnergyTransfer : public RecombinationModelInterface
+class TC_DLLOCAL ExcitonEnergyTransfer : public RecombinationModelInterface
 {
 
   public:
 
     //! Destructor
     virtual ~ExcitonEnergyTransfer(void) {};
-
-    //! Create a ConstantMobility object
-    static ExcitonEnergyTransfer* create(const ModelOptions& options);
 
 
   protected:
@@ -123,16 +120,7 @@ ExcitonEnergyTransfer::ExcitonEnergyTransfer(const ModelOptions& options)
 }
 
 
-inline
-ExcitonEnergyTransfer*
-ExcitonEnergyTransfer::create(const ModelOptions& options)
-{
-  return new ExcitonEnergyTransfer(options);
-}
 
 
 
-
-
-
-#endif // _EXCITONENERGYTRANSFER_H__
+#endif // TC_EXCITONENERGYTRANSFER_H

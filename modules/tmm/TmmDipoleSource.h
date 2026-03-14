@@ -30,12 +30,11 @@
 
 #include "tibercad/physics/PhysicalModel.h"
 #include "elem.h"
-// #include "Tmm.h"
 
 using namespace std;
 
 //! This is the base class for the TMM bulk physical model
-class TmmDipoleSource : public PhysicalModel
+class TC_DLEXPORT TmmDipoleSource : public PhysicalModel
 {
 
 public:
@@ -43,10 +42,6 @@ public:
 
   //! Destructor
   virtual ~TmmDipoleSource(void) {};
-
-  //! Creator function
-  static TmmDipoleSource* create(const ModelOptions& options);
-
 
   const double& get_emission_power(void) const;
 
@@ -79,4 +74,4 @@ private:
 
 
 
-#endif // _TMMBULKMODEL_H_
+#endif // TC_TMMBULKMODEL_H

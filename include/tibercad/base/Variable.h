@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _VARIABLEVALUE_H_
-#define _VARIABLEVALUE_H_
+#ifndef TC_VARIABLEVALUE_H
+#define TC_VARIABLEVALUE_H
 
 
 #include <iostream>
@@ -240,4 +240,4 @@ VariableValue::check_string(const std::string& s)
   return (!s.empty() && (s[0] == '$'));
 }
 
-#endif // _VARIABLEVALUE_H_
+#endif // TC_VARIABLEVALUE_H

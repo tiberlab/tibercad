@@ -27,8 +27,8 @@
 
 
 
-#ifndef _THERMOELECTRICPOWER_H_
-#define _THERMOELECTRICPOWER_H_
+#ifndef TC_THERMOELECTRICPOWER_H
+#define TC_THERMOELECTRICPOWER_H
 
 
 //#ifndef TIBER_MODULE_NAME
@@ -56,7 +56,7 @@
  *  \f$  \alpha = \frac{T}{\mu_p} \frac {\partial \mu_p}{\partial T}\f$
  *
  */
-class TBDLLOCAL ThermoelectricPower : public DriftDiffusionModelInterface
+class TC_DLLOCAL ThermoelectricPower : public DriftDiffusionModelInterface
 {
 
   public:

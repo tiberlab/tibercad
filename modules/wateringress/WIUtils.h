@@ -24,16 +24,18 @@
  * \note This file is part of module wateringress.
  */
 
-#ifndef _WIUTILS_H_
-#define _WIUTILS_H_
+#ifndef TC_WIUTILS_H
+#define TC_WIUTILS_H
+
+#include "tibercad/base/tiber_dll.h"
 
 //! A namespace with some utility functions
 namespace WIUtils
 {
 
   //! Provide the saturation water pressure using Goff-Gratch equation
-  double goff_gratch(double T);
+  TC_DLEXPORT double goff_gratch(double T);
 
 };
 
-#endif // _WIUTILS_H_
+#endif // TC_WIUTILS_H

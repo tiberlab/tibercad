@@ -24,8 +24,8 @@
 
 
 
-#ifndef _TIBERVTKIO_H_
-#define _TIBERVTKIO_H_
+#ifndef TC_TIBERVTKIO_H
+#define TC_TIBERVTKIO_H
 
 #include "tibercad/base/TypeDefs.h"
 #include "tibercad/io/DataOutput.h"
@@ -35,7 +35,7 @@
 
 
 //! Write data using VTK XML unstructured grid format (.vtu)
-class TBDLLOCAL TiberVTKIO : public DataOutput
+class TC_DLLOCAL TiberVTKIO : public DataOutput
 {
 
  public:

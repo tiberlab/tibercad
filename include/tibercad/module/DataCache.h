@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _DATACACHE_H
-#define _DATACACHE_H
+#ifndef TC_DATACACHE_H
+#define TC_DATACACHE_H
 
 #include "tibercad/base/TypeDefs.h"
 #include "tibercad/base/libMeshDefs.h"
@@ -144,4 +144,4 @@ class DataCache
 };
 
 
-#endif // _DATACACHE_H
+#endif // TC_DATACACHE_H

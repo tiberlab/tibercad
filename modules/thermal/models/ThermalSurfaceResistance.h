@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _THERMALSURFACERESISTANCE_H_
-#define _THERMALSURFACERESISTANCE_H_
+#ifndef TC_THERMALSURFACERESISTANCE_H
+#define TC_THERMALSURFACERESISTANCE_H
 
 #include "ThermalBoundaryModel.h"
 
@@ -44,7 +44,7 @@ namespace libMesh
 
 
 //! The base class for Poisson boundary conditions
-class TBDLLOCAL ThermalSurfaceResistance : public ThermalBoundaryModel
+class TC_DLLOCAL ThermalSurfaceResistance : public ThermalBoundaryModel
 {
 
   public:
@@ -52,37 +52,24 @@ class TBDLLOCAL ThermalSurfaceResistance : public ThermalBoundaryModel
     //! Destructor
     ~ThermalSurfaceResistance(void) {};
 
-    //! Creator function
-    static ThermalSurfaceResistance* create(const ModelOptions& options);
-
- //! Calculate for a point on the given side
+    //! Calculate for a point on the given side
     virtual void calculate(const Elem* elem, unsigned int side,
-        const Point& point);
+        const Point& point) override;
+
+
   protected:
+
+    //! Constructor
+    explicit ThermalSurfaceResistance(const ModelOptions& options);
 
     //! Initialize
     virtual void do_init(void);
 
-    /* In some cases it might be useful to reimplement this: */
-    // virtual void do_init_interface(const PhysicalModel* comp_A,
-    //         const PhysicalModel* comp_B);
-
-
-    /* This is not used here: */
-    // virtual void read_database(void);
-
-
-    /* We do not use this here: */
-    // virtual void read_interface_database(void);
-
 
   private:
 
-    //! Constructor
-    ThermalSurfaceResistance(const ModelOptions& options);
-
-  double _temperature;
-  double _resistance;
+    double _temperature;
+    double _resistance;
 };
 
 
@@ -97,15 +84,6 @@ ThermalSurfaceResistance::ThermalSurfaceResistance(const ModelOptions& options) 
 
 
 
-inline
-ThermalSurfaceResistance*
-ThermalSurfaceResistance::create(const ModelOptions& options)
-{
-  return new ThermalSurfaceResistance(options);
-}
 
 
-
-
-
-#endif // _POISSONDIRICHLET_H_
+#endif // TC_POISSONDIRICHLET_H

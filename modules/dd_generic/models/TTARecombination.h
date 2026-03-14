@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _TTARECOMBINATION_H_
-#define _TTARECOMBINATION_H_
+#ifndef TC_TTARECOMBINATION_H
+#define TC_TTARECOMBINATION_H
 
 #include "RecombinationModelInterface.h"
 #include "tibercad/base/TypeDefs.h"
@@ -38,16 +38,13 @@ class SimulationInterface;
  * Triplet-triplet annihilation (TTA) is
  * modeled by \f[R=C n_T^{2}(1-exp{-2/kT\phi_T}\f]
  */
-class TBDLLOCAL TTARecombination : public RecombinationModelInterface
+class TC_DLLOCAL TTARecombination : public RecombinationModelInterface
 {
 
   public:
 
     //! Destructor
     virtual ~TTARecombination(void) {};
-
-    //! Create a ConstantMobility object
-    static TTARecombination* create(const ModelOptions& options);
 
     
   protected:
@@ -85,16 +82,9 @@ TTARecombination::TTARecombination(const ModelOptions& options)
 }
 
 
-inline
-TTARecombination*
-TTARecombination::create(const ModelOptions& options)
-{
-  return new TTARecombination(options);
-}
 
 
 
 
 
-
-#endif // _TTARECOMBINATION_H__
+#endif // TC_TTARECOMBINATION_H

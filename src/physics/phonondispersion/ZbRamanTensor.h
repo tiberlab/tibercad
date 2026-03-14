@@ -22,8 +22,8 @@
  * \internal
  */
 
-#ifndef _ZB_RAMANTENSOR_H_
-#define _ZB_RAMANTENSOR_H_
+#ifndef TC_ZB_RAMANTENSOR_H
+#define TC_ZB_RAMANTENSOR_H
 
 
 #include "PhononModel.h"

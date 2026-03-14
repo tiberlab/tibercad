@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _DEFAULTBANDPROPERTIES_H_
-#define _DEFAULTBANDPROPERTIES_H_
+#ifndef TC_DEFAULTBANDPROPERTIES_H
+#define TC_DEFAULTBANDPROPERTIES_H
 
 #include "BandProperties.h"
 
@@ -40,9 +40,6 @@ class DefaultBandProperties : public BandProperties
     //! Destructor
     virtual ~DefaultBandProperties(void); 
 
-    //! Creator method
-    static DefaultBandProperties* create(const ModelOptions& options);
-
 
   protected:
 
@@ -54,4 +51,4 @@ class DefaultBandProperties : public BandProperties
 };
 
 
-#endif // _DEFAULTBANDPROPERTIES_H_
+#endif // TC_DEFAULTBANDPROPERTIES_H

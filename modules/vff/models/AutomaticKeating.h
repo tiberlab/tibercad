@@ -24,8 +24,8 @@
  * \note This file is part of module vff.
  */
 
-#ifndef _AUTOMATICKEATING_H_
-#define _AUTOMATICKEATING_H_
+#ifndef TC_AUTOMATICKEATING_H
+#define TC_AUTOMATICKEATING_H
 
 #include "Keating.h"
 
@@ -36,27 +36,24 @@ namespace libMesh
 }
 
 //! User defined Keating model parameters
-class TBDLLOCAL AutomaticKeating : public Keating
+class TC_DLLOCAL AutomaticKeating : public Keating
 {
 public:
 
   //! Destructor
   virtual ~AutomaticKeating(void) {};
 
-  //! Creator function
-  static AutomaticKeating* create(const ModelOptions& options);
-
 protected:
 
+  explicit AutomaticKeating(const ModelOptions& options);
+
   //! Assign value to parameters
-  virtual void do_init(void);
+  virtual void do_init(void) override;
 
   //! Print some info
-  virtual void do_print_info(void);
+  virtual void do_print_info(void) override;
 
 private:
-
-  AutomaticKeating(const ModelOptions& options);
 
   //! Calculate zb alpha from stiffness constants
   void calculate_zb_alpha(void);
@@ -111,14 +108,6 @@ private:
 
 };
 
-inline
-AutomaticKeating*
-AutomaticKeating::create(const ModelOptions& options)
-{
-
-     return new AutomaticKeating(options);
-
-}
 
 
 

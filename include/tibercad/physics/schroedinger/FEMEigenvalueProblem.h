@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _FEMEIGENVALUEPROBLEM_H_
-#define _FEMEIGENVALUEPROBLEM_H_
+#ifndef TC_FEMEIGENVALUEPROBLEM_H
+#define TC_FEMEIGENVALUEPROBLEM_H
 
 #include "tibercad/physics/schroedinger/EigenvalueProblem.h"
 
@@ -235,4 +235,4 @@ FEMEigenvalueProblem::get_periodicity_vector(unsigned int dof) const
 
 
 
-#endif // _FEMEIGENVALUEPROBLEM_H_
+#endif // TC_FEMEIGENVALUEPROBLEM_H

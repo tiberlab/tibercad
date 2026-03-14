@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _DIRECTRECOMBINATION_H_
-#define _DIRECTRECOMBINATION_H_
+#ifndef TC_DIRECTRECOMBINATION_H
+#define TC_DIRECTRECOMBINATION_H
 
 #include "RecombinationModelInterface.h"
 #include "tibercad/base/TypeDefs.h"
@@ -38,16 +38,13 @@ class SimulationInterface;
  * This class implements direct recombination processes that can be
  * modeled by \f[R_{direct}=C(np-n_i^2)\f]
  */
-class TBDLLOCAL DirectRecombination : public RecombinationModelInterface
+class TC_DLLOCAL DirectRecombination : public RecombinationModelInterface
 {
 
   public:
 
     //! Destructor
     virtual ~DirectRecombination(void) {};
-
-    //! Create a ConstantMobility object
-    static DirectRecombination* create(const ModelOptions& options);
 
     
   protected:
@@ -109,16 +106,8 @@ DirectRecombination::DirectRecombination(const ModelOptions& options)
 }
 
 
-inline
-DirectRecombination*
-DirectRecombination::create(const ModelOptions& options)
-{
-  return new DirectRecombination(options);
-}
 
 
 
 
-
-
-#endif // _DIRECTRECOMBINATION_H__
+#endif // TC_DIRECTRECOMBINATION_H

@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _PVMODULEMODEL_H_
-#define _PVMODULEMODEL_H_
+#ifndef TC_PVMODULEMODEL_H
+#define TC_PVMODULEMODEL_H
 
 #include "tibercad/physics/PhysicalModel.h"
 
@@ -37,7 +37,7 @@ class ElementaryCell;
 
 
 //! This is the basic physical modle of PVModule
-class PVModuleModel : public PhysicalModel
+class TC_DLEXPORT PVModuleModel : public PhysicalModel
 {
 
   public:
@@ -52,7 +52,7 @@ class PVModuleModel : public PhysicalModel
     };
 
     //! Destructor
-    ~PVModuleModel(void) {};
+    virtual ~PVModuleModel(void);
 
     //! Creator function
     static PVModuleModel* create(const Material* mat, const ModelOptions& options);
@@ -116,7 +116,7 @@ class PVModuleModel : public PhysicalModel
     ElementaryCell* _elementary_cell = nullptr;
 
     //! The constructor method
-    static TiberModelObject* _create(const ModelOptions& options, const void*);
+    static TiberModelObject* _create(const ModelOptions& options);
 
     //! The destructor method
     static void _destroy(TiberModelObject* p);
@@ -140,4 +140,4 @@ PVModuleModel::get_elementary_cell(void) const
   return _elementary_cell;
 }
 
-#endif // _PVMODULEMODEL_H_
+#endif // TC_PVMODULEMODEL_H

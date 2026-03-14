@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _DATABASE_H_
-#define _DATABASE_H_
+#ifndef TC_DATABASE_H
+#define TC_DATABASE_H
 
 #include "tibercad/base/ModelOptions.h"
 #include "tibercad/base/tiber_dll.h"
@@ -277,20 +277,20 @@ class Database
 
 
     //! Find a file in the search path
-    const std::string find_file(const std::string& file) const TBDLLOCAL;
+    const std::string find_file(const std::string& file) const TC_DLLOCAL;
 
     //! Open the database
     /*!
      * This method is called by all other methods that
      * access the database
      */
-    void open(void) const TBDLLOCAL;
+    void open(void) const TC_DLLOCAL;
 
     //! Does the real opening of the database
-    void do_open(void) const TBDLLOCAL;
+    void do_open(void) const TC_DLLOCAL;
 
     //! Check for a variable and throw exception if it is not found
-    void require_variable(const std::string& variable) const TBDLLOCAL;
+    void require_variable(const std::string& variable) const TC_DLLOCAL;
 
 };
 
@@ -420,4 +420,4 @@ Database::get_component_database(size_t i)
 
 
 
-#endif // _DATABASE_H_
+#endif // TC_DATABASE_H

@@ -24,8 +24,8 @@
 //  
 //  (C) 2001-2002 Frank R. Schaefer  
 //==========================================================================
-#ifndef __GETPOT_H__
-#define __GETPOT_H__
+#ifndef TC_GETPOT_H
+#define TC_GETPOT_H
 
 #if defined(WIN32) || defined(SOLARIS_RAW) || defined(__SUNPRO_CC) || (__GNUC__ == 2) || defined(__HP_aCC) || defined (__CYGWIN__) || defined (__MINGW32__)
 #  define strtok_r(a, b, c) std::strtok(a, b)
@@ -2207,6 +2207,6 @@ GetPot::variable::operator=(const GetPot::variable& Other)
 
 #undef victorate
 #undef reduce
-#endif // __GETPOT_H__
+#endif // TC_GETPOT_H
 
 

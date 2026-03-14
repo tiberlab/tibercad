@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _EXCITONISC_H_
-#define _EXCITONISC_H_
+#ifndef TC_EXCITONISC_H
+#define TC_EXCITONISC_H
 
 #include "RecombinationModelInterface.h"
 #include "tibercad/base/TypeDefs.h"
@@ -38,16 +38,13 @@ class SimulationInterface;
  * This class implements direct recombination processes that can be
  * modeled by \f[R_{direct}=C(np-n_i^2)\f]
  */
-class TBDLLOCAL ExcitonISC : public RecombinationModelInterface
+class TC_DLLOCAL ExcitonISC : public RecombinationModelInterface
 {
 
   public:
 
     //! Destructor
     virtual ~ExcitonISC(void) {};
-
-    //! Create a ConstantMobility object
-    static ExcitonISC* create(const ModelOptions& options);
 
 
   protected:
@@ -104,16 +101,8 @@ ExcitonISC::ExcitonISC(const ModelOptions& options)
 }
 
 
-inline
-ExcitonISC*
-ExcitonISC::create(const ModelOptions& options)
-{
-  return new ExcitonISC(options);
-}
 
 
 
 
-
-
-#endif // _EXCITONISC_H__
+#endif // TC_EXCITONISC_H

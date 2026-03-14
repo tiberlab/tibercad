@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _SCHOTTKYCONTACT_H_
-#define _SCHOTTKYCONTACT_H_
+#ifndef TC_SCHOTTKYCONTACT_H
+#define TC_SCHOTTKYCONTACT_H
 
 #include "ElectricalContact.h"
 
@@ -34,12 +34,9 @@
 /*!
  * \brief A Schottky contact
  */
-class TBDLLOCAL SchottkyContact : public ElectricalContact
+class TC_DLLOCAL SchottkyContact : public ElectricalContact
 {
   public:
-
-    //! Create a schottky contact
-    static SchottkyContact* create(const ModelOptions& options);
 
 
   protected:
@@ -79,21 +76,8 @@ class TBDLLOCAL SchottkyContact : public ElectricalContact
 
 
 
-//
-// inline
-//
-
-
-inline
-SchottkyContact*
-SchottkyContact::create(const ModelOptions& options)
-{
-  return new SchottkyContact(options);
-}
 
 
 
 
-
-
-#endif // _SCHOTTKYCONTACT_H_
+#endif // TC_SCHOTTKYCONTACT_H

@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _EXTPROFILE1D_H_
-#define _EXTPROFILE1D_H_
+#ifndef TC_EXTPROFILE1D_H
+#define TC_EXTPROFILE1D_H
 
 
 #include "tibercad/profiles/ExternalProfile.h"

@@ -25,15 +25,15 @@
  */
 
 
-#ifndef _VFF_H_
-#define _VFF_H_
+#ifndef TC_VFF_H
+#define TC_VFF_H
 
 #include "tibercad/module/SimulationInterface.h"
 #include "tibercad/atomistic/StrainLattice.h"
 
 class VffModel;
 
-class TBDLLOCAL Vff : public SimulationInterface
+class TC_DLLOCAL Vff : public SimulationInterface
 {
 
 public:
@@ -61,10 +61,7 @@ public:
    * We do not declare it virtual here, as we will not allow
    * to derive from this class anyway.
    */
-  ~Vff(void);
-
-  //! We need a public static creator function
-  static Vff* create(const ModelOptions& options);
+  virtual ~Vff(void);
 
   void keating_gradient(double* grad, double* x, int n);
 
@@ -82,6 +79,9 @@ public:
   const std::vector<double>& get_dof(void) const;
 
 protected:
+
+  //! The constructor
+  explicit Vff(const ModelOptions& options);
 
   //! The initialization
   virtual void do_init(void) final;
@@ -124,12 +124,6 @@ protected:
 
 private:
 
-
-  //! The constructor
-  /*!
-   * Being private disables further inheritance.
-   */
-  Vff(const ModelOptions& options);
 
 
   class Options

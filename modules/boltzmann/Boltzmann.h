@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _BOLTZMANN_H_
-#define _BOLTZMANN_H_
+#ifndef TC_BOLTZMANN_H
+#define TC_BOLTZMANN_H
 
 #include "tibercad/module/SimulationInterface.h"
 #include "tibercad/geom/ElementSide.h"
@@ -43,7 +43,7 @@ class TiberLinearSystem;
  *
  * Illustrates the basic usage of the SimulationInterface API.
  */
-class TBDLLOCAL Boltzmann : public SimulationInterface
+class TC_DLLOCAL Boltzmann : public SimulationInterface
 {
 
   public:
@@ -55,12 +55,12 @@ class TBDLLOCAL Boltzmann : public SimulationInterface
      */
     ~Boltzmann(void);
 
-    //! We need a public static creator function
-    static Boltzmann* create(const ModelOptions& options);
-
 
 
   protected:
+
+    //! The constructor
+    Boltzmann(const ModelOptions& options);
 
     //! The initialization
     virtual void do_init(void);
@@ -349,12 +349,6 @@ class TBDLLOCAL Boltzmann : public SimulationInterface
       MaxTemp
     };
 
-  //! The constructor
-    /*!
-     * Being private disables further inheritance.
-     */
-    Boltzmann(const ModelOptions& options);
-
     //! The assembly function
     static void assemble_fourier(libMesh::EquationSystems& es, const std::string& system_name);
 
@@ -449,4 +443,4 @@ Boltzmann::assemble_global(libMesh::EquationSystems& es, const std::string& syst
 {
   _this->do_assemble_global(es, system_name);
 }
-#endif // _MYPOISSON_H_
+#endif // TC_MYPOISSON_H

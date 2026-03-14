@@ -33,7 +33,7 @@
 /*!
   Segment Definition.
 */
-class TBDLLOCAL ISE_Element_1D: public  ISE_Element
+class TC_DLLOCAL ISE_Element_1D: public  ISE_Element
 {
  public:
 

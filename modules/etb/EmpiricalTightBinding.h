@@ -24,8 +24,8 @@
  * \note This file is part of module empirical_tb.
  */
 
-#ifndef _EMPIRICALTIGHTBINDING_H_
-#define _EMPIRICALTIGHTBINIDNG_H_
+#ifndef TC_EMPIRICALTIGHTBINDING_H
+#define TC_EMPIRICALTIGHTBINIDNG_H
 
 #include "tibercad/physics/tightbinding/TightBinding.h"
 #include "tibercad/physics/StrainInterface.h"
@@ -118,14 +118,8 @@ class ETB : public TightBinding
     int solver_flag;
   };
 
-  //! Constructor
-  ETB(const ModelOptions& options);
-
   //! Destructor
-  ~ETB(void);
-
-  //! Create object
-  static ETB* create(const ModelOptions& options);
+  virtual ~ETB(void);
 
   //! assemble the matrix again w/o init overheads
   void reassemble(void);
@@ -155,6 +149,9 @@ class ETB : public TightBinding
   unsigned int get_number_of_bands(void) const;
 
  protected:
+
+  //! Constructor
+  ETB(const ModelOptions& options);
 
   //! get band-edges including potential
   double get_band_edge(const std::string& band);

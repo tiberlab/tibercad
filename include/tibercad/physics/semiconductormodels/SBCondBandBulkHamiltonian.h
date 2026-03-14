@@ -25,8 +25,8 @@
 
 
 
-#ifndef _SBCONDBULKHAMILTONIAN_H_
-#define _SBCONDBULKHAMILTONIAN_H_
+#ifndef TC_SBCONDBULKHAMILTONIAN_H
+#define TC_SBCONDBULKHAMILTONIAN_H
 
 #include "tibercad/physics/semiconductormodels/SBbulkHamiltonian.h"
 #include "tibercad/physics/semiconductormodels/Semiconductor.h"

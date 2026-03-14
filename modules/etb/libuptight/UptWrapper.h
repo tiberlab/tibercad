@@ -24,8 +24,8 @@
  * \note This file is part of module empirical_tb.
  */
 
-#ifndef _UPTWRAPPER_H_
-#define _UPTWRAPPER_H_
+#ifndef TC_UPTWRAPPER_H
+#define TC_UPTWRAPPER_H
 
 #include "uptight.h"
 #include <iostream>

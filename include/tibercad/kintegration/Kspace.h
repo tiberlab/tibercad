@@ -23,8 +23,8 @@
  *       API version: 3.5
  */
 
-#ifndef _KSPACE_H_
-#define _KSPACE_H_
+#ifndef TC_KSPACE_H
+#define TC_KSPACE_H
 
 #include "tibercad/base/ModelOptions.h"
 #include "tibercad/base/InitFailedException.h"

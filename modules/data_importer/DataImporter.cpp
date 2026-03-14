@@ -84,12 +84,6 @@ DataImporter::~DataImporter(void)
   // Move along, nothing to see here...
 }
 
-DataImporter*
-DataImporter::create(const ModelOptions& options)
-{
-  // Just copying from the example here...
-  return new DataImporter(options);
-}
 
 void
 DataImporter::do_init(void)

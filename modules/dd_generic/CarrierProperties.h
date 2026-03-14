@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _CARRIERPROPERTIES_H_
-#define _CARRIERPROPERTIES_H_
+#ifndef TC_CARRIERPROPERTIES_H
+#define TC_CARRIERPROPERTIES_H
 
 #include "DriftDiffusionModelInterface.h"
 #include "tibercad/physics/TemperatureInterface.h"
@@ -40,13 +40,13 @@ class MobilityModelInterface;
 
 
 //! Base class for band parameter models
-class CarrierProperties : public DriftDiffusionModelInterface
+class TC_DLEXPORT CarrierProperties : public DriftDiffusionModelInterface
 {
 
   public:
 
     //! Destructor
-    virtual ~CarrierProperties(void) = default;
+    virtual ~CarrierProperties(void);
 
     //! Creator method
     static CarrierProperties* create(const ModelOptions& options);

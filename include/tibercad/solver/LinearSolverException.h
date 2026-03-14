@@ -25,8 +25,8 @@
 
 
 
-#ifndef _LINEARSOLVEREXCEPTION_H_
-#define _LINEARSOLVEREXCEPTION_H_
+#ifndef TC_LINEARSOLVEREXCEPTION_H
+#define TC_LINEARSOLVEREXCEPTION_H
 
 #include "tibercad/solver/SolverException.h"
 
@@ -51,4 +51,4 @@ class LinearSolverException : public SolverException
 
 
 
-#endif // _LINEARSOLVEREXCEPTION_H_
+#endif // TC_LINEARSOLVEREXCEPTION_H

@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _DSSCMODEL_H_
-#define _DSSCMODEL_H_
+#ifndef TC_DSSCMODEL_H
+#define TC_DSSCMODEL_H
 
 
 #ifndef TIBER_MODULE_PREFIX

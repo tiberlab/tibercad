@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _MATERIAL_H_
-#define _MATERIAL_H_
+#ifndef TC_MATERIAL_H
+#define TC_MATERIAL_H
 
 #include "tibercad/physics/PhysicalObject.h"
 #include "tibercad/base/TypeDefs.h"
@@ -296,7 +296,7 @@ class Material : public PhysicalObject
     std::set<Dopant*> _acceptors;
 
     //! Clear all doping
-    void clear_doping(void) TBDLLOCAL;
+    void clear_doping(void) TC_DLLOCAL;
 };
 
 
@@ -474,5 +474,5 @@ Material::count_labels(void) const
 }
 
 
-#endif // _MATERIAL_H_
+#endif // TC_MATERIAL_H
 

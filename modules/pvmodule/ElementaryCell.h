@@ -25,21 +25,24 @@
  */
 
 
-#ifndef _ELEMENTARYCELL_H_
-#define _ELEMENTARYCELL_H_
+#ifndef TC_ELEMENTARYCELL_H
+#define TC_ELEMENTARYCELL_H
 
 #include "tibercad/physics/PhysicalModel.h"
 
 #include <ostream>
 
 
-// Base class for elementary cell models
-class ElementaryCell : public PhysicalModel
+/*!
+ * \brief Base class for elementary cell models
+ *
+ */
+class TC_DLEXPORT ElementaryCell : public PhysicalModel
 {
 
   public:
 
-    virtual ~ElementaryCell(void) {};
+    virtual ~ElementaryCell(void);
 
     //! Write the netlist
     /*!
@@ -106,4 +109,4 @@ ElementaryCell::ElementaryCell(const ModelOptions& options) :
 
 
 
-#endif // _ELEMENTARYCELL_H_
+#endif // TC_ELEMENTARYCELL_H

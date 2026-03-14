@@ -40,7 +40,7 @@ class Elem;
 
 
 //! The base class for Poisson boundary conditions
-class TBDLLOCAL Custom : public ElasticityBoundaryModel
+class TC_DLLOCAL Custom : public ElasticityBoundaryModel
 {
 
   public:
@@ -48,38 +48,24 @@ class TBDLLOCAL Custom : public ElasticityBoundaryModel
     //! Destructor
     ~Custom(void) {};
 
-    //! Creator function
-    static Custom* create(const ModelOptions& options);
-
 
     //! Calculate for a point on the given side
     virtual void calculate(const libMesh::Elem* elem, unsigned int side,
-			   const libMesh::Point& point){};
+			   const libMesh::Point& point) override {};
 
 
   protected:
 
+    //! Constructor
+    Custom(const ModelOptions& options);
+
     //! Initialize
-  virtual void do_init(void);
+    virtual void do_init(void) override;
 
-    /* In some cases it might be useful to reimplement this: */
-    // virtual void do_init_interface(const PhysicalModel* comp_A,
-    //         const PhysicalModel* comp_B);
-
-
-    /* This is not used here: */
-    // virtual void read_database(void);
-
-
-    /* We do not use this here: */
-    // virtual void read_interface_database(void);
-
+   
 
 
   private:
-
-    //! Constructor
-    Custom(const ModelOptions& options);
 
    
 };
@@ -94,14 +80,7 @@ Custom::Custom(const ModelOptions& options) :
 
 
 
-inline
-Custom*
-Custom::create(const ModelOptions& options)
-{
-  return new Custom(options);
-}
 
 
 
-
-#endif // _POISSONDIRICHLET_H_
+#endif // TC_POISSONDIRICHLET_H

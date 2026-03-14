@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _ISOTROPICSTIFFNESS_H_
-#define _ISOTROPICSTIFFNESS_H_
+#ifndef TC_ISOTROPICSTIFFNESS_H
+#define TC_ISOTROPICSTIFFNESS_H
 
 #include "StiffnessModel.h"
 
@@ -40,7 +40,7 @@ class Elem;
 
 
 //! The base class for Poisson boundary conditions
-class TBDLLOCAL IsotropicStiffness : public StiffnessModel
+class TC_DLLOCAL IsotropicStiffness : public StiffnessModel
 {
 
   public:
@@ -48,28 +48,17 @@ class TBDLLOCAL IsotropicStiffness : public StiffnessModel
   //! Destructor
   ~IsotropicStiffness(void) {};
   
-  //! Creator function
-  static IsotropicStiffness* create(const ModelOptions& options);
-  
-  virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point){};
+  virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point) override {};
 
   protected:
 
+    //! Constructor
+    IsotropicStiffness(const ModelOptions& options);
+
     //! Initialize
-    virtual void do_init(void);
+    virtual void do_init(void) override;
 
-    /* In some cases it might be useful to reimplement this: */
-    // virtual void do_init_interface(const PhysicalModel* comp_A,
-    //         const PhysicalModel* comp_B);
-
-
-    /* This is not used here: */
-  // virtual void read_database(void);
-
-
-    /* We do not use this here: */
-    // virtual void read_interface_database(void);
-
+   
 
 
   private:
@@ -77,23 +66,12 @@ class TBDLLOCAL IsotropicStiffness : public StiffnessModel
   double _young;
   double _poisson;
   
-
-  //! Constructor
-    IsotropicStiffness(const ModelOptions& options);
   
 };
 
 
 
 
-inline
-IsotropicStiffness*
-IsotropicStiffness::create(const ModelOptions& options)
-{ 
-  return new  IsotropicStiffness(options);
-}
 
 
-
-
-#endif // _GRAYMODEL_H_
+#endif // TC_GRAYMODEL_H

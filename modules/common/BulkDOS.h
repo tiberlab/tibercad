@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _BULKDOS_H_
-#define _BULKDOS_H_
+#ifndef TC_BULKDOS_H
+#define TC_BULKDOS_H
 
 
 #include "tibercad/physics/misc/DensityOfStates.h"
@@ -35,18 +35,13 @@
 /*!
  * \brief Base class for density of states
  */
-class TBDLEXPORT BulkDOS : public DensityOfStates
+class TC_DLEXPORT BulkDOS : public DensityOfStates
 {
 
   public:
 
     //! Destructor
     virtual ~BulkDOS(void) {};
-
-
-    //! Creator function
-    static BulkDOS* create(const ModelOptions& options);
-
 
 
   protected:
@@ -109,16 +104,6 @@ class TBDLEXPORT BulkDOS : public DensityOfStates
 
 };
 
-//
-// inline methods
-//
-
-inline
-BulkDOS*
-BulkDOS::create(const ModelOptions& options)
-{
-  return new BulkDOS(options);
-}
 
 
-#endif // _BULKDOS_H_
+#endif // TC_BULKDOS_H

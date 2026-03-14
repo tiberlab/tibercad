@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _CONSTANTBODYFORCE_H_
-#define _CONSTANTBODYFORCE_H_
+#ifndef TC_CONSTANTBODYFORCE_H
+#define TC_CONSTANTBODYFORCE_H
 
 #include "BodyForceModel.h"
 
@@ -40,7 +40,7 @@
 
 
 //! The base class for Poisson boundary conditions
-class TBDLLOCAL ConstantBodyForce : public BodyForceModel
+class TC_DLLOCAL ConstantBodyForce : public BodyForceModel
 {
 
   public:
@@ -48,49 +48,27 @@ class TBDLLOCAL ConstantBodyForce : public BodyForceModel
   //! Destructor
   ~ConstantBodyForce(void) {};
   
-  //! Creator function
-  static ConstantBodyForce* create(const ModelOptions& options);
-  
-  virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point){};
+  virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point) override {};
 
   protected:
 
+    //! Constructor
+    ConstantBodyForce(const ModelOptions& options);
+
     //! Initialize
-    virtual void do_init(void);
-
-    /* In some cases it might be useful to reimplement this: */
-    // virtual void do_init_interface(const PhysicalModel* comp_A,
-    //         const PhysicalModel* comp_B);
-
-
-    /* This is not used here: */
-    // virtual void read_database(void);
-
-
-    /* We do not use this here: */
-    // virtual void read_interface_database(void);
+    virtual void do_init(void) override;
 
 
 
   private:
   
-
-  //! Constructor
-     ConstantBodyForce(const ModelOptions& options);
   
 };
 
 
 
 
-inline
-ConstantBodyForce*
-ConstantBodyForce::create(const ModelOptions& options)
-{ 
-  return new  ConstantBodyForce(options);
-}
 
 
 
-
-#endif // _GRAYMODEL_H_
+#endif // TC_GRAYMODEL_H

@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _EXCITONDISSOCIATION_H_
-#define _EXCITONDISSOCIATION_H_
+#ifndef TC_EXCITONDISSOCIATION_H
+#define TC_EXCITONDISSOCIATION_H
 
 #include "RecombinationModelInterface.h"
 #include "tibercad/base/TypeDefs.h"
@@ -38,16 +38,13 @@ class SimulationInterface;
 /*!
  * This class implements Exciton dissociation process
  */
-class TBDLLOCAL ExcitonDissociation : public RecombinationModelInterface
+class TC_DLLOCAL ExcitonDissociation : public RecombinationModelInterface
 {
 
   public:
 
     //! Destructor
     virtual ~ExcitonDissociation(void) {};
-
-    //! Create a ConstantMobility object
-    static ExcitonDissociation* create(const ModelOptions& options);
 
     //! \copydoc RecombinationModelInterface::get_net_recombination_rates()
     virtual void get_net_recombination_rates(double& recomb_e, double& recomb_h);
@@ -68,9 +65,6 @@ class TBDLLOCAL ExcitonDissociation : public RecombinationModelInterface
     //! \copydoc RecombinationModelInterface::do_init()
     virtual void do_init(void);
 
-    //! \copydoc RecombinationModelInterface::create_new()
-    virtual PhysicalModel* create_new(void) const;
-
 
   private:
 
@@ -87,33 +81,5 @@ class TBDLLOCAL ExcitonDissociation : public RecombinationModelInterface
 
 
 
-//
-// inline methods
-// 
 
-inline
-ExcitonDissociation::ExcitonDissociation(const ModelOptions& options)
-  : RecombinationModelInterface(options),
-    d_(1.0),
-    _exciton_sim(NULL)
-{
-}
-
-inline
-ExcitonDissociation*
-ExcitonDissociation::create(const ModelOptions& options)
-{
-  return new ExcitonDissociation(options);
-}
-
-
-
-inline
-PhysicalModel*
-ExcitonDissociation::create_new(void) const
-{
-  return new ExcitonDissociation(get_options());
-}
-
-
-#endif // _EXCITONDISSOCIATION_H_
+#endif // TC_EXCITONDISSOCIATION_H

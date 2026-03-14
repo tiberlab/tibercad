@@ -23,8 +23,8 @@
  *       API version: 3.5
  */
 
-#ifndef _EIGENSOLVER_H_
-#define _EIGENSOLVER_H_
+#ifndef TC_EIGENSOLVER_H
+#define TC_EIGENSOLVER_H
 
 #include "tibercad/base/tiber_dll.h"
 
@@ -40,7 +40,7 @@ using libMesh::Complex;
 
 
 //! SLEPc interface class 
-class TBDLEXPORT EigenSolver
+class TC_DLEXPORT EigenSolver
 {
  public:
   //!parameters for solver

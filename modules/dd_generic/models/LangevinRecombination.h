@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _LANGEVINRECOMBINATION_H_
-#define _LANGEVINRECOMBINATION_H_
+#ifndef TC_LANGEVINRECOMBINATION_H
+#define TC_LANGEVINRECOMBINATION_H
 
 #include "RecombinationModelInterface.h"
 #include "tibercad/base/TypeDefs.h"
@@ -38,16 +38,13 @@ class SimulationInterface;
  * This class implements direct recombination processes that can be
  * modeled by \f[R_{Langevin}=\gamma \frac{2}{\varepsilon_r \varepsilon_0}(\mu_e + \mu_h)np\f]
  */
-class TBDLLOCAL LangevinRecombination : public RecombinationModelInterface
+class TC_DLLOCAL LangevinRecombination : public RecombinationModelInterface
 {
 
   public:
 
     //! Destructor
     virtual ~LangevinRecombination(void) {};
-
-    //! Create a LangevinRecombination object
-    static LangevinRecombination* create(const ModelOptions& options);
 
 
   protected:
@@ -92,11 +89,5 @@ LangevinRecombination::LangevinRecombination(const ModelOptions& options)
 }
 
 
-inline
-LangevinRecombination*
-LangevinRecombination::create(const ModelOptions& options)
-{
-  return new LangevinRecombination(options);
-}
 
-#endif // _LANGEVINRECOMBINATION_H__
+#endif // TC_LANGEVINRECOMBINATION_H

@@ -23,8 +23,8 @@
  */
 
 
-#ifndef __READCOMSOL_H_
-#define __READCOMSOL_H_
+#ifndef TC_READCOMSOL_H
+#define TC_READCOMSOL_H
 
 #include "tibercad/base/tiber_dll.h"
 
@@ -46,7 +46,7 @@ namespace libMesh
 /*!
  * This class implements reading of meshes in the Comsol format.
  */
-class TBDLLOCAL ReadComsol : public libMesh::MeshInput<libMesh::MeshBase>
+class TC_DLLOCAL ReadComsol : public libMesh::MeshInput<libMesh::MeshBase>
 
 {
   public:
@@ -94,4 +94,4 @@ ReadComsol::ReadComsol(libMesh::MeshBase& mesh, MeshRegionInfo& reg_info,
 {}
 
 
-#endif // __READCOMSOL_H_
+#endif // TC_READCOMSOL_H

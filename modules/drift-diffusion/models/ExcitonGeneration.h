@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _EXCITONGENERATION_H_
-#define _EXCITONGENERATION_H_
+#ifndef TC_EXCITONGENERATION_H
+#define TC_EXCITONGENERATION_H
 
 #include "RecombinationModelInterface.h"
 #include "tibercad/base/TypeDefs.h"
@@ -39,16 +39,13 @@ class ExcitonTransport;
  * This class implements Exciton generation processes that can be
  * modeled by \f[G_{x}=Cnp\f]
  */
-class TBDLLOCAL ExcitonGeneration : public RecombinationModelInterface
+class TC_DLLOCAL ExcitonGeneration : public RecombinationModelInterface
 {
 
   public:
 
     //! Destructor
     virtual ~ExcitonGeneration(void) {};
-
-    //! Create a ConstantMobility object
-    static ExcitonGeneration* create(const ModelOptions& options);
 
     //! \copydoc RecombinationModelInterface::get_net_recombination_rates()
     void get_net_recombination_rates(double& recomb_e, double& recomb_h);
@@ -86,21 +83,6 @@ class TBDLLOCAL ExcitonGeneration : public RecombinationModelInterface
 // 
 
 
-inline
-ExcitonGeneration::ExcitonGeneration(const ModelOptions& options)
-  : RecombinationModelInterface(options),
-    C_(1e-10)
-{
-}
-
-
-inline
-ExcitonGeneration*
-ExcitonGeneration::create(const ModelOptions& options)
-{
-  return new ExcitonGeneration(options);
-}
-
 
 inline
 void
@@ -111,4 +93,4 @@ ExcitonGeneration::set_parameters(double C)
 
 
 
-#endif // _EXCITONGENERATION_H_
+#endif // TC_EXCITONGENERATION_H

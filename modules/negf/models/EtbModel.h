@@ -34,7 +34,6 @@ class EtbModel : public HamiltonianModel
 
     virtual ~EtbModel(void){};
 
-    static EtbModel* create(const ModelOptions& options);
 
   protected:
 
@@ -44,12 +43,5 @@ class EtbModel : public HamiltonianModel
 
 
 };
-
-inline
-EtbModel*
-EtbModel::create(const ModelOptions& options)
-{
-  return new EtbModel(options);
-}
 
 

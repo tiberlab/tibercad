@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _BUILTINSTRAIN_H_
-#define _BUILTINSTRAIN_H_
+#ifndef TC_BUILTINSTRAIN_H
+#define TC_BUILTINSTRAIN_H
 
 #include "BodyForceModel.h"
 
@@ -36,7 +36,7 @@
 
 
 //! The base class for Poisson boundary conditions
-class TBDLLOCAL BuiltInStrain : public BodyForceModel
+class TC_DLLOCAL BuiltInStrain : public BodyForceModel
 {
 
   public:
@@ -44,33 +44,19 @@ class TBDLLOCAL BuiltInStrain : public BodyForceModel
     //! Destructor
     ~BuiltInStrain(void) {};
 
-    //! Creator function
-    static BuiltInStrain* create(const ModelOptions& options);
-
 
   protected:
 
+    //! Constructor
+    BuiltInStrain(const ModelOptions& options);
+
     //! Initialize
-  virtual void do_init(void);
+    virtual void do_init(void) override;
 
-    /* In some cases it might be useful to reimplement this: */
-    // virtual void do_init_interface(const PhysicalModel* comp_A,
-    //         const PhysicalModel* comp_B);
-
-
-    /* This is not used here: */
-    // virtual void read_database(void);
-
-
-    /* We do not use this here: */
-    // virtual void read_interface_database(void);
 
 
 
   private:
-
-    //! Constructor
-    BuiltInStrain(const ModelOptions& options);
 
    
 };
@@ -85,14 +71,6 @@ BuiltInStrain::BuiltInStrain(const ModelOptions& options) :
 
 
 
-inline
-BuiltInStrain*
-BuiltInStrain::create(const ModelOptions& options)
-{
-  return new BuiltInStrain(options);
-}
 
 
-
-
-#endif // _POISSONDIRICHLET_H_
+#endif // TC_POISSONDIRICHLET_H

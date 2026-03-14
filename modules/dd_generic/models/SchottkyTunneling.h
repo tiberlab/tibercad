@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _SCHOTTKYTUNNELING_H_
-#define _SCHOTTKYTUNNELING_H_
+#ifndef TC_SCHOTTKYTUNNELING_H
+#define TC_SCHOTTKYTUNNELING_H
 
 #include "RecombinationModelInterface.h"
 #include "tibercad/base/HashMap.h"
@@ -42,16 +42,13 @@ class Elem;
  * This class implements Schottky tunneling casted into
  * a local recombination model
  */
-class TBDLLOCAL SchottkyTunneling : public RecombinationModelInterface
+class TC_DLLOCAL SchottkyTunneling : public RecombinationModelInterface
 {
 
   public:
 
     //! Destructor
     virtual ~SchottkyTunneling(void) {};
-
-    //! Create a ConstantMobility object
-    static SchottkyTunneling* create(const ModelOptions& options);
 
     
   protected:
@@ -106,22 +103,7 @@ class TBDLLOCAL SchottkyTunneling : public RecombinationModelInterface
 
 
 
-//
-// inline methods
-// 
 
 
 
-inline
-SchottkyTunneling*
-SchottkyTunneling::create(const ModelOptions& options)
-{
-  return new SchottkyTunneling(options);
-}
-
-
-
-
-
-
-#endif // _SCHOTTKYTUNNELING_H__
+#endif // TC_SCHOTTKYTUNNELING_H

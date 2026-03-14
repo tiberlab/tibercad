@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _HEATTRANSPORTMODEL_H_
-#define _HEATTRANSPORTMODEL_H_
+#ifndef TC_HEATTRANSPORTMODEL_H
+#define TC_HEATTRANSPORTMODEL_H
 
 #include "tibercad/physics/PhysicalModel.h"
 
@@ -35,7 +35,7 @@
 using namespace std;
 
 //! The base class for Poisson boundary conditions
-//class TBDLEXPORT HeatTransportModel : public PhysicalModel
+//class TC_DLEXPORT HeatTransportModel : public PhysicalModel
 class HeatTransportModel : public PhysicalModel
 {
 
@@ -120,4 +120,4 @@ HeatTransportModel::HeatTransportModel(const ModelOptions& options) :
 
 
 
-#endif // _HEATTRANSPORTMODEL_H_
+#endif // TC_HEATTRANSPORTMODEL_H

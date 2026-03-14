@@ -23,8 +23,8 @@
  */
 
 
-#ifndef _TIBERNONLINLS_H_
-#define _TIBERNONLINLS_H_
+#ifndef TC_TIBERNONLINLS_H
+#define TC_TIBERNONLINLS_H
 
 
 #include "tibercad/solver/TiberLineSearch.h"
@@ -34,7 +34,7 @@ class TiberLinearSolver;
 
 
 //! An implementation of line search to solve nonlinear systems
-class TBDLLOCAL TiberNonlinLS : public TiberLineSearch
+class TC_DLLOCAL TiberNonlinLS : public TiberLineSearch
 {
 
   public:
@@ -82,4 +82,4 @@ TiberNonlinLS::system_type(void) const
 }
 
 
-#endif // _TIBERNONLINLS_H_
+#endif // TC_TIBERNONLINLS_H

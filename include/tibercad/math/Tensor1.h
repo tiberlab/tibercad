@@ -23,8 +23,8 @@
  *       API version: 3.5
  */
 
-#ifndef _TENSOR1_H_
-#define _TENSOR1_H_
+#ifndef TC_TENSOR1_H
+#define TC_TENSOR1_H
 
 #include <cassert>
 #include <array>
@@ -128,4 +128,4 @@ class Tensor1
 };
 
 
-#endif // _TENSOR1_H_
+#endif // TC_TENSOR1_H

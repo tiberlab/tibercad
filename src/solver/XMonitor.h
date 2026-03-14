@@ -24,8 +24,8 @@
 
 
 
-#ifndef _XMONITOR_H_
-#define _XMONITOR_H_
+#ifndef TC_XMONITOR_H
+#define TC_XMONITOR_H
 
 
 #include "petsc.h"
@@ -117,4 +117,4 @@ XMonitor::draw_point(double x, double y)
 }
 
 
-#endif // _XMONITOR_H_
+#endif // TC_XMONITOR_H

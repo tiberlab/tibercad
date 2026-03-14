@@ -22,8 +22,8 @@
  * \internal
  */
 
-#ifndef _READISEGRID_H_
-#define _READISEGRID_H_
+#ifndef TC_READISEGRID_H
+#define TC_READISEGRID_H
 
 #include "tibercad/base/InitFailedException.h"
 #include "tibercad/base/TypeDefs.h"
@@ -51,7 +51,7 @@ class ISE_Face;
 
 
 //! Reads an ISE mesh (*.grd file).
-class TBDLLOCAL ReadISEGrid : public libMesh::MeshInput<MeshBase>
+class TC_DLLOCAL ReadISEGrid : public libMesh::MeshInput<MeshBase>
 {
 
  public:

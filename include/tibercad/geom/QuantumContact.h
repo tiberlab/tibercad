@@ -107,7 +107,7 @@ class QuantumContact
     ~QuantumContact(void);
 
     //! We need a public static creator function
-    static QuantumContact* create(void) TBDLLOCAL;
+    static QuantumContact* create(void) TC_DLLOCAL;
 
 
     /*!
@@ -130,7 +130,7 @@ class QuantumContact
               BoundaryRegions* bd_regions,
               const std::set<ID>& rg_ids,
               const std::set<ID>& bd_ids,
-              double length = 0.0)  TBDLLOCAL;
+              double length = 0.0)  TC_DLLOCAL;
 
     void plot(const std::string& name);
 
@@ -143,7 +143,7 @@ class QuantumContact
 
   private:
 
-    QuantumContact(void) TBDLLOCAL;
+    QuantumContact(void) TC_DLLOCAL;
 
     //! Compute normal vector to a boundary region
     Point get_normal( double& area);

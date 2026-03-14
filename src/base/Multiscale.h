@@ -23,8 +23,8 @@
  */
 
 
-#ifndef _MULTISCALE_H_
-#define _MULTISCALE_H_
+#ifndef TC_MULTISCALE_H
+#define TC_MULTISCALE_H
 
 
 #include "tibercad/base/ModelOptions.h"
@@ -86,4 +86,4 @@ class Multiscale
 };
 
 
-#endif // _MULTISCALE_H_
+#endif // TC_MULTISCALE_H

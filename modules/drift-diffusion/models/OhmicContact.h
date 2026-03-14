@@ -25,18 +25,15 @@
  */
 
 
-#ifndef _OHMICCONTACT_H_
-#define _OHMICCONTACT_H_
+#ifndef TC_OHMICCONTACT_H
+#define TC_OHMICCONTACT_H
 
 #include "ElectricalContact.h"
 
 
-class TBDLLOCAL OhmicContact : public ElectricalContact
+class TC_DLLOCAL OhmicContact : public ElectricalContact
 {
   public:
-
-    //! Create an ohmic contact
-    static OhmicContact* create(const ModelOptions& options);
 
   protected:
 
@@ -51,20 +48,8 @@ class TBDLLOCAL OhmicContact : public ElectricalContact
 };
 
 
-//
-// inline
-//
-
-inline
-OhmicContact*
-OhmicContact::create(const ModelOptions& options)
-{
-  return new OhmicContact(options);
-}
 
 
 
 
-
-
-#endif // _OHMICCONTACT_H_
+#endif // TC_OHMICCONTACT_H
