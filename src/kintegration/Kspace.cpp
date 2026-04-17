@@ -773,6 +773,10 @@ void Kspace::build_k_grid()
 
     //kmesh->print_info();
   }
+  else
+  {
+    kmesh->add_point(Point(0,0,0), 0, 0);
+  }
 
 }
 
