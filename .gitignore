@@ -16,6 +16,9 @@ external/
 # Sphinx build
 manual/Sphinx/Complete/_build/
 
+# unreleased_modules
+unreleased_modules/
+
 # Make and build files
 Makefile~
 cmake-build-*/
