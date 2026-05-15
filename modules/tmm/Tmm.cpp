@@ -981,7 +981,7 @@ Tmm::do_solve(void)
         //T = get_M(n_real[n_real.size()-N0-2],n_imag[n_real.size()-N0-2],l[n_real.size()-N0-2],lambda,theta[n_real.size()-N0-2],0);
         for (int k = mesh_size - N0 - 2;k >= 0; --k)
         {
-          DD = get_D(n_real[k], -n_imag[k], n_real[k + 1], -n_imag[k + 1], 0, lambda, 0);
+          DD = get_D(n_real[k], n_imag[k], n_real[k + 1], n_imag[k + 1], 0, lambda, 0);
           if (Incoh[k] == 1 && Incoh[k + 1] == 0)
           {
             if (coh_mod)
@@ -1061,7 +1061,7 @@ Tmm::do_solve(void)
         double load = 0;
         for (size_t el = Regions[re - 1]; el < Regions[re]; el++)
         {
-          load += Generation_rate_avg[el];
+          load += Generation_rate_avg[el] * l[el];
         }
         sumation.push_back(load);
       }
