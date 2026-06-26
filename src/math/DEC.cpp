@@ -90,6 +90,17 @@ DEC::reinit(const libMesh::Elem& elem, DEC::DualConstruction dual_constr)
 
 
 
+void
+DEC::get_hodge(libMesh::DenseMatrix<double>& hodge,
+        const libMesh::DenseMatrix<double>& metric = libMesh::DenseMatrix<double>(0, 0)) const
+{
+  hodge.resize(_primal.size(), _primal.size());
+
+}
+
+
+
+
 libMesh::Point
 DEC::circumcenter(const libMesh::Elem& elem, int s) const
 {

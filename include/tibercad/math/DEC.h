@@ -96,6 +96,15 @@ class DEC
     //! \brief Retrieve the midpoints of the edges
     const std::vector<libMesh::Point>& get_midpoints(void) const { return _midpoints; }
 
+    /*!
+     * \brief Get the Hodge star, possibly including a metric factor
+      * \param hodge The Hodge star matrix to be filled
+      * \param metric The metric matrix to be used, if any
+      *
+     */
+    void get_hodge(libMesh::DenseMatrix<double>& hodge,
+        const libMesh::DenseMatrix<double>& metric = libMesh::DenseMatrix<double>(0, 0)) const;
+
 
   private:
 
