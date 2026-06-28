@@ -92,7 +92,7 @@ DEC::reinit(const libMesh::Elem& elem, DEC::DualConstruction dual_constr)
 
 void
 DEC::get_hodge(libMesh::DenseMatrix<double>& hodge,
-        const libMesh::DenseMatrix<double>& metric = libMesh::DenseMatrix<double>(0, 0)) const
+        const libMesh::DenseMatrix<double>& metric) const
 {
   hodge.resize(_primal.size(), _primal.size());
 
