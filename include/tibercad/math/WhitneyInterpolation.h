@@ -105,12 +105,15 @@ class WhitneyInterpolation
 };
 
 
+inline
 const std::vector<std::vector<double>>&
 WhitneyInterpolation::get_0forms(void) const
 {
   return _w0; 
 }
 
+
+inline
 const std::vector<std::vector<libMesh::RealGradient>>&
 WhitneyInterpolation::get_1forms(void) const
 {
