@@ -96,7 +96,7 @@ class TC_DLLOCAL PolarizationGrid : public SimulationInterface
 
   virtual void do_solve(void) override;
 
-  void parse_options(void) override;
+  void parse_options(void);
 
   virtual void get_solution_secure(const Elem* elem,
                            std::map<ID, std::vector<double> >& values,
