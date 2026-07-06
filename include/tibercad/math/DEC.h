@@ -78,14 +78,22 @@ class DEC
      */
     void reinit(const libMesh::Elem& elem, DualConstruction dual_constr = BARYCENTRIC);
 
-    //! \brief Retrieve the Whitney interpolation object
+    /*! \brief Retrieve the Whitney interpolation object
+     * 
+     * The internal Whitney forms are calculated at the element center point.
+     * 
+     * \return A constant reference to the Whitney interpolation object
+     */
     const WhitneyInterpolation& get_whitney(void) const { return _whip; }
 
     //! \brief Retrieve the element center point
     const libMesh::Point& get_center(void) const { return _center; }
 
-    //! \brief Retrieve the incidence matrix
-    const libMesh::DenseMatrix<int>& get_incidence(void) const { return _incidence; }
+    /*!
+     * \brief Retrieve the incidence matrix
+     * The incidence matrix is the discrete exterior derivative for 0-forms.
+     */
+    const libMesh::DenseMatrix<double>& get_incidence_matrix(void) const { return _incidence; }
 
     //! \brief Retrieve the dual volumes
     const std::vector<double>& get_dual_volumes(void) const { return _dual_volumes; }
@@ -103,19 +111,22 @@ class DEC
       *
      */
     void get_hodge(libMesh::DenseMatrix<double>& hodge,
-        const libMesh::DenseMatrix<double>& metric = libMesh::DenseMatrix<double>(0, 0)) const;
+        const libMesh::RealTensor& metric = libMesh::RealTensor(1, 0, 0, 0, 1, 0, 0, 0, 1)) const;
 
 
   private:
 
     //! The Whitney interpolation object
     WhitneyInterpolation _whip;
+
+    //! The element we are currently working on
+    const libMesh::Elem* _elem = nullptr;
      
     //! The element center point
     libMesh::Point _center;
 
     //! The incidence matrix = d0, the discrete exterior derivative for 0-forms
-    libMesh::DenseMatrix<int> _incidence;
+    libMesh::DenseMatrix<double> _incidence;
 
     //! The dual 0-cell volume contributions for each primal node
     std::vector<double> _dual_volumes;

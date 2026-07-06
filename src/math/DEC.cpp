@@ -25,8 +25,6 @@
 
 
 #include "libmesh/elem.h"
-//#include "libmesh/fe_map.h"
-//#include "tibercad/base/libMeshDefs.h"
 
 using namespace std;
 using namespace libMesh;
@@ -35,6 +33,8 @@ using namespace libMesh;
 void
 DEC::reinit(const libMesh::Elem& elem, DEC::DualConstruction dual_constr)
 {
+  _elem = &elem;
+
   unsigned int dim = elem.dim();
   unsigned int ne = (dim == 1) ? 1 : elem.n_edges();
   unsigned int nn = elem.n_nodes();
@@ -61,7 +61,9 @@ DEC::reinit(const libMesh::Elem& elem, DEC::DualConstruction dual_constr)
     _midpoints[0] = 0.5 * (elem.point(0) + elem.point(1));
     _incidence(0, 0) = -1;
     _incidence(0, 1) =  1;
-    _dual_volumes.resize(2, 0.5 * elem.volume());
+    double vol = 0.5 * elem.volume();
+    _dual_volumes[0] = vol;
+    _dual_volumes[1] = vol;
   }
   else
   {
@@ -75,13 +77,47 @@ DEC::reinit(const libMesh::Elem& elem, DEC::DualConstruction dual_constr)
       _incidence(e, ni) = -1;
       _incidence(e, nj) =  1;
     }
-      
 
-    if (dim == 2)
+    for (unsigned int e = 0; e < ne; ++e)
     {
+      unsigned int ni = elem.local_edge_node(e, 0);
+      unsigned int nj = elem.local_edge_node(e, 1);
+      Point a = _midpoints[e] - elem.point(ni);
+      Point b = _center - elem.point(ni);
+      Point axb = a.cross(b);
 
+      double vol = 0.0;
+
+      if (dim == 2)
+      {
+        // volume is the area of the quadilateral formed by two
+        // half-edges and the center point
+        vol = 0.5 * axb.norm();
+      }
+      else
+      {
+        // volume is the sum of cones, each cone has volume
+        // 1/6 a * (b x c) where a is the vector from the
+        // edge midpoint to the ceenter, b is the vector from
+        // the edge midpoint to the center of the first side,
+        // and c is the half-edge.
+
+        // now we need the two sides containing the edge, and their centers
+        unsigned int ns = elem.n_sides();
+        for (unsigned int s = 0; s < ns; ++s)
+        {
+          if (elem.is_edge_on_side(e, s))
+          {
+            Point c = elem.side_ptr(s)->vertex_average() - elem.point(ni);
+            double part_vol = 1.0 / 6.0 * a * (b.cross(c));
+            vol += std::abs(part_vol);
+          }
+        }
+      }
+
+      _dual_volumes[ni] += vol;
+      _dual_volumes[nj] += vol;
     }
-   
   }
 
   // Reinit the Whitney interpolation object
@@ -92,9 +128,43 @@ DEC::reinit(const libMesh::Elem& elem, DEC::DualConstruction dual_constr)
 
 void
 DEC::get_hodge(libMesh::DenseMatrix<double>& hodge,
-        const libMesh::DenseMatrix<double>& metric) const
+        const libMesh::RealTensor& metric) const
 {
+  WhitneyInterpolation whip;
+
+  unsigned int dim = _elem->dim();
+
   hodge.resize(_primal.size(), _primal.size());
+
+  if (dim == 1)
+  {
+    hodge(0, 0) =  metric(0, 0) / _primal[0].norm();
+  }
+  else
+  {
+    for (unsigned int e = 0; e < _primal.size(); ++e)
+    {
+      // we use the midpoint of the dual edge segment as integration point
+      Point q_point = 0.5 * (_midpoints[e] + _center);
+      RealGradient dual = _center - _midpoints[e];
+
+      // Reinit the Whitney interpolation object
+      whip.reinit(*_elem, {q_point});
+
+      auto& w1 = _whip.get_1forms();
+
+      for (unsigned int i = 0; i < _primal.size(); ++i)
+      {
+        RealGradient a = w1[i][0];
+        a = metric * a;
+
+        a = a.cross(dual);
+
+        hodge(e, i) = a(2);
+      }
+
+    }
+  }
 
 }
 

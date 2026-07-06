@@ -28,6 +28,8 @@
 #include "libmesh/fe_map.h"
 #include "tibercad/base/libMeshDefs.h"
 
+#include "libmesh/fe_interface.h"
+
 using namespace std;
 
 void
@@ -44,14 +46,16 @@ WhitneyInterpolation::reinit(const libMesh::Elem& elem,
 
   unsigned int np = points.size();
 
-  _w0.resize(nn);
   _w1.resize(ne);
 
   unique_ptr<libMesh::FEBase> fe = libMesh::FEBase::build(dim, libMesh::FEType(1, libMesh::LAGRANGE));
   const vector<vector<libMesh::Real>> &phi = fe->get_phi();
   const vector<vector<libMesh::RealGradient>> &dphi = fe->get_dphi();
 
-  fe->reinit(&elem, &points);
+  vector<libMesh::Point> ref_points(np);
+  libMesh::FEInterface::inverse_map(dim, libMesh::FEType(), &elem, points, ref_points);
+
+  fe->reinit(&elem, &ref_points);
 
   _w0 = phi;
 
@@ -60,6 +64,7 @@ WhitneyInterpolation::reinit(const libMesh::Elem& elem,
     // for Lagrange elements of order 1, the 1-form is constant along the edge, and its value
     // is given by the derivative of the basis function associated with the second node of the
     // edge (the first node's basis function derivative is negative of that).
+    _w1[0].resize(np);
     for (unsigned int p = 0; p < np; ++p)
       _w1[0][p] = dphi[1][0];
   }
@@ -67,6 +72,7 @@ WhitneyInterpolation::reinit(const libMesh::Elem& elem,
   {
     for (unsigned int i = 0; i < ne; ++i)
     {
+      _w1[i].resize(np);
       unsigned int ni = elem.local_edge_node(i, 0);
       unsigned int nj = elem.local_edge_node(i, 1);
       for (unsigned int p = 0; p < np; ++p)

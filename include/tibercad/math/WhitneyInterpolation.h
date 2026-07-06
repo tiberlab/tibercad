@@ -85,7 +85,7 @@ class WhitneyInterpolation
      * of the element. Not that 1D elements are assumed to have
      * a single edge, although libMesh doesn't currently assign
      * them one. Also, the 1-forms are returned as RealGradients,
-     * containing the coefficients to the coordinate 1-forms.
+     * containing the coefficients to the coordinate 1-forms dx, dy, dz.
      */
     const std::vector<std::vector<libMesh::RealGradient>>& get_1forms(void) const;
 
