@@ -212,6 +212,12 @@ The optional subblock ``Doping`` as in the example above contains the keywords:
          The energy level of the dopant given as the distance from the conduction band edge (for donors)
          or from the valence band edge (for acceptors) in eV.
 
+  ``alpha`` : double
+         The parameter for the doping density dependence of the ionization energy, given as
+         :math:`\Delta E_d = \Delta E_{d,0} - \alpha N_d^{1/3}`, where :math:`\Delta E_d` corresponds to the value
+         of ``level``, and :math`N_d` is the density given by ``density``. The default value is 0.0.
+
+
   ``g`` : integer
          Level multiplicity. Defaults to 2 for donors and 4 for acceptors.
 

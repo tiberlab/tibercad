@@ -126,13 +126,6 @@ class Dopant
 
 
 
-  protected:
-
-    //! Calculate the doping density
-    virtual double do_calculate_doping_density(const libMesh::Elem* elem, const libMesh::Point& p);
-
-
-
   private:
 
     //! The doping profile function
@@ -153,6 +146,8 @@ class Dopant
     //! The g factor
     int _g_factor;
 
+    //! The alpha factor for activation energy density dependence
+    double _alpha;
 
     //! More options
     ModelOptions _options;
@@ -173,7 +168,8 @@ Dopant::Dopant(double density, double ionisation_energy,
     _type(type),
     _incomplete_ionisation(true),
     _ionisation_energy(ionisation_energy),
-    _g_factor(g_factor)
+    _g_factor(g_factor),
+    _alpha(0.0)
 {
 }
 
@@ -184,7 +180,8 @@ Dopant::Dopant(const Dopant& dopant)
     _type(dopant._type),
     _incomplete_ionisation(dopant._incomplete_ionisation),
     _ionisation_energy(dopant._ionisation_energy),
-    _g_factor(dopant._g_factor)
+    _g_factor(dopant._g_factor),
+    _alpha(dopant._alpha)
 {
 }
 
@@ -201,7 +198,7 @@ inline
 double
 Dopant::get_ionisation_energy(void) const
 {
-  return _ionisation_energy;
+  return _ionisation_energy - _alpha * std::pow(_density, 1.0/3.0);
 }
 
 inline
@@ -227,13 +224,6 @@ Dopant::get_options(void)
 }
 
 
-
-inline
-double
-Dopant::do_calculate_doping_density(const libMesh::Elem*, const libMesh::Point&)
-{
-  return 0.0;
-}
 
 
 

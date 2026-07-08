@@ -52,6 +52,7 @@ Dopant::create(const std::string& profile, const ModelOptions& options)
   dop = new Dopant(density, ionisation_energy, g_factor, type);
   dop->_options = options;
   dop->_incomplete_ionisation = options.get_option("incomplete_ionization", true);
+  dop->_alpha = options.get_option("alpha", 0.0);
 
   if (options.has_submodel("profile"))
   {
@@ -78,7 +79,7 @@ Dopant::get_ionized_dopant_density(double arg, double kT)
 {
   if (_incomplete_ionisation)
   {
-    double denom = 1.0 + _g_factor * std::exp((arg + _ionisation_energy) / kT);
+    double denom = 1.0 + _g_factor * std::exp((arg + get_ionisation_energy()) / kT);
     return _density / denom;
   }
   else
@@ -91,7 +92,7 @@ Dopant::get_ionized_dopant_density_derivative(double arg, double kT)
 {
   if (_incomplete_ionisation)
   {
-    double tmp = _g_factor * std::exp((arg + _ionisation_energy) / kT);
+    double tmp = _g_factor * std::exp((arg + get_ionisation_energy()) / kT);
     double denom = 1.0 + tmp;
     denom *= denom;
 
