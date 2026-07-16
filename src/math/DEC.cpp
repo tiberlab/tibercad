@@ -91,7 +91,9 @@ DEC::reinit(const libMesh::Elem& elem, DEC::DualConstruction dual_constr)
       if (dim == 2)
       {
         // volume is the area of the quadilateral formed by two
-        // half-edges and the center point
+        // half-edges and the center point, which can be divided
+        // into two triangles. This is the contribution
+        // of the triangle formed with edge e.
         vol = 0.5 * axb.norm();
       }
       else
@@ -120,7 +122,7 @@ DEC::reinit(const libMesh::Elem& elem, DEC::DualConstruction dual_constr)
     }
   }
 
-  // Reinit the Whitney interpolation object
+  // Reinit the Whitney interpolation object on the element center
   _whip.reinit(elem, {_center});
 }
 
@@ -140,7 +142,7 @@ DEC::get_hodge(libMesh::DenseMatrix<double>& hodge,
   {
     hodge(0, 0) =  metric(0, 0) / _primal[0].norm();
   }
-  else
+  else if (dim == 2)
   {
     for (unsigned int e = 0; e < _primal.size(); ++e)
     {
@@ -155,14 +157,60 @@ DEC::get_hodge(libMesh::DenseMatrix<double>& hodge,
 
       for (unsigned int i = 0; i < _primal.size(); ++i)
       {
-        RealGradient a = w1[i][0];
-        a = metric * a;
+        RealGradient w_a = w1[i][0];
+        w_a = metric * w_a;
 
-        a = a.cross(dual);
+        w_a = w_a.cross(dual);
 
-        hodge(e, i) = a(2);
+        hodge(e, i) = w_a(2);
       }
 
+    }
+  }
+  else if (dim == 3)
+  {
+    for (unsigned int e = 0; e < _primal.size(); ++e)
+    {
+      unsigned int ni = _elem->local_edge_node(e, 0);
+      Point a = _midpoints[e] - _elem->point(ni);
+
+      // first basis vector for surface patch
+      Point v = _center - _midpoints[e];
+
+      for (unsigned int s = 0; s < _elem->n_sides(); ++s)
+      {
+        if (_elem->is_edge_on_side(e, s))
+        {
+          Point c = _elem->side_ptr(s)->vertex_average();
+
+          // second basis vector for surface patch
+          Point w = c - _midpoints[e];
+
+          // the cross product of the two basis vectors gives the normal vector to the surface patch
+          Point n = v.cross(w);
+
+          // check orientation of the normal vector
+          if (n * a < 0)
+            n *= -1;
+
+          // we use the midpoint of the dual edge patches as integration points
+          Point q_point = 1.0/3.0 * (_center + _midpoints[e] + c);
+
+          // Reinit the Whitney interpolation object
+          whip.reinit(*_elem, {q_point});
+
+          auto& w1 = _whip.get_1forms();
+
+          for (unsigned int i = 0; i < _primal.size(); ++i)
+          {
+            RealGradient w_a = w1[i][0];
+            w_a = metric * w_a;
+
+            hodge(e, i) += 0.5 * w_a * n;
+          }
+        }
+      }
+      
     }
   }
 
