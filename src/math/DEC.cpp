@@ -44,6 +44,7 @@ DEC::reinit(const libMesh::Elem& elem, DEC::DualConstruction dual_constr)
   _incidence.resize(ne, nn);
   _dual_volumes.resize(nn, 0.0);
 
+
   // circumcenter and thus Voronoi-construction works only
   // for triangles, otherwise we fall back to barycentric Hodge
   if ((nn != 3) || (dual_constr == BARYCENTRIC))
@@ -55,7 +56,11 @@ DEC::reinit(const libMesh::Elem& elem, DEC::DualConstruction dual_constr)
       _center = elem.vertex_average();
   }
 
-  if (dim == 1)
+  if (dim == 0)
+  {
+    _dual_volumes[0] = 1.0;
+  }
+  else if (dim == 1)
   {
     _primal[0] = elem.point(1) - elem.point(0);
     _midpoints[0] = 0.5 * (elem.point(0) + elem.point(1));
