@@ -137,6 +137,7 @@ DEC::get_hodge(libMesh::DenseMatrix<double>& hodge,
   unsigned int dim = _elem->dim();
 
   hodge.resize(_primal.size(), _primal.size());
+  hodge.zero();
 
   if (dim == 1)
   {

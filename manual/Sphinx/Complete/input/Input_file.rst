@@ -215,7 +215,7 @@ The optional subblock ``Doping`` as in the example above contains the keywords:
   ``alpha`` : double
          The parameter for the doping density dependence of the ionization energy, given as
          :math:`\Delta E_d = \Delta E_{d,0} - \alpha N_d^{1/3}`, where :math:`\Delta E_d` corresponds to the value
-         of ``level``, and :math`N_d` is the density given by ``density``. The default value is 0.0.
+         of ``level``, and :math`N_d` is the density given by ``density`` [Shaheed94]_. The default value is 0.0.
 
 
   ``g`` : integer
