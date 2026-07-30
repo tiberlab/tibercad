@@ -30,10 +30,28 @@ using namespace std;
 using namespace libMesh;
 
 
+DEC::DEC(const libMesh::Elem& elem,
+         double length_scaling,
+         DEC::DualConstruction dual_constr)
+: _elem(&elem),
+  _dual_constr(dual_constr),
+  _length_scaling(length_scaling)
+{
+  //_whip.set_mesh_units(length_scaling);
+}
+
 void
-DEC::reinit(const libMesh::Elem& elem, DEC::DualConstruction dual_constr)
+DEC::reinit(const libMesh::Elem& elem)
 {
   _elem = &elem;
+
+  init();
+}
+
+void
+DEC::init(void)
+{
+  const libMesh::Elem& elem = *_elem;
 
   unsigned int dim = elem.dim();
   unsigned int ne = (dim == 1) ? 1 : elem.n_edges();
@@ -44,15 +62,17 @@ DEC::reinit(const libMesh::Elem& elem, DEC::DualConstruction dual_constr)
   _incidence.resize(ne, nn);
   _dual_volumes.resize(nn, 0.0);
 
+  double vol_scaling = pow(_length_scaling, dim);
+
 
   // circumcenter and thus Voronoi-construction works only
   // for triangles, otherwise we fall back to barycentric Hodge
-  if ((nn != 3) || (dual_constr == BARYCENTRIC))
+  if ((nn != 3) || (_dual_constr == BARYCENTRIC))
     _center = elem.vertex_average();
   else
   {
     _center = circumcenter(elem);
-    if (!elem.contains_point(_center) && (dual_constr == MIXED))
+    if (!elem.contains_point(_center) && (_dual_constr == MIXED))
       _center = elem.vertex_average();
   }
 
@@ -66,7 +86,8 @@ DEC::reinit(const libMesh::Elem& elem, DEC::DualConstruction dual_constr)
     _midpoints[0] = 0.5 * (elem.point(0) + elem.point(1));
     _incidence(0, 0) = -1;
     _incidence(0, 1) =  1;
-    double vol = 0.5 * elem.volume();
+
+    double vol = 0.5 * elem.volume() * vol_scaling;
     _dual_volumes[0] = vol;
     _dual_volumes[1] = vol;
   }
@@ -122,6 +143,8 @@ DEC::reinit(const libMesh::Elem& elem, DEC::DualConstruction dual_constr)
         }
       }
 
+      vol *= vol_scaling;
+
       _dual_volumes[ni] += vol;
       _dual_volumes[nj] += vol;
     }
@@ -143,6 +166,15 @@ DEC::get_hodge(libMesh::DenseMatrix<double>& hodge,
 
   hodge.resize(_primal.size(), _primal.size());
   hodge.zero();
+
+  // H on 1-forms has dimension [mesh_unit^{dim-2}]: no scaling for dim=2 (dimensionless
+  // ratio), divide by length_scaling for dim=1, multiply for dim=3
+  double h_scale = 1.0;
+  if (dim != 2)
+  {
+    double exp = (dim == 1) ? -1 : 1;
+    h_scale = pow(_length_scaling, exp);
+  }
 
   if (dim == 1)
   {
@@ -219,6 +251,8 @@ DEC::get_hodge(libMesh::DenseMatrix<double>& hodge,
       
     }
   }
+
+  hodge *= h_scale;
 
 }
 

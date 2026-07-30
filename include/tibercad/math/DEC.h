@@ -69,14 +69,31 @@ class DEC
     
 
     //! Default constructor 
-    DEC(void) = default;
-    
+    DEC(void) = delete;
+
     /*!
-     * \brief Reinitialize the DEC object for a given element
+     * \brief Constructor with element and scaling
+     *
      * \param elem The element to initialize for
+     * \param length_scaling The scaling factor for length units
      * \param dual_constr The approach for dual element construction
      */
-    void reinit(const libMesh::Elem& elem, DualConstruction dual_constr = BARYCENTRIC);
+    DEC(const libMesh::Elem& elem,
+        double length_scaling = 1.0,
+        DualConstruction dual_constr = BARYCENTRIC);
+
+
+    /*!
+     * \brief initialize the data structures
+     */
+    void init(void);
+
+    /*!
+     * \brief Reinitialize the DEC object for a new element
+     *
+     * \param elem The element to initialize for
+     */
+    void reinit(const libMesh::Elem& elem);
 
     /*! \brief Retrieve the Whitney interpolation object
      * 
@@ -114,13 +131,30 @@ class DEC
         const libMesh::RealTensor& metric = libMesh::RealTensor(1, 0, 0, 0, 1, 0, 0, 0, 1)) const;
 
 
+    //! Set the dual construction approach
+    void set_dual_construction(DualConstruction dual_constr) { _dual_constr = dual_constr; }
+
+    //! Set the scaling factor for length units
+    void set_length_scaling(double length_scaling) { _length_scaling = length_scaling; }
+
+
   private:
 
     //! The Whitney interpolation object
     WhitneyInterpolation _whip;
 
-    //! The element we are currently working on
+    /*!
+     * \brief The element we are currently working on
+     * The pointer is guarantueed to be non-null after
+     * the constructor or reinit() is called.
+     */
     const libMesh::Elem* _elem = nullptr;
+
+    //! The dual construction approach
+    DualConstruction _dual_constr = BARYCENTRIC;
+
+    //! The scaling factor for length units
+    double _length_scaling = 1.0;
      
     //! The element center point
     libMesh::Point _center;
