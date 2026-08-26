@@ -75,11 +75,9 @@ class DEC
      * \brief Constructor with element and scaling
      *
      * \param elem The element to initialize for
-     * \param length_scaling The scaling factor for length units
      * \param dual_constr The approach for dual element construction
      */
     DEC(const libMesh::Elem& elem,
-        double length_scaling = 1.0,
         DualConstruction dual_constr = BARYCENTRIC);
 
 
@@ -134,8 +132,9 @@ class DEC
     //! Set the dual construction approach
     void set_dual_construction(DualConstruction dual_constr) { _dual_constr = dual_constr; }
 
-    //! Set the scaling factor for length units
-    void set_length_scaling(double length_scaling) { _length_scaling = length_scaling; }
+
+    //! Get the incidence as pairs of nodes, in the same order as the incidence matrix
+    void get_incidence_pairs(std::vector<std::pair<unsigned int, unsigned int>>& inc) const;
 
 
   private:
@@ -153,9 +152,6 @@ class DEC
     //! The dual construction approach
     DualConstruction _dual_constr = BARYCENTRIC;
 
-    //! The scaling factor for length units
-    double _length_scaling = 1.0;
-     
     //! The element center point
     libMesh::Point _center;
 

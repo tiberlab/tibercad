@@ -64,9 +64,13 @@ class WhitneyInterpolation
     
     /*!
      * \brief Recalculate interpolants for given element and points
+     * 
+     * \param elem the element
+     * \param points the points at which to evaluate the interpolants
+     * \param local_coordinates true if points are in local coordinates
      */
     void reinit(const libMesh::Elem& elem,
-        const std::vector<libMesh::Point>& points);
+        const std::vector<libMesh::Point>& points, bool local_coordinates = false);
 
     /*!
      * \brief Retrieve the 0-forms
@@ -89,6 +93,10 @@ class WhitneyInterpolation
      */
     const std::vector<std::vector<libMesh::RealGradient>>& get_1forms(void) const;
 
+    /*!
+     * \brief Retrieve the points in real coordinates
+     */
+    const std::vector<libMesh::Point>& get_xyz(void) const;
 
 
   private:
@@ -102,6 +110,12 @@ class WhitneyInterpolation
      * \brief The 1-forms
      */
     std::vector<std::vector<libMesh::RealGradient>> _w1;
+
+    /*!
+     *\brief the points in real coordinates
+     */
+    std::vector<libMesh::Point> _xyz;
+
 };
 
 
@@ -118,6 +132,14 @@ const std::vector<std::vector<libMesh::RealGradient>>&
 WhitneyInterpolation::get_1forms(void) const
 {
   return _w1;
+}
+
+
+inline
+const std::vector<libMesh::Point>&
+WhitneyInterpolation::get_xyz(void) const
+{
+  return _xyz;
 }
 
 #endif // TC_WHITNEYINTERPOLATION_H

@@ -31,13 +31,10 @@ using namespace libMesh;
 
 
 DEC::DEC(const libMesh::Elem& elem,
-         double length_scaling,
          DEC::DualConstruction dual_constr)
 : _elem(&elem),
-  _dual_constr(dual_constr),
-  _length_scaling(length_scaling)
+  _dual_constr(dual_constr)
 {
-  //_whip.set_mesh_units(length_scaling);
 }
 
 void
@@ -62,8 +59,6 @@ DEC::init(void)
   _incidence.resize(ne, nn);
   _dual_volumes.resize(nn, 0.0);
 
-  double vol_scaling = pow(_length_scaling, dim);
-
 
   // circumcenter and thus Voronoi-construction works only
   // for triangles, otherwise we fall back to barycentric Hodge
@@ -72,7 +67,7 @@ DEC::init(void)
   else
   {
     _center = circumcenter(elem);
-    if (!elem.contains_point(_center) && (_dual_constr == MIXED))
+    if ((_dual_constr == MIXED) && !elem.contains_point(_center))
       _center = elem.vertex_average();
   }
 
@@ -87,7 +82,7 @@ DEC::init(void)
     _incidence(0, 0) = -1;
     _incidence(0, 1) =  1;
 
-    double vol = 0.5 * elem.volume() * vol_scaling;
+    double vol = 0.5 * elem.volume();
     _dual_volumes[0] = vol;
     _dual_volumes[1] = vol;
   }
@@ -143,8 +138,6 @@ DEC::init(void)
         }
       }
 
-      vol *= vol_scaling;
-
       _dual_volumes[ni] += vol;
       _dual_volumes[nj] += vol;
     }
@@ -166,15 +159,6 @@ DEC::get_hodge(libMesh::DenseMatrix<double>& hodge,
 
   hodge.resize(_primal.size(), _primal.size());
   hodge.zero();
-
-  // H on 1-forms has dimension [mesh_unit^{dim-2}]: no scaling for dim=2 (dimensionless
-  // ratio), divide by length_scaling for dim=1, multiply for dim=3
-  double h_scale = 1.0;
-  if (dim != 2)
-  {
-    double exp = (dim == 1) ? -1 : 1;
-    h_scale = pow(_length_scaling, exp);
-  }
 
   if (dim == 1)
   {
@@ -251,12 +235,28 @@ DEC::get_hodge(libMesh::DenseMatrix<double>& hodge,
       
     }
   }
-
-  hodge *= h_scale;
-
 }
 
 
+void
+DEC::get_incidence_pairs(std::vector<std::pair<unsigned int, unsigned int>>& inc) const
+{
+  inc.clear();
+  inc.reserve(_incidence.m());
+
+  for (unsigned int i = 0; i < _incidence.m(); ++i)
+  {
+    auto p = std::make_pair(0, 0);
+    for (unsigned int j = 0; j < _incidence.n(); ++j)
+    {
+      if (_incidence(i, j) > 0)
+        p.second = j;
+      else if (_incidence(i, j) < 0)
+        p.first = j;
+    }
+    inc.push_back(p);
+  }
+}
 
 
 libMesh::Point

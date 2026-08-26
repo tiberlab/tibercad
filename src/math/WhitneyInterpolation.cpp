@@ -34,7 +34,7 @@ using namespace std;
 
 void
 WhitneyInterpolation::reinit(const libMesh::Elem& elem,
-    const std::vector<libMesh::Point>& points)
+    const std::vector<libMesh::Point>& points, bool local_coordinates)
 {
 
   unsigned int dim = elem.dim();
@@ -53,7 +53,18 @@ WhitneyInterpolation::reinit(const libMesh::Elem& elem,
   const vector<vector<libMesh::RealGradient>> &dphi = fe->get_dphi();
 
   vector<libMesh::Point> ref_points(np);
-  libMesh::FEInterface::inverse_map(dim, libMesh::FEType(), &elem, points, ref_points);
+  if (local_coordinates)
+  {
+    ref_points = points;
+    _xyz.resize(np);
+    for (unsigned int p = 0; p < np; ++p)
+      _xyz[p] = libMesh::FEMap::map(dim, &elem, ref_points[p]);
+  }
+  else
+  {
+    libMesh::FEInterface::inverse_map(dim, libMesh::FEType(), &elem, points, ref_points);
+    _xyz = points;
+  }
 
   fe->reinit(&elem, &ref_points);
 
