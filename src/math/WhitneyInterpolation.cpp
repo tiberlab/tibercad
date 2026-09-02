@@ -62,7 +62,8 @@ WhitneyInterpolation::reinit(const libMesh::Elem& elem,
   }
   else
   {
-    libMesh::FEInterface::inverse_map(dim, libMesh::FEType(), &elem, points, ref_points);
+    libMesh::FEMap::inverse_map(dim, &elem, points, ref_points);
+    //libMesh::FEInterface::inverse_map(dim, libMesh::FEType(), &elem, points, ref_points);
     _xyz = points;
   }
 
@@ -77,7 +78,7 @@ WhitneyInterpolation::reinit(const libMesh::Elem& elem,
     // edge (the first node's basis function derivative is negative of that).
     _w1[0].resize(np);
     for (unsigned int p = 0; p < np; ++p)
-      _w1[0][p] = dphi[1][0];
+      _w1[0][p] = dphi[1][p];
   }
   else
   {

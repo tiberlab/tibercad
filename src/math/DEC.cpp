@@ -22,9 +22,14 @@
 
 
 #include "tibercad/math/DEC.h"
+#include "tibercad/io/Messages.h"
 
 
 #include "libmesh/elem.h"
+#include "libmesh/dense_vector.h"
+
+#include <fstream>
+#include <cassert>
 
 using namespace std;
 using namespace libMesh;
@@ -157,6 +162,11 @@ DEC::get_hodge(libMesh::DenseMatrix<double>& hodge,
 
   unsigned int dim = _elem->dim();
 
+  RealTensor R;
+  R(0, 1) = -1.0;
+  R(1, 0) =  1.0;
+  R(2, 2) =  1.0;
+
   hodge.resize(_primal.size(), _primal.size());
   hodge.zero();
 
@@ -166,27 +176,149 @@ DEC::get_hodge(libMesh::DenseMatrix<double>& hodge,
   }
   else if (dim == 2)
   {
-    for (unsigned int e = 0; e < _primal.size(); ++e)
+    if (_elem->n_nodes() == 3)
     {
-      // we use the midpoint of the dual edge segment as integration point
-      Point q_point = 0.5 * (_midpoints[e] + _center);
-      RealGradient dual = _center - _midpoints[e];
-
-      // Reinit the Whitney interpolation object
-      whip.reinit(*_elem, {q_point});
-
-      auto& w1 = _whip.get_1forms();
-
-      for (unsigned int i = 0; i < _primal.size(); ++i)
+      // for a simplex, we can perform calculations in phycial coordinates
+      for (unsigned int e = 0; e < _primal.size(); ++e)
       {
-        RealGradient w_a = w1[i][0];
-        w_a = metric * w_a;
+        // we use the midpoint of the dual edge segment as integration point
+        // Point q_point = 0.5 * (_midpoints[e] + _center);
+        Point q_point = _midpoints[e];
+        RealGradient dual = _center - _midpoints[e];
 
-        w_a = w_a.cross(dual);
+        // Reinit the Whitney interpolation object
+        whip.reinit(*_elem, {q_point});
 
-        hodge(e, i) = w_a(2);
+        auto &w1 = whip.get_1forms();
+
+        for (unsigned int i = 0; i < _primal.size(); ++i)
+        {
+          RealGradient w_a = w1[i][0];
+          w_a = metric * w_a;
+
+          w_a = w_a.cross(dual);
+
+          hodge(e, i) = w_a(2);
+        }
       }
+    }
+    else if (_elem->n_nodes() == 4)
+    {
+      compute_quad_hodge(*_elem, hodge, metric);
+    }
+    else
+    {
+      // code with explicit integration and pull back to reference
+      // element, works for simplices only
 
+      unique_ptr<libMesh::FEBase> fe = libMesh::FEBase::build(dim, libMesh::FEType(1, libMesh::LAGRANGE));
+      const vector<vector<libMesh::Real>> &phi = fe->get_phi();
+      const vector<vector<libMesh::RealGradient>> &dphi = fe->get_dphi();
+
+      // Reference coordinates of dual edge endpoints
+      Point ref_center = FEMap::inverse_map(dim, _elem, _center);
+
+      for (unsigned int e = 0; e < _primal.size(); ++e)
+      {
+        Point ref_mid = FEMap::inverse_map(dim, _elem, _midpoints[e]);
+        
+        // Reference dual edge vector (straight in reference coords)
+        Point ref_dual = ref_center - ref_mid;
+        Point dual = _center - _midpoints[e];
+
+        
+        // Trapezoidal integration along reference dual edge
+        unsigned int nq = 20;
+        for (unsigned int k = 0; k <= nq; ++k)
+        {
+
+          double s = k * 1.0;
+          double wq = (k == 0 || k == nq) ? 0.5 : 1.0;
+          if (nq == 0)
+            wq = 1.0;
+          else
+          {
+            wq /= nq;
+            s  /= nq;
+          }
+
+          // Quadrature point in reference coordinates
+          Point ref_qp = ref_mid + s * ref_dual;
+          Point phys_qp = FEMap::map(dim, _elem, ref_qp);
+
+          // Get Jacobian J_T at this reference point
+          // by reinitializing FEMap at ref_qp
+          std::vector<Point> ref_qp_vec = {ref_qp};
+          fe->reinit(_elem, &ref_qp_vec);
+
+          auto fe_map = fe->get_fe_map();
+
+          // J_T columns from FEMap
+          // dxyzdxi = d(physical)/d(xi), dxyzdeta = d(physical)/d(eta)
+          const auto &dxyzdxi = fe_map.get_dxyzdxi();
+          const auto &dxyzdeta = fe_map.get_dxyzdeta();
+
+          // Build J_T as 2x2 matrix at this quadrature point
+          // J_T = [ dxyzdxi[0](x,y) | dxyzdeta[0](x,y) ]
+          RealTensor J;
+          J(0, 0) = dxyzdxi[0](0);
+          J(0, 1) = dxyzdeta[0](0);
+          J(1, 0) = dxyzdxi[0](1);
+          J(1, 1) = dxyzdeta[0](1);
+          J(2, 2) = 1.0;
+
+          // Pulled-back metric g = J_T^T * J_T in reference coords
+          RealTensor g = J.transpose() * J;
+
+          // Reinit Whitney forms at reference quadrature point
+          // whip must support reinit at reference coordinates
+          whip.reinit(*_elem, ref_qp_vec, true);
+          auto &w1 = whip.get_1forms();
+
+
+          // Reference dual edge cross product direction
+          // in 2D: a x b = a_x*b_y - a_y*b_x (z-component)
+          for (unsigned int i = 0; i < _primal.size(); ++i)
+          {
+            /*
+            // w1[i][0] is the Whitney 1-form in reference coords
+            RealGradient w_a = w1[i][0];
+
+            // Apply pulled-back metric and physical tensor mu
+            // Combined: g^{-1} * mu or mu * g depending on convention
+            w_a = g * w_a;      // pulled-back metric
+            w_a = metric * w_a; // physical anisotropy tensor
+
+            // Cross product with reference dual edge (z-component in 2D)
+            double contrib = w_a(0) * ref_dual(1) - w_a(1) * ref_dual(0);
+            hodge(e, i) += wq * contrib;
+            */
+
+            // Physical gradient from whip: J_T^{-T} * grad_xi N_i
+            RealGradient grad_phys = w1[i][0]; // physical grad N_i
+            grad_phys = R * metric * grad_phys; 
+
+            // Recover reference gradient: J_T^T * grad_phys = grad_xi N_i
+            RealGradient grad_ref = J.transpose() * grad_phys;
+            
+            // Now construct reference Whitney form contribution
+            // w_a = mu * grad_ref (in reference coords)
+            //RealGradient w_a = metric * g.inverse() * grad_ref;
+            //RealGradient w_a = metric * grad_phys;
+
+            Point dual_pushed = J * ref_dual; // push reference dual edge to physical space
+
+            // Cross with reference dual edge (2D z-component)
+            //double contrib = w_a(0) * ref_dual(1) - w_a(1) * ref_dual(0);
+            //double contrib = w_a(0) * dual_pushed(1) - w_a(1) * dual_pushed(0);
+            //double contrib = grad_ref * ref_dual;
+            double contrib = grad_phys * dual;
+
+            hodge(e, i) += wq * contrib;
+            
+          }
+        }
+      }
     }
   }
   else if (dim == 3)
@@ -221,7 +353,7 @@ DEC::get_hodge(libMesh::DenseMatrix<double>& hodge,
           // Reinit the Whitney interpolation object
           whip.reinit(*_elem, {q_point});
 
-          auto& w1 = _whip.get_1forms();
+          auto& w1 = whip.get_1forms();
 
           for (unsigned int i = 0; i < _primal.size(); ++i)
           {
@@ -266,8 +398,6 @@ DEC::circumcenter(const libMesh::Elem& elem, int s) const
 
   unsigned int dim = elem.dim();
 
-  // (It seems the centroid works better for quadrangles)
-  //if (dim == 2)
   if ((dim == 2) && (elem.n_nodes() == 3))
   {
     Point a, b, c;
@@ -347,5 +477,140 @@ DEC::circumcenter(const libMesh::Elem& elem, int s) const
     x_i = elem.vertex_average();
 
   return(x_i);
+}
+
+
+/**
+ * Compute the local Hodge matrix H for a quadrilateral element
+ * using consistency with linear fields and graph compatibility.
+ * 
+ * Element nodes ordered anti-clockwise:
+ *   3---2
+ *   |   |
+ *   0---1
+ * 
+ * Edges ordered anti-clockwise:
+ *   e0: 0->1 (bottom)
+ *   e1: 1->2 (right)
+ *   e2: 2->3 (top)
+ *   e3: 3->0 (left)
+ * 
+ * Dual edges connect edge midpoints to element center.
+ * Non-adjacent pairs (opposite edges): (0,2) and (1,3)
+ */
+void
+DEC::compute_quad_hodge(const libMesh::Elem& elem,
+                        libMesh::DenseMatrix<libMesh::Real>& H,
+                        const libMesh::RealTensor& mu) const
+{
+    assert(elem.n_nodes() == 4);
+    H.resize(4, 4);
+    H.zero();
+
+    // Node coordinates
+    const libMesh::Point& p0 = elem.point(0);
+    const libMesh::Point& p1 = elem.point(1);
+    const libMesh::Point& p2 = elem.point(2);
+    const libMesh::Point& p3 = elem.point(3);
+
+    // Element center
+    Point center = 0.25 * (p0 + p1 + p2 + p3);
+
+    // Edge midpoints and dual edge vectors
+    std::vector<Point> midpoints(4), dual(4), primal(4);
+    midpoints[0] = 0.5*(p0+p1); primal[0] = p1-p0;
+    midpoints[1] = 0.5*(p1+p2); primal[1] = p2-p1;
+    midpoints[2] = 0.5*(p2+p3); primal[2] = p3-p2;
+    midpoints[3] = 0.5*(p3+p0); primal[3] = p0-p3;
+    for (unsigned int r = 0; r < 4; ++r)
+        dual[r] = center - midpoints[r];
+
+    // Build C matrix (4x2): cochain values for u=x and u=y
+    // c_r^(1) = primal[r].x, c_r^(2) = primal[r].y
+    DenseMatrix<Real> C(4, 2);
+    for (unsigned int r = 0; r < 4; ++r)
+    {
+        C(r, 0) = primal[r](0); // d(x) cochain
+        C(r, 1) = primal[r](1); // d(y) cochain
+    }
+
+    // Build R matrix (4x2): exact dual fluxes
+    // For mu*star(dx): flux through dual[r] = mu applied to star(dx)
+    // star(dx) = dy, so mu*star(dx) has components (mu_yx, mu_yy)
+    // flux = (mu_yx)*dual[r].x + (mu_yy)*dual[r].y  -- wait
+    // More carefully: star(du) . dual[r] where du = (1,0) or (0,1)
+    // With metric mu: (star du)_i = mu_ij (du)_j rotated 90 degrees
+    // In 2D: star(a dx + b dy) = (mu_xx*a + mu_xy*b)dy 
+    //                           -(mu_yx*a + mu_yy*b)dx
+    // flux through dual[r] = (mu_xx*a+mu_xy*b)*dual[r].y
+    //                       -(mu_yx*a+mu_yy*b)*dual[r].x
+    DenseMatrix<Real> R(4, 2);
+    for (unsigned int r = 0; r < 4; ++r)
+    {
+        // test field u=x: du=(1,0)
+        R(r, 0) = (mu(0,0)*dual[r](1) - mu(1,0)*dual[r](0));
+        // test field u=y: du=(0,1)
+        R(r, 1) = (mu(0,1)*dual[r](1) - mu(1,1)*dual[r](0));
+    }
+
+    // Compute C^T C (2x2)
+    DenseMatrix<Real> CtC(2, 2);
+    CtC.zero();
+    for (unsigned int i = 0; i < 2; ++i)
+        for (unsigned int j = 0; j < 2; ++j)
+            for (unsigned int r = 0; r < 4; ++r)
+                CtC(i,j) += C(r,i) * C(r,j);
+
+    // Invert C^T C
+    DenseMatrix<Real> CtC_inv(2, 2);
+    Real det = CtC(0,0)*CtC(1,1) - CtC(0,1)*CtC(1,0);
+    libmesh_assert_greater(std::abs(det), 1e-14);
+    CtC_inv(0,0) =  CtC(1,1)/det;
+    CtC_inv(0,1) = -CtC(0,1)/det;
+    CtC_inv(1,0) = -CtC(1,0)/det;
+    CtC_inv(1,1) =  CtC(0,0)/det;
+
+    // Compute C_dag = (C^T C)^{-1} C^T  (2x4)
+    DenseMatrix<Real> C_dag(2, 4);
+    C_dag.zero();
+    for (unsigned int i = 0; i < 2; ++i)
+        for (unsigned int r = 0; r < 4; ++r)
+            for (unsigned int k = 0; k < 2; ++k)
+                C_dag(i,r) += CtC_inv(i,k) * C(r,k);
+
+    // Compute consistency part: H_c = R * C_dag  (4x4)
+    DenseMatrix<Real> H_c(4, 4);
+    H_c.zero();
+    for (unsigned int r = 0; r < 4; ++r)
+        for (unsigned int s = 0; s < 4; ++s)
+            for (unsigned int k = 0; k < 2; ++k)
+                H_c(r,s) += R(r,k) * C_dag(k,s);
+
+    // Compute projection P = I - C * C_dag  (4x4)
+    DenseMatrix<Real> P(4, 4);
+    P.zero();
+    for (unsigned int r = 0; r < 4; ++r)
+        P(r,r) = 1.0;
+    for (unsigned int r = 0; r < 4; ++r)
+        for (unsigned int s = 0; s < 4; ++s)
+            for (unsigned int k = 0; k < 2; ++k)
+                P(r,s) -= C(r,k) * C_dag(k,s);
+
+
+    // Stabilization parameter alpha
+    // A common choice is the trace of H_c divided by the rank
+    Real alpha = 0.0;
+    for (unsigned int r = 0; r < 4; ++r)
+        alpha += H_c(r,r);
+    alpha /= 4.0;
+    // ensure positive
+    if (alpha < 1e-14)
+        alpha = 1.0;
+
+
+    // H = H_c + alpha * P
+    for (unsigned int r = 0; r < 4; ++r)
+        for (unsigned int s = 0; s < 4; ++s)
+            H(r,s) = H_c(r,s) + alpha * P(r,s);
 }
 

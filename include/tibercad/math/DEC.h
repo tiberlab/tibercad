@@ -181,8 +181,11 @@ class DEC
      */
     libMesh::Point circumcenter(const libMesh::Elem& elem, int s = -1) const;
 
-};
+    void compute_quad_hodge(const libMesh::Elem& elem,
+                            libMesh::DenseMatrix<double>& H,
+                            const libMesh::RealTensor& metric) const;
 
+};
 
 
 #endif // TC_DEC_H
