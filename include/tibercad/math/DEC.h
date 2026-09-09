@@ -167,24 +167,75 @@ class DEC
     //! The midpoints of the edges, ordered as the edges of the element
     std::vector<libMesh::Point> _midpoints;
 
-    //! \brief Calculate the circumcenter of a given element
     /*!
+     * \brief Calculate the center point of a given element 
+     *
+     * \param elem The element to calculate the center for
+     * \return The center point of the element
+     * This function calculates the center point of the given element. 
+     * The center point is calculated as the circumcenter for triangles, and as the intersection of the diagonals for quadrilaterals.
+     * For other element types, the function falls back to the barycenter.
+     */
+    libMesh::Point get_center(const libMesh::Elem& elem) const;
+
+    /*!
+     * \brief Calculate the circumcenter of a given element
+     *
      * \param elem The element to calculate the circumcenter for
-     * \param s The side index to use for the circumcenter calculation, if applicable
      * \return The circumcenter point of the element
      *
-     * This function calculates the circumcenter of the given element. If a side index
-     * is provided, the circumcenter is calculated such that the points of that side
-     * lie on the circumcircle.
+     * This function calculates the circumcenter of the given element. 
      * Circumcenter is not implemented for all element types, and the function may fall
      * back to the barycenter
      */
-    libMesh::Point circumcenter(const libMesh::Elem& elem, int s = -1) const;
+    libMesh::Point circumcenter(const libMesh::Elem& elem) const;
 
-    void compute_quad_hodge(const libMesh::Elem& elem,
-                            libMesh::DenseMatrix<double>& H,
-                            const libMesh::RealTensor& metric) const;
+    /*!
+     * \brief Compute intersection of quad diagonals
+     * \param elem The quadrilateral element
+     * \return The intersection point of the diagonals
+     */
+    libMesh::Point diagonal_intersection(const libMesh::Elem& elem) const;
 
+    /*!
+     * \brief Compute the Hodge star for quadrilateral elements using a mixed finite difference approach
+     * \param elem The quadrilateral element
+     * \param H The Hodge star matrix to be filled
+     * \param metric The metric tensor to be used in the computation
+     *
+     * This function computes the Hodge star for quadrilateral elements using a mixed finite difference approach.
+     * It takes into account the provided metric tensor and fills the Hodge star matrix accordingly.
+    */
+    void compute_quad_hodge_mfd(const libMesh::Elem& elem,
+                                libMesh::DenseMatrix<double>& H,
+                                const libMesh::RealTensor& metric) const;
+    
+    /*!
+     * \brief Compute the Hodge star on a quadrilateral using interpolation scheme
+     * \param elem The quadrilateral element
+     * \param H The Hodge star matrix to be filled
+     * \param metric The metric tensor to be used in the computation
+     *
+     * This function computes the Hodge star for quadrilateral elements using an interpolation scheme.
+     * It takes into account the provided metric tensor and fills the Hodge star matrix accordingly.
+     */
+    void compute_quad_hodge_interp(const libMesh::Elem& elem,
+                                   libMesh::DenseMatrix<double>& H,
+                                   const libMesh::RealTensor& metric) const;
+
+    /*!
+     * \brief Compute the three Whitney 1-forms on a triangle at a given point
+     * \param q0 The first vertex of the triangle
+     * \param q1 The second vertex of the triangle
+     * \param q2 The third vertex of the triangle
+     * \param x The point at which to evaluate the forms
+     * \param w The array to store the computed forms
+     */
+    void whitney_1forms(const libMesh::Point &q0,
+                        const libMesh::Point &q1,
+                        const libMesh::Point &q2,
+                        const libMesh::Point &x,
+                        libMesh::RealGradient w[3]) const;
 };
 
 

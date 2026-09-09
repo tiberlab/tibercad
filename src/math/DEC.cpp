@@ -64,17 +64,7 @@ DEC::init(void)
   _incidence.resize(ne, nn);
   _dual_volumes.resize(nn, 0.0);
 
-
-  // circumcenter and thus Voronoi-construction works only
-  // for triangles, otherwise we fall back to barycentric Hodge
-  if ((nn != 3) || (_dual_constr == BARYCENTRIC))
-    _center = elem.vertex_average();
-  else
-  {
-    _center = circumcenter(elem);
-    if ((_dual_constr == MIXED) && !elem.contains_point(_center))
-      _center = elem.vertex_average();
-  }
+  _center = get_center(elem);
 
   if (dim == 0)
   {
@@ -204,12 +194,16 @@ DEC::get_hodge(libMesh::DenseMatrix<double>& hodge,
     }
     else if (_elem->n_nodes() == 4)
     {
-      compute_quad_hodge(*_elem, hodge, metric);
+      compute_quad_hodge_interp(*_elem, hodge, metric);
+      //cerr << "Hodge (interp) = " << hodge << endl;
+      //compute_quad_hodge_mfd(*_elem, hodge, metric);
+      //cerr << "Hodge (mfd) = " << hodge << endl;
     }
     else
     {
       // code with explicit integration and pull back to reference
       // element, works for simplices only
+      // left here for reference
 
       unique_ptr<libMesh::FEBase> fe = libMesh::FEBase::build(dim, libMesh::FEType(1, libMesh::LAGRANGE));
       const vector<vector<libMesh::Real>> &phi = fe->get_phi();
@@ -323,6 +317,7 @@ DEC::get_hodge(libMesh::DenseMatrix<double>& hodge,
   }
   else if (dim == 3)
   {
+    // TODO: this works for tetrahedra, but not for other 3D elements  
     for (unsigned int e = 0; e < _primal.size(); ++e)
     {
       unsigned int ni = _elem->local_edge_node(e, 0);
@@ -392,7 +387,64 @@ DEC::get_incidence_pairs(std::vector<std::pair<unsigned int, unsigned int>>& inc
 
 
 libMesh::Point
-DEC::circumcenter(const libMesh::Elem& elem, int s) const
+DEC::get_center(const libMesh::Elem& elem) const
+{
+  unsigned int dim = elem.dim();
+  unsigned int nn = elem.n_nodes();
+
+  Point center;
+
+  if (dim == 0)
+    center = elem.point(0);
+
+  else if (dim == 1)
+    center = 0.5 * (elem.point(0) + elem.point(1));
+
+  else if (dim == 2)
+  {
+    if (nn == 3)
+    {
+      if (_dual_constr == BARYCENTRIC)
+        center = elem.vertex_average();
+      else
+      {
+        center = circumcenter(elem);
+        if ((_dual_constr == MIXED) && !elem.contains_point(_center))
+          center = elem.vertex_average();
+      }
+    }
+    else if (nn == 4)
+    {
+      // For quadrilaterals, use intersection of diagonals
+      center = diagonal_intersection(elem);
+    }
+  }
+
+  else if (dim == 3)
+  {
+    if (nn == 4)
+    {
+      if (_dual_constr == BARYCENTRIC)
+        center = elem.vertex_average();
+      else
+      {
+        center = circumcenter(elem);
+        if ((_dual_constr == MIXED) && !elem.contains_point(_center))
+          center = elem.vertex_average();
+      }
+    }
+    else // for now use barycenter for other 3D elements
+      center = elem.vertex_average();
+  }
+
+  return center;
+}
+
+
+
+
+libMesh::Point
+DEC::circumcenter(const libMesh::Elem& elem) const
 {
   Point x_i(0.0);
 
@@ -401,39 +453,10 @@ DEC::circumcenter(const libMesh::Elem& elem, int s) const
   if ((dim == 2) && (elem.n_nodes() == 3))
   {
     Point a, b, c;
-    
-    /*
-    if ((s >= 0) && (elem.n_nodes() > 3))
-    {
-      auto side = elem.side_ptr(s);
-      a = side.point(0);
-      b = side.point(1);
-      Point v1(b - a);
 
-      // look for adjacent side that makes smallest angle
-      unsigned int ns = elem.n_sides();
-
-      auto s2 = elem.side_ptr((s+1)%ns);
-      Point v2(s2.point(1) - s2.point(0));
-
-      auto s3 = elem.side_ptr((s-1)%ns);
-      Point v3(s3.point(0) - s3.point(1));
-
-      double cosa = -(v1 * v2) / (v1.norm() * v2.norm());
-      double cosb =  (v1 * v3) / (v1.norm() * v3.norm());
-
-      if (cosa > cosb)
-        c = b + v2;
-      else
-        c = a + v3;
-      
-    }*/
-    //else
-    {
-      a = elem.point(0);
-      b = elem.point(1);
-      c = elem.point(2);
-    }
+    a = elem.point(0);
+    b = elem.point(1);
+    c = elem.point(2);
 
     double d = 2 * (a(0) * (b(1) - c(1)) +
                     b(0) * (c(1) - a(1)) + c(0) * (a(1) - b(1)));
@@ -480,7 +503,7 @@ DEC::circumcenter(const libMesh::Elem& elem, int s) const
 }
 
 
-/**
+/*
  * Compute the local Hodge matrix H for a quadrilateral element
  * using consistency with linear fields and graph compatibility.
  * 
@@ -499,9 +522,9 @@ DEC::circumcenter(const libMesh::Elem& elem, int s) const
  * Non-adjacent pairs (opposite edges): (0,2) and (1,3)
  */
 void
-DEC::compute_quad_hodge(const libMesh::Elem& elem,
+DEC::compute_quad_hodge_mfd(const libMesh::Elem& elem,
                         libMesh::DenseMatrix<libMesh::Real>& H,
-                        const libMesh::RealTensor& mu) const
+                        const libMesh::RealTensor& metric) const
 {
     assert(elem.n_nodes() == 4);
     H.resize(4, 4);
@@ -548,9 +571,9 @@ DEC::compute_quad_hodge(const libMesh::Elem& elem,
     for (unsigned int r = 0; r < 4; ++r)
     {
         // test field u=x: du=(1,0)
-        R(r, 0) = (mu(0,0)*dual[r](1) - mu(1,0)*dual[r](0));
+        R(r, 0) = (metric(0,0)*dual[r](1) - metric(1,0)*dual[r](0));
         // test field u=y: du=(0,1)
-        R(r, 1) = (mu(0,1)*dual[r](1) - mu(1,1)*dual[r](0));
+        R(r, 1) = (metric(0,1)*dual[r](1) - metric(1,1)*dual[r](0));
     }
 
     // Compute C^T C (2x2)
@@ -603,6 +626,7 @@ DEC::compute_quad_hodge(const libMesh::Elem& elem,
     for (unsigned int r = 0; r < 4; ++r)
         alpha += H_c(r,r);
     alpha /= 4.0;
+
     // ensure positive
     if (alpha < 1e-14)
         alpha = 1.0;
@@ -613,4 +637,272 @@ DEC::compute_quad_hodge(const libMesh::Elem& elem,
         for (unsigned int s = 0; s < 4; ++s)
             H(r,s) = H_c(r,s) + alpha * P(r,s);
 }
+
+
+/*
+ * Compute the local Hodge matrix H for a quadrilateral element
+ * using piecewise Whitney interpolation on subtriangles.
+ *
+ * Quad nodes ordered anti-clockwise: 0, 1, 2, 3
+ * (using 0-based indexing throughout)
+ *
+ * Edges (0-based):
+ *   e0: 0->1 (bottom)
+ *   e1: 1->2 (right)
+ *   e2: 2->3 (top)
+ *   e3: 3->0 (left)
+ *
+ * Subtriangles:
+ *   T+ = {0, 1, 2}: supports basis for e0, e1
+ *   T- = {0, 1, 3}: supports basis for e0, e3
+ *   T2 = {1, 2, 3}: supports basis for e1, e2
+ *   T3 = {0, 2, 3}: supports basis for e2, e3
+ *
+ * For each edge e_r, the support is the union of the two
+ * subtriangles sharing that edge. The interpolant on the
+ * support is the average of the Whitney expansions on
+ * each subtriangle, with diagonal cochain eliminated via
+ * Stokes' theorem on each subtriangle.
+ *
+ * The dual edge of e_r goes from the edge midpoint m_r
+ * to the diagonal intersection x_D.
+ */
+void
+DEC::compute_quad_hodge_interp(const libMesh::Elem& elem,
+                               libMesh::DenseMatrix<libMesh::Real>& H,
+                               const libMesh::RealTensor& metric) const
+{
+  assert(elem.n_nodes() == 4);
+  H.resize(4, 4);
+  H.zero();
+
+  const Point p[4] = {elem.point(0), elem.point(1),
+                      elem.point(2), elem.point(3)};
+
+  Point center = diagonal_intersection(elem);
+
+  // matrix representation of Hodge star in R^2
+  RealTensor R;
+  R(0, 1) = -1.0;
+  R(1, 0) =  1.0;
+
+
+  for (unsigned int e = 0; e < 4; ++e)
+  {
+    // Dual edge vector
+    Point dual_r = center - _midpoints[e];
+
+    // integration point
+    Point q_point = 0.5 * (_midpoints[e] + center);
+
+    // Subtriangles supporting edge e
+    RealGradient w1[3];
+    RealGradient w2[3];
+
+    whitney_1forms(p[e], p[(e+1)%4], p[(e+2)%4], q_point, w1);
+    whitney_1forms(p[e], p[(e+1)%4], p[(e+3)%4], q_point, w2);
+
+    RealGradient lambda1 = 0.5 *(w1[0] + w2[0] - w1[2] - w2[1]); // eliminate diagonal cochain
+    RealGradient lambda2 = 0.5 *(w1[1] - w1[2]);
+    RealGradient lambda3 = 0.5 *(w2[2] - w2[1]);
+
+    double contrib_r0 = (R * metric * lambda1) * dual_r;
+    double contrib_r1 = (R * metric * lambda2) * dual_r;
+    double contrib_r3 = (R * metric * lambda3) * dual_r;
+
+    H(e, e) = contrib_r0;
+    H(e, (e+1)%4) += contrib_r1;
+    H(e, (e+3)%4) += contrib_r3;
+  }
+  
+}
+
+
+/*
+ * Compute intersection of quad diagonals
+ * Diagonal 1: p[0] -> p[2]
+ * Diagonal 2: p[1] -> p[3]
+ * Returns the intersection point xD
+ */
+Point
+DEC::diagonal_intersection(const libMesh::Elem& elem) const
+{
+  /*
+  const Point& p0 = elem.point(0);
+  const Point& p1 = elem.point(1);
+  const Point& p2 = elem.point(2);
+  const Point& p3 = elem.point(3);
+
+  // Parametrize:
+  // Diagonal 1: p0 + t*(p2-p0)
+  // Diagonal 2: p1 + s*(p3-p1)
+  // Solve: p0 + t*(p2-p0) = p1 + s*(p3-p1)
+  // => t*(p2-p0) - s*(p3-p1) = p1-p0
+
+  Point d1 = p2 - p0;  // direction of diagonal 1
+  Point d2 = p3 - p1;  // direction of diagonal 2
+  Point d  = p1 - p0;  // rhs
+
+  // 2x2 system:
+  // d1.x * t - d2.x * s = d.x
+  // d1.y * t - d2.y * s = d.y
+  // Solve by Cramer's rule
+  Real denom = d1(0)*(-d2(1)) - d1(1)*(-d2(0));
+  //         = -d1(0)*d2(1) + d1(1)*d2(0)
+  //         = -(d1(0)*d2(1) - d1(1)*d2(0))
+
+  libmesh_assert_greater(std::abs(denom), 1e-14);
+
+  Real t = (d(0)*(-d2(1)) - d(1)*(-d2(0))) / denom;
+  //     = (-d(0)*d2(1) + d(1)*d2(0)) / denom
+
+  // Intersection point
+  Point xD = p0 + t * d1;
+
+  // Verify with s (debug check)
+  Real s = (d1(0)*d(1) - d1(1)*d(0)) / denom;
+  Point xD_check = p1 + s * d2;
+  libmesh_assert_less((xD - xD_check).norm(), 1e-10);
+
+  return xD;
+  */
+
+  const Point& p0 = elem.point(0);
+  const Point& p1 = elem.point(1);
+  const Point& p2 = elem.point(2);
+  const Point& p3 = elem.point(3);
+
+  Point d1 = p2 - p0;  // direction of diagonal 1
+  Point d2 = p3 - p1;  // direction of diagonal 2
+  Point d  = p1 - p0;  // rhs
+
+  // The system t*d1 - s*d2 = d has 3 equations, 2 unknowns.
+  // Find the two equations with largest |determinant| for stability.
+  // This corresponds to projecting onto the plane of the quad
+  // by dropping the coordinate most aligned with the quad normal.
+
+  // Quad normal (unnormalized)
+  Point normal = d1.cross(d2);
+
+  // Drop the coordinate with largest absolute normal component
+  // to get the most stable 2x2 subsystem
+  Real nx = std::abs(normal(0));
+  Real ny = std::abs(normal(1));
+  Real nz = std::abs(normal(2));
+
+  int i, j; // indices of the two coordinates to use
+  if (nx >= ny && nx >= nz)
+  {
+    // Normal most aligned with x: use y,z equations
+    i = 1; j = 2;
+  }
+  else if (ny >= nx && ny >= nz)
+  {
+    // Normal most aligned with y: use x,z equations
+    i = 0; j = 2;
+  }
+  else
+  {
+    // Normal most aligned with z: use x,y equations
+    i = 0; j = 1;
+  }
+
+  // 2x2 system using coordinates i and j:
+  // d1[i]*t - d2[i]*s = d[i]
+  // d1[j]*t - d2[j]*s = d[j]
+  //
+  // Matrix A = | d1[i]  -d2[i] |
+  //            | d1[j]  -d2[j] |
+  Real denom = d1(i)*(-d2(j)) - (-d2(i))*d1(j);
+  //         = -d1(i)*d2(j) + d2(i)*d1(j)
+
+  if (std::abs(denom) < 1e-14)
+  {
+    libmesh_warning("Degenerate quad: diagonals are parallel");
+    return 0.25*(p0+p1+p2+p3);
+  }
+
+  Real t = (d(i)*(-d2(j)) - (-d2(i))*d(j)) / denom;
+  Real s = (d1(i)*d(j)   - d(i)*d1(j))    / denom;
+
+  Point xD = p0 + t*d1;
+
+  // Sanity checks
+  libmesh_assert_greater(t, -1e-10);
+  libmesh_assert_less(t,    1.0+1e-10);
+  libmesh_assert_greater(s, -1e-10);
+  libmesh_assert_less(s,    1.0+1e-10);
+
+#ifdef DEBUG
+  // Verify both parametrizations agree
+  Point xD_check = p1 + s*d2;
+  libmesh_assert_less((xD-xD_check).norm(), 1e-8);
+#endif
+
+  return xD;
+}
+
+
+
+/*
+ * Compute the three Whitney 1-forms on a triangle at a given point.
+ * Triangle nodes: q0, q1, q2 (in given order, anti-clockwise assumed)
+ * Returns Whitney 1-forms for edges:
+ *   w[0] = lambda_01 (edge q0->q1)
+ *   w[1] = lambda_12 (edge q1->q2)
+ *   w[2] = lambda_20 (edge q2->q0)
+ * All in physical coordinates.
+ * 
+ * TODO: adapt for 3D triangle in 3D space (currently assumes 2D triangle in 2D space)
+ */
+void
+DEC::whitney_1forms(const libMesh::Point& q0,
+                    const libMesh::Point& q1,
+                    const libMesh::Point& q2,
+                    const libMesh::Point& x,
+                    libMesh::RealGradient w[3]) const
+{
+  // Signed area via cross product
+  // area = 0.5 * (q1-q0) x (q2-q0)
+  Real area2 = (q1(0)-q0(0))*(q2(1)-q0(1))
+             - (q1(1)-q0(1))*(q2(0)-q0(0));
+
+  libmesh_assert_greater(std::abs(area2), 1e-14);
+
+  Real inv2A = 1.0 / area2;
+
+  // Gradients of barycentric coordinates (constant on triangle)
+  // grad lambda_i = (1/2A) * perp(opposite edge)
+  RealGradient g[3];
+  g[0](0) = (q1(1)-q2(1)) * inv2A;
+  g[0](1) = (q2(0)-q1(0)) * inv2A;
+
+  g[1](0) = (q2(1)-q0(1)) * inv2A;
+  g[1](1) = (q0(0)-q2(0)) * inv2A;
+
+  g[2](0) = (q0(1)-q1(1)) * inv2A;
+  g[2](1) = (q1(0)-q0(0)) * inv2A;
+
+  // Barycentric coordinates of x
+  Real lam[3];
+  lam[0] = ((q1(1)-q2(1))*(x(0)-q2(0))
+           + (q2(0)-q1(0))*(x(1)-q2(1))) * inv2A;
+  lam[1] = ((q2(1)-q0(1))*(x(0)-q2(0))
+           + (q0(0)-q2(0))*(x(1)-q2(1))) * inv2A;
+  lam[2] = 1.0 - lam[0] - lam[1];
+
+  // Whitney 1-forms: lambda_ij = lam_i * grad_j - lam_j * grad_i
+  // w[0] = lambda_01: edge q0->q1
+  w[0](0) = lam[0]*g[1](0) - lam[1]*g[0](0);
+  w[0](1) = lam[0]*g[1](1) - lam[1]*g[0](1);
+
+  // w[1] = lambda_12: edge q1->q2
+  w[1](0) = lam[1]*g[2](0) - lam[2]*g[1](0);
+  w[1](1) = lam[1]*g[2](1) - lam[2]*g[1](1);
+
+  // w[2] = lambda_20: edge q2->q0
+  w[2](0) = lam[2]*g[0](0) - lam[0]*g[2](0);
+  w[2](1) = lam[2]*g[0](1) - lam[0]*g[2](1);
+}
+
 
