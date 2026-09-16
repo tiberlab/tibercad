@@ -25,8 +25,8 @@
 
 
 
-#ifndef _MESHUTILS_H_
-#define _MESHUTILS_H_
+#ifndef TC_MESHUTILS_H
+#define TC_MESHUTILS_H
 
 #include "tibercad/base/TypeDefs.h"
 #include "tibercad/geom/TensorGrid.h"
@@ -174,4 +174,4 @@ class MeshUtils
 };
 
 
-#endif // _MESHUTILS_H_
+#endif // TC_MESHUTILS_H

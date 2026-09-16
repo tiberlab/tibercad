@@ -25,8 +25,8 @@
 
 
 
-#ifndef _SOLVEREXCEPTION_H_
-#define _SOLVEREXCEPTION_H_
+#ifndef TC_SOLVEREXCEPTION_H
+#define TC_SOLVEREXCEPTION_H
 
 #include <stdexcept>
 #include <string>
@@ -49,4 +49,4 @@ class SolverException : public std::runtime_error
 
 
 
-#endif // _SOLVEREXCEPTION_H_
+#endif // TC_SOLVEREXCEPTION_H

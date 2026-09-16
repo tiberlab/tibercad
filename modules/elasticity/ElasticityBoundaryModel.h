@@ -40,7 +40,7 @@
 //class Point;
 
 //! This is the base class for the Poisson physical model
-class ElasticityBoundaryModel : public PhysicalModel
+class TC_DLEXPORT ElasticityBoundaryModel : public PhysicalModel
 {
 
   public:
@@ -149,14 +149,5 @@ ElasticityBoundaryModel::ElasticityBoundaryModel(const ModelOptions& options) :
 
 
 
-
-//inline
-//ElasticityBoundaryModel*
-//ElasticityBoundaryModel::create(const ModelOptions& options)
-//{
- 
-//  return dynamic_cast<ElasticityBoundaryModel*>(PhysicalModel::create(_create,_destroy,options));
-  
-//}
 
 #endif // _MYPOISSONMODEL_H_tens_

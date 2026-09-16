@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _DIFFUSIVE_H_
-#define _DIFUSSIVE_H_
+#ifndef TC_DIFFUSIVE_H
+#define TC_DIFUSSIVE_H
 
 #include "BoltzmannBoundaryModel.h"
 
@@ -38,7 +38,7 @@
 
 
 //! The base class for Poisson boundary conditions
-class TBDLLOCAL Diffusive : public BoltzmannBoundaryModel
+class TC_DLLOCAL Diffusive : public BoltzmannBoundaryModel
 {
 
   public:
@@ -113,4 +113,4 @@ Diffusive::create_new(void) const
   return new Diffusive(get_options());
 }
 
-#endif // _POISSONDIRICHLET_H_
+#endif // TC_POISSONDIRICHLET_H

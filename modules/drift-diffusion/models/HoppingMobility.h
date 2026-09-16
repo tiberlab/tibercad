@@ -26,8 +26,8 @@
 
 
 
-#ifndef _HOPPINGMOBILITY_H_
-#define _HOPPINGMOBILITY_H_
+#ifndef TC_HOPPINGMOBILITY_H
+#define TC_HOPPINGMOBILITY_H
 
 #include "MobilityModelInterface.h"
 
@@ -52,16 +52,13 @@
 *	f \left( s, F \right) = \exp \left\{ 0.44 \left( s^{\frac{3}{2}} - 2.2 \right) \left\[ \sqrt{1 + 0.8 \left(F \frac{e}{\sigma N_0^{\frac{1}{3}}} \right)^2 } - 1 \right\] \right\} 
 * \f
 */
-class TBDLLOCAL HoppingMobility : public MobilityModelInterface
+class TC_DLLOCAL HoppingMobility : public MobilityModelInterface
 {
 
   public:
 
     //! Destructor
     virtual ~HoppingMobility(void);
-
-    //! Create a HoppingMobility object
-    static HoppingMobility* create(const ModelOptions& options);
 
     //! \copydoc MobilityModelInterface::get_mobility()
     virtual double get_mobility(void);
@@ -112,18 +109,10 @@ HoppingMobility::HoppingMobility(const ModelOptions& options)
 {
 }
 
-inline
-HoppingMobility*
-HoppingMobility::create(const ModelOptions& options)
-{
-  return new HoppingMobility(options);
-}
-
-
 
 inline
 HoppingMobility::~HoppingMobility(void)
 {
 }
 
-#endif // _HOPPINGMOBILITY_H_
+#endif // TC_HOPPINGMOBILITY_H

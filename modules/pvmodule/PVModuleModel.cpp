@@ -39,8 +39,11 @@ PVModuleModel::PVModuleModel(const ModelOptions& options) :
 }
 
 
+PVModuleModel::~PVModuleModel(void) = default;
+
+
 TiberModelObject*
-PVModuleModel::_create(const ModelOptions& options, const void*)
+PVModuleModel::_create(const ModelOptions& options)
 {
   return new PVModuleModel(options);
 }

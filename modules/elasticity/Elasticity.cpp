@@ -71,17 +71,6 @@ Elasticity::~Elasticity(void)
 }
 
 
-Elasticity*
-Elasticity::create(const ModelOptions& options)
-{
-  // we could use the options to create different implementations
-  // or something like that.
-
-  return new Elasticity(options);
-}
-
-
-
 
 void
 Elasticity::do_init(void)

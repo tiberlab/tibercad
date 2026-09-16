@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _EXPONENTIALPROFILE_H_
-#define _EXPONENTIALPROFILE_H_
+#ifndef TC_EXPONENTIALPROFILE_H
+#define TC_EXPONENTIALPROFILE_H
 
 
 #include "tibercad/profiles/ExternalProfile.h"

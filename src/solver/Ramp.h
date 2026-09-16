@@ -23,8 +23,8 @@
  */
 
 
-#ifndef _RAMP_H_
-#define _RAMP_H_
+#ifndef TC_RAMP_H
+#define TC_RAMP_H
 
 #include "tibercad/base/tiber_dll.h"
 #include "tibercad/base/TypeDefs.h"
@@ -37,7 +37,7 @@ class SimulationInterface;
 
 
 //! Ramp a variable in quasistationary mode
-class TBDLLOCAL Ramp
+class TC_DLLOCAL Ramp
 {
 
   public:
@@ -112,4 +112,4 @@ class TBDLLOCAL Ramp
 
 
 
-#endif // _SWEEP_H_
+#endif // TC_SWEEP_H

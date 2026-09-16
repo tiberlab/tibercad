@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _AVALANCHEGENERATION_H_
-#define _AVALANCHEGENERATION_H_
+#ifndef TC_AVALANCHEGENERATION_H
+#define TC_AVALANCHEGENERATION_H
 
 #include "RecombinationModelInterface.h"
 #include "tibercad/base/TypeDefs.h"
@@ -42,16 +42,13 @@
  * \f}
  *
  */
-class TBDLLOCAL AvalancheGeneration : public RecombinationModelInterface
+class TC_DLLOCAL AvalancheGeneration : public RecombinationModelInterface
 {
 
   public:
 
     //! Destructor
     virtual ~AvalancheGeneration(void);
-
-    //! Create a ConstantMobility object
-    static AvalancheGeneration* create(const ModelOptions& options);
 
 
   protected:
@@ -84,22 +81,7 @@ class TBDLLOCAL AvalancheGeneration : public RecombinationModelInterface
 };
 
 
-//
-// inline methods
-//
 
 
 
-
-
-inline
-AvalancheGeneration*
-AvalancheGeneration::create(const ModelOptions& options)
-{
-  return new AvalancheGeneration(options);
-}
-
-
-
-
-#endif // _AVALANCHEGENERATION_H_
+#endif // TC_AVALANCHEGENERATION_H

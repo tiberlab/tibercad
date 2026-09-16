@@ -30,6 +30,9 @@
 
 using namespace std;
 
+
+WIBoundaryModel::~WIBoundaryModel(void) = default;
+
 WIBoundaryModel*
 WIBoundaryModel::create(const MaterialBoundary* boundary, const ModelOptions& options)
 {

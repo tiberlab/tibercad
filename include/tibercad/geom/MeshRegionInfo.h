@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _MESHREGIONINFO_H_
-#define _MESHREGIONINFO_H_
+#ifndef TC_MESHREGIONINFO_H
+#define TC_MESHREGIONINFO_H
 
 #include "tibercad/base/TypeDefs.h"
 #include "tibercad/base/HashMap.h"
@@ -247,4 +247,4 @@ MeshRegionInfo::get_mesh(void)
 
 
 
-#endif // _REGIONINFO_H_
+#endif // TC_REGIONINFO_H

@@ -35,11 +35,7 @@ DegradationH2O::DegradationH2O(const ModelOptions& options)
 {
 }
 
-DegradationH2O*
-DegradationH2O::create(const ModelOptions& options)
-{
-  return new DegradationH2O(options);
-}
+
 
 void
 DegradationH2O::do_init(void)

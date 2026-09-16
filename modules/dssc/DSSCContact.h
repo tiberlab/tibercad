@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _DSSCCONTACT_H_
-#define _DSSCCONTACT_H_
+#ifndef TC_DSSCCONTACT_H
+#define TC_DSSCCONTACT_H
 
 #include "tibercad/physics/PhysicalModel.h"
 
@@ -290,4 +290,4 @@ DSSCContact::get_ex_curr(void) const
   return _j0;
 }
 
-#endif // _DSSCCONTACT_H_
+#endif // TC_DSSCCONTACT_H

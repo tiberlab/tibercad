@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _QUANTUMDOS_H_
-#define _QUANTUMDOS_H_
+#ifndef TC_QUANTUMDOS_H
+#define TC_QUANTUMDOS_H
 
 
 #include "tibercad/physics/misc/DensityOfStates.h"
@@ -38,7 +38,7 @@ class Embracing;
 /*!
  * \brief Base class for density of states
  */
-class TBDLEXPORT QuantumDOS : public DensityOfStates
+class TC_DLEXPORT QuantumDOS : public DensityOfStates
 {
 
   public:
@@ -152,4 +152,4 @@ QuantumDOS::get_quantum_simulation(void)
 
 
 
-#endif // _DELTADOS_H_
+#endif // TC_DELTADOS_H

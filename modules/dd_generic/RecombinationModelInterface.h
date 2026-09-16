@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _RECOMBINATIONMODELINTERFACE_H_
-#define _RECOMBINATIONMODELINTERFACE_H_
+#ifndef TC_RECOMBINATIONMODELINTERFACE_H
+#define TC_RECOMBINATIONMODELINTERFACE_H
 
 
 
@@ -56,7 +56,7 @@ class Boundary;
  * Fermi level difference.
  *
  */
-class TBDLEXPORT RecombinationModelInterface : public DriftDiffusionModelInterface
+class TC_DLEXPORT RecombinationModelInterface : public DriftDiffusionModelInterface
 {
 
   public:
@@ -257,4 +257,4 @@ RecombinationModelInterface::is_radiative(void) const
 
 
 
-#endif // _RECOMBINATIONMODELINTERFACE_H_
+#endif // TC_RECOMBINATIONMODELINTERFACE_H

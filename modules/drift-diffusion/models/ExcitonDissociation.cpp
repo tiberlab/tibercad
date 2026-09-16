@@ -35,6 +35,13 @@
 #include "tibercad/module/TiberModule.h"
 
 
+ExcitonDissociation::ExcitonDissociation(const ModelOptions& options)
+  : RecombinationModelInterface(options),
+    d_(1.0),
+    _exciton_sim(NULL)
+{
+  set_name("ExcitonDissociation");
+}
 
 void
 ExcitonDissociation::do_init(void)

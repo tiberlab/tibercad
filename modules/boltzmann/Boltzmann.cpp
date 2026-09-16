@@ -66,14 +66,6 @@ Boltzmann::Boltzmann(const ModelOptions& options) :
 }
 
 
-Boltzmann*
-Boltzmann::create(const ModelOptions& options)
-{
-  // we could use the options to create different implementations
-  // or something like that.
-  return new Boltzmann(options);
-}
-
 
 
 void

@@ -35,7 +35,7 @@
 
 namespace
 {
-  TiberModelObject* thpow_create(const ModelOptions& options, const void*)
+  TiberModelObject* thpow_create(const ModelOptions& options)
   {
     return new ThermoelectricPower(options);
   }

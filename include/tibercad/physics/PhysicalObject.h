@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _PHYSICALOBJECT_H_
-#define _PHYSICALOBJECT_H_
+#ifndef TC_PHYSICALOBJECT_H
+#define TC_PHYSICALOBJECT_H
 
 #include "tibercad/module/TiberModelObject.h"
 #include "tibercad/base/TypeDefs.h"
@@ -231,4 +231,4 @@ PhysicalObject::get_type(void) const
   return _type;
 }
 
-#endif // _PHYSICALOBJECT_H_
+#endif // TC_PHYSICALOBJECT_H

@@ -66,14 +66,6 @@ PVModule::~PVModule(void)
 }
 
 
-PVModule*
-PVModule::create(const ModelOptions& options)
-{
-  // we could use the options to create different implementations
-  // or something like that.
-  return new PVModule(options);
-}
-
 
 
 void

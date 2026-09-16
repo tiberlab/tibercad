@@ -37,21 +37,21 @@ namespace libMesh
 }
 
 // Base class for InCoherence model
-class TBDLEXPORT OpticalRecombination : public TmmDipoleSource
+class TC_DLLOCAL OpticalRecombination : public TmmDipoleSource
 {
 
   public:
 
   virtual ~OpticalRecombination(void) {};
-  static OpticalRecombination* create(const ModelOptions& options);
-  virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point, double lambda);
+
+  virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point, double lambda) override;
 
   
 protected:
   
-    OpticalRecombination(const ModelOptions& options);
+  explicit OpticalRecombination(const ModelOptions& options);
 	
-	virtual void do_init(void){};
+	virtual void do_init(void) override {};
 
 
 
@@ -76,13 +76,6 @@ OpticalRecombination::OpticalRecombination(const ModelOptions& options) :
 {
 }
 
-inline
-OpticalRecombination*
-OpticalRecombination::create(const ModelOptions& options)
-{
-  return new OpticalRecombination(options);
-}
 
 
-
-#endif // _POLARIZATIONMODEL_H_
+#endif // TC_POLARIZATIONMODEL_H

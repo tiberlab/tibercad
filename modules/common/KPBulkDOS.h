@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _KPBULKDOS_H_
-#define _KPBULKDOS_H_
+#ifndef TC_KPBULKDOS_H
+#define TC_KPBULKDOS_H
 
 
 #include "tibercad/physics/misc/DensityOfStates.h"
@@ -38,7 +38,7 @@ class DDsemiconductor;
 /*!
  * \brief Base class for density of states
  */
-class TBDLEXPORT KPBulkDOS : public DensityOfStates
+class TC_DLEXPORT KPBulkDOS : public DensityOfStates
 {
 
   public:
@@ -172,4 +172,4 @@ KPBulkDOS::create(const ModelOptions& options)
 }
 
 
-#endif // _BULKDOS_H_
+#endif // TC_BULKDOS_H

@@ -41,7 +41,7 @@ namespace libMesh
 {
   class Elem;
 }
-class TBDLLOCAL Incident_wave : public TmmBoundaryModel
+class TC_DLLOCAL Incident_wave : public TmmBoundaryModel
 {
 
   public:
@@ -49,24 +49,20 @@ class TBDLLOCAL Incident_wave : public TmmBoundaryModel
     //! Destructor
     ~Incident_wave(void) {};
 
-    //! Creator function
-
-
-    static Incident_wave* create(const ModelOptions& options);
-    virtual void Calculate_M_Matrix(void);
+    virtual void Calculate_M_Matrix(void) override;
 
 
   protected:
 
-    virtual void do_init(void);
+    //! Constructor
+    explicit Incident_wave(const ModelOptions& options);
+
+    virtual void do_init(void) override;
 
 
 
 
   private:
-
-    //! Constructor
-    Incident_wave(const ModelOptions& options);
 
 
 };
@@ -81,11 +77,5 @@ Incident_wave::Incident_wave(const ModelOptions& options) :
 
 
 
-inline
-Incident_wave*
-Incident_wave::create(const ModelOptions& options)
-{
-  return new Incident_wave(options);
-}
 
 #endif /* SRC_CORE_MODULES_TMM_MODELS_INCIDENTWAVE_H_ */

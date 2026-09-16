@@ -82,10 +82,7 @@ ETB::ETB(const ModelOptions& options)
   has_solution_vector(false);
 }
 
-ETB* ETB::create(const ModelOptions& options)
-{
-  return new ETB(options);
-}
+
 
 ETB::~ETB(void)
 {

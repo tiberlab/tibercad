@@ -23,8 +23,8 @@
  */
 
 
-#ifndef _DYNAMICALMATRIX_H_
-#define _DYNAMICALMATRIX_H_
+#ifndef TC_DYNAMICALMATRIX_H
+#define TC_DYNAMICALMATRIX_H
 
 #include "tibercad/physics/PhysicalModel.h"
 #include "PhononModel.h"

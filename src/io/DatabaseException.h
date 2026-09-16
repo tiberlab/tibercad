@@ -24,8 +24,8 @@
 
 
 
-#ifndef _DATABASEEXCEPTION_H_
-#define _DATABASEEXCEPTION_H_
+#ifndef TC_DATABASEEXCEPTION_H
+#define TC_DATABASEEXCEPTION_H
 
 #include "tibercad/base/ExceptionTracer.h"
 
@@ -50,4 +50,4 @@ class DatabaseException : public std::runtime_error, ExceptionTracer
 
 
 
-#endif // _DATABASEEXCEPTION_H_
+#endif // TC_DATABASEEXCEPTION_H

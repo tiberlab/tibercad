@@ -36,12 +36,7 @@ IncoherentModel::IncoherentModel(const ModelOptions& options) :
  _Incoheret_Index=0;
 }
 
-inline
-IncoherentModel*
-IncoherentModel::create(const ModelOptions& options)
-{
-  return new IncoherentModel(options);
-}
+
 
 inline
 const double&

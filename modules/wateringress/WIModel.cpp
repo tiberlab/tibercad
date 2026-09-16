@@ -31,9 +31,10 @@
 
 using namespace std;
 
+WIModel::~WIModel(void) = default;
 
 TiberModelObject*
-WIModel::_create(const ModelOptions& options, const void*)
+WIModel::_create(const ModelOptions& options)
 {
   return new WIModel(options);
 }

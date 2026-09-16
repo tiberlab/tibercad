@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _VORONOICELL_H_
-#define _VORONOICELL_H_
+#ifndef TC_VORONOICELL_H
+#define TC_VORONOICELL_H
 
 #include <vector>
 
@@ -174,4 +174,4 @@ VoronoiCell::get_volumes(void) const
 }
 
 
-#endif // _VORONOICELL_H_
+#endif // TC_VORONOICELL_H

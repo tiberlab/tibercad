@@ -24,8 +24,8 @@
  * \note This file is part of module vff.
  */
 
-#ifndef _VFFMODEL_H_
-#define _VFFMODEL_H_
+#ifndef TC_VFFMODEL_H
+#define TC_VFFMODEL_H
 
 
 #include "tibercad/physics/PhysicalModel.h"
@@ -38,8 +38,12 @@
 class Keating;
 
 
-//! This is the base class for the Poisson physical model
-class TBDLLOCAL VffModel : public PhysicalModel
+//! This is the base class for VFF models
+/*!
+ * Right now there are no derived classes from this, so it is declared local,
+ * but in future there might be a need to specialize this class.
+ */
+class TC_DLLOCAL VffModel : public PhysicalModel
 {
 
 public:
@@ -85,7 +89,7 @@ protected:
 private:
 
 
-  static TiberModelObject* _create(const ModelOptions& options, const void*);
+  static TiberModelObject* _create(const ModelOptions& options);
 
   static void  _destroy( TiberModelObject* p);
 
@@ -110,7 +114,7 @@ VffModel::~VffModel()
 }
 
 inline
-TiberModelObject*  VffModel::_create(const ModelOptions& options, const void*)
+TiberModelObject*  VffModel::_create(const ModelOptions& options)
 {
 
   return new VffModel(options);
@@ -149,4 +153,4 @@ double VffModel::get_d(void) const
   return _keating->get_d_0();
 }
 
-#endif // _VFFMODEL_H_
+#endif // TC_VFFMODEL_H

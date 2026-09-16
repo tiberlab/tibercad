@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _ALLOY_H_
-#define _ALLOY_H_
+#ifndef TC_ALLOY_H
+#define TC_ALLOY_H
 
 
 #include "tibercad/physics/Material.h"

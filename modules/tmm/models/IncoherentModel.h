@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _INCOHERENCE_H_
-#define _INCOHERENCE_H_
+#ifndef TC_INCOHERENCE_H
+#define TC_INCOHERENCE_H
 
 #include "Tmm.h"
 #include "TmmBulkModel.h"
@@ -37,7 +37,7 @@ namespace libMesh
 }
 
 // Base class for InCoherence model
-class TBDLEXPORT IncoherentModel : public TmmBulkModel
+class TC_DLEXPORT IncoherentModel : public TmmBulkModel
 {
 
   public:
@@ -45,12 +45,11 @@ class TBDLEXPORT IncoherentModel : public TmmBulkModel
   virtual ~IncoherentModel(void) {};
   
   const double& get_Incoherent_Index(void) const;
-  static IncoherentModel* create(const ModelOptions& options);
 
   
 protected:
   
-    IncoherentModel(const ModelOptions& options);
+    explicit IncoherentModel(const ModelOptions& options);
 
     void set_Incoherent_Index(const double& Incoheret_Index);
 
@@ -66,4 +65,4 @@ protected:
 
 
 
-#endif // _POLARIZATIONMODEL_H_
+#endif // TC_POLARIZATIONMODEL_H

@@ -27,8 +27,8 @@
 //                         COPYRIGHT NOTICE
 // ***************************************************************
 
-#ifndef _FADIFF_H
-#define _FADIFF_H
+#ifndef TC_FADIFF_H
+#define TC_FADIFF_H
 
 #include "fadbad.h"
 

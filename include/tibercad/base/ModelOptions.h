@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _MODELOPTIONS_H_
-#define _MODELOPTIONS_H_
+#ifndef TC_MODELOPTIONS_H
+#define TC_MODELOPTIONS_H
 
 #include "tibercad/utils/Utils.h"
 #include "tibercad/base/tiber_dll.h"
@@ -584,4 +584,4 @@ ModelOptions::options_end(void) const
 }
 */
 
-#endif // _MODELOPTIONS_H_
+#endif // TC_MODELOPTIONS_H

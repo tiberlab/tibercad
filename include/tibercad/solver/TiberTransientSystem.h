@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _TIBERTRANSIENTSYSTEM_H_
-#define _TIBERTRANSIENTSYSTEM_H_
+#ifndef TC_TIBERTRANSIENTSYSTEM_H
+#define TC_TIBERTRANSIENTSYSTEM_H
 
 #include "tibercad/solver/TiberEqSystem.h"
 #include "tibercad/base/libMeshDefs.h"
@@ -143,4 +143,4 @@ class TiberTransientSystem : public TiberEqSystem, public libMesh::TransientSyst
 
 typedef TiberTransientSystem<libMesh::LinearImplicitSystem> TiberTransientLinSystem;
 
-#endif // _TIBERTRANSIENTSYSTEM_H_
+#endif // TC_TIBERTRANSIENTSYSTEM_H

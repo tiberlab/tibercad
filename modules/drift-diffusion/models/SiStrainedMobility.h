@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _SISTRAINEDMOBILITY_H_
-#define _SISTRAINEDMOBILITY_H_
+#ifndef TC_SISTRAINEDMOBILITY_H
+#define TC_SISTRAINEDMOBILITY_H
 
 #include "MobilityModelInterface.h"
 #include "tibercad/physics/StrainInterface.h"
@@ -42,16 +42,13 @@
  * \mu = \mu_{max} \left(\frac{T}{T_0}\right)^{-\gamma}
  * \f]
  */
-class TBDLLOCAL SiStrainedMobility : public MobilityModelInterface
+class TC_DLLOCAL SiStrainedMobility : public MobilityModelInterface
 {
 
   public:
 
     //! Destructor
     virtual ~SiStrainedMobility(void);
-
-    //! Create a SiStrainedMobility object
-    static SiStrainedMobility* create(const ModelOptions& options);
 
     //! \copydoc MobilityModelInterface::get_mobility()
     virtual double get_mobility(void);
@@ -70,9 +67,6 @@ class TBDLLOCAL SiStrainedMobility : public MobilityModelInterface
 
     //! \copydoc MobilityModelInterface::do_init()
     virtual void do_init(void);
-
-    //! \copydoc MobilityModelInterface::create_new()
-    virtual PhysicalModel* create_new(void) const;
 
 
   private:
@@ -114,24 +108,8 @@ class TBDLLOCAL SiStrainedMobility : public MobilityModelInterface
 
 
 inline
-SiStrainedMobility*
-SiStrainedMobility::create(const ModelOptions& options)
-{
-  return new SiStrainedMobility(options);
-}
-
-
-inline
-PhysicalModel*
-SiStrainedMobility::create_new(void) const
-{
-  return new SiStrainedMobility(get_options());
-}
-
-
-inline
 SiStrainedMobility::~SiStrainedMobility(void)
 {
 }
 
-#endif // _CONSTANTMOBILITY_H_
+#endif // TC_CONSTANTMOBILITY_H

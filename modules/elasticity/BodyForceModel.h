@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _BODYFORCEMODEL_H_
-#define _BODYFORCEMODEL_H_
+#ifndef TC_BODYFORCEMODEL_H
+#define TC_BODYFORCEMODEL_H
 
 #include "tibercad/physics/PhysicalModel.h"
 //#include "tibercad/base/libMeshDefs.h"
@@ -142,4 +142,4 @@ BodyForceModel::BodyForceModel(const ModelOptions& options) :
 {
 }
 
-#endif // _THERMALCONDUCTIVITYMODEL_H_
+#endif // TC_THERMALCONDUCTIVITYMODEL_H

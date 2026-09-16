@@ -26,7 +26,6 @@
 
 
 #include "CarrierProperties.h"
-#include "tibercad/physics/misc/ParticleDensity.h"
 #include "tibercad/physics/misc/DensityOfStates.h"
 #include "MobilityModelInterface.h"
 #include "DriftDiffusionProperties.h"
@@ -40,6 +39,8 @@
 
 using namespace std;
 
+
+CarrierProperties::~CarrierProperties(void) = default;
 
 
 CarrierProperties::CarrierProperties(const ModelOptions& options) :

@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _UNIFORMRANDOMALLOY_H_
-#define _UNIFORMRANDOMALLOY_H_
+#ifndef TC_UNIFORMRANDOMALLOY_H
+#define TC_UNIFORMRANDOMALLOY_H
 
 
 #include "tibercad/profiles/ExternalProfile.h"
@@ -67,4 +67,4 @@ class UniformRandomAlloy : public ExternalProfile
 };
 
 
-#endif // _UNIFORMRANDOMALLOY_H_
+#endif // TC_UNIFORMRANDOMALLOY_H

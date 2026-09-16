@@ -6,8 +6,7 @@ Compiler
   C++
   {
     executable = @CXX@
-    compiler_flags = "-g -O3 -std=gnu++17 -pthread -fPIC -c"
-    # -fvisibility=hidden
+    compiler_flags = "-g -O3 -std=gnu++17 -fvisibility=hidden -pthread -fPIC -c"
   }
 
   C

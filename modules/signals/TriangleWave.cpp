@@ -52,12 +52,6 @@ TriangleWave::~TriangleWave(void)
 }
 
 
-TriangleWave*
-TriangleWave::create(const ModelOptions& options)
-{
-  return(new TriangleWave(options));
-}
-
 
 void
 TriangleWave::do_init(void)

@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _MESHREADER_H_
-#define _MESHREADER_H_
+#ifndef TC_MESHREADER_H
+#define TC_MESHREADER_H
 
 #include "tibercad/base/tiber_dll.h"
 
@@ -44,7 +44,7 @@ class MeshBase;
 /*!
  *  Calls the  appropriate mesh reading class.  
  */
-class TBDLLOCAL MeshReader
+class TC_DLLOCAL MeshReader
 {
 
 
@@ -75,7 +75,7 @@ class TBDLLOCAL MeshReader
 };
 
 
-#endif // _MESHREADER_H_
+#endif // TC_MESHREADER_H
 
 
 

@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _EXCEPTIONTRACER_H_
-#define _EXCEPTIONTRACER_H_
+#ifndef TC_EXCEPTIONTRACER_H
+#define TC_EXCEPTIONTRACER_H
 
 
 #ifdef DEBUG 
@@ -67,4 +67,4 @@ class ExceptionTracer
 };
 
 
-#endif // _EXCEPTIONTRACER_H_
+#endif // TC_EXCEPTIONTRACER_H

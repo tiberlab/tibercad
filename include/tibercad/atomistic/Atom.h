@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _ATOM_H_
-#define _ATOM_H_
+#ifndef TC_ATOM_H
+#define TC_ATOM_H
 
 #include "tibercad/base/TypeDefs.h"
 #include "tibercad/atomistic/Specie.h"
@@ -229,5 +229,5 @@ const libMesh::Elem* Atom::get_elem() const
   return _el;
 }
 
-#endif // _ATOM_H_
+#endif // TC_ATOM_H
 

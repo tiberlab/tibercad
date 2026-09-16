@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _THERMALMODEL_H_
-#define _THERMALMODEL_H_
+#ifndef TC_THERMALMODEL_H
+#define TC_THERMALMODEL_H
 
 #include "tibercad/physics/PhysicalModel.h"
 
@@ -43,7 +43,7 @@
 class HeatSourceModel;
 class ThermalConductivityModel;
 
-class TBDLLOCAL BoltzmannModel : public PhysicalModel
+class TC_DLLOCAL BoltzmannModel : public PhysicalModel
 {
 
   public:
@@ -204,4 +204,4 @@ BoltzmannModel::create_new(void) const
 }
 
 
-#endif // _DEFAULTMODEL_H_
+#endif // TC_DEFAULTMODEL_H

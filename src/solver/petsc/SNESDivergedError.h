@@ -23,8 +23,8 @@
  */
 
 
-#ifndef _SNESDIVERGEDERROR_H_
-#define _SNESDIVERGEDERROR_H_
+#ifndef TC_SNESDIVERGEDERROR_H
+#define TC_SNESDIVERGEDERROR_H
 
 #include "PetscDivergedError.h"
 
@@ -47,4 +47,4 @@ class SNESDivergedError : public PetscDivergedError
 
 };
 
-#endif // _SNESDIVERGEDERROR_H_
+#endif // TC_SNESDIVERGEDERROR_H

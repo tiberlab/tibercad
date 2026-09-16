@@ -37,8 +37,6 @@ class SingleBand : public HamiltonianModel
 
     virtual ~SingleBand(void) {};
 
-    static SingleBand* create(const ModelOptions& options);
-
   protected:
 
     SingleBand(const ModelOptions& options);
@@ -51,11 +49,4 @@ class SingleBand : public HamiltonianModel
 
 };
 
-inline
-SingleBand*
-SingleBand::create(const ModelOptions& options)
-{
-  return new SingleBand(options);
-}
-
-
+i

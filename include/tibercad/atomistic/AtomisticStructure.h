@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _ATOMISTICSTRUCTURE_H_
-#define _ATOMISTICSTRUCTURE_H_
+#ifndef TC_ATOMISTICSTRUCTURE_H
+#define TC_ATOMISTICSTRUCTURE_H
 
 #include "tibercad/base/ModelOptions.h"
 #include "tibercad/base/TypeDefs.h"
@@ -390,4 +390,4 @@ AtomisticStructure::get_N_without_H(void) const
 
 
 
-#endif // _ATOMISTICSTRUCTURE_H_
+#endif // TC_ATOMISTICSTRUCTURE_H

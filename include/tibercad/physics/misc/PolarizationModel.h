@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _POLARIZATIONMODEL_H_
-#define _POLARIZATIONMODEL_H_
+#ifndef TC_POLARIZATIONMODEL_H
+#define TC_POLARIZATIONMODEL_H
 
 #include "tibercad/physics/PhysicalModel.h"
 #include "tibercad/module/SolutionProvider.h"
@@ -190,4 +190,4 @@ PolarizationModel::set_polarization(const libMesh::RealVectorValue& polarization
 
 
 
-#endif // _POLARIZATIONMODEL_H_
+#endif // TC_POLARIZATIONMODEL_H

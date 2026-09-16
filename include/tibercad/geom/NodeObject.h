@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _NODEOBJECT_H_
-#define _NODEOBJECT_H_
+#ifndef TC_NODEOBJECT_H
+#define TC_NODEOBJECT_H
 
 
 #include "tibercad/physics/PhysicalObject.h"
@@ -50,7 +50,7 @@ class NodeObject : public PhysicalObject
     /*!
      * \param options options for this boundary
      */
-    static NodeObject* create(const ModelOptions& options) TBDLLOCAL;
+    static NodeObject* create(const ModelOptions& options) TC_DLLOCAL;
 
 
   protected:

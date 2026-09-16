@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _CONSTANTS_H_
-#define _CONSTANTS_H_
+#ifndef TC_CONSTANTS_H
+#define TC_CONSTANTS_H
 
 #include "tibercad/base/tiber_dll.h"
 

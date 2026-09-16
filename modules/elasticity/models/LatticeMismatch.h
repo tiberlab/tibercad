@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _LATTICEMISMATCH_H_
-#define _LATTICEMISMATCH_H_
+#ifndef TC_LATTICEMISMATCH_H
+#define TC_LATTICEMISMATCH_H
 
 #include "BodyForceModel.h"
 
@@ -40,7 +40,7 @@ class Elem;
 
 
 //! The base class for Poisson boundary conditions
-class TBDLLOCAL LatticeMismatch : public BodyForceModel
+class TC_DLLOCAL LatticeMismatch : public BodyForceModel
 {
 
   public:
@@ -48,49 +48,28 @@ class TBDLLOCAL LatticeMismatch : public BodyForceModel
   //! Destructor
   ~LatticeMismatch(void);
   
-  //! Creator function
-  static LatticeMismatch* create(const ModelOptions& options);
-  
-  virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point){};
+  virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point) override {};
 
   protected:
 
+    //! Constructor
+    LatticeMismatch(const ModelOptions& options);
+
     //! Initialize
-    virtual void do_init(void);
+    virtual void do_init(void) override;
 
-    /* In some cases it might be useful to reimplement this: */
-    // virtual void do_init_interface(const PhysicalModel* comp_A,
-    //         const PhysicalModel* comp_B);
-
-
-    /* This is not used here: */
-    // virtual void read_database(void);
-
-
-    /* We do not use this here: */
-    // virtual void read_interface_database(void);
-
+  
 
 
   private:
   
-
-  //! Constructor
-     LatticeMismatch(const ModelOptions& options);
   
 };
 
 
 
 
-inline
-LatticeMismatch*
-LatticeMismatch::create(const ModelOptions& options)
-{ 
-  return new  LatticeMismatch(options);
-}
 
 
 
-
-#endif // _GRAYMODEL_H_
+#endif // TC_GRAYMODEL_H

@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _SEMICONDUCTORMODEL_H_
-#define _SEMICONDUCTORMODEL_H_
+#ifndef TC_SEMICONDUCTORMODEL_H
+#define TC_SEMICONDUCTORMODEL_H
 
 #include "tibercad/base/SimulationOptions.h"
 #include "DDBulkModel.h"
@@ -42,19 +42,13 @@ class Elem;
 
 
 //! The default DD semiconductor model container
-class TBDLLOCAL SemiconductorModel : public DDBulkModel
+class TC_DLLOCAL SemiconductorModel : public DDBulkModel
 {
 
   public:
     
-    //! The constructor
-    SemiconductorModel(const ModelOptions& options);
-    
     //! The destructor
     virtual ~SemiconductorModel(void);
-
-    //! This method creates a SimpleSemiconductorModel object
-    static SemiconductorModel* create(const ModelOptions& options);
 
 
     //! Clean the internal cache of element data
@@ -67,6 +61,9 @@ class TBDLLOCAL SemiconductorModel : public DDBulkModel
     
 
   protected:
+    
+    //! The constructor
+    SemiconductorModel(const ModelOptions& options);
 
 
     //! The data structure for element-wise cached data
@@ -125,18 +122,6 @@ class TBDLLOCAL SemiconductorModel : public DDBulkModel
 
 };
 
-
-//
-// inline member functions
-//
-
-
-inline
-SemiconductorModel*
-SemiconductorModel::create(const ModelOptions& options)
-{
-  return new SemiconductorModel(options);
-}
 
 
 

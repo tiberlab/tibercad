@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _EDGEOBJECT_H_
-#define _EDGEOBJECT_H_
+#ifndef TC_EDGEOBJECT_H
+#define TC_EDGEOBJECT_H
 
 
 #include "tibercad/physics/PhysicalObject.h"
@@ -50,7 +50,7 @@ class EdgeObject : public PhysicalObject
     /*!
      * \param options options for this boundary
      */
-    static EdgeObject* create(const ModelOptions& options) TBDLLOCAL;
+    static EdgeObject* create(const ModelOptions& options) TC_DLLOCAL;
 
 
   protected:

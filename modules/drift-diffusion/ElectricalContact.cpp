@@ -27,7 +27,6 @@
 
 #include "ElectricalContact.h"
 #include "DriftDiffusionProperties.h"
-#include "tibercad/physics/misc/ParticleDensity.h"
 #include "tibercad/base/Initializer.h"
 
 
@@ -123,16 +122,9 @@ ElectricalContact::do_compute(void)
     cb.calculate(pd.electron_vt);
     std::pair<double, double> eldens(cb.get_density_and_derivative(0, _contact_fermilevel));
     double n0 = eldens.first;
-    //ParticleDensity& el = get_dd_properties()->get_electrons();
-    //el.set_classical_parameters(cb.get_effective_DOS(),
-    //    get_dd_properties()->get_conduction_band_edge() - _contact_fermilevel, 0,
-    //    pd.electron_vt);
-    //double n0 = el.get_particle_density();
 
-    //std::cout<<"vrec_n="<<_vrec_n<<" n="<<pd.electron_density<<" n0="<<n0<<std::endl;
     double Rn = _vrec_n * (pd.electron_density - n0);
     double dRn = _vrec_n * pd.electron_density_derivative;
-    //std::cout<<"dRn = "<<dRn<<std::endl;
    
     if (_tunneling)
     {
@@ -162,17 +154,10 @@ ElectricalContact::do_compute(void)
     vb.calculate(pd.hole_vt);
     std::pair<double, double> hldens(vb.get_density_and_derivative(0, _contact_fermilevel));
     double p0 = hldens.first;
-    //ParticleDensity& hl = get_dd_properties()->get_holes();
-    //vb.set_temperature(pd.hole_vt);
-    //hl.set_classical_parameters(vb.get_effective_DOS(),
-    //    _contact_fermilevel - get_dd_properties()->get_valence_band_edge(), 0,
-    //    pd.hole_vt);
-    //double p0 = hl.get_particle_density();
+    
 
-    //std::cout<<"vrec_p="<<_vrec_p<<" p="<<pd.hole_density<<" p0="<<p0<<std::endl;
     double Rp = _vrec_p * (pd.hole_density - p0);
     double dRp = _vrec_p * pd.hole_density_derivative;
-    //std::cout<<"dRp ="<<dRp<<std::endl;
 
     if (_tunneling)
     {

@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _BOUNDARYNODEMAP_H_
-#define _BOUNDARYNODEMAP_H_
+#ifndef TC_BOUNDARYNODEMAP_H
+#define TC_BOUNDARYNODEMAP_H
 
 #include "tibercad/base/TypeDefs.h"
 
@@ -95,4 +95,4 @@ BoundaryNodeMap::add_node(ID id, const libMesh::Node* node)
 }
 
 
-#endif // _BOUNDARYNODEMAP_H_
+#endif // TC_BOUNDARYNODEMAP_H

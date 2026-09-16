@@ -1,6 +1,8 @@
 .. _Bibliography:
 
 
+.. [Shaheed94] M. R. Shaheed and C. M. Maziar, “A Physically Based Model for Carrier Freeze-out in Si- and SiGe-Base Bipolar Transistors Suitable for Implementation in Device Simulators,” in *Proceedings of the 1994 Bipolar/BiCMOS Circuits and Technology Meeting (BCTM)*, Minneapolis, MN, USA, pp. 191–194, October 1994.
+
 .. [Selberherr] Siegfried Selberherr, "Analysis and Simulation of Semiconductor Devices", *SpringerVerlag Wien*, New York, 1st edition, 1984.
 
 .. [Masetti] G Masetti M Severi and S Solmi, "Modeling of carrier mobility against carrier concentration in Arsenic-, Phosphorus- and Boron-doped Silicon", *IEEE Trans. on Electron Devices*,  1983.

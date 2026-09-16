@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _ELASTICITY_H_
-#define _ELASTICITY_H_
+#ifndef TC_ELASTICITY_H
+#define TC_ELASTICITY_H
 
 #include "tibercad/module/SimulationInterface.h"
 #include "tibercad/solver/TiberLinearSystem.h"
@@ -43,7 +43,7 @@ class Tensor4DSym;
  *
  *
  */
-class TBDLLOCAL Elasticity : public SimulationInterface
+class TC_DLLOCAL Elasticity : public SimulationInterface
 {
 
   public:
@@ -55,14 +55,14 @@ class TBDLLOCAL Elasticity : public SimulationInterface
      */
     ~Elasticity(void);
 
-    //! We need a public static creator function
-    static Elasticity* create(const ModelOptions& options);
-
     //! The assembly function
     void assemble(void);
 
 
   protected:
+
+    //! The constructor
+    Elasticity(const ModelOptions &options);
 
     //! The initialization
     virtual void do_init(void);
@@ -223,11 +223,6 @@ class TBDLLOCAL Elasticity : public SimulationInterface
     force_vector internal_force;
 
     std::vector<unsigned int> uvar;
-    //! The constructor
-    /*!
-     * Being private disables further inheritance.
-     */
-    Elasticity(const ModelOptions &options);
 
     //! Apply the deformation
     void apply_shape_deformation();
@@ -247,4 +242,4 @@ class TBDLLOCAL Elasticity : public SimulationInterface
 
 
 
-#endif // _ELASTICITY_H_
+#endif // TC_ELASTICITY_H

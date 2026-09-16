@@ -40,9 +40,9 @@
 #endif
 
 #ifdef DEBUG
-#define DLOPENFLAGS RTLD_NOW | RTLD_LOCAL
+#define TC_DLOPENFLAGS RTLD_NOW | RTLD_LOCAL
 #else
-#define DLOPENFLAGS RTLD_LAZY | RTLD_LOCAL
+#define TC_DLOPENFLAGS RTLD_LAZY | RTLD_LOCAL
 #endif
 
 
@@ -140,12 +140,22 @@ DLLoader::open_library(const string& name, DLLoader::LibraryInterface& iface)
 
   if (file_exists)
   {
-    iface.handle = dlopen(libfile.c_str(), DLOPENFLAGS);
+    // check if it is already resident
+    iface.handle = dlopen(libfile.c_str(), RTLD_NOLOAD | TC_DLOPENFLAGS);
+
+    if (iface.handle == nullptr)
+    {
+      iface.handle = dlopen(libfile.c_str(), TC_DLOPENFLAGS);
+
+      if (iface.handle != nullptr)
+        Messages::info("(using " + libfile + ")");
+    }
+
 
     if (iface.handle != nullptr)
     {
-      iface.create_fnc = dlsym(iface.handle, TBCREATEFUNCSYM);
-      iface.destroy_fnc = dlsym(iface.handle, TBDESTROYFUNCSYM);
+      iface.create_fnc = dlsym(iface.handle, TC_CREATEFUNCSYM);
+      iface.destroy_fnc = dlsym(iface.handle, TC_DESTROYFUNCSYM);
 
       if ((iface.create_fnc == nullptr) || (iface.destroy_fnc == nullptr))
       {
@@ -154,8 +164,6 @@ DLLoader::open_library(const string& name, DLLoader::LibraryInterface& iface)
             << " (missing creation/destruction methods)";
         throw RuntimeException(os.str());
       }
-
-      Messages::info("(using " + libfile + ")");
     }
     else
     {

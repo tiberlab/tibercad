@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _OPTICSTB_H_
-#define _OPTICSTB_H_
+#ifndef TC_OPTICSTB_H
+#define TC_OPTICSTB_H
 
 #include "tibercad/physics/optics/Optics.h"
 #include "tibercad/physics/schroedinger/EigenvalueProblem.h"
@@ -78,4 +78,4 @@ inline OpticsTB* OpticsTB::create(const ModelOptions& options)
 }
 
 
-#endif // _OPTICSTB_H_
+#endif // TC_OPTICSTB_H

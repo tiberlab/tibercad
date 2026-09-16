@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _TIBEREQSYSTEM_H_
-#define _TIBEREQSYSTEM_H_
+#ifndef TC_TIBEREQSYSTEM_H
+#define TC_TIBEREQSYSTEM_H
 
 
 #include "tibercad/base/ModelOptions.h"
@@ -284,4 +284,4 @@ TiberEqSystem::set_excluded_dofs(const IDHashSet& exlcuded_dofs,
 }
 
 
-#endif // _TIBEREQSYSTEM_H_
+#endif // TC_TIBEREQSYSTEM_H

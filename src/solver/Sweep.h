@@ -23,8 +23,8 @@
  */
 
 
-#ifndef _SWEEP_H_
-#define _SWEEP_H_
+#ifndef TC_SWEEP_H
+#define TC_SWEEP_H
 
 #include "tibercad/module/SimulationInterface.h"
 
@@ -43,7 +43,7 @@
  * \image latex Sweep_flowchart.eps
  *    "Flow chart for a parameter sweep" width=10cm
  */
-class TBDLLOCAL Sweep : public SimulationInterface
+class TC_DLLOCAL Sweep : public SimulationInterface
 {
 
   public:
@@ -188,4 +188,4 @@ class TBDLLOCAL Sweep : public SimulationInterface
 
 
 
-#endif // _SWEEP_H_
+#endif // TC_SWEEP_H

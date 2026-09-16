@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _DRIFTDIFFUSIONPROPERTIES_H_
-#define _DRIFTDIFFUSIONPROPERTIES_H_
+#ifndef TC_DRIFTDIFFUSIONPROPERTIES_H
+#define TC_DRIFTDIFFUSIONPROPERTIES_H
 
 
 
@@ -59,11 +59,10 @@ class Trap;
 class SimulationInterface;
 class DriftDiffusion;
 class RecombinationModelInterface;
-class ParticleDensity;
 
 
 //! The base class for all drift-diffusion related semiconductor models
-class DriftDiffusionProperties : public PhysicalModel
+class TC_DLEXPORT DriftDiffusionProperties : public PhysicalModel
 {
 
   private:

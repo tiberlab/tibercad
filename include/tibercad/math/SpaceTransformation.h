@@ -25,8 +25,8 @@
 
 
 
-#ifndef _SPACETRANSFORMATION_H_
-#define _SPACETRANSFORMATION_H_
+#ifndef TC_SPACETRANSFORMATION_H
+#define TC_SPACETRANSFORMATION_H
 
 #include "tibercad/base/libMeshDefs.h"
 
@@ -114,4 +114,4 @@ class SpaceTransformation
 };
 
 
-#endif // _SPACETRANSFORMATION_H_
+#endif // TC_SPACETRANSFORMATION_H

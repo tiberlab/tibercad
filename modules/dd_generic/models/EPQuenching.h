@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _EPQUENCHING_H_
-#define _EPQUENCHING_H_
+#ifndef TC_EPQUENCHING_H
+#define TC_EPQUENCHING_H
 
 #include "RecombinationModelInterface.h"
 #include "tibercad/base/TypeDefs.h"
@@ -39,16 +39,13 @@ class SimulationInterface;
  * \f[R=C n_i n_T (1-exp^{-\phi_T / kT}\f]
  * where \f$n_i\f$ is the quenching particle density (e.g. electron)
  */
-class TBDLLOCAL EPQuenching : public RecombinationModelInterface
+class TC_DLLOCAL EPQuenching : public RecombinationModelInterface
 {
 
   public:
 
     //! Destructor
     virtual ~EPQuenching(void) {};
-
-    //! Create a ConstantMobility object
-    static EPQuenching* create(const ModelOptions& options);
 
     
   protected:
@@ -89,16 +86,9 @@ EPQuenching::EPQuenching(const ModelOptions& options)
 }
 
 
-inline
-EPQuenching*
-EPQuenching::create(const ModelOptions& options)
-{
-  return new EPQuenching(options);
-}
 
 
 
 
 
-
-#endif // _EPQUENCHING_H__
+#endif // TC_EPQUENCHING_H

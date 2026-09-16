@@ -25,8 +25,8 @@
 
 // This header is part of the public tibercad API
 
-#ifndef _TIBERCAD_H_
-#define _TIBERCAD_H_
+#ifndef TC_TIBERCAD_H
+#define TC_TIBERCAD_H
 
 #include "tibercad/base/tiber_dll.h"
 
@@ -215,4 +215,4 @@ class TiberCad
 };
 
 
-#endif // _TIBERCAD_H_
+#endif // TC_TIBERCAD_H

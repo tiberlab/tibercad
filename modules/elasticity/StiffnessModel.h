@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _STIFFNESSMODEL_H_
-#define _STIFFNESSMODEL_H_
+#ifndef TC_STIFFNESSMODEL_H
+#define TC_STIFFNESSMODEL_H
 
 #include "tibercad/physics/PhysicalModel.h"
 
@@ -111,4 +111,4 @@ StiffnessModel::rotate()
   _stiffness = push_forward(_stiffness, rotm);
 }
 
-#endif // _THERMALCONDUCTIVITYMODEL_H_
+#endif // TC_THERMALCONDUCTIVITYMODEL_H

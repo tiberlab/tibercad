@@ -23,8 +23,8 @@
  */
 
 
-#ifndef _PETSCRUNTIMEERROR_H_
-#define _PETSCRUNTIMEERROR_H_
+#ifndef TC_PETSCRUNTIMEERROR_H
+#define TC_PETSCRUNTIMEERROR_H
 
 #include "tibercad/solver/SolverException.h"
 
@@ -55,4 +55,4 @@ class PetscRuntimeError : public SolverException
 };
 
 
-#endif // _PETSCRUNTIMEERROR_H_
+#endif // TC_PETSCRUNTIMEERROR_H

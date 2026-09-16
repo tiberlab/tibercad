@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _OPTICALGENERATION_H_
-#define _OPTICALGENERATION_H_
+#ifndef TC_OPTICALGENERATION_H
+#define TC_OPTICALGENERATION_H
 
 #include "RecombinationModelInterface.h"
 #include "tibercad/base/TypeDefs.h"
@@ -48,19 +48,13 @@ class ExternalProfile;
  * carrier (e.g. exciton).
  *
  */
-class TBDLLOCAL OpticalGeneration : public RecombinationModelInterface
+class TC_DLLOCAL OpticalGeneration : public RecombinationModelInterface
 {
 
   public:
 
     //! Destructor
     virtual ~OpticalGeneration(void) {};
-
-    //! Create a ConstantMobility object
-    static OpticalGeneration* create(const ModelOptions& options);
-
-    //! \copydoc RecombinationModelInterface::get_net_recombination_rates()
-    void get_net_recombination_rates(double& recomb_e, double& recomb_h);
 
 
   protected:
@@ -69,7 +63,7 @@ class TBDLLOCAL OpticalGeneration : public RecombinationModelInterface
     OpticalGeneration(const ModelOptions& options);
 
     //! \copydoc RecombinationModelInterface::do_init()
-    virtual void do_init(void);
+    virtual void do_init(void) override;
 
     //! \copydoc RecombinationModelInterface::calculate_rate_and_derivatives()
     virtual void calculate_rate_and_derivatives(std::vector<double>& R,
@@ -115,15 +109,7 @@ OpticalGeneration::OpticalGeneration(const ModelOptions& options)
 }
 
 
-inline
-OpticalGeneration*
-OpticalGeneration::create(const ModelOptions& options)
-{
-  return new OpticalGeneration(options);
-}
 
 
 
-
-
-#endif // _OPTICALGENERATION_H_
+#endif // TC_OPTICALGENERATION_H

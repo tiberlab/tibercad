@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _DRIFTDIFFUSIONDEFS_H_
-#define _DRIFTDIFFUSIONDEFS_H_
+#ifndef TC_DRIFTDIFFUSIONDEFS_H
+#define TC_DRIFTDIFFUSIONDEFS_H
 
 
 
@@ -68,4 +68,4 @@ namespace DriftDiffusionDefs
 }
 
 
-#endif // _DRIFTDIFFUSIONDEFS_H_
+#endif // TC_DRIFTDIFFUSIONDEFS_H

@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _SCALING_H_
-#define _SCALING_H_
+#ifndef TC_SCALING_H
+#define TC_SCALING_H
 
 #include "tibercad/base/tiber_dll.h"
 

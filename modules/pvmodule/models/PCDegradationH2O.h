@@ -24,8 +24,8 @@
  * \note This file is part of module pvmodule.
  */
 
-#ifndef _PCDEGRADATIONH2O_H_
-#define _PCDEGRADATIONH2O_H_
+#ifndef TC_PCDEGRADATIONH2O_H
+#define TC_PCDEGRADATIONH2O_H
 
 #include "Photocurrent.h"
 #include "tibercad/module/SolutionProvider.h"
@@ -45,10 +45,10 @@ class PCDegradationH2O : public Photocurrent
 
     ~PCDegradationH2O(void) {};
 
-    static PCDegradationH2O* create(const ModelOptions& options);
-
 
   protected:
+
+    PCDegradationH2O(const ModelOptions& options);
 
     virtual void do_init(void) final;
 
@@ -57,8 +57,6 @@ class PCDegradationH2O : public Photocurrent
 
 
   private:
-
-    PCDegradationH2O(const ModelOptions& options);
 
     //! The current degradation factor
     /*!
@@ -82,4 +80,4 @@ class PCDegradationH2O : public Photocurrent
 };
 
 
-#endif // _PCDEGRADATIONH2O_H_
+#endif // TC_PCDEGRADATIONH2O_H

@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _THERMALSTRESS_H_
-#define _THERMALSTRESS_H_
+#ifndef TC_THERMALSTRESS_H
+#define TC_THERMALSTRESS_H
 
 #include "BodyForceModel.h"
 
@@ -39,7 +39,7 @@ class Elem;
 
 
 //! The base class for Poisson boundary conditions
-class TBDLLOCAL ThermalStress : public BodyForceModel
+class TC_DLLOCAL ThermalStress : public BodyForceModel
 {
 
   public:
@@ -47,26 +47,23 @@ class TBDLLOCAL ThermalStress : public BodyForceModel
   //! Destructor
   ~ThermalStress(void);
   
-  //! Creator function
-  static ThermalStress* create(const ModelOptions& options);
-  
-  virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point);
+  virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point) override;
 
   protected:
 
+    //! Constructor
+    ThermalStress(const ModelOptions& options);
+
     //! Initialize
-    virtual void do_init(void);
+    virtual void do_init(void) override;
 
 
     //! Read expansion coefficients
-    virtual void read_database(void);
+    virtual void read_database(void) override;
 
 
   private:
   
-
-    //! Constructor
-    ThermalStress(const ModelOptions& options);
 
     //! Thermal expansion coefficients for the crystal directions
     libMesh::RealVectorValue _alpha;
@@ -84,14 +81,4 @@ class TBDLLOCAL ThermalStress : public BodyForceModel
 
 
 
-inline
-ThermalStress*
-ThermalStress::create(const ModelOptions& options)
-{ 
-  return new  ThermalStress(options);
-}
-
-
-
-
-#endif // _THERMALSTRESS_H_
+#endif // TC_THERMALSTRESS_H

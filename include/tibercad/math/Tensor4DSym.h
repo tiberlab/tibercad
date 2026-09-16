@@ -23,8 +23,8 @@
  *       API version: 3.5
  */
 
-#ifndef _TENSOR4DSYM_H_
-#define _TENSOR4DSYM_H_
+#ifndef TC_TENSOR4DSYM_H
+#define TC_TENSOR4DSYM_H
 
 #include <array>
 #include <cassert>
@@ -286,4 +286,4 @@ Tensor4DSym::operator/=(double s)
 }
 
 
-#endif // _TENSOR4DSYM_H_
+#endif // TC_TENSOR4DSYM_H

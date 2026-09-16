@@ -25,15 +25,15 @@
  */
 
 
-#ifndef _PYROPOLARIZATION_H_
-#define _PYROPOLARIZATION_H_
+#ifndef TC_PYROPOLARIZATION_H
+#define TC_PYROPOLARIZATION_H
 
 #include "tibercad/physics/misc/PolarizationModel.h"
 #include "tibercad/module/SimulationInterface.h"
 #include "tibercad/base/tiber_dll.h"
 
 // Base class for charge density models
-class  TBDLLOCAL Pyropolarization: public PolarizationModel
+class  TC_DLLOCAL Pyropolarization: public PolarizationModel
 {
 
   public:
@@ -78,4 +78,4 @@ Pyropolarization::create(const ModelOptions& options)
 }
 
 
-#endif // _PIEZOPOLARIZATION_H_
+#endif // TC_PIEZOPOLARIZATION_H

@@ -41,7 +41,7 @@ namespace libMesh
 {
   class Elem;
 }
-class TBDLLOCAL Dipole_source : public TmmBoundaryModel
+class TC_DLLOCAL Dipole_source : public TmmBoundaryModel
 {
 
   public:
@@ -49,15 +49,16 @@ class TBDLLOCAL Dipole_source : public TmmBoundaryModel
     //! Destructor
     ~Dipole_source(void) {};
 
-    //! Creator function
-
-    static Dipole_source* create(const ModelOptions& options);
-    virtual void Calculate_M_Matrix(void);
+    virtual void Calculate_M_Matrix(void) override;
 
 
   protected:
 
-    virtual void do_init(void);
+    //! Constructor
+    explicit Dipole_source(const ModelOptions& options);
+
+
+    virtual void do_init(void) override;
 
 
 
@@ -65,8 +66,6 @@ class TBDLLOCAL Dipole_source : public TmmBoundaryModel
   private:
     double _kr;
     double _steps;
-    //! Constructor
-    Dipole_source(const ModelOptions& options);
 
 
 };
@@ -79,13 +78,5 @@ Dipole_source::Dipole_source(const ModelOptions& options) :
 {
 }
 
-
-
-inline
-Dipole_source*
-Dipole_source::create(const ModelOptions& options)
-{
-  return new Dipole_source(options);
-}
 
 #endif /* SRC_CORE_MODULES_TMM_MODELS_INCIDENTWAVE_H_ */

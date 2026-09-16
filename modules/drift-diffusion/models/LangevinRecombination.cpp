@@ -43,6 +43,15 @@
 using namespace std;
 
 
+LangevinRecombination::LangevinRecombination(const ModelOptions& options)
+  : RecombinationModelInterface(options),
+    _er(0.0),
+    _gamma(1.0)
+{
+  set_name("LangevinRecombination");
+}
+
+
 void
 LangevinRecombination::read_database(void)
 {
@@ -55,6 +64,7 @@ LangevinRecombination::read_database(void)
 void
 LangevinRecombination::do_init(void)
 {
+
   get_parameter("gamma", _gamma);
 }
 

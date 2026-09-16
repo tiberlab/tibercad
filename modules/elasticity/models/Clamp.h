@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _CLAMP_H_
-#define _CLAMP_H_
+#ifndef TC_CLAMP_H
+#define TC_CLAMP_H
 
 #include "ElasticityBoundaryModel.h"
 
@@ -34,7 +34,7 @@
 
 
 //! The base class for Poisson boundary conditions
-class TBDLLOCAL Clamp : public ElasticityBoundaryModel
+class TC_DLLOCAL Clamp : public ElasticityBoundaryModel
 {
 
   public:
@@ -42,24 +42,21 @@ class TBDLLOCAL Clamp : public ElasticityBoundaryModel
     //! Destructor
     ~Clamp(void) {};
 
-    //! Creator function
-    static Clamp* create(const ModelOptions& options);
-
 
     //! Calculate for a point on the given side
     virtual void calculate(const libMesh::Elem* elem, unsigned int side,
-			   const libMesh::Point& point){};
+			   const libMesh::Point& point) override {};
 
   protected:
 
+    //! Constructor
+    Clamp(const ModelOptions& options);
+
     //! Initialize
-  virtual void do_init(void);
+  virtual void do_init(void) override;
 
 
   private:
-
-    //! Constructor
-    Clamp(const ModelOptions& options);
 
 };
 
@@ -72,12 +69,6 @@ Clamp::Clamp(const ModelOptions& options) :
 }
 
 
-inline
-Clamp*
-Clamp::create(const ModelOptions& options)
-{
-  return new Clamp(options);
-}
 
 
-#endif // _POISSONDIRICHLET_H_
+#endif // TC_POISSONDIRICHLET_H

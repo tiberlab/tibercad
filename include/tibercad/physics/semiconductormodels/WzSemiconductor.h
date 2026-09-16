@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _WZSEMICONDUCTOR_H_
-#define _WZSEMICONDUCTOR_H_
+#ifndef TC_WZSEMICONDUCTOR_H
+#define TC_WZSEMICONDUCTOR_H
 
 
 #include "tibercad/physics/semiconductormodels/Semiconductor.h"

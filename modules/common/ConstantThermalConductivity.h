@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _CONSTANTTHERMALCONDUCTIVITY_H_
-#define _CONSTANTTHERMALCONDUCTIVITY_H_
+#ifndef TC_CONSTANTTHERMALCONDUCTIVITY_H
+#define TC_CONSTANTTHERMALCONDUCTIVITY_H
 
 #include "tensor_value.h"
 #include "vector_value.h"
@@ -39,7 +39,7 @@
 
 
 //! The base class for Poisson boundary conditions
-class TBDLLOCAL ConstantThermalConductivity : public ThermalConductivityModel
+class TC_DLLOCAL ConstantThermalConductivity : public ThermalConductivityModel
 {
   
 public:
@@ -53,6 +53,9 @@ public:
   virtual void calculate(const Elem* elem, const Point& point, double temperature);
   
 protected:
+
+  //! Constructor
+  ConstantThermalConductivity(const ModelOptions& options);
   
   //! Initialize
   virtual void do_init(void);
@@ -87,9 +90,6 @@ private:
 
   //! The reference temperature (default 300K)
   double _ref_temp;
-
-  //! Constructor
-  ConstantThermalConductivity(const ModelOptions& options);
   
 };
 
@@ -110,6 +110,6 @@ ConstantThermalConductivity::create(const ModelOptions& options)
 
 
 
-#endif // _GRAYMODEL_H_
+#endif // TC_GRAYMODEL_H
 
   

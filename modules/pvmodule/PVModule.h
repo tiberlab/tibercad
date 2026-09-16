@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _PVMODULE_H_
-#define _PVMODULE_H_
+#ifndef TC_PVMODULE_H
+#define TC_PVMODULE_H
 
 #include "tibercad/module/SimulationInterface.h"
 #include "tibercad/solver/TiberLinearSystem.h"
@@ -43,7 +43,7 @@
  * and individual elementary cells are interconnected by resistors to
  * neighboring cells, representing the transport and contact layers. 
  */
-class TBDLLOCAL PVModule : public SimulationInterface
+class TC_DLLOCAL PVModule : public SimulationInterface
 {
 
   public:
@@ -51,12 +51,12 @@ class TBDLLOCAL PVModule : public SimulationInterface
     //! Destructor
     ~PVModule(void);
 
-    //! We need a public static creator function
-    static PVModule* create(const ModelOptions& options);
-
 
 
   protected:
+
+    //! The constructor
+    explicit PVModule(const ModelOptions& options);
 
     //! The initialization
     virtual void do_init(void) final;
@@ -118,12 +118,6 @@ class TBDLLOCAL PVModule : public SimulationInterface
       DEC     /*!< DEC with dual grid */
     };
 
-    //! The constructor
-    /*!
-     * Being private disables further inheritance.
-     */
-    PVModule(const ModelOptions& options);
-
     //! The assembly function
     void assemble(void);
 
@@ -184,4 +178,4 @@ class TBDLLOCAL PVModule : public SimulationInterface
 
 
 
-#endif // _PVMODULE_H_
+#endif // TC_PVMODULE_H

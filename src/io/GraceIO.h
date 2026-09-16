@@ -24,8 +24,8 @@
 
 
 
-#ifndef _GRACEIO_H_
-#define _GRACEIO_H_
+#ifndef TC_GRACEIO_H
+#define TC_GRACEIO_H
 
 #include "tibercad/io/DataOutput.h"
 #include "tibercad/base/tiber_dll.h"
@@ -33,7 +33,7 @@
 
 
 //! Write nodal and elemental data using a grace-compatible format
-class TBDLLOCAL GraceIO : public DataOutput
+class TC_DLLOCAL GraceIO : public DataOutput
 {
 
  public:

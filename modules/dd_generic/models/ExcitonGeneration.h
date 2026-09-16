@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _EXCITONGENERATION_H_
-#define _EXCITONGENERATION_H_
+#ifndef TC_EXCITONGENERATION_H
+#define TC_EXCITONGENERATION_H
 
 #include "RecombinationModelInterface.h"
 #include "tibercad/base/TypeDefs.h"
@@ -41,16 +41,13 @@ class SimulationInterface;
  * In the input file, the carriers have to be provided in the order
  * \c electron, \c hole, \c exciton
  */
-class TBDLLOCAL ExcitonGeneration : public RecombinationModelInterface
+class TC_DLLOCAL ExcitonGeneration : public RecombinationModelInterface
 {
 
   public:
 
     //! Destructor
     virtual ~ExcitonGeneration(void) {};
-
-    //! Create a ConstantMobility object
-    static ExcitonGeneration* create(const ModelOptions& options);
 
     
   protected:
@@ -91,16 +88,8 @@ ExcitonGeneration::ExcitonGeneration(const ModelOptions& options)
 }
 
 
-inline
-ExcitonGeneration*
-ExcitonGeneration::create(const ModelOptions& options)
-{
-  return new ExcitonGeneration(options);
-}
 
 
 
 
-
-
-#endif // _EXCITONGENERATION_H__
+#endif // TC_EXCITONGENERATION_H

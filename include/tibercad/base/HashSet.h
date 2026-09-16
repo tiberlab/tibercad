@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _HASHSET_H_
-#define _HASHSET_H_
+#ifndef TC_HASHSET_H
+#define TC_HASHSET_H
 
 #include "tibercad/base/tiber_config.h"
 
@@ -121,4 +121,4 @@
   };
 
 
-#endif // _HASHSET_H_
+#endif // TC_HASHSET_H

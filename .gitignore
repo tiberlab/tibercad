@@ -7,6 +7,17 @@
 *.exe
 *.out
 *.log
+.x86_64-linux/
+x86_64-linux/
+
+# external builds
+external/
+
+# Sphinx build
+manual/Sphinx/Complete/_build/
+
+# unreleased_modules
+unreleased_modules/
 
 # Make and build files
 Makefile~
@@ -14,6 +25,7 @@ cmake-build-*/
 CMakeCache.txt
 CMakeFiles/
 *.cmake
+autom4te.cache/
 
 # Python
 __pycache__/

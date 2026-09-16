@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _OPTICS_H_
-#define _OPTICS_H_
+#ifndef TC_OPTICS_H
+#define TC_OPTICS_H
 
 #include "tibercad/module/SimulationInterface.h"
 #include "tibercad/physics/schroedinger/EigenvalueProblem.h"
@@ -281,4 +281,4 @@ double Optics::gaussian(double arg, double fwhm)
 }
 
 
-#endif // _OPTICS_H_
+#endif // TC_OPTICS_H

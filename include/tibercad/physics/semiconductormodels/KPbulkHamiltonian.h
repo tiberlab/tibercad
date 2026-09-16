@@ -23,8 +23,8 @@
  *       API version: 3.5
  */
 
-#ifndef _KPBULKHAMILTONIAN_H_
-#define _KPBULKHAMILTONIAN_H_
+#ifndef TC_KPBULKHAMILTONIAN_H
+#define TC_KPBULKHAMILTONIAN_H
 
 #include <complex>
 #include <vector>

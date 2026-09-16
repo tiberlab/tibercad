@@ -23,8 +23,8 @@
  *       API version: 3.5
  */
 
-#ifndef _KSPACEINTEGRATION_H_
-#define _KSPACEINTEGRATION_H_
+#ifndef TC_KSPACEINTEGRATION_H
+#define TC_KSPACEINTEGRATION_H
 
 
 #include "tibercad/module/TiberModelObject.h"

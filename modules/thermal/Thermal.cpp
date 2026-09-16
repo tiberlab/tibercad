@@ -60,17 +60,6 @@ Thermal::Thermal(const ModelOptions& options) :
 
 
 
-Thermal*
-Thermal::create(const ModelOptions& options)
-{
-  // we could use the options to create different implementations
-  // or something like that.
-
-  return new Thermal(options);
-}
-
-
-
 void
 Thermal::do_init(void)
 {

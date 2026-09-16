@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _EXCITONDECAY_H_
-#define _EXCITONDECAY_H_
+#ifndef TC_EXCITONDECAY_H
+#define TC_EXCITONDECAY_H
 
 #include "RecombinationModelInterface.h"
 #include "tibercad/base/TypeDefs.h"
@@ -38,16 +38,13 @@ class SimulationInterface;
  * This class implements a recombination processes that can be
  * modeled by \f[R_{decay}=Cn(1 - exp(E_{F,n}/k_BT))\f] where \c n is the density of the carriers
  */
-class TBDLLOCAL ExcitonDecay : public RecombinationModelInterface
+class TC_DLLOCAL ExcitonDecay : public RecombinationModelInterface
 {
 
   public:
 
     //! Destructor
     virtual ~ExcitonDecay(void) {};
-
-    //! Create a ConstantMobility object
-    static ExcitonDecay* create(const ModelOptions& options);
 
     
   protected:
@@ -87,16 +84,9 @@ ExcitonDecay::ExcitonDecay(const ModelOptions& options)
 }
 
 
-inline
-ExcitonDecay*
-ExcitonDecay::create(const ModelOptions& options)
-{
-  return new ExcitonDecay(options);
-}
 
 
 
 
 
-
-#endif // _EXCITONDECAY_H__
+#endif // TC_EXCITONDECAY_H

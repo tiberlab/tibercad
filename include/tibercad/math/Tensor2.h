@@ -23,8 +23,8 @@
  *       API version: 3.5
  */
 
-#ifndef _TENSOR2_H_
-#define _TENSOR2_H_
+#ifndef TC_TENSOR2_H
+#define TC_TENSOR2_H
 
 #include "tibercad/math/Tensor1.h"
 
@@ -220,5 +220,5 @@ Tensor2::trace(void) const
 
 
 
-#endif // _TENSOR2_H_
+#endif // TC_TENSOR2_H
 

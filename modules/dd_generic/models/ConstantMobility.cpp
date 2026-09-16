@@ -75,12 +75,6 @@ ConstantMobility::get_mobility(void)
 
 
 void
-ConstantMobility::get_mobility_derivatives(std::vector<double>& dm)
-{
-  dm[0] = dm[1] = dm[2] = 0.0;
-}
-
-void
 ConstantMobility::get_derivative_grad_potential(libMesh::RealGradient& dm)
 {
   dm.zero();

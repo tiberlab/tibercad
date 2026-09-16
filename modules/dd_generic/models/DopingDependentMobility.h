@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _DOPINGDEPENDENTMOBILITY_H_
-#define _DOPINGDEPENDENTMOBILITY_H_
+#ifndef TC_DOPINGDEPENDENTMOBILITY_H
+#define TC_DOPINGDEPENDENTMOBILITY_H
 
 #include "MobilityModelInterface.h"
 
@@ -54,7 +54,7 @@
  * \alpha^\ast & = & \alpha\left(\frac{T}{T_0}\right)^{\alpha_a}
  * \f}
  */
-class TBDLLOCAL DopingDependentMobility : public MobilityModelInterface
+class TC_DLLOCAL DopingDependentMobility : public MobilityModelInterface
 {
 
   public:
@@ -62,20 +62,14 @@ class TBDLLOCAL DopingDependentMobility : public MobilityModelInterface
     //! Destructor
     virtual ~DopingDependentMobility(void);
 
-    //! Create a DopingDependentMobility object
-    static DopingDependentMobility* create(const ModelOptions& options);
-
     //! \copydoc MobilityModelInterface::get_mobility()
-    virtual double get_mobility(void);
-
-    //! \copydoc MobilityModelInterface::get_mobility_derivatives()
-    virtual void get_mobility_derivatives(std::vector<double>& dm);
+    virtual double get_mobility(void) override;
 
     //! \copydoc MobilityModelInterface::get_derivative_grad_potential()
-    virtual void get_derivative_grad_potential(libMesh::RealGradient& dm);
+    virtual void get_derivative_grad_potential(libMesh::RealGradient& dm) override;
 
     //! \copydoc MobilityModelInterface::get_derivative_grad_fermi()
-    virtual void get_derivative_grad_fermi(libMesh::RealGradient& dm);
+    virtual void get_derivative_grad_fermi(libMesh::RealGradient& dm) override;
 
   protected:
 
@@ -83,16 +77,13 @@ class TBDLLOCAL DopingDependentMobility : public MobilityModelInterface
     DopingDependentMobility(const ModelOptions& options);
 
     //! \copydoc MobilityModelInterface::read_database()
-    virtual void read_database(void);
+    virtual void read_database(void) override;
 
     //! \copydoc MobilityModelInterface::do_init()
-    virtual void do_init(void);
+    virtual void do_init(void) override;
 
     //! Create submodels
-    virtual void prepare_submodels(void);
-
-    //! \copydoc MobilityModelInterface::create_new()
-    virtual PhysicalModel* create_new(void) const;
+    virtual void prepare_submodels(void) override;
 
 
   private:
@@ -182,25 +173,10 @@ DopingDependentMobility::DopingDependentMobility(const ModelOptions& options)
 }
 
 
-inline
-DopingDependentMobility*
-DopingDependentMobility::create(const ModelOptions& options)
-{
-  return new DopingDependentMobility(options);
-}
-
-
-inline
-PhysicalModel*
-DopingDependentMobility::create_new(void) const
-{
-  return new DopingDependentMobility(get_options());
-}
-
 
 inline
 DopingDependentMobility::~DopingDependentMobility(void)
 {
 }
 
-#endif // _DOPINGDEPENDENTMOBILITY_H_
+#endif // TC_DOPINGDEPENDENTMOBILITY_H

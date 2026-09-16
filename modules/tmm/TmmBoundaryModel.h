@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _TMMBOUNDARYMODEL_H_
-#define _TMMBOUNDARYMODEL_H_
+#ifndef TC_TMMBOUNDARYMODEL_H
+#define TC_TMMBOUNDARYMODEL_H
 
 #include "tibercad/physics/PhysicalModel.h"
 #include "Tmm.h"
@@ -39,7 +39,7 @@ namespace libMesh
 }
 
 //! The base class for thermal balance boundary conditions
-class TmmBoundaryModel : public  PhysicalModel
+class TC_DLEXPORT TmmBoundaryModel : public  PhysicalModel
 {
 
 public:
@@ -98,4 +98,4 @@ TmmBoundaryModel::TmmBoundaryModel(const ModelOptions& options) :
 
 
 
-#endif // _TMMBOUNDARYMODEL_H_
+#endif // TC_TMMBOUNDARYMODEL_H

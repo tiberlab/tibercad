@@ -104,12 +104,6 @@ FieldAssistedMobility::get_mobility(void)
 
 
 void
-FieldAssistedMobility::get_mobility_derivatives(std::vector<double>& dm)
-{
-  dm[0] = dm[1] = dm[2] = 0.0;
-}
-
-void
 FieldAssistedMobility::get_derivative_grad_potential(libMesh::RealGradient& dm)
 {
   dm.zero();

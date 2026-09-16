@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _SPECIE_H_
-#define _SPECIE_H_
+#ifndef TC_SPECIE_H
+#define TC_SPECIE_H
 
 //C++ and boost includes
 #include <string>
@@ -257,4 +257,4 @@ bool operator< (const Specie& specie1, const Specie& specie2)
 }
 
 
-#endif // _SPECIE_H_
+#endif // TC_SPECIE_H

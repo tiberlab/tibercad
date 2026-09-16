@@ -64,14 +64,6 @@ WaterIngress::~WaterIngress(void)
 }
 
 
-WaterIngress*
-WaterIngress::create(const ModelOptions& options)
-{
-  // we could use the options to create different implementations
-  // or something like that.
-  return new WaterIngress(options);
-}
-
 
 
 void

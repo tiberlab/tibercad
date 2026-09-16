@@ -62,14 +62,14 @@ ExcitonISC::do_init(void)
   for (auto name : get_carrier_names())
   {
     //if (!dd.get_carrier_properties(name)->is_exciton())
-    //  throw InitFailedException("Recombination '" + get_default_name() + ": carrier '" + name + "' is not an exciton");
+    //  throw InitFailedException("Recombination '" + get_name() + ": carrier '" + name + "' is not an exciton");
 
     spin.push_back( dd.get_carrier_properties(name)->get_spin() );
   }
 
   if (!(((spin[0] == 1.0) && (spin[1] == 0.0)) ||
         ((spin[0] == 0.0) && (spin[1] == 1.0))))
-    throw InitFailedException("Recombination '" + get_default_name() +
+    throw InitFailedException("Recombination '" + get_name() +
         ": carriers for ISC model must be a singlet and a triplet exciton");
 
 

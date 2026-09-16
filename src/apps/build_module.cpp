@@ -893,15 +893,15 @@ void process_module(const string& , const ModelOptions& options)
 
     string compileflags = options.get_option("compiler_flags", "");
     compileflags += cpflags;
-    compileflags += " -DMODULE_NAME=" + module;
-    compileflags += " -DCREATABLE=" + creatable;
+    compileflags += " -DTC_MODULE_NAME=" + module;
+    compileflags += " -DTC_CREATABLE=" + creatable;
 
-    string module_code = options.get_option("creator_code", "");
+    string module_code = options.get_option("factory_code", "");
     if (!module_code.empty())
     {
       ofstream of(string(module + "_creator.h").c_str());
       of << module_code;
-      compileflags += " -DCREATORCODE=" + module + "_creator.h";
+      compileflags += " -DTC_FACTORYCODE=" + module + "_creator.h";
     }
 
     vector<string> objects;

@@ -25,8 +25,8 @@
 
 
 
-#ifndef _STRAININTERFACE_H_
-#define _STRAININTERFACE_H_
+#ifndef TC_STRAININTERFACE_H
+#define TC_STRAININTERFACE_H
 
 #include "tibercad/base/TypeDefs.h"
 #include "tibercad/base/tiber_dll.h"
@@ -136,4 +136,4 @@ StrainInterface::get_simulation(void)
 }
 
 
-#endif // _STRAININTERFACE_H_
+#endif // TC_STRAININTERFACE_H

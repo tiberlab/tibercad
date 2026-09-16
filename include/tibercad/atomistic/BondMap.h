@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _BONDMAP_H_
-#define _BONDMAP_H_
+#ifndef TC_BONDMAP_H
+#define TC_BONDMAP_H
 
 //-------------------------------------------
 
@@ -155,4 +155,4 @@ private:
 //----------------------------------------------------
 
 
-#endif // _BONDMAP_H_
+#endif // TC_BONDMAP_H

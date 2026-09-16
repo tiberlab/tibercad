@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _COMPOSITEROFILE_H_
-#define _COMPOSITEROFILE_H_
+#ifndef TC_COMPOSITEROFILE_H
+#define TC_COMPOSITEROFILE_H
 
 
 #include "tibercad/profiles/ExternalProfile.h"

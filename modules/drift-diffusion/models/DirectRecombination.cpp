@@ -44,6 +44,16 @@ using namespace std;
 DirectRecombination::QRecMap
 DirectRecombination::_qrec_vals;
 
+
+DirectRecombination::DirectRecombination(const ModelOptions& options)
+  : RecombinationModelInterface(options),
+    C_(0.0),
+    _quantum_optics(NULL)
+{
+  set_name("RadiativeRecombination");
+}
+
+
 void
 DirectRecombination::read_database(void)
 {

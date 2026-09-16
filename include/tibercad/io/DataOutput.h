@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _DATAOUTPUT_H_
-#define _DATAOUTPUT_H_
+#ifndef TC_DATAOUTPUT_H
+#define TC_DATAOUTPUT_H
 
 #include "tibercad/module/SolutionDescriptor.h"
 #include "tibercad/base/libMeshDefs.h"
@@ -248,4 +248,4 @@ DataOutput::do_write(bool)
 {
 }
 
-#endif // _DATAOUTPUT_H_
+#endif // TC_DATAOUTPUT_H

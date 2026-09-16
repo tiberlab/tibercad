@@ -34,11 +34,6 @@ PCDegradationH2O::PCDegradationH2O(const ModelOptions& options)
 {
 }
 
-PCDegradationH2O*
-PCDegradationH2O::create(const ModelOptions& options)
-{
-  return new PCDegradationH2O(options);
-}
 
 void
 PCDegradationH2O::do_init(void)

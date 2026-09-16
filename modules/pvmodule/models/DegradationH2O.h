@@ -24,8 +24,8 @@
  * \note This file is part of module pvmodule.
  */
 
-#ifndef _DEGRADATIONH2O_H_
-#define _DEGRADATIONH2O_H_
+#ifndef TC_DEGRADATIONH2O_H
+#define TC_DEGRADATIONH2O_H
 
 #include "DegradationModel.h"
 #include "tibercad/module/SolutionProvider.h"
@@ -55,10 +55,11 @@ class DegradationH2O : public DegradationModel
 
     virtual ~DegradationH2O(void) = default;
 
-    static DegradationH2O* create(const ModelOptions& options);
-
 
   protected:
+
+    //! Protected constructor
+    DegradationH2O(const ModelOptions& options);
 
     virtual void do_init(void) override;
 
@@ -68,13 +69,6 @@ class DegradationH2O : public DegradationModel
 
 
   private:
-
-    //! Private constructor
-    /*!
-     * This is a specific model. Other models should directly
-     * derive from the base class to not create a mess
-     */
-    DegradationH2O(const ModelOptions& options);
 
     //! The reference humidity in the photocurrent degradation fit
     double _RH_ref_ph = 1e9;
@@ -94,4 +88,4 @@ class DegradationH2O : public DegradationModel
 };
 
 
-#endif // _DEGRADATIONH2O_H_
+#endif // TC_DEGRADATIONH2O_H

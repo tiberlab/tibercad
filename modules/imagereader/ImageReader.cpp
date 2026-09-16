@@ -46,12 +46,6 @@ using namespace std;
 using namespace libMesh;
 
 
-ImageReader*
-ImageReader::create(const ModelOptions& options)
-{
-  return new ImageReader(options);
-}
-
 
 ImageReader::ImageReader(const ModelOptions& options) :
     SimulationInterface(options),

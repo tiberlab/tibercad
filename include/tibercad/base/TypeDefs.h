@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _TYPEDEFS_H_
-#define _TYPEDEFS_H_
+#ifndef TC_TYPEDEFS_H
+#define TC_TYPEDEFS_H
 
 #include "libmesh/id_types.h"
 #include <limits.h>
@@ -43,4 +43,4 @@ typedef libMesh::subdomain_id_type ID;
 
 
 
-#endif // _TYPEDEFS_H_
+#endif // TC_TYPEDEFS_H

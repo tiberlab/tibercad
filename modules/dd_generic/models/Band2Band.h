@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _BAND2BAND_H_
-#define _BAND2BAND_H_
+#ifndef TC_BAND2BAND_H
+#define TC_BAND2BAND_H
 
 #include "RecombinationModelInterface.h"
 #include "tibercad/base/TypeDefs.h"
@@ -37,16 +37,13 @@
  * This class implements band-to-band tunneling in a local
  * approximation
  */
-class TBDLLOCAL Band2Band : public RecombinationModelInterface
+class TC_DLLOCAL Band2Band : public RecombinationModelInterface
 {
 
   public:
 
     //! Destructor
     virtual ~Band2Band(void) {};
-
-    //! Create a ConstantMobility object
-    static Band2Band* create(const ModelOptions& options);
 
     //! \copydoc RecombinationModelInterface::calculate_rate_and_derivatives()
     virtual void calculate_rate_and_derivatives(std::vector<double>& R,
@@ -59,10 +56,10 @@ class TBDLLOCAL Band2Band : public RecombinationModelInterface
     Band2Band(const ModelOptions& options);
 
     //! \copydoc RecombinationModelInterface::read_database()
-    virtual void read_database(void);
+    virtual void read_database(void) override;
 
     //! \copydoc RecombinationModelInterface::do_init()
-    virtual void do_init(void);
+    virtual void do_init(void) override;
 
 
   private:
@@ -98,17 +95,9 @@ Band2Band::Band2Band(const ModelOptions& options)
 }
 
 
-inline
-Band2Band*
-Band2Band::create(const ModelOptions& options)
-{
-  return new Band2Band(options);
-}
 
 
 
 
 
-
-
-#endif // _DIRECTRECOMBINATION_H__
+#endif // TC_DIRECTRECOMBINATION_H

@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _AUGERRECOMBINATION_H_
-#define _AUGERRECOMBINATION_H_
+#ifndef TC_AUGERRECOMBINATION_H
+#define TC_AUGERRECOMBINATION_H
 
 #include "RecombinationModelInterface.h"
 #include "tibercad/base/TypeDefs.h"
@@ -45,16 +45,13 @@
  *      \left(1 + H e^{-\{n,p\}/N_0}\right)
  * \f]
  */
-class TBDLLOCAL AugerRecombination : public RecombinationModelInterface
+class TC_DLLOCAL AugerRecombination : public RecombinationModelInterface
 {
 
   public:
 
     //! Destructor
     virtual ~AugerRecombination(void) {};
-
-    //! Create a ConstantMobility object
-    static AugerRecombination* create(const ModelOptions& options);
 
     /*! \copydoc RecombinationModelInterface::get_net_recombination_rates() */
     void get_net_recombination_rates(double& recomb_e, double& recomb_h);
@@ -127,39 +124,8 @@ class TBDLLOCAL AugerRecombination : public RecombinationModelInterface
 };
 
 
-//
-// inline methods
-// 
-
-
-inline
-AugerRecombination::AugerRecombination(const ModelOptions& options)
-  : RecombinationModelInterface(options),
-    _An(6.7000e-32),
-    _Ap(7.2000e-32),
-    _Bn(2.4500e-31),
-    _Bp(4.5000e-33),
-    _Cn(-2.2000e-32),
-    _Cp(2.6300e-32),
-    _Hn(3.46667),
-    _Hp(8.25688),
-    _N0n(1.0000e+18),
-    _N0p(1.0000e+18),
-    _fixed_Cn(false),
-    _fixed_Cp(false)
-{
-}
-
-
-inline
-AugerRecombination*
-AugerRecombination::create(const ModelOptions& options)
-{
-  return new AugerRecombination(options);
-}
 
 
 
 
-
-#endif // _AUGERRECOMBINATION_H_
+#endif // TC_AUGERRECOMBINATION_H

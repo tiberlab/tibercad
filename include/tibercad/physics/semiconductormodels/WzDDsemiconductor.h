@@ -23,8 +23,8 @@
  *       API version: 3.5
  */
 
-#ifndef _WZDDSEMICONDUCTOR_H_
-#define _WZDDSEMICONDUCTOR_H_
+#ifndef TC_WZDDSEMICONDUCTOR_H
+#define TC_WZDDSEMICONDUCTOR_H
 
 
 #include "tibercad/physics/semiconductormodels/DDsemiconductor.h"

@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _BOUNDARYREGIONS_H_
-#define _BOUNDARYREGIONS_H_
+#ifndef TC_BOUNDARYREGIONS_H
+#define TC_BOUNDARYREGIONS_H
 
 #include "tibercad/geom/MeshRegionInfo.h"
 #include "tibercad/geom/ElementSide.h"
@@ -50,7 +50,7 @@ class Node;
  * Boundary IDs are assumed to be unique, even if they refer to boundaries
  * of different spatial dimension.
  */
-class TBDLLOCAL BoundaryRegions : public MeshRegionInfo
+class TC_DLLOCAL BoundaryRegions : public MeshRegionInfo
 {
 
   private:
@@ -381,4 +381,4 @@ BoundaryRegions::sides_end(const std::set<ID>& ids = std::set<ID>())
 }
 
 
-#endif // _BOUNDARYREGIONS_H_
+#endif // TC_BOUNDARYREGIONS_H

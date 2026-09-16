@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _DOPINGDEPENDENTMOBILITY_H_
-#define _DOPINGDEPENDENTMOBILITY_H_
+#ifndef TC_DOPINGDEPENDENTMOBILITY_H
+#define TC_DOPINGDEPENDENTMOBILITY_H
 
 #include "MobilityModelInterface.h"
 
@@ -54,16 +54,13 @@
  * \alpha^\ast & = & \alpha\left(\frac{T}{T_0}\right)^{\alpha_a}
  * \f}
  */
-class TBDLLOCAL DopingDependentMobility : public MobilityModelInterface
+class TC_DLLOCAL DopingDependentMobility : public MobilityModelInterface
 {
 
   public:
 
     //! Destructor
-    virtual ~DopingDependentMobility(void);
-
-    //! Create a DopingDependentMobility object
-    static DopingDependentMobility* create(const ModelOptions& options);
+    virtual ~DopingDependentMobility(void) = default;
 
     //! \copydoc MobilityModelInterface::get_mobility()
     virtual double get_mobility(void);
@@ -90,9 +87,6 @@ class TBDLLOCAL DopingDependentMobility : public MobilityModelInterface
 
     //! Create submodels
     virtual void prepare_submodels(void);
-
-    //! \copydoc MobilityModelInterface::create_new()
-    virtual PhysicalModel* create_new(void) const;
 
 
   private:
@@ -182,25 +176,6 @@ DopingDependentMobility::DopingDependentMobility(const ModelOptions& options)
 }
 
 
-inline
-DopingDependentMobility*
-DopingDependentMobility::create(const ModelOptions& options)
-{
-  return new DopingDependentMobility(options);
-}
 
 
-inline
-PhysicalModel*
-DopingDependentMobility::create_new(void) const
-{
-  return new DopingDependentMobility(get_options());
-}
-
-
-inline
-DopingDependentMobility::~DopingDependentMobility(void)
-{
-}
-
-#endif // _DOPINGDEPENDENTMOBILITY_H_
+#endif // TC_DOPINGDEPENDENTMOBILITY_H

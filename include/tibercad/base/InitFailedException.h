@@ -25,8 +25,8 @@
 
 
 
-#ifndef _INITFAILEDEXCEPTION_H_
-#define _INITFAILEDEXCEPTION_H_
+#ifndef TC_INITFAILEDEXCEPTION_H
+#define TC_INITFAILEDEXCEPTION_H
 
 #include "tibercad/base/ExceptionTracer.h"
 
@@ -57,4 +57,4 @@ class InitFailedException : public std::runtime_error, ExceptionTracer
     //}
 
 
-#endif // _INITFAILEDEXCEPTION_H_
+#endif // TC_INITFAILEDEXCEPTION_H

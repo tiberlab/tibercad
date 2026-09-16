@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _HEATRESERVOIR_H_
-#define _HEATRESERVOIR_H_
+#ifndef TC_HEATRESERVOIR_H
+#define TC_HEATRESERVOIR_H
 
 #include "BoltzmannBoundaryModel.h"
 
@@ -38,7 +38,7 @@
 
 
 //! The base class for Poisson boundary conditions
-class TBDLLOCAL HeatReservoir : public BoltzmannBoundaryModel
+class TC_DLLOCAL HeatReservoir : public BoltzmannBoundaryModel
 {
 
   public:
@@ -112,4 +112,4 @@ HeatReservoir::create_new(void) const
   return new HeatReservoir(get_options());
 }
 
-#endif // _POISSONDIRICHLET_H_
+#endif // TC_POISSONDIRICHLET_H

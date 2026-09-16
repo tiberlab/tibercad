@@ -113,8 +113,10 @@ void SBZbCondBandBulkHamiltonian::calculate_for_init(void)
 	  kp_bands.resize(1,0);
 	}
 
-        _degeneracy = 2;
+      _degeneracy = 2;
     }
+
+  _degeneracy = opt.get_option("degeneracy", _degeneracy);
 
   calculate_Hamiltonian_gen();
 

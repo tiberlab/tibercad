@@ -24,8 +24,8 @@
 
 
 
-#ifndef _PARDISOLINEARSOLVER_H_
-#define _PARDISOLINEARSOLVER_H_
+#ifndef TC_PARDISOLINEARSOLVER_H
+#define TC_PARDISOLINEARSOLVER_H
 
 
 #include "TiberLinearSolver.h"
@@ -141,4 +141,4 @@ PardisoLinearSolver::~PardisoLinearSolver(void)
 
 
 
-#endif // _PARDISOLINEARSOLVER_H_
+#endif // TC_PARDISOLINEARSOLVER_H

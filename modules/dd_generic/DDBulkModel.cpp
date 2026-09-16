@@ -26,7 +26,6 @@
 
 
 #include "DDBulkModel.h"
-#include "tibercad/physics/misc/ParticleDensity.h"
 #include "RecombinationModelInterface.h"
 #include "ThermoelectricPower.h"
 #include "tibercad/module/SimulationInterface.h"
@@ -416,7 +415,7 @@ DDBulkModel::calculate_equilibrium_properties(void)
     double residual_dens = fabs(f);
 
     double dx = 0.0;
-    if (residual_dens > ParticleDensity::MINDENSITY)
+    if (residual_dens > 1e-64)
     {
       // At low temperatures everything is very sensitive on dx, so we don't
       // allow it to be bigger than k*T. At high temperatures this should not

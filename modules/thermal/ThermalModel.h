@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _THERMALMODEL_H_
-#define _THERMALMODEL_H_
+#ifndef TC_THERMALMODEL_H
+#define TC_THERMALMODEL_H
 
 #include "tibercad/physics/PhysicalModel.h"
 
@@ -40,7 +40,7 @@
 class HeatSourceModel;
 class ThermalConductivityModel;
 
-class TBDLLOCAL ThermalModel : public PhysicalModel
+class TC_DLLOCAL ThermalModel : public PhysicalModel
 {
 
   public:
@@ -79,7 +79,7 @@ class TBDLLOCAL ThermalModel : public PhysicalModel
 
   private:
 
-  static TiberModelObject*  _create(const ModelOptions& options, const void*);
+  static TiberModelObject*  _create(const ModelOptions& options);
 
   static void  _destroy( TiberModelObject* p);
 
@@ -97,7 +97,7 @@ class TBDLLOCAL ThermalModel : public PhysicalModel
 };
 
 inline
-TiberModelObject*  ThermalModel::_create(const ModelOptions& options, const void*)
+TiberModelObject*  ThermalModel::_create(const ModelOptions& options)
 {
   return new ThermalModel(options);
 }
@@ -129,4 +129,4 @@ ThermalModel::get_total_thermal_conductivity(void) const
 
 
 
-#endif // _DEFAULTMODEL_H_
+#endif // TC_DEFAULTMODEL_H

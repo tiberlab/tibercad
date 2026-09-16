@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _BANDPROPERTIES_H_
-#define _BANDPROPERTIES_H_
+#ifndef TC_BANDPROPERTIES_H
+#define TC_BANDPROPERTIES_H
 
 #include "DriftDiffusionModelInterface.h"
 #include "tibercad/physics/TemperatureInterface.h"
@@ -34,23 +34,18 @@
 #include "tibercad/physics/Constants.h"
 
 class ModelOptions;
-//class DensityOfStates;
-class ParticleDensity;
 class Elem;
 class Point;
 
 
 //! Base class for band parameter models
-class BandProperties : public DriftDiffusionModelInterface
+class TC_DLEXPORT BandProperties : public DriftDiffusionModelInterface
 {
 
   public:
 
     //! Destructor
     virtual ~BandProperties(void);
-
-    //! Creator method
-    static BandProperties* create(const ModelOptions& options);
 
     /*
     // ! Set the temperature interface
@@ -94,9 +89,6 @@ class BandProperties : public DriftDiffusionModelInterface
 
     //! Get the particle density and its derivative
     std::pair<double, double> get_density_and_derivative(double Ef, double Epot) const;
-
-    //! Get the \f$\gamma\f$ factor
-    double get_gamma(void) const;
 
     //! Set the band edge
     void set_band_edge(double band_edge);
@@ -189,18 +181,9 @@ class BandProperties : public DriftDiffusionModelInterface
     //! The DOS model
     DensityOfStates* _dos_model;
 
-    //! The particle density
-    ParticleDensity* _density;
-
 };
 
 
-inline
-BandProperties*
-BandProperties::create(const ModelOptions& options)
-{
-  return new BandProperties(options);
-}
 
 
 /*
@@ -240,4 +223,4 @@ BandProperties::set_band_edge(double )
 }
 
 
-#endif // _BANDPROPERTIES_H_
+#endif // TC_BANDPROPERTIES_H

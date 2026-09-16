@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _TIBERMATH_H_
-#define _TIBERMATH_H_
+#ifndef TC_TIBERMATH_H
+#define TC_TIBERMATH_H
 
 #include "tibercad/base/tiber_dll.h"
 
@@ -136,4 +136,4 @@ TiberMath::d2_fermidirac(double x)
   return d2_fd_(x);
 }
 
-#endif // _TIBERMATH_H_
+#endif // TC_TIBERMATH_H

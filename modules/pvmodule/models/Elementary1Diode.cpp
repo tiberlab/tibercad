@@ -37,14 +37,6 @@ Elementary1Diode::Elementary1Diode(const ModelOptions& options) :
 }
 
 
-Elementary1Diode*
-Elementary1Diode::create(const ModelOptions& options)
-{
-  Elementary1Diode* cd = new Elementary1Diode(options);
-
-  return cd;
-}
-
 
 void
 Elementary1Diode::prepare_submodels(void)

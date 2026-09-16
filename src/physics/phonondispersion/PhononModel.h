@@ -22,8 +22,8 @@
  * \internal
  */
 
-#ifndef _PHONONMODEL_H_
-#define _PHONONMODEL_H_
+#ifndef TC_PHONONMODEL_H
+#define TC_PHONONMODEL_H
 
 #include "DynamicalMatrix.h"
 #include "RamanTensor.h"

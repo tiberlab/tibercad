@@ -24,8 +24,8 @@
 
 
 
-#ifndef _PARDISOSOLVEREXCEPTION_H_
-#define _PARDISOSOLVEREXCEPTION_H_
+#ifndef TC_PARDISOSOLVEREXCEPTION_H
+#define TC_PARDISOSOLVEREXCEPTION_H
 
 #include "tibercad/solver/SolverException.h"
 
@@ -51,4 +51,4 @@ class PardisoSolverException : public SolverException
 
 
 
-#endif // _PARDISOSOLVEREXCEPTION_H_
+#endif // TC_PARDISOSOLVEREXCEPTION_H

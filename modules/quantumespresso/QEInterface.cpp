@@ -70,12 +70,6 @@ QEInterface::~QEInterface(void)
 }
 
 
-QEInterface*
-QEInterface::create(const ModelOptions& options)
-{
-  return(new QEInterface(options));
-}
-
 
 void
 QEInterface::do_init(void)

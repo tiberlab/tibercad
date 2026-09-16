@@ -36,7 +36,7 @@ using namespace  std;
 /*!
   Contains Segment data and orientations.
 */
-class TBDLLOCAL ISE_Element_2D : public  ISE_Element
+class TC_DLLOCAL ISE_Element_2D : public  ISE_Element
 {
  public:
 

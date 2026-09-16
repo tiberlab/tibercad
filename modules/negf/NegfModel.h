@@ -37,7 +37,7 @@
 #include "tibercad/physics/PhysicalModel.h"
 #include "models/HamiltonianModel.h"
 
-class TBDLLOCAL NegfModel : public PhysicalModel
+class TC_DLLOCAL NegfModel : public PhysicalModel
 {
   public:
 
@@ -67,7 +67,7 @@ class TBDLLOCAL NegfModel : public PhysicalModel
 
   private:
 
-    static TiberModelObject*  _create(const ModelOptions& options, const void*);
+    static TiberModelObject*  _create(const ModelOptions& options);
 
     static void  _destroy( TiberModelObject* p);
 
@@ -77,7 +77,7 @@ class TBDLLOCAL NegfModel : public PhysicalModel
 };
 
 inline
-TiberModelObject*  NegfModel::_create(const ModelOptions& options, const void*)
+TiberModelObject*  NegfModel::_create(const ModelOptions& options)
 {
   return new NegfModel(options);
 }

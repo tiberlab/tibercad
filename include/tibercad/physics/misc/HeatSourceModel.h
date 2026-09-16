@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _HEATSOURCEMODEL_H_
-#define _HEATSOURCEMODEL_H_
+#ifndef TC_HEATSOURCEMODEL_H
+#define TC_HEATSOURCEMODEL_H
 
 #include "tibercad/physics/PhysicalModel.h"
 
@@ -97,4 +97,4 @@ PhysicalModel(options)
 
 
 
-#endif // _THERMALCONDUCTIVITYMODEL_H_
+#endif // TC_THERMALCONDUCTIVITYMODEL_H

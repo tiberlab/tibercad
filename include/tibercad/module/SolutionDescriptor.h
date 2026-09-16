@@ -25,8 +25,8 @@
 
 
 
-#ifndef _SOLUTIONDESCRIPTOR_H_
-#define _SOLUTIONDESCRIPTOR_H_
+#ifndef TC_SOLUTIONDESCRIPTOR_H
+#define TC_SOLUTIONDESCRIPTOR_H
 
 #include "tibercad/base/TypeDefs.h"
 

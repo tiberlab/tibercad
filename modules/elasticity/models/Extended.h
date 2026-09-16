@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _EXTENDED_H_
-#define _EXTENDED_H_
+#ifndef TC_EXTENDED_H
+#define TC_EXTENDED_H
 
 #include "ElasticityBoundaryModel.h"
 
@@ -35,7 +35,7 @@ class Elem;
 
 
 //! The base class for Poisson boundary conditions
-class TBDLLOCAL Extended : public ElasticityBoundaryModel
+class TC_DLLOCAL Extended : public ElasticityBoundaryModel
 {
 
   public:
@@ -43,24 +43,21 @@ class TBDLLOCAL Extended : public ElasticityBoundaryModel
     //! Destructor
     ~Extended(void) {};
 
-    //! Creator function
-    static Extended* create(const ModelOptions& options);
-
 
     //! Calculate for a point on the given side
     virtual void calculate(const libMesh::Elem* elem, unsigned int side,
-			   const libMesh::Point& point);
+			   const libMesh::Point& point) override;
 
   protected:
 
+    //! Constructor
+    Extended(const ModelOptions& options);
+
     //! Initialize
-  virtual void do_init(void);
+  virtual void do_init(void) override;
 
 
   private:
-
-    //! Constructor
-    Extended(const ModelOptions& options);
 
 };
 
@@ -73,12 +70,5 @@ Extended::Extended(const ModelOptions& options) :
 }
 
 
-inline
-Extended*
-Extended::create(const ModelOptions& options)
-{
-  return new Extended(options);
-}
 
-
-#endif // _POISSONDIRICHLET_H_
+#endif // TC_POISSONDIRICHLET_H

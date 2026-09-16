@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _DRIFTDIFFUSIONPROPERTIES_H_
-#define _DRIFTDIFFUSIONPROPERTIES_H_
+#ifndef TC_DRIFTDIFFUSIONPROPERTIES_H
+#define TC_DRIFTDIFFUSIONPROPERTIES_H
 
 
 
@@ -60,11 +60,10 @@ class Trap;
 class SimulationInterface;
 class DriftDiffusion;
 class RecombinationModelInterface;
-class ParticleDensity;
 
 
 //! The base class for all drift-diffusion related semiconductor models
-class DriftDiffusionProperties : public PhysicalModel
+class TC_DLEXPORT DriftDiffusionProperties : public PhysicalModel
 {
 
   private:
@@ -166,12 +165,6 @@ class DriftDiffusionProperties : public PhysicalModel
          * has the same value but opposite sign.
          */
         double hole_density_derivative;
-
-        //! \f$\gamma_n\f$
-        double gamma_n;
-
-        //! \f$\gamma_n\f$
-        double gamma_p;
 
         //! The ionized donor density
         double ionized_donor_density;
@@ -459,14 +452,6 @@ class DriftDiffusionProperties : public PhysicalModel
       { return get_pd().electron_density_derivative; };
 
 
-    //! Get the electron gamma \f$\gamma_n\f$
-    /*!
-     * \f$\gamma_n = n/n_{cl}\f$
-     */
-    double get_electron_gamma(void) const
-    { return get_pd().gamma_n; };
-
-
     //! Get the hole density
     /*!
      * Get the hole density as calculated by \c calculate_all(...)
@@ -485,13 +470,6 @@ class DriftDiffusionProperties : public PhysicalModel
     double get_hole_density_derivative(void) const
       { return get_pd().hole_density_derivative; };
 
-
-    //! Get the hole gamma \f$\gamma_p\f$
-    /*!
-     * \f$\gamma_p = p/p_{cl}\f$
-     */
-    double get_hole_gamma(void) const
-    { return get_pd().gamma_p; };
 
 
     //! Get the ionized donor density

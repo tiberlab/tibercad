@@ -23,8 +23,8 @@
  *       API version: 3.5
  */
 
-#ifndef _SBUSERHAMILTONIAN_H_
-#define _SBUSERHAMILTONIAN_H_
+#ifndef TC_SBUSERHAMILTONIAN_H
+#define TC_SBUSERHAMILTONIAN_H
 //! A class that builds single band Hamiltonian
 
 #include <complex>

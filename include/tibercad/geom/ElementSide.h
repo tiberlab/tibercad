@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _ELEMENTSIDE_H_
-#define _ELEMENTSIDE_H_
+#ifndef TC_ELEMENTSIDE_H
+#define TC_ELEMENTSIDE_H
 
 #include "tibercad/base/TypeDefs.h"
 #include "tibercad/base/libMeshDefs.h"
@@ -84,4 +84,4 @@ typedef ElementSide ElementEdge;
 typedef ElementSide ElementNode;
 
 
-#endif // _ELEMENTSIDE_H_
+#endif // TC_ELEMENTSIDE_H

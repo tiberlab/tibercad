@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _TIBERLINEARSYSTEM_H_
-#define _TIBERLINEARSYSTEM_H_
+#ifndef TC_TIBERLINEARSYSTEM_H
+#define TC_TIBERLINEARSYSTEM_H
 
 #include "tibercad/solver/TiberEqSystem.h"
 #include "tibercad/base/libMeshDefs.h"
@@ -119,4 +119,4 @@ TiberLinearSystem::get_local_solution_vector(void)
 }
 
 
-#endif // _TIBERLINEARSYSTEM_H_
+#endif // TC_TIBERLINEARSYSTEM_H

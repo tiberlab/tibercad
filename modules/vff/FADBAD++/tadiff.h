@@ -27,8 +27,8 @@
 // COPYRIGHT NOTICE
 // ***************************************************************
 
-#ifndef _TADIFF_H
-#define _TADIFF_H
+#ifndef TC_TADIFF_H
+#define TC_TADIFF_H
 
 #include <algorithm>
 

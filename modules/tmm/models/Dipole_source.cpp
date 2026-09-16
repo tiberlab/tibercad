@@ -42,8 +42,8 @@ void Dipole_source::do_init(void)
   set_dipole_elements(_kr,_steps);
  // typer = "Incident Wave";
 }
+
 void Dipole_source::Calculate_M_Matrix(void)
 {
-  ;;
 }
 

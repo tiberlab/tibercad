@@ -23,8 +23,8 @@
  */
 
 
-#ifndef _DLLOADER_H_
-#define _DLLOADER_H_
+#ifndef TC_DLLOADER_H
+#define TC_DLLOADER_H
 
 #include "tibercad/base/tiber_dll.h"
 
@@ -36,7 +36,7 @@
  * The given library is looked for in well defined paths. If it is found,
  * it is opened and well defined symbols are looked for.
  */
-class TBDLLOCAL DLLoader
+class TC_DLLOCAL DLLoader
 {
 
   public:
@@ -97,4 +97,4 @@ class TBDLLOCAL DLLoader
 
 
 
-#endif // _DLLOADER_H_
+#endif // TC_DLLOADER_H

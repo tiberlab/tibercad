@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _ATOMISTICBASIS_H_
-#define _ATOMISTICBASIS_H_
+#ifndef TC_ATOMISTICBASIS_H
+#define TC_ATOMISTICBASIS_H
 
 #include "tibercad/atomistic/Atom.h"
 #include "tibercad/math/Tensor2.h"
@@ -440,4 +440,4 @@ const std::vector<std::string>& AtomisticBasis::get_atom_types(void)
   return _atom_types;
 }
 
-#endif // _ATOMISTICBASIS_H_
+#endif // TC_ATOMISTICBASIS_H

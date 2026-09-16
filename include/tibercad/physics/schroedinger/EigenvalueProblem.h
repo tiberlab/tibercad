@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _EIGENVALUEPROBLEM_H_
-#define _EIGENVALUEPROBLEM_H_
+#ifndef TC_EIGENVALUEPROBLEM_H
+#define TC_EIGENVALUEPROBLEM_H
 
 #include "tibercad/module/SimulationInterface.h"
 #include "tibercad/kintegration/KspaceIntegration.h"
@@ -509,4 +509,4 @@ bool EigenvalueProblem::is_generalized(void) const
 
 //=======================================================================//
 
-#endif // _EIGENVALUEPROBLEM_H_
+#endif // TC_EIGENVALUEPROBLEM_H

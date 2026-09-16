@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _GAUSSIANPROFILE_H_
-#define _GAUSSIANPROFILE_H_
+#ifndef TC_GAUSSIANPROFILE_H
+#define TC_GAUSSIANPROFILE_H
 
 
 #include "tibercad/profiles/ExternalProfile.h"

@@ -35,7 +35,7 @@ using  namespace std;
 /*! 
   Contains node coordinates and id.
 */
-class TBDLLOCAL ISE_Vertex
+class TC_DLLOCAL ISE_Vertex
 {
  public:
   //! Constructor.

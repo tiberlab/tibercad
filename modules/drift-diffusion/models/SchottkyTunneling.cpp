@@ -57,6 +57,7 @@ SchottkyTunneling::SchottkyTunneling(const ModelOptions& options)
     _barrier(0.6),
     _mass(1.0)
 {
+  set_name("SchottkyTunneling");
 }
 
 
@@ -75,6 +76,7 @@ SchottkyTunneling::read_database(void)
 void
 SchottkyTunneling::do_init(void)
 {
+
   _max_tunnel_length = get_option("maximum_tunnel_length", _max_tunnel_length);
   _contact_name = get_option("contact", _contact_name);
   get_parameter("effective_mass", _mass);

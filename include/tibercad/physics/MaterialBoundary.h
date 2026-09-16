@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _MATERIALBOUNDARY_H_
-#define _MATERIALBOUNDARY_H_
+#ifndef TC_MATERIALBOUNDARY_H
+#define TC_MATERIALBOUNDARY_H
 
 
 #include "tibercad/physics/PhysicalObject.h"

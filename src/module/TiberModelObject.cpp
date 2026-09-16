@@ -258,7 +258,7 @@ TiberModelObject::get_option(const std::string& name,
 
 TiberModelObject*
 TiberModelObject::_create_from_library(const std::string& name,
-    const ModelOptions& options, const void* handle)
+    const ModelOptions& options)
 {
   TiberModelObject* obj = nullptr;
 
@@ -269,7 +269,7 @@ TiberModelObject::_create_from_library(const std::string& name,
   create_t create = (create_t) iface.create_fnc;
 
   if (create != nullptr)
-    obj = create(options, handle);
+    obj = create(options);
 
   if (obj != nullptr)
   {
@@ -287,14 +287,14 @@ TiberModelObject::_create_from_library(const std::string& name,
 
 
 TiberModelObject*
-TiberModelObject::_create_from_object(const TiberModelObject* other, const void* handle)
+TiberModelObject::_create_from_object(const TiberModelObject* other)
 {
   TiberModelObject* obj = nullptr;
 
   if (other != nullptr)
   {
     if (other->_create != nullptr)
-    obj = other->_create(other->_options, handle);
+    obj = other->_create(other->_options);
     if (obj != nullptr)
     {
       obj->_create = other->_create;
@@ -310,12 +310,12 @@ TiberModelObject::_create_from_object(const TiberModelObject* other, const void*
 
 TiberModelObject*
 TiberModelObject::create_from_function(create_t create, destroy_t destroy,
-    const ModelOptions& options, const void* handle)
+    const ModelOptions& options)
 {
   assert(create != nullptr);
   assert(destroy != nullptr);
 
-  TiberModelObject* obj = create(options, handle);
+  TiberModelObject* obj = create(options);
 
   if (obj != nullptr)
   {
@@ -343,7 +343,7 @@ TiberModelObject::destroy(TiberModelObject* p)
     m.debug(os.str());
     m.indent();
 
-    libhandle_t libhandle = p->_libhandle;
+    //libhandle_t libhandle = p->_libhandle;
     destroy_t destroy_fnc = p->_destroy;
 
     if (destroy_fnc != nullptr)

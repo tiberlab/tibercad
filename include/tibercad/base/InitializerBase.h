@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _INITIALIZERBASE_H_
-#define _INITIALIZERBASE_H_
+#ifndef TC_INITIALIZERBASE_H
+#define TC_INITIALIZERBASE_H
 
 class TiberModelObject;
 

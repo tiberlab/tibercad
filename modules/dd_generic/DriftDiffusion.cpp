@@ -2199,7 +2199,7 @@ DriftDiffusion::do_setup_solution_variables(void)
         ID eid = static_cast<ID>(eNetRecombination) + ids[i];
         ID hid = static_cast<ID>(hNetRecombination) + ids[i];
         const std::string& name =
-            sc->get_recombination_model(ids[i])->get_default_name();
+            sc->get_recombination_model(ids[i])->get_name();
         // if recombination should be plotted, add it also to the plot variables
         if (plot_erec) add_plot_variable("e" + name);
         if (plot_hrec) add_plot_variable("h" + name);

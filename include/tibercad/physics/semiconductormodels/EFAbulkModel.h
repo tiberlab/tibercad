@@ -23,8 +23,8 @@
  *       API version: 3.5
  */
 
-#ifndef _EFABULKMODEL_H_
-#define _EFABULKMODEL_H_
+#ifndef TC_EFABULKMODEL_H
+#define TC_EFABULKMODEL_H
 
 #include "tibercad/physics/PhysicalModel.h"
 #include "tibercad/physics/semiconductormodels/EFAbulkHamiltonian.h"

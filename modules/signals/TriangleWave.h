@@ -41,14 +41,11 @@ class TriangleWave : public SignalGenerator
     //! Destructor
     virtual ~TriangleWave(void);
 
-    //! Create an instance
-    static TriangleWave* create(const ModelOptions& options);
-
 
   protected:
 
     //! Constructor
-    TriangleWave(const ModelOptions& options);
+    explicit TriangleWave(const ModelOptions& options);
 
     //! Initialize
     void do_init(void) override;

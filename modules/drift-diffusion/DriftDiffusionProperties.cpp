@@ -26,7 +26,6 @@
 
 
 #include "DriftDiffusionProperties.h"
-#include "tibercad/physics/misc/ParticleDensity.h"
 #include "RecombinationModelInterface.h"
 #include "MobilityModelInterface.h"
 #include "tibercad/module/SimulationInterface.h"
@@ -218,86 +217,6 @@ DriftDiffusionProperties::prepare_submodels(void)
     create_submodel(_valence_band, "band_properties", opts);
   }
 
-
-
-
-  // particle densities
-  {
-    ModelOptions opts;
-    opts.set_option("statistics", "fermidirac");
-
-    bool e_done = false;
-    bool h_done = false;
-
-    ModelOptions::submodel_iterator
-      it(get_options().submodels_begin("particle_density"));
-    ModelOptions::submodel_iterator
-      end(get_options().submodels_end("particle_density"));
-
-
-
-    while (it != end)
-    {
-      ModelOptions& o = it->second;
-      ++it;
-
-      const string& particle = o.get_option("particle", "");
-      if (!o.find_option("statistics"))
-        o.set_option("statistics", "fermidirac");
-
-      if (particle == "electron")
-      {
-        if (e_done)
-          throw InitFailedException("Only one particle_density model per "
-              "particle and region is allowed");
-
-        e_done = true;
-      }
-      else if (particle == "hole")
-      {
-        if (h_done)
-          throw InitFailedException("Only one particle_density model per "
-              "particle and region is allowed");
-
-        h_done = true;
-      }
-      else
-      {
-        if (e_done || h_done)
-          throw InitFailedException("Only one particle_density model per "
-              "particle and region is allowed");
-
-        // this case is valid for both
-
-        o.set_option("particle", "electron");
-
-        opts = o;
-        opts.set_option("particle", "hole");
-        get_options().add_submodel("particle_density", opts);
-
-        e_done = h_done = true;
-      }
-    }
-
-    if (!e_done)
-    {
-      opts.set_option("particle", "electron");
-      get_options().add_submodel("particle_density", opts);
-    }
-
-    if (!h_done)
-    {
-      opts.set_option("particle", "hole");
-      get_options().add_submodel("particle_density", opts);
-    }
-
-    vector<PhysicalModel*> pd;
-    create_submodels(pd, "particle_density");
-  }
-
-
-  // polarization models
-  //create_submodels(_pm, "polarization");
 
 
   // traps
@@ -535,9 +454,6 @@ DriftDiffusionProperties::calculate_densities(void)
   pair<double, double> hl(vb.get_density_and_derivative(get_pd().fermi_h, get_pd().electric_potential));
   get_pd().hole_density = hl.first;
   get_pd().hole_density_derivative = hl.second;
-
-  get_pd().gamma_n = cb.get_gamma();
-  get_pd().gamma_p = vb.get_gamma();
 
   if (!(_coupling & DriftDiffusionDefs::ELECTRONS))
   {
