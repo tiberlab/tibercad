@@ -186,6 +186,14 @@ public:
   // Solver flag. currently 0: CPU solver; 1: GPU; 2: GPU-split version 
   void set_solver_flag(int flag);
 
+  //! Configure the optional coarse-graining transformation.
+  void set_coarse_graining(int mode, int subsolver_flag, int subsolver_type, int nblocks,
+      double imbalance, double energy_min, double energy_max,
+      double core_energy_min, double core_energy_max, double energy_buffer,
+      double epsilon, int neumann_order, double expansion_energy,
+      bool check_convergence, int power_iteration_max_iterations,
+      double power_iteration_tolerance);
+
   void set_num_states(int n_vb, int n_cb);
 
   //! get ETB Hamiltonian size (number of rows)

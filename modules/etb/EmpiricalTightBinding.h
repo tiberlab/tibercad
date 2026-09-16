@@ -116,6 +116,23 @@ class ETB : public TightBinding
     int dynamic;
     double bitoff;
     int solver_flag;
+    bool coarse_graining;
+    int coarse_mode;
+    int coarse_subsolver_flag;
+    int coarse_subsolver_type;
+    int coarse_num_blocks;
+    double coarse_imbalance;
+    double coarse_energy_min;
+    double coarse_energy_max;
+    double coarse_core_energy_min;
+    double coarse_core_energy_max;
+    double coarse_energy_buffer;
+    double coarse_epsilon;
+    int coarse_neumann_order;
+    double coarse_expansion_energy;
+    bool coarse_check_convergence;
+    int coarse_power_iteration_max_iterations;
+    double coarse_power_iteration_tolerance;
   };
 
   //! Destructor

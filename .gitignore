@@ -18665,3 +18665,4 @@ share/Doxyfile_SDK
 share/modules.conf
 src/apps/Makefile
 src/solver/slepc/Makefile
+modules/etb/coarse-graining-interface-plan.md
