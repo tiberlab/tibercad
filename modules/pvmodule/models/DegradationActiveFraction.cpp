@@ -35,12 +35,6 @@ DegradationActiveFraction::DegradationActiveFraction(const ModelOptions& options
 {
 }
 
-DegradationActiveFraction*
-DegradationActiveFraction::create(const ModelOptions& options)
-{
-  return new DegradationActiveFraction(options);
-}
-
 void
 DegradationActiveFraction::do_init(void)
 {

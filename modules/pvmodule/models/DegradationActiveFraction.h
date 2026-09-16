@@ -24,8 +24,8 @@
  * \note This file is part of module pvmodule.
  */
 
-#ifndef _DEGRADATIONACTIVEFRACTION_H_
-#define _DEGRADATIONACTIVEFRACTION_H_
+#ifndef TC_DEGRADATIONACTIVEFRACTION_H
+#define TC_DEGRADATIONACTIVEFRACTION_H
 
 #include "DegradationModel.h"
 #include "tibercad/module/SolutionProvider.h"
@@ -49,10 +49,11 @@ class DegradationActiveFraction : public DegradationModel
 
     virtual ~DegradationActiveFraction(void) = default;
 
-    static DegradationActiveFraction* create(const ModelOptions& options);
-
 
   protected:
+
+    //! Private constructor
+    DegradationActiveFraction(const ModelOptions& options);
 
     virtual void do_init(void) override;
 
@@ -62,13 +63,6 @@ class DegradationActiveFraction : public DegradationModel
 
 
   private:
-
-    //! Private constructor
-    /*!
-     * This is a specific model. Other models should directly
-     * derive from the base class to not create a mess
-     */
-    DegradationActiveFraction(const ModelOptions& options);
 
     //! The exponent in the photocurrent degradation dependency
     double _exponent_ph = 1;
@@ -82,4 +76,4 @@ class DegradationActiveFraction : public DegradationModel
 };
 
 
-#endif // _DEGRADATIONACTIVEFRACTION_H_
+#endif // TC_DEGRADATIONACTIVEFRACTION_H
