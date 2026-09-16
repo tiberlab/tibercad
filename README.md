@@ -22,15 +22,16 @@ Compilation
 -----------
 
 tiberCAD can be compiled by defining a site configuration in compilation/site_config.sh and running build_all. This will download necessary libraries and configure and compile all code. Example site configurations are in the site_configuration subdirectory.
-For example, in a Debian 12 or compatible system, you might do
+For example, in a Debian 12 or compatible systems (like Ubuntu 24.04 or other derived distros), you might do
 
 ```bash
+sudo apt install libopenmpi-dev cmake   #install some utility packages needed for the compilation 
 cd compilation/
 ln -s site_configuration/debian_12.sh site_config.sh
 ./build_all
 ```
 
-This will donwload and compile PETSc, SLEPc, Boost libraries and libmesh.
+This will download and compile PETSc, SLEPc, Boost libraries and libmesh.
 
 Tagging and releases
 --------------------
