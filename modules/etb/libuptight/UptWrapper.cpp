@@ -108,6 +108,13 @@ void UptWrapper::set_coarse_graining(int mode, int subsolver_flag, int subsolver
       power_iteration_max_iterations, power_iteration_tolerance);
 }
 
+int UptWrapper::get_coarse_graining_error(void)
+{
+  int error_code = 0;
+  upt_get_coarse_graining_error_(_handler, error_code);
+  return error_code;
+}
+
 void UptWrapper::set_output(int format, double step)
 {
   upt_setoutput_(_handler, format, step);

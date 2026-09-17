@@ -702,6 +702,16 @@ ETB::call_uptight(void)
 
   if (!_upt_options.assemble_H) create_dummy_H(); 
 
+  if (_upt_solver_options.coarse_graining)
+  {
+    if (!_upt_options.assemble_H)
+      throw InitFailedException("ETB: coarse-grain requires assemble_hamiltonian = true");
+    const int coarse_error = inst->get_coarse_graining_error();
+    if (coarse_error != 0)
+      throw InitFailedException("ETB: Uptight coarse-graining failed (error " +
+          std::to_string(coarse_error) + ")");
+  }
+
   if (_upt_solver_options.read_states)
   {
     Messages::info("("+get_name()+") reading old states");
@@ -883,7 +893,20 @@ ETB::call_uptight(void)
       }
       else
       {
-        throw SolveFailedException("ETB: unkown particle type");
+        // CG returns the main solver's ordered states without Uptight-side
+        // particle classification. Keep classification at the tiberCAD edge.
+        if (i < num_vb)
+        {
+          _solution[i].particle = "hl";
+          _solution[i].electro_chem_pot = _upt_options.potential_flag ?
+              calculate_fermi_averaged(i) : _upt_options.hl_chem_pot;
+        }
+        else
+        {
+          _solution[i].particle = "el";
+          _solution[i].electro_chem_pot = _upt_options.potential_flag ?
+              calculate_fermi_averaged(i) : _upt_options.el_chem_pot;
+        }
       }
 
     }
@@ -1400,7 +1423,8 @@ void ETB::parse_options(void)
     else if (subsolver == "jd") _upt_solver_options.coarse_subsolver_flag = 1;
     else if (subsolver == "lanczos" || subsolver == "upt_lanczos")
       _upt_solver_options.coarse_subsolver_flag = 2;
-    else if (subsolver == "feast") _upt_solver_options.coarse_subsolver_flag = 3;
+    else if (subsolver == "feast")
+      throw InitFailedException("ETB: coarse-grain subsolver feast is unavailable in Uptight");
     else throw InitFailedException("ETB: unsupported coarse-grain subsolver " + subsolver);
 
     const string subsolver_type = cg.get_option("subsolver_type", string("cpu"));
@@ -1409,6 +1433,8 @@ void ETB::parse_options(void)
       throw InitFailedException("ETB: unsupported coarse-grain subsolver_type " + subsolver_type);
     if (subsolver_type == "gpu") _upt_solver_options.coarse_subsolver_type = 1;
     if (subsolver_type == "gpu-split") _upt_solver_options.coarse_subsolver_type = 2;
+    if (subsolver == "lapack" && _upt_solver_options.coarse_subsolver_type != 0)
+      throw InitFailedException("ETB: coarse-grain LAPACK preparation supports only subsolver_type = cpu");
 
     _upt_solver_options.coarse_num_blocks = cg.get_option("num_blocks", 0);
     _upt_solver_options.coarse_imbalance = cg.get_option("imbalance", 0.03);

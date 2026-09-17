@@ -18666,3 +18666,7 @@ share/modules.conf
 src/apps/Makefile
 src/solver/slepc/Makefile
 modules/etb/coarse-graining-interface-plan.md
+/modules/etb/test/GaAs/coarse-cg
+/modules/etb/test/GaAs/coarse-icg
+/modules/etb/test/GaAs/coarse-icgn
+/modules/etb/test/GaAs/passivation2/output

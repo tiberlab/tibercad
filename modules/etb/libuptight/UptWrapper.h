@@ -194,6 +194,8 @@ public:
       bool check_convergence, int power_iteration_max_iterations,
       double power_iteration_tolerance);
 
+  int get_coarse_graining_error(void);
+
   void set_num_states(int n_vb, int n_cb);
 
   //! get ETB Hamiltonian size (number of rows)
