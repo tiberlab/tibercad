@@ -12,6 +12,12 @@ ifeq ($(have_mkl),yes)
   MKLCONF=--with-mkl=@MKL_DIR@ --with-thread-library=@THREAD_LIBRARY@
 endif
 
+MKL_RUNTIME := $(firstword $(wildcard /usr/lib/x86_64-linux-gnu/libmkl_rt.so) \
+														 $(wildcard /opt/intel/mkl/lib/intel64/libmkl_rt.so))
+ifneq ($(MKL_RUNTIME),)
+	MKLLIBS=-L$(dir $(MKL_RUNTIME)) -Wl,-rpath,$(dir $(MKL_RUNTIME)) -Wl,--no-as-needed -lmkl_rt
+endif
+
 ARCH = $(shell uname -m)
 
 CXXFLAGS = -fPIC  
@@ -27,7 +33,7 @@ libuptight$(shared_libext) :  .$(ARCH)/UptWrapper$(obj-suffix) libuptight_$(ARCH
 		-Wl,--version-script,export.map \
 		-Wl,-Bsymbolic -Wl,-Bstatic \
 		-L. libuptight_$(ARCH).a \
-		-Wl,-Bdynamic
+		-Wl,-Bdynamic $(MKLLIBS)
 	
 .$(ARCH)/UptWrapper$(obj-suffix) : libuptight_$(ARCH).a 
 

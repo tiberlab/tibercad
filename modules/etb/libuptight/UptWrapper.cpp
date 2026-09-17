@@ -25,9 +25,17 @@
  */
 
 #include "UptWrapper.h"
+#include "tibercad/io/Messages.h"
+
+#include <string>
 
 
 //---------------------------------------------------------------------
+
+extern "C" void upt_cg_log_message(const char* message, int length)
+{
+  Messages::info(std::string("(cg) ") + std::string(message, length));
+}
 
 
 UptWrapper::UptWrapper(){
@@ -94,17 +102,20 @@ void UptWrapper::set_solver_flag(int flag)
   upt_solver_flag_(_handler, flag);
 }
 
-void UptWrapper::set_coarse_graining(int mode, int subsolver_flag, int subsolver_type, int nblocks,
+void UptWrapper::set_coarse_graining(int mode, int subsolver_flag, int subsolver_type,
+  double sub_tolerance, int nblocks,
     double imbalance, double energy_min, double energy_max,
-    double core_energy_min, double core_energy_max, double energy_buffer,
+    double core_energy_min, double core_energy_max, double top_buffer,
+    double bottom_buffer,
     double epsilon, int neumann_order, double expansion_energy,
-    bool check_convergence, int power_iteration_max_iterations,
+    bool check_neumann_convergence, int power_iteration_max_iterations,
     double power_iteration_tolerance)
 {
-  const int check = check_convergence ? 1 : 0;
-  upt_set_coarse_graining_mode_(_handler, mode, subsolver_flag, subsolver_type, nblocks,
+  const int check = check_neumann_convergence ? 1 : 0;
+  upt_set_coarse_graining_mode_(_handler, mode, subsolver_flag, subsolver_type,
+      sub_tolerance, nblocks,
       imbalance, energy_min, energy_max, core_energy_min, core_energy_max,
-      energy_buffer, epsilon, neumann_order, expansion_energy, check,
+      top_buffer, bottom_buffer, epsilon, neumann_order, expansion_energy, check,
       power_iteration_max_iterations, power_iteration_tolerance);
 }
 

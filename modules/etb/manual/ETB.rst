@@ -365,6 +365,53 @@ The Solver section of the **Module**  ``empirical_tb`` contains the following op
  ``solver`` : string
       the actual solver to be used. For ``gpu`` one can choose ``jd`` or ``lanczos``, for ``cpu`` ``lanczos`` or ``lapack``, for ``slepc`` all SLEPc solvers
 
+Coarse-graining
+~~~~~~~~~~~~~~~
+
+An optional ``coarse-grain`` block can be placed inside ``Solver``. It is a
+transformation layer between construction of the physical Hamiltonian and the
+main solver call; the normal solver settings remain authoritative for the
+final solve. A typical use case is to reduce the computational time to solve
+for the near-gap states of large-supercell systems, at the price of some accuracy loss.
+
+``mode`` : string
+  Required. One of ``cg`` (original coarse-graining method proposed in Liu et al. 2022),
+  ``icg`` (improved ``cg``) or ``icgn`` (``icg`` plus self-energy's correction by Neumann series).
+
+``subsolver`` : string
+  Optional preparation solver, default ``lapack`` (highly advised). It solves the complete
+  spectrum of each preparation block. ``lanczos`` is unavailable for CG
+  preparation; ``jd`` is available where the Uptight JD backend is built.
+
+``subsolver_type`` : string
+  Optional preparation backend, default ``cpu``.
+
+``sub_tolerance`` : double
+  Optional preparation tolerance. Defaults to the enclosing Solver's
+  ``long_tolerance`` and does not change the main solver tolerance.
+
+``num_blocks`` : integer
+  Required number of coarse-graining blocks.
+
+For ``cg``, ``energy_min`` and ``energy_max`` define the retained energy
+window. For ``icg`` and ``icgn``, ``core_energy_min``, ``core_energy_max``,
+``top_buffer`` and ``bottom_buffer`` define the core window and asymmetric
+selection pool. Acquaintance states are selected when
+``abs(g_ij)^2 / abs(E_i - E_j) > epsilon``.
+
+``epsilon`` : double
+  Optional ICG/ICGN acquaintance threshold, default ``1e-3``.
+
+``neumann_order`` and ``expansion_energy`` : integer/double
+  ICGN options. The Neumann correction includes all terms from order zero
+  through ``neumann_order``, evaluated at ``expansion_energy``.
+
+``check_neumann_convergence`` : boolean
+  Common diagnostic option. ``power_iteration_max_iterations`` and
+  ``power_iteration_tolerance`` are also common CG options. ICGN reports
+  the estimated Neumann norm when its discarded-state coupling operator is
+  available; CG and ICG report when that norm is not defined for the mode.
+
 When using SLEPc solvers, options have to be passed in the ``solver`` block.
 
 

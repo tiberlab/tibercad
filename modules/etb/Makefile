@@ -4,6 +4,12 @@ topdir := ../..
 
 include $(topdir)/Make.common
 
+ifeq ($(have_cuda),yes)
+	CPPFLAGS += -DTC_UPTIGHT_HAS_CUDA=1
+else
+	CPPFLAGS += -DTC_UPTIGHT_HAS_CUDA=0
+endif
+
 target := modules
 
 modules: libuptight module.conf

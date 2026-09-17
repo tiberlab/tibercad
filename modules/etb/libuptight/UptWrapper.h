@@ -187,11 +187,13 @@ public:
   void set_solver_flag(int flag);
 
   //! Configure the optional coarse-graining transformation.
-  void set_coarse_graining(int mode, int subsolver_flag, int subsolver_type, int nblocks,
+  void set_coarse_graining(int mode, int subsolver_flag, int subsolver_type,
+      double sub_tolerance, int nblocks,
       double imbalance, double energy_min, double energy_max,
-      double core_energy_min, double core_energy_max, double energy_buffer,
+      double core_energy_min, double core_energy_max, double top_buffer,
+      double bottom_buffer,
       double epsilon, int neumann_order, double expansion_energy,
-      bool check_convergence, int power_iteration_max_iterations,
+      bool check_neumann_convergence, int power_iteration_max_iterations,
       double power_iteration_tolerance);
 
   int get_coarse_graining_error(void);
