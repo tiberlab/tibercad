@@ -1,5 +1,5 @@
 /*  
- * This file is part of the tiberCAD module wateringress.
+ * This file is part of the tiberCAD module masstransport.
  *
  * tiberCAD modules are licensed under the GNU General Public License v3.
  *
@@ -18,10 +18,10 @@
  */
 
 /*!
- * \file WIModel.h
- * \brief tiberCAD wateringress module header.
+ * \file MTModel.h
+ * \brief tiberCAD masstransport module header.
  *
- * \note This file is part of module wateringress.
+ * \note This file is part of module masstransport.
  */
 
 
@@ -31,32 +31,32 @@
 #include "tibercad/physics/PhysicalModel.h"
 
 
-//! This is the base class for the WI physical model
-class TC_DLEXPORT WIModel : public PhysicalModel
+//! This is the base class for the MT physical model
+class TC_DLEXPORT MTModel : public PhysicalModel
 {
 
   public:
 
     //! Destructor
-    virtual ~WIModel(void);
+    virtual ~MTModel(void);
 
     //! Creator function
-    static WIModel* create(const Material* mat, const ModelOptions& options);
+    static MTModel* create(const Material* mat, const ModelOptions& options);
 
     //! Calculate everything
     void calculate(const Elem* elem, const Point& point);
 
-    //! Get the water solubility in g/m^3/P
+    //! Get the solubility in g/m^3/P
     double get_solubility(void) const;
 
-    //! Get the water diffusivity in m^2/s
+    //! Get the diffusivity in m^2/s
     double get_diffusivity(void) const;
 
 
   protected:
 
     //! Constructor
-    WIModel(const ModelOptions& options);
+    MTModel(const ModelOptions& options);
 
     virtual void do_init(void) override;
 
@@ -66,11 +66,11 @@ class TC_DLEXPORT WIModel : public PhysicalModel
 
   private:
  
-    //! The water solubility in g/m^3/P
-    double _solubility = 0.45;
+    //! The solubility in g/m^3/P
+    double _solubility = 0.45; // this value is for H2O
  
-    //! The water diffusivity in m^2/s
-    double _diffusivity = 3.43e-11;
+    //! The diffusivity in m^2/s
+    double _diffusivity = 3.43e-11; // this value is for H2O
 
     //! The constructor method
     static TiberModelObject* _create(const ModelOptions& options);
@@ -78,13 +78,16 @@ class TC_DLEXPORT WIModel : public PhysicalModel
     //! The destructor method
     static void _destroy(TiberModelObject* p);
 
+    //! The cell temperature
+    double _cell_temp = 300;
+
 };
 
 
 
 
 inline
-WIModel::WIModel(const ModelOptions& options) :
+MTModel::MTModel(const ModelOptions& options) :
   PhysicalModel(options)
 {
 }
@@ -92,17 +95,20 @@ WIModel::WIModel(const ModelOptions& options) :
 
 inline
 double
-WIModel::get_solubility(void) const
+MTModel::get_solubility(void) const
 {
   return _solubility;
 }
 
 inline
 double
-WIModel::get_diffusivity(void) const
+MTModel::get_diffusivity(void) const
 {
   return _diffusivity;
 }
 
 
 #endif // TC_POISSONMODEL_H
+
+
+

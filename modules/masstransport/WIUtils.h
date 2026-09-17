@@ -1,5 +1,5 @@
 /*  
- * This file is part of the tiberCAD module wateringress.
+ * This file is part of the tiberCAD module masstransport.
  *
  * tiberCAD modules are licensed under the GNU General Public License v3.
  *
@@ -19,9 +19,9 @@
 
 /*!
  * \file WIUtils.h
- * \brief tiberCAD wateringress module header.
+ * \brief tiberCAD masstransport module header, for H2O.
  *
- * \note This file is part of module wateringress.
+ * \note This file is part of module masstransport.
  */
 
 #ifndef TC_WIUTILS_H

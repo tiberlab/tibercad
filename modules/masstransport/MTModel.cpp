@@ -1,5 +1,5 @@
 /*  
- * This file is part of the tiberCAD module wateringress.
+ * This file is part of the tiberCAD module masstransport.
  *
  * tiberCAD modules are licensed under the GNU General Public License v3.
  *
@@ -18,51 +18,52 @@
  */
 
 /*!
- * \file WIModel.C
- * \brief tiberCAD wateringress module implementation.
+ * \file MTModel.C
+ * \brief tiberCAD masstransport module implementation.
  *
- * \note This file is part of module wateringress.
+ * \note This file is part of module masstransport.
  */
 
 
-#include "WIModel.h"
-
+#include "MTModel.h"
+#include "tibercad/base/SimulationOptions.h"
 #include "tibercad/physics/Material.h"
 
 using namespace std;
 
-WIModel::~WIModel(void) = default;
+MTModel::~MTModel(void) = default;
+
 
 TiberModelObject*
-WIModel::_create(const ModelOptions& options)
+MTModel::_create(const ModelOptions& options)
 {
-  return new WIModel(options);
+  return new MTModel(options);
 }
 
 
 void
-WIModel::_destroy(TiberModelObject* p)
+MTModel::_destroy(TiberModelObject* p)
 {
   delete p;
 }
 
 
-WIModel*
-WIModel::create(const Material* mat, const ModelOptions& options)
+MTModel*
+MTModel::create(const Material* mat, const ModelOptions& options)
 {
   string type("default");
   options.get_option("type", type);
 
-  WIModel* pm = NULL;
+  MTModel* pm = NULL;
 
   if (type == "default")
     // we create the default model from explicit creation method
-    pm = PhysicalModel::create<WIModel>(_create, _destroy, mat, options);
+    pm = PhysicalModel::create<MTModel>(_create, _destroy, mat, options);
   else
   {
     // there is no such model, at the moment
     type = "bulk_" + type;
-    pm = PhysicalModel::create<WIModel>(type, mat, options);
+    pm = PhysicalModel::create<MTModel>(type, mat, options);
   }
 
   return(pm);
@@ -71,23 +72,34 @@ WIModel::create(const Material* mat, const ModelOptions& options)
 
 
 void
-WIModel::do_init(void)
+MTModel::do_init(void)
 {
+
   // we read it in g/m^3/Pa
   _solubility = get_option("solubility", _solubility);
 
   // we read it in m^2/S
-  _diffusivity = get_option("diffusivity", _diffusivity);
+  double d0 = get_option("diffusivity_0", 3.21e-4);
+  double Ea = get_option("diff_act_en",0.415); //eV
+  const double kb = 8.617e-5; //eV/K
+  _cell_temp = get_option("cell_temperature", SimulationOptions::temperature);
+
+  //Arrhenius D = D0 exp(-Ea/kbT)
+  _diffusivity = d0*exp(-Ea/(kb*_cell_temp));
+
 }
 
 
 void
-WIModel::calculate(const Elem* elem, const Point& point)
+MTModel::calculate(const Elem* elem, const Point& point)
 {
  
 }
 
 void
-WIModel::prepare_submodels(void)
+MTModel::prepare_submodels(void)
 {
 }
+
+
+

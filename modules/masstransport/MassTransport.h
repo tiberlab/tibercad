@@ -1,5 +1,5 @@
 /*  
- * This file is part of the tiberCAD module wateringress.
+ * This file is part of the tiberCAD module masstransport.
  *
  * tiberCAD modules are licensed under the GNU General Public License v3.
  *
@@ -18,29 +18,31 @@
  */
 
 /*!
- * \file WaterIngress.h
- * \brief tiberCAD wateringress module header.
+ * \file MassTransport.h
+ * \brief tiberCAD masstransport module header.
  *
- * \note This file is part of module wateringress.
+ * \note This file is part of module masstransport.
  */
 
 
-#ifndef TC_WATERINGRESS_H
-#define TC_WATERINGRESS_H
+#ifndef TC_MASSTRANSPORT_H
+#define TC_MASSTRANSPORT_H
 
 #include "tibercad/module/SimulationInterface.h"
 #include "tibercad/solver/TiberLinearSystem.h"
+#include <string>
+using namespace std;
 
 
 /*!
  * 
  * \brief This is a simple implementation of the Fick's laws for
- *        mmodeling water ingress e.g. into solar cells.
+ *        modeling mass transport e.g. into solar cells.
  *
  * The implementation uses the partial pressure as primary
  * variable, and assumes the solubility to be piecewise constant.
  */
-class TC_DLLOCAL WaterIngress : public SimulationInterface
+class TC_DLLOCAL MassTransport : public SimulationInterface
 {
 
   public:
@@ -50,48 +52,48 @@ class TC_DLLOCAL WaterIngress : public SimulationInterface
      * We do not declare it virtual here, as we will not allow
      * to derive from this class anyway.
      */
-    virtual ~WaterIngress(void);
+    ~MassTransport(void);
 
 
 
   protected:
 
     //! The constructor
-    explicit WaterIngress(const ModelOptions& options);
+    MassTransport(const ModelOptions& options);
 
     //! The initialization
-    virtual void do_init(void) override;
+    virtual void do_init(void);
 
 
     //! Parse the options from the input file
-    void parse_options(void);
+    virtual void parse_options(void);
 
 
     //! Setup the available variables
-    virtual void do_setup_solution_variables(void) override;
+    virtual void do_setup_solution_variables(void);
 
 
-    //! Solve the WaterIngress equation
-    virtual void do_solve(void) override;
+    //! Solve the MassTransport equation
+    virtual void do_solve(void);
 
 
     //! Print some useful information
-    virtual void do_print_info(void) override;
+    virtual void do_print_info(void);
 
 
     //! We need to create a physical model
     virtual PhysicalModel* create_bulk_model(const ModelOptions& options,
-        const Material* mat) const override;
+        const Material* mat) const;
 
     //! We need to create boundary condition model
     virtual PhysicalModel* create_boundary_model(const ModelOptions& options,
-        const MaterialBoundary* boundary) const override;
+        const MaterialBoundary* boundary) const;
 
 
     //! We have to provide somehow our solution variables
     virtual void get_solution_secure(const Elem* elem,
         std::map<ID, std::vector<double> >& values,
-        const std::vector<Point>& p) override;
+        const std::vector<Point>& p);
 
 
 
@@ -100,9 +102,9 @@ class TC_DLLOCAL WaterIngress : public SimulationInterface
     //! These are the known solution variables
     enum Solutions
     {
-      PartialPressure,  /*!< the partial water pressure */
-      Concentration,    /*!< the water concentration given by Henry's law */
-      RelativeHumidity, /*!< the relative humidity, from the partial pressure */
+      PartialPressure,  /*!< the partial pressure */
+      Concentration,    /*!< the concentration given by Henry's law */
+      RelativeHumidity, /*!< the relative humidity for H2O, from the partial pressure */
       Flux,             /*!< the flux */
       Solubility,       /*!< the solubility */
       Diffusivity       /*!< the diffusion constant cm^2/s */
@@ -115,7 +117,7 @@ class TC_DLLOCAL WaterIngress : public SimulationInterface
     class MyAssembly : public TiberLinearSystem::Assembly
     {
       public:
-        MyAssembly(WaterIngress* obj) : _obj(obj) {};
+        MyAssembly(MassTransport* obj) : _obj(obj) {};
 
         void assemble() override
         {
@@ -123,7 +125,7 @@ class TC_DLLOCAL WaterIngress : public SimulationInterface
         }
 
       private:
-        WaterIngress *_obj;
+        MassTransport *_obj;
     };
 
     //! The assembly object
@@ -133,10 +135,13 @@ class TC_DLLOCAL WaterIngress : public SimulationInterface
     //! The cell temperature
     double _cell_temp = 300;
 
+    //! The molecule to be considered
+    string _mass_tran_spec = "H2O"; // this can be defined in the input file
+
 };
 
 
 
 
 
-#endif // TC_WATERINGRESS_H
+#endif // TC_MASSTRANSPORT_H
