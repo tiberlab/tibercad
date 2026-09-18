@@ -1411,12 +1411,7 @@ void ETB::parse_options(void)
   if ( solver_type == "cpu") _upt_solver_options.solver_flag = 0;
   if ( solver_type == "gpu" || solver_type == "gpu-split")
   {
-#if !TC_UPTIGHT_HAS_CUDA
-    throw InitFailedException("ETB: solver_type=" + solver_type +
-        " is unavailable because Uptight was built without CUDA support");
-#else
     _upt_solver_options.solver_flag = solver_type == "gpu" ? 1 : 2;
-#endif
   }
 
   ModelOptions::const_submodel_iterator cg_it = solopts.submodels_begin("coarse_grain");
@@ -1447,11 +1442,6 @@ void ETB::parse_options(void)
       throw InitFailedException("ETB: unsupported coarse-grain subsolver_type " + subsolver_type);
     if (subsolver_type == "gpu") _upt_solver_options.coarse_subsolver_type = 1;
     if (subsolver_type == "gpu-split") _upt_solver_options.coarse_subsolver_type = 2;
-  #if !TC_UPTIGHT_HAS_CUDA
-    if (subsolver_type == "gpu" || subsolver_type == "gpu-split")
-      throw InitFailedException("ETB: coarse-grain subsolver_type=" + subsolver_type +
-        " is unavailable because Uptight was built without CUDA support");
-  #endif
     if (subsolver == "lapack" && _upt_solver_options.coarse_subsolver_type != 0)
       throw InitFailedException("ETB: coarse-grain LAPACK preparation supports only subsolver_type = cpu");
 
