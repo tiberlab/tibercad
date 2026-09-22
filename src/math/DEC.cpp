@@ -181,9 +181,9 @@ DEC::get_hodge(libMesh::DenseMatrix<double>& hodge,
   {
     hodge(0, 0) =  metric(0, 0) / _primal[0].norm();
   }
-  else if (dim == 2)
+  else if (is_simplex || (_hodge_constr == INTERPOLATION))
   {
-    if ((_hodge_constr == INTERPOLATION) || (_elem->n_nodes() == 3))
+    if (dim == 2)
     {
       // for a simplex, we can perform calculations in phycial coordinates.
       // Also, there is no need to use a mimetic Hodge.
@@ -209,59 +209,58 @@ DEC::get_hodge(libMesh::DenseMatrix<double>& hodge,
         }
       }
     }
-    else
+    else // dim == 3
     {
-      compute_quad_hodge_mfd(*_elem, hodge, metric);
-    }
-  }
-  else if (dim == 3)
-  {
-    // TODO: this works for tetrahedra, but not for other 3D elements  
-    for (unsigned int e = 0; e < _primal.size(); ++e)
-    {
-      unsigned int ni = _elem->local_edge_node(e, 0);
-      Point a = _midpoints[e] - _elem->point(ni);
-
-      // first basis vector for surface patch
-      Point v = _center - _midpoints[e];
-
-      for (unsigned int s = 0; s < _elem->n_sides(); ++s)
+      for (unsigned int e = 0; e < _primal.size(); ++e)
       {
-        if (_elem->is_edge_on_side(e, s))
+        unsigned int ni = _elem->local_edge_node(e, 0);
+        Point a = _midpoints[e] - _elem->point(ni);
+
+        // first basis vector for surface patch
+        Point v = _center - _midpoints[e];
+
+        for (unsigned int s = 0; s < _elem->n_sides(); ++s)
         {
-          Point c = _elem->side_ptr(s)->vertex_average();
-
-          // second basis vector for surface patch
-          Point w = c - _midpoints[e];
-
-          // the cross product of the two basis vectors gives the normal vector to the surface patch
-          Point n = v.cross(w);
-
-          // check orientation of the normal vector
-          if (n * a < 0)
-            n *= -1;
-
-          // we use the midpoint of the dual edge patches as integration points
-          Point q_point = 1.0/3.0 * (_center + _midpoints[e] + c);
-
-          // Reinit the Whitney interpolation object
-          _whip.reinit(*_elem, {q_point});
-
-          auto& w1 = _whip.get_1forms();
-
-          for (unsigned int i = 0; i < _primal.size(); ++i)
+          if (_elem->is_edge_on_side(e, s))
           {
-            RealGradient w_a = w1[i][0];
-            w_a = metric * w_a;
+            Point c = _elem->side_ptr(s)->vertex_average();
 
-            hodge(e, i) += 0.5 * w_a * n;
+            // second basis vector for surface patch
+            Point w = c - _midpoints[e];
+
+            // the cross product of the two basis vectors gives the normal vector to the surface patch
+            Point n = v.cross(w);
+
+            // check orientation of the normal vector
+            if (n * a < 0)
+              n *= -1;
+
+            // we use the midpoint of the dual edge patches as integration points
+            Point q_point = 1.0 / 3.0 * (_center + _midpoints[e] + c);
+
+            // Reinit the Whitney interpolation object
+            _whip.reinit(*_elem, {q_point});
+
+            auto &w1 = _whip.get_1forms();
+
+            for (unsigned int i = 0; i < _primal.size(); ++i)
+            {
+              RealGradient w_a = w1[i][0];
+              w_a = metric * w_a;
+
+              hodge(e, i) += 0.5 * w_a * n;
+            }
           }
         }
       }
-      
     }
   }
+  else
+  {
+    compute_hodge_mfd(*_elem, hodge, metric);
+  }
 }
+
 
 
 void
@@ -830,14 +829,8 @@ DEC::compute_hodge_mfd(const libMesh::Elem& elem,
 
   std::vector<Point> midpoints(n_e);
   for (unsigned int r=0; r<n_e; ++r)
-  {
-    auto edge = elem.build_edge_ptr(r);
-    Point head = edge->point(1);
-    Point tail = edge->point(0);
-    midpoints[r] = 0.5*(head+tail);
     for (unsigned int k=0; k<n_test; ++k)
-      C(r,k) = head(k)-tail(k);
-  }
+      C(r,k) = _primal[r](k);
 
   //----------------------------------------------------------------
   // Dual edge/face vectors and flux matrix R
@@ -857,7 +850,7 @@ DEC::compute_hodge_mfd(const libMesh::Elem& elem,
     //--------------------------------------------------------------
     for (unsigned int r=0; r<n_e; ++r)
     {
-      Point dual = x_c - midpoints[r];
+      Point dual = x_c - _midpoints[r];
       // Apply metric: R[r,k] = star(e_k) . dual_edge
       // star(e_0=dx) = mu_xx*dy - mu_yx*dx (with metric)
       // More precisely: flux of mu*star(du) through dual edge
@@ -904,10 +897,41 @@ DEC::compute_hodge_mfd(const libMesh::Elem& elem,
         for (unsigned int i=0; i<face->n_nodes(); ++i)
         {
           dof_id_type nf = elem.get_node_index(face->node_ptr(i));
-          if (nf==n0) has_n0=true;
-          if (nf==n1) has_n1=true;
+          if (nf == n0) has_n0 = true;
+          if (nf == n1) has_n1 = true;
         }
-        if (has_n0&&has_n1) adj_faces.push_back(f);
+        if (has_n0 && has_n1) adj_faces.push_back(f);
+      }
+
+      // Order face centers consistently around edge direction
+      if (adj_faces.size() > 2)
+      {
+        auto edge = elem.build_edge_ptr(r);
+        Point d = (edge->point(1) - edge->point(0)).unit();
+
+        // Reference perpendicular direction
+        Point ref = face_centers[adj_faces[0]] - _midpoints[r];
+        ref = ref - (ref * d) * d; // project out edge component
+        Real ref_norm = ref.norm();
+
+        if (ref_norm > 1e-14)
+        {
+          ref /= ref_norm;
+
+          std::sort(adj_faces.begin(), adj_faces.end(),
+                    [&](unsigned int a, unsigned int b)
+                    {
+                      Point va = face_centers[a] - _midpoints[r];
+                      Point vb = face_centers[b] - _midpoints[r];
+                      // Project out edge component
+                      va = va - (va * d) * d;
+                      vb = vb - (vb * d) * d;
+                      // Angle relative to reference direction
+                      Real angle_a = std::atan2((va.cross(ref)) * d, va * ref);
+                      Real angle_b = std::atan2((vb.cross(ref)) * d, vb * ref);
+                      return angle_a < angle_b;
+                    });
+        }
       }
 
       // Dual face area vector:
@@ -919,25 +943,9 @@ DEC::compute_hodge_mfd(const libMesh::Elem& elem,
 
       // Compute area vector as sum of cross products
       Point area_vec;
-      const Point& mr = midpoints[r];
+      const Point& mr = _midpoints[r];
 
-      // Order adjacent face centers consistently
-      // (for tet: 2 faces, for hex: 4 faces)
-      // Use the ordering that gives outward-pointing normal
-      // relative to the edge direction
       unsigned int nf = adj_faces.size();
-      for (unsigned int k=0; k<nf; ++k)
-      {
-        Point fc_k  = face_centers[adj_faces[k]];
-        Point fc_k1 = face_centers[adj_faces[(k+1)%nf]];
-        // Triangle {mr, fc_k, fc_k1} contributes to dual face
-        // area vector via cross product
-        area_vec += 0.5*(fc_k-mr).cross(fc_k1-mr);
-      }
-      // Also include triangles to x_c if needed
-      // For a tet (2 adj faces): dual face is {mr, fc0, x_c, fc1}
-      // = triangle {mr,fc0,x_c} + triangle {mr,x_c,fc1}
-      area_vec = Point(0,0,0); // reset and redo correctly
 
       if (nf == 2)
       {
@@ -971,6 +979,18 @@ DEC::compute_hodge_mfd(const libMesh::Elem& elem,
           area_vec += 0.5*(fc_k-mr).cross(x_c-mr);
         }
       }
+      // After computing area_vec, check and fix orientation
+      Point edge_vec;
+      auto edge_ptr = elem.build_edge_ptr(r);
+      for (unsigned int k = 0; k < 3; ++k)
+        edge_vec(k) = edge_ptr->point(1)(k) - edge_ptr->point(0)(k);
+
+      // R.C should be positive: area_vec should have positive
+      // dot product with edge_vec (after metric application)
+      // Check without metric first:
+      Real dot = area_vec * edge_vec;
+      if (dot < 0)
+        area_vec *= -1.0;
 
       // Apply metric: R[r,k] = (mu * area_vec)[k]
       // For test field u=x^k: star(du)=star(e_k) is a 2-form
@@ -1062,8 +1082,10 @@ DEC::compute_hodge_mfd(const libMesh::Elem& elem,
   alpha /= n_e;
   if (alpha < 1e-14) alpha = 1.0;
 
+
   // H = H_c + alpha * P
   for (unsigned int r=0; r<n_e; ++r)
     for (unsigned int s=0; s<n_e; ++s)
       H(r,s) = H_c(r,s) + alpha*P(r,s);
+
 }
