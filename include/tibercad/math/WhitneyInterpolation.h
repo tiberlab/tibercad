@@ -120,12 +120,40 @@ class WhitneyInterpolation
     const std::vector<std::vector<libMesh::RealGradient>>& get_1forms(void) const;
 
     /*!
+     * \brief Retrieve the 1-cells, inclduing virtual ones for non-simplices
+     *
+     * \return the primal 1-cells, i.e. the edges of the element, as pairs of node indices.
+     * This includes the virtual 1-cells due to logical subdivision
+     * of non-simplicial elements. It corresponds to the incidence matrix,
+     * but is stored as pairs of node indices. The order is the same as in get_1forms().
+     */
+    const std::vector<std::pair<unsigned int, unsigned int>>& get_1cells(void) const;
+
+    /*!
      * \brief Retrieve the points in real coordinates
      */
     const std::vector<libMesh::Point>& get_xyz(void) const;
 
 
   private:
+
+    /*!
+     * \brief The current element
+     * The pointer is guarantueed to be non-null after
+     * reinit() is called.
+     */
+    const libMesh::Elem* _elem = nullptr;
+
+    /*!
+     * \brief the primal 1-cells, i.e. the edges of the element
+     * This includes the virtual 1-cells due to logical subdivision
+     * of non-simplicial elements. It corresponds to the incidence matrix,
+     * but is stored as pairs of node indices.
+     * This is needed for the Whitney interpolation of 1-forms, which are defined
+     * on the primal 1-cells, and not on the edges of the element, and thus might
+     * need evaluation of 1-cochains on additional virtiual 1-cells.
+     */
+    std::vector<std::pair<unsigned int, unsigned int>> _primal_1cells;
 
     /*!
      * \brief The 0-forms
@@ -141,6 +169,47 @@ class WhitneyInterpolation
      *\brief the points in real coordinates
      */
     std::vector<libMesh::Point> _xyz;
+
+
+    /*!
+     * \brief Setup the primal 1-cells for a given element
+     * \param elem the element
+     * \param primal_1cells the vector to be filled with the primal 1-cells, as pairs of node indices
+     * 
+     * \c primal_1cells is filled with the primal 1-cells of the element, which are
+     * the edges of the element for simplices, and the edges of the simplicial subelements for non-simplices.
+     * The order of the primal 1-cells is consistent with the order of the edges of the element,
+     * and is used to define the Whitney interpolation 1-forms. For non-simplices, this means
+     * that some primal 1-cells might not correspond to actual edges of the element, but rather
+     * to virtual edges that are used to define the Whitney interpolation 1-forms on the simplicial
+     * subelements. Real edges precede virtual edges in the in the data structure.
+     * This function is called by reinit() to setup the primal 1-cells for the given element.
+     */
+    void setup_1cells(const libMesh::Elem& elem,
+        std::vector<std::pair<unsigned int, unsigned int>>& primal_1cells);
+
+    /*!
+     * \brief Find the pair of nodes that form the larger angle
+     * \param p0 the first point
+     * \param p1 the second point
+     * \param p2 the third point
+     * \param p3 the fourth point
+     * \return the pair of nodes that form the larger angle
+     */
+    std::pair<unsigned int, unsigned int> larger_angle_pair(const libMesh::Point& p0,
+        const libMesh::Point& p1, const libMesh::Point& p2, const libMesh::Point& p3) const;
+
+    /*!
+     * \brief Calculate the Whitney forms for a subtriangle
+     * \param n1 the first node
+     * \param n2 the second node
+     * \param n3 the third node
+     * \param points the point indices in the subtriangle
+     * \param ref_points the reference points
+     */
+    void calculate_subtriangle_whitney_forms(unsigned int n1, unsigned int n2, unsigned int n3,
+        const std::vector<unsigned int>& points, const std::vector<libMesh::Point>& ref_points);
+
 
 };
 
@@ -166,6 +235,13 @@ const std::vector<libMesh::Point>&
 WhitneyInterpolation::get_xyz(void) const
 {
   return _xyz;
+}
+
+inline
+const std::vector<std::pair<unsigned int, unsigned int>>&
+WhitneyInterpolation::get_1cells(void) const
+{
+  return _primal_1cells;
 }
 
 #endif // TC_WHITNEYINTERPOLATION_H

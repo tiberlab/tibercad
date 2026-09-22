@@ -43,13 +43,23 @@
  * in DEC, like element center point, incidence matrix, discrete
  * exterior derivative, Hodge star etc.
  *
- * The current implementation uses libMesh's FE order-1 Lagrange
- * element family for the construction of Whiyney interpolation forms.
- *
+ * For simplices, the current implementation uses libMesh's FE
+ * order-1 Lagrange element family for the construction of
+ * standard Whitney interpolation forms.
  * The construction of the dual d-cells can be chosen between 
  * barycentric and circumcentric, or mixed. The default is
  * barycentric, since then the center point is guarantueed to be inside
  * the primal element (d-cell).
+ * 
+ * For non-simplices, the implementation logically subdivides the element
+ * into simplices, and uses the Whitney forms on the simplices to construct
+ * piecewise Whitney interpolation 1-forms on the non-simplicial subelements.
+ * For the 0-form interpolants, the standard Lagrange basis functions are used.
+ * 
+ * Alternatively, the Hodge star can be calculated using a mimetic finite
+ * difference (MFD) approach, which is consistent with linear fields, graph
+ * compatible and might have better numerical properties, at a cost of
+ * inconsistency with the interpolation forms.
  *
  */
 class DEC
@@ -58,13 +68,22 @@ class DEC
   public:
 
     /*!
-     * \brief Approach for dual element construction
+     * \brief Approach for dual element construction on simplices
      */
-    enum DualConstruction
+    enum DualConstruction : unsigned int
     {
       BARYCENTRIC,   /*! < barycentric dual construction */
       CIRCUMCENTRIC, /*! < circumcentric dual construction */
       MIXED          /*! < mixed dual construction */
+    };
+
+    /*!
+     * \brief Approach for Hodge star construction
+     */
+    enum HodgeConstruction : unsigned int
+    {
+      INTERPOLATION, /*! < Hodge star construction using Whitney interpolation */
+      MFD            /*! < Hodge star construction using mimetic finite differences */
     };
     
 
@@ -78,7 +97,8 @@ class DEC
      * \param dual_constr The approach for dual element construction
      */
     DEC(const libMesh::Elem& elem,
-        DualConstruction dual_constr = BARYCENTRIC);
+        DualConstruction dual_constr = BARYCENTRIC,
+        HodgeConstruction hodge_constr = INTERPOLATION);
 
 
     /*!
@@ -95,18 +115,32 @@ class DEC
 
     /*! \brief Retrieve the Whitney interpolation object
      * 
-     * The internal Whitney forms are calculated at the element center point.
-     * 
      * \return A constant reference to the Whitney interpolation object
      */
-    const WhitneyInterpolation& get_whitney(void) const { return _whip; }
+    WhitneyInterpolation& get_whitney(void) { return _whip; }
 
-    //! \brief Retrieve the element center point
+    /*!
+     * \brief Retrieve the element center point
+     *
+     * On simplices, the center point corresponds to the barycenter or circumcenter,
+     * depending on the dual construction approach. On non-simplices, the center
+     * point is the intersection of the diagonals for quadrilaterals, and the
+     * barycenter for other element types.
+     * 
+     * \return A constant reference to the element center point
+     */
     const libMesh::Point& get_center(void) const { return _center; }
 
     /*!
      * \brief Retrieve the incidence matrix
+     *
      * The incidence matrix is the discrete exterior derivative for 0-forms.
+     * Note that the incidence matrix might contain entries for internal edges
+     * of the element, which are not part of its primal 1-cells. This is the case
+     * for non-simplicial elements, where the primal 1-cells are constructed from
+     * the edges of the simplicial subelements.
+     * 
+     * \return A constant reference to the incidence matrix
      */
     const libMesh::DenseMatrix<double>& get_incidence_matrix(void) const { return _incidence; }
 
@@ -126,11 +160,14 @@ class DEC
       *
      */
     void get_hodge(libMesh::DenseMatrix<double>& hodge,
-        const libMesh::RealTensor& metric = libMesh::RealTensor(1, 0, 0, 0, 1, 0, 0, 0, 1)) const;
+        const libMesh::RealTensor& metric = libMesh::RealTensor(1, 0, 0, 0, 1, 0, 0, 0, 1));
 
 
     //! Set the dual construction approach
     void set_dual_construction(DualConstruction dual_constr) { _dual_constr = dual_constr; }
+
+    //! Set the Hodge construction approach
+    void set_hodge_construction(HodgeConstruction hodge_constr) { _hodge_constr = hodge_constr; } 
 
 
     //! Get the incidence as pairs of nodes, in the same order as the incidence matrix
@@ -151,6 +188,9 @@ class DEC
 
     //! The dual construction approach
     DualConstruction _dual_constr = BARYCENTRIC;
+
+    //! The Hodge construction approach
+    HodgeConstruction _hodge_constr = INTERPOLATION;
 
     //! The element center point
     libMesh::Point _center;
@@ -173,7 +213,8 @@ class DEC
      * \param elem The element to calculate the center for
      * \return The center point of the element
      * This function calculates the center point of the given element. 
-     * The center point is calculated as the circumcenter for triangles, and as the intersection of the diagonals for quadrilaterals.
+     * The center point is calculated as the circumcenter for triangles, and
+     * as the intersection of the diagonals for quadrilaterals.
      * For other element types, the function falls back to the barycenter.
      */
     libMesh::Point get_center(const libMesh::Elem& elem) const;
@@ -198,17 +239,34 @@ class DEC
     libMesh::Point diagonal_intersection(const libMesh::Elem& elem) const;
 
     /*!
-     * \brief Compute the Hodge star for quadrilateral elements using a mixed finite difference approach
+     * \brief Compute the Hodge star for quadrilateral elements using a mimetic finite difference approach
      * \param elem The quadrilateral element
      * \param H The Hodge star matrix to be filled
      * \param metric The metric tensor to be used in the computation
      *
-     * This function computes the Hodge star for quadrilateral elements using a mixed finite difference approach.
-     * It takes into account the provided metric tensor and fills the Hodge star matrix accordingly.
+     * This function computes the Hodge star for quadrilateral elements using a
+     * mimetic finite difference approach.
+     * It takes into account the provided metric tensor and fills the Hodge star
+     * matrix accordingly.
     */
     void compute_quad_hodge_mfd(const libMesh::Elem& elem,
                                 libMesh::DenseMatrix<double>& H,
                                 const libMesh::RealTensor& metric) const;
+
+    /*!
+     * \brief Compute the Hodge star using a mimetic finite difference approach
+     * \param elem The element
+     * \param H The Hodge star matrix to be filled
+     * \param metric The metric tensor to be used in the computation
+     *
+     * This function computes the Hodge star for 2D and 3D elements using a
+     * mimetic finite difference approach.
+     * It takes into account the provided metric tensor and fills the Hodge star
+     * matrix accordingly.
+    */
+    void compute_hodge_mfd(const libMesh::Elem& elem,
+                           libMesh::DenseMatrix<double>& H,
+                           const libMesh::RealTensor& metric) const;
     
     /*!
      * \brief Compute the Hodge star on a quadrilateral using interpolation scheme
@@ -216,8 +274,10 @@ class DEC
      * \param H The Hodge star matrix to be filled
      * \param metric The metric tensor to be used in the computation
      *
-     * This function computes the Hodge star for quadrilateral elements using an interpolation scheme.
-     * It takes into account the provided metric tensor and fills the Hodge star matrix accordingly.
+     * This function computes the Hodge star for quadrilateral elements using
+     * an interpolation scheme.
+     * It takes into account the provided metric tensor and fills the Hodge star
+     * matrix accordingly.
      */
     void compute_quad_hodge_interp(const libMesh::Elem& elem,
                                    libMesh::DenseMatrix<double>& H,
