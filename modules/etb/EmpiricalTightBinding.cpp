@@ -1456,6 +1456,13 @@ void ETB::parse_options(void)
         _upt_solver_options.coarse_imbalance < 0.0)
       throw InitFailedException("ETB: coarse-grain num_blocks must be positive and imbalance non-negative");
 
+    // epsilon is used by all coarse-graining modes, including plain CG.
+    // Read it before branching on the mode so a user-supplied value is not
+    // silently lost for mode = cg (which otherwise keeps the 1e-3 default).
+    _upt_solver_options.coarse_epsilon = cg.get_option("epsilon", 1e-3);
+    if (_upt_solver_options.coarse_epsilon <= 0.0)
+      throw InitFailedException("ETB: coarse-grain epsilon must be positive");
+
     if (_upt_solver_options.coarse_mode == 1)
     {
       if (!cg.find_option("energy_min") || !cg.find_option("energy_max"))
@@ -1474,12 +1481,10 @@ void ETB::parse_options(void)
       _upt_solver_options.coarse_core_energy_max = cg.get_option("core_energy_max", 0.0);
       _upt_solver_options.coarse_top_buffer = cg.get_option("top_buffer", 0.0);
       _upt_solver_options.coarse_bottom_buffer = cg.get_option("bottom_buffer", 0.0);
-      _upt_solver_options.coarse_epsilon = cg.get_option("epsilon", 1e-3);
       if (_upt_solver_options.coarse_core_energy_min >= _upt_solver_options.coarse_core_energy_max ||
           _upt_solver_options.coarse_top_buffer < 0.0 ||
-          _upt_solver_options.coarse_bottom_buffer < 0.0 ||
-          _upt_solver_options.coarse_epsilon <= 0.0)
-        throw InitFailedException("ETB: invalid coarse-grain core window, top_buffer, bottom_buffer, or epsilon");
+          _upt_solver_options.coarse_bottom_buffer < 0.0)
+        throw InitFailedException("ETB: invalid coarse-grain core window, top_buffer, or bottom_buffer");
       if (_upt_solver_options.coarse_mode == 3)
       {
         _upt_solver_options.coarse_neumann_order = cg.get_option("neumann_order", 0);
