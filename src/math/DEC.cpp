@@ -185,13 +185,25 @@ DEC::get_hodge(libMesh::DenseMatrix<double>& hodge,
   {
     if (dim == 2)
     {
+      Point center(_center);
+
+      // for QUAD, we change the center point for Hodge calculation
+      // to be the midpoint of the virtual edge.
+      if (_elem->type() == libMesh::QUAD4)
+      {
+        center = _midpoints[_primal.size() - 1];
+      }
+
+
       // for a simplex, we can perform calculations in phycial coordinates.
       // Also, there is no need to use a mimetic Hodge.
       for (unsigned int e = 0; e < _primal.size(); ++e)
       {
         // we use the midpoint of the dual edge segment as integration point
-        Point q_point = 0.5 * (_midpoints[e] + _center);
-        RealGradient dual = _center - _midpoints[e];
+        Point q_point = 0.5 * (_midpoints[e] + center);
+        RealGradient dual = center - _midpoints[e];
+
+        Point tmp = _primal[e].cross(dual);
 
         // Reinit the Whitney interpolation object
         _whip.reinit(*_elem, {q_point});
