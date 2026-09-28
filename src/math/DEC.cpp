@@ -27,9 +27,15 @@
 
 #include "libmesh/elem.h"
 #include "libmesh/dense_vector.h"
+#include "libmesh/fe_map.h"
+#include "libmesh/fe_interface.h"
+#include "libmesh/fe_type.h"
 
 #include <fstream>
 #include <cassert>
+#include <set>
+#include <numeric>
+#include <limits>
 
 using namespace std;
 using namespace libMesh;
@@ -59,8 +65,18 @@ DEC::init(void)
 
   _center = get_center(elem);
 
-  // Reinit the Whitney interpolation object whithout a point
-  _whip.reinit(elem, {});
+  setup_subdivision();
+
+  // Keyed by sorted node pair, since _primal_1cells[e] may store either
+  // orientation of the edge (see setup_subdivision()).
+  _cell_index.clear();
+  for (unsigned int e = 0; e < _primal_1cells.size(); ++e)
+  {
+    std::pair<unsigned int, unsigned int> key = _primal_1cells[e];
+    if (key.first > key.second)
+      std::swap(key.first, key.second);
+    _cell_index[key] = e;
+  }
 
   unsigned int dim = elem.dim();
   unsigned int ne = (dim == 1) ? 1 : elem.n_edges();
@@ -73,9 +89,9 @@ DEC::init(void)
   // construction, only real element edges are considered.
   if (_hodge_constr == INTERPOLATION)
   {
-    ne = _whip.get_1cells().size();
+    ne = _primal_1cells.size();
   }
-  
+
   _primal.resize(ne);
   _midpoints.resize(ne);
   _incidence.resize(ne, nn);
@@ -100,8 +116,8 @@ DEC::init(void)
   {
     for (unsigned int e = 0; e < ne; ++e)
     {
-      unsigned int ni = _whip.get_1cells()[e].first;
-      unsigned int nj = _whip.get_1cells()[e].second;
+      unsigned int ni = _primal_1cells[e].first;
+      unsigned int nj = _primal_1cells[e].second;
       _primal[e] = (elem.point(nj) - elem.point(ni));
       _midpoints[e] = 0.5 * (elem.point(ni) + elem.point(nj));
 
@@ -159,6 +175,250 @@ DEC::init(void)
 }
 
 
+void
+DEC::reinit_forms(const std::vector<libMesh::Point>& points, bool reference_coord)
+{
+  const libMesh::Elem& elem = *_elem;
+
+  unsigned int dim = elem.dim();
+  unsigned int nn = elem.n_nodes();
+  unsigned int nc = _primal_1cells.size();
+  unsigned int np = points.size();
+
+  if (reference_coord)
+  {
+    _xyz.resize(np);
+    for (unsigned int p = 0; p < np; ++p)
+      _xyz[p] = libMesh::FEMap::map(dim, &elem, points[p]);
+  }
+  else
+  {
+    _xyz = points;
+  }
+
+  _w0.assign(nn, std::vector<double>(np, 0.0));
+  _w1.assign(nc, std::vector<RealGradient>(np));
+
+  bool is_simplex = (nn == dim + 1);
+
+  if (!is_simplex && np > 0)
+  {
+    // For a logically subdivided (non-simplicial) element, the 0-forms
+    // use the element's own native (e.g. bilinear/trilinear) Lagrange
+    // basis functions, which are smooth over the whole element -- unlike
+    // the 1-forms, which are necessarily piecewise over the logical
+    // simplicial subdivision (see setup_subdivision()), since Whitney
+    // forms are only defined on simplices.
+    std::vector<libMesh::Point> ref_pts;
+    libMesh::FEMap::inverse_map(dim, &elem, _xyz, ref_pts);
+
+    libMesh::FEType fe_type(1, libMesh::LAGRANGE);
+    for (unsigned int p = 0; p < np; ++p)
+      for (unsigned int i = 0; i < nn; ++i)
+        _w0[i][p] = libMesh::FEInterface::shape(fe_type, &elem, i, ref_pts[p]);
+  }
+
+  for (unsigned int p = 0; p < np; ++p)
+  {
+    // Find the sub-simplex containing the point: for each candidate, the
+    // point belongs to it if all of its barycentric 0-forms are
+    // non-negative. In case of round-off at a sub-simplex boundary, we
+    // keep the candidate with the smallest (least negative) violation.
+    // The Whitney interpolation for the best candidate found so far is
+    // kept around, so it does not need to be recomputed once the search
+    // is over (in particular, a plain simplex element never subdivides,
+    // so the search loop below runs (and reinits _whip) only once).
+    double best_violation = std::numeric_limits<double>::max();
+
+    for (unsigned int s = 0; s < _sub_simplices.size(); ++s)
+    {
+      const std::vector<unsigned int>& sub = _sub_simplices[s];
+
+      std::vector<Point> sub_nodes(sub.size());
+      for (unsigned int a = 0; a < sub.size(); ++a)
+        sub_nodes[a] = elem.point(sub[a]);
+
+      _whip.reinit(sub_nodes, {_xyz[p]});
+
+      const auto& w0 = _whip.get_0forms();
+
+      double violation = 0.0;
+      for (unsigned int a = 0; a < sub.size(); ++a)
+        violation = std::max(violation, -w0[a][0]);
+
+      if (violation < best_violation)
+      {
+        best_violation = violation;
+
+        // Record the results for the current best candidate; overwritten
+        // if a later candidate turns out to be a better fit.
+        const auto& w1 = _whip.get_1forms();
+        const auto& cells = _whip.get_1cells();
+
+        // For a simplex, the sub-simplex *is* the whole element, so its
+        // barycentric 0-forms already are the element's native basis
+        // functions. For a non-simplex, _w0 was already filled above
+        // using the native basis, which is what should be returned.
+        if (is_simplex)
+          for (unsigned int a = 0; a < sub.size(); ++a)
+            _w0[sub[a]][p] = w0[a][0];
+
+        for (unsigned int c = 0; c < cells.size(); ++c)
+        {
+          unsigned int gi = sub[cells[c].first];
+          unsigned int gj = sub[cells[c].second];
+
+          unsigned int si = gi, sj = gj;
+          if (si > sj)
+            std::swap(si, sj);
+
+          unsigned int row = _cell_index.at(std::make_pair(si, sj));
+
+          // _primal_1cells[row] may store either orientation of this
+          // edge (see setup_subdivision()); flip the sign of the
+          // Whitney 1-form if it disagrees with the (gi,gj) direction
+          // evaluated here.
+          double sign = (_primal_1cells[row].first == gi) ? 1.0 : -1.0;
+          _w1[row][p] = sign * w1[c][0];
+        }
+      }
+
+      if (violation <= 1e-10)
+        break;
+    }
+  }
+}
+
+
+void
+DEC::setup_subdivision(void)
+{
+  _sub_simplices.clear();
+  _primal_1cells.clear();
+
+  const libMesh::Elem& elem = *_elem;
+
+  unsigned int dim = elem.dim();
+  unsigned int nn = elem.n_nodes();
+
+  if (dim == 0)
+    return;
+
+  if (dim == 1)
+  {
+    // libMesh doesn't currently assign 1D elements any edges, although
+    // they logically have a single one.
+    _sub_simplices.push_back({0, 1});
+    _primal_1cells.push_back(std::make_pair(0u, 1u));
+    return;
+  }
+
+  // Real edges of the element, in libMesh's own order *and orientation*.
+  // The orientation must be kept as libMesh gives it (rather than
+  // normalized to the lower node index first): it encodes the element's
+  // boundary orientation (e.g. counterclockwise in 2D), which the
+  // primal/dual pairing sign in get_hodge() relies on to get a
+  // positive-definite Hodge star. Virtual edges introduced by the
+  // subdivision (if any) are appended below, in an arbitrary but fixed
+  // orientation.
+  unsigned int n_real_edges = elem.n_edges();
+  _primal_1cells.reserve(n_real_edges);
+
+  // Tracks, for each undirected node pair already covered, that it has
+  // been seen (regardless of which of the two orientations was stored
+  // in _primal_1cells), so virtual edges are not added twice.
+  std::set<std::pair<unsigned int, unsigned int>> seen;
+  for (unsigned int e = 0; e < n_real_edges; ++e)
+  {
+    unsigned int ni = elem.local_edge_node(e, 0);
+    unsigned int nj = elem.local_edge_node(e, 1);
+    _primal_1cells.push_back(std::make_pair(ni, nj));
+
+    if (ni > nj)
+      std::swap(ni, nj);
+    seen.insert(std::make_pair(ni, nj));
+  }
+
+  bool is_simplex = (nn == dim + 1);
+
+  if (is_simplex)
+  {
+    _sub_simplices.emplace_back(nn);
+    std::iota(_sub_simplices.back().begin(), _sub_simplices.back().end(), 0);
+  }
+  else if (elem.type() == libMesh::QUAD4)
+  {
+    // Split the quad into two triangles by the diagonal connecting the
+    // pair of nodes with the larger sum of subtended angles.
+    std::pair<unsigned int, unsigned int> diag = larger_angle_pair(
+        elem.point(0), elem.point(1), elem.point(2), elem.point(3));
+    unsigned int d0 = diag.first;
+    unsigned int d2 = diag.second;
+
+    _sub_simplices.push_back({d0, d2, (d2 + 1) % 4});
+    _sub_simplices.push_back({d2, d0, (d0 + 1) % 4});
+  }
+  else if (elem.type() == libMesh::HEX8)
+  {
+    // Split the hexahedron into six tetrahedra sharing the main diagonal
+    // between nodes 0 and 6, fanning around the hexagonal "belt" of
+    // vertices connected to either endpoint by a real edge.
+    static const unsigned int belt[6] = {1, 2, 3, 7, 4, 5};
+    for (unsigned int k = 0; k < 6; ++k)
+      _sub_simplices.push_back({0, 6, belt[k], belt[(k + 1) % 6]});
+  }
+  else
+  {
+    Messages::error("DEC: no simplicial subdivision implemented for this element type.");
+    return;
+  }
+
+  // Append the virtual 1-cells required by the subdivision, i.e. the
+  // sub-simplex edges that are not already real edges of the element.
+  // Each virtual edge keeps the orientation it is first encountered in
+  // (the choice is arbitrary, but must be fixed: reinit_forms() looks it
+  // up again to tell whether a given sub-simplex evaluates it in the
+  // same or the opposite direction).
+  for (const std::vector<unsigned int>& sub : _sub_simplices)
+    for (unsigned int a = 0; a < sub.size(); ++a)
+      for (unsigned int b = a + 1; b < sub.size(); ++b)
+      {
+        unsigned int gi = sub[a];
+        unsigned int gj = sub[b];
+
+        unsigned int si = gi, sj = gj;
+        if (si > sj)
+          std::swap(si, sj);
+
+        if (seen.insert(std::make_pair(si, sj)).second)
+          _primal_1cells.push_back(std::make_pair(gi, gj));
+      }
+}
+
+
+std::pair<unsigned int, unsigned int>
+DEC::larger_angle_pair(const libMesh::Point& x1,
+                        const libMesh::Point& x2,
+                        const libMesh::Point& x3,
+                        const libMesh::Point& x4) const
+{
+  // Normal from the diagonals (unbiased w.r.t. any single vertex)
+  const Point N = (x3 - x1).cross(x4 - x2);
+
+  // Vectors at x2 and x4
+  const Point a = x1 - x2, b = x3 - x2;
+  const Point c = x1 - x4, d = x3 - x4;
+
+  const double P = a.cross(b) * N;   // proportional to |a||b| sin(angle2)
+  const double Q = a * b;            // proportional to |a||b| cos(angle2)
+  const double R = c.cross(d) * N;   // proportional to |c||d| sin(angle4)
+  const double S = c * d;            // proportional to |c||d| cos(angle4)
+
+  const double test = P * S + Q * R; // proportional to sin(angle2 + angle4)
+
+  return (test > 0 ? std::make_pair(0u, 2u) : std::make_pair(1u, 3u));
+}
+
 
 void
 DEC::get_hodge(libMesh::DenseMatrix<double>& hodge,
@@ -195,7 +455,7 @@ DEC::get_hodge(libMesh::DenseMatrix<double>& hodge,
       }
 
 
-      // for a simplex, we can perform calculations in phycial coordinates.
+      // for a simplex, we can perform calculations in physical coordinates.
       // Also, there is no need to use a mimetic Hodge.
       for (unsigned int e = 0; e < _primal.size(); ++e)
       {
@@ -205,10 +465,10 @@ DEC::get_hodge(libMesh::DenseMatrix<double>& hodge,
 
         Point tmp = _primal[e].cross(dual);
 
-        // Reinit the Whitney interpolation object
-        _whip.reinit(*_elem, {q_point});
+        // Evaluate the Whitney interpolation 1-forms at the integration point
+        reinit_forms({q_point});
 
-        auto &w1 = _whip.get_1forms();
+        auto &w1 = get_1forms();
 
         for (unsigned int i = 0; i < _primal.size(); ++i)
         {
@@ -223,7 +483,13 @@ DEC::get_hodge(libMesh::DenseMatrix<double>& hodge,
     }
     else // dim == 3
     {
-      for (unsigned int e = 0; e < _primal.size(); ++e)
+      // Dual faces are only defined for real edges of the element: the
+      // virtual 1-cells introduced by a logical subdivision (see
+      // setup_subdivision()) only serve as Whitney interpolation basis
+      // functions (i.e. as columns below), not as independent Hodge rows,
+      // just like they are excluded from the dual volume calculation in
+      // init().
+      for (unsigned int e = 0; e < _elem->n_edges(); ++e)
       {
         unsigned int ni = _elem->local_edge_node(e, 0);
         Point a = _midpoints[e] - _elem->point(ni);
@@ -250,10 +516,10 @@ DEC::get_hodge(libMesh::DenseMatrix<double>& hodge,
             // we use the midpoint of the dual edge patches as integration points
             Point q_point = 1.0 / 3.0 * (_center + _midpoints[e] + c);
 
-            // Reinit the Whitney interpolation object
-            _whip.reinit(*_elem, {q_point});
+            // Evaluate the Whitney interpolation 1-forms at the integration point
+            reinit_forms({q_point});
 
-            auto &w1 = _whip.get_1forms();
+            auto &w1 = get_1forms();
 
             for (unsigned int i = 0; i < _primal.size(); ++i)
             {
@@ -409,221 +675,6 @@ DEC::circumcenter(const libMesh::Elem& elem) const
 
 
 /*
- * Compute the local Hodge matrix H for a quadrilateral element
- * using consistency with linear fields and graph compatibility.
- * 
- * Element nodes ordered anti-clockwise:
- *   3---2
- *   |   |
- *   0---1
- * 
- * Edges ordered anti-clockwise:
- *   e0: 0->1 (bottom)
- *   e1: 1->2 (right)
- *   e2: 2->3 (top)
- *   e3: 3->0 (left)
- * 
- * Dual edges connect edge midpoints to element center.
- * Non-adjacent pairs (opposite edges): (0,2) and (1,3)
- */
-void
-DEC::compute_quad_hodge_mfd(const libMesh::Elem& elem,
-                        libMesh::DenseMatrix<libMesh::Real>& H,
-                        const libMesh::RealTensor& metric) const
-{
-    assert(elem.n_nodes() == 4);
-    H.resize(4, 4);
-    H.zero();
-
-    // Node coordinates
-    const libMesh::Point& p0 = elem.point(0);
-    const libMesh::Point& p1 = elem.point(1);
-    const libMesh::Point& p2 = elem.point(2);
-    const libMesh::Point& p3 = elem.point(3);
-
-    // Element center
-    Point center = 0.25 * (p0 + p1 + p2 + p3);
-
-    // Edge midpoints and dual edge vectors
-    std::vector<Point> midpoints(4), dual(4), primal(4);
-    midpoints[0] = 0.5*(p0+p1); primal[0] = p1-p0;
-    midpoints[1] = 0.5*(p1+p2); primal[1] = p2-p1;
-    midpoints[2] = 0.5*(p2+p3); primal[2] = p3-p2;
-    midpoints[3] = 0.5*(p3+p0); primal[3] = p0-p3;
-    for (unsigned int r = 0; r < 4; ++r)
-        dual[r] = center - midpoints[r];
-
-    // Build C matrix (4x2): cochain values for u=x and u=y
-    // c_r^(1) = primal[r].x, c_r^(2) = primal[r].y
-    DenseMatrix<Real> C(4, 2);
-    for (unsigned int r = 0; r < 4; ++r)
-    {
-        C(r, 0) = primal[r](0); // d(x) cochain
-        C(r, 1) = primal[r](1); // d(y) cochain
-    }
-
-    // Build R matrix (4x2): exact dual fluxes
-    // For mu*star(dx): flux through dual[r] = mu applied to star(dx)
-    // star(dx) = dy, so mu*star(dx) has components (mu_yx, mu_yy)
-    // flux = (mu_yx)*dual[r].x + (mu_yy)*dual[r].y  -- wait
-    // More carefully: star(du) . dual[r] where du = (1,0) or (0,1)
-    // With metric mu: (star du)_i = mu_ij (du)_j rotated 90 degrees
-    // In 2D: star(a dx + b dy) = (mu_xx*a + mu_xy*b)dy 
-    //                           -(mu_yx*a + mu_yy*b)dx
-    // flux through dual[r] = (mu_xx*a+mu_xy*b)*dual[r].y
-    //                       -(mu_yx*a+mu_yy*b)*dual[r].x
-    DenseMatrix<Real> R(4, 2);
-    for (unsigned int r = 0; r < 4; ++r)
-    {
-        // test field u=x: du=(1,0)
-        R(r, 0) = (metric(0,0)*dual[r](1) - metric(1,0)*dual[r](0));
-        // test field u=y: du=(0,1)
-        R(r, 1) = (metric(0,1)*dual[r](1) - metric(1,1)*dual[r](0));
-    }
-
-    // Compute C^T C (2x2)
-    DenseMatrix<Real> CtC(2, 2);
-    CtC.zero();
-    for (unsigned int i = 0; i < 2; ++i)
-        for (unsigned int j = 0; j < 2; ++j)
-            for (unsigned int r = 0; r < 4; ++r)
-                CtC(i,j) += C(r,i) * C(r,j);
-
-    // Invert C^T C
-    DenseMatrix<Real> CtC_inv(2, 2);
-    Real det = CtC(0,0)*CtC(1,1) - CtC(0,1)*CtC(1,0);
-    libmesh_assert_greater(std::abs(det), 1e-14);
-    CtC_inv(0,0) =  CtC(1,1)/det;
-    CtC_inv(0,1) = -CtC(0,1)/det;
-    CtC_inv(1,0) = -CtC(1,0)/det;
-    CtC_inv(1,1) =  CtC(0,0)/det;
-
-    // Compute C_dag = (C^T C)^{-1} C^T  (2x4)
-    DenseMatrix<Real> C_dag(2, 4);
-    C_dag.zero();
-    for (unsigned int i = 0; i < 2; ++i)
-        for (unsigned int r = 0; r < 4; ++r)
-            for (unsigned int k = 0; k < 2; ++k)
-                C_dag(i,r) += CtC_inv(i,k) * C(r,k);
-
-    // Compute consistency part: H_c = R * C_dag  (4x4)
-    DenseMatrix<Real> H_c(4, 4);
-    H_c.zero();
-    for (unsigned int r = 0; r < 4; ++r)
-        for (unsigned int s = 0; s < 4; ++s)
-            for (unsigned int k = 0; k < 2; ++k)
-                H_c(r,s) += R(r,k) * C_dag(k,s);
-
-    // Compute projection P = I - C * C_dag  (4x4)
-    DenseMatrix<Real> P(4, 4);
-    P.zero();
-    for (unsigned int r = 0; r < 4; ++r)
-        P(r,r) = 1.0;
-    for (unsigned int r = 0; r < 4; ++r)
-        for (unsigned int s = 0; s < 4; ++s)
-            for (unsigned int k = 0; k < 2; ++k)
-                P(r,s) -= C(r,k) * C_dag(k,s);
-
-
-    // Stabilization parameter alpha
-    // A common choice is the trace of H_c divided by the rank
-    Real alpha = 0.0;
-    for (unsigned int r = 0; r < 4; ++r)
-        alpha += H_c(r,r);
-    alpha /= 4.0;
-
-    // ensure positive
-    if (alpha < 1e-14)
-        alpha = 1.0;
-
-
-    // H = H_c + alpha * P
-    for (unsigned int r = 0; r < 4; ++r)
-        for (unsigned int s = 0; s < 4; ++s)
-            H(r,s) = H_c(r,s) + alpha * P(r,s);
-}
-
-
-/*
- * Compute the local Hodge matrix H for a quadrilateral element
- * using piecewise Whitney interpolation on subtriangles.
- *
- * Quad nodes ordered anti-clockwise: 0, 1, 2, 3
- * (using 0-based indexing throughout)
- *
- * Edges (0-based):
- *   e0: 0->1 (bottom)
- *   e1: 1->2 (right)
- *   e2: 2->3 (top)
- *   e3: 3->0 (left)
- *
- * Subtriangles:
- *   T+ = {0, 1, 2}: supports basis for e0, e1
- *   T- = {0, 1, 3}: supports basis for e0, e3
- *   T2 = {1, 2, 3}: supports basis for e1, e2
- *   T3 = {0, 2, 3}: supports basis for e2, e3
- *
- * For each edge e_r, the support is the union of the two
- * subtriangles sharing that edge. The interpolant on the
- * support is the average of the Whitney expansions on
- * each subtriangle, with diagonal cochain eliminated via
- * Stokes' theorem on each subtriangle.
- *
- * The dual edge of e_r goes from the edge midpoint m_r
- * to the diagonal intersection x_D.
- */
-void
-DEC::compute_quad_hodge_interp(const libMesh::Elem& elem,
-                               libMesh::DenseMatrix<libMesh::Real>& H,
-                               const libMesh::RealTensor& metric) const
-{
-  assert(elem.n_nodes() == 4);
-  H.resize(4, 4);
-  H.zero();
-
-  const Point p[4] = {elem.point(0), elem.point(1),
-                      elem.point(2), elem.point(3)};
-
-  Point center = diagonal_intersection(elem);
-
-  // matrix representation of Hodge star in R^2
-  RealTensor R;
-  R(0, 1) = -1.0;
-  R(1, 0) =  1.0;
-
-
-  for (unsigned int e = 0; e < 4; ++e)
-  {
-    // Dual edge vector
-    Point dual_r = center - _midpoints[e];
-
-    // integration point
-    Point q_point = 0.5 * (_midpoints[e] + center);
-
-    // Subtriangles supporting edge e
-    RealGradient w1[3];
-    RealGradient w2[3];
-
-    whitney_1forms(p[e], p[(e+1)%4], p[(e+2)%4], q_point, w1);
-    whitney_1forms(p[e], p[(e+1)%4], p[(e+3)%4], q_point, w2);
-
-    RealGradient lambda1 = 0.5 *(w1[0] + w2[0] - w1[2] - w2[1]); // eliminate diagonal cochain
-    RealGradient lambda2 = 0.5 *(w1[1] - w1[2]);
-    RealGradient lambda3 = 0.5 *(w2[2] - w2[1]);
-
-    double contrib_r0 = (R * metric * lambda1) * dual_r;
-    double contrib_r1 = (R * metric * lambda2) * dual_r;
-    double contrib_r3 = (R * metric * lambda3) * dual_r;
-
-    H(e, e) = contrib_r0;
-    H(e, (e+1)%4) += contrib_r1;
-    H(e, (e+3)%4) += contrib_r3;
-  }
-  
-}
-
-
-/*
  * Compute intersection of quad diagonals
  * Diagonal 1: p[0] -> p[2]
  * Diagonal 2: p[1] -> p[3]
@@ -747,68 +798,6 @@ DEC::diagonal_intersection(const libMesh::Elem& elem) const
   return xD;
 }
 
-
-
-/*
- * Compute the three Whitney 1-forms on a triangle at a given point.
- * Triangle nodes: q0, q1, q2 (in given order, anti-clockwise assumed)
- * Returns Whitney 1-forms for edges:
- *   w[0] = lambda_01 (edge q0->q1)
- *   w[1] = lambda_12 (edge q1->q2)
- *   w[2] = lambda_20 (edge q2->q0)
- * All in physical coordinates.
- * 
- * TODO: adapt for 3D triangle in 3D space (currently assumes 2D triangle in 2D space)
- */
-void
-DEC::whitney_1forms(const libMesh::Point& q0,
-                    const libMesh::Point& q1,
-                    const libMesh::Point& q2,
-                    const libMesh::Point& x,
-                    libMesh::RealGradient w[3]) const
-{
-  // Signed area via cross product
-  // area = 0.5 * (q1-q0) x (q2-q0)
-  Real area2 = (q1(0)-q0(0))*(q2(1)-q0(1))
-             - (q1(1)-q0(1))*(q2(0)-q0(0));
-
-  libmesh_assert_greater(std::abs(area2), 1e-14);
-
-  Real inv2A = 1.0 / area2;
-
-  // Gradients of barycentric coordinates (constant on triangle)
-  // grad lambda_i = (1/2A) * perp(opposite edge)
-  RealGradient g[3];
-  g[0](0) = (q1(1)-q2(1)) * inv2A;
-  g[0](1) = (q2(0)-q1(0)) * inv2A;
-
-  g[1](0) = (q2(1)-q0(1)) * inv2A;
-  g[1](1) = (q0(0)-q2(0)) * inv2A;
-
-  g[2](0) = (q0(1)-q1(1)) * inv2A;
-  g[2](1) = (q1(0)-q0(0)) * inv2A;
-
-  // Barycentric coordinates of x
-  Real lam[3];
-  lam[0] = ((q1(1)-q2(1))*(x(0)-q2(0))
-           + (q2(0)-q1(0))*(x(1)-q2(1))) * inv2A;
-  lam[1] = ((q2(1)-q0(1))*(x(0)-q2(0))
-           + (q0(0)-q2(0))*(x(1)-q2(1))) * inv2A;
-  lam[2] = 1.0 - lam[0] - lam[1];
-
-  // Whitney 1-forms: lambda_ij = lam_i * grad_j - lam_j * grad_i
-  // w[0] = lambda_01: edge q0->q1
-  w[0](0) = lam[0]*g[1](0) - lam[1]*g[0](0);
-  w[0](1) = lam[0]*g[1](1) - lam[1]*g[0](1);
-
-  // w[1] = lambda_12: edge q1->q2
-  w[1](0) = lam[1]*g[2](0) - lam[2]*g[1](0);
-  w[1](1) = lam[1]*g[2](1) - lam[2]*g[1](1);
-
-  // w[2] = lambda_20: edge q2->q0
-  w[2](0) = lam[2]*g[0](0) - lam[0]*g[2](0);
-  w[2](1) = lam[2]*g[0](1) - lam[0]*g[2](1);
-}
 
 
 void

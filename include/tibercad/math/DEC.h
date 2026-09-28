@@ -33,29 +33,36 @@
 
 
 #include "libmesh/edge.h"
+#include "libmesh/dense_matrix.h"
+#include "libmesh/tensor_value.h"
+
+#include <map>
 
 
 
 /*!
  * \brief A class to hold Discrete Exterior Calculus related stuff
  * 
- * Thsi class is used to calculate and access quantities needed
+ * This class is used to calculate and access quantities needed
  * in DEC, like element center point, incidence matrix, discrete
  * exterior derivative, Hodge star etc.
  *
- * For simplices, the current implementation uses libMesh's FE
- * order-1 Lagrange element family for the construction of
- * standard Whitney interpolation forms.
- * The construction of the dual d-cells can be chosen between 
+ * For simplices, WhitneyInterpolation is used directly on the element's
+ * own nodes to construct the standard Whitney interpolation forms.
+ * The construction of the dual d-cells can be chosen between
  * barycentric and circumcentric, or mixed. The default is
  * barycentric, since then the center point is guarantueed to be inside
  * the primal element (d-cell).
  * 
- * For non-simplices, the implementation logically subdivides the element
- * into simplices, and uses the Whitney forms on the simplices to construct
- * piecewise Whitney interpolation 1-forms on the non-simplicial subelements.
- * For the 0-form interpolants, the standard Lagrange basis functions are used.
- * 
+ * For non-simplices, this class logically subdivides the element into
+ * sub-simplices (e.g. a quadrilateral into two triangles, a hexahedron
+ * into six tetrahedra), and uses WhitneyInterpolation on the sub-simplex
+ * containing a given point to construct piecewise Whitney interpolation
+ * 1-forms on the non-simplicial element; these are discontinuous across
+ * the internal (virtual) sub-simplex boundaries. The 0-forms, on the
+ * other hand, use the element's own native (e.g. bilinear/trilinear)
+ * Lagrange basis functions, which are smooth over the whole element.
+ *
  * Alternatively, the Hodge star can be calculated using a mimetic finite
  * difference (MFD) approach, which is consistent with linear fields, graph
  * compatible and might have better numerical properties, at a cost of
@@ -113,19 +120,57 @@ class DEC
      */
     void reinit(const libMesh::Elem& elem);
 
-    /*! \brief Retrieve the Whitney interpolation object
-     * 
-     * \return A constant reference to the Whitney interpolation object
+    /*!
+     * \brief Evaluate the 0- and 1-form interpolants at the given points
+     *
+     * The 0-forms are the element's own native (e.g. bilinear/trilinear)
+     * Lagrange basis functions, smooth over the whole element. For the
+     * 1-forms, each point is assigned to the sub-simplex of the (possibly
+     * logically subdivided, see get_primal_1cells()) element that
+     * contains it, and the piecewise Whitney interpolants are evaluated
+     * there. The results are accessible via get_0forms() and
+     * get_1forms(), indexed in the global node / primal 1-cell numbering
+     * of the element.
+     *
+     * \param points the points at which to evaluate the interpolants
+     * \param reference_coord if true, \c points are given in reference
+     *        (local) coordinates on the element, and are mapped to real
+     *        coordinates via libMesh::FEMap before evaluation; otherwise
+     *        \c points are already in real coordinates. Either way, the
+     *        real coordinates used are available via get_xyz().
      */
-    WhitneyInterpolation& get_whitney(void) { return _whip; }
+    void reinit_forms(const std::vector<libMesh::Point>& points,
+                      bool reference_coord = false);
+
+    /*!
+     * \brief Retrieve the points (in real coordinates) used by the last
+     * call to reinit_forms()
+     */
+    const std::vector<libMesh::Point>& get_xyz(void) const { return _xyz; }
+
+    /*!
+     * \brief Retrieve the 0-forms computed by the last call to reinit_forms()
+     *
+     * The first vector index refers to the interpolant, ordered as the
+     * nodes of the element; the second to the point.
+     */
+    const std::vector<std::vector<double>>& get_0forms(void) const { return _w0; }
+
+    /*!
+     * \brief Retrieve the 1-forms computed by the last call to reinit_forms()
+     *
+     * The first vector index refers to the interpolant, ordered as
+     * get_primal_1cells() (including virtual 1-cells for logically
+     * subdivided, non-simplicial elements); the second to the point.
+     */
+    const std::vector<std::vector<libMesh::RealGradient>>& get_1forms(void) const { return _w1; }
 
     /*!
      * \brief Retrieve the element center point
      *
      * On simplices, the center point corresponds to the barycenter or circumcenter,
      * depending on the dual construction approach. On non-simplices, the center
-     * point is the intersection of the diagonals for quadrilaterals, and the
-     * barycenter for other element types.
+     * point might depend on the simplicial subdivision.
      * 
      * \return A constant reference to the element center point
      */
@@ -208,14 +253,43 @@ class DEC
     std::vector<libMesh::Point> _midpoints;
 
     /*!
+     * \brief The primal 1-cells, i.e. the edges of the element, as pairs
+     * of (global) node indices
+     *
+     * For a simplex, this simply lists all edges of the element. For a
+     * logically subdivided (non-simplicial) element, real edges of the
+     * element precede the virtual edges introduced by the subdivision.
+     */
+    std::vector<std::pair<unsigned int, unsigned int>> _primal_1cells;
+
+    /*!
+     * \brief The sub-simplices the element is logically subdivided into
+     *
+     * Each entry lists the (global) node indices of one sub-simplex. For
+     * a simplex element, there is a single entry listing all its nodes.
+     */
+    std::vector<std::vector<unsigned int>> _sub_simplices;
+
+    //! Lookup from a (sorted) node pair to its row in _primal_1cells
+    std::map<std::pair<unsigned int, unsigned int>, unsigned int> _cell_index;
+
+    //! The 0-forms computed by the last call to reinit_forms()
+    std::vector<std::vector<double>> _w0;
+
+    //! The 1-forms computed by the last call to reinit_forms()
+    std::vector<std::vector<libMesh::RealGradient>> _w1;
+
+    //! The points (in real coordinates) used by the last call to reinit_forms()
+    std::vector<libMesh::Point> _xyz;
+
+    /*!
      * \brief Calculate the center point of a given element 
      *
      * \param elem The element to calculate the center for
      * \return The center point of the element
      * This function calculates the center point of the given element. 
-     * The center point is calculated as the circumcenter for triangles, and
-     * as the intersection of the diagonals for quadrilaterals.
-     * For other element types, the function falls back to the barycenter.
+     * The center point is calculated according to the chosen approach.
+     * The default is the barycenter.
      */
     libMesh::Point get_center(const libMesh::Elem& elem) const;
 
@@ -239,19 +313,28 @@ class DEC
     libMesh::Point diagonal_intersection(const libMesh::Elem& elem) const;
 
     /*!
-     * \brief Compute the Hodge star for quadrilateral elements using a mimetic finite difference approach
-     * \param elem The quadrilateral element
-     * \param H The Hodge star matrix to be filled
-     * \param metric The metric tensor to be used in the computation
+     * \brief Setup the logical subdivision of an element into sub-simplices
      *
-     * This function computes the Hodge star for quadrilateral elements using a
-     * mimetic finite difference approach.
-     * It takes into account the provided metric tensor and fills the Hodge star
-     * matrix accordingly.
-    */
-    void compute_quad_hodge_mfd(const libMesh::Elem& elem,
-                                libMesh::DenseMatrix<double>& H,
-                                const libMesh::RealTensor& metric) const;
+     * For a simplex, \c _sub_simplices contains a single entry listing all
+     * of its nodes, and no virtual 1-cells are introduced. For a
+     * quadrilateral, the element is split into two triangles by the
+     * diagonal connecting the pair of nodes with the larger sum of
+     * subtended angles (see larger_angle_pair()). For a hexahedron, the
+     * element is split into six tetrahedra sharing the main diagonal
+     * between nodes 0 and 6.
+     */
+    void setup_subdivision(void);
+
+    /*!
+     * \brief Find the pair of nodes that form the larger angle
+     * \param p0 the first point
+     * \param p1 the second point
+     * \param p2 the third point
+     * \param p3 the fourth point
+     * \return the pair of nodes that form the larger angle
+     */
+    std::pair<unsigned int, unsigned int> larger_angle_pair(const libMesh::Point& p0,
+        const libMesh::Point& p1, const libMesh::Point& p2, const libMesh::Point& p3) const;
 
     /*!
      * \brief Compute the Hodge star using a mimetic finite difference approach
@@ -267,35 +350,6 @@ class DEC
     void compute_hodge_mfd(const libMesh::Elem& elem,
                            libMesh::DenseMatrix<double>& H,
                            const libMesh::RealTensor& metric) const;
-    
-    /*!
-     * \brief Compute the Hodge star on a quadrilateral using interpolation scheme
-     * \param elem The quadrilateral element
-     * \param H The Hodge star matrix to be filled
-     * \param metric The metric tensor to be used in the computation
-     *
-     * This function computes the Hodge star for quadrilateral elements using
-     * an interpolation scheme.
-     * It takes into account the provided metric tensor and fills the Hodge star
-     * matrix accordingly.
-     */
-    void compute_quad_hodge_interp(const libMesh::Elem& elem,
-                                   libMesh::DenseMatrix<double>& H,
-                                   const libMesh::RealTensor& metric) const;
-
-    /*!
-     * \brief Compute the three Whitney 1-forms on a triangle at a given point
-     * \param q0 The first vertex of the triangle
-     * \param q1 The second vertex of the triangle
-     * \param q2 The third vertex of the triangle
-     * \param x The point at which to evaluate the forms
-     * \param w The array to store the computed forms
-     */
-    void whitney_1forms(const libMesh::Point &q0,
-                        const libMesh::Point &q1,
-                        const libMesh::Point &q2,
-                        const libMesh::Point &x,
-                        libMesh::RealGradient w[3]) const;
 };
 
 
