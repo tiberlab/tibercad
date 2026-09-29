@@ -371,6 +371,19 @@ DEC::setup_subdivision(void)
     _sub_simplices.push_back({d0, d2, (d2 + 1) % 4});
     _sub_simplices.push_back({d2, d0, (d0 + 1) % 4});
   }
+  else if (elem.type() == libMesh::PYRAMID5)
+  {
+    // Split the pyramid into two tetrahedra by the diagonal of the
+    // quadrilateral base (nodes 0-3; node 4 is the apex), chosen the same
+    // way as for a QUAD4 base.
+    std::pair<unsigned int, unsigned int> diag = larger_angle_pair(
+        elem.point(0), elem.point(1), elem.point(2), elem.point(3));
+    unsigned int d0 = diag.first;
+    unsigned int d2 = diag.second;
+
+    _sub_simplices.push_back({d0, d2, (d2 + 1) % 4, 4});
+    _sub_simplices.push_back({d2, d0, (d0 + 1) % 4, 4});
+  }
   else if (elem.type() == libMesh::HEX8)
   {
     // Split the hexahedron into six tetrahedra sharing the main diagonal
@@ -379,6 +392,16 @@ DEC::setup_subdivision(void)
     static const unsigned int belt[6] = {1, 2, 3, 7, 4, 5};
     for (unsigned int k = 0; k < 6; ++k)
       _sub_simplices.push_back({0, 6, belt[k], belt[(k + 1) % 6]});
+  }
+  else if (elem.type() == libMesh::PRISM6)
+  {
+    // Split the triangular prism (bottom face 0-1-2, top face 3-4-5, with
+    // real vertical edges i-(i+3)) into three tetrahedra, pivoting on
+    // node 0: one using the bottom face, one using the top face, and one
+    // bridging them.
+    _sub_simplices.push_back({0, 1, 2, 5});
+    _sub_simplices.push_back({0, 1, 5, 4});
+    _sub_simplices.push_back({0, 4, 5, 3});
   }
   else
   {

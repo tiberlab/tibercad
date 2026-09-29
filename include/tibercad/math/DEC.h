@@ -55,9 +55,11 @@
  * the primal element (d-cell).
  * 
  * For non-simplices, this class logically subdivides the element into
- * sub-simplices (e.g. a quadrilateral into two triangles, a hexahedron
- * into six tetrahedra), and uses WhitneyInterpolation on the sub-simplex
- * containing a given point to construct piecewise Whitney interpolation
+ * sub-simplices (a quadrilateral into two triangles, a pyramid into two
+ * tetrahedra, a prism into three tetrahedra, a hexahedron into six
+ * tetrahedra; see setup_subdivision()), and uses WhitneyInterpolation on
+ * the sub-simplex containing a given point to construct piecewise Whitney
+ * interpolation
  * 1-forms on the non-simplicial element; these are discontinuous across
  * the internal (virtual) sub-simplex boundaries. The 0-forms, on the
  * other hand, use the element's own native (e.g. bilinear/trilinear)
@@ -316,12 +318,22 @@ class DEC
      * \brief Setup the logical subdivision of an element into sub-simplices
      *
      * For a simplex, \c _sub_simplices contains a single entry listing all
-     * of its nodes, and no virtual 1-cells are introduced. For a
-     * quadrilateral, the element is split into two triangles by the
+     * of its nodes, and no virtual 1-cells are introduced.
+     *
+     * For a quadrilateral, the element is split into two triangles by the
      * diagonal connecting the pair of nodes with the larger sum of
-     * subtended angles (see larger_angle_pair()). For a hexahedron, the
-     * element is split into six tetrahedra sharing the main diagonal
-     * between nodes 0 and 6.
+     * subtended angles (see larger_angle_pair()).
+     *
+     * For a pyramid (a quadrilateral base, nodes 0-3, plus an apex, node
+     * 4), the element is split into two tetrahedra by the same diagonal
+     * of the base as for a quadrilateral.
+     *
+     * For a triangular prism (a bottom face 0-1-2 and a top face 3-4-5,
+     * with real vertical edges i-(i+3)), the element is split into three
+     * tetrahedra, pivoting on node 0.
+     *
+     * For a hexahedron, the element is split into six tetrahedra sharing
+     * the main diagonal between nodes 0 and 6.
      */
     void setup_subdivision(void);
 
