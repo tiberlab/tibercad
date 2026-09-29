@@ -1409,9 +1409,27 @@ void ETB::parse_options(void)
   _upt_solver_options.solver = solopts.get_option("solver", "lanczos");
   string solver_type = solopts.get_option("solver_type", "cpu");
   if ( solver_type == "cpu") _upt_solver_options.solver_flag = 0;
-  if ( solver_type == "gpu" || solver_type == "gpu-split")
+  else if ( solver_type == "gpu" || solver_type == "gpu-split")
   {
     _upt_solver_options.solver_flag = solver_type == "gpu" ? 1 : 2;
+  }
+  else if ( solver_type == "shift" || solver_type == "thick" || solver_type == "trl")
+  {
+    // Shifted Lanczos: operator B = H - sigma, thick restart (serial CPU).
+    // ncv/nkeep: UPT_TRL_NCV / UPT_TRL_NKEEP.
+    _upt_solver_options.solver_flag = 3;
+  }
+  else if ( solver_type == "shift_invert" || solver_type == "si")
+  {
+    // Shift-and-invert Lanczos: dense LU of B = H - sigma, then thick-restart
+    // Lanczos on B^{-1} (largest |mu| -> eigenvalue nearest sigma).
+    // Serial CPU. Tunable: UPT_TRL_NCV / UPT_TRL_NKEEP.
+    _upt_solver_options.solver_flag = 4;
+  }
+  else
+  {
+    throw InitFailedException("ETB: unsupported solver_type " + solver_type +
+        " (use cpu, gpu, gpu-split, shift, shift_invert)");
   }
 
   ModelOptions::const_submodel_iterator cg_it = solopts.submodels_begin("coarse_grain");
