@@ -224,11 +224,14 @@ DEC::reinit_forms(const std::vector<libMesh::Point>& points, bool reference_coor
     // point belongs to it if all of its barycentric 0-forms are
     // non-negative. In case of round-off at a sub-simplex boundary, we
     // keep the candidate with the smallest (least negative) violation.
-    // The Whitney interpolation for the best candidate found so far is
-    // kept around, so it does not need to be recomputed once the search
-    // is over (in particular, a plain simplex element never subdivides,
-    // so the search loop below runs (and reinits _whip) only once).
+    // Only the winning candidate's index is kept during the search;
+    // _w0/_w1 are filled in a single pass afterwards (below), since a
+    // sub-simplex only supplies values for its own nodes/cells and
+    // writing them incrementally for every temporarily-best candidate
+    // would leave stale entries from a losing candidate in place for
+    // the cells the eventual winner does not itself touch.
     double best_violation = std::numeric_limits<double>::max();
+    unsigned int best = 0;
 
     for (unsigned int s = 0; s < _sub_simplices.size(); ++s)
     {
@@ -249,42 +252,52 @@ DEC::reinit_forms(const std::vector<libMesh::Point>& points, bool reference_coor
       if (violation < best_violation)
       {
         best_violation = violation;
-
-        // Record the results for the current best candidate; overwritten
-        // if a later candidate turns out to be a better fit.
-        const auto& w1 = _whip.get_1forms();
-        const auto& cells = _whip.get_1cells();
-
-        // For a simplex, the sub-simplex *is* the whole element, so its
-        // barycentric 0-forms already are the element's native basis
-        // functions. For a non-simplex, _w0 was already filled above
-        // using the native basis, which is what should be returned.
-        if (is_simplex)
-          for (unsigned int a = 0; a < sub.size(); ++a)
-            _w0[sub[a]][p] = w0[a][0];
-
-        for (unsigned int c = 0; c < cells.size(); ++c)
-        {
-          unsigned int gi = sub[cells[c].first];
-          unsigned int gj = sub[cells[c].second];
-
-          unsigned int si = gi, sj = gj;
-          if (si > sj)
-            std::swap(si, sj);
-
-          unsigned int row = _cell_index.at(std::make_pair(si, sj));
-
-          // _primal_1cells[row] may store either orientation of this
-          // edge (see setup_subdivision()); flip the sign of the
-          // Whitney 1-form if it disagrees with the (gi,gj) direction
-          // evaluated here.
-          double sign = (_primal_1cells[row].first == gi) ? 1.0 : -1.0;
-          _w1[row][p] = sign * w1[c][0];
-        }
+        best = s;
       }
 
       if (violation <= 1e-10)
         break;
+    }
+
+    // Re-evaluate the winning sub-simplex (cheap: at most a handful of
+    // candidates) and write its contribution, and only its contribution,
+    // into _w0/_w1 for this point.
+    const std::vector<unsigned int>& sub = _sub_simplices[best];
+
+    std::vector<Point> sub_nodes(sub.size());
+    for (unsigned int a = 0; a < sub.size(); ++a)
+      sub_nodes[a] = elem.point(sub[a]);
+
+    _whip.reinit(sub_nodes, {_xyz[p]});
+
+    const auto& w0 = _whip.get_0forms();
+    const auto& w1 = _whip.get_1forms();
+    const auto& cells = _whip.get_1cells();
+
+    // For a simplex, the sub-simplex *is* the whole element, so its
+    // barycentric 0-forms already are the element's native basis
+    // functions. For a non-simplex, _w0 was already filled above using
+    // the native basis, which is what should be returned.
+    if (is_simplex)
+      for (unsigned int a = 0; a < sub.size(); ++a)
+        _w0[sub[a]][p] = w0[a][0];
+
+    for (unsigned int c = 0; c < cells.size(); ++c)
+    {
+      unsigned int gi = sub[cells[c].first];
+      unsigned int gj = sub[cells[c].second];
+
+      unsigned int si = gi, sj = gj;
+      if (si > sj)
+        std::swap(si, sj);
+
+      unsigned int row = _cell_index.at(std::make_pair(si, sj));
+
+      // _primal_1cells[row] may store either orientation of this edge
+      // (see setup_subdivision()); flip the sign of the Whitney 1-form
+      // if it disagrees with the (gi,gj) direction evaluated here.
+      double sign = (_primal_1cells[row].first == gi) ? 1.0 : -1.0;
+      _w1[row][p] = sign * w1[c][0];
     }
   }
 }
