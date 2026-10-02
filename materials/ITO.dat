@@ -6,3 +6,12 @@ optical_epsilon = 11.85
 optical_data = optics/ITO.nk
 
 
+[stiffness]
+young_modulus = 116
+poisson_ratio = 0.35
+reference = "LLNL-TR-702726, Modules of Elasticity and Thermal Expansion Coefficient of ITO Film A. D. Carter, S. Elhadj September 9, 2016"
+
+
+[lattice]
+thermal_coefficient = 5e-6
+reference = "LLNL-TR-702726, Modules of Elasticity and Thermal Expansion Coefficient of ITO Film A. D. Carter, S. Elhadj September 9, 2016"
