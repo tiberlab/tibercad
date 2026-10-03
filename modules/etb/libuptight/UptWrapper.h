@@ -198,10 +198,22 @@ public:
 
   int get_coarse_graining_error(void);
 
+  //! Leave the coarse-graining layer: restores the original operator and, when
+  //! lift is true, maps the eigenvectors currently held by uptight from the
+  //! reduced basis back to the orbital basis. Solvers outside uptight only
+  //! have to solve whatever get_H_dim() reports and call this afterwards.
+  void coarse_graining_swap_out(bool lift);
+
   void set_num_states(int n_vb, int n_cb);
 
   //! get ETB Hamiltonian size (number of rows)
   int get_H_dim(void);
+
+  //! Number of rows of the ORIGINAL (orbital) Hamiltonian. This is the length an
+  //! eigenvector must have once the solve is done. It differs from get_H_dim()
+  //! while coarse-graining is active, because that one reports the reduced
+  //! operator the solver actually worked on.
+  int get_original_hdim(void);
 
   //! get ETB Hamiltonian number of non-zero elements
   int get_H_nnz(void);

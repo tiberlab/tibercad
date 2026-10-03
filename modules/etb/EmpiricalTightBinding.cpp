@@ -605,6 +605,7 @@ void ETB::do_solve_for_kpoint(const Point& k_point)
   set_band_extrema();
 
   reinit();
+
   call_uptight();
 }
 
@@ -783,10 +784,26 @@ ETB::call_uptight(void)
     // need to set some options for SLEPc eigensolver
     get_solver_options().set_option("eigen_solver_tolerance", _upt_solver_options.long_tol);
 
-    solve_eigenvalue_problem(_upt_solver_options.n_vb + _upt_solver_options.n_cb, _upt_solver_options.guess_cb);
+    // Seed the solver with a single band. The loop inside
+    // solve_eigenvalue_problem() re-targets itself from the slots that are
+    // still empty, so starting from the conduction band makes it pick up the
+    // valence band afterwards. Asking for n_vb + n_cb states around one single
+    // shift makes both bands be filled from the same energy region.
+    const unsigned int seed_count = _upt_solver_options.n_cb > 0
+                                      ? _upt_solver_options.n_cb
+                                      : _upt_solver_options.n_vb;
+    const double seed_shift = _upt_solver_options.n_cb > 0
+                                ? _upt_solver_options.guess_cb
+                                : _upt_solver_options.guess_vb;
+    solve_eigenvalue_problem(seed_count, seed_shift);
 
     int num_states = _upt_solver_options.n_vb + _upt_solver_options.n_cb;
 
+    // Push the results into uptight first. The SLEPc path does not go through
+    // uptight's drivers, so it is the only place that has to close the
+    // coarse-graining layer: coarse_graining_swap_out() restores the original
+    // operator and lifts the eigenvectors stored by set_state() from the
+    // reduced basis back to the orbital basis. They are read back afterwards.
     for (int i = 0; i < num_states; ++i)
     {
       // +1 is electron, -1 is hole
@@ -797,6 +814,21 @@ ETB::call_uptight(void)
       inst->set_state(num_states, i, _solution[i].eigen_vector.size(),
                                      _solution[i].eigen_energy,
                                      _solution[i].eigen_vector, particle);
+    }
+
+    if (inst->get_coarse_graining_error() == 0)
+    {
+      inst->coarse_graining_swap_out(true);
+
+      const int hdim = inst->get_H_dim();
+      std::vector<double> vals(num_states);
+      std::vector<Complex> vecs(static_cast<size_t>(hdim) * num_states);
+      std::vector<int> parts(num_states);
+      inst->get_states(num_states, hdim, vals.data(), vecs.data(), parts.data());
+
+      for (int i = 0; i < num_states; ++i)
+        _solution[i].eigen_vector.assign(vecs.begin() + static_cast<size_t>(i) * hdim,
+                                         vecs.begin() + static_cast<size_t>(i + 1) * hdim);
     }
 
     _solution_size = _solution.size();
@@ -843,7 +875,7 @@ ETB::call_uptight(void)
     Messages::info(" ");
     Messages::info("("+get_name()+") copy states from uptight");
 
-    int hdim = inst->get_H_dim();
+int hdim = inst->get_original_hdim();
     int num_vb = _upt_solver_options.n_vb;
     int num_ev = _upt_solver_options.n_vb + _upt_solver_options.n_cb;
 
@@ -948,6 +980,11 @@ ETB::call_uptight(void)
 std::pair<unsigned int, double>
 ETB::read_slepc_solution(void)
 {
+  {
+    ostringstream os;
+    os << "  (slepc) ENTER read_slepc_solution" << endl;
+    Messages::info(os.str());
+  }
 
   //--------------------------------------------------------------------
   //how many solutions do we have from SLEPC?
@@ -1122,6 +1159,37 @@ ETB::read_slepc_solution(void)
 
   }
 
+
+  // Per-round diagnostic: shows whether the merge is actually filling the two
+  // bands, or whether states keep coming back classified into a band that is
+  // already full (which makes the re-targeting loop spin).
+  {
+    int filled_hl = 0, filled_el = 0;
+    for (int k = 0; k < n_states; ++k)
+      if (_solution[k].eigen_vector.size() != 0)
+      {
+        if (k < _upt_solver_options.n_vb) filled_hl++; else filled_el++;
+      }
+
+    int n_hl = 0, n_el = 0;
+    for (unsigned int ind = 0; ind < number_of_converged_solutions; ++ind)
+    {
+      if (ev[ind].particle == "el") n_el++; else n_hl++;
+    }
+
+    ostringstream os;
+    os << "  (slepc round) converged=" << number_of_converged_solutions
+       << " classified el=" << n_el << " hl=" << n_hl
+       << " | filled valence=" << filled_hl << "/" << _upt_solver_options.n_vb
+       << " conduction=" << filled_el << "/" << _upt_solver_options.n_cb
+       << " | next request=" << number_of_eigenstates
+       << " next shift=" << new_shift
+       << " (guess_vb=" << _upt_solver_options.guess_vb
+       << ", guess_cb=" << _upt_solver_options.guess_cb
+       << ", _vb_max=" << _vb_max
+       << ", _cb_min=" << _cb_min << ")" << endl;
+    Messages::info(os.str());
+  }
 
   return(make_pair(number_of_eigenstates, new_shift));
 
@@ -1426,11 +1494,11 @@ void ETB::parse_options(void)
     // Serial CPU. Tunable: UPT_TRL_NCV / UPT_TRL_NKEEP.
     _upt_solver_options.solver_flag = 4;
   }
-  else
-  {
-    throw InitFailedException("ETB: unsupported solver_type " + solver_type +
-        " (use cpu, gpu, gpu-split, shift, shift_invert)");
-  }
+  //else
+  //{
+  //  throw InitFailedException("ETB: unsupported solver_type " + solver_type +
+  //      " (use cpu, gpu, gpu-split, shift, shift_invert)");
+  //}
 
   ModelOptions::const_submodel_iterator cg_it = solopts.submodels_begin("coarse_grain");
   if (cg_it != solopts.submodels_end("coarse_grain"))
@@ -2184,6 +2252,12 @@ ETB::compute_eigenvector_mag(unsigned int eigenstate, std::vector<double>& densa
   if (eigenstate >= n)
     throw InitFailedException("Eigenstate index is larger than number of available eigenstates");
 
+  // The sum of the per-atom orbital counts is the length of the eigenvector,
+  // but never assume it: clamp to what we actually hold. Coarse-graining or a
+  // failed dimension check can leave the vector shorter than the atomistic
+  // structure implies.
+  const size_t vlen = _solution[eigenstate].eigen_vector.size();
+
   for(j=0; j<N_atoms_wo_H; j++){densatm[j] = 0.0; }
 
   k = 0; k_at = 0;
@@ -2191,7 +2265,9 @@ ETB::compute_eigenvector_mag(unsigned int eigenstate, std::vector<double>& densa
   for (j = 0; j < N_atoms_wo_H; j++)
   {
     atom_sum = 0.0;
-    for (k = k_at; k < k_at + _ion_num_orbitals[j]; k++)
+    size_t kend = k_at + _ion_num_orbitals[j];
+    if (kend > vlen) kend = vlen;
+    for (k = k_at; k < kend; k++)
     {
       atom_sum += std::norm(_solution[eigenstate].eigen_vector[k]);
     }

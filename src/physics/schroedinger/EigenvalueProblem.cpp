@@ -1784,8 +1784,24 @@ EigenvalueProblem::solve_eigenvalue_problem(unsigned int num_eigenvalues,
   slep_opt.spectrum_shift  = spectrum_shift;
 
 
+  unsigned int slepc_round = 0;
+  {
+    std::ostringstream os;
+    os << "  (slepc) ENTER loop: ev_number=" << slep_opt.ev_number
+       << " shift=" << slep_opt.spectrum_shift
+       << " H_dim=" << get_H_dim() << endl;
+    Messages::info(os.str());
+  }
   while (slep_opt.ev_number > 0)
   {
+
+    // read_slepc_solution() re-targets the solver from the slots that are still
+    // empty. If a round cannot make progress the loop spins forever with the
+    // same request, so bound it explicitly instead of hanging.
+    if (++slepc_round > 20)
+      throw SolveFailedException("SLEPc eigensolver made no progress towards the "
+          "requested states after 20 re-targeting rounds. Please report the "
+          "per-round diagnostics above, they show which band is not filling up.");
 
     int result;
     if (_haveS)

@@ -131,6 +131,12 @@ int UptWrapper::get_coarse_graining_error(void)
   return error_code;
 }
 
+void UptWrapper::coarse_graining_swap_out(bool lift)
+{
+  int lift_flag = lift ? 1 : 0;
+  upt_coarse_graining_swap_out_(_handler, lift_flag);
+}
+
 void UptWrapper::set_output(int format, double step)
 {
   upt_setoutput_(_handler, format, step);
@@ -259,9 +265,19 @@ void UptWrapper::set_num_states(int n_vb, int n_cb)
 
 
 int UptWrapper::get_H_dim(void) {
-  int hdim;	
+  int hdim;
   upt_get_hamildim_(_handler,hdim);
   return hdim;
+}
+
+int UptWrapper::get_original_hdim(void) {
+  int ready = 0, original_dim = 0, reduced_dim = 0, n_blocks = 0;
+  f77_double cut_fraction = 0.0;
+  upt_get_coarse_graining_info_(_handler, ready, original_dim, reduced_dim,
+                               n_blocks, cut_fraction);
+  if (ready != 0 && original_dim > 0)
+    return original_dim;
+  return get_H_dim();
 }
 
 int UptWrapper::get_H_nnz(void) {

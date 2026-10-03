@@ -313,73 +313,77 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt,
   else if (opt.solver_type == "jd")
   {
     ierr = EPSSetType(eps, EPSJD);
+    TiberPetscUtils::checkerr(ierr);
 
-    //set_ksp_and_pc(st, opt);
-    if ((opt.spectral_trans == "folding") && (fold_ctx != nullptr))
-    {
-      PetscInt N;
-      MatGetSize(A, &N, nullptr); // we only have square matrices
+    // EPSJD applies its own preconditioner, so PETSc rejects every ST type
+    // other than STPRECOND for it: the shift-and-invert spectral transform used
+    // by the other EPS types is not available here. Build the diagonal-of-A^2
+    // preconditioner matrix and hand it to the ST directly.
+    PetscInt N;
+    MatGetSize(A, &N, nullptr); // we only have square matrices
 
-      MatCreate(PETSC_COMM_WORLD, &P);
-      MatSetSizes(P, PETSC_DECIDE, PETSC_DECIDE, N, N);
+    MatCreate(PETSC_COMM_WORLD, &P);
+    MatSetSizes(P, PETSC_DECIDE, PETSC_DECIDE, N, N);
 
-      // we abuse of the working vector in the folding context to calculate
-      // the diagonal of A^2
-      PetscInt start, stop;
-      MatGetOwnershipRange(A, &start, &stop);
-
-      for (PetscInt i = start; i < stop; ++i)
-      {
-        PetscInt nvals;
-        const PetscScalar *vals;
-        const PetscInt *cols;
-        MatGetRow(A, i, &nvals, &cols, &vals);
-
-        double sum = 0;
-        for (unsigned int j = 0; j < nvals; ++j)
-        {
-          double norm = std::abs(vals[j]);
-          //if (i == cols[j])
-          //  norm -= shift;
-
-          sum += norm*norm;
-        }
-
-        MatRestoreRow(A, i, &nvals, &cols, &vals);
-
-        VecSetValue(fold_ctx->w, i, sum, INSERT_VALUES);
-      }
-      VecAssemblyBegin(fold_ctx->w);
-      VecAssemblyEnd(fold_ctx->w);
-
-
-      MatSetUp(P);
-      MatDiagonalSet(P, fold_ctx->w, INSERT_VALUES);
-
-      EPSGetST(eps, &st);
-      STSetType(st, STPRECOND);
-      STSetPreconditionerMat(st, P);
-      MatDestroy(&P);
-      //set_ksp_and_pc(st, opt);
-      STGetKSP(st, &ksp);
-      KSPSetType( ksp, KSPMINRES);
-      KSPGetPC(ksp, &pc);
-      PCSetType(pc, PCJACOBI);
-      KSPSetTolerances(ksp,opt.spectrum_inversion_tolerance, PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT);
-
-      /*if (opt.monitor)
-      {
-        PetscViewerAndFormat *vf;
-        ierr = PetscViewerAndFormatCreate(PETSC_VIEWER_STDOUT_WORLD,PETSC_VIEWER_DEFAULT, &vf);
-        TiberPetscUtils::checkerr(ierr);
-        ierr = KSPMonitorSet(ksp, (PetscErrorCode (*)(KSP, PetscInt, PetscReal, void*))KSPMonitorResidual, vf, 0);
-        TiberPetscUtils::checkerr(ierr);
-      }*/
-    }
+    Vec dgv = nullptr;
+    if (fold_ctx != nullptr)
+      ierr = VecDuplicate(fold_ctx->w, &dgv);
     else
+      ierr = MatCreateVecs(A, &dgv, nullptr);
+    TiberPetscUtils::checkerr(ierr);
+
+    // we abuse of the working vector in the folding context to calculate
+    // the diagonal of A^2
+    PetscInt start, stop;
+    MatGetOwnershipRange(A, &start, &stop);
+
+    for (PetscInt i = start; i < stop; ++i)
     {
-      ierr = STSetType(st, STSINVERT); TiberPetscUtils::checkerr(ierr);
+      PetscInt nvals;
+      const PetscScalar *vals;
+      const PetscInt *cols;
+      MatGetRow(A, i, &nvals, &cols, &vals);
+
+      double sum = 0;
+      for (PetscInt j = 0; j < nvals; ++j)
+      {
+        double norm = std::abs(vals[j]);
+        //if (i == cols[j])
+        //  norm -= shift;
+
+        sum += norm*norm;
+      }
+
+      MatRestoreRow(A, i, &nvals, &cols, &vals);
+
+      VecSetValue(dgv, i, sum, INSERT_VALUES);
     }
+    VecAssemblyBegin(dgv);
+    VecAssemblyEnd(dgv);
+
+    MatSetUp(P);
+    MatDiagonalSet(P, dgv, INSERT_VALUES);
+    VecDestroy(&dgv);
+
+    EPSGetST(eps, &st);
+    STSetType(st, STPRECOND);
+    STSetPreconditionerMat(st, P);
+    MatDestroy(&P);
+    //set_ksp_and_pc(st, opt);
+    STGetKSP(st, &ksp);
+    KSPSetType( ksp, KSPMINRES);
+    KSPGetPC(ksp, &pc);
+    PCSetType(pc, PCJACOBI);
+    KSPSetTolerances(ksp,opt.spectrum_inversion_tolerance, PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT);
+
+    /*if (opt.monitor)
+    {
+      PetscViewerAndFormat *vf;
+      ierr = PetscViewerAndFormatCreate(PETSC_VIEWER_STDOUT_WORLD,PETSC_VIEWER_DEFAULT, &vf);
+      TiberPetscUtils::checkerr(ierr);
+      ierr = KSPMonitorSet(ksp, (PetscErrorCode (*)(KSP, PetscInt, PetscReal, void*))KSPMonitorResidual, vf, 0);
+      TiberPetscUtils::checkerr(ierr);
+    }*/
   }
   else if (opt.solver_type == "gd")
   {
@@ -859,21 +863,31 @@ int EigenSolver::do_solve(const SLEPCoptions& opt)
   {
     ierr = EPSGetConverged(eps, &nconv);  TiberPetscUtils::checkerr(ierr);
 
-    Vec* v = new Vec[nconv];
-    for (int i = 0; i < nconv; ++i)
+    // EPSGetInvariantSubspace fills the whole ncv-dimensional invariant
+    // subspace, not only the nconv converged eigenvectors, so the buffer has to
+    // be sized with ncv.
+    Vec* v = new Vec[ncv];
+    for (int i = 0; i < ncv; ++i)
       MatCreateVecs(A,PETSC_NULLPTR,&v[i]);
 
     EPSGetInvariantSubspace(eps, v);
 
+    // _deflation_space owns the vectors, they are released by clear_slepc(),
+    // so the ones handed to the deflation space must be copies.
     for (int i = 0; i < nconv; ++i)
-      _deflation_space.push_back(v[i]);
+    {
+      Vec d;
+      ierr = VecDuplicate(v[i], &d); TiberPetscUtils::checkerr(ierr);
+      _deflation_space.push_back(d);
+    }
 
     PetscInt defl_dim = _deflation_space.size();
-    EPSSetDeflationSpace(eps, defl_dim, _deflation_space.data());
-    //for (int i = 0; i < nconv; ++i)
-    //  VecDestroy(&v[i]);
-    //delete [] v;
-    //VecDestroyVecs(v, nconv);
+    ierr = EPSSetDeflationSpace(eps, defl_dim, _deflation_space.data());
+    TiberPetscUtils::checkerr(ierr);
+
+    for (int i = 0; i < ncv; ++i)
+      VecDestroy(&v[i]);
+    delete [] v;
   }
 
   return ierr;
