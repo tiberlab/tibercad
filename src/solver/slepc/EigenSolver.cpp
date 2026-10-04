@@ -506,10 +506,13 @@ int set_ksp_and_pc(ST st, const EigenSolver::SLEPCoptions& opts)
   PCSetOperators(pc, A, A);
 #endif
 
-  // if MUMPS or PARDISO is used as solver package, then we
-  // want to use LU or Cholesky decomposition
+  // if MUMPS, PARDISO or the built-in PETSc package is used as solver package,
+  // then we want to use a direct LU (or Cholesky) factorization, applied
+  // through KSPPREONLY. Without this, solver_package=petsc leaves the user's
+  // iterative KSP in place and the shift-invert solve fails with DIVERGED_ITS.
   if ((opt.solver_package == "mumps") ||
-      (opt.solver_package == "mkl_pardiso"))
+      (opt.solver_package == "mkl_pardiso") ||
+      (opt.solver_package == "petsc"))
   {
     if (opt.pc_type != "cholesky")
       opt.pc_type = "lu";
