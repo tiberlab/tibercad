@@ -203,7 +203,7 @@ Module  efaschroedinger
 
   Solver
   {
-    solver = krylovshur 
+    solver = krylovschur 
     ksp_type = bcgsl
     pc_type =  lu
   }

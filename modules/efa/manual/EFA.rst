@@ -145,9 +145,9 @@ The Solver section of the Module efaschroedinger contains the following options:
     if *true* (default value), Dirichlet boundary conditions are imposed over all the boundaries of the simulation region
 
  ``solver`` : string 
-    defines the solver for the eigenvalue problem, possible values are: *arnoldi*, *lapack*, *krylovshur*. The default value is **krylovshur** . 
+    defines the solver for the eigenvalue problem, possible values are: *arnoldi*, *lapack*, *krylovschur*. The default value is **krylovschur** . 
 
-In the case of the *lapack* solver all the eigenvalues are computed. In the case of *arnoldi* or *krylovshur*
+In the case of the *lapack* solver all the eigenvalues are computed. In the case of *arnoldi* or *krylovschur*
 solver it is necessary to specify which and how many eigenvalues have to be computed. 
 The idea is that the iterative solver calculates several eigenvalues that are
 close to a specific number, referred to as the *guess*.

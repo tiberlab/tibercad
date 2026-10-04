@@ -213,8 +213,8 @@ Quantized states of electrons and holes
 We are going to study quantized states of electrons and holes in the quantum well. 
 Since the structure is 1D, the eigenstate is characterized by the energy level number *n* 
 and the :math:`k_{||}` vector that is perpendicular to the growth direction. 
-First, we define two simulations that solve Schrödinger for a single **k** -vector, 
-for electrones and holes. In order to simplify the tutorial we solve the Schrödinger equation 
+First, we define two simulations that solve Schrï¿½dinger for a single **k** -vector, 
+for electrones and holes. In order to simplify the tutorial we solve the Schrï¿½dinger equation 
 over all the structure. 
 
 The  Models section reads::
@@ -246,7 +246,7 @@ The Solver section reads as follows::
      poisson_model_name = dd
      strain_model_name = macrostrain
      solution_method = general
-     solver = krylovshur
+     solver = krylovschur
     }
   quantum_hl
     {
@@ -255,7 +255,7 @@ The Solver section reads as follows::
      number_of_eigenstates = 15
      poisson_model_name = dd
      strain_model_name = macrostrain
-     solver = krylovshur
+     solver = krylovschur
      solution_method = general
     }
 

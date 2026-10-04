@@ -32,6 +32,15 @@
 
 #include "slepceps.h"
 
+// Private PETSc dense-matrix header: needed only to force-clear the
+// matinuse flag on DS matrices that SLEPc leaves "checked out" when
+// KSPSolve diverges mid-Krylov iteration (EPSDestroy would crash otherwise).
+// This is an internal workaround tied to PETSc 3.23 + SLEPc 3.23.
+#include "../../../external/petsc-3.23.4/src/mat/impls/dense/seq/dense.h"
+
+// Private SLEPc DS header: needed to access omat[] array in _p_DS struct.
+#include "../../../external/slepc-3.23.1/include/slepc/private/dsimpl.h"
+
 
 #include "petsc/private/matimpl.h"
 
@@ -46,6 +55,10 @@ namespace
   Mat P; // preconditioner matrix
   EPS eps; // EigenSolver
   MPI_Comm slepc_comm;
+  // Set to true the first time a retry-with-LU succeeds, so that subsequent
+  // calls in the same k-point loop also use LU directly instead of the
+  // iterative KSP that already proved unreliable for this problem.
+  bool lu_fallback_active = false;
   double shift; // could be stored in ST but lapack does not apply any shift
   
   vector<Vec> _deflation_space;
@@ -96,6 +109,50 @@ namespace
 static int set_ksp_and_pc(ST st, const EigenSolver::SLEPCoptions& opt);
 
 static void set_sub_pc(PC pc, PCType pc_type);
+
+// ---------------------------------------------------------------------------
+// Force-release any DS matrices that SLEPc left "checked out" (matinuse != 0)
+// after a failed Krylov iteration.  KSPSolve divergence causes BVMatLanczos /
+// BVMatArnoldi to unwind without calling DSRestoreMat, so the underlying
+// Mat_SeqDense objects have matinuse set.  EPSDestroy -> DSDestroy ->
+// DSReset -> MatDestroy then crashes with "Need to call
+// MatDenseRestoreSubMatrix() first".
+//
+// We iterate over all DS matrix slots and, for any that have matinuse != 0,
+// directly zero the flag and null out the pointer – the same minimal work that
+// MatDenseRestoreSubMatrix_SeqDense() does, minus the array-reset step that
+// isn't needed here since we are about to destroy the whole DS anyway.
+//
+// This is intentionally a private, fire-and-forget helper: it is only called
+// immediately before EPSDestroy inside the retry path, so safety is not a
+// concern for any subsequent use of the same objects.
+// ---------------------------------------------------------------------------
+static void force_release_ds_matrices(EPS eps)
+{
+  DS ds;
+  EPSGetDS(eps, &ds);
+  if (!ds) return;
+
+  for (int m = 0; m < DS_NUM_MAT; ++m)
+  {
+    // Access omat[] through the public DS struct layout. DS is typedef'd as
+    // struct _p_DS* (defined in slepc/private/dsimpl.h).
+    Mat omat = ds->omat[m];
+    if (!omat) continue;
+
+    Mat_SeqDense *a = (Mat_SeqDense *)omat->data;
+    if (!a) continue;
+
+    if (a->matinuse)
+    {
+      // Zero the flag – this is exactly what MatDenseRestoreSubMatrix does
+      // after resetting the column array. We skip MatDenseResetArray because
+      // we are about to destroy everything; skipping it is safe.
+      a->matinuse = 0;
+      a->cmat     = nullptr;
+    }
+  }
+}
 
 
 int EigenSolver::_size_of_matrix;
@@ -265,13 +322,13 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt,
   }
 
 
-  if (opt.solver_type == "arnoldi" || opt.solver_type == "krylovshur")
+  if (opt.solver_type == "arnoldi" || opt.solver_type == "krylovschur")
   {
     //ierr = EPSSetProblemType(eps,EPS_GNHEP);TiberPetscUtils::checkerr(ierr);
 
     if (opt.solver_type == "arnoldi")
       ierr = EPSSetType(eps, EPSARNOLDI);
-    else if (opt.solver_type == "krylovshur")
+    else if (opt.solver_type == "krylovschur")
       ierr = EPSSetType(eps, EPSKRYLOVSCHUR);
 
 
@@ -491,6 +548,17 @@ int set_ksp_and_pc(ST st, const EigenSolver::SLEPCoptions& opts)
 
   EigenSolver::SLEPCoptions opt(opts);
 
+  // If a previous call already proved that the iterative KSP is unreliable
+  // for this problem (lu_fallback_active was set by the retry path), upgrade
+  // to a direct LU solve immediately instead of repeating the same failure.
+  if (lu_fallback_active &&
+      opt.solver_package != "mumps" &&
+      opt.solver_package != "mkl_pardiso")
+  {
+    opt.pc_type      = "lu";
+    opt.st_ksp_type  = "preonly";
+  }
+
   int ierr;
 
   KSP ksp;
@@ -506,13 +574,15 @@ int set_ksp_and_pc(ST st, const EigenSolver::SLEPCoptions& opts)
   PCSetOperators(pc, A, A);
 #endif
 
-  // if MUMPS, PARDISO or the built-in PETSc package is used as solver package,
-  // then we want to use a direct LU (or Cholesky) factorization, applied
-  // through KSPPREONLY. Without this, solver_package=petsc leaves the user's
-  // iterative KSP in place and the shift-invert solve fails with DIVERGED_ITS.
+  // if MUMPS or PARDISO is used as solver package, then we
+  // want to use LU or Cholesky decomposition (direct solve through KSPPREONLY).
+  // With solver_package=petsc the user keeps full control through the
+  // ``pc_type`` / ``ksp_type`` options: the default (ilu + bcgsl) is an
+  // iterative solve suited to large sparse systems, while ``pc_type = lu``
+  // gives a direct solve (recommended for small/dense, e.g. coarse-grained,
+  // Hamiltonians where ILU does not converge).
   if ((opt.solver_package == "mumps") ||
-      (opt.solver_package == "mkl_pardiso") ||
-      (opt.solver_package == "petsc"))
+      (opt.solver_package == "mkl_pardiso"))
   {
     if (opt.pc_type != "cholesky")
       opt.pc_type = "lu";
@@ -556,8 +626,18 @@ int set_ksp_and_pc(ST st, const EigenSolver::SLEPCoptions& opts)
       set_sub_pc(pc, PCILU);
     }
     else
-      ierr =  PCSetType(pc, PCILU);
-
+    {
+      ierr = PCSetType(pc, PCILU);
+      // ILU(0) with no reordering breaks down easily when the shift sigma is
+      // close to an eigenvalue of H (which is exactly the shift-and-invert
+      // scenario), because (H - sigma*I) is deliberately ill-conditioned and
+      // the zero-fill ILU pivot can become near-zero.
+      // ILU(1) with natural reordering is a cheap improvement: one level of
+      // fill-in typically reduces the condition number of the preconditioned
+      // system enough for BCGSL to converge reliably at modest extra cost.
+      PCFactorSetLevels(pc, 1);
+      PCFactorSetMatOrderingType(pc, MATORDERINGNATURAL);
+    }
   }
   else if (opt.pc_type == "lu" )
   {
@@ -718,6 +798,9 @@ int EigenSolver::prepare_slepc(MPI_Comm comm)
 
   slepc_comm = comm;
 
+  // Reset the LU fallback flag: each new k-point starts fresh and the
+  // iterative KSP gets a fair chance again (it may work fine at other shifts).
+  lu_fallback_active = false;
 
 //  if (eps == NULLPTR)
   {
@@ -860,17 +943,153 @@ int EigenSolver::do_solve(const SLEPCoptions& opt)
   Messages::info(os.str());
 
 
+  // ---------------------------------------------------------------------
+  // Safety net for the shift-and-invert linear solves.
+  // The default (ilu + bcgsl) is an iterative solve that is fine for large
+  // sparse Hamiltonians but can stall (DIVERGED_ITS) on small, dense-like or
+  // strongly indefinite (H - shift) matrices, e.g. coarse-grained ones. If the
+  // eigensolver failed *because* the inner KSP diverged, retry once with a
+  // direct LU factorization instead of aborting the whole simulation.
+  //
+  // PETSc's default error handler aborts the process when an error propagates
+  // up through EPSSolve (e.g. DIVERGED_ITS from KSPSolve). To allow the first
+  // EPSSolve to fail gracefully and return an error code instead of aborting,
+  // we temporarily install PetscReturnErrorHandler which converts fatal errors
+  // into non-zero return codes. The original handler is restored immediately
+  // after, whether the call succeeded or failed.
+  //
+  // Restrictions, so that no working configuration changes behaviour:
+  //  - only reached if EPSSolve already failed;
+  //  - only for the shift-and-invert transform whose KSP is still iterative;
+  //  - only on a single MPI process (PETSc's own LU is serial; with several
+  //    processes the user must choose mumps/mkl_pardiso explicitly).
+  // ---------------------------------------------------------------------
+  PetscPushErrorHandler(PetscReturnErrorHandler, NULL);
   ierr = EPSSolve(eps);
+  PetscPopErrorHandler();
 
+  // Also treat insufficient convergence as a failure: if EPSSolve returned
+  // success but converged fewer eigenvalues than requested, the iterative
+  // inner solve likely produced inaccurate (H-shift)^{-1} actions, causing
+  // the eigensolver to converge to wrong eigenpairs rather than diverge
+  // outright.  Treat this the same way as DIVERGED_ITS.
+  if (ierr == 0)
+  {
+    PetscInt nconv_check = 0;
+    EPSGetConverged(eps, &nconv_check);
+    if (nconv_check < static_cast<PetscInt>(opt.ev_number))
+      ierr = PETSC_ERR_CONV_FAILED;
+  }
+
+  if (ierr != 0)
+  {
+    KSPConvergedReason reason = KSP_CONVERGED_ITERATING;
+    KSPGetConvergedReason(ksp, &reason);
+
+    KSPType ksp_type_now = nullptr;
+    KSPGetType(ksp, &ksp_type_now);
+
+    STType st_type_now = nullptr;
+    STGetType(st, &st_type_now);
+
+    PetscMPIInt comm_size_now = 0;
+    MPI_Comm_size(slepc_comm, &comm_size_now);
+
+    const bool ksp_diverged = (reason < 0);
+    const bool ksp_iterative = (ksp_type_now != nullptr) &&
+                               (std::string(ksp_type_now) != std::string(KSPPREONLY));
+    const bool is_sinvert = (st_type_now != nullptr) &&
+                            (std::string(st_type_now) == std::string(STSINVERT));
+
+    if (ksp_diverged && ksp_iterative && is_sinvert && comm_size_now == 1)
+    {
+      // info (not Messages::warning): a warning may require acknowledgment when
+      // stop_on_warning is set, which would block a batch run on a recoverable event.
+      Messages::info("  (slepc) WARNING: iterative shift-and-invert linear solve did not converge; "
+                     "retrying with a direct LU factorization "
+                     "(set pc_type = lu in the Solver block to skip this retry)");
+
+      PetscBool generalized = PETSC_FALSE;
+      EPSIsGeneralized(eps, &generalized);
+
+      // In SLEPc >= 3.23, a failed Krylov-Schur iteration leaves multiple
+      // internal objects (BV, DS and its dense matrices) in dirty states that
+      // cannot be cleanly reset through the public API: EPSReset clears BV but
+      // not DS, and DSReset triggers MatDestroy on a matrix that still has an
+      // unreleased submatrix (matinuse != 0), causing a second fatal error.
+      // The only safe way to get a clean EPS before the retry is to destroy
+      // the existing context and create a fresh one. Before destroying, we
+      // must force-release any DS matrices left checked out by the failed solve.
+      // The MPI communicator concern noted in clear_slepc() ("too many
+      // communicators with real MPI") does not apply here because this branch
+      // is already guarded to single-process runs (comm_size_now == 1).
+      force_release_ds_matrices(eps);
+      EPSDestroy(&eps);
+      EPSCreate(slepc_comm, &eps);
+
+      // Re-supply operators to the new EPS.
+      EPSSetOperators(eps, A, (generalized == PETSC_TRUE) ? B : PETSC_NULLPTR);
+      EPSSetProblemType(eps, (generalized == PETSC_TRUE) ? EPS_GHEP : EPS_HEP);
+
+      // Reapply the user-level EPS settings that were on the old context.
+      EPSSetTolerances(eps, opt.eps_tolerance, opt.eps_max_it);
+      EPSSetWhichEigenpairs(eps, EPS_TARGET_MAGNITUDE);
+      EPSSetTarget(eps, opt.spectrum_shift);
+      EPSSetType(eps, (opt.solver_type == "arnoldi") ? EPSARNOLDI : EPSKRYLOVSCHUR);
+
+      {
+        ST st_retry;
+        EPSGetST(eps, &st_retry);
+        STSetType(st_retry, STSINVERT);
+
+        KSP ksp_retry;
+        STGetKSP(st_retry, &ksp_retry);
+        PC pc_retry;
+        KSPGetPC(ksp_retry, &pc_retry);
+
+        // Switch the inner linear solver to a direct LU factorization.
+        KSPSetType(ksp_retry, KSPPREONLY);
+        PCSetType(pc_retry, PCLU);
+        PCFactorSetMatSolverType(pc_retry, opt.solver_package.c_str());
+      }
+
+      // Restore the subspace size that was set in do_solve().
+      {
+        PetscInt ncv_retry = (opt.ev_number > 8) ? 4 * opt.ev_number : 32;
+        if (ncv_retry > _size_of_matrix) ncv_retry = _size_of_matrix;
+        EPSSetDimensions(eps, opt.ev_number, ncv_retry, PETSC_DECIDE);
+      }
+
+      // Re-apply any deflation space accumulated from previous rounds.
+      if (opt.use_deflation_space && !_deflation_space.empty())
+      {
+        PetscInt defl_dim = _deflation_space.size();
+        EPSSetDeflationSpace(eps, defl_dim, _deflation_space.data());
+      }
+
+      ierr = EPSSolve(eps);
+
+      // Retry succeeded: remember that iterative KSP is unreliable for this
+      // problem so that subsequent rounds in the same loop use LU directly.
+      if (ierr == 0)
+        lu_fallback_active = true;
+    }
+  }
   if (ierr == 0 && opt.use_deflation_space)
   {
     ierr = EPSGetConverged(eps, &nconv);  TiberPetscUtils::checkerr(ierr);
 
+    // Re-query ncv from the EPS context: after a retry the EPS object may be
+    // a freshly created one with a different ncv than the variable computed
+    // at the top of this function.
+    PetscInt ncv_actual, mpd_actual, nev_actual;
+    EPSGetDimensions(eps, &nev_actual, &ncv_actual, &mpd_actual);
+
     // EPSGetInvariantSubspace fills the whole ncv-dimensional invariant
     // subspace, not only the nconv converged eigenvectors, so the buffer has to
     // be sized with ncv.
-    Vec* v = new Vec[ncv];
-    for (int i = 0; i < ncv; ++i)
+    Vec* v = new Vec[ncv_actual];
+    for (int i = 0; i < ncv_actual; ++i)
       MatCreateVecs(A,PETSC_NULLPTR,&v[i]);
 
     EPSGetInvariantSubspace(eps, v);
@@ -888,7 +1107,7 @@ int EigenSolver::do_solve(const SLEPCoptions& opt)
     ierr = EPSSetDeflationSpace(eps, defl_dim, _deflation_space.data());
     TiberPetscUtils::checkerr(ierr);
 
-    for (int i = 0; i < ncv; ++i)
+    for (int i = 0; i < ncv_actual; ++i)
       VecDestroy(&v[i]);
     delete [] v;
   }

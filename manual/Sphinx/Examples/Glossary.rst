@@ -1172,7 +1172,7 @@ Glossary
     | 
     | 
     | Example: 
-    |   solver = krylovshur
+    |   solver = krylovschur
     | 
     
    kp_model

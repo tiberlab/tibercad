@@ -1744,7 +1744,7 @@ EigenvalueProblem::solve_eigenvalue_problem(unsigned int num_eigenvalues,
 
   slep_opt.solver_package = sol_opt.get_option("solver_package","petsc");
 
-  slep_opt.solver_type = sol_opt.get_option("solver","krylovshur");
+  slep_opt.solver_type = sol_opt.get_option("solver","krylovschur");
 
   slep_opt.H_file_name = "H.out";
 

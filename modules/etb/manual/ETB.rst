@@ -360,10 +360,79 @@ The Solver section of the **Module**  ``empirical_tb`` contains the following op
       solver convergence criterion (default 1e-9) 
 
  ``solver_type`` : string
-      this indicates the class of implemented solvers to use: ``cpu`` (default), ``gpu`` or ``slepc``. The former two use uptight internal implementations, the latter uses the external SLEPc library.
+      this indicates the class of implemented solvers to use: ``cpu`` (default), ``gpu`` or ``slepc``. The former two use uptight internal implementations, the latter uses the external SLEPc library (see :ref:`etb-slepc-solvers` below).
 
  ``solver`` : string
-      the actual solver to be used. For ``gpu`` one can choose ``jd`` or ``lanczos``, for ``cpu`` ``lanczos`` or ``lapack``, for ``slepc`` all SLEPc solvers
+      the actual solver to be used. For ``gpu`` one can choose ``jd`` or ``lanczos``, for ``cpu`` ``lanczos`` or ``lapack``, for ``slepc`` one of the SLEPc solvers listed below.
+
+.. _etb-slepc-solvers:
+
+SLEPc solvers
+~~~~~~~~~~~~~
+
+With ``solver_type = slepc`` the (possibly coarse-grained) Hamiltonian is copied to SLEPc
+and the eigenvalues closest to the guess energies (``guess_conduction`` / ``guess_valence``) are searched
+with a spectral transformation. The following options are read from the same ``Solver`` block.
+
+``solver`` : string
+  The SLEPc eigensolver: ``krylovschur``, ``arnoldi``, ``lapack`` (dense, all eigenpairs), ``arpack``, ``jd`` (Jacobi-Davidson), ``gd`` (Generalized Davidson) or ``feast``.
+  ``jd`` ignores the spectral transformation and uses its own diagonal preconditioner.
+
+``spectral_transformation`` : string
+  ``shift_and_invert`` (default) or ``folding``. Shift-and-invert needs the solution of a linear system
+  with :math:`(H - \sigma)` at every iteration (see ``solver_package``, ``pc_type`` and ``ksp_type``); folding
+  works on :math:`(H-\sigma)^2` and needs only matrix-vector products.
+
+``solver_package`` : string
+  The linear-algebra package used to factorize :math:`(H - \sigma)`: ``petsc`` (default, built-in PETSc
+  factorization, always available), ``mumps`` or ``mkl_pardiso``. The last two have to be enabled when
+  PETSc is configured (``--download-mumps``, ``--with-mkl_pardiso``); if they are not, SLEPc stops with the
+  error *Could not locate solver type ... for factorization type LU*. For ``mumps`` and ``mkl_pardiso``
+  the code automatically selects a direct LU solve (``ksp_type = preonly``, ``pc_type = lu``).
+
+``pc_type`` (or ``preconditioner``) : string
+  Preconditioner applied to the shift-and-invert linear system: ``ilu`` (default), ``lu``, ``cholesky``,
+  ``icc``, ``jacobi``, ``redundant``, ``composite``. With ``lu`` and one MPI process the system is solved
+  directly (``ksp_type`` is forced to ``preonly``).
+
+``ksp_type`` : string
+  Krylov method of the shift-and-invert linear system: ``bcgsl`` (default), ``gmres``, ``bcgs``, ``cg``,
+  ``richardson`` or ``preonly``.
+
+``spectrum_inversion_tolerance`` : double
+  Tolerance of the iterative linear solves (default ``1e-8``).
+
+``max_iteration_number`` : integer
+  Maximum number of eigensolver iterations (default ``30000``).
+
+``use_deflation_space`` : boolean
+  Reuse already converged states as deflation space when more states are requested (default **true**).
+
+``monitor`` : boolean
+  Print the convergence history of the eigensolver and of the linear solver (default **false**).
+
+The eigensolver tolerance is not a separate option: it is taken from ``long_tolerance``.
+
+.. note::
+
+   **Choosing the linear solver.** For large, sparse, *uncoarse-grained* Hamiltonians the defaults
+   (``solver_package = petsc``, ``pc_type = ilu``, ``ksp_type = bcgsl``) are memory-friendly. The reduced
+   Hamiltonian produced by coarse-graining is small but dense-like and indefinite after the shift, and ILU
+   does not converge on it: the run stops with ``KSPSolve() has not converged, reason DIVERGED_ITS``.
+   In that case use a direct solve::
+
+     Solver
+     {
+       solver_type    = slepc
+       solver         = krylovschur
+       solver_package = petsc       # or mumps / mkl_pardiso if available
+       pc_type        = lu
+       ...
+       coarse-grain { mode = icg  ... }
+     }
+
+   Direct factorization is serial for ``petsc``; for several MPI processes use ``mumps`` or ``mkl_pardiso``,
+   otherwise PETSc falls back to block-Jacobi with LU on each block (an approximate solve).
 
 Coarse-graining
 ~~~~~~~~~~~~~~~

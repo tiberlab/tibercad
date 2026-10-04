@@ -776,7 +776,7 @@ ETB::call_uptight(void)
   }
 
   string solver_type = get_solver_options().get_option("solver_type", "cpu");
-  if (solver_type.compare("tibercad/solver/slepc") == 0)
+  if (solver_type.compare("slepc") == 0)
   {
     Messages::info("Solving Tight Binding with SLEPc eigensolver");
     initialize_solution_container(_upt_solver_options.n_vb + _upt_solver_options.n_cb);
