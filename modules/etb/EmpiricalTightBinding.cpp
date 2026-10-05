@@ -1481,13 +1481,13 @@ void ETB::parse_options(void)
   {
     _upt_solver_options.solver_flag = solver_type == "gpu" ? 1 : 2;
   }
-  else if ( solver_type == "shift" || solver_type == "thick" || solver_type == "trl")
+  else if ( solver_type == "shift")
   {
     // Shifted Lanczos: operator B = H - sigma, thick restart (serial CPU).
     // ncv/nkeep: UPT_TRL_NCV / UPT_TRL_NKEEP.
     _upt_solver_options.solver_flag = 3;
   }
-  else if ( solver_type == "shift_invert" || solver_type == "si")
+  else if ( solver_type == "shift_and_invert")
   {
     // Shift-and-invert Lanczos: dense LU of B = H - sigma, then thick-restart
     // Lanczos on B^{-1} (largest |mu| -> eigenvalue nearest sigma).
