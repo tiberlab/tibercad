@@ -32,7 +32,7 @@
 
 //---------------------------------------------------------------------
 
-extern "C" void upt_cg_log_message(const char* message, int length)
+extern "C" void upt_log_message(const char* message, int length)
 {
   Messages::info(std::string("(cg) ") + std::string(message, length));
 }
