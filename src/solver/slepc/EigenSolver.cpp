@@ -663,7 +663,15 @@ int set_ksp_and_pc(ST st, const EigenSolver::SLEPCoptions& opts)
   PCFactorSetMatSolverType(pc, opt.solver_package.c_str());
 
 
-  ierr = KSPSetTolerances(ksp,opt.spectrum_inversion_tolerance, PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT);
+  ierr = KSPSetTolerances(ksp, opt.spectrum_inversion_tolerance,
+                          opt.spectrum_inversion_tolerance, PETSC_DEFAULT, PETSC_DEFAULT);
+
+  // Use the unpreconditioned residual norm for convergence testing.
+  // With ILU preconditioning the preconditioned norm can become artificially
+  // small (because ILU scales the residual) while the true residual is still
+  // large, causing BCGSL to declare convergence prematurely and return an
+  // inaccurate (H-sigma*I)^{-1} action to the eigensolver.
+  KSPSetNormType(ksp, KSP_NORM_UNPRECONDITIONED);
 
   if (opt.monitor)
   {

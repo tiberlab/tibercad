@@ -413,27 +413,6 @@ with a spectral transformation. The following options are read from the same ``S
 
 The eigensolver tolerance is not a separate option: it is taken from ``long_tolerance``.
 
-.. note::
-
-   **Choosing the linear solver.** For large, sparse, *uncoarse-grained* Hamiltonians the defaults
-   (``solver_package = petsc``, ``pc_type = ilu``, ``ksp_type = bcgsl``) are memory-friendly. The reduced
-   Hamiltonian produced by coarse-graining is small but dense-like and indefinite after the shift, and ILU
-   does not converge on it: the run stops with ``KSPSolve() has not converged, reason DIVERGED_ITS``.
-   In that case use a direct solve::
-
-     Solver
-     {
-       solver_type    = slepc
-       solver         = krylovschur
-       solver_package = petsc       # or mumps / mkl_pardiso if available
-       pc_type        = lu
-       ...
-       coarse-grain { mode = icg  ... }
-     }
-
-   Direct factorization is serial for ``petsc``; for several MPI processes use ``mumps`` or ``mkl_pardiso``,
-   otherwise PETSc falls back to block-Jacobi with LU on each block (an approximate solve).
-
 Coarse-graining
 ~~~~~~~~~~~~~~~
 
