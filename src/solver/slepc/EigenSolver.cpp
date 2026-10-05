@@ -355,6 +355,7 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt,
   }
   else if (opt.solver_type == "arpack")
   {
+#if defined(SLEPC_HAVE_ARPACK)
     ierr = EPSSetType(eps, EPSARPACK);
 
     if (std::abs(opt.spectrum_shift) >1e-8)
@@ -366,6 +367,13 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt,
 
       set_ksp_and_pc(st, opt);
     }
+#else
+    throw RuntimeException(
+        "SLEPc solver 'arpack' requires SLEPc to be built with ARPACK support "
+        "(--download-arpack). The current SLEPc installation does not "
+        "include ARPACK. Use solver = krylovschur or solver = jd instead, "
+        "or rebuild SLEPc with ARPACK enabled.");
+#endif
   }
   else if (opt.solver_type == "jd")
   {
@@ -499,6 +507,7 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt,
   }
   else if (opt.solver_type == "feast")
   {
+#if defined(SLEPC_HAVE_FEAST)
     ierr = EPSSetType(eps, EPSFEAST);
     TiberPetscUtils::checkerr(ierr);
 
@@ -507,6 +516,13 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt,
 
     ierr = EPSSetWhichEigenpairs(eps, EPS_ALL);
     TiberPetscUtils::checkerr(ierr);
+#else
+    throw RuntimeException(
+        "SLEPc solver 'feast' requires SLEPc to be built with FEAST support "
+        "(--download-feast or MKL). The current SLEPc installation does not "
+        "include FEAST. Use solver = krylovschur or solver = jd instead, "
+        "or rebuild SLEPc with FEAST enabled.");
+#endif
   }
   else
   {
