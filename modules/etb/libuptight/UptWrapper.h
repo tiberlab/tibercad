@@ -187,8 +187,7 @@ public:
   void set_solver_flag(int flag);
 
   //! Configure the optional coarse-graining transformation.
-  void set_coarse_graining(int mode, int subsolver_flag, int subsolver_type,
-      double sub_tolerance, int nblocks,
+  void set_coarse_graining(int mode, int nblocks,
       double imbalance, double energy_min, double energy_max,
       double core_energy_min, double core_energy_max, double top_buffer,
       double bottom_buffer,

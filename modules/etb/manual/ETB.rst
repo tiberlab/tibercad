@@ -419,24 +419,13 @@ Coarse-graining
 An optional ``coarse-grain`` block can be placed inside ``Solver``. It is a
 transformation layer between construction of the physical Hamiltonian and the
 main solver call; the normal solver settings remain authoritative for the
-final solve. A typical use case is to reduce the computational time to solve
-for the near-gap states of large-supercell systems, at the price of some accuracy loss.
+final solve. Block diagonalization always uses LAPACK (ZHEEVD). A typical 
+use caseis to reduce the computational time to solve for the near-gap
+states of large-supercell systems, at the price of some accuracy loss.
 
 ``mode`` : string
   Required. One of ``cg`` (original coarse-graining method proposed in Liu et al. 2022)
   or ``icgn`` (improved CG with optional Neumann self-energy correction).
-
-``subsolver`` : string
-  Optional preparation solver, default ``lapack`` (highly advised). It solves the complete
-  spectrum of each preparation block. ``lanczos`` is unavailable for CG
-  preparation; ``jd`` is available where the Uptight JD backend is built.
-
-``subsolver_type`` : string
-  Optional preparation backend, default ``cpu``.
-
-``sub_tolerance`` : double
-  Optional preparation tolerance. Defaults to the enclosing Solver's
-  ``long_tolerance`` and does not change the main solver tolerance.
 
 ``num_blocks`` : integer
   Required number of coarse-graining blocks.

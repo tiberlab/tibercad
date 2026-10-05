@@ -167,9 +167,6 @@ ETB::UptSolverOptions::UptSolverOptions(void)
    dynamic(0),
    coarse_graining(false),
    coarse_mode(0),
-   coarse_subsolver_flag(0),
-   coarse_subsolver_type(0),
-  coarse_sub_tolerance(1e-10),
    coarse_num_blocks(0),
    coarse_imbalance(0.03),
    coarse_energy_min(0.0),
@@ -475,9 +472,6 @@ void ETB::do_reinit(void)
 
   if (_upt_solver_options.coarse_graining)
     inst->set_coarse_graining(_upt_solver_options.coarse_mode,
-        _upt_solver_options.coarse_subsolver_flag,
-        _upt_solver_options.coarse_subsolver_type,
-        _upt_solver_options.coarse_sub_tolerance,
         _upt_solver_options.coarse_num_blocks,
         _upt_solver_options.coarse_imbalance,
         _upt_solver_options.coarse_energy_min,
@@ -1512,31 +1506,8 @@ void ETB::parse_options(void)
     else if (mode == "icgn") _upt_solver_options.coarse_mode = 2;
     else throw InitFailedException("ETB: coarse-grain mode must be cg or icgn");
 
-    const string subsolver = cg.get_option("subsolver", string("lapack"));
-    if (subsolver == "lapack") _upt_solver_options.coarse_subsolver_flag = 0;
-    else if (subsolver == "jd") _upt_solver_options.coarse_subsolver_flag = 1;
-    else if (subsolver == "lanczos" || subsolver == "upt_lanczos")
-      throw InitFailedException("ETB: coarse-grain subsolver lanczos is unavailable; use subsolver = lapack or jd");
-    else if (subsolver == "feast")
-      throw InitFailedException("ETB: coarse-grain subsolver feast is unavailable in Uptight");
-    else throw InitFailedException("ETB: unsupported coarse-grain subsolver " + subsolver);
-
-    const string subsolver_type = cg.get_option("subsolver_type", string("cpu"));
-    if (subsolver_type != "cpu" && subsolver_type != "gpu" &&
-        subsolver_type != "gpu-split")
-      throw InitFailedException("ETB: unsupported coarse-grain subsolver_type " + subsolver_type);
-    if (subsolver_type == "gpu") _upt_solver_options.coarse_subsolver_type = 1;
-    if (subsolver_type == "gpu-split") _upt_solver_options.coarse_subsolver_type = 2;
-    if (subsolver == "lapack" && _upt_solver_options.coarse_subsolver_type != 0)
-      throw InitFailedException("ETB: coarse-grain LAPACK preparation supports only subsolver_type = cpu");
-
     _upt_solver_options.coarse_num_blocks = cg.get_option("num_blocks", 0);
     _upt_solver_options.coarse_imbalance = cg.get_option("imbalance", 0.03);
-    _upt_solver_options.coarse_sub_tolerance =
-      cg.get_option("sub_tolerance",
-        solopts.get_option("long_tolerance", _upt_solver_options.long_tol));
-    if (_upt_solver_options.coarse_sub_tolerance <= 0.0)
-      throw InitFailedException("ETB: coarse-grain sub_tolerance must be positive");
     if (_upt_solver_options.coarse_num_blocks < 1 ||
         _upt_solver_options.coarse_imbalance < 0.0)
       throw InitFailedException("ETB: coarse-grain num_blocks must be positive and imbalance non-negative");

@@ -118,9 +118,6 @@ class ETB : public TightBinding
     int solver_flag;
     bool coarse_graining;
     int coarse_mode;
-    int coarse_subsolver_flag;
-    int coarse_subsolver_type;
-    double coarse_sub_tolerance;
     int coarse_num_blocks;
     double coarse_imbalance;
     double coarse_energy_min;

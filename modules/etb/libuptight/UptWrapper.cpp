@@ -107,8 +107,7 @@ void UptWrapper::set_solver_flag(int flag)
   upt_solver_flag_(_handler, flag);
 }
 
-void UptWrapper::set_coarse_graining(int mode, int subsolver_flag, int subsolver_type,
-  double sub_tolerance, int nblocks,
+void UptWrapper::set_coarse_graining(int mode, int nblocks,
     double imbalance, double energy_min, double energy_max,
     double core_energy_min, double core_energy_max, double top_buffer,
     double bottom_buffer,
@@ -117,8 +116,8 @@ void UptWrapper::set_coarse_graining(int mode, int subsolver_flag, int subsolver
     double power_iteration_tolerance)
 {
   const int check = check_neumann_convergence ? 1 : 0;
-  upt_set_coarse_graining_mode_(_handler, mode, subsolver_flag, subsolver_type,
-      sub_tolerance, nblocks,
+  upt_set_coarse_graining_mode_(_handler, mode,
+      nblocks,
       imbalance, energy_min, energy_max, core_energy_min, core_energy_max,
       top_buffer, bottom_buffer, epsilon, neumann_order, expansion_energy, check,
       power_iteration_max_iterations, power_iteration_tolerance);
