@@ -423,8 +423,8 @@ final solve. A typical use case is to reduce the computational time to solve
 for the near-gap states of large-supercell systems, at the price of some accuracy loss.
 
 ``mode`` : string
-  Required. One of ``cg`` (original coarse-graining method proposed in Liu et al. 2022),
-  ``icg`` (improved ``cg``) or ``icgn`` (``icg`` plus self-energy's correction by Neumann series).
+  Required. One of ``cg`` (original coarse-graining method proposed in Liu et al. 2022)
+  or ``icgn`` (improved CG with optional Neumann self-energy correction).
 
 ``subsolver`` : string
   Optional preparation solver, default ``lapack`` (highly advised). It solves the complete
@@ -442,23 +442,25 @@ for the near-gap states of large-supercell systems, at the price of some accurac
   Required number of coarse-graining blocks.
 
 For ``cg``, ``energy_min`` and ``energy_max`` define the retained energy
-window. For ``icg`` and ``icgn``, ``core_energy_min``, ``core_energy_max``,
+window. For ``icgn``, ``core_energy_min``, ``core_energy_max``,
 ``top_buffer`` and ``bottom_buffer`` define the core window and asymmetric
 selection pool. Acquaintance states are selected when
 ``abs(g_ij)^2 / abs(E_i - E_j) > epsilon``.
 
 ``epsilon`` : double
-  Optional ICG/ICGN acquaintance threshold, default ``1e-3``.
+  Optional ICGN acquaintance threshold, default ``1e-3``.
 
 ``neumann_order`` and ``expansion_energy`` : integer/double
-  ICGN options. The Neumann correction includes all terms from order zero
-  through ``neumann_order``, evaluated at ``expansion_energy``.
+  ICGN options. Set ``neumann_order`` to a negative value (default ``-1``)
+  to skip the Neumann correction entirely. Otherwise the correction includes
+  all terms from order zero through ``neumann_order``, evaluated at
+  ``expansion_energy``.
 
 ``check_neumann_convergence`` : boolean
   Common diagnostic option. ``power_iteration_max_iterations`` and
-  ``power_iteration_tolerance`` are also common CG options. ICGN reports
+  ``power_iteration_tolerance`` are also common ICGN options. ICGN reports
   the estimated Neumann norm when its discarded-state coupling operator is
-  available; CG and ICG report when that norm is not defined for the mode.
+  available; CG reports when that norm is not defined for the mode.
 
 When using SLEPc solvers, options have to be passed in the ``solver`` block.
 

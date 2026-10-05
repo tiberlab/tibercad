@@ -179,7 +179,7 @@ ETB::UptSolverOptions::UptSolverOptions(void)
   coarse_top_buffer(0.0),
   coarse_bottom_buffer(0.0),
    coarse_epsilon(1e-3),
-   coarse_neumann_order(0),
+   coarse_neumann_order(-1),
    coarse_expansion_energy(0.0),
   coarse_check_neumann_convergence(false),
    coarse_power_iteration_max_iterations(1000),
@@ -1509,9 +1509,8 @@ void ETB::parse_options(void)
 
     const string mode = cg.get_option("mode", string());
     if (mode == "cg") _upt_solver_options.coarse_mode = 1;
-    else if (mode == "icg") _upt_solver_options.coarse_mode = 2;
-    else if (mode == "icgn") _upt_solver_options.coarse_mode = 3;
-    else throw InitFailedException("ETB: coarse-grain mode must be cg, icg, or icgn");
+    else if (mode == "icgn") _upt_solver_options.coarse_mode = 2;
+    else throw InitFailedException("ETB: coarse-grain mode must be cg or icgn");
 
     const string subsolver = cg.get_option("subsolver", string("lapack"));
     if (subsolver == "lapack") _upt_solver_options.coarse_subsolver_flag = 0;
@@ -1562,7 +1561,7 @@ void ETB::parse_options(void)
     {
       if (!cg.find_option("core_energy_min") || !cg.find_option("core_energy_max") ||
           !cg.find_option("top_buffer") || !cg.find_option("bottom_buffer"))
-        throw InitFailedException("ETB: coarse-grain icg/icgn requires core_energy_min, core_energy_max, top_buffer, and bottom_buffer");
+        throw InitFailedException("ETB: coarse-grain icgn requires core_energy_min, core_energy_max, top_buffer, and bottom_buffer");
       _upt_solver_options.coarse_core_energy_min = cg.get_option("core_energy_min", 0.0);
       _upt_solver_options.coarse_core_energy_max = cg.get_option("core_energy_max", 0.0);
       _upt_solver_options.coarse_top_buffer = cg.get_option("top_buffer", 0.0);
@@ -1571,9 +1570,9 @@ void ETB::parse_options(void)
           _upt_solver_options.coarse_top_buffer < 0.0 ||
           _upt_solver_options.coarse_bottom_buffer < 0.0)
         throw InitFailedException("ETB: invalid coarse-grain core window, top_buffer, or bottom_buffer");
-      if (_upt_solver_options.coarse_mode == 3)
+      if (_upt_solver_options.coarse_mode == 2)
       {
-        _upt_solver_options.coarse_neumann_order = cg.get_option("neumann_order", 0);
+        _upt_solver_options.coarse_neumann_order = cg.get_option("neumann_order", -1);
         _upt_solver_options.coarse_expansion_energy = cg.get_option("expansion_energy",
             0.5 * (_upt_solver_options.coarse_core_energy_min + _upt_solver_options.coarse_core_energy_max));
       }
@@ -1584,8 +1583,7 @@ void ETB::parse_options(void)
         cg.get_option("power_iteration_max_iterations", 1000);
       _upt_solver_options.coarse_power_iteration_tolerance =
         cg.get_option("power_iteration_tolerance", 1e-3);
-      if (_upt_solver_options.coarse_neumann_order < 0 ||
-        _upt_solver_options.coarse_power_iteration_max_iterations <= 0 ||
+      if (_upt_solver_options.coarse_power_iteration_max_iterations <= 0 ||
         _upt_solver_options.coarse_power_iteration_tolerance <= 0.0)
         throw InitFailedException("ETB: invalid coarse-grain Neumann convergence options");
     _upt_solver_options.coarse_graining = true;
