@@ -191,7 +191,7 @@ public:
       double imbalance, double energy_min, double energy_max,
       double core_energy_min, double core_energy_max, double top_buffer,
       double bottom_buffer,
-      double epsilon, int neumann_order, double expansion_energy,
+      double epsilon, int add_core_acquaintances, int neumann_order, double expansion_energy,
       bool check_neumann_convergence, int power_iteration_max_iterations,
       double power_iteration_tolerance);
 

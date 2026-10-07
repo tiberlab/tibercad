@@ -111,7 +111,7 @@ void UptWrapper::set_coarse_graining(int mode, int nblocks,
     double imbalance, double energy_min, double energy_max,
     double core_energy_min, double core_energy_max, double top_buffer,
     double bottom_buffer,
-    double epsilon, int neumann_order, double expansion_energy,
+    double epsilon, int add_core_acquaintances, int neumann_order, double expansion_energy,
     bool check_neumann_convergence, int power_iteration_max_iterations,
     double power_iteration_tolerance)
 {
@@ -119,7 +119,7 @@ void UptWrapper::set_coarse_graining(int mode, int nblocks,
   upt_set_coarse_graining_mode_(_handler, mode,
       nblocks,
       imbalance, energy_min, energy_max, core_energy_min, core_energy_max,
-      top_buffer, bottom_buffer, epsilon, neumann_order, expansion_energy, check,
+      top_buffer, bottom_buffer, epsilon, add_core_acquaintances, neumann_order, expansion_energy, check,
       power_iteration_max_iterations, power_iteration_tolerance);
 }
 

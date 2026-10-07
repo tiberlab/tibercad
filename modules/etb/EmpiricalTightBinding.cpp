@@ -176,6 +176,7 @@ ETB::UptSolverOptions::UptSolverOptions(void)
   coarse_top_buffer(0.0),
   coarse_bottom_buffer(0.0),
    coarse_epsilon(0.0),
+   coarse_add_core_acquaintances(0),
    coarse_neumann_order(-1),
    coarse_expansion_energy(0.0),
   coarse_check_neumann_convergence(false),
@@ -481,6 +482,7 @@ void ETB::do_reinit(void)
         _upt_solver_options.coarse_top_buffer,
         _upt_solver_options.coarse_bottom_buffer,
         _upt_solver_options.coarse_epsilon,
+        _upt_solver_options.coarse_add_core_acquaintances,
         _upt_solver_options.coarse_neumann_order,
         _upt_solver_options.coarse_expansion_energy,
         _upt_solver_options.coarse_check_neumann_convergence,
@@ -1543,6 +1545,9 @@ void ETB::parse_options(void)
         throw InitFailedException("ETB: invalid coarse-grain core window, top_buffer, or bottom_buffer");
       if (_upt_solver_options.coarse_mode == 2)
       {
+        _upt_solver_options.coarse_add_core_acquaintances = cg.get_option("add_core_acquaintances", 0);
+        if (_upt_solver_options.coarse_add_core_acquaintances < 0)
+          throw InitFailedException("ETB: coarse-grain add_core_acquaintances must be non-negative");
         _upt_solver_options.coarse_neumann_order = cg.get_option("neumann_order", -1);
         _upt_solver_options.coarse_expansion_energy = cg.get_option("expansion_energy",
             0.5 * (_upt_solver_options.coarse_core_energy_min + _upt_solver_options.coarse_core_energy_max));

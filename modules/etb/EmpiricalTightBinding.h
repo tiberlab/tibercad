@@ -127,6 +127,7 @@ class ETB : public TightBinding
     double coarse_top_buffer;
     double coarse_bottom_buffer;
     double coarse_epsilon;
+    int coarse_add_core_acquaintances;
     int coarse_neumann_order;
     double coarse_expansion_energy;
     bool coarse_check_neumann_convergence;
