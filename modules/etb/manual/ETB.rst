@@ -416,49 +416,92 @@ The eigensolver tolerance is not a separate option: it is taken from ``long_tole
 Coarse-graining
 ~~~~~~~~~~~~~~~
 
-An optional ``coarse-grain`` block can be placed inside ``Solver``. It is a
-transformation layer between construction of the physical Hamiltonian and the
-main solver call; the normal solver settings remain authoritative for the
-final solve. Block diagonalization always uses LAPACK (ZHEEVD). A typical 
-use caseis to reduce the computational time to solve for the near-gap
-states of large-supercell systems, at the price of some accuracy loss.
+An optional ``coarse-grain`` block can be placed inside ``Solver`` to reduce the
+size of the Hamiltonian used by the eigensolver. The system is divided into
+spatial blocks and each block is diagonalized independently. The resulting
+block states are then selected by energy. All states inside the core energy
+window and its upper and lower buffer regions are retained in the reduced
+basis. If acquaintance tracing is enabled, only core states are used as the
+starting points for tracing additional coupled states; buffer states are not
+used for this tracing.
 
-``mode`` : string
-  Required. One of ``cg`` (original coarse-graining method proposed in Liu et al. 2022)
-  or ``icgn`` (improved CG with optional Neumann self-energy correction).
+The retained states are used to construct a smaller effective Hamiltonian,
+preserving the interactions between them while eliminating the remaining
+states. This can substantially reduce the computational cost for large
+atomistic systems, especially when only states in a limited energy range are
+of interest.
 
-``num_blocks`` : integer
-  Required number of coarse-graining blocks.
+A typical configuration is ::
 
-For ``cg``, ``energy_min`` and ``energy_max`` define the retained energy
-window. For ``icgn``, ``core_energy_min``, ``core_energy_max``,
-``top_buffer`` and ``bottom_buffer`` define the core window and asymmetric
-selection pool.
+  coarse-grain
+  {
+    num_blocks = 1
+    metis_imbalance = 0.03
+    core_energy_min = -100.0
+    core_energy_max = 100.0
+    top_buffer = 0.0
+    bottom_buffer = 0.0
+    coupling_threshold = 0.0
+    add_core_acquaintances = 0
+    neumann_order = -1
+  }
 
-``epsilon`` : double
-  Optional non-negative coupling threshold common to ``cg`` and ``icgn``,
-  default ``0``. A coupling ``g_ij`` between two states with energies ``E_i``
-  and ``E_j`` is kept only if ``abs(g_ij)^2 > epsilon * abs(E_i - E_j)``;
-  otherwise (equality included) it is set to exact zero. It applies to the
-  couplings between retained states in the reduced Hamiltonian and, for
-  ``icgn``, also to the Neumann self-energy couplings. Degenerate states
-  (``E_i = E_j``) are filtered only if the coupling itself is zero. With the
-  default ``epsilon = 0`` only exactly zero couplings are removed. For
-  ``icgn``, an acquaintance state is added to the retained set only if it has
-  at least one non-zero coupling to a core state after this filtering. A
-  value that is too large decouples the blocks and gives wrong eigenvalues.
+The available options are:
 
-``neumann_order`` and ``expansion_energy`` : integer/double
-  ICGN options. Set ``neumann_order`` to a negative value (default ``-1``)
-  to skip the Neumann correction entirely. Otherwise the correction includes
-  all terms from order zero through ``neumann_order``, evaluated at
-  ``expansion_energy``.
+``num_blocks`` : integer (required)
+  Number of spatial blocks into which the system is divided before
+  coarse-graining.
 
-``check_neumann_convergence`` : boolean
-  Common diagnostic option. ``power_iteration_max_iterations`` and
-  ``power_iteration_tolerance`` are also common ICGN options. ICGN reports
-  the estimated Neumann norm when its discarded-state coupling operator is
-  available; CG reports when that norm is not defined for the mode.
+``metis_imbalance`` : double (optional)
+  Maximum allowed relative imbalance between block sizes. The default is
+  ``0.03``. This value is passed to METIS when METIS is available and
+  controls the partitioning metis_imbalance target. When METIS is unavailable, the
+  built-in graph-BFS fallback partitioner does not use ``metis_imbalance``; it only
+  uses the graph connectivity and block weights. The value is still validated
+  as non-negative in both cases.
+
+``core_energy_min`` / ``core_energy_max`` : double (required)
+  Lower and upper bounds of the energy window, in eV, containing the states
+  that must be retained. ``core_energy_min`` must be smaller than
+  ``core_energy_max``.
+
+``top_buffer`` / ``bottom_buffer`` : double (optional)
+  Additional energy ranges, in eV, above and below the core window used when
+  selecting states for the reduced basis. Both default to ``0``.
+
+``coupling_threshold`` : double (optional)
+  Non-negative threshold controlling which couplings between retained states
+  are kept. A coupling :math:`g_{ij}` between states with energies
+  :math:`E_i` and :math:`E_j` is retained only if
+  ``abs(g_ij)^2 > coupling_threshold * abs(E_i - E_j)``. The default is ``0``.
+
+``add_core_acquaintances`` : integer (optional)
+  Controls whether states coupled to the core states are added to the reduced
+  basis. ``0`` disables this extension. ``1`` includes the first level of
+  coupled states. Values greater than ``1`` are treated as ``1``.
+
+``neumann_order`` : integer (optional)
+  Controls the order of the optional self-energy correction used to account
+  for the effect of states outside the retained basis. A negative value
+  (default ``-1``) disables this correction. Non-negative values include the
+  corresponding correction terms.
+
+``expansion_energy`` : double (optional)
+  Energy, in eV, around which the self-energy correction is expanded. By
+  default it is the midpoint of ``core_energy_min`` and ``core_energy_max``.
+  It is only used when ``neumann_order >= 0``.
+
+``check_neumann_convergence`` : boolean (optional)
+  If **true**, perform an additional convergence check for the self-energy
+  correction. The default is **false**.
+
+``power_iteration_max_iterations`` : integer (optional)
+  Maximum number of iterations used by the convergence check. The default is
+  ``1000``.
+
+``power_iteration_tolerance`` : double (optional)
+  Convergence tolerance used by the convergence check. The default is
+  ``1e-3``.
 
 When using SLEPc solvers, options have to be passed in the ``solver`` block.
 

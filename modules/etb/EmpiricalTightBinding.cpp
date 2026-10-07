@@ -166,11 +166,8 @@ ETB::UptSolverOptions::UptSolverOptions(void)
    ort_tol(1e-4),
    dynamic(0),
    coarse_graining(false),
-   coarse_mode(0),
    coarse_num_blocks(0),
-   coarse_imbalance(0.03),
-   coarse_energy_min(0.0),
-   coarse_energy_max(0.0),
+   coarse_metis_imbalance(0.03),
    coarse_core_energy_min(0.0),
    coarse_core_energy_max(0.0),
   coarse_top_buffer(0.0),
@@ -472,11 +469,9 @@ void ETB::do_reinit(void)
   inst->set_solver_flag(_upt_solver_options.solver_flag); 
 
   if (_upt_solver_options.coarse_graining)
-    inst->set_coarse_graining(_upt_solver_options.coarse_mode,
+    inst->set_coarse_graining(
         _upt_solver_options.coarse_num_blocks,
-        _upt_solver_options.coarse_imbalance,
-        _upt_solver_options.coarse_energy_min,
-        _upt_solver_options.coarse_energy_max,
+        _upt_solver_options.coarse_metis_imbalance,
         _upt_solver_options.coarse_core_energy_min,
         _upt_solver_options.coarse_core_energy_max,
         _upt_solver_options.coarse_top_buffer,
@@ -929,7 +924,7 @@ int hdim = inst->get_original_hdim();
       }
       else
       {
-        // CG returns the main solver's ordered states without Uptight-side
+        // ICGN returns the main solver's ordered states without Uptight-side
         // particle classification. Keep classification at the tiberCAD edge.
         if (i < num_vb)
         {
@@ -1496,72 +1491,49 @@ void ETB::parse_options(void)
   //      " (use cpu, gpu, gpu-split, shift, shift_invert)");
   //}
 
-  ModelOptions::const_submodel_iterator cg_it = solopts.submodels_begin("coarse_grain");
-  if (cg_it != solopts.submodels_end("coarse_grain"))
+  ModelOptions::const_submodel_iterator icgn_it = solopts.submodels_begin("coarse_grain");
+  if (icgn_it != solopts.submodels_end("coarse_grain"))
   {
-    const ModelOptions& cg = cg_it->second;
-    if (!cg.find_option("mode") || !cg.find_option("num_blocks"))
-      throw InitFailedException("ETB: coarse-grain requires mode and num_blocks");
+    const ModelOptions& icgn = icgn_it->second;
+    if (!icgn.find_option("num_blocks"))
+      throw InitFailedException("ETB: coarse-grain requires num_blocks");
 
-    const string mode = cg.get_option("mode", string());
-    if (mode == "cg") _upt_solver_options.coarse_mode = 1;
-    else if (mode == "icgn") _upt_solver_options.coarse_mode = 2;
-    else throw InitFailedException("ETB: coarse-grain mode must be cg or icgn");
-
-    _upt_solver_options.coarse_num_blocks = cg.get_option("num_blocks", 0);
-    _upt_solver_options.coarse_imbalance = cg.get_option("imbalance", 0.03);
+    _upt_solver_options.coarse_num_blocks = icgn.get_option("num_blocks", 0);
+    _upt_solver_options.coarse_metis_imbalance = icgn.get_option("metis_imbalance", 0.03);
     if (_upt_solver_options.coarse_num_blocks < 1 ||
-        _upt_solver_options.coarse_imbalance < 0.0)
-      throw InitFailedException("ETB: coarse-grain num_blocks must be positive and imbalance non-negative");
+        _upt_solver_options.coarse_metis_imbalance < 0.0)
+      throw InitFailedException("ETB: coarse-grain num_blocks must be positive and metis_imbalance non-negative");
 
-    // epsilon is used by all coarse-graining modes (cg and icgn) with the same
-    // meaning: couplings with |V|^2/|dE| < epsilon are set to exact zero.
-    // epsilon = 0 (default) disables the filter.
-    _upt_solver_options.coarse_epsilon = cg.get_option("epsilon", 0.0);
+    _upt_solver_options.coarse_epsilon = icgn.get_option("coupling_threshold", 0.0);
     if (_upt_solver_options.coarse_epsilon < 0.0)
-      throw InitFailedException("ETB: coarse-grain epsilon must be non-negative");
+      throw InitFailedException("ETB: coarse-grain coupling_threshold must be non-negative");
 
-    if (_upt_solver_options.coarse_mode == 1)
-    {
-      if (!cg.find_option("energy_min") || !cg.find_option("energy_max"))
-        throw InitFailedException("ETB: coarse-grain cg requires energy_min and energy_max");
-      _upt_solver_options.coarse_energy_min = cg.get_option("energy_min", 0.0);
-      _upt_solver_options.coarse_energy_max = cg.get_option("energy_max", 0.0);
-      if (_upt_solver_options.coarse_energy_min >= _upt_solver_options.coarse_energy_max)
-        throw InitFailedException("ETB: coarse-grain energy_min must be smaller than energy_max");
-    }
-    else
-    {
-      if (!cg.find_option("core_energy_min") || !cg.find_option("core_energy_max") ||
-          !cg.find_option("top_buffer") || !cg.find_option("bottom_buffer"))
-        throw InitFailedException("ETB: coarse-grain icgn requires core_energy_min, core_energy_max, top_buffer, and bottom_buffer");
-      _upt_solver_options.coarse_core_energy_min = cg.get_option("core_energy_min", 0.0);
-      _upt_solver_options.coarse_core_energy_max = cg.get_option("core_energy_max", 0.0);
-      _upt_solver_options.coarse_top_buffer = cg.get_option("top_buffer", 0.0);
-      _upt_solver_options.coarse_bottom_buffer = cg.get_option("bottom_buffer", 0.0);
-      if (_upt_solver_options.coarse_core_energy_min >= _upt_solver_options.coarse_core_energy_max ||
-          _upt_solver_options.coarse_top_buffer < 0.0 ||
-          _upt_solver_options.coarse_bottom_buffer < 0.0)
-        throw InitFailedException("ETB: invalid coarse-grain core window, top_buffer, or bottom_buffer");
-      if (_upt_solver_options.coarse_mode == 2)
-      {
-        _upt_solver_options.coarse_add_core_acquaintances = cg.get_option("add_core_acquaintances", 0);
-        if (_upt_solver_options.coarse_add_core_acquaintances < 0)
-          throw InitFailedException("ETB: coarse-grain add_core_acquaintances must be non-negative");
-        _upt_solver_options.coarse_neumann_order = cg.get_option("neumann_order", -1);
-        _upt_solver_options.coarse_expansion_energy = cg.get_option("expansion_energy",
-            0.5 * (_upt_solver_options.coarse_core_energy_min + _upt_solver_options.coarse_core_energy_max));
-      }
-    }
-      _upt_solver_options.coarse_check_neumann_convergence =
-        cg.get_option("check_neumann_convergence", false);
-      _upt_solver_options.coarse_power_iteration_max_iterations =
-        cg.get_option("power_iteration_max_iterations", 1000);
-      _upt_solver_options.coarse_power_iteration_tolerance =
-        cg.get_option("power_iteration_tolerance", 1e-3);
-      if (_upt_solver_options.coarse_power_iteration_max_iterations <= 0 ||
+    if (!icgn.find_option("core_energy_min") || !icgn.find_option("core_energy_max"))
+      throw InitFailedException("ETB: coarse-grain requires core_energy_min and core_energy_max");
+    _upt_solver_options.coarse_core_energy_min = icgn.get_option("core_energy_min", 0.0);
+    _upt_solver_options.coarse_core_energy_max = icgn.get_option("core_energy_max", 0.0);
+    _upt_solver_options.coarse_top_buffer = icgn.get_option("top_buffer", 0.0);
+    _upt_solver_options.coarse_bottom_buffer = icgn.get_option("bottom_buffer", 0.0);
+    if (_upt_solver_options.coarse_core_energy_min >= _upt_solver_options.coarse_core_energy_max ||
+        _upt_solver_options.coarse_top_buffer < 0.0 ||
+        _upt_solver_options.coarse_bottom_buffer < 0.0)
+      throw InitFailedException("ETB: invalid coarse-grain core window, top_buffer, or bottom_buffer");
+
+    _upt_solver_options.coarse_add_core_acquaintances = icgn.get_option("add_core_acquaintances", 0);
+    if (_upt_solver_options.coarse_add_core_acquaintances < 0)
+      throw InitFailedException("ETB: coarse-grain add_core_acquaintances must be non-negative");
+    _upt_solver_options.coarse_neumann_order = icgn.get_option("neumann_order", -1);
+    _upt_solver_options.coarse_expansion_energy = icgn.get_option("expansion_energy",
+        0.5 * (_upt_solver_options.coarse_core_energy_min + _upt_solver_options.coarse_core_energy_max));
+    _upt_solver_options.coarse_check_neumann_convergence =
+      icgn.get_option("check_neumann_convergence", false);
+    _upt_solver_options.coarse_power_iteration_max_iterations =
+      icgn.get_option("power_iteration_max_iterations", 1000);
+    _upt_solver_options.coarse_power_iteration_tolerance =
+      icgn.get_option("power_iteration_tolerance", 1e-3);
+    if (_upt_solver_options.coarse_power_iteration_max_iterations <= 0 ||
         _upt_solver_options.coarse_power_iteration_tolerance <= 0.0)
-        throw InitFailedException("ETB: invalid coarse-grain Neumann convergence options");
+      throw InitFailedException("ETB: invalid coarse-grain Neumann convergence options");
     _upt_solver_options.coarse_graining = true;
   }
 

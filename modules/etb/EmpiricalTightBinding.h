@@ -117,11 +117,8 @@ class ETB : public TightBinding
     double bitoff;
     int solver_flag;
     bool coarse_graining;
-    int coarse_mode;
     int coarse_num_blocks;
-    double coarse_imbalance;
-    double coarse_energy_min;
-    double coarse_energy_max;
+    double coarse_metis_imbalance;
     double coarse_core_energy_min;
     double coarse_core_energy_max;
     double coarse_top_buffer;
