@@ -433,11 +433,20 @@ states of large-supercell systems, at the price of some accuracy loss.
 For ``cg``, ``energy_min`` and ``energy_max`` define the retained energy
 window. For ``icgn``, ``core_energy_min``, ``core_energy_max``,
 ``top_buffer`` and ``bottom_buffer`` define the core window and asymmetric
-selection pool. Acquaintance states are selected when
-``abs(g_ij)^2 / abs(E_i - E_j) > epsilon``.
+selection pool.
 
 ``epsilon`` : double
-  Optional ICGN acquaintance threshold, default ``1e-3``.
+  Optional non-negative coupling threshold common to ``cg`` and ``icgn``,
+  default ``0``. A coupling ``g_ij`` between two states with energies ``E_i``
+  and ``E_j`` is kept only if ``abs(g_ij)^2 > epsilon * abs(E_i - E_j)``;
+  otherwise (equality included) it is set to exact zero. It applies to the
+  couplings between retained states in the reduced Hamiltonian and, for
+  ``icgn``, also to the Neumann self-energy couplings. Degenerate states
+  (``E_i = E_j``) are filtered only if the coupling itself is zero. With the
+  default ``epsilon = 0`` only exactly zero couplings are removed. For
+  ``icgn``, an acquaintance state is added to the retained set only if it has
+  at least one non-zero coupling to a core state after this filtering. A
+  value that is too large decouples the blocks and gives wrong eigenvalues.
 
 ``neumann_order`` and ``expansion_energy`` : integer/double
   ICGN options. Set ``neumann_order`` to a negative value (default ``-1``)

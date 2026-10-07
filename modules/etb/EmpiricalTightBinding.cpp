@@ -175,7 +175,7 @@ ETB::UptSolverOptions::UptSolverOptions(void)
    coarse_core_energy_max(0.0),
   coarse_top_buffer(0.0),
   coarse_bottom_buffer(0.0),
-   coarse_epsilon(1e-3),
+   coarse_epsilon(0.0),
    coarse_neumann_order(-1),
    coarse_expansion_energy(0.0),
   coarse_check_neumann_convergence(false),
@@ -1512,12 +1512,12 @@ void ETB::parse_options(void)
         _upt_solver_options.coarse_imbalance < 0.0)
       throw InitFailedException("ETB: coarse-grain num_blocks must be positive and imbalance non-negative");
 
-    // epsilon is used by all coarse-graining modes, including plain CG.
-    // Read it before branching on the mode so a user-supplied value is not
-    // silently lost for mode = cg (which otherwise keeps the 1e-3 default).
-    _upt_solver_options.coarse_epsilon = cg.get_option("epsilon", 1e-3);
-    if (_upt_solver_options.coarse_epsilon <= 0.0)
-      throw InitFailedException("ETB: coarse-grain epsilon must be positive");
+    // epsilon is used by all coarse-graining modes (cg and icgn) with the same
+    // meaning: couplings with |V|^2/|dE| < epsilon are set to exact zero.
+    // epsilon = 0 (default) disables the filter.
+    _upt_solver_options.coarse_epsilon = cg.get_option("epsilon", 0.0);
+    if (_upt_solver_options.coarse_epsilon < 0.0)
+      throw InitFailedException("ETB: coarse-grain epsilon must be non-negative");
 
     if (_upt_solver_options.coarse_mode == 1)
     {
