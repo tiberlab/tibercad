@@ -32,17 +32,35 @@
 
 #include "slepceps.h"
 
-// Private PETSc dense-matrix header: needed only to force-clear the
-// matinuse flag on DS matrices that SLEPc leaves "checked out" when
-// KSPSolve diverges mid-Krylov iteration (EPSDestroy would crash otherwise).
-// This is an internal workaround tied to PETSc 3.23 + SLEPc 3.23.
-#include "../../../external/petsc-3.23.4/src/mat/impls/dense/seq/dense.h"
-
-// Private SLEPc DS header: needed to access omat[] array in _p_DS struct.
-#include "../../../external/slepc-3.23.1/include/slepc/private/dsimpl.h"
-
-
 #include "petsc/private/matimpl.h"
+// SLEPc private DS layout (installed with SLEPc): needed for ds->omat[].
+#include <slepc/private/dsimpl.h>
+
+// Local mirror of PETSc 3.23 Mat_SeqDense (src/mat/impls/dense/seq/dense.h).
+// That header is NOT installed by PETSc, so we cannot include it via the
+// source tree under external/ (absent on system-wide installs, e.g. olab).
+// Only matinuse / cmat are touched; the preceding fields must match layout
+// so those two have the correct offsets. Tied to PETSc 3.23.x.
+typedef struct {
+  PetscScalar  *v;
+  PetscScalar  *unplacedarray;
+  PetscBool     roworiented;
+  PetscInt      pad;
+  PetscBLASInt *pivots;
+  PetscBLASInt  lfwork;
+  PetscScalar  *fwork;
+  PetscScalar  *tau;
+  Vec           qrrhs;
+  PetscBLASInt  lda;
+  PetscBLASInt  rank;
+  PetscBool     user_alloc;
+  PetscBool     unplaced_user_alloc;
+  Mat                cmat;
+  Vec                cvec;
+  const PetscScalar *ptrinuse;
+  PetscInt           vecinuse;
+  PetscInt           matinuse;
+} Mat_SeqDense;
 
 
 using namespace std;
