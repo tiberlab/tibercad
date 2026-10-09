@@ -69,8 +69,18 @@ ulimit -c 0
 if [ $usegdb -eq 1 ]
 then
   gdb -nx -ex run --args ${executable} $@
-  #@MPIEXEC@ --map-by slot:PE=${OMP_NUM_THREADS} --bind-to core -n ${n_mpi_procs} ${mpi_opts[*]} -xterm -e gdb -nx -ex run --args ${executable} $@
+  #@MPIEXEC@ --bind-to none -n ${n_mpi_procs} ${mpi_opts[*]} -xterm -e gdb -nx -ex run --args ${executable} $@
 else
   #${SDKDIR}/${ARCH}/bin/mpiexec -n ${n_mpi_procs} ${executable} $@
-  @MPIEXEC@ --map-by slot:PE=${OMP_NUM_THREADS} --bind-to core -n ${n_mpi_procs} ${mpi_opts[*]}  ${executable} $@
+  # Process binding: under SLURM each rank gets exactly OMP_NUM_THREADS cores
+  # (no oversubscription between ranks); outside SLURM (laptop/workstation)
+  # leave threads free, otherwise OpenMPI pins a rank to 1 core and all OpenMP
+  # threads of that rank compete for it.
+  if test "${SLURM_JOB_ID}x" != "x"
+  then
+    bind_opts=(--map-by slot:PE=${OMP_NUM_THREADS} --bind-to core)
+  else
+    bind_opts=(--bind-to none)
+  fi
+  @MPIEXEC@ ${bind_opts[*]} -n ${n_mpi_procs} ${mpi_opts[*]}  ${executable} $@
 fi
