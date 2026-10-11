@@ -189,7 +189,7 @@ public:
   //! Configure the optional coarse-graining transformation.
   void set_coarse_graining(int nblocks, double metis_imbalance,
       double core_energy_min, double core_energy_max, double top_buffer,
-      double bottom_buffer, double epsilon, int add_core_acquaintances,
+      double bottom_buffer, double epsilon, int add_core_outers,
       int neumann_order, double expansion_energy, bool check_neumann_convergence,
       int power_iteration_max_iterations, double power_iteration_tolerance);
 

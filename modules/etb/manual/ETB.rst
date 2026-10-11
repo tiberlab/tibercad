@@ -421,7 +421,7 @@ size of the Hamiltonian used by the eigensolver. The system is divided into
 spatial blocks and each block is diagonalized independently. The resulting
 block states are then selected by energy. All states inside the core energy
 window and its upper and lower buffer regions are retained in the reduced
-basis. If acquaintance tracing is enabled, only core states are used as the
+basis. If outer tracing is enabled, only core states are used as the
 starting points for tracing additional coupled states; buffer states are not
 used for this tracing.
 
@@ -441,8 +441,8 @@ A typical configuration is ::
     core_energy_max = 100.0
     top_buffer = 0.0
     bottom_buffer = 0.0
-    coupling_threshold = 0.0
-    add_core_acquaintances = 0
+    outer_coupling_threshold = 0.0
+    add_core_outers = 0
     neumann_order = -1
   }
 
@@ -469,16 +469,20 @@ The available options are:
   Additional energy ranges, in eV, above and below the core window used when
   selecting states for the reduced basis. Both default to ``0``.
 
-``coupling_threshold`` : double (optional)
-  Non-negative threshold controlling which couplings between retained states
-  are kept. A coupling :math:`g_{ij}` between states with energies
-  :math:`E_i` and :math:`E_j` is retained only if
-  ``abs(g_ij)^2 > coupling_threshold * abs(E_i - E_j)``. The default is ``0``.
+``outer_coupling_threshold`` : double (optional)
+  Non-negative threshold used to drop weak couplings that involve at least one
+  state outside the core+buffer energy window. Couplings between two states
+  that both lie in
+  ``[core_energy_min - bottom_buffer, core_energy_max + top_buffer]`` are never
+  filtered (only exact zeros are removed). For any other pair a coupling
+  :math:`g_{ij}` is kept only if
+  ``abs(g_ij)^2 > outer_coupling_threshold * abs(E_i - E_j)``. The default is ``0``.
 
-``add_core_acquaintances`` : integer (optional)
-  Controls whether states coupled to the core states are added to the reduced
-  basis. ``0`` disables this extension. ``1`` includes the first level of
-  coupled states. Values greater than ``1`` are treated as ``1``.
+``add_core_outers`` : integer (optional)
+  Controls whether states outside the core+buffer window that couple to core
+  states ("outers") are added to the reduced basis. ``0`` disables this
+  extension. ``1`` includes the first level of coupled states. Values greater
+  than ``1`` are treated as ``1``.
 
 ``neumann_order`` : integer (optional)
   Controls the order of the optional self-energy correction used to account

@@ -173,7 +173,7 @@ ETB::UptSolverOptions::UptSolverOptions(void)
   coarse_top_buffer(0.0),
   coarse_bottom_buffer(0.0),
    coarse_epsilon(0.0),
-   coarse_add_core_acquaintances(0),
+   coarse_add_core_outers(0),
    coarse_neumann_order(-1),
    coarse_expansion_energy(0.0),
   coarse_check_neumann_convergence(false),
@@ -477,7 +477,7 @@ void ETB::do_reinit(void)
         _upt_solver_options.coarse_top_buffer,
         _upt_solver_options.coarse_bottom_buffer,
         _upt_solver_options.coarse_epsilon,
-        _upt_solver_options.coarse_add_core_acquaintances,
+        _upt_solver_options.coarse_add_core_outers,
         _upt_solver_options.coarse_neumann_order,
         _upt_solver_options.coarse_expansion_energy,
         _upt_solver_options.coarse_check_neumann_convergence,
@@ -1504,9 +1504,9 @@ void ETB::parse_options(void)
         _upt_solver_options.coarse_metis_imbalance < 0.0)
       throw InitFailedException("ETB: coarse-grain num_blocks must be positive and metis_imbalance non-negative");
 
-    _upt_solver_options.coarse_epsilon = icgn.get_option("coupling_threshold", 0.0);
+    _upt_solver_options.coarse_epsilon = icgn.get_option("outer_coupling_threshold", 0.0);
     if (_upt_solver_options.coarse_epsilon < 0.0)
-      throw InitFailedException("ETB: coarse-grain coupling_threshold must be non-negative");
+      throw InitFailedException("ETB: coarse-grain outer_coupling_threshold must be non-negative");
 
     if (!icgn.find_option("core_energy_min") || !icgn.find_option("core_energy_max"))
       throw InitFailedException("ETB: coarse-grain requires core_energy_min and core_energy_max");
@@ -1519,9 +1519,9 @@ void ETB::parse_options(void)
         _upt_solver_options.coarse_bottom_buffer < 0.0)
       throw InitFailedException("ETB: invalid coarse-grain core window, top_buffer, or bottom_buffer");
 
-    _upt_solver_options.coarse_add_core_acquaintances = icgn.get_option("add_core_acquaintances", 0);
-    if (_upt_solver_options.coarse_add_core_acquaintances < 0)
-      throw InitFailedException("ETB: coarse-grain add_core_acquaintances must be non-negative");
+    _upt_solver_options.coarse_add_core_outers = icgn.get_option("add_core_outers", 0);
+    if (_upt_solver_options.coarse_add_core_outers < 0)
+      throw InitFailedException("ETB: coarse-grain add_core_outers must be non-negative");
     _upt_solver_options.coarse_neumann_order = icgn.get_option("neumann_order", -1);
     _upt_solver_options.coarse_expansion_energy = icgn.get_option("expansion_energy",
         0.5 * (_upt_solver_options.coarse_core_energy_min + _upt_solver_options.coarse_core_energy_max));
