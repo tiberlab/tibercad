@@ -448,9 +448,17 @@ A typical configuration is ::
 
 The available options are:
 
-``num_blocks`` : integer (required)
+``num_blocks`` : integer (required, non-negative)
   Number of spatial blocks into which the system is divided before
-  coarse-graining.
+  coarse-graining. Must be ``>= 0``. A positive value is used as given,
+  except that if it exceeds the number of atoms the code falls back to
+  one block per atom and prints a warning. The special value ``0``
+  enables **automatic** selection: the number of blocks is chosen so
+  that the average orbital dimension per block is near a target size
+  (about 128), while preferring at least as many blocks as the OpenMP
+  thread budget so that block diagonalization can fill the available
+  threads. The chosen value is always clamped to ``[1, n_atoms]`` and
+  is reported in the log.
 
 ``metis_imbalance`` : double (optional)
   Maximum allowed relative imbalance between block sizes. The default is

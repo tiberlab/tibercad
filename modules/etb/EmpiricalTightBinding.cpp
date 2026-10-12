@@ -1500,9 +1500,10 @@ void ETB::parse_options(void)
 
     _upt_solver_options.coarse_num_blocks = icgn.get_option("num_blocks", 0);
     _upt_solver_options.coarse_metis_imbalance = icgn.get_option("metis_imbalance", 0.03);
-    if (_upt_solver_options.coarse_num_blocks < 1 ||
+    // num_blocks == 0 means auto-select at prepare time; negative is invalid
+    if (_upt_solver_options.coarse_num_blocks < 0 ||
         _upt_solver_options.coarse_metis_imbalance < 0.0)
-      throw InitFailedException("ETB: coarse-grain num_blocks must be positive and metis_imbalance non-negative");
+      throw InitFailedException("ETB: coarse-grain num_blocks must be non-negative and metis_imbalance non-negative");
 
     _upt_solver_options.coarse_epsilon = icgn.get_option("outer_coupling_threshold", 0.0);
     if (_upt_solver_options.coarse_epsilon < 0.0)
