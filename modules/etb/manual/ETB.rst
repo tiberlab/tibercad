@@ -365,6 +365,10 @@ The Solver section of the **Module**  ``empirical_tb`` contains the following op
  ``solver`` : string
       the actual solver to be used. For ``gpu`` one can choose ``jd`` or ``lanczos``, for ``cpu`` ``lanczos`` or ``lapack``, for ``slepc`` one of the SLEPc solvers listed below.
 
+
+With  the  keyword *load_states = true* it is  possible to resume a  calculation starting from the last of the states loaded from a  file. Also,  one  can use  a  set  of already calculated states for an optical  spectrum calculation (see in the following).
+Just  run *empirical_tb simulation* to  load  the  states  and  then  *opticstb* to calculate spectrum  based on those   states.
+
 .. _etb-slepc-solvers:
 
 SLEPc solvers
@@ -413,12 +417,13 @@ with a spectral transformation. The following options are read from the same ``S
 
 The eigensolver tolerance is not a separate option: it is taken from ``long_tolerance``.
 
-Coarse-graining
-~~~~~~~~~~~~~~~
+
+Coarse-graining mode
+~~~~~~~~~~~~~~~~~~~~
 
 An optional ``coarse-grain`` block can be placed inside ``Solver`` to reduce the
-size of the Hamiltonian used by the eigensolver. The system is divided into
-spatial blocks and each block is diagonalized independently. The resulting
+size of the Hamiltonian fed to the eigensolver. The system is divided into blocks
+and each block is diagonalized independently using LAPACK. The resulting
 block states are then selected by energy. All states inside the core energy
 window and its upper and lower buffer regions are retained in the reduced
 basis. If outer tracing is enabled, only core states are used as the
@@ -435,15 +440,21 @@ A typical configuration is ::
 
   coarse-grain
   {
-    num_blocks = 1
+    num_blocks = 10
     metis_imbalance = 0.03
-    core_energy_min = -100.0
-    core_energy_max = 100.0
-    top_buffer = 0.0
-    bottom_buffer = 0.0
-    outer_coupling_threshold = 0.0
-    add_core_outers = 0
-    neumann_order = -1
+    outer_coupling_threshold = 1e-5
+    add_core_outers = 1
+
+    core_energy_min = -3.0
+    core_energy_max = 3.0
+    top_buffer = 2.0
+    bottom_buffer = 2.0
+
+    neumann_order = 0
+    expansion_energy = 0.0
+    check_neumann_convergence = true
+    power_iteration_max_iterations = 1000
+    power_iteration_tolerance = 1e-3
   }
 
 The available options are:
@@ -455,7 +466,7 @@ The available options are:
   one block per atom and prints a warning. The special value ``0``
   enables **automatic** selection: the number of blocks is chosen so
   that the average orbital dimension per block is near a target size
-  (about 128), while preferring at least as many blocks as the OpenMP
+  (about 200), while preferring at least as many blocks as the OpenMP
   thread budget so that block diagonalization can fill the available
   threads. The chosen value is always clamped to ``[1, n_atoms]`` and
   is reported in the log.
@@ -512,17 +523,7 @@ The available options are:
   ``1000``.
 
 ``power_iteration_tolerance`` : double (optional)
-  Convergence tolerance used by the convergence check. The default is
-  ``1e-3``.
-
-When using SLEPc solvers, options have to be passed in the ``solver`` block.
-
-
-With  the  keyword *load_states = true* it is  possible to resume a  calculation starting from the last of the states loaded from a  file. Also,  one  can use  a  set  of already calculated states for an optical  spectrum calculation (see in the following). 
-Just  run *empirical_tb simulation* to  load  the  states  and  then  *opticstb* to calculate spectrum  based on those   states.
-
-  
-
+  Convergence tolerance used by the convergence check. The default is ``1e-3``.
 
 
 Output
