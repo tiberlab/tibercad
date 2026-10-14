@@ -1526,15 +1526,17 @@ void ETB::parse_options(void)
     _upt_solver_options.coarse_neumann_order = icgn.get_option("neumann_order", -1);
     _upt_solver_options.coarse_expansion_energy = icgn.get_option("expansion_energy",
         0.5 * (_upt_solver_options.coarse_core_energy_min + _upt_solver_options.coarse_core_energy_max));
-    _upt_solver_options.coarse_check_neumann_convergence =
-      icgn.get_option("check_neumann_convergence", false);
-    _upt_solver_options.coarse_power_iteration_max_iterations =
-      icgn.get_option("power_iteration_max_iterations", 1000);
-    _upt_solver_options.coarse_power_iteration_tolerance =
-      icgn.get_option("power_iteration_tolerance", 1e-3);
-    if (_upt_solver_options.coarse_power_iteration_max_iterations <= 0 ||
-        _upt_solver_options.coarse_power_iteration_tolerance <= 0.0)
-      throw InitFailedException("ETB: invalid coarse-grain Neumann convergence options");
+    // Temporarily disabled: Neumann convergence checker options are not exposed
+    // through the tibercad interface. Keep this block for future reconsideration.
+    // _upt_solver_options.coarse_check_neumann_convergence =
+    //   icgn.get_option("check_neumann_convergence", false);
+    // _upt_solver_options.coarse_power_iteration_max_iterations =
+    //   icgn.get_option("power_iteration_max_iterations", 1000);
+    // _upt_solver_options.coarse_power_iteration_tolerance =
+    //   icgn.get_option("power_iteration_tolerance", 1e-3);
+    // if (_upt_solver_options.coarse_power_iteration_max_iterations <= 0 ||
+    //     _upt_solver_options.coarse_power_iteration_tolerance <= 0.0)
+    //   throw InitFailedException("ETB: invalid coarse-grain Neumann convergence options");
     _upt_solver_options.coarse_graining = true;
   }
 

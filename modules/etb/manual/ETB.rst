@@ -442,19 +442,17 @@ A typical configuration is ::
   {
     num_blocks = 10
     metis_imbalance = 0.03
-    outer_coupling_threshold = 1e-5
-    add_core_outers = 1
 
     core_energy_min = -3.0
     core_energy_max = 3.0
     top_buffer = 2.0
     bottom_buffer = 2.0
 
+    add_core_outers = 1
+    outer_coupling_threshold = 1e-5
+
     neumann_order = 0
     expansion_energy = 0.0
-    check_neumann_convergence = true
-    power_iteration_max_iterations = 1000
-    power_iteration_tolerance = 1e-3
   }
 
 The available options are:
@@ -482,26 +480,27 @@ The available options are:
 ``core_energy_min`` / ``core_energy_max`` : double (required)
   Lower and upper bounds of the energy window, in eV, containing the states
   that must be retained. ``core_energy_min`` must be smaller than
-  ``core_energy_max``.
+  ``core_energy_max``. These states (so-called core states) will be used for
+  tracing "outer states" (see below) if ``add_core_outers > 0``.
 
 ``top_buffer`` / ``bottom_buffer`` : double (optional)
   Additional energy ranges, in eV, above and below the core window used when
   selecting states for the reduced basis. Both default to ``0``.
-
-``outer_coupling_threshold`` : double (optional)
-  Non-negative threshold used to drop weak couplings that involve at least one
-  state outside the core+buffer energy window. Couplings between two states
-  that both lie in
-  ``[core_energy_min - bottom_buffer, core_energy_max + top_buffer]`` are never
-  filtered (only exact zeros are removed). For any other pair a coupling
-  :math:`g_{ij}` is kept only if
-  ``abs(g_ij)^2 > outer_coupling_threshold * abs(E_i - E_j)``. The default is ``0``.
 
 ``add_core_outers`` : integer (optional)
   Controls whether states outside the core+buffer window that couple to core
   states ("outers") are added to the reduced basis. ``0`` disables this
   extension. ``1`` includes the first level of coupled states. Values greater
   than ``1`` are treated as ``1``.
+
+``outer_coupling_threshold`` : double (optional)
+  (Irrelevant if ``add_core_outers = 0``) Non-negative threshold used to drop
+  weak couplings involving at least one state outside the core+buffer window.
+  Couplings between two states that both lie in
+  ``[core_energy_min - bottom_buffer, core_energy_max + top_buffer]`` are never
+  filtered (only exact zeros are removed). For any other pair a coupling
+  :math:`g_{ij}` is kept only if
+  ``abs(g_ij)^2 > outer_coupling_threshold * abs(E_i - E_j)``. The default is ``0``.
 
 ``neumann_order`` : integer (optional)
   Controls the order of the optional self-energy correction used to account
@@ -514,16 +513,18 @@ The available options are:
   default it is the midpoint of ``core_energy_min`` and ``core_energy_max``.
   It is only used when ``neumann_order >= 0``.
 
-``check_neumann_convergence`` : boolean (optional)
-  If **true**, perform an additional convergence check for the self-energy
-  correction. The default is **false**.
+.. Temporarily disabled checker options, retained here for future reconsideration:
 
-``power_iteration_max_iterations`` : integer (optional)
-  Maximum number of iterations used by the convergence check. The default is
-  ``1000``.
+   ``check_neumann_convergence`` : boolean (optional)
+     If **true**, perform an additional convergence check for the self-energy
+     correction. The default is **false**.
 
-``power_iteration_tolerance`` : double (optional)
-  Convergence tolerance used by the convergence check. The default is ``1e-3``.
+   ``power_iteration_max_iterations`` : integer (optional)
+     Maximum number of iterations used by the convergence check. The default is
+     ``1000``.
+
+   ``power_iteration_tolerance`` : double (optional)
+     Convergence tolerance used by the convergence check. The default is ``1e-3``.
 
 
 Output
