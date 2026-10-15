@@ -193,6 +193,14 @@ public:
       int neumann_order, double expansion_energy, bool check_neumann_convergence,
       int power_iteration_max_iterations, double power_iteration_tolerance);
 
+  //! Select the coarse-graining block partition strategy.
+  //! partition_type: 0 = coupling (METIS/graph), 1 = geometry (1D principal layers).
+  //! partition_direction: 0 = auto (longest extent), 1/2/3 = x/y/z.
+  //! layer_tolerance: atomic-layer gap tolerance in Angstrom (<= 0: auto).
+  //! Call after set_coarse_graining.
+  void set_coarse_graining_partition(int partition_type, int partition_direction,
+      double layer_tolerance);
+
   int get_coarse_graining_error(void);
 
   //! Leave the coarse-graining layer: restores the original operator and, when

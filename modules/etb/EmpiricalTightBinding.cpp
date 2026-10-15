@@ -178,7 +178,10 @@ ETB::UptSolverOptions::UptSolverOptions(void)
    coarse_expansion_energy(0.0),
   coarse_check_neumann_convergence(false),
    coarse_power_iteration_max_iterations(1000),
-   coarse_power_iteration_tolerance(1e-3)
+   coarse_power_iteration_tolerance(1e-3),
+   coarse_partition_type(0),
+   coarse_partition_direction(0),
+   coarse_layer_tolerance(0.0)
 {
 }
 
@@ -469,6 +472,7 @@ void ETB::do_reinit(void)
   inst->set_solver_flag(_upt_solver_options.solver_flag); 
 
   if (_upt_solver_options.coarse_graining)
+  {
     inst->set_coarse_graining(
         _upt_solver_options.coarse_num_blocks,
         _upt_solver_options.coarse_metis_imbalance,
@@ -483,6 +487,11 @@ void ETB::do_reinit(void)
         _upt_solver_options.coarse_check_neumann_convergence,
         _upt_solver_options.coarse_power_iteration_max_iterations,
         _upt_solver_options.coarse_power_iteration_tolerance);
+    inst->set_coarse_graining_partition(
+        _upt_solver_options.coarse_partition_type,
+        _upt_solver_options.coarse_partition_direction,
+        _upt_solver_options.coarse_layer_tolerance);
+  }
 	  
   inst->set_output((int) _upt_options.out_format, _upt_options.grid_step);
 
@@ -1526,6 +1535,37 @@ void ETB::parse_options(void)
     _upt_solver_options.coarse_neumann_order = icgn.get_option("neumann_order", -1);
     _upt_solver_options.coarse_expansion_energy = icgn.get_option("expansion_energy",
         0.5 * (_upt_solver_options.coarse_core_energy_min + _upt_solver_options.coarse_core_energy_max));
+    // Block partition strategy: "coupling" (default, METIS/graph) or
+    // "geometry" (1D principal layers along partition_direction).
+    {
+      const std::string ptype = icgn.get_option("partition_type", "coupling");
+      if (ptype == "coupling")
+        _upt_solver_options.coarse_partition_type = 0;
+      else if (ptype == "geometry")
+        _upt_solver_options.coarse_partition_type = 1;
+      else
+        throw InitFailedException("ETB: coarse-grain partition_type must be 'coupling' or 'geometry' (got '" + ptype + "')");
+
+      const bool has_dir = icgn.find_option("partition_direction");
+      const std::string pdir = icgn.get_option("partition_direction", "auto");
+      if (pdir == "auto")
+        _upt_solver_options.coarse_partition_direction = 0;
+      else if (pdir == "x" || pdir == "X")
+        _upt_solver_options.coarse_partition_direction = 1;
+      else if (pdir == "y" || pdir == "Y")
+        _upt_solver_options.coarse_partition_direction = 2;
+      else if (pdir == "z" || pdir == "Z")
+        _upt_solver_options.coarse_partition_direction = 3;
+      else
+        throw InitFailedException("ETB: coarse-grain partition_direction must be x, y or z (got '" + pdir + "')");
+
+      _upt_solver_options.coarse_layer_tolerance = icgn.get_option("layer_tolerance", 0.0);
+
+      if (_upt_solver_options.coarse_partition_type == 0 &&
+          (has_dir || icgn.find_option("layer_tolerance")))
+        Messages::warning("ETB: coarse-grain partition_direction/layer_tolerance are ignored unless partition_type = geometry");
+    }
+
     // Temporarily disabled: Neumann convergence checker options are not exposed
     // through the tibercad interface. Keep this block for future reconsideration.
     // _upt_solver_options.coarse_check_neumann_convergence =

@@ -120,6 +120,13 @@ void UptWrapper::set_coarse_graining(int nblocks, double metis_imbalance,
       power_iteration_max_iterations, power_iteration_tolerance);
 }
 
+void UptWrapper::set_coarse_graining_partition(int partition_type,
+    int partition_direction, double layer_tolerance)
+{
+  upt_set_coarse_graining_partition_(_handler, partition_type,
+      partition_direction, layer_tolerance);
+}
+
 int UptWrapper::get_coarse_graining_error(void)
 {
   int error_code = 0;
