@@ -130,9 +130,11 @@ class ETB : public TightBinding
     bool coarse_check_neumann_convergence;
     int coarse_power_iteration_max_iterations;
     double coarse_power_iteration_tolerance;
-    int coarse_partition_type;       // 0 = coupling (default), 1 = geometry
+    int coarse_partition_type;       // 0 = coupling, 1 = geometry, 2 = nested
     int coarse_partition_direction;  // 0 = auto (longest extent), 1/2/3 = x/y/z
     double coarse_layer_tolerance;   // Angstrom; <= 0 means auto-detect
+    int coarse_nested_axes[3];       // permutation of 1,2,3 (x,y,z)
+    int coarse_nested_grids[3];      // nx,ny,nz along nested_axes
   };
 
   //! Destructor

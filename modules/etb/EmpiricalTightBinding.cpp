@@ -181,7 +181,9 @@ ETB::UptSolverOptions::UptSolverOptions(void)
    coarse_power_iteration_tolerance(1e-3),
    coarse_partition_type(0),
    coarse_partition_direction(0),
-   coarse_layer_tolerance(0.0)
+   coarse_layer_tolerance(0.0),
+   coarse_nested_axes{1, 2, 3},
+   coarse_nested_grids{0, 0, 0}
 {
 }
 
@@ -491,6 +493,10 @@ void ETB::do_reinit(void)
         _upt_solver_options.coarse_partition_type,
         _upt_solver_options.coarse_partition_direction,
         _upt_solver_options.coarse_layer_tolerance);
+    if (_upt_solver_options.coarse_partition_type == 2)
+      inst->set_coarse_graining_nested(
+          _upt_solver_options.coarse_nested_axes,
+          _upt_solver_options.coarse_nested_grids);
   }
 	  
   inst->set_output((int) _upt_options.out_format, _upt_options.grid_step);
@@ -1543,8 +1549,10 @@ void ETB::parse_options(void)
         _upt_solver_options.coarse_partition_type = 0;
       else if (ptype == "geometry")
         _upt_solver_options.coarse_partition_type = 1;
+      else if (ptype == "nested")
+        _upt_solver_options.coarse_partition_type = 2;
       else
-        throw InitFailedException("ETB: coarse-grain partition_type must be 'coupling' or 'geometry' (got '" + ptype + "')");
+        throw InitFailedException("ETB: coarse-grain partition_type must be 'coupling', 'geometry' or 'nested' (got '" + ptype + "')");
 
       const bool has_dir = icgn.find_option("partition_direction");
       const std::string pdir = icgn.get_option("partition_direction", "auto");
@@ -1564,6 +1572,45 @@ void ETB::parse_options(void)
       if (_upt_solver_options.coarse_partition_type == 0 &&
           (has_dir || icgn.find_option("layer_tolerance")))
         Messages::warning("ETB: coarse-grain partition_direction/layer_tolerance are ignored unless partition_type = geometry");
+
+      // nested_axes = "x-y-z" (row along first, plane along first two)
+      // nested_grids = (nx, ny, nz)
+      if (_upt_solver_options.coarse_partition_type == 2)
+      {
+        const std::string axes_str = icgn.get_option("nested_axes", "x-y-z");
+        auto axis_char = [](char c) -> int {
+          if (c == 'x' || c == 'X') return 1;
+          if (c == 'y' || c == 'Y') return 2;
+          if (c == 'z' || c == 'Z') return 3;
+          return 0;
+        };
+        // expect three letters separated by '-'
+        std::vector<int> ax;
+        for (char c : axes_str)
+        {
+          int v = axis_char(c);
+          if (v > 0) ax.push_back(v);
+        }
+        if (ax.size() != 3 || ax[0] == ax[1] || ax[0] == ax[2] || ax[1] == ax[2])
+          throw InitFailedException("ETB: coarse-grain nested_axes must be a permutation like 'x-y-z'");
+        for (int i = 0; i < 3; ++i)
+          _upt_solver_options.coarse_nested_axes[i] = ax[i];
+
+        if (!icgn.find_option("nested_grids"))
+          throw InitFailedException("ETB: nested partition requires nested_grids = (nx, ny, nz)");
+        std::vector<int> grids;
+        icgn.get_option("nested_grids", grids);
+        if (grids.size() != 3 || grids[0] < 1 || grids[1] < 1 || grids[2] < 1)
+          throw InitFailedException("ETB: nested_grids must be three positive integers (nx, ny, nz)");
+        for (int i = 0; i < 3; ++i)
+          _upt_solver_options.coarse_nested_grids[i] = grids[i];
+
+        // Nested prototype: force fast-path
+        _upt_solver_options.coarse_add_core_outers = 0;
+        _upt_solver_options.coarse_neumann_order = -1;
+      }
+      else if (icgn.find_option("nested_axes") || icgn.find_option("nested_grids"))
+        Messages::warning("ETB: nested_axes/nested_grids are ignored unless partition_type = nested");
     }
 
     // Temporarily disabled: Neumann convergence checker options are not exposed

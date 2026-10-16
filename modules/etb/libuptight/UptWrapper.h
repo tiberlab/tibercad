@@ -201,6 +201,9 @@ public:
   void set_coarse_graining_partition(int partition_type, int partition_direction,
       double layer_tolerance);
 
+  //! Nested CG: axes[3] in {1,2,3}, grids[3] > 0. Call after partition_type=2.
+  void set_coarse_graining_nested(const int axes[3], const int grids[3]);
+
   int get_coarse_graining_error(void);
 
   //! Leave the coarse-graining layer: restores the original operator and, when

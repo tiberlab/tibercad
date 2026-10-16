@@ -127,6 +127,12 @@ void UptWrapper::set_coarse_graining_partition(int partition_type,
       partition_direction, layer_tolerance);
 }
 
+void UptWrapper::set_coarse_graining_nested(const int axes[3], const int grids[3])
+{
+  upt_set_coarse_graining_nested_(_handler, axes[0], axes[1], axes[2],
+      grids[0], grids[1], grids[2]);
+}
+
 int UptWrapper::get_coarse_graining_error(void)
 {
   int error_code = 0;
