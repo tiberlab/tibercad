@@ -194,15 +194,22 @@ public:
       int power_iteration_max_iterations, double power_iteration_tolerance);
 
   //! Select the coarse-graining block partition strategy.
-  //! partition_type: 0 = coupling (METIS/graph), 1 = geometry (1D principal layers).
-  //! partition_direction: 0 = auto (longest extent), 1/2/3 = x/y/z.
-  //! layer_tolerance: atomic-layer gap tolerance in Angstrom (<= 0: auto).
+  //! partition_type: 0 = coupling (METIS/graph), 2 = nested (cube/row/plane).
+  //! layer_tolerance: atomic-layer gap tolerance in Angstrom (<= 0: auto),
+  //! used by the nested slab partition.
   //! Call after set_coarse_graining.
-  void set_coarse_graining_partition(int partition_type, int partition_direction,
-      double layer_tolerance);
+  void set_coarse_graining_partition(int partition_type, double layer_tolerance);
 
   //! Nested CG: axes[3] in {1,2,3}, grids[3] > 0. Call after partition_type=2.
   void set_coarse_graining_nested(const int axes[3], const int grids[3]);
+
+  //! Per-tier (cubes, rows, planes) parameters of the nested CG. Call after
+  //! set_coarse_graining (it initializes all tiers to its scalar values).
+  void set_coarse_graining_nested_tiers(const double core_energy_min[3],
+      const double core_energy_max[3], const double top_buffer[3],
+      const double bottom_buffer[3], const double epsilon[3],
+      const int add_core_outers[3], const int neumann_order[3],
+      const double expansion_energy[3]);
 
   int get_coarse_graining_error(void);
 

@@ -47,6 +47,7 @@
 
 #include <fstream>
 #include <sstream>
+#include <cmath>
 #include <utility>
 #include <cstring>
 #include <map>
@@ -180,10 +181,17 @@ ETB::UptSolverOptions::UptSolverOptions(void)
    coarse_power_iteration_max_iterations(1000),
    coarse_power_iteration_tolerance(1e-3),
    coarse_partition_type(0),
-   coarse_partition_direction(0),
    coarse_layer_tolerance(0.0),
    coarse_nested_axes{1, 2, 3},
-   coarse_nested_grids{0, 0, 0}
+   coarse_nested_grids{0, 0, 0},
+   coarse_tier_core_min{0.0, 0.0, 0.0},
+   coarse_tier_core_max{0.0, 0.0, 0.0},
+   coarse_tier_top{0.0, 0.0, 0.0},
+   coarse_tier_bottom{0.0, 0.0, 0.0},
+   coarse_tier_epsilon{0.0, 0.0, 0.0},
+   coarse_tier_e0{0.0, 0.0, 0.0},
+   coarse_tier_outers{0, 0, 0},
+   coarse_tier_orders{-1, -1, -1}
 {
 }
 
@@ -491,12 +499,22 @@ void ETB::do_reinit(void)
         _upt_solver_options.coarse_power_iteration_tolerance);
     inst->set_coarse_graining_partition(
         _upt_solver_options.coarse_partition_type,
-        _upt_solver_options.coarse_partition_direction,
         _upt_solver_options.coarse_layer_tolerance);
     if (_upt_solver_options.coarse_partition_type == 2)
+    {
       inst->set_coarse_graining_nested(
           _upt_solver_options.coarse_nested_axes,
           _upt_solver_options.coarse_nested_grids);
+      inst->set_coarse_graining_nested_tiers(
+          _upt_solver_options.coarse_tier_core_min,
+          _upt_solver_options.coarse_tier_core_max,
+          _upt_solver_options.coarse_tier_top,
+          _upt_solver_options.coarse_tier_bottom,
+          _upt_solver_options.coarse_tier_epsilon,
+          _upt_solver_options.coarse_tier_outers,
+          _upt_solver_options.coarse_tier_orders,
+          _upt_solver_options.coarse_tier_e0);
+    }
   }
 	  
   inst->set_output((int) _upt_options.out_format, _upt_options.grid_step);
@@ -1510,68 +1528,127 @@ void ETB::parse_options(void)
   if (icgn_it != solopts.submodels_end("coarse_grain"))
   {
     const ModelOptions& icgn = icgn_it->second;
-    if (!icgn.find_option("num_blocks"))
-      throw InitFailedException("ETB: coarse-grain requires num_blocks");
 
-    _upt_solver_options.coarse_num_blocks = icgn.get_option("num_blocks", 0);
+    // partition_type is mandatory: "coupling" or "nested".
+    // num_blocks is required only for coupling; nested uses nested_grids instead.
+    if (!icgn.find_option("partition_type"))
+      throw InitFailedException("ETB: coarse-grain requires partition_type = 'coupling' or 'nested'");
+    const std::string ptype_early = icgn.get_option("partition_type", "");
+
+    _upt_solver_options.coarse_num_blocks = 0; // default; meaningful only for coupling
+    if (ptype_early == "coupling")
+    {
+      if (!icgn.find_option("num_blocks"))
+        throw InitFailedException("ETB: coarse-grain partition_type=coupling requires num_blocks");
+      _upt_solver_options.coarse_num_blocks = icgn.get_option("num_blocks", 0);
+      if (_upt_solver_options.coarse_num_blocks < 0)
+        throw InitFailedException("ETB: coarse-grain num_blocks must be non-negative (0 = auto)");
+    }
+    else if (icgn.find_option("num_blocks"))
+      Messages::warning("ETB: coarse-grain num_blocks is ignored unless partition_type = coupling");
+
     _upt_solver_options.coarse_metis_imbalance = icgn.get_option("metis_imbalance", 0.03);
-    // num_blocks == 0 means auto-select at prepare time; negative is invalid
-    if (_upt_solver_options.coarse_num_blocks < 0 ||
-        _upt_solver_options.coarse_metis_imbalance < 0.0)
-      throw InitFailedException("ETB: coarse-grain num_blocks must be non-negative and metis_imbalance non-negative");
+    if (_upt_solver_options.coarse_metis_imbalance < 0.0)
+      throw InitFailedException("ETB: coarse-grain metis_imbalance must be non-negative");
 
-    _upt_solver_options.coarse_epsilon = icgn.get_option("outer_coupling_threshold", 0.0);
-    if (_upt_solver_options.coarse_epsilon < 0.0)
-      throw InitFailedException("ETB: coarse-grain outer_coupling_threshold must be non-negative");
+    // Per-tier parameters.  Each of outer_coupling_threshold, core_energy_min/max,
+    // top_buffer, bottom_buffer, add_core_outers, neumann_order, expansion_energy
+    // takes either ONE value (used by every tier) or a tuple (a,b,c) giving the
+    // value of the (cube, row, plane) diagonalization tiers of partition_type = nested.
+    auto parse_tier = [&icgn](const char* key, double def, double out[3]) {
+      out[0] = out[1] = out[2] = def;
+      if (!icgn.find_option(key))
+        return;
+      const std::string raw = icgn.get_option(key, "");
+      std::string cleaned;
+      for (char c : raw)
+        cleaned += (c == '(' || c == ')' || c == ',' || c == ';') ? ' ' : c;
+      std::istringstream iss(cleaned);
+      std::vector<double> v;
+      double x;
+      while (iss >> x)
+        v.push_back(x);
+      if (v.size() == 1)
+        out[0] = out[1] = out[2] = v[0];
+      else if (v.size() == 3)
+        for (int i = 0; i < 3; ++i)
+          out[i] = v[i];
+      else
+        throw InitFailedException(std::string("ETB: coarse-grain ") + key +
+            " must be one number or a tuple (a, b, c) of three numbers");
+    };
+
+    double t_eps[3], t_emin[3], t_emax[3], t_top[3], t_bot[3], t_outer[3], t_order[3], t_e0[3];
+    parse_tier("outer_coupling_threshold", 0.0, t_eps);
 
     if (!icgn.find_option("core_energy_min") || !icgn.find_option("core_energy_max"))
       throw InitFailedException("ETB: coarse-grain requires core_energy_min and core_energy_max");
-    _upt_solver_options.coarse_core_energy_min = icgn.get_option("core_energy_min", 0.0);
-    _upt_solver_options.coarse_core_energy_max = icgn.get_option("core_energy_max", 0.0);
-    _upt_solver_options.coarse_top_buffer = icgn.get_option("top_buffer", 0.0);
-    _upt_solver_options.coarse_bottom_buffer = icgn.get_option("bottom_buffer", 0.0);
-    if (_upt_solver_options.coarse_core_energy_min >= _upt_solver_options.coarse_core_energy_max ||
-        _upt_solver_options.coarse_top_buffer < 0.0 ||
-        _upt_solver_options.coarse_bottom_buffer < 0.0)
-      throw InitFailedException("ETB: invalid coarse-grain core window, top_buffer, or bottom_buffer");
+    parse_tier("core_energy_min", 0.0, t_emin);
+    parse_tier("core_energy_max", 0.0, t_emax);
+    parse_tier("top_buffer", 0.0, t_top);
+    parse_tier("bottom_buffer", 0.0, t_bot);
+    parse_tier("add_core_outers", 0.0, t_outer);
+    parse_tier("neumann_order", -1.0, t_order);
+    if (icgn.find_option("expansion_energy"))
+      parse_tier("expansion_energy", 0.0, t_e0);
+    else
+      for (int i = 0; i < 3; ++i)
+        t_e0[i] = 0.5 * (t_emin[i] + t_emax[i]);
 
-    _upt_solver_options.coarse_add_core_outers = icgn.get_option("add_core_outers", 0);
-    if (_upt_solver_options.coarse_add_core_outers < 0)
-      throw InitFailedException("ETB: coarse-grain add_core_outers must be non-negative");
-    _upt_solver_options.coarse_neumann_order = icgn.get_option("neumann_order", -1);
-    _upt_solver_options.coarse_expansion_energy = icgn.get_option("expansion_energy",
-        0.5 * (_upt_solver_options.coarse_core_energy_min + _upt_solver_options.coarse_core_energy_max));
-    // Block partition strategy: "coupling" (default, METIS/graph) or
-    // "geometry" (1D principal layers along partition_direction).
+    for (int i = 0; i < 3; ++i)
     {
-      const std::string ptype = icgn.get_option("partition_type", "coupling");
+      if (t_eps[i] < 0.0)
+        throw InitFailedException("ETB: coarse-grain outer_coupling_threshold must be non-negative");
+      if (t_emin[i] >= t_emax[i] || t_top[i] < 0.0 || t_bot[i] < 0.0)
+        throw InitFailedException("ETB: invalid coarse-grain core window, top_buffer, or bottom_buffer");
+      if (t_outer[i] < 0.0 || t_outer[i] != std::floor(t_outer[i]))
+        throw InitFailedException("ETB: coarse-grain add_core_outers must be a non-negative integer");
+      if (t_order[i] != std::floor(t_order[i]))
+        throw InitFailedException("ETB: coarse-grain neumann_order must be an integer");
+      _upt_solver_options.coarse_tier_core_min[i] = t_emin[i];
+      _upt_solver_options.coarse_tier_core_max[i] = t_emax[i];
+      _upt_solver_options.coarse_tier_top[i] = t_top[i];
+      _upt_solver_options.coarse_tier_bottom[i] = t_bot[i];
+      _upt_solver_options.coarse_tier_epsilon[i] = t_eps[i];
+      _upt_solver_options.coarse_tier_e0[i] = t_e0[i];
+      _upt_solver_options.coarse_tier_outers[i] = static_cast<int>(t_outer[i]);
+      _upt_solver_options.coarse_tier_orders[i] = static_cast<int>(t_order[i]);
+    }
+    // Scalar values (solver / non-nested CG): the LAST tier, i.e. the window that
+    // defines the final H_CG handed to the eigensolver.  Identical to the single
+    // value when no tuple is given.
+    _upt_solver_options.coarse_epsilon = t_eps[2];
+    _upt_solver_options.coarse_core_energy_min = t_emin[2];
+    _upt_solver_options.coarse_core_energy_max = t_emax[2];
+    _upt_solver_options.coarse_top_buffer = t_top[2];
+    _upt_solver_options.coarse_bottom_buffer = t_bot[2];
+    _upt_solver_options.coarse_add_core_outers = _upt_solver_options.coarse_tier_outers[2];
+    _upt_solver_options.coarse_neumann_order = _upt_solver_options.coarse_tier_orders[2];
+    _upt_solver_options.coarse_expansion_energy = t_e0[2];
+    const bool tier_tuple_given =
+        t_eps[0] != t_eps[2] || t_eps[1] != t_eps[2] || t_emin[0] != t_emin[2] ||
+        t_emin[1] != t_emin[2] || t_emax[0] != t_emax[2] || t_emax[1] != t_emax[2] ||
+        t_top[0] != t_top[2] || t_top[1] != t_top[2] || t_bot[0] != t_bot[2] ||
+        t_bot[1] != t_bot[2] || t_outer[0] != t_outer[2] || t_outer[1] != t_outer[2] ||
+        t_order[0] != t_order[2] || t_order[1] != t_order[2] || t_e0[0] != t_e0[2] ||
+        t_e0[1] != t_e0[2];
+    // Block partition strategy: "coupling" (METIS/graph) or
+    // "nested" (hierarchical cube -> row -> plane CG). Already validated above.
+    {
+      const std::string ptype = ptype_early;
       if (ptype == "coupling")
         _upt_solver_options.coarse_partition_type = 0;
-      else if (ptype == "geometry")
-        _upt_solver_options.coarse_partition_type = 1;
       else if (ptype == "nested")
         _upt_solver_options.coarse_partition_type = 2;
       else
-        throw InitFailedException("ETB: coarse-grain partition_type must be 'coupling', 'geometry' or 'nested' (got '" + ptype + "')");
+        throw InitFailedException("ETB: coarse-grain partition_type must be 'coupling' or 'nested' (got '" + ptype + "')");
 
-      const bool has_dir = icgn.find_option("partition_direction");
-      const std::string pdir = icgn.get_option("partition_direction", "auto");
-      if (pdir == "auto")
-        _upt_solver_options.coarse_partition_direction = 0;
-      else if (pdir == "x" || pdir == "X")
-        _upt_solver_options.coarse_partition_direction = 1;
-      else if (pdir == "y" || pdir == "Y")
-        _upt_solver_options.coarse_partition_direction = 2;
-      else if (pdir == "z" || pdir == "Z")
-        _upt_solver_options.coarse_partition_direction = 3;
-      else
-        throw InitFailedException("ETB: coarse-grain partition_direction must be x, y or z (got '" + pdir + "')");
-
+      // Atomic-layer gap tolerance (Angstrom) used by the nested slab partition.
       _upt_solver_options.coarse_layer_tolerance = icgn.get_option("layer_tolerance", 0.0);
 
       if (_upt_solver_options.coarse_partition_type == 0 &&
-          (has_dir || icgn.find_option("layer_tolerance")))
-        Messages::warning("ETB: coarse-grain partition_direction/layer_tolerance are ignored unless partition_type = geometry");
+          icgn.find_option("layer_tolerance"))
+        Messages::warning("ETB: coarse-grain layer_tolerance is ignored unless partition_type = nested");
 
       // nested_axes = "x-y-z" (row along first, plane along first two)
       // nested_grids = (nx, ny, nz)
@@ -1604,13 +1681,13 @@ void ETB::parse_options(void)
           throw InitFailedException("ETB: nested_grids must be three positive integers (nx, ny, nz)");
         for (int i = 0; i < 3; ++i)
           _upt_solver_options.coarse_nested_grids[i] = grids[i];
-
-        // Nested prototype: force fast-path
-        _upt_solver_options.coarse_add_core_outers = 0;
-        _upt_solver_options.coarse_neumann_order = -1;
       }
       else if (icgn.find_option("nested_axes") || icgn.find_option("nested_grids"))
         Messages::warning("ETB: nested_axes/nested_grids are ignored unless partition_type = nested");
+
+      if (_upt_solver_options.coarse_partition_type != 2 && tier_tuple_given)
+        throw InitFailedException("ETB: tuple (a, b, c) values for coarse-grain keywords are only "
+            "supported with partition_type = nested");
     }
 
     // Temporarily disabled: Neumann convergence checker options are not exposed

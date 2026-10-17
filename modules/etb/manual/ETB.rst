@@ -421,7 +421,7 @@ The eigensolver tolerance is not a separate option: it is taken from ``long_tole
 Coarse-graining mode
 ~~~~~~~~~~~~~~~~~~~~
 
-An optional ``coarse-grain`` block can be placed inside ``Solver`` to reduce the
+An optional ``coarse_grain`` block can be placed inside ``Solver`` to reduce the
 size of the Hamiltonian fed to the eigensolver. The system is divided into blocks
 and each block is diagonalized independently using LAPACK. The resulting
 block states are then selected by energy. All states inside the core energy
@@ -436,10 +436,87 @@ states. This can substantially reduce the computational cost for large
 atomistic systems, especially when only states in a limited energy range are
 of interest.
 
-A typical configuration is ::
+The available options are:
 
-  coarse-grain
+``partition_type`` : string (**required**)
+  Block partition strategy. Must be ``coupling`` (METIS/graph partition of the
+  atom-coupling graph) or ``nested`` (hierarchical cube → row → plane partition
+  along Catersian axes x/y/z).
+
+``num_blocks`` : integer (required only for ``partition_type = coupling``, non-negative)
+  Number of spatial blocks for the coupling partition. Must be ``>= 0``.
+  A positive value is used as given, except that if it exceeds the number of
+  atoms the code falls back to one block per atom and prints a warning. The
+  special value ``0`` enables **automatic** selection (average orbital dimension
+  per block near ~200, preferring enough blocks for the OpenMP thread budget).
+  Always clamped to ``[1, n_atoms]`` and reported in the log.
+  Ignored when ``partition_type = nested`` (use ``nested_grids`` instead).
+
+``metis_imbalance`` : double (optional)
+  Maximum allowed relative imbalance between block sizes (default ``0.03``).
+  Relevant only when ``partition_type = coupling`` and METIS is available.
+  Passed to METIS when available. The graph-BFS fallback does not use it.
+  Validated as non-negative in all cases.
+
+``nested_axes`` : string (required for ``partition_type = nested``)
+  Permutation of axes for the hierarchy, e.g. ``x-y-z``. The first axis is the
+  rows' direction; the first two axes define planes.
+
+``nested_grids`` : tuple of 3 positive integers (required for ``partition_type = nested``)
+  Number of subdivisions ``(n1, n2, n3)`` along ``nested_axes``. Defines how many
+  cubes / rows / planes are formed at each tier.
+
+``layer_tolerance`` : double (optional, ``nested`` only)
+  Atomic-layer gap tolerance in Angstrom for slab detection. ``<= 0`` (default)
+  means auto-detect from coordinate gaps. Ignored for ``coupling``.
+
+``core_energy_min/max``: double or tuple of 3 doubles (**required**)
+  Energy window (eV) of states that must be retained. For ``nested``, a tuple
+  ``(a, b, c)`` gives per-tier values for cube / row / plane diagonalization;
+  a single number is applied to every tier. ``core_energy_min`` must be smaller
+  than ``core_energy_max``.
+
+``top/bottom_buffer`` : double or tuple of 3 doubles (optional)
+  Extra energy ranges (eV) above/below the core window. Default ``0``.
+  Same single-or-tuple rule as the core window.
+
+``add_core_outers`` : integer or tuple of 3 integers (optional)
+  Whether to promote discarded states that couple to core states ("outers").
+  ``0`` disables (default); ``1`` includes level-1 outers;
+  ``2`` or higher number will fall back to ``1``. Same single-or-tuple rule.
+
+``outer_coupling_threshold`` : double or tuple of 3 doubles (optional)
+  Threshold for promoting outers (irrelevant if ``add_core_outers = 0``).
+  A coupling :math:`g_{ij}` is kept when
+  ``abs(g_ij)^2 > outer_coupling_threshold * abs(E_i - E_j)``. Default ``0``.
+  Same single-or-tuple rule.
+
+``neumann_order`` : integer or tuple of 3 integers (optional)
+  Order of the optional Neumann self-energy correction for discarded states.
+  Negative (default ``-1``) disables it. Same single-or-tuple rule.
+
+``expansion_energy`` : double or tuple of 3 doubles (optional)
+  Expansion energy (eV) for the self-energy. Default is the midpoint of the
+  core window. Only used when ``neumann_order >= 0``.
+
+.. Temporarily disabled checker options, retained here for future reconsideration:
+
+   ``check_neumann_convergence`` : boolean (optional)
+     If **true**, perform an additional convergence check for the self-energy
+     correction. The default is **false**.
+
+   ``power_iteration_max_iterations`` : integer (optional)
+     Maximum number of iterations used by the convergence check. The default is
+     ``1000``.
+
+   ``power_iteration_tolerance`` : double (optional)
+     Convergence tolerance used by the convergence check. The default is ``1e-3``.
+
+A typical **coupling** configuration is ::
+
+  coarse_grain
   {
+    partition_type = coupling
     num_blocks = 10
     metis_imbalance = 0.03
 
@@ -455,76 +532,25 @@ A typical configuration is ::
     expansion_energy = 0.0
   }
 
-The available options are:
+A typical **nested** (multi-level) configuration is ::
 
-``num_blocks`` : integer (required, non-negative)
-  Number of spatial blocks into which the system is divided before
-  coarse-graining. Must be ``>= 0``. A positive value is used as given,
-  except that if it exceeds the number of atoms the code falls back to
-  one block per atom and prints a warning. The special value ``0``
-  enables **automatic** selection: the number of blocks is chosen so
-  that the average orbital dimension per block is near a target size
-  (about 200), while preferring at least as many blocks as the OpenMP
-  thread budget so that block diagonalization can fill the available
-  threads. The chosen value is always clamped to ``[1, n_atoms]`` and
-  is reported in the log.
+  coarse_grain
+  {
+    partition_type = nested
+    nested_axes = x-y-z
+    nested_grids = (4, 4, 2)
+    layer_tolerance = 0.0
 
-``metis_imbalance`` : double (optional)
-  Maximum allowed relative imbalance between block sizes. The default is
-  ``0.03``. This value is passed to METIS when METIS is available and
-  controls the partitioning metis_imbalance target. When METIS is unavailable, the
-  built-in graph-BFS fallback partitioner does not use ``metis_imbalance``; it only
-  uses the graph connectivity and block weights. The value is still validated
-  as non-negative in both cases.
+    core_energy_min = (-3.0, -3.0, -3.0)
+    core_energy_max = (3.0, 3.0, 3.0)
+    top_buffer = (2.0, 2.0, 2.0)
+    bottom_buffer = (2.0, 2.0, 2.0)
 
-``core_energy_min`` / ``core_energy_max`` : double (required)
-  Lower and upper bounds of the energy window, in eV, containing the states
-  that must be retained. ``core_energy_min`` must be smaller than
-  ``core_energy_max``. These states (so-called core states) will be used for
-  tracing "outer states" (see below) if ``add_core_outers > 0``.
-
-``top_buffer`` / ``bottom_buffer`` : double (optional)
-  Additional energy ranges, in eV, above and below the core window used when
-  selecting states for the reduced basis. Both default to ``0``.
-
-``add_core_outers`` : integer (optional)
-  Controls whether states outside the core+buffer window that couple to core
-  states ("outers") are added to the reduced basis. ``0`` disables this
-  extension. ``1`` includes the first level of coupled states. Values greater
-  than ``1`` are treated as ``1``.
-
-``outer_coupling_threshold`` : double (optional)
-  (Irrelevant if ``add_core_outers = 0``) Non-negative threshold used to drop
-  weak couplings involving at least one state outside the core+buffer window.
-  Couplings between two states that both lie in
-  ``[core_energy_min - bottom_buffer, core_energy_max + top_buffer]`` are never
-  filtered (only exact zeros are removed). For any other pair a coupling
-  :math:`g_{ij}` is kept only if
-  ``abs(g_ij)^2 > outer_coupling_threshold * abs(E_i - E_j)``. The default is ``0``.
-
-``neumann_order`` : integer (optional)
-  Controls the order of the optional self-energy correction used to account
-  for the effect of states outside the retained basis. A negative value
-  (default ``-1``) disables this correction. Non-negative values include the
-  corresponding correction terms.
-
-``expansion_energy`` : double (optional)
-  Energy, in eV, around which the self-energy correction is expanded. By
-  default it is the midpoint of ``core_energy_min`` and ``core_energy_max``.
-  It is only used when ``neumann_order >= 0``.
-
-.. Temporarily disabled checker options, retained here for future reconsideration:
-
-   ``check_neumann_convergence`` : boolean (optional)
-     If **true**, perform an additional convergence check for the self-energy
-     correction. The default is **false**.
-
-   ``power_iteration_max_iterations`` : integer (optional)
-     Maximum number of iterations used by the convergence check. The default is
-     ``1000``.
-
-   ``power_iteration_tolerance`` : double (optional)
-     Convergence tolerance used by the convergence check. The default is ``1e-3``.
+    add_core_outers = (1, 1, 1)
+    outer_coupling_threshold = (1e-5, 1e-5, 1e-5)
+    neumann_order = (0, 0, 0)
+    expansion_energy = (0.0, 0.0, 0.0)
+  }
 
 
 Output

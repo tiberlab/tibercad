@@ -121,16 +121,27 @@ void UptWrapper::set_coarse_graining(int nblocks, double metis_imbalance,
 }
 
 void UptWrapper::set_coarse_graining_partition(int partition_type,
-    int partition_direction, double layer_tolerance)
+    double layer_tolerance)
 {
   upt_set_coarse_graining_partition_(_handler, partition_type,
-      partition_direction, layer_tolerance);
+      layer_tolerance);
 }
 
 void UptWrapper::set_coarse_graining_nested(const int axes[3], const int grids[3])
 {
   upt_set_coarse_graining_nested_(_handler, axes[0], axes[1], axes[2],
       grids[0], grids[1], grids[2]);
+}
+
+void UptWrapper::set_coarse_graining_nested_tiers(const double core_energy_min[3],
+    const double core_energy_max[3], const double top_buffer[3],
+    const double bottom_buffer[3], const double epsilon[3],
+    const int add_core_outers[3], const int neumann_order[3],
+    const double expansion_energy[3])
+{
+  upt_set_coarse_graining_nested_tiers_(_handler, core_energy_min,
+      core_energy_max, top_buffer, bottom_buffer, epsilon, add_core_outers,
+      neumann_order, expansion_energy);
 }
 
 int UptWrapper::get_coarse_graining_error(void)
