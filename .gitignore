@@ -18665,3 +18665,6 @@ share/Doxyfile_SDK
 share/modules.conf
 src/apps/Makefile
 src/solver/slepc/Makefile
+modules/negf/libnegf/build
+modules/negf/libnegf/libnegf.hpp
+modules/etb/test/GaAs/passivation2/output
