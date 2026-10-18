@@ -1,5 +1,5 @@
 /*  
- * This file is part of the tiberCAD module wateringress.
+ * This file is part of the tiberCAD module masstransport.
  *
  * tiberCAD modules are licensed under the GNU General Public License v3.
  *
@@ -18,15 +18,15 @@
  */
 
 /*!
- * \file WIBoundaryModel.h
- * \brief tiberCAD wateringress module header.
+ * \file MTBoundaryModel.h
+ * \brief tiberCAD masstransport module header.
  *
- * \note This file is part of module wateringress.
+ * \note This file is part of module masstransport.
  */
 
 
-#ifndef TC_WIBOUNDARYMODEL_H
-#define TC_WIBOUNDARYMODEL_H
+#ifndef TC_MTBOUNDARYMODEL_H
+#define TC_MTBOUNDARYMODEL_H
 
 #include "tibercad/physics/PhysicalModel.h"
 
@@ -35,17 +35,17 @@ class Elem;
 class Point;
 
 
-//! The base class for WI boundary conditions
-class TC_DLEXPORT WIBoundaryModel : public PhysicalModel
+//! The base class for MT boundary conditions
+class TC_DLEXPORT MTBoundaryModel : public PhysicalModel
 {
 
   public:
 
     //! Destructor
-    virtual ~WIBoundaryModel(void);
+    virtual ~MTBoundaryModel(void);
 
     //! Creator function
-    static WIBoundaryModel* create(const MaterialBoundary* boundary,
+    static MTBoundaryModel* create(const MaterialBoundary* boundary,
         const ModelOptions& options);
 
 
@@ -59,7 +59,7 @@ class TC_DLEXPORT WIBoundaryModel : public PhysicalModel
   protected:
 
     //! Constructor
-    WIBoundaryModel(const ModelOptions& options);
+    MTBoundaryModel(const ModelOptions& options);
 
     void set_coefficients(double a, double b, double c);
 
@@ -75,7 +75,7 @@ class TC_DLEXPORT WIBoundaryModel : public PhysicalModel
 
 
 inline
-WIBoundaryModel::WIBoundaryModel(const ModelOptions& options) :
+MTBoundaryModel::MTBoundaryModel(const ModelOptions& options) :
   PhysicalModel(options),
   _alpha(0),
   _beta(1),
@@ -87,7 +87,7 @@ WIBoundaryModel::WIBoundaryModel(const ModelOptions& options) :
 
 inline
 void
-WIBoundaryModel::get_coefficients(double& a, double& b, double& c)
+MTBoundaryModel::get_coefficients(double& a, double& b, double& c)
 {
   a = _alpha;
   b = _beta;
@@ -97,7 +97,7 @@ WIBoundaryModel::get_coefficients(double& a, double& b, double& c)
 
 inline
 void
-WIBoundaryModel::set_coefficients(double a, double b, double c)
+MTBoundaryModel::set_coefficients(double a, double b, double c)
 {
   _alpha = a;
   _beta = b;
@@ -105,4 +105,6 @@ WIBoundaryModel::set_coefficients(double a, double b, double c)
 }
 
 
-#endif // TC_WIBOUNDARYMODEL_H
+#endif // TC_MTBOUNDARYMODEL_H
+
+

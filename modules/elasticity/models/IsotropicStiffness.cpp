@@ -40,17 +40,16 @@ IsotropicStiffness::IsotropicStiffness(const ModelOptions& options):StiffnessMod
 }
 
 
-// void IsotropicStiffness::read_database( )
-// {
+void IsotropicStiffness::read_database(void)
+{
 
-//   Database& db = get_database();
-//   db.set_section("stiffness/isotropic");
+  const Database& db = get_database();
+  db.set_section("stiffness");
 
-//   _young = db.get("young", 0.0, false);
-//   _poisson = db.get("poisson", 0.0, false);
+  _young = db.get("young_modulus", 0.0, false);
+  _poisson = db.get("poisson_ratio", 0.0, false);
  
-
-// }
+}
 
 
 void
@@ -60,8 +59,8 @@ IsotropicStiffness::do_init(void)
   _young = 0.0;
   _poisson = 0.0;
 
-  get_parameter("young",_young);
-  get_parameter("poisson",_poisson);
+  get_parameter("young_modulus",_young);
+  get_parameter("poisson_ratio",_poisson);
 
 
   Tensor4DSym stiffness(0);

@@ -23,74 +23,125 @@
 
 #include "tibercad/math/WhitneyInterpolation.h"
 
-
-#include "libmesh/elem.h"
-#include "libmesh/fe_map.h"
-#include "tibercad/base/libMeshDefs.h"
-
-#include "libmesh/fe_interface.h"
+#include <numeric>
 
 using namespace std;
 
 void
-WhitneyInterpolation::reinit(const libMesh::Elem& elem,
-    const std::vector<libMesh::Point>& points, bool local_coordinates)
+WhitneyInterpolation::reinit(const std::vector<libMesh::Point>& nodes,
+    const std::vector<libMesh::Point>& points)
 {
+  _nodes = nodes;
 
-  unsigned int dim = elem.dim();
+  setup_1cells();
+  compute_gradients();
 
-  unsigned int nn = elem.n_nodes();
-  unsigned int ne = elem.n_edges();
-  if (dim == 1)
-    ne = 1;
-
+  unsigned int nn = _nodes.size();
+  unsigned int ne = _cells.size();
   unsigned int np = points.size();
 
-  _w1.resize(ne);
+  _w0.assign(nn, vector<double>(np));
+  _w1.assign(ne, vector<libMesh::RealGradient>(np));
 
-  unique_ptr<libMesh::FEBase> fe = libMesh::FEBase::build(dim, libMesh::FEType(1, libMesh::LAGRANGE));
-  const vector<vector<libMesh::Real>> &phi = fe->get_phi();
-  const vector<vector<libMesh::RealGradient>> &dphi = fe->get_dphi();
-
-  vector<libMesh::Point> ref_points(np);
-  if (local_coordinates)
+  // The barycentric coordinate functions (0-forms) are affine, and vanish
+  // at every node but their own (where they take the value 1), so they
+  // can be evaluated from their (constant) gradient alone.
+  for (unsigned int p = 0; p < np; ++p)
   {
-    ref_points = points;
-    _xyz.resize(np);
+    libMesh::Point dx = points[p] - _nodes[0];
+
+    double n0 = 1.0;
+    for (unsigned int i = 1; i < nn; ++i)
+    {
+      double ni = _grad[i] * dx;
+      _w0[i][p] = ni;
+      n0 -= ni;
+    }
+    _w0[0][p] = n0;
+  }
+
+  // Standard Whitney 1-forms: lambda_ij = N_i dN_j - N_j dN_i
+  for (unsigned int e = 0; e < ne; ++e)
+  {
+    unsigned int ni = _cells[e].first;
+    unsigned int nj = _cells[e].second;
     for (unsigned int p = 0; p < np; ++p)
-      _xyz[p] = libMesh::FEMap::map(dim, &elem, ref_points[p]);
+      _w1[e][p] = _w0[ni][p] * _grad[nj] - _w0[nj][p] * _grad[ni];
   }
-  else
-  {
-    libMesh::FEMap::inverse_map(dim, &elem, points, ref_points);
-    //libMesh::FEInterface::inverse_map(dim, libMesh::FEType(), &elem, points, ref_points);
-    _xyz = points;
-  }
+}
 
-  fe->reinit(&elem, &ref_points);
 
-  _w0 = phi;
+void
+WhitneyInterpolation::setup_1cells(void)
+{
+  _cells.clear();
 
+  unsigned int nn = _nodes.size();
+  _cells.reserve(nn * (nn - 1) / 2);
+
+  for (unsigned int i = 0; i < nn; ++i)
+    for (unsigned int j = i + 1; j < nn; ++j)
+      _cells.push_back(make_pair(i, j));
+}
+
+
+void
+WhitneyInterpolation::compute_gradients(void)
+{
+  unsigned int nn = _nodes.size();
+  unsigned int dim = nn - 1;
+
+  _grad.assign(nn, libMesh::RealGradient(0.0));
+
+  // Edge vectors from node 0 to the other nodes.
+  vector<libMesh::Point> e(dim);
+  for (unsigned int i = 0; i < dim; ++i)
+    e[i] = _nodes[i + 1] - _nodes[0];
+
+  // The gradient of the barycentric coordinate N_{i+1} is obtained from
+  // the (generalized, for a simplex not spanning the full ambient space)
+  // inverse of the Gram matrix G_ab = e_a . e_b of the edge vectors, as
+  // grad(N_{i+1}) = sum_j Ginv(i,j) * e_j. This reduces to the exact
+  // inverse for a tetrahedron in 3D space, and to a least-squares
+  // (Moore-Penrose) solution for an edge or a triangle embedded in 3D.
   if (dim == 1)
   {
-    // for Lagrange elements of order 1, the 1-form is constant along the edge, and its value
-    // is given by the derivative of the basis function associated with the second node of the
-    // edge (the first node's basis function derivative is negative of that).
-    _w1[0].resize(np);
-    for (unsigned int p = 0; p < np; ++p)
-      _w1[0][p] = dphi[1][p];
+    double g00 = e[0] * e[0];
+    _grad[1] = e[0] / g00;
   }
-  else
+  else if (dim == 2)
   {
-    for (unsigned int i = 0; i < ne; ++i)
-    {
-      _w1[i].resize(np);
-      unsigned int ni = elem.local_edge_node(i, 0);
-      unsigned int nj = elem.local_edge_node(i, 1);
-      for (unsigned int p = 0; p < np; ++p)
-      {
-        _w1[i][p] = _w0[ni][p] * dphi[nj][p] - _w0[nj][p] * dphi[ni][p];
-      }
-    }
+    double g00 = e[0] * e[0];
+    double g01 = e[0] * e[1];
+    double g11 = e[1] * e[1];
+    double det = g00 * g11 - g01 * g01;
+
+    _grad[1] = (g11 * e[0] - g01 * e[1]) / det;
+    _grad[2] = (g00 * e[1] - g01 * e[0]) / det;
   }
+  else // dim == 3
+  {
+    double g00 = e[0] * e[0], g01 = e[0] * e[1], g02 = e[0] * e[2];
+    double g11 = e[1] * e[1], g12 = e[1] * e[2], g22 = e[2] * e[2];
+
+    // Cofactors of the (symmetric) Gram matrix.
+    double c00 = g11 * g22 - g12 * g12;
+    double c01 = g02 * g12 - g01 * g22;
+    double c02 = g01 * g12 - g02 * g11;
+    double c11 = g00 * g22 - g02 * g02;
+    double c12 = g01 * g02 - g00 * g12;
+    double c22 = g00 * g11 - g01 * g01;
+
+    double det = g00 * c00 + g01 * c01 + g02 * c02;
+
+    _grad[1] = (c00 * e[0] + c01 * e[1] + c02 * e[2]) / det;
+    _grad[2] = (c01 * e[0] + c11 * e[1] + c12 * e[2]) / det;
+    _grad[3] = (c02 * e[0] + c12 * e[1] + c22 * e[2]) / det;
+  }
+
+  // N_0 = 1 - sum_{i>0} N_i, so grad(N_0) = -sum_{i>0} grad(N_i)
+  libMesh::RealGradient sum(0.0);
+  for (unsigned int i = 1; i < nn; ++i)
+    sum += _grad[i];
+  _grad[0] = -sum;
 }

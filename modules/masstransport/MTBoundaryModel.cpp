@@ -1,5 +1,5 @@
 /*  
- * This file is part of the tiberCAD module wateringress.
+ * This file is part of the tiberCAD module masstransport.
  *
  * tiberCAD modules are licensed under the GNU General Public License v3.
  *
@@ -18,32 +18,31 @@
  */
 
 /*!
- * \file WIBoundaryModel.C
- * \brief tiberCAD wateringress module implementation.
+ * \file MTBoundaryModel.C
+ * \brief tiberCAD masstransport module implementation.
  *
- * \note This file is part of module wateringress.
+ * \note This file is part of module masstransport.
  */
 
 
-#include "WIBoundaryModel.h"
+#include "MTBoundaryModel.h"
 #include "tibercad/physics/MaterialBoundary.h"
 
 using namespace std;
 
+MTBoundaryModel::~MTBoundaryModel(void) = default;
 
-WIBoundaryModel::~WIBoundaryModel(void) = default;
-
-WIBoundaryModel*
-WIBoundaryModel::create(const MaterialBoundary* boundary, const ModelOptions& options)
+MTBoundaryModel*
+MTBoundaryModel::create(const MaterialBoundary* boundary, const ModelOptions& options)
 {
   std::string type = options.get_option("type", "pressure");
-  WIBoundaryModel* mod = 
-      PhysicalModel::create<WIBoundaryModel>("contact_" + type, boundary, options);
+  MTBoundaryModel* mod = 
+      PhysicalModel::create<MTBoundaryModel>("contact_" + type, boundary, options);
 
   if (mod == NULL)
   {
     ostringstream os;
-    os << "water ingress boundary model \'" << type << "\' cannot be found.";
+    os << "mass transport boundary model \'" << type << "\' cannot be found.";
     throw InitFailedException(os.str());
   }
 

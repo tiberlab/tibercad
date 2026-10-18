@@ -1,5 +1,5 @@
 /*  
- * This file is part of the tiberCAD module wateringress.
+ * This file is part of the tiberCAD module masstransport.
  *
  * tiberCAD modules are licensed under the GNU General Public License v3.
  *
@@ -19,22 +19,24 @@
 
 /*!
  * \file BCPressure.h
- * \brief tiberCAD wateringress module header.
+ * \brief tiberCAD masstransport module header.
  *
- * \note This file is part of module wateringress.
+ * \note This file is part of module masstransport.
  */
 
 
 #ifndef TC_BCPRESSURE_H
 #define TC_BCPRESSURE_H
 
-#include "WIBoundaryModel.h"
+#include "MTBoundaryModel.h"
+#include <string>
+using namespace std;
 
 
 
 
 //! The base class for Poisson boundary conditions
-class BCPressure : public WIBoundaryModel
+class BCPressure : public MTBoundaryModel
 {
 
   public:
@@ -42,25 +44,27 @@ class BCPressure : public WIBoundaryModel
     //! Destructor
     ~BCPressure(void) {};
 
-
     //! Calculate for a point on the given side
     virtual void calculate(const Elem* elem, unsigned int side,
-        const Point& point) override;
+        const Point& point);
 
 
   protected:
 
     //! Constructor
-    explicit BCPressure(const ModelOptions& options);
+    BCPressure(const ModelOptions& options);
 
     //! Initialize
-    virtual void do_init(void) override;
+    virtual void do_init(void);
 
 
   private:
 
-    //! The relative humidity
-    double _relative_humidity = 0;
+    //! The relative pressure
+    double _relative_pressure = 0; 
+
+    //! The molecule to be considered
+    string _mass_tran_spec = "H2O"; // this can be defined in the input file
 
 };
 
@@ -68,10 +72,11 @@ class BCPressure : public WIBoundaryModel
 
 inline
 BCPressure::BCPressure(const ModelOptions& options) :
-  WIBoundaryModel(options)
+  MTBoundaryModel(options)
 {
 }
 
 
 
 #endif // TC_BCPRESSURE_H
+

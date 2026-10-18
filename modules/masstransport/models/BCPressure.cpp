@@ -1,5 +1,5 @@
 /*  
- * This file is part of the tiberCAD module wateringress.
+ * This file is part of the tiberCAD module masstransport.
  *
  * tiberCAD modules are licensed under the GNU General Public License v3.
  *
@@ -19,9 +19,9 @@
 
 /*!
  * \file BCPressure.C
- * \brief tiberCAD wateringress module implementation.
+ * \brief tiberCAD masstransport module implementation.
  *
- * \note This file is part of module wateringress.
+ * \note This file is part of module masstransport.
  */
 
 
@@ -37,7 +37,8 @@ using namespace libMesh;
 void
 BCPressure::do_init(void)
 {
-  _relative_humidity = get_option("relative_humidity", _relative_humidity);
+  _relative_pressure = get_option("relative_pressure", _relative_pressure); 
+  _mass_tran_spec = get_option("molecule", _mass_tran_spec);  
 }
 
 
@@ -45,10 +46,18 @@ void
 BCPressure::calculate(const Elem* elem, unsigned int side,
     const Point& point)
 {
-  double temp = SimulationOptions::temperature;
-  double pressure = WIUtils::goff_gratch(temp);
-  pressure *= _relative_humidity / 100;
+
+ double pressure = 101324.6;   // Pa, standard atmospheric pressure; 
+
+ if (_mass_tran_spec == "H2O")
+ {
+    double temp = SimulationOptions::temperature;
+    pressure = WIUtils::goff_gratch(temp);
+ }
+
+  pressure *= _relative_pressure / 100; 
 
   set_coefficients(1, 0, pressure);
 }
+
 

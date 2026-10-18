@@ -45,10 +45,10 @@ class TC_DLLOCAL IsotropicStiffness : public StiffnessModel
 
   public:
  
-  //! Destructor
-  ~IsotropicStiffness(void) {};
+    //! Destructor
+    ~IsotropicStiffness(void) {};
   
-  virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point) override {};
+    virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point) override {};
 
   protected:
 
@@ -57,6 +57,8 @@ class TC_DLLOCAL IsotropicStiffness : public StiffnessModel
 
     //! Initialize
     virtual void do_init(void) override;
+
+    virtual void read_database(void) override;
 
    
 

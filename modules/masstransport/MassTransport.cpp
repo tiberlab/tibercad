@@ -1,5 +1,5 @@
 /*  
- * This file is part of the tiberCAD module wateringress.
+ * This file is part of the tiberCAD module masstransport.
  *
  * tiberCAD modules are licensed under the GNU General Public License v3.
  *
@@ -18,16 +18,16 @@
  */
 
 /*!
- * \file WaterIngress.C
- * \brief tiberCAD wateringress module implementation.
+ * \file MassTransport.C
+ * \brief tiberCAD masstransport module implementation.
  *
- * \note This file is part of module wateringress.
+ * \note This file is part of module masstransport.
  */
 
 
-#include "WaterIngress.h"
-#include "WIModel.h"
-#include "WIBoundaryModel.h"
+#include "MassTransport.h"
+#include "MTModel.h"
+#include "MTBoundaryModel.h"
 #include "WIUtils.h"
 #include "tibercad/base/SimulationOptions.h"
 #include "tibercad/solver/TiberTransientSystem.h"
@@ -50,7 +50,7 @@ using namespace libMesh;
 
 
 
-WaterIngress::WaterIngress(const ModelOptions& options) :
+MassTransport::MassTransport(const ModelOptions& options) :
   SimulationInterface(options),
   _my_assembly(this)
 {
@@ -58,16 +58,15 @@ WaterIngress::WaterIngress(const ModelOptions& options) :
 }
 
 
-WaterIngress::~WaterIngress(void)
+MassTransport::~MassTransport(void)
 {
   // there's nothing to be done
 }
 
 
 
-
 void
-WaterIngress::do_init(void)
+MassTransport::do_init(void)
 {
   parse_options();
 
@@ -89,20 +88,20 @@ WaterIngress::do_init(void)
 
 
 void
-WaterIngress::parse_options(void)
+MassTransport::parse_options(void)
 {
-  // no options right now 
   _cell_temp = get_option("cell_temperature", SimulationOptions::temperature);
+  _mass_tran_spec = get_option("molecule", _mass_tran_spec);  
 }
 
 
 void
-WaterIngress::do_setup_solution_variables(void)
+MassTransport::do_setup_solution_variables(void)
 {
   // we declare our solution variables
   declare_solution(PartialPressure, REAL, NODES, "Pa");
   declare_solution(Concentration, REAL, NODES, "g/cm^3");
-  declare_solution(RelativeHumidity, REAL, NODES, "%");
+  declare_solution(RelativeHumidity, REAL, NODES, "%"); // used for H2O
   declare_solution(Flux, VECTOR, CELL, "g/cm^2/s");
   declare_solution(Solubility, REAL, NODES, "g/cm^3/Pa");
   declare_solution(Diffusivity, REAL, NODES, "cm^2/s");
@@ -110,7 +109,7 @@ WaterIngress::do_setup_solution_variables(void)
 
 
 void
-WaterIngress::do_solve(void)
+MassTransport::do_solve(void)
 {
   double current_time = TiberCad::get_global_time();
 
@@ -124,32 +123,32 @@ WaterIngress::do_solve(void)
 
 
 void
-WaterIngress::do_print_info(void)
+MassTransport::do_print_info(void)
 {
-  Messages::info("Simulation of water ingress based on Fick's laws");
+  Messages::info("Simulation of mass transport based on Fick's laws");
 }
 
 
 PhysicalModel*
-WaterIngress::create_bulk_model(const ModelOptions& options,
+MassTransport::create_bulk_model(const ModelOptions& options,
     const Material* mat) const
 {
-  return WIModel::create(mat, options);
+  return MTModel::create(mat, options);
 }
 
 
 
 PhysicalModel*
-WaterIngress::create_boundary_model(const ModelOptions& options,
+MassTransport::create_boundary_model(const ModelOptions& options,
     const MaterialBoundary* boundary) const
 {
-  return WIBoundaryModel::create(boundary, options);
+  return MTBoundaryModel::create(boundary, options);
 }
 
 
 
 void
-WaterIngress::get_solution_secure(const Elem* elem,
+MassTransport::get_solution_secure(const Elem* elem,
     std::map<ID, std::vector<double> >& values,
     const std::vector<Point>& p)
 {
@@ -184,7 +183,7 @@ WaterIngress::get_solution_secure(const Elem* elem,
 
   // cell data variable
   RealGradient flux(0);
-  WIModel& mod = *get_bulk_model<WIModel>(elem);
+  MTModel& mod = *get_bulk_model<MTModel>(elem);
 
   mod.calculate(elem, elem->vertex_average());
   
@@ -219,8 +218,9 @@ WaterIngress::get_solution_secure(const Elem* elem,
 
     if (values.count(RelativeHumidity))
     {
+      if (_mass_tran_spec == "H2O") {
       double psat = WIUtils::goff_gratch(_cell_temp);
-      values[RelativeHumidity][n] = 100 * p / psat;
+      values[RelativeHumidity][n] = 100 * p / psat; }
     }
 
     if (values.count(Solubility))
@@ -245,7 +245,7 @@ WaterIngress::get_solution_secure(const Elem* elem,
 
 
 void
-WaterIngress::assemble(void)
+MassTransport::assemble(void)
 {
   TiberTransientLinSystem& system = get_equation_system<TiberTransientLinSystem>();
 
@@ -331,7 +331,7 @@ WaterIngress::assemble(void)
     // get the current solution
     dof_map.extract_local_vector(solution, dof_indices, sol);
 
-    WIModel& mod = *get_bulk_model<WIModel>(elem);
+    MTModel& mod = *get_bulk_model<MTModel>(elem);
 
     mod.calculate(elem, elem->vertex_average());
 
@@ -358,8 +358,8 @@ WaterIngress::assemble(void)
     // the sides
     for (unsigned int s = 0; s < elem->n_sides(); s++)
     {
-      WIBoundaryModel* mod_int =
-        get_interface_model<WIBoundaryModel>(elem, s);
+      MTBoundaryModel* mod_int =
+        get_interface_model<MTBoundaryModel>(elem, s);
 
       if (mod_int != NULL)
       {
@@ -442,3 +442,4 @@ WaterIngress::assemble(void)
 
   t_weight.close();
 }
+
