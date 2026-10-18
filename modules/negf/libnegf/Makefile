@@ -19,11 +19,13 @@ target := libnegf$(shared_libext)
 libnegf$(shared_libext) :  .$(ARCH)/NegfWrapper$(obj-suffix) libnegf_$(ARCH).a
 	@echo "Linking libnegf$(shared_libext) ..."
 	dep=$$(find . -name libmpifx.a); \
+	mpi_link=$$(mpifort -showme:link 2>/dev/null || true); \
 	$(CXX) -shared -o $@ $< \
 		-Wl,--version-script,export.map \
 		-Wl,-Bsymbolic -Wl,-Bstatic \
 		-L. libnegf_$(ARCH).a $$dep \
 		-Wl,-Bdynamic \
+		$$mpi_link -lmpi_usempif08 -lmpi -lgfortran
 
 .$(ARCH)/NegfWrapper$(obj-suffix) : libnegf_$(ARCH).a 
 

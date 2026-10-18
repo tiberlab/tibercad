@@ -18666,3 +18666,5 @@ share/modules.conf
 src/apps/Makefile
 src/solver/slepc/Makefile
 modules/etb/
+modules/negf/libnegf/build
+modules/negf/libnegf/libnegf.hpp
