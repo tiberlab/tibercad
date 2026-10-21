@@ -3824,6 +3824,7 @@ Negf::setup_interactions(void)
   _srh_site_Ec.clear();
   _srh_site_atom.clear();
   _srh_site_rho.clear();
+  _srh_site_charge.clear();
   _srh_charge_state = 0;
 
   for (int i = 0; i < _interactions.size(); i++)
@@ -3899,6 +3900,11 @@ Negf::setup_interactions(void)
           throw InitFailedException("SRH defect: srh_phonon_energy (eV) and huang_rhys must be > 0.");
         if (inter.srh_mass_c <= 0.0 || inter.srh_mass_v <= 0.0)
           throw InitFailedException("SRH defect: effective_mass_c and effective_mass_v (m0) must be > 0 (needed for the multiphonon calibration).");
+        int charge_state = 0;
+        if (inter.srh_charge_state == "acceptor") charge_state = -1;
+        else if (inter.srh_charge_state == "donor") charge_state = 1;
+        else if (inter.srh_charge_state != "neutral")
+          throw InitFailedException("SRH defect: charge_state must be neutral, acceptor, or donor.");
         double T_K = SimulationOptions::temperature;
         // defect site = all orbitals (bands) of one atom unless n_orb is given explicitly
         int n_orb_site = inter.n_orb;
@@ -3923,7 +3929,7 @@ Negf::setup_interactions(void)
           if (has_pos || inter.pl_index > 0 || inter.orb_index > 0)
             throw InitFailedException("SRH defect: give only one placement: defect_x_min/defect_x_max (region), "
                                       "defect_x/y/z (single site) or pl_index/orb_index.");
-          setup_srh_region(inter, n_orb_site, T_K);
+          setup_srh_region(inter, n_orb_site, T_K, charge_state);
           if ( inter.scba_tol < inelastic_tol ) inelastic_tol = inter.scba_tol;
           break;
         }
@@ -3968,9 +3974,8 @@ Negf::setup_interactions(void)
         // single-site: atom index known only when placed by position (resolve_srh_site sets pl/orb)
         _srh_site_atom.push_back(inter.srh_atom);
         _srh_site_rho.push_back(inter.rho_d);
-        if (inter.srh_charge_state == "acceptor") _srh_charge_state = -1;
-        else if (inter.srh_charge_state == "donor") _srh_charge_state = 1;
-        else _srh_charge_state = 0;
+        _srh_site_charge.push_back(charge_state);
+        if (charge_state != 0) _srh_charge_state = charge_state;
         if ( inter.scba_tol < inelastic_tol ) inelastic_tol = inter.scba_tol;
         break;
       }
@@ -4140,7 +4145,7 @@ Negf::get_device_atom_xyz(vector<dvector>& xyz)
 
 
 void
-Negf::setup_srh_region(Interaction& inter, int n_orb_site, double T_K)
+Negf::setup_srh_region(Interaction& inter, int n_orb_site, double T_K, int charge_state)
 {
   const double unset = 0.5e30;
   const int n_bands = static_cast<int>(_ext_module->get_number_of_bands());
@@ -4226,13 +4231,12 @@ Negf::setup_srh_region(Interaction& inter, int n_orb_site, double T_K)
     _srh_site_Ec.push_back(Ec);
     _srh_site_atom.push_back(static_cast<int>(a));
     _srh_site_rho.push_back(inter.rho_d);
+    _srh_site_charge.push_back(charge_state);
     Ev_lo = std::min(Ev_lo, Ev); Ev_hi = std::max(Ev_hi, Ev);
     Ec_lo = std::min(Ec_lo, Ec); Ec_hi = std::max(Ec_hi, Ec);
   }
 
-  if (inter.srh_charge_state == "acceptor") _srh_charge_state = -1;
-  else if (inter.srh_charge_state == "donor") _srh_charge_state = 1;
-  else _srh_charge_state = 0;
+  if (charge_state != 0) _srh_charge_state = charge_state;
 
   if (n_sites == 0)
     throw InitFailedException("SRH defect region: no device atom has x inside [defect_x_min, defect_x_max].");
@@ -4261,8 +4265,13 @@ Negf::report_srh(const std::vector<double>& layer_current)
   std::array<double, 8> r;
   double rate_tot = 0.0;                 // sum_i U_i * V_i  [1/s]
   double fd_min = 1.0e300, fd_max = -1.0e300;
+  int n_neutral = 0, n_acceptor = 0, n_donor = 0;
   for (int i = 0; i < ns; ++i)
   {
+    const int charge = (i < static_cast<int>(_srh_site_charge.size())) ? _srh_site_charge[i] : 0;
+    if (charge < 0) ++n_acceptor;
+    else if (charge > 0) ++n_donor;
+    else ++n_neutral;
     if (!_libnegf->get_srh_results(r, i + 1))
     {
       res[i].fill(0.0);
@@ -4281,15 +4290,16 @@ Negf::report_srh(const std::vector<double>& layer_current)
     ofstream out(get_output_directory() + "/" + get_output_filename_prefix() + "_srh_sites.dat");
     if (out.good())
     {
-      out << "# SRH defect sites: x[nm]  Ev[eV]  Ec[eV]  fd  R_def[1/s]  U[cm^-3 s^-1]  U*V_site[1/s]\n";
+      out << "# SRH defect sites: x[nm]  Ev[eV]  Ec[eV]  charge_state  fd  R_def[1/s]  U[cm^-3 s^-1]  U*V_site[1/s]\n";
       for (int i = 0; i < ns; ++i)
       {
         const bool have = (i < static_cast<int>(_srh_site_x.size()));
         const double V = have ? _srh_site_vol[i] : 0.0;
+        const int charge = (i < static_cast<int>(_srh_site_charge.size())) ? _srh_site_charge[i] : 0;
         out << (have ? _srh_site_x[i] : std::nan("")) << " "
             << (have ? _srh_site_Ev[i] : std::nan("")) << " "
             << (have ? _srh_site_Ec[i] : std::nan("")) << " "
-            << res[i][0] << " " << res[i][2] << " " << res[i][3] << " " << res[i][3] * V << "\n";
+            << charge << " " << res[i][0] << " " << res[i][2] << " " << res[i][3] << " " << res[i][3] * V << "\n";
       }
     }
   }
@@ -4304,12 +4314,12 @@ Negf::report_srh(const std::vector<double>& layer_current)
     os << "  layer currents: first = " << layer_current.front() << ", last = " << layer_current.back()
        << ", spread (max-min) = " << (*mm.second - *mm.first) << " A" << std::endl;
   }
-  if (_srh_charge_state != 0)
-  {
-    os << "  charge_state = " << (_srh_charge_state < 0 ? "acceptor (N_a- = rho_d*fd)"
-                                                       : "donor (N_d+ = rho_d*(1-fd))")
-       << " — injected into elDensity for Poisson" << std::endl;
-  }
+  os << "  charge-state sites: neutral=" << n_neutral << ", acceptor=" << n_acceptor
+     << ", donor=" << n_donor;
+  if (n_acceptor + n_donor > 0)
+    os << " — injected into elDensity for Poisson"
+       << " (N_a- = rho_d*fd, N_d+ = rho_d*(1-fd))";
+  os << std::endl;
   os << "  per-site table written to <prefix>_srh_sites.dat" << std::endl;
 
   // Spectral band self-energies Sn_b(E), Sp_b(E) [eV] for each site (rank 0).
@@ -4368,6 +4378,8 @@ Negf::add_srh_trap_charge(std::vector<double>& atomic_charges, unsigned int N_at
     if (i >= static_cast<int>(_srh_site_atom.size())) break;
     const int atom = _srh_site_atom[i];
     if (atom < 0 || static_cast<unsigned int>(atom) >= N_atoms) continue;
+    const int charge = (i < static_cast<int>(_srh_site_charge.size())) ? _srh_site_charge[i] : 0;
+    if (charge == 0) continue;
     if (!_libnegf->get_srh_results(r, i + 1)) continue;
 
     const double V = (i < static_cast<int>(_srh_site_vol.size())) ? _srh_site_vol[i] : 0.0;
@@ -4375,7 +4387,7 @@ Negf::add_srh_trap_charge(std::vector<double>& atomic_charges, unsigned int N_at
     const double n_def = rho * V;   // defects in this atom cell
     if (n_def <= 0.0) continue;
 
-    if (_srh_charge_state < 0)
+    if (charge < 0)
       atomic_charges[atom] += n_def * r[0];       // acceptor occupied → more electrons
     else
       atomic_charges[atom] -= n_def * r[1];       // donor empty (1-fd) → fewer electrons

@@ -414,7 +414,7 @@ class TC_DLLOCAL Negf : public SimulationInterface
 
     //! SRH: uniform defect density in an x-range: one site on every device atom with x_min <= x <= x_max
     //! (nm); each site gets Ev/Ec from the potential module at its own atom. Registers the sites in libNEGF.
-    void setup_srh_region(Interaction& inter, int n_orb_site, double T_K);
+    void setup_srh_region(Interaction& inter, int n_orb_site, double T_K, int charge_state);
 
     //! coordinates (nm) of the device atoms in MATRIX order (atom a owns rows a*n_bands+1 .. (a+1)*n_bands)
     void get_device_atom_xyz(std::vector<std::vector<double> >& xyz);
@@ -434,6 +434,7 @@ class TC_DLLOCAL Negf : public SimulationInterface
     //! matrix atom index (0-based device order; -1 if unknown), defect density, charge state
     //! charge_state: 0=neutral, -1=acceptor, +1=donor
     std::vector<int> _srh_site_atom;
+    std::vector<int> _srh_site_charge;
     std::vector<double> _srh_site_rho;
     int _srh_charge_state = 0;
 
