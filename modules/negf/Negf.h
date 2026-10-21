@@ -228,6 +228,7 @@ class TC_DLLOCAL Negf : public SimulationInterface
       NONPOLAROPTICAL,
       ACOUSTICINEL,
       PHOTON,
+      SRH,
     };
 
     //! The structure containing elastic and inelastic scattering parameters. 
@@ -280,6 +281,23 @@ class TC_DLLOCAL Negf : public SimulationInterface
       int poldir = 3;
 
       int deb_id = 0;
+
+      // SRH / multiphonon defect (Aeberhard 2019 model)
+      double Ed0 = 0.0;          // defect level above the local valence band edge (eV)
+      double rho_d = 0.0;        // defect density (cm^-3)
+      double Cn = 0.0;           // electron capture coeff sigma_n*v_th (cm^3/s)
+      double Cp = 0.0;           // hole capture coeff sigma_p*v_th (cm^3/s)
+      int pl_index = 0;          // principal-layer index (1-based Fortran; 0 = unset)
+      int orb_index = 0;         // first matrix row of the defect site inside the PL (1-based; 0 = unset)
+      int n_orb = 0;             // rows (orbitals) of the defect site; 0 = all bands of one atom
+      double srh_phonon_energy = 0.0;  // multiphonon ladder energy hbar*Omega (eV)
+      double srh_huang_rhys = 0.0;     // Huang-Rhys factor S
+      double srh_mass_c = 0.0;         // CB effective mass (m0), used only to calibrate coupling
+      double srh_mass_v = 0.0;         // VB effective mass (m0), used only to calibrate coupling
+      double srh_Ev = 0.0;             // VB edge at defect site, NEGF energy axis (eV)
+      double srh_Ec = 0.0;             // CB edge at defect site, NEGF energy axis (eV)
+      double srh_cell_volume = 0.0;    // volume per ORBITAL = (volume of the defect site)/n_orb (cm^3)
+      double srh_line_width = 1.0e-3;  // defect line width (eV), keep <~ 0.1 kT
     };
 
     double get_band_edge(const std::string& band) const;

@@ -617,3 +617,24 @@ NegfWrapper::set_scba_tolerances(double elastic_tol, double inelastic_tol)
 {
   negf_set_scba_tolerances(_handler, elastic_tol, inelastic_tol);
 }
+
+
+void
+NegfWrapper::set_srh_defect(double Ed_rel, double rho_d, double Cn, double Cp, double temperature,
+                            int pl_index, int orb_index, int n_orb, int scba_niter,
+                            double phonon_energy, double huang_rhys, double mass_c, double mass_v,
+                            double Ev_abs, double Ec_abs, double cell_volume, double line_width)
+{
+  negf_set_srh_defect(_handler, Ed_rel, rho_d, Cn, Cp, temperature, pl_index, orb_index, n_orb, scba_niter,
+                      phonon_energy, huang_rhys, mass_c, mass_v, Ev_abs, Ec_abs, cell_volume, line_width);
+}
+
+
+bool
+NegfWrapper::get_srh_results(std::array<double, 8>& res)
+{
+  int ierr = 1;
+  res.fill(0.0);
+  negf_get_srh_results(_handler, res.data(), ierr);
+  return ierr == 0;
+}

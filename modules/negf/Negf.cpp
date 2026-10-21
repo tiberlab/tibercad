@@ -1156,6 +1156,14 @@ Negf::compute_layer_currents(void)
   {
     std::cout << layer_current[i] << std::endl;
   }
+
+  // SRH defect summary (only if an SRH interaction is registered)
+  std::array<double, 8> srh;
+  if (_libnegf->get_srh_results(srh))
+  {
+    std::cout << "SRH defect result: fd=" << srh[0] << "  R_def[1/s]=" << srh[2]
+              << "  U=rho_d*R[cm^-3 s^-1]=" << srh[3] << std::endl;
+  }
   return layer_current;
 }
 
@@ -3714,6 +3722,23 @@ Negf::parse_scattering_options(void)
         inter.poldir = inel_options.get_option("polarization_direction", inter.poldir);
         inter.deb_id = inel_options.get_option("debug_id", inter.deb_id);
 
+        // SRH defect (Aeberhard 2019 multiphonon model). Energies in eV, densities in cm^-3.
+        inter.Ed0 = inel_options.get_option("defect_energy", inter.Ed0);   // above Ev
+        inter.rho_d = inel_options.get_option("defect_density", inter.rho_d);
+        inter.Cn = inel_options.get_option("capture_n", inter.Cn);
+        inter.Cp = inel_options.get_option("capture_p", inter.Cp);
+        inter.pl_index = inel_options.get_option("pl_index", inter.pl_index);
+        inter.orb_index = inel_options.get_option("orb_index", inter.orb_index);
+        inter.n_orb = inel_options.get_option("n_orb", inter.n_orb);
+        inter.srh_phonon_energy = inel_options.get_option("srh_phonon_energy", inter.srh_phonon_energy);
+        inter.srh_huang_rhys = inel_options.get_option("huang_rhys", inter.srh_huang_rhys);
+        inter.srh_mass_c = inel_options.get_option("effective_mass_c", inter.srh_mass_c);
+        inter.srh_mass_v = inel_options.get_option("effective_mass_v", inter.srh_mass_v);
+        inter.srh_Ev = inel_options.get_option("band_edge_v", inter.srh_Ev);
+        inter.srh_Ec = inel_options.get_option("band_edge_c", inter.srh_Ec);
+        inter.srh_cell_volume = inel_options.get_option("cell_volume", inter.srh_cell_volume);
+        inter.srh_line_width = inel_options.get_option("line_width", inter.srh_line_width);
+
         _interactions.push_back(inter);
       }
     }
@@ -3764,6 +3789,7 @@ Negf::get_scattering_model(std::string input_model)
   else if (input_model == "non_polar_optical_phonon") model = NONPOLAROPTICAL;
   else if (input_model == "acoustic_phonon") model = ACOUSTICINEL;
   else if (input_model == "photon") model = PHOTON;
+  else if (input_model == "srh" || input_model == "srh_multiphonon") model = SRH;
   else model = DUMMY;
   
   return model;
@@ -3846,6 +3872,36 @@ Negf::setup_interactions(void)
 
         _libnegf->set_elphot(coup, volume, inter.nr, inter.Ephot, inter.intensity, IP, JP, P, inter.poldir,
                              inter.scba_niter,  inter.tTridiagonal, inter.deb_id);
+        if ( inter.scba_tol < inelastic_tol ) inelastic_tol = inter.scba_tol;
+        break;
+      }
+      case SRH:
+      {
+        if (inter.pl_index < 1 || inter.orb_index < 1)
+          throw InitFailedException("SRH defect: pl_index and orb_index (1-based) must be set in the Inelastic block.");
+        if (inter.srh_phonon_energy <= 0.0 || inter.srh_huang_rhys <= 0.0)
+          throw InitFailedException("SRH defect: srh_phonon_energy (eV) and huang_rhys must be > 0.");
+        if (inter.srh_cell_volume <= 0.0)
+          throw InitFailedException("SRH defect: cell_volume (cm^3) must be > 0.");
+        os << "Setting SRH multiphonon defect interaction: Ed(above Ev)=" << inter.Ed0
+           << " eV, rho_d=" << inter.rho_d << " cm^-3, Ev=" << inter.srh_Ev
+           << " eV, Ec=" << inter.srh_Ec << " eV" << std::endl;
+        Messages::info(os.str()); os.str("");
+        double T_K = SimulationOptions::temperature;
+        // defect site = all orbitals (bands) of one atom unless n_orb is given explicitly
+        int n_orb_site = inter.n_orb;
+        if (n_orb_site <= 0)
+          n_orb_site = (_ext_module != nullptr) ? static_cast<int>(_ext_module->get_number_of_bands()) : 1;
+        if (n_orb_site < 1) n_orb_site = 1;
+        os << "SRH defect site: PL " << inter.pl_index << ", rows " << inter.orb_index
+           << " .. " << inter.orb_index + n_orb_site - 1 << " (n_orb = " << n_orb_site << ")" << std::endl;
+        Messages::info(os.str()); os.str("");
+        _libnegf->set_srh_defect(inter.Ed0, inter.rho_d, inter.Cn, inter.Cp, T_K,
+                                 inter.pl_index, inter.orb_index, n_orb_site, inter.scba_niter,
+                                 inter.srh_phonon_energy, inter.srh_huang_rhys,
+                                 inter.srh_mass_c, inter.srh_mass_v,
+                                 inter.srh_Ev, inter.srh_Ec, inter.srh_cell_volume,
+                                 inter.srh_line_width);
         if ( inter.scba_tol < inelastic_tol ) inelastic_tol = inter.scba_tol;
         break;
       }

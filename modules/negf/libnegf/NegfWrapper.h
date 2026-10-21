@@ -30,6 +30,7 @@
 #include "libnegf.hpp"
 #include "lnParams.h"
 
+#include <array>
 #include <complex>
 #include <vector>
 #include <map>
@@ -228,6 +229,20 @@ public:
                   std::vector<std::vector<int>>& JP, std::vector<std::vector<Complex>>& P, int poldir, int scba_niter, bool tTridiagonal, int deb_id);
 
   void set_scba_tolerances(double elastic_tol, double inelastic_tol);
+
+  //! SRH multiphonon defect interaction (Aeberhard 2019). Energies in eV, rho_d in cm^-3,
+  //! Cn/Cp = sigma*v_th in cm^3/s, masses in m0, cell_volume in cm^3.
+  //! Ed_rel is measured from the local valence band edge Ev_abs; Ec_abs is the local conduction band edge.
+  //! The defect site is the n_orb consecutive matrix rows starting at orb_index inside principal layer pl_index.
+  void set_srh_defect(double Ed_rel, double rho_d, double Cn, double Cp, double temperature,
+                      int pl_index, int orb_index, int n_orb, int scba_niter,
+                      double phonon_energy, double huang_rhys, double mass_c, double mass_v,
+                      double Ev_abs, double Ec_abs, double cell_volume, double line_width);
+
+  //! Read back SRH diagnostics after the SCBA loop:
+  //! res = {fd, 1-fd, R_def [1/s], U = rho_d*R_def [cm^-3 s^-1], Sn_dc, Sp_dc, Sn_dv, Sp_dv [eV]}.
+  //! Returns false if no SRH defect is registered.
+  bool get_srh_results(std::array<double, 8>& res);
 
 private:
   int _handler[NEGF_HSIZE];
