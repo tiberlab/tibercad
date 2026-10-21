@@ -630,6 +630,22 @@ NegfWrapper::set_srh_defect(double Ed_rel, double rho_d, double Cn, double Cp, d
 }
 
 
+void
+NegfWrapper::add_srh_site(int pl_index, int orb_index, int n_orb, double Ev_abs, double Ec_abs, double weight)
+{
+  negf_add_srh_site(_handler, pl_index, orb_index, n_orb, Ev_abs, Ec_abs, weight);
+}
+
+
+int
+NegfWrapper::get_srh_nsites()
+{
+  int nsites = 0;
+  negf_get_srh_nsites(_handler, nsites);
+  return nsites;
+}
+
+
 bool
 NegfWrapper::get_srh_results(std::array<double, 8>& res, int isite)
 {

@@ -78,6 +78,7 @@
 #include <sstream>
 #include <set>
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cmath>
 
@@ -1157,13 +1158,8 @@ Negf::compute_layer_currents(void)
     std::cout << layer_current[i] << std::endl;
   }
 
-  // SRH defect summary (only if an SRH interaction is registered)
-  std::array<double, 8> srh;
-  if (_libnegf->get_srh_results(srh))
-  {
-    std::cout << "SRH defect result: fd=" << srh[0] << "  R_def[1/s]=" << srh[2]
-              << "  U=rho_d*R[cm^-3 s^-1]=" << srh[3] << std::endl;
-  }
+  // SRH: per-site table + total recombination current next to the layer currents
+  report_srh(layer_current);
   return layer_current;
 }
 
@@ -3732,6 +3728,8 @@ Negf::parse_scattering_options(void)
         inter.srh_pos_x = inel_options.get_option("defect_x", inter.srh_pos_x);   // nm
         inter.srh_pos_y = inel_options.get_option("defect_y", inter.srh_pos_y);   // nm (optional)
         inter.srh_pos_z = inel_options.get_option("defect_z", inter.srh_pos_z);   // nm (optional)
+        inter.srh_x_min = inel_options.get_option("defect_x_min", inter.srh_x_min);   // nm, region start
+        inter.srh_x_max = inel_options.get_option("defect_x_max", inter.srh_x_max);   // nm, region end
         inter.n_orb = inel_options.get_option("n_orb", inter.n_orb);
         inter.srh_phonon_energy = inel_options.get_option("srh_phonon_energy", inter.srh_phonon_energy);
         inter.srh_huang_rhys = inel_options.get_option("huang_rhys", inter.srh_huang_rhys);
@@ -3810,6 +3808,12 @@ Negf::setup_interactions(void)
   double inelastic_tol = 10.0;
 
   ostringstream os;
+
+  // SRH site bookkeeping is rebuilt on every setup (libNEGF is re-initialised on every solve)
+  _srh_site_x.clear();
+  _srh_site_vol.clear();
+  _srh_site_Ev.clear();
+  _srh_site_Ec.clear();
 
   for (int i = 0; i < _interactions.size(); i++)
   {
@@ -3891,8 +3895,19 @@ Negf::setup_interactions(void)
           n_orb_site = (_ext_module != nullptr) ? static_cast<int>(_ext_module->get_number_of_bands()) : 1;
         if (n_orb_site < 1) n_orb_site = 1;
 
-        // Placement: physical position (defect_x [, defect_y, defect_z] in nm) OR raw (pl_index, orb_index)
+        // Placement: (C) uniform density in an x-range, (A) one site at a physical position
+        // (defect_x [, defect_y, defect_z] in nm), or (B) raw (pl_index, orb_index)
         const bool has_pos = (inter.srh_pos_x < 0.5e30);
+        const bool has_region = (inter.srh_x_min < 0.5e30 || inter.srh_x_max < 0.5e30);
+        if (has_region)
+        {
+          if (has_pos || inter.pl_index > 0 || inter.orb_index > 0)
+            throw InitFailedException("SRH defect: give only one placement: defect_x_min/defect_x_max (region), "
+                                      "defect_x/y/z (single site) or pl_index/orb_index.");
+          setup_srh_region(inter, n_orb_site, T_K);
+          if ( inter.scba_tol < inelastic_tol ) inelastic_tol = inter.scba_tol;
+          break;
+        }
         if (has_pos)
         {
           if (inter.pl_index > 0 || inter.orb_index > 0)
@@ -3927,6 +3942,10 @@ Negf::setup_interactions(void)
                                  inter.srh_mass_c, inter.srh_mass_v,
                                  inter.srh_Ev, inter.srh_Ec, inter.srh_cell_volume,
                                  inter.srh_line_width);
+        _srh_site_x.push_back(has_pos ? inter.srh_pos_x : std::nan(""));
+        _srh_site_vol.push_back(inter.srh_cell_volume * n_orb_site);
+        _srh_site_Ev.push_back(inter.srh_Ev);
+        _srh_site_Ec.push_back(inter.srh_Ec);
         if ( inter.scba_tol < inelastic_tol ) inelastic_tol = inter.scba_tol;
         break;
       }
@@ -4011,16 +4030,9 @@ Negf::get_band_edges_at_point(const Point& pt, double& Ec, double& Ev) const
 
 
 void
-Negf::resolve_srh_site(Interaction& inter, int n_orb_site)
+Negf::get_device_atom_xyz(vector<dvector>& xyz)
 {
-  const double unset = 0.5e30;
-  const bool use_y = (inter.srh_pos_y < unset);
-  const bool use_z = (inter.srh_pos_z < unset);
-  const int n_bands = static_cast<int>(_ext_module->get_number_of_bands());
-
-  // --- coordinates (nm) of the device atoms, in MATRIX order (atom a owns rows a*n_bands+1 .. (a+1)*n_bands)
-  vector<dvector> xyz(3);
-  for (int i = 0; i < 3; i++) xyz[i].resize(_device_n_dofs);
+  xyz.assign(3, dvector(_device_n_dofs, 0.0));
 
   if (_hamil_type == "etb")
   {
@@ -4050,6 +4062,184 @@ Negf::resolve_srh_site(Interaction& inter, int n_orb_site)
   {
     get_coordinates(xyz);                        // already in nm and in matrix order
   }
+}
+
+
+void
+Negf::setup_srh_region(Interaction& inter, int n_orb_site, double T_K)
+{
+  const double unset = 0.5e30;
+  const int n_bands = static_cast<int>(_ext_module->get_number_of_bands());
+
+  // one bound given -> the region extends to the device end on the other side
+  const double xlo = (inter.srh_x_min < unset) ? inter.srh_x_min : -1.0e300;
+  const double xhi = (inter.srh_x_max < unset) ? inter.srh_x_max : 1.0e300;
+  if (xlo > xhi)
+    throw InitFailedException("SRH defect: defect_x_min must not be larger than defect_x_max.");
+
+  vector<dvector> xyz;
+  get_device_atom_xyz(xyz);
+
+  const double to_mesh = 1.0 / (get_mesh_units() * 1.0e9);   // nm -> mesh units
+  const bool need_pot = (inter.srh_Ev > unset || inter.srh_Ec > unset);
+
+  int n_sites = 0;
+  double x_first = 0.0, x_last = 0.0;
+  double Ev_lo = 1.0e300, Ev_hi = -1.0e300, Ec_lo = 1.0e300, Ec_hi = -1.0e300;
+
+  for (unsigned int a = 0; a < _device_n_dofs; ++a)
+  {
+    const double x = xyz[0][a];
+    if (x < xlo || x > xhi) continue;
+
+    // matrix rows of this atom -> (PL, first row inside the PL); _end_blocks[p] = last (1-based) row of PL p
+    const int first_row = static_cast<int>(a) * n_bands + 1;
+    const int last_row = first_row + n_orb_site - 1;
+    int pl = -1;
+    int pl_start = 1;
+    for (size_t p = 0; p < _end_blocks.size(); ++p)
+    {
+      if (first_row <= _end_blocks[p]) { pl = static_cast<int>(p); break; }
+      pl_start = _end_blocks[p] + 1;
+    }
+    if (pl < 0 || last_row > _end_blocks[pl])
+    {
+      ostringstream es;
+      es << "SRH defect region: the site of atom #" << a << " (x = " << x
+         << " nm) does not fit inside one principal layer.";
+      throw InitFailedException(es.str());
+    }
+
+    // band edges at this atom from the potential module (unless given in the input)
+    double Ev = inter.srh_Ev;
+    double Ec = inter.srh_Ec;
+    if (need_pot)
+    {
+      Point pt(xyz[0][a] * to_mesh, xyz[1][a] * to_mesh, xyz[2][a] * to_mesh);
+      double Ec_pot = 0.0, Ev_pot = 0.0;
+      get_band_edges_at_point(pt, Ec_pot, Ev_pot);
+      if (Ev > unset) Ev = Ev_pot;
+      if (Ec > unset) Ec = Ec_pot;
+    }
+    if (Ec <= Ev || inter.Ed0 <= 0.0 || inter.Ed0 >= Ec - Ev)
+    {
+      ostringstream es;
+      es << "SRH defect region: at x = " << x << " nm the defect level Ed = " << inter.Ed0
+         << " eV above Ev is not inside the local gap (Ev = " << Ev << " eV, Ec = " << Ec << " eV).";
+      throw InitFailedException(es.str());
+    }
+
+    const int row_in_pl = first_row - pl_start + 1;
+    if (n_sites == 0)
+    {
+      _libnegf->set_srh_defect(inter.Ed0, inter.rho_d, inter.Cn, inter.Cp, T_K,
+                               pl + 1, row_in_pl, n_orb_site, inter.scba_niter,
+                               inter.srh_phonon_energy, inter.srh_huang_rhys,
+                               inter.srh_mass_c, inter.srh_mass_v,
+                               Ev, Ec, inter.srh_cell_volume, inter.srh_line_width);
+      x_first = x;
+    }
+    else
+    {
+      _libnegf->add_srh_site(pl + 1, row_in_pl, n_orb_site, Ev, Ec, 1.0);
+    }
+    x_last = x;
+    ++n_sites;
+
+    _srh_site_x.push_back(x);
+    _srh_site_vol.push_back(inter.srh_cell_volume * n_orb_site);
+    _srh_site_Ev.push_back(Ev);
+    _srh_site_Ec.push_back(Ec);
+    Ev_lo = std::min(Ev_lo, Ev); Ev_hi = std::max(Ev_hi, Ev);
+    Ec_lo = std::min(Ec_lo, Ec); Ec_hi = std::max(Ec_hi, Ec);
+  }
+
+  if (n_sites == 0)
+    throw InitFailedException("SRH defect region: no device atom has x inside [defect_x_min, defect_x_max].");
+
+  ostringstream os;
+  os << "Setting SRH multiphonon defect region: " << n_sites << " sites (one per device atom), x from "
+     << x_first << " to " << x_last << " nm" << std::endl;
+  os << "  Ed(above Ev)=" << inter.Ed0 << " eV, rho_d=" << inter.rho_d << " cm^-3 (uniform), Ev in ["
+     << Ev_lo << ", " << Ev_hi << "] eV, Ec in [" << Ec_lo << ", " << Ec_hi << "] eV ("
+     << (need_pot ? "from potential module" : "from input") << ")" << std::endl;
+  os << "  n_orb per site = " << n_orb_site << ", volume per site = "
+     << inter.srh_cell_volume * n_orb_site << " cm^3" << std::endl;
+  Messages::info(os.str());
+}
+
+
+void
+Negf::report_srh(const std::vector<double>& layer_current)
+{
+  const int ns = _libnegf->get_srh_nsites();
+  if (ns < 1) return;
+
+  const double q_C = 1.602176634e-19;
+
+  std::vector<std::array<double, 8>> res(ns);
+  std::array<double, 8> r;
+  double rate_tot = 0.0;                 // sum_i U_i * V_i  [1/s]
+  double fd_min = 1.0e300, fd_max = -1.0e300;
+  for (int i = 0; i < ns; ++i)
+  {
+    if (!_libnegf->get_srh_results(r, i + 1))
+    {
+      res[i].fill(0.0);
+      continue;
+    }
+    res[i] = r;
+    const double V = (i < static_cast<int>(_srh_site_vol.size())) ? _srh_site_vol[i] : 0.0;
+    rate_tot += r[3] * V;                // U [cm^-3 s^-1] * V [cm^3]
+    fd_min = std::min(fd_min, r[0]);
+    fd_max = std::max(fd_max, r[0]);
+  }
+
+  // per-site table (rank 0 only)
+  if (get_communicator().rank() == 0)
+  {
+    ofstream out(get_output_directory() + "/" + get_output_filename_prefix() + "_srh_sites.dat");
+    if (out.good())
+    {
+      out << "# SRH defect sites: x[nm]  Ev[eV]  Ec[eV]  fd  R_def[1/s]  U[cm^-3 s^-1]  U*V_site[1/s]\n";
+      for (int i = 0; i < ns; ++i)
+      {
+        const bool have = (i < static_cast<int>(_srh_site_x.size()));
+        const double V = have ? _srh_site_vol[i] : 0.0;
+        out << (have ? _srh_site_x[i] : std::nan("")) << " "
+            << (have ? _srh_site_Ev[i] : std::nan("")) << " "
+            << (have ? _srh_site_Ec[i] : std::nan("")) << " "
+            << res[i][0] << " " << res[i][2] << " " << res[i][3] << " " << res[i][3] * V << "\n";
+      }
+    }
+  }
+
+  ostringstream os;
+  os << "SRH recombination: " << ns << " site(s), fd in [" << fd_min << ", " << fd_max << "]" << std::endl;
+  os << "  sum(U*V_site) = " << rate_tot << " 1/s   ->   I_rec = q*sum = " << q_C * rate_tot
+     << " A (per simulated cell)" << std::endl;
+  if (!layer_current.empty())
+  {
+    const auto mm = std::minmax_element(layer_current.begin(), layer_current.end());
+    os << "  layer currents: first = " << layer_current.front() << ", last = " << layer_current.back()
+       << ", spread (max-min) = " << (*mm.second - *mm.first) << " A" << std::endl;
+  }
+  os << "  per-site table written to <prefix>_srh_sites.dat" << std::endl;
+  Messages::info(os.str());
+}
+
+
+void
+Negf::resolve_srh_site(Interaction& inter, int n_orb_site)
+{
+  const double unset = 0.5e30;
+  const bool use_y = (inter.srh_pos_y < unset);
+  const bool use_z = (inter.srh_pos_z < unset);
+  const int n_bands = static_cast<int>(_ext_module->get_number_of_bands());
+
+  // --- coordinates (nm) of the device atoms, in MATRIX order (atom a owns rows a*n_bands+1 .. (a+1)*n_bands)
+  vector<dvector> xyz;
+  get_device_atom_xyz(xyz);
 
   // --- nearest device atom (distance only in the directions given by the user)
   int best = -1;
@@ -4119,6 +4309,9 @@ Negf::resolve_srh_site(Interaction& inter, int n_orb_site)
 
   if (dist > 0.5)
     Messages::warning("SRH defect: the nearest atom is more than 0.5 nm from the requested position.");
+
+  // keep the x of the atom actually used (for the per-site report)
+  inter.srh_pos_x = xyz[0][best];
 }
 
 

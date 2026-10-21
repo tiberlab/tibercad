@@ -293,6 +293,10 @@ class TC_DLLOCAL Negf : public SimulationInterface
       double srh_pos_x = 1.0e30;
       double srh_pos_y = 1.0e30;
       double srh_pos_z = 1.0e30;
+      // Option C: uniform density rho_d in the x-range [srh_x_min, srh_x_max] (nm); one site per device atom.
+      // If only one bound is given the region extends to the end of the device on the other side.
+      double srh_x_min = 1.0e30;
+      double srh_x_max = 1.0e30;
       // Option B (manual): raw indices
       int pl_index = 0;          // principal-layer index (1-based Fortran; 0 = unset)
       int orb_index = 0;         // first matrix row of the defect site inside the PL (1-based; 0 = unset)
@@ -401,6 +405,23 @@ class TC_DLLOCAL Negf : public SimulationInterface
 
     //! SRH: nearest device atom to the requested position -> (pl_index, orb_index); fills Ev/Ec if not given
     void resolve_srh_site(Interaction& inter, int n_orb_site);
+
+    //! SRH: uniform defect density in an x-range: one site on every device atom with x_min <= x <= x_max
+    //! (nm); each site gets Ev/Ec from the potential module at its own atom. Registers the sites in libNEGF.
+    void setup_srh_region(Interaction& inter, int n_orb_site, double T_K);
+
+    //! coordinates (nm) of the device atoms in MATRIX order (atom a owns rows a*n_bands+1 .. (a+1)*n_bands)
+    void get_device_atom_xyz(std::vector<std::vector<double> >& xyz);
+
+    //! SRH: write per-site table (x, Ev, Ec, fd, U) and print the total recombination current,
+    //! next to the layer currents of the same run
+    void report_srh(const std::vector<double>& layer_current);
+
+    //! Per registered SRH site, in the same order as libNEGF counts them (over all SRH interactions):
+    //! x (nm; NaN if placed by pl_index/orb_index), volume of the site = cell_volume*n_orb (cm^3), Ev, Ec (eV)
+    std::vector<double> _srh_site_x;
+    std::vector<double> _srh_site_vol;
+    std::vector<double> _srh_site_Ev, _srh_site_Ec;
 
     //! Ec, Ev (eV) of the potential module evaluated at a point (mesh units)
     void get_band_edges_at_point(const Point& pt, double& Ec, double& Ev) const;

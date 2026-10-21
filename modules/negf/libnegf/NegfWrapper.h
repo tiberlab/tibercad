@@ -239,7 +239,14 @@ public:
                       double phonon_energy, double huang_rhys, double mass_c, double mass_v,
                       double Ev_abs, double Ec_abs, double cell_volume, double line_width);
 
-  //! Read back SRH diagnostics after the SCBA loop:
+  //! Add one more site (same defect species) to the most recently registered SRH interaction.
+  //! weight = multiplicity of the site (1 = one atom cell).
+  void add_srh_site(int pl_index, int orb_index, int n_orb, double Ev_abs, double Ec_abs, double weight);
+
+  //! Total number of SRH sites over all SRH interactions.
+  int get_srh_nsites();
+
+  //! Read back SRH diagnostics after the SCBA loop (site isite = 1..nsites, counted over all SRH interactions):
   //! res = {fd, 1-fd, R_def [1/s], U = rho_d*R_def [cm^-3 s^-1], Sn_dc, Sp_dc, Sn_dv, Sp_dv [eV]}.
   //! Returns false if no SRH defect is registered.
   bool get_srh_results(std::array<double, 8>& res, int isite = 1);
