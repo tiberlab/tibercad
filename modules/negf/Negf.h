@@ -311,6 +311,10 @@ class TC_DLLOCAL Negf : public SimulationInterface
       // cell_area and the mean axial spacing of device atoms (see estimate_srh_cell_volume).
       double srh_cell_volume = 0.0;
       double srh_line_width = 1.0e-3;  // defect line width (eV), keep <~ 0.1 kT
+      // Charge state for Poisson: "neutral" (default), "acceptor" (N_a- = rho_d*fd),
+      // "donor" (N_d+ = rho_d*(1-fd)). Injected into elDensity as equivalent electron count.
+      std::string srh_charge_state = "neutral";
+      int srh_atom = -1;  // filled by resolve_srh_site / setup_srh_region (matrix atom index)
     };
 
     double get_band_edge(const std::string& band) const;
@@ -427,6 +431,14 @@ class TC_DLLOCAL Negf : public SimulationInterface
     std::vector<double> _srh_site_x;
     std::vector<double> _srh_site_vol;
     std::vector<double> _srh_site_Ev, _srh_site_Ec;
+    //! matrix atom index (0-based device order; -1 if unknown), defect density, charge state
+    //! charge_state: 0=neutral, -1=acceptor, +1=donor
+    std::vector<int> _srh_site_atom;
+    std::vector<double> _srh_site_rho;
+    int _srh_charge_state = 0;
+
+    //! Add charged-trap contribution to atomic electron counts (acceptor/donor).
+    void add_srh_trap_charge(std::vector<double>& atomic_charges, unsigned int N_atoms);
 
     //! Ec, Ev (eV) of the potential module evaluated at a point (mesh units)
     void get_band_edges_at_point(const Point& pt, double& Ec, double& Ev) const;

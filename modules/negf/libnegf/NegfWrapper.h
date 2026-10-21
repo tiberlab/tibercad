@@ -251,6 +251,11 @@ public:
   //! Returns false if no SRH defect is registered.
   bool get_srh_results(std::array<double, 8>& res, int isite = 1);
 
+  //! Band self-energies Sn_b(E), Sp_b(E) [eV] on the global energy grid for site isite (1-based).
+  //! On success fills Sn, Sp (size nE), E_i = Emin + (i-1)*dE.  Returns false if missing.
+  bool get_srh_spectral(int isite, int& nE, double& Emin, double& dE,
+                        std::vector<double>& Sn, std::vector<double>& Sp);
+
   //! Drop all interactions (needed before re-setup on each Poisson–NEGF iteration).
   void destroy_interactions();
 

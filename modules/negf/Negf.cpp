@@ -2105,6 +2105,10 @@ Negf::transfer_density_etb(const std::vector<double>& density, const std::string
     atomic_charges[i] = charge;
   }
 
+  // Charged traps (acceptor/donor): add to electron atomic counts so Poisson sees N_a-/N_d+
+  if (particle == "el" && _srh_charge_state != 0)
+    add_srh_trap_charge(atomic_charges, N_atoms);
+
   // compute connectivity of each node
   // we need the connectivity of the nodes to not double count
   std::vector<int> connectivity(qdens.size(), 0);
@@ -3739,6 +3743,7 @@ Negf::parse_scattering_options(void)
         inter.srh_Ec = inel_options.get_option("band_edge_c", inter.srh_Ec);
         inter.srh_cell_volume = inel_options.get_option("cell_volume", inter.srh_cell_volume);
         inter.srh_line_width = inel_options.get_option("line_width", inter.srh_line_width);
+        inter.srh_charge_state = inel_options.get_option("charge_state", inter.srh_charge_state);
 
         _interactions.push_back(inter);
       }
@@ -3817,6 +3822,9 @@ Negf::setup_interactions(void)
   _srh_site_vol.clear();
   _srh_site_Ev.clear();
   _srh_site_Ec.clear();
+  _srh_site_atom.clear();
+  _srh_site_rho.clear();
+  _srh_charge_state = 0;
 
   for (int i = 0; i < _interactions.size(); i++)
   {
@@ -3957,6 +3965,12 @@ Negf::setup_interactions(void)
         _srh_site_vol.push_back(inter.srh_cell_volume * n_orb_site);
         _srh_site_Ev.push_back(inter.srh_Ev);
         _srh_site_Ec.push_back(inter.srh_Ec);
+        // single-site: atom index known only when placed by position (resolve_srh_site sets pl/orb)
+        _srh_site_atom.push_back(inter.srh_atom);
+        _srh_site_rho.push_back(inter.rho_d);
+        if (inter.srh_charge_state == "acceptor") _srh_charge_state = -1;
+        else if (inter.srh_charge_state == "donor") _srh_charge_state = 1;
+        else _srh_charge_state = 0;
         if ( inter.scba_tol < inelastic_tol ) inelastic_tol = inter.scba_tol;
         break;
       }
@@ -4210,9 +4224,15 @@ Negf::setup_srh_region(Interaction& inter, int n_orb_site, double T_K)
     _srh_site_vol.push_back(inter.srh_cell_volume * n_orb_site);
     _srh_site_Ev.push_back(Ev);
     _srh_site_Ec.push_back(Ec);
+    _srh_site_atom.push_back(static_cast<int>(a));
+    _srh_site_rho.push_back(inter.rho_d);
     Ev_lo = std::min(Ev_lo, Ev); Ev_hi = std::max(Ev_hi, Ev);
     Ec_lo = std::min(Ec_lo, Ec); Ec_hi = std::max(Ec_hi, Ec);
   }
+
+  if (inter.srh_charge_state == "acceptor") _srh_charge_state = -1;
+  else if (inter.srh_charge_state == "donor") _srh_charge_state = 1;
+  else _srh_charge_state = 0;
 
   if (n_sites == 0)
     throw InitFailedException("SRH defect region: no device atom has x inside [defect_x_min, defect_x_max].");
@@ -4284,8 +4304,82 @@ Negf::report_srh(const std::vector<double>& layer_current)
     os << "  layer currents: first = " << layer_current.front() << ", last = " << layer_current.back()
        << ", spread (max-min) = " << (*mm.second - *mm.first) << " A" << std::endl;
   }
+  if (_srh_charge_state != 0)
+  {
+    os << "  charge_state = " << (_srh_charge_state < 0 ? "acceptor (N_a- = rho_d*fd)"
+                                                       : "donor (N_d+ = rho_d*(1-fd))")
+       << " — injected into elDensity for Poisson" << std::endl;
+  }
   os << "  per-site table written to <prefix>_srh_sites.dat" << std::endl;
+
+  // Spectral band self-energies Sn_b(E), Sp_b(E) [eV] for each site (rank 0).
+  // Columns: E[eV]  Sn_b  Sp_b  Gamma=(Sn+Sp)/2.  One file per site if ns small,
+  // otherwise a single multi-site file with site index.
+  if (get_communicator().rank() == 0)
+  {
+    const int max_files = 20;   // avoid flooding disk for dense region placements
+    int n_written = 0;
+    for (int i = 0; i < ns && i < max_files; ++i)
+    {
+      int nE = 0;
+      double Emin = 0.0, dE = 0.0;
+      std::vector<double> Sn, Sp;
+      if (!_libnegf->get_srh_spectral(i + 1, nE, Emin, dE, Sn, Sp) || nE < 1)
+        continue;
+
+      ostringstream fname;
+      fname << get_output_directory() << "/" << get_output_filename_prefix()
+            << "_srh_spectral_s" << (i + 1) << ".dat";
+      ofstream sout(fname.str());
+      if (!sout.good()) continue;
+      sout << "# SRH spectral band Sigma_n / Sigma_p at site " << (i + 1)
+           << "  Emin=" << Emin << " dE=" << dE << " nE=" << nE << "\n";
+      sout << "# E[eV]  Sn_b[eV]  Sp_b[eV]  Gamma[eV]\n";
+      for (int ie = 0; ie < nE; ++ie)
+      {
+        const double E = Emin + ie * dE;
+        sout << E << " " << Sn[ie] << " " << Sp[ie] << " " << 0.5 * (Sn[ie] + Sp[ie]) << "\n";
+      }
+      ++n_written;
+    }
+    if (n_written > 0)
+      os << "  spectral Sn/Sp written for " << n_written
+         << " site(s) to <prefix>_srh_spectral_s*.dat" << std::endl;
+  }
+
   Messages::info(os.str());
+}
+
+
+void
+Negf::add_srh_trap_charge(std::vector<double>& atomic_charges, unsigned int N_atoms)
+{
+  // Poisson: rho = q*(p - n + N_d+ - N_a-).  We only adjust the electron channel:
+  //   acceptor: N_a- = rho_d * fd  → add +N_a- * V_atom electrons at the site atom
+  //   donor:    N_d+ = rho_d*(1-fd) → add -N_d+ * V_atom electrons (positive ion)
+  // V_atom = site volume [cm^3]; rho_d [cm^-3] → defects per atom cell = rho_d * V_atom.
+  if (_srh_charge_state == 0) return;
+  const int ns = _libnegf->get_srh_nsites();
+  if (ns < 1) return;
+
+  std::array<double, 8> r;
+  for (int i = 0; i < ns; ++i)
+  {
+    if (i >= static_cast<int>(_srh_site_atom.size())) break;
+    const int atom = _srh_site_atom[i];
+    if (atom < 0 || static_cast<unsigned int>(atom) >= N_atoms) continue;
+    if (!_libnegf->get_srh_results(r, i + 1)) continue;
+
+    const double V = (i < static_cast<int>(_srh_site_vol.size())) ? _srh_site_vol[i] : 0.0;
+    const double rho = (i < static_cast<int>(_srh_site_rho.size())) ? _srh_site_rho[i] : 0.0;
+    const double n_def = rho * V;   // defects in this atom cell
+    if (n_def <= 0.0) continue;
+
+    if (_srh_charge_state < 0)
+      atomic_charges[atom] += n_def * r[0];       // acceptor occupied → more electrons
+    else
+      atomic_charges[atom] -= n_def * r[1];       // donor empty (1-fd) → fewer electrons
+  }
 }
 
 
@@ -4339,6 +4433,7 @@ Negf::resolve_srh_site(Interaction& inter, int n_orb_site)
 
   inter.pl_index = pl + 1;                       // Fortran, 1-based
   inter.orb_index = first_row - pl_start + 1;    // 1-based inside the PL
+  inter.srh_atom = best;
 
   // --- band edges at the atom from the potential module (unless given by the user)
   const double to_mesh = 1.0 / (get_mesh_units() * 1.0e9);   // nm -> mesh units
