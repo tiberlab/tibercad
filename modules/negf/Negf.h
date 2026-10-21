@@ -287,6 +287,13 @@ class TC_DLLOCAL Negf : public SimulationInterface
       double rho_d = 0.0;        // defect density (cm^-3)
       double Cn = 0.0;           // electron capture coeff sigma_n*v_th (cm^3/s)
       double Cp = 0.0;           // hole capture coeff sigma_p*v_th (cm^3/s)
+      // Defect placement, option A (preferred): physical position in nm (x = transport direction).
+      // 1.0e30 means "not given". y, z are optional: if not given they are ignored in the nearest-atom search.
+      // The site is then resolved to (pl_index, orb_index) automatically.
+      double srh_pos_x = 1.0e30;
+      double srh_pos_y = 1.0e30;
+      double srh_pos_z = 1.0e30;
+      // Option B (manual): raw indices
       int pl_index = 0;          // principal-layer index (1-based Fortran; 0 = unset)
       int orb_index = 0;         // first matrix row of the defect site inside the PL (1-based; 0 = unset)
       int n_orb = 0;             // rows (orbitals) of the defect site; 0 = all bands of one atom
@@ -294,8 +301,8 @@ class TC_DLLOCAL Negf : public SimulationInterface
       double srh_huang_rhys = 0.0;     // Huang-Rhys factor S
       double srh_mass_c = 0.0;         // CB effective mass (m0), used only to calibrate coupling
       double srh_mass_v = 0.0;         // VB effective mass (m0), used only to calibrate coupling
-      double srh_Ev = 0.0;             // VB edge at defect site, NEGF energy axis (eV)
-      double srh_Ec = 0.0;             // CB edge at defect site, NEGF energy axis (eV)
+      double srh_Ev = 1.0e30;          // VB edge at defect site, NEGF energy axis (eV); 1e30 = take from potential module
+      double srh_Ec = 1.0e30;          // CB edge at defect site, NEGF energy axis (eV); 1e30 = take from potential module
       double srh_cell_volume = 0.0;    // volume per ORBITAL = (volume of the defect site)/n_orb (cm^3)
       double srh_line_width = 1.0e-3;  // defect line width (eV), keep <~ 0.1 kT
     };
@@ -391,6 +398,12 @@ class TC_DLLOCAL Negf : public SimulationInterface
     int get_scattering_model(std::string model);
 
     void setup_interactions(void);
+
+    //! SRH: nearest device atom to the requested position -> (pl_index, orb_index); fills Ev/Ec if not given
+    void resolve_srh_site(Interaction& inter, int n_orb_site);
+
+    //! Ec, Ev (eV) of the potential module evaluated at a point (mesh units)
+    void get_band_edges_at_point(const Point& pt, double& Ec, double& Ev) const;
 
     void print_interactions(void);
 

@@ -242,7 +242,7 @@ public:
   //! Read back SRH diagnostics after the SCBA loop:
   //! res = {fd, 1-fd, R_def [1/s], U = rho_d*R_def [cm^-3 s^-1], Sn_dc, Sp_dc, Sn_dv, Sp_dv [eV]}.
   //! Returns false if no SRH defect is registered.
-  bool get_srh_results(std::array<double, 8>& res);
+  bool get_srh_results(std::array<double, 8>& res, int isite = 1);
 
 private:
   int _handler[NEGF_HSIZE];

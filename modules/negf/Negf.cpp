@@ -3729,6 +3729,9 @@ Negf::parse_scattering_options(void)
         inter.Cp = inel_options.get_option("capture_p", inter.Cp);
         inter.pl_index = inel_options.get_option("pl_index", inter.pl_index);
         inter.orb_index = inel_options.get_option("orb_index", inter.orb_index);
+        inter.srh_pos_x = inel_options.get_option("defect_x", inter.srh_pos_x);   // nm
+        inter.srh_pos_y = inel_options.get_option("defect_y", inter.srh_pos_y);   // nm (optional)
+        inter.srh_pos_z = inel_options.get_option("defect_z", inter.srh_pos_z);   // nm (optional)
         inter.n_orb = inel_options.get_option("n_orb", inter.n_orb);
         inter.srh_phonon_energy = inel_options.get_option("srh_phonon_energy", inter.srh_phonon_energy);
         inter.srh_huang_rhys = inel_options.get_option("huang_rhys", inter.srh_huang_rhys);
@@ -3877,22 +3880,44 @@ Negf::setup_interactions(void)
       }
       case SRH:
       {
-        if (inter.pl_index < 1 || inter.orb_index < 1)
-          throw InitFailedException("SRH defect: pl_index and orb_index (1-based) must be set in the Inelastic block.");
         if (inter.srh_phonon_energy <= 0.0 || inter.srh_huang_rhys <= 0.0)
           throw InitFailedException("SRH defect: srh_phonon_energy (eV) and huang_rhys must be > 0.");
         if (inter.srh_cell_volume <= 0.0)
           throw InitFailedException("SRH defect: cell_volume (cm^3) must be > 0.");
-        os << "Setting SRH multiphonon defect interaction: Ed(above Ev)=" << inter.Ed0
-           << " eV, rho_d=" << inter.rho_d << " cm^-3, Ev=" << inter.srh_Ev
-           << " eV, Ec=" << inter.srh_Ec << " eV" << std::endl;
-        Messages::info(os.str()); os.str("");
         double T_K = SimulationOptions::temperature;
         // defect site = all orbitals (bands) of one atom unless n_orb is given explicitly
         int n_orb_site = inter.n_orb;
         if (n_orb_site <= 0)
           n_orb_site = (_ext_module != nullptr) ? static_cast<int>(_ext_module->get_number_of_bands()) : 1;
         if (n_orb_site < 1) n_orb_site = 1;
+
+        // Placement: physical position (defect_x [, defect_y, defect_z] in nm) OR raw (pl_index, orb_index)
+        const bool has_pos = (inter.srh_pos_x < 0.5e30);
+        if (has_pos)
+        {
+          if (inter.pl_index > 0 || inter.orb_index > 0)
+            throw InitFailedException("SRH defect: give either defect_x/y/z or pl_index/orb_index, not both.");
+          resolve_srh_site(inter, n_orb_site);
+        }
+        else if (inter.pl_index < 1 || inter.orb_index < 1)
+        {
+          throw InitFailedException("SRH defect: set defect_x (nm) or both pl_index and orb_index (1-based) in the Inelastic block.");
+        }
+        if (inter.srh_Ev > 0.5e30 || inter.srh_Ec > 0.5e30)
+          throw InitFailedException("SRH defect: band_edge_v and band_edge_c (eV) must be given when the defect is placed by pl_index/orb_index.");
+        if (inter.srh_Ec <= inter.srh_Ev)
+          throw InitFailedException("SRH defect: band_edge_c must be larger than band_edge_v.");
+        if (inter.Ed0 <= 0.0 || inter.Ed0 >= inter.srh_Ec - inter.srh_Ev)
+        {
+          ostringstream es;
+          es << "SRH defect: defect_energy (above Ev) = " << inter.Ed0 << " eV must lie inside the gap (0, "
+             << inter.srh_Ec - inter.srh_Ev << ") eV at the defect site.";
+          throw InitFailedException(es.str());
+        }
+        os << "Setting SRH multiphonon defect interaction: Ed(above Ev)=" << inter.Ed0
+           << " eV, rho_d=" << inter.rho_d << " cm^-3, Ev=" << inter.srh_Ev
+           << " eV, Ec=" << inter.srh_Ec << " eV (Eg=" << inter.srh_Ec - inter.srh_Ev << " eV)" << std::endl;
+        Messages::info(os.str()); os.str("");
         os << "SRH defect site: PL " << inter.pl_index << ", rows " << inter.orb_index
            << " .. " << inter.orb_index + n_orb_site - 1 << " (n_orb = " << n_orb_site << ")" << std::endl;
         Messages::info(os.str()); os.str("");
@@ -3915,6 +3940,185 @@ Negf::setup_interactions(void)
 
   }
   _libnegf->set_scba_tolerances(elastic_tol, inelastic_tol);
+}
+
+
+void
+Negf::get_band_edges_at_point(const Point& pt, double& Ec, double& Ev) const
+{
+  if (opt.pot_module == "none")
+    throw InitFailedException("SRH defect: no potential module given, so Ec/Ev at the defect cannot be read. "
+                              "Give band_edge_v and band_edge_c (eV) in the Inelastic block.");
+
+  SimulationInterface* model = SimulationInterface::find_simulation(opt.pot_module);
+  if (!model->is_solved())
+    throw SolveFailedException("Simulation " + opt.pot_module + " must be solved first");
+
+  // find the element that contains the point (fallback: element with the closest centroid)
+  MeshBase& mesh = get_mesh();
+  MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
+  const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
+
+  const Elem* found = nullptr;
+  const Elem* nearest = nullptr;
+  double best = 1.0e300;
+  for (; el != end_el; ++el)
+  {
+    const Elem* elem = *el;
+    if (elem->contains_point(pt, 1.0e-6))
+    {
+      found = elem;
+      break;
+    }
+    const double d2 = (elem->centroid() - pt).norm_sq();
+    if (d2 < best)
+    {
+      best = d2;
+      nearest = elem;
+    }
+  }
+  if (found == nullptr)
+  {
+    if (nearest == nullptr)
+      throw InitFailedException("SRH defect: mesh has no elements.");
+    Messages::warning("SRH defect: the defect atom is not inside any mesh element (boundary round-off?). "
+                      "Band edges are taken from the nearest element.");
+    found = nearest;
+  }
+
+  // Same call pattern as get_band_edge(): evaluate at the element nodes (the solution is nodal),
+  // then take the value of the node closest to the defect atom.
+  const unsigned int nn = found->n_nodes();
+  std::vector<Point> p(nn);
+  std::vector<double> val(nn, 0.0);
+  unsigned int inode = 0;
+  double dmin = 1.0e300;
+  for (unsigned int i = 0; i < nn; ++i)
+  {
+    p[i] = found->point(i);
+    const double d2 = (p[i] - pt).norm_sq();
+    if (d2 < dmin) { dmin = d2; inode = i; }
+  }
+
+  ID ec_id = model->get_solution_id("Ec");
+  model->get_solution(found, ec_id, val, p);
+  Ec = val[inode];
+
+  ID ev_id = model->get_solution_id("Ev");
+  model->get_solution(found, ev_id, val, p);
+  Ev = val[inode];
+}
+
+
+void
+Negf::resolve_srh_site(Interaction& inter, int n_orb_site)
+{
+  const double unset = 0.5e30;
+  const bool use_y = (inter.srh_pos_y < unset);
+  const bool use_z = (inter.srh_pos_z < unset);
+  const int n_bands = static_cast<int>(_ext_module->get_number_of_bands());
+
+  // --- coordinates (nm) of the device atoms, in MATRIX order (atom a owns rows a*n_bands+1 .. (a+1)*n_bands)
+  vector<dvector> xyz(3);
+  for (int i = 0; i < 3; i++) xyz[i].resize(_device_n_dofs);
+
+  if (_hamil_type == "etb")
+  {
+    // The atom list is reordered by setup_etb_hamil(); at this point it may or may not have happened.
+    // If the first _device_n_dofs atoms are all device atoms and sorted in x, it is already in matrix order.
+    // Otherwise the matrix order is atoms[_perm[a]].
+    AtomisticStructure* as = _ext_module->get_atomistic_structure();
+    std::vector<Atom>& atoms = as->get_structure_atoms();
+
+    bool in_matrix_order = true;
+    for (unsigned int a = 0; a < _device_n_dofs && in_matrix_order; ++a)
+    {
+      if (_quantum_contacts.find(atoms[a].get_region_ID()) != _quantum_contacts.end())
+        in_matrix_order = false;
+      else if (a > 0 && atoms[a].get_position(0) < atoms[a-1].get_position(0) - 1.0e-6)
+        in_matrix_order = false;
+    }
+
+    for (unsigned int a = 0; a < _device_n_dofs; ++a)
+    {
+      Atom& at = in_matrix_order ? atoms[a] : atoms[_perm[a]];
+      for (int i = 0; i < 3; i++)
+        xyz[i][a] = at.get_position(i) * 0.1;   // Angstrom -> nm
+    }
+  }
+  else
+  {
+    get_coordinates(xyz);                        // already in nm and in matrix order
+  }
+
+  // --- nearest device atom (distance only in the directions given by the user)
+  int best = -1;
+  double best_d2 = 1.0e300;
+  for (unsigned int a = 0; a < _device_n_dofs; ++a)
+  {
+    const double dx = xyz[0][a] - inter.srh_pos_x;
+    double d2 = dx * dx;
+    if (use_y) { const double dy = xyz[1][a] - inter.srh_pos_y; d2 += dy * dy; }
+    if (use_z) { const double dz = xyz[2][a] - inter.srh_pos_z; d2 += dz * dz; }
+    if (d2 < best_d2 - 1.0e-12)   // strict: ties keep the first atom in matrix order
+    {
+      best_d2 = d2;
+      best = static_cast<int>(a);
+    }
+  }
+  if (best < 0)
+    throw InitFailedException("SRH defect: no device atoms found.");
+
+  const double dist = std::sqrt(best_d2);
+
+  // --- matrix rows -> (PL, row inside PL). _end_blocks[p] = last (1-based) row of PL p.
+  const int first_row = best * n_bands + 1;
+  const int last_row = first_row + n_orb_site - 1;
+  int pl = -1;
+  int pl_start = 1;
+  for (size_t p = 0; p < _end_blocks.size(); ++p)
+  {
+    if (first_row <= _end_blocks[p]) { pl = static_cast<int>(p); break; }
+    pl_start = _end_blocks[p] + 1;
+  }
+  if (pl < 0)
+    throw InitFailedException("SRH defect: resolved atom lies outside the device principal layers.");
+  if (last_row > _end_blocks[pl])
+    throw InitFailedException("SRH defect: the defect site (n_orb rows) crosses a principal-layer boundary. "
+                              "Move defect_x or reduce n_orb.");
+
+  inter.pl_index = pl + 1;                       // Fortran, 1-based
+  inter.orb_index = first_row - pl_start + 1;    // 1-based inside the PL
+
+  // --- band edges at the atom from the potential module (unless given by the user)
+  const double to_mesh = 1.0 / (get_mesh_units() * 1.0e9);   // nm -> mesh units
+  Point pt(xyz[0][best] * to_mesh, xyz[1][best] * to_mesh, xyz[2][best] * to_mesh);
+
+  const bool need_edges = (inter.srh_Ev > unset || inter.srh_Ec > unset);
+  double Ec_pot = 0.0, Ev_pot = 0.0;
+  if (need_edges)
+  {
+    get_band_edges_at_point(pt, Ec_pot, Ev_pot);
+    if (inter.srh_Ev > unset) inter.srh_Ev = Ev_pot;
+    if (inter.srh_Ec > unset) inter.srh_Ec = Ec_pot;
+  }
+
+  ostringstream os;
+  os << "SRH defect placement: requested x=" << inter.srh_pos_x << " nm";
+  if (use_y) os << ", y=" << inter.srh_pos_y << " nm";
+  if (use_z) os << ", z=" << inter.srh_pos_z << " nm";
+  os << std::endl;
+  os << "  nearest device atom #" << best << " at (" << xyz[0][best] << ", " << xyz[1][best] << ", "
+     << xyz[2][best] << ") nm, distance " << dist << " nm" << std::endl;
+  os << "  matrix rows " << first_row << " .. " << last_row << " -> PL " << inter.pl_index
+     << ", first row in PL " << inter.orb_index << std::endl;
+  os << "  Ev = " << inter.srh_Ev << " eV, Ec = " << inter.srh_Ec << " eV ("
+     << (need_edges ? "from potential module" : "from input") << "), defect level = "
+     << inter.srh_Ev + inter.Ed0 << " eV" << std::endl;
+  Messages::info(os.str());
+
+  if (dist > 0.5)
+    Messages::warning("SRH defect: the nearest atom is more than 0.5 nm from the requested position.");
 }
 
 

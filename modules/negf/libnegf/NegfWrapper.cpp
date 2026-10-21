@@ -631,10 +631,10 @@ NegfWrapper::set_srh_defect(double Ed_rel, double rho_d, double Cn, double Cp, d
 
 
 bool
-NegfWrapper::get_srh_results(std::array<double, 8>& res)
+NegfWrapper::get_srh_results(std::array<double, 8>& res, int isite)
 {
   int ierr = 1;
   res.fill(0.0);
-  negf_get_srh_results(_handler, res.data(), ierr);
+  negf_get_srh_results(_handler, isite, res.data(), ierr);
   return ierr == 0;
 }
