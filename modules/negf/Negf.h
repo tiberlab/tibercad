@@ -307,7 +307,9 @@ class TC_DLLOCAL Negf : public SimulationInterface
       double srh_mass_v = 0.0;         // VB effective mass (m0), used only to calibrate coupling
       double srh_Ev = 1.0e30;          // VB edge at defect site, NEGF energy axis (eV); 1e30 = take from potential module
       double srh_Ec = 1.0e30;          // CB edge at defect site, NEGF energy axis (eV); 1e30 = take from potential module
-      double srh_cell_volume = 0.0;    // volume per ORBITAL = (volume of the defect site)/n_orb (cm^3)
+      // volume per ORBITAL = (volume of one device atom)/n_orb [cm^3]. 0 = estimate from
+      // cell_area and the mean axial spacing of device atoms (see estimate_srh_cell_volume).
+      double srh_cell_volume = 0.0;
       double srh_line_width = 1.0e-3;  // defect line width (eV), keep <~ 0.1 kT
     };
 
@@ -412,6 +414,9 @@ class TC_DLLOCAL Negf : public SimulationInterface
 
     //! coordinates (nm) of the device atoms in MATRIX order (atom a owns rows a*n_bands+1 .. (a+1)*n_bands)
     void get_device_atom_xyz(std::vector<std::vector<double> >& xyz);
+
+    //! volume per orbital of one device atom [cm^3] from cell_area and mean axial atom spacing
+    double estimate_srh_cell_volume(int n_orb_site);
 
     //! SRH: write per-site table (x, Ev, Ec, fd, U) and print the total recombination current,
     //! next to the layer currents of the same run

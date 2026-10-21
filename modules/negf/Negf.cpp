@@ -3886,14 +3886,22 @@ Negf::setup_interactions(void)
       {
         if (inter.srh_phonon_energy <= 0.0 || inter.srh_huang_rhys <= 0.0)
           throw InitFailedException("SRH defect: srh_phonon_energy (eV) and huang_rhys must be > 0.");
-        if (inter.srh_cell_volume <= 0.0)
-          throw InitFailedException("SRH defect: cell_volume (cm^3) must be > 0.");
+        if (inter.srh_mass_c <= 0.0 || inter.srh_mass_v <= 0.0)
+          throw InitFailedException("SRH defect: effective_mass_c and effective_mass_v (m0) must be > 0 (needed for the multiphonon calibration).");
         double T_K = SimulationOptions::temperature;
         // defect site = all orbitals (bands) of one atom unless n_orb is given explicitly
         int n_orb_site = inter.n_orb;
         if (n_orb_site <= 0)
           n_orb_site = (_ext_module != nullptr) ? static_cast<int>(_ext_module->get_number_of_bands()) : 1;
         if (n_orb_site < 1) n_orb_site = 1;
+        if (inter.srh_cell_volume <= 0.0)
+        {
+          inter.srh_cell_volume = estimate_srh_cell_volume(n_orb_site);
+          ostringstream vos;
+          vos << "SRH defect: cell_volume not set; using estimate from cell_area and atom spacing: "
+              << inter.srh_cell_volume << " cm^3 per orbital (n_orb = " << n_orb_site << ")";
+          Messages::info(vos.str());
+        }
 
         // Placement: (C) uniform density in an x-range, (A) one site at a physical position
         // (defect_x [, defect_y, defect_z] in nm), or (B) raw (pl_index, orb_index)
@@ -4026,6 +4034,55 @@ Negf::get_band_edges_at_point(const Point& pt, double& Ec, double& Ev) const
   ID ev_id = model->get_solution_id("Ev");
   model->get_solution(found, ev_id, val, p);
   Ev = val[inode];
+}
+
+
+double
+Negf::estimate_srh_cell_volume(int n_orb_site)
+{
+  // Volume of one device atom = (lateral cell area) * (mean axial spacing of consecutive
+  // distinct-x planes) / (atoms per plane).  cell_volume per orbital = V_atom / n_orb.
+  // Units: cell_area in nm^2 (from lattice), coordinates in nm -> volume in nm^3 -> *1e-21 = cm^3.
+  if (n_orb_site < 1) n_orb_site = 1;
+  if (opt.cell_area <= 0.0)
+    throw InitFailedException("SRH defect: cannot estimate cell_volume (cell_area is zero). "
+                              "Set cell_volume (cm^3 per orbital) explicitly in the Inelastic block.");
+  if (_device_n_dofs < 1)
+    throw InitFailedException("SRH defect: cannot estimate cell_volume (no device atoms).");
+
+  vector<dvector> xyz;
+  get_device_atom_xyz(xyz);
+
+  // unique x-planes (tolerance 1e-4 nm)
+  std::vector<double> xs;
+  xs.reserve(_device_n_dofs);
+  for (unsigned int a = 0; a < _device_n_dofs; ++a)
+  {
+    const double x = xyz[0][a];
+    bool found = false;
+    for (size_t p = 0; p < xs.size(); ++p)
+    {
+      if (std::abs(xs[p] - x) < 1.0e-4) { found = true; break; }
+    }
+    if (!found) xs.push_back(x);
+  }
+  std::sort(xs.begin(), xs.end());
+
+  double dx_nm = 0.0;
+  if (xs.size() >= 2)
+    dx_nm = (xs.back() - xs.front()) / static_cast<double>(xs.size() - 1);
+  else if (opt.volume > 0.0 && opt.cell_area > 0.0)
+    dx_nm = opt.volume / opt.cell_area;   // fallback: primitive-cell axial length
+  else
+    throw InitFailedException("SRH defect: cannot estimate cell_volume (need at least two distinct "
+                              "device atom x positions, or a non-zero lattice volume).");
+
+  const double atoms_per_plane = static_cast<double>(_device_n_dofs) / static_cast<double>(xs.size());
+  const double V_atom_nm3 = (opt.cell_area * dx_nm) / atoms_per_plane;
+  const double V_orb_cm3 = V_atom_nm3 * 1.0e-21 / static_cast<double>(n_orb_site);
+  if (V_orb_cm3 <= 0.0)
+    throw InitFailedException("SRH defect: estimated cell_volume is non-positive.");
+  return V_orb_cm3;
 }
 
 
