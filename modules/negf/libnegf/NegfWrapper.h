@@ -251,6 +251,9 @@ public:
   //! Returns false if no SRH defect is registered.
   bool get_srh_results(std::array<double, 8>& res, int isite = 1);
 
+  //! Drop all interactions (needed before re-setup on each Poisson–NEGF iteration).
+  void destroy_interactions();
+
 private:
   int _handler[NEGF_HSIZE];
 

@@ -3809,7 +3809,10 @@ Negf::setup_interactions(void)
 
   ostringstream os;
 
-  // SRH site bookkeeping is rebuilt on every setup (libNEGF is re-initialised on every solve)
+  // Drop previous interactions so Poisson–NEGF iterations do not stack SRH/e-ph nodes
+  _libnegf->destroy_interactions();
+
+  // SRH site bookkeeping is rebuilt on every setup
   _srh_site_x.clear();
   _srh_site_vol.clear();
   _srh_site_Ev.clear();

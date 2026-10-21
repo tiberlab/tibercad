@@ -654,3 +654,10 @@ NegfWrapper::get_srh_results(std::array<double, 8>& res, int isite)
   negf_get_srh_results(_handler, isite, res.data(), ierr);
   return ierr == 0;
 }
+
+
+void
+NegfWrapper::destroy_interactions()
+{
+  negf_destroy_interactions(_handler);
+}
