@@ -4322,9 +4322,8 @@ Negf::report_srh(const std::vector<double>& layer_current)
   os << std::endl;
   os << "  per-site table written to <prefix>_srh_sites.dat" << std::endl;
 
-  // Spectral band self-energies Sn_b(E), Sp_b(E) [eV] for each site (rank 0).
-  // Columns: E[eV]  Sn_b  Sp_b  Gamma=(Sn+Sp)/2.  One file per site if ns small,
-  // otherwise a single multi-site file with site index.
+  // Spectral band self-energies for each site (rank 0).  Sr_b is the
+  // principal-value component, so Sigma^r = Sr_b - i(Sn_b+Sp_b)/2.
   if (get_communicator().rank() == 0)
   {
     const int max_files = 20;   // avoid flooding disk for dense region placements
@@ -4333,8 +4332,13 @@ Negf::report_srh(const std::vector<double>& layer_current)
     {
       int nE = 0;
       double Emin = 0.0, dE = 0.0;
-      std::vector<double> Sn, Sp;
+      std::vector<double> Sn, Sp, Sr;
       if (!_libnegf->get_srh_spectral(i + 1, nE, Emin, dE, Sn, Sp) || nE < 1)
+        continue;
+      int nE_r = 0;
+      double Emin_r = 0.0, dE_r = 0.0;
+      if (!_libnegf->get_srh_retarded_spectral(i + 1, nE_r, Emin_r, dE_r, Sr) ||
+          nE_r != nE || std::abs(Emin_r - Emin) > 1.0e-12 || std::abs(dE_r - dE) > 1.0e-12)
         continue;
 
       ostringstream fname;
@@ -4342,18 +4346,19 @@ Negf::report_srh(const std::vector<double>& layer_current)
             << "_srh_spectral_s" << (i + 1) << ".dat";
       ofstream sout(fname.str());
       if (!sout.good()) continue;
-      sout << "# SRH spectral band Sigma_n / Sigma_p at site " << (i + 1)
+      sout << "# SRH spectral band self-energies at site " << (i + 1)
            << "  Emin=" << Emin << " dE=" << dE << " nE=" << nE << "\n";
-      sout << "# E[eV]  Sn_b[eV]  Sp_b[eV]  Gamma[eV]\n";
+      sout << "# E[eV]  Sn_b[eV]  Sp_b[eV]  Sr_b[eV]  Gamma[eV]\n";
       for (int ie = 0; ie < nE; ++ie)
       {
         const double E = Emin + ie * dE;
-        sout << E << " " << Sn[ie] << " " << Sp[ie] << " " << 0.5 * (Sn[ie] + Sp[ie]) << "\n";
+        sout << E << " " << Sn[ie] << " " << Sp[ie] << " " << Sr[ie] << " "
+             << 0.5 * (Sn[ie] + Sp[ie]) << "\n";
       }
       ++n_written;
     }
     if (n_written > 0)
-      os << "  spectral Sn/Sp written for " << n_written
+      os << "  spectral Sn/Sp/Sr written for " << n_written
          << " site(s) to <prefix>_srh_spectral_s*.dat" << std::endl;
   }
 

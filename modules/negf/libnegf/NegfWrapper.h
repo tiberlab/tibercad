@@ -256,6 +256,11 @@ public:
   bool get_srh_spectral(int isite, int& nE, double& Emin, double& dE,
                         std::vector<double>& Sn, std::vector<double>& Sp);
 
+  //! Causal dispersive component Sr_b(E) of the SRH retarded self-energy.
+  //! The complete retarded term is Sr_b - i*(Sn_b + Sp_b)/2.
+  bool get_srh_retarded_spectral(int isite, int& nE, double& Emin, double& dE,
+                                 std::vector<double>& Sr);
+
   //! Drop all interactions (needed before re-setup on each Poisson–NEGF iteration).
   void destroy_interactions();
 

@@ -683,6 +683,30 @@ NegfWrapper::get_srh_spectral(int isite, int& nE, double& Emin, double& dE,
 }
 
 
+bool
+NegfWrapper::get_srh_retarded_spectral(int isite, int& nE, double& Emin, double& dE,
+                                       std::vector<double>& Sr)
+{
+  nE = 0;
+  Emin = 0.0;
+  dE = 0.0;
+  Sr.clear();
+  int ierr = 1;
+
+  negf_get_srh_retarded_spectral(_handler, isite, 0, nE, Emin, dE, nullptr, ierr);
+  if (ierr != 0 || nE < 1)
+    return false;
+
+  const int nE_buf = nE;
+  Sr.assign(nE_buf, 0.0);
+  int nE_out = 0;
+  negf_get_srh_retarded_spectral(_handler, isite, nE_buf, nE_out, Emin, dE, Sr.data(), ierr);
+  if (ierr != 0) return false;
+  nE = nE_out;
+  return true;
+}
+
+
 void
 NegfWrapper::destroy_interactions()
 {
