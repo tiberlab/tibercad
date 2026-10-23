@@ -21,6 +21,8 @@ Modules are released under the GNU General Public License (GPL) version 3.0, unl
 Compilation
 -----------
 
+**IMPORTANT**: To compile modules ETB and NEGF successfully, Intel® oneMKL needs to be installed manually following the instructions of this [webpage](https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-download.html?operatingsystem=linux&linux-install=apt). **This should be done before compiling tiberCAD.**
+
 tiberCAD can be compiled by defining a site configuration in compilation/site_config.sh and running build_all. This will download necessary libraries and configure and compile all code. Example site configurations are in the site_configuration subdirectory.
 For example, in a Debian 12 or compatible systems (like Ubuntu 24.04 or other derived distros), you might do
 

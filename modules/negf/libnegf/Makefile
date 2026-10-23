@@ -6,7 +6,7 @@ include $(topdir)/Make.common
 
 ARCH = $(shell uname -m)
 
-CMAKE = cmake
+CMAKE = cmake -DMKL_LIBDIR=/opt/intel/oneapi/mkl/latest/lib/intel64 -DLAPACK_LIBRARY_DIR=/opt/intel/oneapi/mkl/latest/lib/intel64\;/usr/lib/x86_64-linux-gnu -DSCALAPACK_LIBRARY_DIR=/opt/intel/oneapi/mkl/latest/lib/intel64
 
 CXXFLAGS = -fPIC -I . 
 
