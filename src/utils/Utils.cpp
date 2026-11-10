@@ -459,6 +459,36 @@ Utils::scale_to_int(Tensor2& a, double tol)
 
 
 
+unsigned int Utils::find_smallest_multiplier(const Tensor1& a, double tol)
+{
+  // Find the smallest multiplier m such that m*a is within tol of an
+  // integer vector, componentwise (same absolute-tolerance convention as
+  // scale_to_int() above). Note the tolerance must be absolute here, not
+  // relative to norm(m*a): since that norm grows with m, a relative
+  // criterion would eventually accept an arbitrary, spuriously "close"
+  // multiplier for any direction, regardless of how far from commensurate
+  // it actually is -- which is exactly what happens for larger lattice
+  // mismatches (the rounding error can exceed tol in absolute terms while
+  // still being a small fraction of the ever-growing norm).
+
+  unsigned int multiplier = 1;
+
+  for ( ; multiplier <= 100; ++multiplier)
+  {
+    Tensor1 scaled_a = a * multiplier;
+
+    if ((std::abs(scaled_a(1) - std::round(scaled_a(1))) < tol) &&
+        (std::abs(scaled_a(2) - std::round(scaled_a(2))) < tol) &&
+        (std::abs(scaled_a(3) - std::round(scaled_a(3))) < tol))
+    {
+      break;
+    }
+  }
+
+  return multiplier;
+}
+
+
 template <typename T>
 void
 Utils::extract_vector(const string& input, vector<T>& vec)

@@ -127,6 +127,15 @@ class Utils
     //! Scale 3 vectors (as tensor) with fractional parts to all integer vector
     static void scale_to_int(Tensor2& a, double tol = 0.001);
 
+    /*!
+     * \brief Find smallest integer multiplier to convert a vector to integer vector
+     *
+     * \param a the vector to convert
+     * \param tol the tolerance for the conversion
+     * \return the smallest integer multiplier
+     */
+    static unsigned int find_smallest_multiplier(const Tensor1& a, double tol = 0.001);
+
 
     //! Tokenize a string
     /*!
