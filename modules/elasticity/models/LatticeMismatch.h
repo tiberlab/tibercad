@@ -37,6 +37,11 @@
 
 class Elem;
 
+//! Forward declaration of LatticeMatch::Candidate
+namespace LatticeMatch
+{
+  struct Candidate;
+}
 
 
 //! The base class for Poisson boundary conditions
@@ -58,11 +63,15 @@ class TC_DLLOCAL LatticeMismatch : public BodyForceModel
     //! Initialize
     virtual void do_init(void) override;
 
-  
+    //! Print information on output
+    virtual void do_print_info(void) override;
+
 
 
   private:
-  
+
+    //! The lattice matching best common supercell candidate
+    LatticeMatch::Candidate*  _common_supercell = nullptr;
   
 };
 

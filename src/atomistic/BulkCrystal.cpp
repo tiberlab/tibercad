@@ -23,6 +23,7 @@
 #include "tibercad/atomistic/BulkCrystal.h"
 #include "tibercad/atomistic/CrystalDefs.h"
 #include "tibercad/math/TensorOperators.h"
+#include "tibercad/math/LatticeMatch.h"
 #include "tibercad/io/Database.h"
 #include "tibercad/physics/Alloy.h"
 #include "tibercad/io/Messages.h"
@@ -456,166 +457,122 @@ BulkCrystal::calculate_strain(Tensor2 &strain,
                  const Tensor2 &reference,
                  const Tensor2 &other_cell) const
 {
-  strain = inv(other_cell) * reference - Tensor2(1.0);
+  // Tensor2 stores lattice vectors as columns, so the deformation gradient
+  // F mapping other_cell's columns onto reference's columns as a whole
+  // basis (F * other_cell = reference) is F = reference * inv(other_cell)
+  // -- inv(other_cell) on the right, not the left. The two orders only
+  // coincide when reference and other_cell commute (e.g. both diagonal,
+  // as for matched cubic cells), which is why this went unnoticed.
+  strain = reference * inv(other_cell) - Tensor2(1.0);
 }
 
 
 
-void
+LatticeMatch::Candidate
 BulkCrystal::find_least_common_lattice(const BulkCrystal &substrate,
-                                       libMesh::RealTensor &trafo,
                                        libMesh::RealTensor &residual_strain,
-                                       std::vector<unsigned int> &super_ref,
-                                       std::vector<unsigned int> &super_mat,
                                        double max_strain) const
 {
-
-  double minResidualStrain = std::numeric_limits<double>::max();
-
-  Tensor2 inv_prim = inv(_rotated_prim_vec);
-
-  Tensor2 M = inv_prim * substrate.get_rotated_prim_vec();
-  std::cerr << "rotated_prim_vec = " << _rotated_prim_vec << std::endl;
-  std::cerr << "substrate.get_rotated_prim_vec() = " << substrate.get_rotated_prim_vec() << std::endl;
-  std::cerr << "M = " << M << std::endl;
-
-  // multpliers for substrate to check
-  std::vector<int> supercell_a = {1, 0, 0, 1, 1, 0, 1};
-  std::vector<int> supercell_b = {0, 1, 0, 1, 0, 1, 1};
-  std::vector<int> supercell_c = {0, 0, 1, 0, 1, 1, 1};
-
-  Tensor1 ref;
-  Tensor1 superA;
-
-  double residualStrain;
-  unsigned int min_index[3] = {0, 0, 0};
-
-  // we try to match multiples of the substrate conventional cell
-  // to the superstrate lattice vectors.
-  std::vector<Tensor1> candidate_vec(supercell_a.size());
-  std::vector<unsigned int> candidate_order(supercell_a.size());
-  std::vector<double> candidate_mul(supercell_a.size());
-
-  for (unsigned int i = 0; i < supercell_a.size(); ++i)
+  // LatticeMatch takes lattice vectors as ROWS; Tensor2 stores them as
+  // COLUMNS (1-based indexing), so transpose on the way in.
+  auto to_rows = [](const Tensor2& T)
   {
-    ref(1) = supercell_a[i];
-    ref(2) = supercell_b[i];
-    ref(3) = supercell_c[i];
+    Eigen::Matrix3d A;
+    for (int vec = 0; vec < 3; ++vec)
+      for (int comp = 0; comp < 3; ++comp)
+        A(vec, comp) = T(comp + 1, vec + 1);
+    return A;
+  };
 
-    superA = M * ref;
-    std::cerr << "superA = " << superA;
+  Eigen::Matrix3d A1 = to_rows(substrate.get_rotated_prim_vec()); // substrate
+  Eigen::Matrix3d A2 = to_rows(_rotated_prim_vec);                // this material (superstrate)
 
-    // extend to least integers
-    Tensor1 tmp = superA;
-    //Utils::scale_to_int(superA);
-    unsigned int mul = Utils::find_smallest_multiplier(superA, 0.3);
-    superA *= mul;
+  std::cerr << "BulkCrystal::find_least_common_lattice: "
+            << "superstrate " << _mat->get_name() << " vs. "
+            << "substrate " << (substrate._mat)->get_name() << "\n"
+            << "superstrate lattice:\n" << A2 << "\n"
+            << "substrate lattice:\n" << A1
+            << std::endl;
 
-    std::cerr << "superA = " << superA;
-    std::cerr << "mul = " << mul << std::endl;
-    
-    superA(1) = std::round(superA(1));
-    superA(2) = std::round(superA(2));
-    superA(3) = std::round(superA(3));
+  // Stage 1: shape-only match (smallest coincident sublattices after a
+  // free isotropic rescaling). Its own tolerance is a coarse, fixed
+  // search parameter, not the strain bound reported to the caller -- that
+  // is applied below, when selecting from stage 2's Pareto front.
+  std::vector<LatticeMatch::Candidate> canon = LatticeMatch::canonical_cells(A1, A2, 0.05);
+  if (canon.empty())
+    throw RuntimeException("BulkCrystal::find_least_common_lattice: no "
+        "coincident sublattice found between this material and the "
+        "substrate.");
 
-    candidate_vec[i] = superA;
-    candidate_order[i] = i;
-    candidate_mul[i] = mul;
-  }
+  // Canonical cells are matched by shape only, after a free isotropic
+  // rescaling of A2 -- canon[0].F is not the real strain. Recompute the
+  // deformation gradient for that same supercell correspondence from the
+  // actual lattice vectors, to use as the default (stage-2-less) result.
+  LatticeMatch::Candidate canon_real = LatticeMatch::real_strain(A1, A2, canon.front());
+  const LatticeMatch::Candidate* best = &canon_real;
 
-  // sort candidates by increasing length, so that a greedy pick of the
-  // first three that are linearly independent gives the shortest such
-  // triplet among the candidates
-  std::sort(candidate_order.begin(), candidate_order.end(),
-      [&candidate_vec, &candidate_mul](unsigned int a, unsigned int b)
-      {
-        return norm(candidate_vec[a])/candidate_mul[a] < norm(candidate_vec[b])/candidate_mul[b];
-      });
+  // Declared outside the if-block below: best may point into it, and must
+  // stay alive at least as long as best is used.
+  std::vector<LatticeMatch::Candidate> front;
 
-  // relative tolerance for the linear-independence checks below, since
-  // the vectors can be of very different lengths (e.g. because of
-  // anisotropic lattice matching)
-  const double tol = 1e-6;
-
-  unsigned int n_found = 0;
-  for (unsigned int k = 0; (k < candidate_order.size()) && (n_found < 3); ++k)
+  if (max_strain > 0.0)
   {
-    unsigned int i = candidate_order[k];
-    const Tensor1& v = candidate_vec[i];
+    // Stage 2: real supercells (with the true lattice constants, allowing
+    // sheared/oblique cells), as a Pareto front of size vs. residual
+    // strain. Search with a generous internal tolerance so the front isn't
+    // starved by an overly strict max_strain -- the actual selection
+    // against max_strain happens below.
 
-    bool independent = true;
-    if (n_found == 1)
-    {
-      // not (anti-)parallel to the vector already found
-      const Tensor1& v0 = candidate_vec[min_index[0]];
-      independent = (norm(v ^ v0) > tol * norm(v) * norm(v0));
-    }
-    else if (n_found == 2)
-    {
-      // not coplanar with the two vectors already found
-      Tensor2 triplet;
-      for (unsigned int r = 1; r <= 3; ++r)
+    double search_tol = std::max(max_strain, 0.1);
+    front = LatticeMatch::real_supercells(
+        A1, A2, canon[0], search_tol, 80.0, 40, 2000, 40, true, 10);
+    if (front.empty())
+      throw RuntimeException("BulkCrystal::find_least_common_lattice: no "
+                             "real commensurate supercell found between this material and the "
+                             "substrate.");
+
+    // front is sorted by increasing supercell size, with strictly
+    // decreasing residual strain. Prefer the smallest supercell that meets
+    // max_strain; otherwise fall back to the best (lowest-strain) point
+    // found, since perfect commensurability below max_strain isn't always
+    // achievable for strongly mismatched pairs.
+    best = &front.back();
+    for (const auto &c : front)
+      if (c.H_norm <= max_strain)
       {
-        triplet(r, 1) = candidate_vec[min_index[0]](r);
-        triplet(r, 2) = candidate_vec[min_index[1]](r);
-        triplet(r, 3) = v(r);
+        best = &c;
+        break;
       }
-      double scale = norm(candidate_vec[min_index[0]]) *
-                     norm(candidate_vec[min_index[1]]) * norm(v);
-      independent = (std::abs(det(triplet)) > tol * scale);
-    }
-
-    if (independent)
-      min_index[n_found++] = i;
   }
 
-  if (n_found < 3)
-    throw RuntimeException("BulkCrystal::find_least_common_lattice: could "
-        "not find three linearly independent common lattice vectors.");
-  
-  std::cerr << "min_index = " << min_index[0] << ", "
-            << min_index[1] << ", " << min_index[2] << std::endl;
+  // M1's and M2's rows can each be jointly negated without changing F (both
+  // lattice vectors feeding that row of the map get negated together) --
+  // Buerger reduction has no reason to prefer either sign, so left alone it
+  // can report a supercell basis that looks like an arbitrary axis flip of
+  // the substrate, e.g. of its growth direction. Re-sign to match the
+  // substrate's own lattice vectors instead; this does not change F.
+  LatticeMatch::Candidate result = *best;
+  LatticeMatch::preserve_orientation(result, A1);
 
-  Tensor2 super_sup;
-  Tensor2 super_sub;
+  std::cerr << "residual strain = " << result.H_norm
+            << std::endl;
+  std::cerr << "  superstrate supercell:\n" << result.M2 << std::endl;
+  std::cerr << "  substrate supercell:\n" << result.M1 << std::endl;
+  std::cerr << "  superstrate lattice matching strain:\n" << result.biot << std::endl;
 
-  // now we use the three shortest linearly independent supercell
-  // vectors to define the common supercell. We also calculate the
-  // residual strain tensor for this supercell.
-  for (unsigned int i = 0; i < 3; ++i)
-  {
+  // Symmetric part of (F - I), in the calculation frame (both lattices
+  // were already rotated), matching the convention used by the
+  // "compatible lattice type" branch alongside this one.
+  Eigen::Matrix3d eps = 0.5 * (result.F + result.F.transpose()) - Eigen::Matrix3d::Identity();
 
-    unsigned int mul = candidate_mul[min_index[i]];
+  residual_strain(0,0) = eps(0,0);
+  residual_strain(1,1) = eps(1,1);
+  residual_strain(2,2) = eps(2,2);
+  residual_strain(0,1) = residual_strain(1,0) = eps(0,1);
+  residual_strain(0,2) = residual_strain(2,0) = eps(0,2);
+  residual_strain(1,2) = residual_strain(2,1) = eps(1,2);
 
-    std::cerr << "mul = " << mul << std::endl;
-
-    super_sup(1, i+1) = candidate_vec[min_index[i]](1);
-    super_sup(2, i+1) = candidate_vec[min_index[i]](2);
-    super_sup(3, i+1) = candidate_vec[min_index[i]](3);
-
-    super_sub(1,i+1) = mul * supercell_a[min_index[i]];
-    super_sub(2,i+1) = mul * supercell_b[min_index[i]];
-    super_sub(3,i+1) = mul * supercell_c[min_index[i]];
-  }
-  std::cerr << "super_sup_i = " << super_sup << std::endl;
-  std::cerr << "super_sub_i = " << super_sub << std::endl;
-
-  super_sup = _rotated_prim_vec * super_sup;
-  std::cerr << "super_sup = " << super_sup << std::endl;
-  super_sub = substrate.get_rotated_prim_vec() * super_sub;  
-  std::cerr << "super_sub = " << super_sub << std::endl;
-    
-  // Compute the residual strain tensor
-  Tensor2 strain;
-  calculate_strain(strain, super_sub, super_sup);
-  residual_strain(0,0) = strain(1,1);
-  residual_strain(1,1) = strain(2,2);
-  residual_strain(2,2) = strain(3,3);
-  residual_strain(1,2) = residual_strain(2,1) = strain(3,2);
-  residual_strain(0,2) = residual_strain(2,0) = strain(3,1);
-  residual_strain(0,1) = residual_strain(1,0) = strain(2,1);
-  residualStrain = trace(strain);
-
+  return result;
 }
 
 
@@ -662,13 +619,7 @@ BulkCrystal::get_lattice_matching_strain(const BulkCrystal& substrate,
   }
   else
   {
-    libMesh::RealTensor trafo;
-    //libMesh::RealTensor residual_strain;
-    std::vector<unsigned int> super_ref;
-    std::vector<unsigned int> super_mat;
-    find_least_common_lattice(substrate, trafo, strain,
-                              super_ref, super_mat, 0.001);
-
+    find_least_common_lattice(substrate, strain, 0.0);
   }
 
   return compatible;

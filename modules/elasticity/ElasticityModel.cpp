@@ -57,8 +57,12 @@ void
 ElasticityModel::do_print_info(void)
 {
   PhysicalModel::SubmodelIterator it(submodels_begin("stiffness"));
-  StiffnessModel* sm = dynamic_cast<StiffnessModel*> ((*it).second);
-  sm->print_info();
+  //StiffnessModel* sm = dynamic_cast<StiffnessModel*> ((*it).second);
+  (*it).second->print_info();
+
+  it = submodels_begin("body_force");
+  for ( ; it != submodels_end("body_force"); ++it)
+    (*it).second->print_info();
 
 }
 

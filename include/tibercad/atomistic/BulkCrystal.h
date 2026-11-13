@@ -30,6 +30,7 @@
 #include "tibercad/base/ModelOptions.h"
 #include "tibercad/physics/Material.h"
 #include "tibercad/math/Tensor2.h"
+#include "tibercad/math/LatticeMatch.h"
 
 //! Contains data for a bulk crystal
 /*!
@@ -116,19 +117,33 @@ public:
 
   //! Find the least common supercell
   /*!
+   * Finds a commensurate (coincident) supercell between this material
+   * (the "superstrate") and \p substrate, at the fixed relative
+   * orientation given by their respective rotated conventional cells, and
+   * returns the residual strain this material must undergo to match the
+   * substrate on that supercell.
+   *
+   * This proceeds in two stages (see \c LatticeMatch): first a shape-only
+   * match (smallest coincident sublattices after a free isotropic
+   * rescaling), then a search over real supercells (with the true lattice
+   * constants, allowing sheared/oblique cells) producing a Pareto front
+   * of supercell size vs. residual strain. The latter is done only if
+   * \p max_strain is specified. The returned strain is the smallest-supercell
+   * point on that front whose spectral norm is within
+   * \p max_strain, or -- if no such point exists -- the point with the
+   * smallest residual strain overall (perfect commensurability below
+   * \p max_strain is not always achievable for strongly mismatched pairs).
    *
    * \param substrate the substrate (reference) BulkCrystal
-   * \param trafo the transformation found for this material
-   * \param residual_strain the residual strain tensor
-   * \param super_ref the supercell needed for the reference material
-   * \param super_mat the supercell needed for this material 
+   * \param residual_strain the residual strain tensor, in the calculation
+   *        coordinate system
+   * \param max_strain the preferred tolerance (spectral norm of the
+   *        residual deformation gradient) for picking a small supercell;
+   *        not a hard requirement (see above)
    */
-  void find_least_common_lattice(const BulkCrystal &substrate,
-                                 libMesh::RealTensor &trafo,
-                                 libMesh::RealTensor &residual_strain,
-                                 std::vector<unsigned int> &super_ref,
-                                 std::vector<unsigned int> &super_mat,
-                                 double max_strain) const;
+  LatticeMatch::Candidate find_least_common_lattice(const BulkCrystal &substrate,
+                                                    libMesh::RealTensor &residual_strain,
+                                                    double max_strain = 0.0) const;
 
   //! Print information on output
   void print_info(void) const;
