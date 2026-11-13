@@ -16,8 +16,8 @@ thermal_coefficient = 14.2e-6
 
 # stiffness data 
 [elasticity]
-poisson = 0.44
-young = 79
+poisson_ratio = 0.44
+young_modulus = 79
 
 
 
