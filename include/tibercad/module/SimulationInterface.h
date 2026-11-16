@@ -1562,6 +1562,9 @@ class SimulationInterface : public TiberModelObject
     //! Whether to use cache
     bool _use_cache;
 
+    //! true if scratch directory has been created by this simulation
+    bool _scratch_dir_created = false;
+
 
     //! A set with all physical models of this simulation
     std::set<PhysicalModel*> _physical_models;

@@ -113,6 +113,16 @@ SimulationInterface::~SimulationInterface(void)
   for ( ; embit != embend; ++embit)
     delete embit->second;
 
+  // delete the scratch directory, but only if it is not the same as
+  // the output directory and if it has been created by this simulation
+  if (_scratch_dir_created)
+  {
+    boost::filesystem::path scratchpath(get_scratch_directory());
+    boost::filesystem::path outpath(get_output_directory());
+    if (scratchpath != outpath)
+      boost::filesystem::remove_all(scratchpath);
+  }
+
   SimulationEnvironment::destroy(_environment);
 
   _simulation_map.erase(get_id());
@@ -1269,6 +1279,7 @@ SimulationInterface::init(void)
         // we catch any error here without doing anything yet
         try {
           create_directories(outpath);
+          _scratch_dir_created = true;
         }
         catch (...) {}
       }
@@ -1276,7 +1287,7 @@ SimulationInterface::init(void)
       if (!(exists(outpath) && is_directory(outpath)))
       {
         string msg("Cannot create or use '");
-        msg += outpath.string() + "' as output directory.";
+        msg += outpath.string() + "' as scratch directory.";
         throw InitFailedException(msg);
       }
     }

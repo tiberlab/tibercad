@@ -185,6 +185,8 @@ Control::init(void)
   // setup the simulation identifiers
   SimulationId::initialize();
 
+  // if not explicitly provided, we used the run ID as output directory
+  _outputdir = SimulationId::run_id();
 
   {
     // get the global rank
@@ -268,7 +270,7 @@ Control::init(void)
 
 
   ModelOptions device_opts;
-  device_opts["output_path"] = global_opts.get_option("resultpath", ".");
+  device_opts["output_path"] = global_opts.get_option("resultpath", _outputdir);
   it = input.submodels_begin("Device");
   device_opts += it->second;
 
@@ -302,11 +304,11 @@ Control::init(void)
 
     // some global variables
     if (!opts.find_option("resultpath"))
-      opts.set_option("resultpath", global_opts.get_option("resultpath", "."));
+      opts.set_option("resultpath", global_opts.get_option("resultpath", _outputdir));
 
     if (!opts.find_option("scratchpath"))
       opts.set_option("scratchpath", global_opts.get_option("scratchpath",
-          opts.get_option("resultpath", ".")));
+          opts.get_option("resultpath", _outputdir) + "/scratch"));
 
     if (!opts.find_option("output_format"))
     {
@@ -348,9 +350,6 @@ void
 Control::setup_globals(const ModelOptions& opts)
 {
   using namespace boost::filesystem;
-
-  // if not explicitly provided, we used the run ID as output directory
-  _outputdir = SimulationId::run_id();
 
   _outputdir = opts.get_option("resultpath", _outputdir);
 
