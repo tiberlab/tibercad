@@ -30,6 +30,7 @@
 #include "tibercad/geom/MeshUtils.h"
 #include "tibercad/utils/Utils.h"
 #include "tibercad/base/TiberCad.h"
+#include "tibercad/base/SimulationId.h"
 #include "tibercad/physics/Material.h"
 #include "tibercad/io/DataOutput.h"
 #include "tibercad/base/RuntimeException.h"
@@ -1978,8 +1979,11 @@ AtomisticStructure::extract_statistics(map<Specie, vector<unsigned int>>& stats,
   // A random starting seed is needed to actually have different sequences
   // we try to use something that is different also if launching simulations
   // at the same time
-  int seed = opt.get_option("random_generator_seed",
-      static_cast<int>(time(NULL) * std::tr1::random_device()()));
+  uint64_t seed = SimulationId::seed();
+
+  if (opt.find_option("random_generator_seed"))
+    seed = opt.get_option("random_generator_seed", seed);
+
   {
     std::ostringstream os;
     os << "Initializing  MT19937 random generator with seed " << seed;
@@ -2287,8 +2291,11 @@ AtomisticStructure::extract_alloy_statistics(const ModelOptions& opt)
   // A random starting seed is needed to actually have different sequences
   // we try to use something that is different also if launching simulations
   // at the same time
-  int seed = opt.get_option("random_generator_seed",
-      static_cast<int>(time(NULL) * std::tr1::random_device()()));
+  uint64_t seed = SimulationId::seed();
+
+  if (opt.find_option("random_generator_seed"))
+    seed = opt.get_option("random_generator_seed", seed);
+
   {
     std::ostringstream os;
     os << "Initializing  MT19937 random generator with seed " << seed;

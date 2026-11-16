@@ -77,6 +77,9 @@ const std::string
 TiberCad::_git_revision = TC_REVISION;
 
 const std::string
+TiberCad::_git_hash = TC_HASH;
+
+const std::string
 TiberCad::_git_modified = TC_MODIFIED;
 
 const std::string
@@ -165,6 +168,14 @@ TiberCad::software_revision(void)
 
 
 
+const std::string&
+TiberCad::git_hash(void)
+{
+  return _git_hash;
+}
+
+
+
 void
 TiberCad::init(const std::string& inputfile)
 {
@@ -241,6 +252,7 @@ TiberCad::run(void)
 {
   if (!_is_initialized)
     throw InitFailedException("TiberCAD library is not initialized!");
+
 
   _control->run_simulation();
 }

@@ -22,6 +22,7 @@
 
 
 #include "tibercad/profiles/UniformRandomAlloy.h"
+#include "tibercad/base/SimulationId.h"
 #include "tibercad/base/InitFailedException.h"
 #include "tibercad/io/Messages.h"
 
@@ -51,8 +52,7 @@ UniformRandomAlloy::UniformRandomAlloy(const ModelOptions& options) :
     throw InitFailedException("Uniform random alloy profile needs the "
         "mean composition as option.");
 
-  int seed = get_option("random_generator_seed",
-      static_cast<int>(time(NULL) * random_device()()));
+  uint64_t seed = SimulationId::seed();
 
   std::ostringstream os;
   os << "Initializing  MT19937 random generator with seed " << seed;

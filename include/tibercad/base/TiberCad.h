@@ -123,6 +123,10 @@ class TiberCad
     static const std::string& software_revision(void);
 
 
+    //! The full git commit hash of the code that produced this build
+    static const std::string& git_hash(void);
+
+
     //! Get the directory where to put output files
     static const std::string& get_output_dir(void);
 
@@ -170,6 +174,9 @@ class TiberCad
 
     //! The TiberCAD subversion release number
     static const std::string _git_revision;
+
+    //! The full git commit hash of the code that produced this build
+    static const std::string _git_hash;
 
 
     //! Last modified date

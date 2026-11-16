@@ -358,6 +358,14 @@ Utils::convert<unsigned int>(const std::string& val)
   return (unsigned int) convert<double>(val);
 }
 
+template<>
+inline
+uint64_t
+Utils::convert<uint64_t>(const std::string& val)
+{
+  return (uint64_t) convert<double>(val);
+}
+
 
 template<>
 inline

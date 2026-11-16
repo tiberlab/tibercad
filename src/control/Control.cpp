@@ -35,6 +35,7 @@
 #include "tibercad/math/SignalGenerator.h"
 #include "tibercad/io/Messages.h"
 #include "tibercad/base/SimulationOptions.h"
+#include "tibercad/base/SimulationId.h"
 #include "tibercad/base/Device.h"
 #include "tibercad/physics/Material.h"
 #include "tibercad/physics/MaterialBoundary.h"
@@ -180,6 +181,9 @@ Control::init(void)
 
   // we want to intercept SIGINT (Ctrl-C)
   //SignalHandler::activate_sigint();
+
+  // setup the simulation identifiers
+  SimulationId::initialize();
 
 
   {
@@ -367,6 +371,7 @@ Control::setup_globals(const ModelOptions& opts)
   Messages::set_log_file(logfile, _device->get_communicator(), 0);
 
   Messages::info("Writing log to " + logfile);
+  Messages::newline();
 
   // Copy input file
   if (opts.get_option("backup_inputfile", true))
@@ -377,14 +382,20 @@ Control::setup_globals(const ModelOptions& opts)
       copy_file(in, out, copy_options::overwrite_existing);
   }
 
-  {
-    ostringstream os;
-    os << "tiberCAD release " << TiberCad::version_string(true)
-       << " (" << TiberCad::arch_string() << ")\n"
-       << TiberCad::compilation_system();
-    Messages::info(os.str());
+  ostringstream os;
+  os << "tiberCAD release " << TiberCad::version_string(true)
+     << " (" << TiberCad::arch_string() << ")\n"
+     << TiberCad::compilation_system();
+  Messages::info(os.str());
+  os.str("");
+  Messages::newline();
 
-  }
+  os << "Simulation run ID: " << SimulationId::run_id() << endl;
+  os << "Simulation UUID  : " << SimulationId::uuid() << endl;
+  os << "Simulation start : " << SimulationId::start_time() << endl;
+  Messages::info(os.str());
+  os.str("");
+
   Messages::newline();
   Messages::info("Input file: " + _inputfile);
   Messages::newline();
@@ -408,7 +419,6 @@ Control::setup_globals(const ModelOptions& opts)
     std::string modellibpath;
     DLLoader::get_library_path(modellibpath);
 
-    ostringstream os;
     os << "Simulation temperature: "
       << SimulationOptions::temperature << " K" << endl
       << "Database search path  : "
@@ -418,6 +428,7 @@ Control::setup_globals(const ModelOptions& opts)
       << "Log file              : "
       << logfile << endl;
     m.info(os.str());
+    os.str("");
     m.newline();
   }
 
@@ -434,12 +445,12 @@ Control::setup_globals(const ModelOptions& opts)
       m.info("Parallelization");
       m.indent();
 
-      ostringstream os;
       os << "MPI communicator size : "
          << mpi_comm << endl
          << "OMP threads           : "
          << omp_procs << endl;
       m.info(os.str());
+      os.str("");
       m.newline();
 
       if ((omp_procs > 1) && (mpi_comm) > 1)
@@ -455,7 +466,6 @@ Control::setup_globals(const ModelOptions& opts)
         char buffer[MPI_MAX_PROCESSOR_NAME];
         int buflen;
         MPI_Get_processor_name(buffer, &buflen);
-        os.str("");
         os << "This is MPI rank " << TiberCad::get_mpi_comm().rank()
           << " out of " << mpi_comm
           << ", running on host " << buffer;

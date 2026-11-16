@@ -31,6 +31,7 @@
 #include "tibercad/atomistic/BulkCrystal.h"
 #include "tibercad/base/Device.h"
 #include "tibercad/base/InitFailedException.h"
+#include "tibercad/base/SimulationId.h"
 #include "tibercad/io/Messages.h"
 #include "tibercad/geom/MeshUtils.h"
 #include "tibercad/utils/Utils.h"
@@ -1921,8 +1922,13 @@ AtomisticGenerator::build_random_alloy()
   // A random starting seed is needed to actually have different sequences
   // we try to use something that is different also if launching simulations
   // at the same time
-  int seed = _as->get_options().get_option("random_generator_seed",
-      static_cast<int>(time(NULL) * std::tr1::random_device()()));
+  uint64_t seed = SimulationId::seed();
+
+  if (_as->get_options().find_option("random_generator_seed"))
+  {
+    seed = _as->get_options().get_option("random_generator_seed", seed);
+  }
+  
   {
     std::ostringstream os;
     os << "Initializing  MT19937 random generator with seed " << seed;
