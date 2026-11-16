@@ -723,20 +723,13 @@ BulkCrystal::calculate_euler_angles(void)
 
   if (std::abs(_rotation(3,3)) < (1.0 - 1e-6))
   {
-
-    double sb1 = sin(beta);
-    alpha = atan2(-_rotation(3,2)/sb1, -_rotation(3,1)/sb1);
-
-
-    if (std::abs(alpha) > M_PI_2)
-    {
-      double sb2 = -sb1;
-      alpha = atan2(-_rotation(3,2)/sb2, -_rotation(3,1)/sb2);
-      gamma = atan2(-_rotation(2,3)/sb2, _rotation(1,3)/sb2);
-      beta = -beta;
-    }
-    else
-      gamma = atan2(-_rotation(2,3)/sb1, _rotation(1,3)/sb1);
+    // beta = acos(...) is already the principal solution, in [0, pi], so
+    // sin(beta) is positive here -- no need for (and no benefit from) the
+    // alternate beta = -beta branch some references give for this step,
+    // which would needlessly take beta outside its natural [0, 180] range
+    double sb = sin(beta);
+    alpha = atan2(-_rotation(3,2)/sb, -_rotation(3,1)/sb);
+    gamma = atan2(-_rotation(2,3)/sb, _rotation(1,3)/sb);
   }
   else // R33 = +/-1
   {
@@ -1007,7 +1000,34 @@ BulkCrystal::set_cell_vectors(void)
 
   else if (_bravais_lattice.at(0) == 'a')
   {
-    // TODO
+    // general triclinic cell: a along x, b in the xy-plane, c general,
+    // following the standard crystallographic convention
+    double alpha = M_PI * _angles[0] / 180.0;
+    double beta  = M_PI * _angles[1] / 180.0;
+    double gamma = M_PI * _angles[2] / 180.0;
+
+    double ca = cos(alpha);
+    double cb = cos(beta);
+    double cg = cos(gamma);
+    double sg = sin(gamma);
+
+    _conv_vec(1,1) = _lattice_constant[0];
+    _conv_vec(2,1) = 0.0;
+    _conv_vec(3,1) = 0.0;
+
+    _conv_vec(1,2) = _lattice_constant[1] * cg;
+    _conv_vec(2,2) = _lattice_constant[1] * sg;
+    _conv_vec(3,2) = 0.0;
+
+    // choose c's x,y components so the angles to a and b come out right,
+    // then its z component so that |c| = lattice_constant[2]
+    double cx = cb;
+    double cy = (ca - cb * cg) / sg;
+    double cz = sqrt(std::max(0.0, 1.0 - cx * cx - cy * cy));
+
+    _conv_vec(1,3) = _lattice_constant[2] * cx;
+    _conv_vec(2,3) = _lattice_constant[2] * cy;
+    _conv_vec(3,3) = _lattice_constant[2] * cz;
   }
 
   else if (_bravais_lattice.at(0) == 'm')
@@ -1099,7 +1119,28 @@ BulkCrystal::set_cell_vectors(void)
   }
   
   else if (_bravais_lattice.compare("hR") == 0)
-  { 
+  {
+    // primitive rhombohedral axes: three vectors of equal length a,
+    // related by a 120 degree rotation about z, with alpha the angle
+    // between any pair of them (Setyawan-Curtarolo RHL convention)
+    double alpha = M_PI * _angles[0] / 180.0;
+    double ca = cos(alpha);
+
+    double tx = sqrt((1.0 - ca) / 2.0);
+    double ty = sqrt((1.0 - ca) / 6.0);
+    double tz = sqrt((1.0 + 2.0 * ca) / 3.0);
+
+    _conv_vec(1,1) =  tx * _lattice_constant[0];
+    _conv_vec(2,1) = -ty * _lattice_constant[0];
+    _conv_vec(3,1) =  tz * _lattice_constant[0];
+
+    _conv_vec(1,2) = 0.0;
+    _conv_vec(2,2) =  2.0 * ty * _lattice_constant[0];
+    _conv_vec(3,2) =  tz * _lattice_constant[0];
+
+    _conv_vec(1,3) = -tx * _lattice_constant[0];
+    _conv_vec(2,3) = -ty * _lattice_constant[0];
+    _conv_vec(3,3) =  tz * _lattice_constant[0];
   }
 
   else if (_bravais_lattice.at(0) == 't')
