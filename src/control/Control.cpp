@@ -349,6 +349,9 @@ Control::setup_globals(const ModelOptions& opts)
 {
   using namespace boost::filesystem;
 
+  // if not explicitly provided, we used the run ID as output directory
+  _outputdir = SimulationId::run_id();
+
   _outputdir = opts.get_option("resultpath", _outputdir);
 
   // setup the logfile
@@ -401,12 +404,8 @@ Control::setup_globals(const ModelOptions& opts)
   Messages::newline();
 
   Database::set_search_path(opts.get_option("searchpath", ""));
-  //opts.delete_option("searchpath");
 
   DLLoader::prepend_to_library_path(opts.get_option("modellibpath", "."));
-  //opts.delete_option("modellibpath");
-
-  _output_format = opts.get_option("output_format", "vtk");
 
   {
     Messages m;

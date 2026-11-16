@@ -99,20 +99,6 @@ class TC_DLLOCAL Control
 
 
 
-    //! Get the output format
-    /*!
-     * \return a string that identifies the type ouf output files
-     * to generate
-     *
-     * Currently the following formats are supported:
-     * \li \c gmv for GMV
-     * \li \c ise for Tecplot
-     * \li \c gnu for GnuPlot
-     */
-    const std::string& get_output_format(void) const;
-
-
-
   private:
 
     /*
@@ -166,13 +152,6 @@ class TC_DLLOCAL Control
     std::string _outputdir = ".";
 
 
-    //! The output format
-    /*!
-     * see get_output_format() for a detailed description
-     */
-    std::string _output_format;
-
-
     //! Setup global simulation options
     void setup_globals(const ModelOptions& opts);
 
@@ -213,15 +192,6 @@ Control::get_output_dir(void) const
   return _outputdir;
 }
 
-
-
-
-inline
-const std::string&
-Control::get_output_format(void) const
-{
-  return _output_format;
-}
 
 
 
