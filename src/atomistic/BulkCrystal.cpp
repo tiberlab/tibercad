@@ -487,12 +487,14 @@ BulkCrystal::find_least_common_lattice(const BulkCrystal &substrate,
   Eigen::Matrix3d A1 = to_rows(substrate.get_rotated_prim_vec()); // substrate
   Eigen::Matrix3d A2 = to_rows(_rotated_prim_vec);                // this material (superstrate)
 
+  /*
   std::cerr << "BulkCrystal::find_least_common_lattice: "
             << "superstrate " << _mat->get_name() << " vs. "
             << "substrate " << (substrate._mat)->get_name() << "\n"
             << "superstrate lattice:\n" << A2 << "\n"
             << "substrate lattice:\n" << A1
             << std::endl;
+  */
 
   // Stage 1: shape-only match (smallest coincident sublattices after a
   // free isotropic rescaling). Its own tolerance is a coarse, fixed
@@ -554,11 +556,13 @@ BulkCrystal::find_least_common_lattice(const BulkCrystal &substrate,
   LatticeMatch::Candidate result = *best;
   LatticeMatch::preserve_orientation(result, A1);
 
+  /*
   std::cerr << "residual strain = " << result.H_norm
             << std::endl;
   std::cerr << "  superstrate supercell:\n" << result.M2 << std::endl;
   std::cerr << "  substrate supercell:\n" << result.M1 << std::endl;
   std::cerr << "  superstrate lattice matching strain:\n" << result.biot << std::endl;
+  */
 
   // Symmetric part of (F - I), in the calculation frame (both lattices
   // were already rotated), matching the convention used by the
@@ -873,7 +877,9 @@ BulkCrystal::read_database(void)
 
       //We express lattice constant in Angstrom
       ax_1 = db->get("a", 0.0) * 10.0;
-      if (ax_1 == 0.0) std::cerr << "At least lattice constant a must be defined !!!!" << std::endl;
+      if (ax_1 == 0.0) 
+        Messages::error("At least lattice constant a must be defined in "
+          + mat_alloy->get_component_A()->get_name());
 
       ay_1 = db->get("b", 0.0) * 10.0;
       if (ay_1 == 0.0) ay_1 = ax_1;
@@ -885,7 +891,9 @@ BulkCrystal::read_database(void)
       db->set_section("lattice");
 
       ax_2 = db->get("a", 0.0) * 10.0;
-      if (ax_2 == 0.0) std::cerr << "At least lattice constant a must be defined !!!!" << std::endl;
+      if (ax_2 == 0.0)
+        Messages::error("At least lattice constant a must be defined in "
+          + mat_alloy->get_component_B()->get_name());
 
       ay_2 = db->get("b", 0.0) * 10.0;
       if (ay_2 == 0.0) ay_2 = ax_2;
